@@ -36,6 +36,25 @@ def test_default_loader_excludes_drafts(tmp_path: Path):
     }
 
 
+def test_default_loader_rejects_invalid_review_status_before_filtering(tmp_path: Path):
+    write_exercise(tmp_path / "typo.yml", review_status="publishd")
+
+    with pytest.raises(ContentLoadError, match="invalid review_status"):
+        load_catalog(tmp_path)
+
+
+def test_default_loader_rejects_missing_review_status_before_filtering(tmp_path: Path):
+    data = write_exercise(tmp_path / "missing-status.yml")
+    data.pop("review_status")
+    (tmp_path / "missing-status.yml").write_text(
+        yaml.safe_dump(data, sort_keys=False),
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ContentLoadError, match="missing review_status"):
+        load_catalog(tmp_path)
+
+
 def test_default_loader_skips_invalid_drafts_before_full_validation(tmp_path: Path):
     write_exercise(tmp_path / "published.yml")
     draft = write_exercise(

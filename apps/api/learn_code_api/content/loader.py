@@ -24,7 +24,8 @@ def load_catalog(content_root: Path, include_drafts: bool = False) -> ContentCat
     exercises: list[ExerciseContent] = []
     for path in _yaml_files(root):
         raw = _load_raw_content(path)
-        if not include_drafts and raw.get("review_status") != ReviewStatus.PUBLISHED.value:
+        review_status = _load_review_status(path, raw)
+        if not include_drafts and review_status != ReviewStatus.PUBLISHED:
             continue
         exercises.append(_load_exercise(path, raw))
 
@@ -51,6 +52,16 @@ def _load_raw_content(path: Path) -> dict[str, Any]:
     if not isinstance(raw, dict):
         raise ContentLoadError(f"content file must contain a mapping: {path}")
     return raw
+
+
+def _load_review_status(path: Path, raw: dict[str, Any]) -> ReviewStatus:
+    if "review_status" not in raw:
+        raise ContentLoadError(f"missing review_status in {path}")
+
+    try:
+        return ReviewStatus(raw["review_status"])
+    except ValueError as exc:
+        raise ContentLoadError(f"invalid review_status in {path}: {raw['review_status']!r}") from exc
 
 
 def _load_exercise(path: Path, raw: dict[str, Any]) -> ExerciseContent:

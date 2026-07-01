@@ -20,6 +20,26 @@ def test_validator_rejects_missing_prerequisite(tmp_path: Path):
     assert any("unknown prerequisite" in issue.message for issue in report.issues)
 
 
+def test_validator_rejects_invalid_review_status_before_draft_filtering(tmp_path: Path):
+    write_exercise(tmp_path / "exercise.yml", review_status="publishd")
+
+    report = validate_content_tree(tmp_path, run_solutions=False)
+
+    assert not report.ok
+    assert any("invalid review_status" in issue.message for issue in report.issues)
+
+
+def test_validator_rejects_missing_review_status_before_draft_filtering(tmp_path: Path):
+    data = write_exercise(tmp_path / "exercise.yml")
+    data.pop("review_status")
+    (tmp_path / "exercise.yml").write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
+
+    report = validate_content_tree(tmp_path, run_solutions=False)
+
+    assert not report.ok
+    assert any("missing review_status" in issue.message for issue in report.issues)
+
+
 def test_seed_validator_rejects_unknown_exercise_concept(tmp_path: Path):
     write_exercise(tmp_path / "exercise.yml", concepts=["python.dictionries"])
 
