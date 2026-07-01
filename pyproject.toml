@@ -1,0 +1,6 @@
+[tool.pytest.ini_options]
+testpaths = ["tests", "apps/api/tests", "apps/cli/tests", "services/runner-broker/tests", "services/python-runner/tests"]
+pythonpath = ["apps/api", "apps/cli/src", "services/runner-broker", "services/python-runner"]
+
+[tool.ruff]
+line-length = 100
