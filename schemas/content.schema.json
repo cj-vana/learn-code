@@ -1,0 +1,281 @@
+{
+  "$defs": {
+    "Difficulty": {
+      "enum": [
+        "easy",
+        "medium",
+        "hard"
+      ],
+      "title": "Difficulty",
+      "type": "string"
+    },
+    "ExerciseTests": {
+      "additionalProperties": false,
+      "properties": {
+        "public": {
+          "items": {
+            "$ref": "#/$defs/FunctionTestCase"
+          },
+          "title": "Public",
+          "type": "array"
+        },
+        "validation": {
+          "items": {
+            "$ref": "#/$defs/FunctionTestCase"
+          },
+          "title": "Validation",
+          "type": "array"
+        }
+      },
+      "required": [
+        "public",
+        "validation"
+      ],
+      "title": "ExerciseTests",
+      "type": "object"
+    },
+    "FunctionTestCase": {
+      "additionalProperties": false,
+      "properties": {
+        "expected": {
+          "title": "Expected"
+        },
+        "input": {
+          "title": "Input"
+        },
+        "name": {
+          "minLength": 1,
+          "title": "Name",
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "input",
+        "expected"
+      ],
+      "title": "FunctionTestCase",
+      "type": "object"
+    },
+    "HintContent": {
+      "additionalProperties": false,
+      "properties": {
+        "level": {
+          "maximum": 3,
+          "minimum": 1,
+          "title": "Level",
+          "type": "integer"
+        },
+        "text": {
+          "minLength": 1,
+          "title": "Text",
+          "type": "string"
+        }
+      },
+      "required": [
+        "level",
+        "text"
+      ],
+      "title": "HintContent",
+      "type": "object"
+    },
+    "Provenance": {
+      "additionalProperties": false,
+      "properties": {
+        "author": {
+          "minLength": 1,
+          "title": "Author",
+          "type": "string"
+        },
+        "brief_id": {
+          "minLength": 1,
+          "title": "Brief Id",
+          "type": "string"
+        },
+        "generated_at": {
+          "format": "date-time",
+          "title": "Generated At",
+          "type": "string"
+        },
+        "inspiration_sources": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Inspiration Sources",
+          "type": "array"
+        },
+        "originality_notes": {
+          "minLength": 1,
+          "title": "Originality Notes",
+          "type": "string"
+        }
+      },
+      "required": [
+        "brief_id",
+        "author",
+        "generated_at",
+        "originality_notes"
+      ],
+      "title": "Provenance",
+      "type": "object"
+    },
+    "ReviewStatus": {
+      "enum": [
+        "briefed",
+        "drafted",
+        "reviewed_originality",
+        "reviewed_pedagogy",
+        "reviewed_correctness",
+        "tests_validated",
+        "published"
+      ],
+      "title": "ReviewStatus",
+      "type": "string"
+    }
+  },
+  "additionalProperties": false,
+  "properties": {
+    "common_mistakes": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Common Mistakes",
+      "type": "array"
+    },
+    "concepts": {
+      "items": {
+        "type": "string"
+      },
+      "minItems": 1,
+      "title": "Concepts",
+      "type": "array"
+    },
+    "difficulty": {
+      "$ref": "#/$defs/Difficulty"
+    },
+    "estimated_time_minutes": {
+      "exclusiveMinimum": 0,
+      "title": "Estimated Time Minutes",
+      "type": "integer"
+    },
+    "explanation_markdown": {
+      "minLength": 1,
+      "title": "Explanation Markdown",
+      "type": "string"
+    },
+    "function_name": {
+      "minLength": 1,
+      "title": "Function Name",
+      "type": "string"
+    },
+    "hints": {
+      "items": {
+        "$ref": "#/$defs/HintContent"
+      },
+      "minItems": 1,
+      "title": "Hints",
+      "type": "array"
+    },
+    "id": {
+      "minLength": 1,
+      "title": "Id",
+      "type": "string"
+    },
+    "input_mode": {
+      "const": "function",
+      "title": "Input Mode",
+      "type": "string"
+    },
+    "kind": {
+      "const": "exercise",
+      "title": "Kind",
+      "type": "string"
+    },
+    "language": {
+      "const": "python",
+      "title": "Language",
+      "type": "string"
+    },
+    "prerequisites": {
+      "items": {
+        "type": "string"
+      },
+      "title": "Prerequisites",
+      "type": "array"
+    },
+    "prompt_markdown": {
+      "minLength": 1,
+      "title": "Prompt Markdown",
+      "type": "string"
+    },
+    "provenance": {
+      "$ref": "#/$defs/Provenance"
+    },
+    "review_status": {
+      "$ref": "#/$defs/ReviewStatus"
+    },
+    "sample_solution": {
+      "minLength": 1,
+      "title": "Sample Solution",
+      "type": "string"
+    },
+    "slug": {
+      "minLength": 1,
+      "title": "Slug",
+      "type": "string"
+    },
+    "solution_sketch": {
+      "minLength": 1,
+      "title": "Solution Sketch",
+      "type": "string"
+    },
+    "source_status": {
+      "const": "original",
+      "title": "Source Status",
+      "type": "string"
+    },
+    "starter_code": {
+      "minLength": 1,
+      "title": "Starter Code",
+      "type": "string"
+    },
+    "tests": {
+      "$ref": "#/$defs/ExerciseTests"
+    },
+    "title": {
+      "minLength": 1,
+      "title": "Title",
+      "type": "string"
+    },
+    "version": {
+      "exclusiveMinimum": 0,
+      "title": "Version",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "id",
+    "kind",
+    "version",
+    "language",
+    "title",
+    "slug",
+    "difficulty",
+    "concepts",
+    "estimated_time_minutes",
+    "review_status",
+    "source_status",
+    "provenance",
+    "prompt_markdown",
+    "starter_code",
+    "function_name",
+    "input_mode",
+    "solution_sketch",
+    "sample_solution",
+    "hints",
+    "tests",
+    "explanation_markdown"
+  ],
+  "title": "ExerciseContent",
+  "type": "object"
+}

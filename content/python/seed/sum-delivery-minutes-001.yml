@@ -1,0 +1,73 @@
+id: exercise.seed.sum-delivery-minutes-001
+kind: exercise
+version: 1
+language: python
+title: Sum Delivery Minutes
+slug: sum-delivery-minutes-001
+difficulty: easy
+concepts:
+  - python.lists
+  - python.loops
+  - patterns.running_total
+prerequisites:
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: seed.running-total
+  author: mixed
+  generated_at: '2026-07-01T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original delivery-route prompt, examples, tests, and explanation.
+prompt_markdown: |
+  A bike courier records the number of minutes spent on each delivery. Write
+  `sum_delivery_minutes(minutes)` so it returns the total time across all
+  deliveries. If the list is empty, return 0.
+starter_code: |
+  def sum_delivery_minutes(minutes):
+      return 0
+function_name: sum_delivery_minutes
+input_mode: function
+solution_sketch: Start a total at 0 and add each number from the list.
+sample_solution: |
+  def sum_delivery_minutes(minutes):
+      total = 0
+      for minute_count in minutes:
+          total += minute_count
+      return total
+hints:
+  - level: 1
+    text: Keep one running total.
+  - level: 2
+    text: Start the total at 0 before the loop.
+  - level: 3
+    text: Add each value with total += minute_count.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: 0
+    - name: single
+      input: [8]
+      expected: 8
+    - name: several
+      input: [5, 12, 7]
+      expected: 24
+  validation:
+    - name: includes_zero
+      input: [0, 4, 0]
+      expected: 4
+    - name: many_small
+      input: [1, 1, 1, 1, 1]
+      expected: 5
+    - name: larger_numbers
+      input: [30, 45, 15]
+      expected: 90
+explanation_markdown: |
+  A running total starts at zero. Each loop iteration adds the next delivery's
+  minutes, so after the loop the total contains the sum of the whole list.
+common_mistakes:
+  - Returning the last item instead of the accumulated total.
+  - Starting the total with a string or list.
+  - Forgetting that an empty list should return 0.
