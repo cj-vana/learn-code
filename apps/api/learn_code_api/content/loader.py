@@ -21,14 +21,14 @@ def load_catalog(content_root: Path, include_drafts: bool = False) -> ContentCat
     if not root.is_dir():
         raise ContentLoadError(f"content root is not a directory: {root}")
 
-    exercises = [_load_exercise(path) for path in _yaml_files(root)]
+    exercises: list[ExerciseContent] = []
+    for path in _yaml_files(root):
+        raw = _load_raw_content(path)
+        if not include_drafts and raw.get("review_status") != ReviewStatus.PUBLISHED.value:
+            continue
+        exercises.append(_load_exercise(path, raw))
+
     _reject_duplicates(exercises)
-
-    if not include_drafts:
-        exercises = [
-            exercise for exercise in exercises if exercise.review_status == ReviewStatus.PUBLISHED
-        ]
-
     return ContentCatalog(exercises=exercises)
 
 
@@ -40,7 +40,7 @@ def _yaml_files(root: Path) -> list[Path]:
     )
 
 
-def _load_exercise(path: Path) -> ExerciseContent:
+def _load_raw_content(path: Path) -> dict[str, Any]:
     try:
         raw = yaml.safe_load(path.read_text(encoding="utf-8"))
     except yaml.YAMLError as exc:
@@ -50,6 +50,10 @@ def _load_exercise(path: Path) -> ExerciseContent:
 
     if not isinstance(raw, dict):
         raise ContentLoadError(f"content file must contain a mapping: {path}")
+    return raw
+
+
+def _load_exercise(path: Path, raw: dict[str, Any]) -> ExerciseContent:
     if raw.get("kind") != "exercise":
         raise ContentLoadError(f"unsupported content kind in {path}: {raw.get('kind')!r}")
 

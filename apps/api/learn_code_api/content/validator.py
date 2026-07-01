@@ -22,6 +22,8 @@ SUSPICIOUS_PLATFORM_NAMES = (
     "leetcode",
     "hacker rank",
     "hackerrank",
+    "codesignal",
+    "code signal",
     "codewars",
     "codeforces",
     "project euler",
@@ -47,8 +49,15 @@ def validate_content_tree(
         )
 
     known_concepts = set(SEED_PROFILE_KNOWN_CONCEPTS if profile == "seed" else [])
+    enforce_known_concepts = profile == "seed"
     for exercise in catalog.exercises:
-        _validate_exercise(exercise, issues, known_concepts, run_solutions)
+        _validate_exercise(
+            exercise,
+            issues,
+            known_concepts,
+            enforce_known_concepts,
+            run_solutions,
+        )
 
     return ValidationReport(ok=not issues, issues=issues, catalog=catalog)
 
@@ -57,17 +66,27 @@ def _validate_exercise(
     exercise: ExerciseContent,
     issues: list[ValidationIssue],
     known_concepts: set[str],
+    enforce_known_concepts: bool,
     run_solutions: bool,
 ) -> None:
-    for concept in exercise.concepts:
-        known_concepts.add(concept)
+    if enforce_known_concepts:
+        for concept in exercise.concepts:
+            if concept not in known_concepts:
+                issues.append(
+                    ValidationIssue(
+                        path=exercise.id,
+                        message=f"unknown exercise concept: {concept}",
+                    )
+                )
+    else:
+        known_concepts.update(exercise.concepts)
 
     for prerequisite in exercise.prerequisites:
         if prerequisite not in known_concepts:
             issues.append(
                 ValidationIssue(
                     path=exercise.id,
-                    message=f"missing prerequisite concept: {prerequisite}",
+                    message=f"unknown prerequisite concept: {prerequisite}",
                 )
             )
 

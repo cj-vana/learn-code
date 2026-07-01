@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
 import yaml
 
 from learn_code_api.content.sample_solution_runner import run_sample_solution
@@ -16,7 +17,16 @@ def test_validator_rejects_missing_prerequisite(tmp_path: Path):
     report = validate_content_tree(tmp_path, run_solutions=False)
 
     assert not report.ok
-    assert any("missing prerequisite" in issue.message for issue in report.issues)
+    assert any("unknown prerequisite" in issue.message for issue in report.issues)
+
+
+def test_seed_validator_rejects_unknown_exercise_concept(tmp_path: Path):
+    write_exercise(tmp_path / "exercise.yml", concepts=["python.dictionries"])
+
+    report = validate_content_tree(tmp_path, run_solutions=False)
+
+    assert not report.ok
+    assert any("unknown exercise concept: python.dictionries" in issue.message for issue in report.issues)
 
 
 def test_validator_rejects_insufficient_tests(tmp_path: Path):
@@ -30,9 +40,20 @@ def test_validator_rejects_insufficient_tests(tmp_path: Path):
     assert any("at least 3 validation tests" in issue.message for issue in report.issues)
 
 
-def test_validator_rejects_platform_name_in_originality_metadata(tmp_path: Path):
+@pytest.mark.parametrize(
+    "platform_text",
+    [
+        "Inspired by LeetCode problem statements.",
+        "Inspired by CodeSignal practice prompts.",
+        "Inspired by Code Signal practice prompts.",
+    ],
+)
+def test_validator_rejects_platform_name_in_originality_metadata(
+    tmp_path: Path,
+    platform_text: str,
+):
     data = valid_exercise_data()
-    data["provenance"]["originality_notes"] = "Inspired by LeetCode problem statements."
+    data["provenance"]["originality_notes"] = platform_text
     (tmp_path / "exercise.yml").write_text(yaml.safe_dump(data, sort_keys=False), encoding="utf-8")
 
     report = validate_content_tree(tmp_path, run_solutions=False)

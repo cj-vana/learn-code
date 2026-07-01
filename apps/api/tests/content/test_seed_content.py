@@ -40,7 +40,7 @@ def test_content_schema_export_writes_exercise_schema(tmp_path: Path):
 
 
 def test_checked_in_content_schema_is_current():
-    expected = export_content_schema()
+    expected = export_content_schema(None)
     actual = json.loads(SCHEMA_PATH.read_text(encoding="utf-8"))
 
     assert actual == expected

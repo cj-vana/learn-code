@@ -36,6 +36,62 @@ def test_default_loader_excludes_drafts(tmp_path: Path):
     }
 
 
+def test_default_loader_skips_invalid_drafts_before_full_validation(tmp_path: Path):
+    write_exercise(tmp_path / "published.yml")
+    draft = write_exercise(
+        tmp_path / "draft.yml",
+        id="exercise.seed.invalid-draft-001",
+        slug="invalid-draft-001",
+        review_status="drafted",
+    )
+    draft.pop("provenance")
+    (tmp_path / "draft.yml").write_text(yaml.safe_dump(draft, sort_keys=False), encoding="utf-8")
+
+    catalog = load_catalog(tmp_path)
+
+    assert [exercise.id for exercise in catalog.exercises] == ["exercise.seed.count-tags-001"]
+
+
+def test_include_drafts_validates_invalid_drafts(tmp_path: Path):
+    write_exercise(tmp_path / "published.yml")
+    draft = write_exercise(
+        tmp_path / "draft.yml",
+        id="exercise.seed.invalid-draft-001",
+        slug="invalid-draft-001",
+        review_status="drafted",
+    )
+    draft.pop("provenance")
+    (tmp_path / "draft.yml").write_text(yaml.safe_dump(draft, sort_keys=False), encoding="utf-8")
+
+    with pytest.raises(ContentLoadError, match="invalid content"):
+        load_catalog(tmp_path, include_drafts=True)
+
+
+def test_default_loader_skips_duplicate_draft_ids_before_duplicate_checks(tmp_path: Path):
+    write_exercise(tmp_path / "published.yml")
+    write_exercise(
+        tmp_path / "draft.yml",
+        slug="draft-duplicate-id-001",
+        review_status="drafted",
+    )
+
+    catalog = load_catalog(tmp_path)
+
+    assert [exercise.id for exercise in catalog.exercises] == ["exercise.seed.count-tags-001"]
+
+
+def test_include_drafts_rejects_duplicate_draft_ids(tmp_path: Path):
+    write_exercise(tmp_path / "published.yml")
+    write_exercise(
+        tmp_path / "draft.yml",
+        slug="draft-duplicate-id-001",
+        review_status="drafted",
+    )
+
+    with pytest.raises(ContentLoadError, match="duplicate id"):
+        load_catalog(tmp_path, include_drafts=True)
+
+
 def test_loader_rejects_duplicate_ids(tmp_path: Path):
     write_exercise(tmp_path / "one.yml", slug="count-inventory-tags-a")
     write_exercise(tmp_path / "two.yml", slug="count-inventory-tags-b")
