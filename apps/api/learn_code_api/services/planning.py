@@ -18,6 +18,7 @@ from learn_code_api.adaptive_plan.planner import (
 from learn_code_api.content.models import ContentCatalog
 from learn_code_api.progress.db import ProgressRepository
 from learn_code_api.progress.rollups import MasteryLabel
+from learn_code_api.services import paths as paths_service
 
 
 def build_snapshot(repo: ProgressRepository, catalog: ContentCatalog) -> ProgressSnapshot:
@@ -41,13 +42,35 @@ def build_snapshot(repo: ProgressRepository, catalog: ContentCatalog) -> Progres
         for quiz in catalog.quizzes
         if {question.id for question in quiz.questions} <= coverage.get(quiz.id, set())
     )
+    path_items, path_context = _active_path_unit(catalog, repo)
     # V1 has no target-date UI, so interview date pacing stays unset.
     return ProgressSnapshot(
         concepts=concepts,
         target_interview_date=None,
         completed_lesson_ids=frozenset(repo.completed_lesson_ids()),
         completed_quiz_ids=completed_quiz_ids,
+        path_current_unit_items=path_items,
+        path_context=path_context,
     )
+
+
+def _active_path_unit(
+    catalog: ContentCatalog, repo: ProgressRepository
+) -> tuple[frozenset[str], str | None]:
+    """The enrolled path's first unit with incomplete items, for the planner's
+    PATH_BONUS. Empty when not enrolled or the path is finished."""
+    active_id = repo.active_path_id()
+    if active_id is None:
+        return frozenset(), None
+    active = next((p for p in catalog.paths if p.id == active_id), None)
+    if active is None:  # enrolled path no longer published
+        return frozenset(), None
+    completed = paths_service.completed_content_ids(catalog, repo)
+    for unit in active.units:
+        remaining = [item for item in unit.items if item not in completed]
+        if remaining:
+            return frozenset(remaining), f"{active.title} › {unit.title}"
+    return frozenset(), None
 
 
 def today_plan(

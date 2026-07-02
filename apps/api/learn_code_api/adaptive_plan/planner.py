@@ -21,6 +21,8 @@ TARGET_DATE_WINDOW_DAYS = 30
 DEFAULT_LIMIT = 5
 QUIZ_READY_MASTERY = 60  # spec tie-break: "several patterns above 60" prefer quizzes
 QUIZ_READY_MIN_CONCEPTS = 2
+# Enrolled-path nudge: small enough that tier-1 due reviews (gap 0.2) always win.
+PATH_BONUS = 0.05
 
 TIER_BASE_PRIORITY = {
     1: 1.0,  # due reviews for weak/recently failed concepts
@@ -94,6 +96,8 @@ class ProgressSnapshot:
     target_interview_date: date | None = None
     completed_lesson_ids: frozenset[str] = frozenset()
     completed_quiz_ids: frozenset[str] = frozenset()
+    path_current_unit_items: frozenset[str] = frozenset()
+    path_context: str | None = None
 
     def concept(self, concept_id: str) -> ConceptProgress:
         return self.concepts.get(
@@ -151,6 +155,8 @@ def build_today_plan(
         candidate = _classify_quiz(quiz, progress, now, prereq_depth)
         if candidate is not None:
             candidates.append(candidate)
+
+    candidates = [_apply_path_bonus(candidate, progress) for candidate in candidates]
 
     candidates.sort(key=lambda candidate: (-candidate.priority, candidate.content_id))
 
@@ -428,6 +434,26 @@ def _build_candidate(
         priority=priority,
         reason=reason,
         because=because,
+    )
+
+
+def _apply_path_bonus(candidate: _Candidate, progress: ProgressSnapshot) -> _Candidate:
+    """Deterministic nudge for the enrolled path's current unit. Applied after
+    classification so it composes with every tier; the bonus (0.05) is far
+    below the tier gap (0.2), so due reviews always outrank boosted items."""
+    if candidate.content_id not in progress.path_current_unit_items:
+        return candidate
+    context = progress.path_context or "your enrolled path"
+    return _Candidate(
+        content_id=candidate.content_id,
+        title=candidate.title,
+        concepts=candidate.concepts,
+        estimated_time_minutes=candidate.estimated_time_minutes,
+        tier=candidate.tier,
+        kind=candidate.kind,
+        priority=round(min(candidate.priority + PATH_BONUS, 1.0), 4),
+        reason=candidate.reason,
+        because=[*candidate.because, f"next up in {context}"],
     )
 
 

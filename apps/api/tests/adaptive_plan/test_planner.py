@@ -405,3 +405,60 @@ def test_due_review_quiz_outranks_and_reemits_even_if_completed():
     assert len(items) == 1
     assert items[0].kind.value == "quiz"
     assert items[0].priority >= 0.9
+
+
+def test_path_bonus_boosts_current_unit_items():
+    in_path = make_exercise(
+        id="exercise.seed.in-path-001",
+        slug="in-path-001",
+        title="In Path",
+        concepts=["patterns.aaa"],
+        prerequisites=[],
+    )
+    outside = make_exercise(
+        id="exercise.seed.outside-001",
+        slug="outside-001",
+        title="Outside",
+        concepts=["patterns.aaa"],
+        prerequisites=[],
+    )
+    catalog = ContentCatalog(exercises=[outside, in_path])
+    snapshot = ProgressSnapshot(
+        concepts={},
+        path_current_unit_items=frozenset({"exercise.seed.in-path-001"}),
+        path_context="Test Path › Unit One",
+    )
+    plan = build_today_plan(catalog, snapshot, now=NOW)
+    assert plan[0].content_id == "exercise.seed.in-path-001"
+    assert plan[0].priority > plan[1].priority
+    assert any("Test Path" in line for line in plan[0].rationale.because)
+
+
+def test_due_review_still_outranks_path_boosted_item():
+    boosted_new = make_exercise(
+        id="exercise.seed.in-path-001",
+        slug="in-path-001",
+        title="In Path New",
+        concepts=["patterns.bbb"],
+        prerequisites=[],
+    )
+    due_review = make_exercise(
+        id="exercise.seed.review-001",
+        slug="review-001",
+        title="Due Review",
+        concepts=["patterns.aaa"],
+        prerequisites=[],
+    )
+    catalog = ContentCatalog(exercises=[boosted_new, due_review])
+    snapshot = ProgressSnapshot(
+        concepts={
+            "patterns.aaa": _concept(
+                "patterns.aaa", mastery=30, review_due_at=NOW, last_status="failed_tests"
+            )
+        },
+        path_current_unit_items=frozenset({"exercise.seed.in-path-001"}),
+        path_context="Test Path › Unit One",
+    )
+    plan = build_today_plan(catalog, snapshot, now=NOW)
+    assert plan[0].content_id == "exercise.seed.review-001"
+    assert plan[0].kind.value == "review"
