@@ -49,6 +49,28 @@ def test_seed_validator_rejects_unknown_exercise_concept(tmp_path: Path):
     assert any("unknown exercise concept: python.dictionries" in issue.message for issue in report.issues)
 
 
+def test_library_profile_accepts_taxonomy_concept_seed_rejects(tmp_path: Path):
+    # A pattern concept outside the 9-concept seed vocabulary is valid under the
+    # broader "library" profile but rejected under "seed".
+    write_exercise(tmp_path / "exercise.yml", concepts=["patterns.two_pointers"])
+
+    library = validate_content_tree(tmp_path, profile="library", run_solutions=False)
+    seed = validate_content_tree(tmp_path, profile="seed", run_solutions=False)
+
+    assert library.ok, [i.message for i in library.issues]
+    assert not seed.ok
+    assert any("unknown exercise concept: patterns.two_pointers" in i.message for i in seed.issues)
+
+
+def test_library_profile_still_rejects_unknown_concept(tmp_path: Path):
+    write_exercise(tmp_path / "exercise.yml", concepts=["patterns.made_up_thing"])
+
+    report = validate_content_tree(tmp_path, profile="library", run_solutions=False)
+
+    assert not report.ok
+    assert any("unknown exercise concept: patterns.made_up_thing" in i.message for i in report.issues)
+
+
 def test_validator_rejects_insufficient_tests(tmp_path: Path):
     data = valid_exercise_data()
     data["tests"]["validation"] = [{"name": "only", "input": ["x"], "expected": {"x": 1}}]

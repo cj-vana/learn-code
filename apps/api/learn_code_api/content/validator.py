@@ -18,6 +18,41 @@ SEED_PROFILE_KNOWN_CONCEPTS = {
     "patterns.running_total",
 }
 
+# The full V1 content-library taxonomy: the controlled concept vocabulary the
+# generated bank draws from. It is a superset of the seed concepts, so seed
+# content also validates under the "library" profile. Enforced (like "seed") so
+# every exercise's concepts and prerequisites reference a known concept.
+LIBRARY_KNOWN_CONCEPTS = SEED_PROFILE_KNOWN_CONCEPTS | {
+    # Python fundamentals
+    "python.variables",
+    "python.types",
+    "python.operators",
+    "python.tuples",
+    "python.sets",
+    "python.sorting",
+    "python.comprehensions",
+    "python.slicing",
+    "python.debugging",
+    # Complexity / general problem-solving
+    "concepts.big_o",
+    "patterns.brute_force",
+    "patterns.set_membership",
+    # Interview pattern families
+    "patterns.two_pointers",
+    "patterns.sliding_window",
+    "patterns.prefix_sums",
+    "patterns.stack",
+    "patterns.queue_bfs",
+    "patterns.binary_search",
+    "patterns.recursion",
+    "patterns.backtracking",
+}
+
+_PROFILE_CONCEPTS = {
+    "seed": SEED_PROFILE_KNOWN_CONCEPTS,
+    "library": LIBRARY_KNOWN_CONCEPTS,
+}
+
 SUSPICIOUS_PLATFORM_NAMES = (
     "leetcode",
     "hacker rank",
@@ -48,8 +83,8 @@ def validate_content_tree(
             catalog=None,
         )
 
-    known_concepts = set(SEED_PROFILE_KNOWN_CONCEPTS if profile == "seed" else [])
-    enforce_known_concepts = profile == "seed"
+    known_concepts = set(_PROFILE_CONCEPTS.get(profile, set()))
+    enforce_known_concepts = profile in _PROFILE_CONCEPTS
     for exercise in catalog.exercises:
         _validate_exercise(
             exercise,

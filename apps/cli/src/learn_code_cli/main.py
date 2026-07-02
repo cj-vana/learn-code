@@ -167,7 +167,7 @@ def validate_content(
     content_root: Optional[Path] = typer.Option(
         None, "--content-root", help="Defaults to the repo's content/python tree."
     ),
-    profile: str = typer.Option("seed", "--profile"),
+    profile: str = typer.Option("library", "--profile"),
     include_drafts: bool = typer.Option(False, "--include-drafts"),
     run_solutions: bool = typer.Option(True, "--run-solutions/--no-run-solutions"),
 ) -> None:
