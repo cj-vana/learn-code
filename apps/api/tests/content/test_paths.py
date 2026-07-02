@@ -83,3 +83,55 @@ def test_loader_rejects_duplicate_path_ids(tmp_path):
     )
     with pytest.raises(ContentLoadError):
         load_catalog(tmp_path)
+
+
+def test_validator_errors_on_unknown_path_item(tmp_path):
+    import yaml
+
+    from learn_code_api.content.validator import validate_content_tree
+
+    src = _path(
+        units=[
+            {
+                "id": "unit.one",
+                "title": "One",
+                "description": "d",
+                "items": ["lesson.library.does_not_exist.a01"],
+            }
+        ]
+    )
+    (tmp_path / "path.yml").write_text(yaml.safe_dump(src), encoding="utf-8")
+    report = validate_content_tree(tmp_path, profile="none", run_solutions=False)
+    assert not report.ok
+    assert any("unknown path item" in issue.message for issue in report.issues)
+
+
+def test_validator_accepts_path_with_real_items(tmp_path):
+    import yaml
+
+    from learn_code_api.content.validator import validate_content_tree
+
+    lesson = {
+        "id": "lesson.t.1",
+        "kind": "lesson",
+        "version": 1,
+        "language": "python",
+        "title": "Intro",
+        "slug": "intro",
+        "difficulty": "easy",
+        "concepts": ["python.loops"],
+        "prerequisites": [],
+        "estimated_time_minutes": 8,
+        "review_status": "published",
+        "source_status": "original",
+        "provenance": _provenance(),
+        "body_markdown": "Body.",
+        "checkpoints": [{"question": "q?", "answer": "a", "explanation": "e"}],
+    }
+    path_data = _path(
+        units=[{"id": "unit.one", "title": "One", "description": "d", "items": ["lesson.t.1"]}]
+    )
+    (tmp_path / "lesson.yml").write_text(yaml.safe_dump(lesson), encoding="utf-8")
+    (tmp_path / "path.yml").write_text(yaml.safe_dump(path_data), encoding="utf-8")
+    report = validate_content_tree(tmp_path, profile="none", run_solutions=False)
+    assert report.ok, [issue.message for issue in report.issues]

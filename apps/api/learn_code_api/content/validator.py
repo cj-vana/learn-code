@@ -7,6 +7,7 @@ from learn_code_api.content.models import (
     ContentCatalog,
     ExerciseContent,
     LessonContent,
+    PathContent,
     QuizContent,
     ValidationIssue,
     ValidationReport,
@@ -104,8 +105,11 @@ def validate_content_tree(
         _validate_lesson(lesson, issues, known_concepts, enforce_known_concepts)
     for quiz in catalog.quizzes:
         _validate_quiz(quiz, issues, known_concepts, enforce_known_concepts)
+    for path_item in catalog.paths:
+        _validate_path(path_item, catalog, issues)
 
-    return ValidationReport(ok=not issues, issues=issues, catalog=catalog)
+    ok = not any(issue.severity == "error" for issue in issues)
+    return ValidationReport(ok=ok, issues=issues, catalog=catalog)
 
 
 def _validate_exercise(
@@ -234,6 +238,50 @@ def _validate_quiz(
                             message=f"unknown quiz question concept: {concept}",
                         )
                     )
+
+
+def _validate_path(
+    path_content: PathContent,
+    catalog: ContentCatalog,
+    issues: list[ValidationIssue],
+) -> None:
+    """Path items must reference published catalog content; ordering that
+    puts an item before its prerequisite concepts is a warning, not an error."""
+    items_by_id: dict[str, ExerciseContent | LessonContent | QuizContent] = {
+        item.id: item
+        for pool in (catalog.exercises, catalog.lessons, catalog.quizzes)
+        for item in pool
+    }
+
+    concepts_seen: set[str] = set()
+    for unit in path_content.units:
+        for item_id in unit.items:
+            item = items_by_id.get(item_id)
+            if item is None:
+                issues.append(
+                    ValidationIssue(
+                        path=path_content.id,
+                        message=f"unknown path item: {item_id}",
+                    )
+                )
+                continue
+            missing = [
+                prerequisite
+                for prerequisite in item.prerequisites
+                if prerequisite not in concepts_seen
+            ]
+            if missing:
+                issues.append(
+                    ValidationIssue(
+                        path=path_content.id,
+                        message=(
+                            f"path item {item_id} appears before its prerequisite "
+                            f"concepts are taught: {', '.join(sorted(missing))}"
+                        ),
+                        severity="warning",
+                    )
+                )
+            concepts_seen.update(item.concepts)
 
 
 def _check_suspicious_metadata(exercise: ExerciseContent, issues: list[ValidationIssue]) -> None:
