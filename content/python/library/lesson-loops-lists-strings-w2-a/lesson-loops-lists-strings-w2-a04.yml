@@ -1,0 +1,46 @@
+id: lesson.library.loops_lists_strings_w2.a04
+kind: lesson
+version: 1
+language: python
+title: Turning Lists Into Strings With join and split
+slug: lesson-loops-lists-strings-w2-a04
+difficulty: medium
+concepts:
+  - python.strings
+  - python.lists
+prerequisites:
+  - python.functions
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings_w2.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original explanation pairing str.join and str.split as inverse operations.
+body_markdown: |
+  `join` and `split` move you between a list of pieces and one glued-together
+  string. You call `join` *on the separator* and pass it the list; the
+  separator is placed *between* the items, never on the ends.
+
+  ```python
+  words = ["map", "the", "route"]
+  line = " ".join(words)   # 'map the route'
+  parts = line.split()     # ['map', 'the', 'route']
+  ```
+
+  `split` with no argument breaks on whitespace and gives back a list, so it
+  undoes what `join` did. One catch: `join` only works when every item is a
+  string. If the list holds a number, convert it first with `str()`, otherwise
+  Python raises a `TypeError`.
+checkpoints:
+  - question: What does "-".join(["a", "b", "c"]) return?
+    answer: "a-b-c"
+    explanation: join places the separator "-" between each pair of items, producing a-b-c with no dash on the ends.
+  - question: What type of object does str.split() return?
+    answer: A list
+    explanation: split breaks the string into pieces and returns them as a list of substrings.
+  - question: What happens if the list given to join contains an integer?
+    answer: Python raises a TypeError.
+    explanation: join requires every element to be a string, so a number must be converted with str() first.

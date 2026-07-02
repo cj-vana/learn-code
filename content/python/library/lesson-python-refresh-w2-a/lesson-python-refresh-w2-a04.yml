@@ -1,0 +1,52 @@
+id: lesson.library.python_refresh_w2.a04
+kind: lesson
+version: 1
+language: python
+title: Giving Functions Sensible Defaults
+slug: lesson-python-refresh-w2-a04
+difficulty: easy
+concepts:
+  - python.functions
+prerequisites: []
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh_w2.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original explanation of default and keyword arguments.
+body_markdown: |
+  A function parameter can carry a *default value*. If the caller leaves that
+  argument out, Python fills in the default automatically:
+
+  ```python
+  def make_tag(text, level=1):
+      return "#" * level + " " + text
+
+  print(make_tag("Intro"))        # "# Intro"    (level defaults to 1)
+  print(make_tag("Details", 2))   # "## Details"
+  ```
+
+  You can also pass arguments *by name* instead of by position. These are
+  called keyword arguments, and because they are matched by name you may give
+  them in any order:
+
+  ```python
+  print(make_tag(level=3, text="Note"))   # "### Note"
+  ```
+
+  One rule to remember: every parameter without a default must appear before
+  any parameter that has one. Writing `def f(a=1, b):` is a `SyntaxError`,
+  because a required parameter cannot follow an optional one.
+checkpoints:
+  - question: In `def f(a, b=2):`, what is `b` when you call `f(5)`?
+    answer: "2"
+    explanation: No value was supplied for b, so Python uses its default of 2.
+  - question: Why does `def f(a=1, b):` raise a SyntaxError?
+    answer: A parameter without a default cannot come after one that has a default
+    explanation: Python requires all defaulted parameters to appear last so it can match positions unambiguously.
+  - question: What does calling `make_tag(level=2, text="Hi")` show about keyword arguments?
+    answer: They can be listed in any order because they are matched by name, not position
+    explanation: Keyword arguments bind to parameters by their names, so their order in the call does not matter.

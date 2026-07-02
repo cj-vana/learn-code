@@ -1,0 +1,61 @@
+id: lesson.library.brute_force_bigo_w2.a03
+kind: lesson
+version: 1
+language: python
+title: Every Loop You Nest Adds an Exponent
+slug: lesson-brute-force-bigo-w2-a03
+difficulty: medium
+concepts:
+  - patterns.brute_force
+  - concepts.big_o
+prerequisites:
+  - python.lists
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.brute_force_bigo_w2.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original three-relay scenario linking a brute-force triple scan to O(n^3); prose and questions written from scratch.
+body_markdown: |
+  When brute force means "try every combination," the number of nested loops
+  tells you the exponent in the Big-O. One loop over `n` items is `O(n)`. Two
+  nested loops are `O(n^2)`. Three become `O(n^3)`.
+
+  Say a lab has relay switches, each with an integer resistance, and you want to
+  know whether some three *different* relays have resistances that add up to a
+  target. The direct approach tries every triple:
+
+  ```python
+  def has_triple(resistances, target):
+      n = len(resistances)
+      for i in range(n):
+          for j in range(i + 1, n):
+              for k in range(j + 1, n):
+                  if resistances[i] + resistances[j] + resistances[k] == target:
+                      return True
+      return False
+  ```
+
+  Starting each inner index one past the outer one (`i + 1`, then `j + 1`)
+  guarantees the three positions are distinct and that each combination is tried
+  only once. It is plainly correct, which is the strength of brute force.
+
+  The price is the three nested loops. The number of triples grows like
+  `n * (n - 1) * (n - 2) / 6`, and once we drop the constants and lower terms
+  that is `O(n^3)`. For 50 relays that is around twenty thousand triples, which
+  is quick. For 5,000 relays it is roughly twenty billion, which is far too
+  slow. Recognizing the cubic shape is your signal that a smarter method may be
+  needed as the input grows.
+checkpoints:
+  - question: Why do the loops use ranges starting at i + 1 and j + 1?
+    answer: To keep the three chosen positions distinct and to try each combination only once.
+    explanation: Advancing each inner start past the outer index avoids reusing a relay and avoids retrying the same trio in a different order.
+  - question: What is the Big-O time complexity of has_triple in the worst case?
+    answer: "O(n^3)"
+    explanation: Three nested loops over n items examine on the order of n cubed combinations, and dropping constants leaves O(n^3).
+  - question: If you removed the innermost loop and only compared pairs, what would the Big-O become?
+    answer: "O(n^2)"
+    explanation: Two nested loops examine about n squared combinations, so the complexity drops from cubic to quadratic.

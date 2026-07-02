@@ -1,0 +1,60 @@
+id: lesson.library.prefix_sums_w2.a01
+kind: lesson
+version: 1
+language: python
+title: Finding a Balance Point With Prefix Sums
+slug: lesson-prefix-sums-w2-a01
+difficulty: medium
+concepts:
+  - patterns.prefix_sums
+prerequisites:
+  - python.lists
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.prefix_sums_w2.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original balance-point explanation using total-minus-running-left, written from scratch.
+body_markdown: |
+  A *balance point* is an index where everything to its left sums to the same
+  total as everything to its right. You could re-sum both sides at every index,
+  but that repeats work and costs O(n^2). A prefix-sum idea lets you sweep the
+  list just once.
+
+  First compute `total`, the sum of the whole list. As you walk position by
+  position, keep a running `left` that holds the sum *strictly before* the
+  current index. Then the sum *strictly after* it is whatever is left over:
+  `total - left - value`. When those two quantities match, the current index is
+  a balance point.
+
+  ```python
+  def balance_point(nums):
+      total = sum(nums)
+      left = 0
+      for i, value in enumerate(nums):
+          right = total - left - value
+          if left == right:
+              return i
+          left += value
+      return -1
+
+  balance_point([1, 7, 3, 6, 5, 6])  # -> 3
+  ```
+
+  At index 3 the value is 6: the left side `[1, 7, 3]` sums to 11 and the right
+  side `[5, 6]` also sums to 11. Notice you update `left` *after* the comparison,
+  so it never includes the current element. One pass to add up the total plus one
+  pass to scan makes the whole thing O(n).
+checkpoints:
+  - question: In balance_point, what does the expression total - left - value represent?
+    answer: The sum of all elements strictly to the right of the current index.
+    explanation: total covers the whole list and left covers everything before index i, so removing both those and the current value leaves only the right side.
+  - question: What does balance_point([1, 7, 3, 6, 5, 6]) return?
+    answer: "3"
+    explanation: At index 3 the elements before it sum to 11 and the elements after it also sum to 11, so 3 is the first balance point.
+  - question: Why is left updated after the equality check instead of before it?
+    answer: So that left holds the sum strictly before the current index and never counts the current element.
+    explanation: Adding value to left before comparing would wrongly fold the current element into the left side.

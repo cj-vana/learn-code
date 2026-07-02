@@ -1,0 +1,56 @@
+id: lesson.library.sliding_window_w2.a03
+kind: lesson
+version: 1
+language: python
+title: Counting the Windows That Pass a Test
+slug: lesson-sliding-window-w2-a03
+difficulty: easy
+concepts:
+  - patterns.sliding_window
+prerequisites:
+  - python.lists
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sliding_window_w2.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original noise-monitoring scenario that counts how many fixed-size windows stay under a limit using a rolling sum.
+body_markdown: |
+  Not every window question wants a maximum or a minimum. Sometimes you just want
+  to *count* how many windows pass some test. Say a sensor logs noise each hour,
+  and a quiet block is any `k` hours in a row whose total noise stays at or below
+  a limit. How many quiet blocks are there?
+
+  Compute the first window's total once, then roll it forward one step at a time,
+  adding one to the count whenever the current total passes the test:
+
+  ```python
+  def count_quiet_blocks(noise, k, limit):
+      current = sum(noise[:k])                 # first window, computed once
+      count = 1 if current <= limit else 0
+      for i in range(k, len(noise)):
+          current += noise[i] - noise[i - k]   # add entering, drop leaving
+          if current <= limit:
+              count += 1
+      return count
+
+  print(count_quiet_blocks([3, 5, 2, 8, 1], 2, 7))  # 1
+  ```
+
+  Only the window `[5, 2]` sums to 7 or less, so the count is 1. The rolling
+  update means each of the `n - k + 1` windows is tested with constant work, so
+  the scan is `O(n)`. Counting simply replaces "track the best" with "increment
+  when the test holds".
+checkpoints:
+  - question: How many fixed-size windows of width k are there in a list of length n?
+    answer: n - k + 1
+    explanation: The window's start index can range from 0 up to n - k, which is n - k + 1 positions.
+  - question: Why is the count seeded with either 1 or 0 before the loop starts?
+    answer: Because the first window is built by sum(noise[:k]) outside the loop, so its own test result must be counted up front.
+    explanation: The loop only handles windows from index k onward, so the initial window is checked separately and seeds the count.
+  - question: For [3, 5, 2, 8, 1] with k = 2 and limit 7, which window is the only quiet one?
+    answer: The window [5, 2], which totals 7.
+    explanation: The other windows total 8, 10, and 9, all above the limit, so only [5, 2] passes and the count is 1.

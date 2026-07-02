@@ -1,0 +1,111 @@
+id: quiz.library.hashmap_set_w2.a02
+kind: quiz
+version: 1
+language: python
+title: Syntax for Counting and Set Operations
+slug: quiz-hashmap-set-w2-a02
+difficulty: medium
+concepts:
+  - patterns.hash_map_counting
+  - patterns.set_membership
+prerequisites:
+  - python.dictionaries
+  - python.sets
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.hashmap_set_w2.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original code fragments and answer options written for this batch.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: |
+      After `from collections import Counter`, what is the value of
+      `Counter("mississippi")["s"]`?
+    choices:
+      - "4"
+      - "2"
+      - "1"
+      - It raises a KeyError because the counts were never initialized
+    correct_choice: "4"
+    explanation: |
+      Counter tallies each character, giving s a count of 4 in "mississippi".
+      Indexing a Counter also never raises for a missing key: it returns 0
+      instead, which makes it convenient for counting work.
+    concepts:
+      - patterns.hash_map_counting
+      - python.dictionaries
+  - id: q2
+    prompt: |
+      You are grouping words into a dict `groups` keyed by first letter, where
+      each value is a list of words. What does
+      `groups.setdefault(letter, []).append(word)` do when `letter` is new?
+    choices:
+      - Inserts letter with a fresh empty list, then appends word to that list
+      - Raises a KeyError because letter is not in the dict yet
+      - Replaces whatever is stored at letter with the single-item list [word]
+      - Adds letter to a set called groups and ignores word
+    correct_choice: Inserts letter with a fresh empty list, then appends word to that list
+    explanation: |
+      setdefault(letter, []) returns the list already stored at letter, or, if
+      letter is absent, first inserts an empty list and returns that. Either way
+      you get a list back, so the chained append safely adds word without a
+      separate "is this key present yet?" check.
+    concepts:
+      - patterns.hash_map_counting
+      - python.dictionaries
+  - id: q3
+    prompt: |
+      Given `a = {1, 2, 3}` and `b = {2, 3, 4}`, which expression returns the
+      values that are in exactly one of the two sets, that is `{1, 4}`?
+    choices:
+      - a ^ b
+      - a & b
+      - a | b
+      - a - b
+    correct_choice: a ^ b
+    explanation: |
+      The ^ operator is symmetric difference: it keeps members that appear in one
+      set but not both, giving {1, 4}. In contrast & is intersection {2, 3}, | is
+      union {1, 2, 3, 4}, and a - b is difference {1}.
+    concepts:
+      - patterns.set_membership
+      - python.sets
+  - id: q4
+    prompt: |
+      What is the value of `len(set("hello"))`?
+    choices:
+      - "4"
+      - "5"
+      - "3"
+      - "2"
+    correct_choice: "4"
+    explanation: |
+      Passing the string to set() keeps only distinct characters, so the two "l"
+      characters collapse to one. The distinct set is {'h', 'e', 'l', 'o'}, whose
+      length is 4.
+    concepts:
+      - patterns.set_membership
+      - python.sets
+  - id: q5
+    prompt: |
+      Which expression returns True when every element of `small` is also present
+      in `big`, and False otherwise?
+    choices:
+      - small <= big
+      - small in big
+      - small & big
+      - small | big
+    correct_choice: small <= big
+    explanation: |
+      For sets, <= is the subset test and returns a boolean. Writing small in big
+      instead asks whether the set object small is itself a single element of big
+      (usually False), while & and | return new sets rather than a True/False
+      answer.
+    concepts:
+      - patterns.set_membership
+      - python.sets

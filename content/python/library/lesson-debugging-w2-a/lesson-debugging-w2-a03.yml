@@ -1,0 +1,52 @@
+id: lesson.library.debugging_w2.a03
+kind: lesson
+version: 1
+language: python
+title: Why input Plus a Number Raises a TypeError
+slug: lesson-debugging-w2-a03
+difficulty: easy
+concepts:
+  - python.debugging
+prerequisites: []
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.debugging_w2.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original explanation that input returns a string and the resulting str-plus-int TypeError, with an int() conversion fix.
+body_markdown: |
+  `input()` always hands back a **string**, even when the user types digits.
+  So the value looks like a number on screen but is really text like `"20"`.
+  Trying to add a real number to that text raises a `TypeError`.
+
+  ```python
+  age = input("Your age: ")   # user types 20, but age is the string "20"
+  print(age + 1)
+  ```
+
+  This crashes with `TypeError: can only concatenate str (not "int") to str`.
+  The `+` operator means *join text* for strings and *add* for numbers, and
+  Python refuses to guess which one you meant when the sides do not match.
+
+  Convert the text to an integer first, then the arithmetic works:
+
+  ```python
+  age = int(input("Your age: "))
+  print(age + 1)   # if the user types 20, this prints 21
+  ```
+
+  Remember the direction: use `int(...)` or `float(...)` to turn text into a
+  number, and `str(...)` to turn a number into text for joining.
+checkpoints:
+  - question: What type does input() always return?
+    answer: "str"
+    explanation: input reads a line as text and returns a string, even when the characters are digits.
+  - question: What error does "20" + 1 raise?
+    answer: TypeError
+    explanation: Adding an int to a str is not allowed, so Python raises a TypeError instead of guessing your intent.
+  - question: How do you make age + 1 work when age came from input()?
+    answer: Wrap the input in int(), e.g. age = int(input(...))
+    explanation: Converting the text to an integer first lets the plus operator do real addition.

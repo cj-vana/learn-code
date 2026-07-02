@@ -1,0 +1,102 @@
+id: quiz.library.dicts_sets_tuples_w2.a01
+kind: quiz
+version: 1
+language: python
+title: Everyday Syntax for Dicts, Sets, and Tuples
+slug: quiz-dicts-sets-tuples-w2-a01
+difficulty: easy
+concepts:
+  - python.dictionaries
+  - python.sets
+  - python.tuples
+prerequisites:
+  - python.loops
+estimated_time_minutes: 5
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples_w2.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax questions and distractors written fresh for this batch; no external text reused.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: |
+      You want to start with an empty set and add items to it later. Which
+      expression actually creates an empty set (not something else)?
+    choices:
+      - set()
+      - "{}"
+      - "[]"
+      - "()"
+    correct_choice: set()
+    explanation: |
+      Curly braces with nothing inside, {}, build an empty dict, not a set,
+      because Python has no literal for an empty set. Calling set() is the only
+      way to get an empty set. [] is a list and () is an empty tuple.
+    concepts:
+      - python.sets
+  - id: q2
+    prompt: |
+      Given `scores = {"ana": 8}`, you want the value for the key "ben", but if
+      "ben" is missing you want 0 instead of an error. Which call does that?
+    choices:
+      - scores.get("ben", 0)
+      - scores["ben", 0]
+      - scores.fetch("ben", 0)
+      - scores.getdefault("ben", 0)
+    correct_choice: scores.get("ben", 0)
+    explanation: |
+      dict.get(key, default) returns the stored value if the key exists and the
+      default otherwise, so it never raises KeyError. scores["ben", 0] would look
+      up the tuple key ("ben", 0) and fail; fetch and getdefault are not real
+      dict methods.
+    concepts:
+      - python.dictionaries
+  - id: q3
+    prompt: |
+      How do you write a tuple that holds exactly one element, the number 5?
+    choices:
+      - (5,)
+      - (5)
+      - "[5]"
+      - "{5}"
+    correct_choice: (5,)
+    explanation: |
+      The trailing comma is what makes it a tuple; (5) is just the integer 5 in
+      parentheses. [5] is a one-element list and {5} is a one-element set.
+    concepts:
+      - python.tuples
+  - id: q4
+    prompt: |
+      You have a set named `seen` and want to put a new value `code` into it.
+      Which method call is correct?
+    choices:
+      - seen.add(code)
+      - seen.append(code)
+      - seen.push(code)
+      - seen.insert(code)
+    correct_choice: seen.add(code)
+    explanation: |
+      Sets grow with .add(). append and insert belong to lists, and push is not a
+      Python collection method at all.
+    concepts:
+      - python.sets
+  - id: q5
+    prompt: |
+      You want to loop over a dict `prices` and read both the key and the value
+      on each pass. Which header does that directly?
+    choices:
+      - "for item, cost in prices.items():"
+      - "for item in prices.values():"
+      - "for item, cost in prices.keys():"
+      - "for item, cost in prices:"
+    correct_choice: "for item, cost in prices.items():"
+    explanation: |
+      dict.items() yields (key, value) pairs, so two loop variables unpack cleanly.
+      Iterating the dict itself (or .keys()) yields only keys, and .values() yields
+      only values, so those cannot fill two variables as shown.
+    concepts:
+      - python.dictionaries

@@ -1,0 +1,125 @@
+id: quiz.library.two_pointers_w2.a02
+kind: quiz
+version: 1
+language: python
+title: Hand-Tracing Two-Pointer Loops
+slug: quiz-two-pointers-w2-a02
+difficulty: medium
+concepts:
+  - patterns.two_pointers
+prerequisites:
+  - python.lists
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.two_pointers_w2.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original code-tracing snippets with results worked out by hand for two-pointer routines.
+quiz_type: mixed_review
+questions:
+  - id: q1
+    prompt: |
+      What list does this function return for nums = [0, 4, 0, 5, 1]?
+
+      ```python
+      def shift_zeros(nums):
+          write = 0
+          for read in range(len(nums)):
+              if nums[read] != 0:
+                  nums[write] = nums[read]
+                  write += 1
+          while write < len(nums):
+              nums[write] = 0
+              write += 1
+          return nums
+      ```
+    choices:
+      - "[4, 5, 1, 0, 0]"
+      - "[0, 0, 4, 5, 1]"
+      - "[4, 0, 5, 0, 1]"
+      - "[1, 5, 4, 0, 0]"
+    correct_choice: "[4, 5, 1, 0, 0]"
+    explanation: |
+      The write pointer packs the non-zero values 4, 5, 1 to the front in their original
+      order, leaving write at index 3. The trailing while-loop then fills indices 3 and 4
+      with zeros, giving [4, 5, 1, 0, 0].
+    concepts:
+      - patterns.two_pointers
+  - id: q2
+    prompt: |
+      What integer does this function return for nums = [1, 2, 3, 4, 5, 6] and target = 7?
+
+      ```python
+      def count_pairs(nums, target):
+          lo, hi = 0, len(nums) - 1
+          count = 0
+          while lo < hi:
+              s = nums[lo] + nums[hi]
+              if s == target:
+                  count += 1
+                  lo += 1
+                  hi -= 1
+              elif s < target:
+                  lo += 1
+              else:
+                  hi -= 1
+          return count
+      ```
+    choices:
+      - "3"
+      - "2"
+      - "6"
+      - "1"
+    correct_choice: "3"
+    explanation: |
+      Each matching pair advances both pointers inward: 1+6, then 2+5, then 3+4 all equal 7,
+      so count reaches 3 before the pointers cross. The three distinct pairs summing to the
+      target are counted exactly once each.
+    concepts:
+      - patterns.two_pointers
+  - id: q3
+    prompt: |
+      What does this function return for nums = [3, 3, 3, 8, 8, 12]?
+
+      ```python
+      def unique_prefix(nums):
+          if not nums:
+              return []
+          write = 1
+          for read in range(1, len(nums)):
+              if nums[read] != nums[write - 1]:
+                  nums[write] = nums[read]
+                  write += 1
+          return nums[:write]
+      ```
+    choices:
+      - "[3, 8, 12]"
+      - "[3, 8, 8, 12]"
+      - "[3, 3, 8, 12]"
+      - "[3, 8, 12, 8]"
+    correct_choice: "[3, 8, 12]"
+    explanation: |
+      The read pointer keeps a value only when it differs from the last kept value at
+      nums[write - 1]. It writes 8 at index 1 and 12 at index 2, ending with write = 3, so
+      the returned slice nums[:3] is [3, 8, 12].
+    concepts:
+      - patterns.two_pointers
+  - id: q4
+    prompt: |
+      Using count_pairs from question 2, what does it return for
+      nums = [2, 2, 2, 2] and target = 4?
+    choices:
+      - "2"
+      - "1"
+      - "4"
+      - "6"
+    correct_choice: "2"
+    explanation: |
+      First 2+2 at the outer ends matches (count 1) and both pointers step inward; the next
+      2+2 also matches (count 2), after which lo and hi cross and the loop stops. So the
+      function reports 2 pairs.
+    concepts:
+      - patterns.two_pointers

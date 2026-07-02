@@ -1,0 +1,136 @@
+id: quiz.library.debugging_w2.a03
+kind: quiz
+version: 1
+language: python
+title: Silent Bugs and How to Corner Them
+slug: quiz-debugging-w2-a03
+difficulty: medium
+concepts:
+  - python.debugging
+prerequisites:
+  - python.functions
+  - python.loops
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.debugging_w2.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original mix of one debugging-workflow question and several quiet, no-crash bugs with plausible distractors.
+quiz_type: mixed_review
+questions:
+  - id: q1
+    prompt: |
+      A program crashes and prints a multi-line traceback. When you are trying
+      to understand what went wrong, where is the most useful place to start?
+    choices:
+      - The last line, which names the exception type and message, then work upward to the deepest line of your own code
+      - The first line only, ignoring everything printed below it
+      - The total number of lines in the traceback
+      - Nowhere; tracebacks are random noise and should be cleared
+    correct_choice: The last line, which names the exception type and message, then work upward to the deepest line of your own code
+    explanation: |
+      The final line states what went wrong (the exception and its message).
+      Reading upward through the stack shows the call path, and the deepest
+      frame in your own code usually points at the line to fix.
+    concepts:
+      - python.debugging
+  - id: q2
+    prompt: |
+      This loop is meant to count down, but nothing prints at all:
+
+      ```python
+      for i in range(5, 0):
+          print(i)
+      ```
+
+      What is happening?
+    choices:
+      - '`range(5, 0)` steps upward by default and is empty because 5 is already past 0, so the body never runs'
+      - It prints 5, 4, 3, 2, 1
+      - It raises a ValueError for a bad range
+      - It loops forever
+    correct_choice: '`range(5, 0)` steps upward by default and is empty because 5 is already past 0, so the body never runs'
+    explanation: |
+      With no step, `range` increments by 1, so a start above the stop produces
+      an empty sequence. To count down, supply a negative step:
+      `range(5, 0, -1)`.
+    concepts:
+      - python.debugging
+      - python.loops
+  - id: q3
+    prompt: |
+      A learner expects uppercase output, but this still prints `hello`:
+
+      ```python
+      word = "hello"
+      word.upper()
+      print(word)
+      ```
+
+      Why is nothing changed?
+    choices:
+      - Strings are immutable, so `upper()` returns a new string that must be assigned back; the original is untouched
+      - '`upper()` only works on lists, not strings'
+      - The string is too short for `upper()` to take effect
+      - '`print` forces its output back to lowercase'
+    correct_choice: Strings are immutable, so `upper()` returns a new string that must be assigned back; the original is untouched
+    explanation: |
+      String methods never edit in place; they hand back a new string. Capture
+      it, for example `word = word.upper()`, to keep the change.
+    concepts:
+      - python.debugging
+      - python.strings
+  - id: q4
+    prompt: |
+      Someone is startled that changing `b` also changed `a`:
+
+      ```python
+      a = [1, 2, 3]
+      b = a
+      b.append(4)
+      print(a)      # [1, 2, 3, 4]
+      ```
+
+      What is going on?
+    choices:
+      - '`b = a` makes both names refer to the same list object, so a change through one is visible through the other'
+      - '`append` always edits every list in the program'
+      - Lists are copied automatically on assignment
+      - '`a` and `b` are unrelated, so this output is impossible'
+    correct_choice: '`b = a` makes both names refer to the same list object, so a change through one is visible through the other'
+    explanation: |
+      Assignment binds another name to the same object; it does not copy. Make
+      an independent copy with `b = a[:]` or `b = list(a)` when you need one.
+    concepts:
+      - python.debugging
+      - python.lists
+  - id: q5
+    prompt: |
+      This check is meant to accept only weekend days, but every day passes:
+
+      ```python
+      def is_weekend(day):
+          if day == "sat" or "sun":
+              return True
+          return False
+
+      is_weekend("mon")   # returns True (!)
+      ```
+
+      What is the bug?
+    choices:
+      - '`or "sun"` is a separate truthy value, so the whole condition is always True; compare each option explicitly'
+      - Python treats "sat" and "sun" as the same word
+      - A function is not allowed to return True
+      - The function needs an elif branch to work correctly
+    correct_choice: '`or "sun"` is a separate truthy value, so the whole condition is always True; compare each option explicitly'
+    explanation: |
+      Python reads the test as `(day == "sat") or ("sun")`, and a non-empty
+      string is always truthy, so the branch fires for any input. Write
+      `day == "sat" or day == "sun"`, or `day in ("sat", "sun")`.
+    concepts:
+      - python.debugging
+      - python.conditionals

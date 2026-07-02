@@ -1,0 +1,83 @@
+id: quiz.library.python_refresh_w2.a02
+kind: quiz
+version: 1
+language: python
+title: Reading the Result of an Operator
+slug: quiz-python-refresh-w2-a02
+difficulty: easy
+concepts:
+  - python.operators
+  - python.types
+prerequisites: []
+estimated_time_minutes: 5
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh_w2.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original operator drills authored for this batch; no reused problem text.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: |
+      What is the value of `17 % 5`?
+    choices:
+      - "2"
+      - "3"
+      - "3.4"
+      - "1"
+    correct_choice: "2"
+    explanation: |
+      The `%` operator gives the remainder after division. Five goes into 17 three
+      times (15), leaving `2` left over. The quotient `3` and the true-division
+      result `3.4` are what the other operators would produce.
+    concepts:
+      - python.operators
+  - id: q2
+    prompt: |
+      What does `2 ** 3` evaluate to?
+    choices:
+      - "8"
+      - "6"
+      - "9"
+      - "5"
+    correct_choice: "8"
+    explanation: |
+      `**` is exponentiation, so `2 ** 3` means 2 raised to the power 3, which is
+      2 * 2 * 2 = 8. The value `6` would come from `2 * 3`, so it is easy to mix the
+      two up.
+    concepts:
+      - python.operators
+  - id: q3
+    prompt: |
+      What is the result of the expression `"ab" * 3`?
+    choices:
+      - ababab
+      - abababab
+      - "ab3"
+      - It raises an error
+    correct_choice: ababab
+    explanation: |
+      When one operand is a string and the other is an integer, `*` repeats the
+      string that many times. So `"ab" * 3` joins three copies into `"ababab"`.
+      Multiplying two strings together, on the other hand, would be an error.
+    concepts:
+      - python.operators
+      - python.strings
+  - id: q4
+    prompt: |
+      What does the expression `(3 < 5) and (5 < 2)` evaluate to?
+    choices:
+      - "False"
+      - "True"
+      - None
+      - It raises an error
+    correct_choice: "False"
+    explanation: |
+      `and` is only `True` when both sides are `True`. Here `3 < 5` is `True` but
+      `5 < 2` is `False`, so the whole expression is `False`. A single failing side
+      is enough to make an `and` false.
+    concepts:
+      - python.operators

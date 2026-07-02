@@ -1,0 +1,118 @@
+id: quiz.library.mixed_capstones_w2.a05
+kind: quiz
+version: 1
+language: python
+title: The Idioms Behind the Patterns
+slug: quiz-mixed-capstones-w2-a05
+difficulty: easy
+concepts:
+  - patterns.hash_map_counting
+  - patterns.prefix_sums
+  - patterns.binary_search
+prerequisites:
+  - python.lists
+  - python.dictionaries
+estimated_time_minutes: 5
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.mixed_capstones_w2.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original code-reading questions about the exact Python idioms that implement counting, prefix sums, binary search midpoints, and set membership.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: |
+      Which line safely increments the count for key `k` in a dictionary `counts`,
+      starting from zero when `k` has not been seen before?
+    choices:
+      - counts[k] = counts.get(k, 0) + 1
+      - counts[k] = counts[k] + 1
+      - counts[k] += counts
+      - counts.append(k)
+    correct_choice: counts[k] = counts.get(k, 0) + 1
+    explanation: |
+      `counts.get(k, 0)` returns the current count or 0 if the key is missing, so adding
+      1 works on the first sighting too. `counts[k] + 1` raises KeyError on a new key,
+      `+= counts` adds the whole dict, and dictionaries have no `append`.
+    concepts:
+      - patterns.hash_map_counting
+      - python.dictionaries
+  - id: q2
+    prompt: |
+      `prefix` is built so that `prefix[i]` is the sum of the first i elements and
+      `prefix[0]` is 0. Which expression gives the sum of the sublist from index a to
+      index b inclusive?
+    choices:
+      - prefix[b + 1] - prefix[a]
+      - prefix[b] - prefix[a]
+      - prefix[a] - prefix[b + 1]
+      - prefix[b + 1] + prefix[a]
+    correct_choice: prefix[b + 1] - prefix[a]
+    explanation: |
+      `prefix[b + 1]` is the total of everything through index b, and `prefix[a]` is the
+      total of everything before index a. Subtracting removes the unwanted front part and
+      leaves the sum of a..b inclusive. Using `prefix[b]` would drop element b itself.
+    concepts:
+      - patterns.prefix_sums
+  - id: q3
+    prompt: |
+      Inside a binary search with integer bounds `lo` and `hi`, which line computes the
+      middle index correctly?
+    choices:
+      - mid = (lo + hi) // 2
+      - mid = (lo + hi) / 2
+      - mid = lo + hi // 2
+      - mid = (lo + hi) % 2
+    correct_choice: mid = (lo + hi) // 2
+    explanation: |
+      Floor division keeps `mid` an integer usable as an index. Plain `/` produces a
+      float, `lo + hi // 2` divides only `hi` because `//` binds tighter than `+`, and
+      `%` returns a remainder (0 or 1), not the midpoint.
+    concepts:
+      - patterns.binary_search
+      - python.operators
+  - id: q4
+    prompt: |
+      Consider this loop:
+
+      ```python
+      prefix = [0]
+      for x in nums:
+          prefix.append(prefix[-1] + x)
+      ```
+
+      Which statement about `prefix` after it runs is true?
+    choices:
+      - It has len(nums) + 1 entries, and prefix[-1] equals sum(nums)
+      - It has len(nums) entries, and prefix[0] equals sum(nums)
+      - It overwrites nums in place
+      - It is sorted ascending no matter what nums contains
+    correct_choice: It has len(nums) + 1 entries, and prefix[-1] equals sum(nums)
+    explanation: |
+      Starting from a single 0 and appending once per element yields len(nums) + 1
+      entries. Each appended value adds the next element to the previous total, so the
+      last entry is the full sum. It stays ascending only if every element is
+      non-negative, so that claim is not guaranteed.
+    concepts:
+      - patterns.prefix_sums
+      - python.lists
+  - id: q5
+    prompt: |
+      Given a set `seen`, which expression is the fast, idiomatic way to test whether
+      `x` is a member?
+    choices:
+      - x in seen
+      - x in list(seen)
+      - any(item == x for item in seen)
+      - sorted(seen)[0] == x
+    correct_choice: x in seen
+    explanation: |
+      `x in seen` uses the set's hash table for an O(1) average lookup. Converting to a
+      list or looping with `any` scans every element for O(n), and comparing against the
+      smallest sorted value does not test membership at all.
+    concepts:
+      - patterns.set_membership
+      - python.sets

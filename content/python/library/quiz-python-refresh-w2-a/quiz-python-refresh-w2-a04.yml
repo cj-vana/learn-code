@@ -1,0 +1,101 @@
+id: quiz.library.python_refresh_w2.a04
+kind: quiz
+version: 1
+language: python
+title: How Functions Take and Give Back Values
+slug: quiz-python-refresh-w2-a04
+difficulty: medium
+concepts:
+  - python.functions
+  - python.variables
+prerequisites: []
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh_w2.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original function-behavior questions and distractors for this batch.
+quiz_type: mixed_review
+questions:
+  - id: q1
+    prompt: |
+      A function runs to the end without ever hitting a `return` statement. What
+      value does a call to it produce?
+    choices:
+      - None
+      - "0"
+      - An empty string
+      - It raises an error
+    correct_choice: None
+    explanation: |
+      When a function finishes without returning anything explicit, Python hands back
+      `None`. It does not default to `0` or `""`, and reaching the end quietly is
+      perfectly legal, so no error occurs.
+    concepts:
+      - python.functions
+  - id: q2
+    prompt: |
+      Given this definition, what does `greet("Sam")` return?
+
+      ```python
+      def greet(name, greeting="Hi"):
+          return greeting + ", " + name
+      ```
+    choices:
+      - "Hi, Sam"
+      - "Sam, Hi"
+      - ", Sam"
+      - It raises an error
+    correct_choice: "Hi, Sam"
+    explanation: |
+      Only one argument is passed, so `name` becomes `"Sam"` and `greeting` falls
+      back to its default `"Hi"`. Building `greeting + ", " + name` gives
+      `"Hi, Sam"`. The default fills in whenever the caller omits that argument.
+    concepts:
+      - python.functions
+  - id: q3
+    prompt: |
+      Given `def box(w, h): return w * h`, which call passes the two values as
+      keyword arguments?
+    choices:
+      - box(w=2, h=5)
+      - box(2 = w, 5 = h)
+      - "box{w: 2, h: 5}"
+      - box[w=2, h=5]
+    correct_choice: box(w=2, h=5)
+    explanation: |
+      Keyword arguments use `name=value` inside the parentheses of the call, so
+      `box(w=2, h=5)` is correct. The `2 = w` form reverses it into an invalid
+      assignment, and braces or brackets are for dicts and indexing, not calls.
+    concepts:
+      - python.functions
+  - id: q4
+    prompt: |
+      What does this program print?
+
+      ```python
+      def bump(x):
+          x = x + 1
+          return x
+
+      n = 5
+      bump(n)
+      print(n)
+      ```
+    choices:
+      - "5"
+      - "6"
+      - None
+      - It raises an error
+    correct_choice: "5"
+    explanation: |
+      Inside `bump`, the line `x = x + 1` rebinds the local name `x`; it never
+      changes the caller's `n`, which is a separate name bound to the integer `5`.
+      The returned value is also discarded because it is not stored, so `print(n)`
+      shows `5`.
+    concepts:
+      - python.functions
+      - python.variables

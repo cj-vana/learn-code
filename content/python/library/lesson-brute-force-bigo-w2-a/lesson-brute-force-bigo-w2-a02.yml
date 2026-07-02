@@ -1,0 +1,61 @@
+id: lesson.library.brute_force_bigo_w2.a02
+kind: lesson
+version: 1
+language: python
+title: Work That Does Not Grow With n
+slug: lesson-brute-force-bigo-w2-a02
+difficulty: easy
+concepts:
+  - concepts.big_o
+prerequisites:
+  - python.lists
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.brute_force_bigo_w2.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original treatment contrasting constant-time O(1) operations with a linear scan; all examples and questions written fresh.
+body_markdown: |
+  Big-O is about *growth*: how much extra work you do when the input gets
+  bigger. Some operations do the same amount of work no matter how long the
+  list is. We call that constant time, written `O(1)`.
+
+  Reading a list by index, checking its length, or grabbing the last item does
+  not depend on `n`:
+
+  ```python
+  def first_and_last(readings):
+      first = readings[0]      # O(1): jump straight to index 0
+      last = readings[-1]      # O(1): jump straight to the end
+      return first + last
+  ```
+
+  Whether `readings` has 5 items or 5 million, those two lookups cost the same.
+  Contrast that with actually walking the list to add everything up:
+
+  ```python
+  def total(readings):
+      running = 0
+      for value in readings:   # O(n): touches every item
+          running += value
+      return running
+  ```
+
+  Here the loop body runs once per item, so doubling the list doubles the work.
+  The key habit is to ask *"does this step repeat more often when n grows?"* An
+  index lookup does not, so it is `O(1)`. A loop over the whole list does, so it
+  is `O(n)`. A function built only from a fixed number of `O(1)` steps is itself
+  `O(1)`, because a handful of constant-cost steps is still constant.
+checkpoints:
+  - question: What does O(1) mean for an operation?
+    answer: Its cost stays the same no matter how large the input is.
+    explanation: Constant time does not grow with n, so the size of the list does not change how long the step takes.
+  - question: Is reading readings[-1] from a list an O(1) or O(n) operation?
+    answer: "O(1)"
+    explanation: A list can jump straight to the last position without scanning, so the cost does not depend on the list length.
+  - question: A function does exactly three index lookups and returns their sum. What is its Big-O?
+    answer: "O(1)"
+    explanation: Three constant-time steps is a fixed amount of work regardless of n, so the whole function is constant time.

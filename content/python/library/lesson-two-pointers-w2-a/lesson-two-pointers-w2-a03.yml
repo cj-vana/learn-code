@@ -1,0 +1,59 @@
+id: lesson.library.two_pointers_w2.a03
+kind: lesson
+version: 1
+language: python
+title: Zipping Two Sorted Lists Into One
+slug: lesson-two-pointers-w2-a03
+difficulty: medium
+concepts:
+  - patterns.two_pointers
+prerequisites:
+  - python.lists
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.two_pointers_w2.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original two-pointer merge walkthrough that combines two sorted lists while keeping every value.
+body_markdown: |
+  When two lists are each already sorted, you can weave them into one sorted
+  list without re-sorting anything. Give each list its own pointer at index 0.
+  Compare the two values under the pointers, copy the smaller one into the
+  result, and advance only that pointer. Repeat until one list runs dry.
+
+  ```python
+  def merge_sorted(a, b):
+      i = 0
+      j = 0
+      merged = []
+      while i < len(a) and j < len(b):
+          if a[i] <= b[j]:
+              merged.append(a[i])
+              i += 1
+          else:
+              merged.append(b[j])
+              j += 1
+      merged.extend(a[i:])
+      merged.extend(b[j:])
+      return merged
+  ```
+
+  The two `extend` calls at the end matter. When the loop exits, one list still
+  has leftover values, and because it was sorted those values are all larger
+  than everything placed so far, so they can be tacked on as-is. Using `<=`
+  rather than `<` in the comparison keeps equal values in a stable order: ties
+  are taken from `a` first. Each value is copied exactly once, so merging lists
+  of length `n` and `m` runs in O(n + m) time.
+checkpoints:
+  - question: After the while loop ends, why is it safe to append the rest of the unfinished list without comparing anything?
+    answer: The loop only ends when one list is empty, and the leftover values in the other list are already sorted and all at least as large as everything merged so far.
+    explanation: Since each list was sorted and the smaller values were consumed first, whatever remains belongs at the tail in its existing order.
+  - question: Which pointer advances on an iteration where a[i] is greater than b[j]?
+    answer: The j pointer advances, because b[j] is the smaller value and gets copied into the result.
+    explanation: You always take the smaller of the two current values so the merged list stays sorted, then move past the value you just used.
+  - question: For input lists of length n and m, what is the total running time, and why?
+    answer: O(n + m), because every element from both lists is copied into the result exactly once.
+    explanation: Each loop step or extend consumes one element and never revisits it, so the work grows linearly with the combined length.

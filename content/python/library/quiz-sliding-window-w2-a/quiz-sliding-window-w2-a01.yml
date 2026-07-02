@@ -1,0 +1,87 @@
+id: quiz.library.sliding_window_w2.a01
+kind: quiz
+version: 1
+language: python
+title: Recognizing a Window Problem
+slug: quiz-sliding-window-w2-a01
+difficulty: easy
+concepts:
+  - patterns.sliding_window
+prerequisites:
+  - python.lists
+estimated_time_minutes: 4
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sliding_window_w2.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Fresh recognition scenarios about streaming counts, contiguous runs, and when a window does NOT apply.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      A podcast app logs how many minutes a listener played each day. Product
+      wants the highest total listening time over any stretch of 7 back-to-back
+      days. Which approach fits most naturally?
+    choices:
+      - Slide a fixed 7-day window and keep a running total as it advances
+      - Sort the daily minutes and add the seven largest values
+      - Store every day's minutes in a set and check membership
+      - Use binary search to locate the busiest day
+    correct_choice: Slide a fixed 7-day window and keep a running total as it advances
+    explanation: |
+      The answer is a sum over a contiguous run of a known length, which is the
+      exact job of a fixed-size sliding window. Sorting would pick seven days that
+      are not next to each other, breaking the "back-to-back" requirement.
+    concepts:
+      - patterns.sliding_window
+  - id: q2
+    prompt: |
+      Which task is the WEAKEST fit for a sliding window?
+    choices:
+      - Find whether any two values anywhere in an unsorted list add up to a target
+      - Find the longest run of consecutive items whose sum stays under a cap
+      - Find the maximum average over every block of m consecutive readings
+      - Find the shortest run of consecutive items whose sum reaches a goal
+    correct_choice: Find whether any two values anywhere in an unsorted list add up to a target
+    explanation: |
+      A pair that can sit anywhere in an unsorted list has nothing to do with a
+      contiguous span, so a window gives no leverage; hashing or sorting fits
+      better. The other three all measure something over an adjacent block.
+    concepts:
+      - patterns.sliding_window
+  - id: q3
+    prompt: |
+      You must return the length of the LONGEST stretch of network packets whose
+      combined size never exceeds a buffer limit. What window shape does this need?
+    choices:
+      - A variable-size window that expands while valid and contracts when the sum passes the limit
+      - A fixed-size window of a predetermined width
+      - A window that always covers the whole list
+      - No window; just take the single largest packet
+    correct_choice: A variable-size window that expands while valid and contracts when the sum passes the limit
+    explanation: |
+      The best length is unknown up front, so no fixed width applies. You grow the
+      right edge while the total stays under the limit and pull in the left edge
+      whenever adding a packet pushes the sum over.
+    concepts:
+      - patterns.sliding_window
+  - id: q4
+    prompt: |
+      Why is a sliding window usually preferred over recomputing each block's sum
+      from scratch when scanning fixed-size blocks across n readings?
+    choices:
+      - It reuses the previous block's total with one add and one subtract, cutting O(n*k) work down to O(n)
+      - It sorts the readings first so each block is already summed
+      - It stores every block in a dictionary to look sums up later
+      - It halves the search range on each step like binary search
+    correct_choice: It reuses the previous block's total with one add and one subtract, cutting O(n*k) work down to O(n)
+    explanation: |
+      Re-summing every block of width k over n positions costs about O(n*k). The
+      window instead adjusts the prior total by adding the entering value and
+      subtracting the leaving one, so each step is O(1) and the whole scan is O(n).
+    concepts:
+      - patterns.sliding_window
+      - concepts.big_o

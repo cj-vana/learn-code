@@ -1,0 +1,90 @@
+id: quiz.library.python_refresh_w2.a01
+kind: quiz
+version: 1
+language: python
+title: Names, Values, and Their Types
+slug: quiz-python-refresh-w2-a01
+difficulty: easy
+concepts:
+  - python.variables
+  - python.types
+prerequisites: []
+estimated_time_minutes: 4
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh_w2.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original questions and distractors written from scratch for this batch.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: |
+      What is the type of the value produced by the expression `7 / 2`?
+    choices:
+      - float
+      - int
+      - str
+      - bool
+    correct_choice: float
+    explanation: |
+      In Python 3 the single-slash operator is "true division" and always yields a
+      float, so `7 / 2` is `3.5`. It stays a float even when the numbers divide
+      evenly: `4 / 2` is `2.0`, not `2`. Use `//` if you want an integer result.
+    concepts:
+      - python.types
+      - python.operators
+  - id: q2
+    prompt: |
+      After these three lines run, what value does `y` hold?
+
+      ```python
+      x = 5
+      y = x
+      x = 10
+      ```
+    choices:
+      - "5"
+      - "10"
+      - None
+      - It raises an error
+    correct_choice: "5"
+    explanation: |
+      `y = x` copies the value that `x` referred to at that moment, which was `5`.
+      Reassigning `x` to `10` afterward just points the name `x` at a new value; it
+      does not reach back and change `y`. So `y` is still `5`.
+    concepts:
+      - python.variables
+  - id: q3
+    prompt: |
+      Which of these is a valid Python variable name?
+    choices:
+      - total_count
+      - 2nd_place
+      - total-count
+      - class
+    correct_choice: total_count
+    explanation: |
+      A name must start with a letter or underscore and contain only letters,
+      digits, and underscores. `2nd_place` starts with a digit, `total-count` uses a
+      hyphen (read as subtraction), and `class` is a reserved keyword, so only
+      `total_count` is legal.
+    concepts:
+      - python.variables
+  - id: q4
+    prompt: |
+      What does `type("42")` return?
+    choices:
+      - "<class 'str'>"
+      - "<class 'int'>"
+      - "<class 'float'>"
+      - "<class 'bool'>"
+    correct_choice: "<class 'str'>"
+    explanation: |
+      The quotation marks make `"42"` a string of two characters, not the number 42.
+      So its type is `str`. If you needed the integer, you would convert it with
+      `int("42")`.
+    concepts:
+      - python.types

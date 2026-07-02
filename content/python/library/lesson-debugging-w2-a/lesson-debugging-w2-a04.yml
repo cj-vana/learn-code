@@ -1,0 +1,53 @@
+id: lesson.library.debugging_w2.a04
+kind: lesson
+version: 1
+language: python
+title: When 0.1 Plus 0.2 Is Not 0.3
+slug: lesson-debugging-w2-a04
+difficulty: medium
+concepts:
+  - python.debugging
+prerequisites: []
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.debugging_w2.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original explanation of binary floating-point rounding and why exact equality fails, with a math.isclose fix.
+body_markdown: |
+  A bug that makes people doubt their computer: comparing two decimals with `==`
+  and getting `False` when they *look* equal.
+
+  ```python
+  print(0.1 + 0.2)          # 0.30000000000000004
+  print(0.1 + 0.2 == 0.3)   # False
+  ```
+
+  Computers store floats in binary, and many everyday decimals like `0.1` have
+  no exact binary form. Python keeps the closest value it can, so tiny rounding
+  errors sneak in. Adding two rounded values leaves a result a hair away from the
+  `0.3` you expected, and `==` demands an *exact* match.
+
+  Instead of exact equality, ask whether the numbers are *close enough* with
+  `math.isclose`:
+
+  ```python
+  import math
+  print(math.isclose(0.1 + 0.2, 0.3))   # True
+  ```
+
+  Reach for this whenever you compare results of float arithmetic. Reserve `==`
+  for integers and other values that are stored exactly.
+checkpoints:
+  - question: What does 0.1 + 0.2 == 0.3 evaluate to in Python?
+    answer: "False"
+    explanation: Binary rounding leaves 0.1 + 0.2 slightly off from 0.3, so an exact equality check is False.
+  - question: Why can't Python store 0.1 exactly?
+    answer: 0.1 has no exact representation in binary floating point
+    explanation: Floats are stored in base 2, and 0.1 is a repeating fraction there, so only an approximation is kept.
+  - question: What is a reliable way to compare two float results for equality?
+    answer: Use math.isclose(a, b)
+    explanation: math.isclose checks whether the values are within a small tolerance instead of demanding an exact match.

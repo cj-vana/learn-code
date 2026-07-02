@@ -1,0 +1,61 @@
+id: lesson.library.recursion_backtracking_w2.a01
+kind: lesson
+version: 1
+language: python
+title: Rewriting a Loop as a Recursive Call
+slug: lesson-recursion-backtracking-w2-a01
+difficulty: easy
+concepts:
+  - patterns.recursion
+prerequisites:
+  - python.functions
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.recursion_backtracking_w2.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original loop-versus-recursion comparison built around multiplying a list of numbers.
+body_markdown: |
+  Any loop that walks a list and folds it into one value can also be written as
+  recursion. The trick is to treat the list as *one first item plus the rest*,
+  handle that first item, and let the same function handle the rest.
+
+  Here is a loop that multiplies every number in a list together:
+
+  ```python
+  def product_loop(nums):
+      result = 1
+      for x in nums:
+          result *= x
+      return result
+  ```
+
+  The recursive version asks two familiar questions. When do I stop? When the
+  list is empty. How do I shrink the problem? Peel off `nums[0]` and hand
+  `nums[1:]` (everything after the first item) back to the same function:
+
+  ```python
+  def product(nums):
+      if not nums:                    # base case: empty list
+          return 1
+      return nums[0] * product(nums[1:])   # first item times product of the rest
+
+  print(product([2, 3, 4]))   # 2 * 3 * 4 = 24
+  ```
+
+  The empty list returns `1`, not `0`, because `1` is the value that leaves a
+  product unchanged - multiplying by it does nothing. Each call slices away one
+  element, so `nums` gets shorter every time and is guaranteed to reach `[]`.
+checkpoints:
+  - question: Why does the base case return 1 instead of 0 when the list is empty?
+    answer: Because 1 is the multiplicative identity, so it leaves the product unchanged; returning 0 would force every result to become 0.
+    explanation: The empty list contributes nothing to a product, and multiplying by 1 has no effect, whereas any multiplication by 0 collapses the whole answer to 0.
+  - question: What smaller problem does each recursive call hand off?
+    answer: The product of nums[1:], meaning the same list with its first element removed.
+    explanation: Each call resolves nums[0] itself and trusts product(nums[1:]) to multiply everything that comes after it.
+  - question: What does product([]) evaluate to?
+    answer: "1"
+    explanation: An empty list matches the base case and returns 1 directly without any recursive call.

@@ -1,0 +1,59 @@
+id: lesson.library.binary_search_w2.a02
+kind: lesson
+version: 1
+language: python
+title: Binary Search on the Answer, Not the List
+slug: lesson-binary-search-w2-a02
+difficulty: medium
+concepts:
+  - patterns.binary_search
+prerequisites:
+  - python.sorting
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.binary_search_w2.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original explanation of searching a numeric answer range using integer square root as the worked example, written independently.
+body_markdown: |
+  Binary search does not need a list at all. Sometimes the thing you are
+  searching *is a number*, and the "sorted order" lives in the range of possible
+  answers. As long as answers that are too small stay too small and answers that
+  are big enough stay big enough, the yes/no pattern is monotonic and you can
+  halve the range.
+
+  Take finding the integer square root of `n`: the largest whole number whose
+  square does not exceed `n`. Guesses form a sorted line from `0` up to `n`, and
+  the test "is `mid * mid <= n`?" flips from yes to no exactly once.
+
+  ```python
+  def int_sqrt(n):
+      lo, hi = 0, n
+      while lo <= hi:
+          mid = (lo + hi) // 2
+          if mid * mid <= n:
+              lo = mid + 1     # mid works, but maybe a bigger one does too
+          else:
+              hi = mid - 1     # mid overshoots, look lower
+      return hi                # hi lands on the largest value that worked
+
+  print(int_sqrt(17))  # 4, because 4*4 = 16 <= 17 < 25 = 5*5
+  ```
+
+  The key move is that we never index into a list; we compute the test straight
+  from `mid`. When the loop ends, `hi` has settled on the last guess that passed
+  the test. Because each step throws away half of the numeric range, we reach the
+  answer in `"O(log n)"` steps instead of trying every candidate.
+checkpoints:
+  - question: In this technique, what is the sorted search space that binary search halves?
+    answer: The range of possible numeric answers, from 0 up to n.
+    explanation: Instead of list indices, the candidates are the numbers themselves; they are naturally ordered, so binary search can discard half the range each step.
+  - question: What property must the yes/no test have for answer-space binary search to be valid?
+    answer: It must be monotonic, flipping from pass to fail exactly once across the range.
+    explanation: Binary search relies on one comparison telling you which half to keep, which only works if all passing values sit on one side and all failing values on the other.
+  - question: After the loop for int_sqrt(17), what value does hi hold and why?
+    answer: "4"
+    explanation: 4*4 = 16 does not exceed 17 but 5*5 = 25 does, so hi settles on 4, the largest guess whose square stays within n.

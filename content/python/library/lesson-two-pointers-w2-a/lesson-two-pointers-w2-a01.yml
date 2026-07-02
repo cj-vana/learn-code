@@ -1,0 +1,52 @@
+id: lesson.library.two_pointers_w2.a01
+kind: lesson
+version: 1
+language: python
+title: Flipping a List End Over End
+slug: lesson-two-pointers-w2-a01
+difficulty: easy
+concepts:
+  - patterns.two_pointers
+prerequisites:
+  - python.lists
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.two_pointers_w2.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original converging-swap explanation for reversing a list in place.
+body_markdown: |
+  To reverse a list without building a second one, put a pointer at each end and
+  trade the values they point at. Then step both pointers one notch toward the
+  middle and trade again. Each swap locks two items into their final flipped
+  positions at once.
+
+  ```python
+  def reverse_in_place(items):
+      left = 0
+      right = len(items) - 1
+      while left < right:
+          items[left], items[right] = items[right], items[left]
+          left += 1
+          right -= 1
+      return items
+  ```
+
+  Notice the loop guard is `left < right`, not `left <= right`. When the two
+  pointers land on the same slot (an odd-length list has a lone middle element),
+  there is nothing left to trade, so we stop. Because each pass through the loop
+  handles two elements, the work is only about `n / 2` swaps, which is still
+  O(n) time but uses O(1) extra space since we reuse the original list.
+checkpoints:
+  - question: Why does the loop use the condition "left < right" instead of "left <= right"?
+    answer: When left and right meet on the same index there is only one element there, and swapping it with itself does nothing, so the loop should stop.
+    explanation: Continuing to left == right would waste a swap, and going further would re-swap pairs back to their original order and undo the reversal.
+  - question: About how many swaps does reverse_in_place perform on a list of length n?
+    answer: About n divided by 2, because each swap places two elements at once.
+    explanation: Every loop iteration handles the pair at the two pointers, so roughly half as many swaps as elements, which is still O(n) work overall.
+  - question: How much extra memory does this approach use compared with building a new reversed list?
+    answer: Only O(1) extra memory, since it rearranges the existing list in place instead of allocating a second one.
+    explanation: The two pointers and the temporary used by the swap take constant space no matter how long the list is.

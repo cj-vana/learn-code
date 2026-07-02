@@ -1,0 +1,48 @@
+id: lesson.library.loops_lists_strings_w2.a05
+kind: lesson
+version: 1
+language: python
+title: Keeping Only the Items That Pass a Test
+slug: lesson-loops-lists-strings-w2-a05
+difficulty: easy
+concepts:
+  - python.loops
+  - python.lists
+prerequisites:
+  - python.functions
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings_w2.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original explanation of building a filtered result list with an empty start and a guard condition.
+body_markdown: |
+  A common job is to copy out only the items that meet a rule. The recipe:
+  start with an empty list, walk the original, and `append` an item only when
+  it passes an `if` test.
+
+  ```python
+  readings = [4, 7, 10, 3, 8]
+  evens = []
+  for n in readings:
+      if n % 2 == 0:
+          evens.append(n)
+  # evens is [4, 10, 8]
+  ```
+
+  The `if` acts as a gate: items that fail the condition are simply skipped and
+  never added. The original `readings` list stays exactly as it was, and
+  `evens` holds only the matches, in the order they appeared.
+checkpoints:
+  - question: What does evens hold after the loop finishes?
+    answer: "[4, 10, 8]"
+    explanation: Only 4, 10, and 8 satisfy n % 2 == 0, and they keep their original order.
+  - question: What must evens be set to before the loop starts?
+    answer: An empty list, written []
+    explanation: You need an empty list to append matches onto; starting elsewhere would corrupt the result.
+  - question: Which items get appended to evens?
+    answer: Only the items where n % 2 == 0, meaning the even numbers.
+    explanation: The if condition gates appends, so numbers that fail the test are skipped.

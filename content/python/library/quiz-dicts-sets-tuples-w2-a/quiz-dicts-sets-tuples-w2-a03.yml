@@ -1,0 +1,101 @@
+id: quiz.library.dicts_sets_tuples_w2.a03
+kind: quiz
+version: 1
+language: python
+title: Comprehensions and Sort Keys in Action
+slug: quiz-dicts-sets-tuples-w2-a03
+difficulty: medium
+concepts:
+  - python.comprehensions
+  - python.sorting
+  - python.dictionaries
+  - python.tuples
+prerequisites:
+  - python.functions
+  - python.loops
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples_w2.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original code-tracing questions with computed answers; no external problem text reused.
+quiz_type: mixed_review
+questions:
+  - id: q1
+    prompt: |
+      Tuples compare element by element, left to right. What does this evaluate
+      to?
+
+          sorted([(2, "b"), (1, "z"), (2, "a")])
+    choices:
+      - "[(1, 'z'), (2, 'a'), (2, 'b')]"
+      - "[(2, 'a'), (2, 'b'), (1, 'z')]"
+      - "[(1, 'z'), (2, 'b'), (2, 'a')]"
+      - "[(2, 'b'), (2, 'a'), (1, 'z')]"
+    correct_choice: "[(1, 'z'), (2, 'a'), (2, 'b')]"
+    explanation: |
+      Python compares the first items first: 1 sorts before both 2s. The two
+      tuples that start with 2 are then broken by their second items, and "a"
+      comes before "b". So the order is (1,'z'), (2,'a'), (2,'b').
+    concepts:
+      - python.sorting
+      - python.tuples
+  - id: q2
+    prompt: |
+      Given `prices = {"pen": 3, "cup": 5}`, what does this dict comprehension
+      produce?
+
+          {name: cost * 2 for name, cost in prices.items()}
+    choices:
+      - "{'pen': 6, 'cup': 10}"
+      - "{'pen': 3, 'cup': 5}"
+      - "{6: 'pen', 10: 'cup'}"
+      - "{'pen': 5, 'cup': 3}"
+    correct_choice: "{'pen': 6, 'cup': 10}"
+    explanation: |
+      The comprehension keeps each key and doubles each value, so 3 becomes 6 and
+      5 becomes 10. Keys and values are not swapped, so options with the numbers
+      as keys are wrong.
+    concepts:
+      - python.comprehensions
+      - python.dictionaries
+  - id: q3
+    prompt: |
+      You want a list of (word, length) tuples ordered from the shortest word to
+      the longest. Which expression is correct?
+    choices:
+      - "sorted(pairs, key=lambda pair: pair[1])"
+      - "sorted(pairs, key=lambda pair: pair[0])"
+      - "sorted(pairs, key=len)"
+      - "sorted(pairs, reverse=True)"
+    correct_choice: "sorted(pairs, key=lambda pair: pair[1])"
+    explanation: |
+      Each element is (word, length), so the length lives at index 1. Keying on
+      pair[1] sorts by length ascending. pair[0] sorts alphabetically, key=len
+      would measure the tuple (always 2), and reverse=True alone sorts by the
+      whole tuple descending.
+    concepts:
+      - python.sorting
+      - python.tuples
+  - id: q4
+    prompt: |
+      A set comprehension removes duplicate results automatically. What is the
+      value of this expression?
+
+          {n % 3 for n in range(7)}
+    choices:
+      - "{0, 1, 2}"
+      - "{0, 1, 2, 3, 4, 5, 6}"
+      - "{0, 1, 2, 0, 1, 2, 0}"
+      - "{1, 2, 3}"
+    correct_choice: "{0, 1, 2}"
+    explanation: |
+      n % 3 for n in 0..6 gives 0,1,2,0,1,2,0. A set keeps only distinct values,
+      so the result collapses to {0, 1, 2}. Sets never store repeats, which rules
+      out the option that lists them.
+    concepts:
+      - python.comprehensions
+      - python.sets

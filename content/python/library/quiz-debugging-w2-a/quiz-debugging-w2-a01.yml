@@ -1,0 +1,128 @@
+id: quiz.library.debugging_w2.a01
+kind: quiz
+version: 1
+language: python
+title: Match the Symptom to the Broken Line
+slug: quiz-debugging-w2-a01
+difficulty: easy
+concepts:
+  - python.debugging
+prerequisites:
+  - python.functions
+  - python.loops
+estimated_time_minutes: 4
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.debugging_w2.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original snippets that each pair one observed symptom with a single root cause the learner must select.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      This loop is supposed to drop the keys whose count is zero, but it
+      crashes with `RuntimeError: dictionary changed size during iteration`:
+
+      ```python
+      counts = {"a": 1, "b": 0, "c": 2}
+      for key in counts:
+          if counts[key] == 0:
+              del counts[key]
+      ```
+
+      What is the root cause?
+    choices:
+      - Deleting a key while looping over the same dict changes its size mid-iteration, which Python forbids
+      - A dictionary is not allowed to store the value 0
+      - '`del` removes every key at once'
+      - Dictionaries cannot be looped over with a for loop
+    correct_choice: Deleting a key while looping over the same dict changes its size mid-iteration, which Python forbids
+    explanation: |
+      Python refuses to let the dictionary resize underneath an active loop.
+      Iterate over a snapshot of the keys instead, e.g.
+      `for key in list(counts):`, or build a new filtered dict.
+    concepts:
+      - python.debugging
+      - python.dictionaries
+      - python.loops
+  - id: q2
+    prompt: |
+      This averaging helper raises `TypeError: 'int' object is not callable`
+      on the last line:
+
+      ```python
+      def average(scores):
+          sum = 0
+          for s in scores:
+              sum += s
+          return sum(scores) / len(scores)
+      ```
+
+      Why?
+    choices:
+      - The local variable named `sum` shadows the built-in function, so `sum(scores)` tries to call an integer
+      - Python cannot add numbers inside a loop
+      - '`len` cannot be used on a list of numbers'
+      - Dividing one integer by another always raises an error
+    correct_choice: The local variable named `sum` shadows the built-in function, so `sum(scores)` tries to call an integer
+    explanation: |
+      Once `sum` is reassigned to an int, the name no longer refers to the
+      built-in function, so calling `sum(scores)` fails. Rename the accumulator
+      (for example `total`) to keep the built-in available.
+    concepts:
+      - python.debugging
+      - python.functions
+  - id: q3
+    prompt: |
+      A learner reads a line of text from the keyboard and compares it, but
+      the check keeps printing `False` even when the typed word looks right:
+
+      ```python
+      answer = input()      # user types: yes
+      print(answer is "yes")
+      ```
+
+      What explains the surprising result?
+    choices:
+      - '`is` tests object identity, so a separately built string is not the same object as the literal even when the text matches; use `=='
+      - '`input` always returns a number, never text'
+      - Two strings can never be compared in Python
+      - '`is` and `==` behave identically for strings'
+    correct_choice: '`is` tests object identity, so a separately built string is not the same object as the literal even when the text matches; use `=='
+    explanation: |
+      `is` asks whether two names point to the very same object in memory. The
+      string returned by `input` is a fresh object, so `is` reports `False`.
+      Compare values with `==`.
+    concepts:
+      - python.debugging
+  - id: q4
+    prompt: |
+      This function should add up every number in the list, but for
+      `[10, 20, 30]` it returns `10`:
+
+      ```python
+      def total(nums):
+          running = 0
+          for n in nums:
+              running += n
+              return running
+      ```
+
+      What is the flaw?
+    choices:
+      - The `return` sits inside the loop, so the function exits after the first item
+      - '`+=` only works outside of loops'
+      - Summing a list requires two nested loops
+      - '`running` must be declared global to accumulate'
+    correct_choice: The `return` sits inside the loop, so the function exits after the first item
+    explanation: |
+      Because `return running` is indented inside the `for` body, the function
+      hands back a value on the first pass and never sees the rest. Dedent the
+      `return` so it runs only after the loop finishes.
+    concepts:
+      - python.debugging
+      - python.functions
+      - python.loops

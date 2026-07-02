@@ -1,0 +1,98 @@
+id: quiz.library.recursion_backtracking_w2.a01
+kind: quiz
+version: 1
+language: python
+title: Spotting Where Recursion Belongs
+slug: quiz-recursion-backtracking-w2-a01
+difficulty: easy
+concepts:
+  - patterns.recursion
+prerequisites:
+  - python.functions
+estimated_time_minutes: 5
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.recursion_backtracking_w2.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original prompts about comment threads, nested lists, and the roles of the base and recursive cases; distractors written by hand and not adapted from any external problem set.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      Which of these tasks is the MOST natural fit for a recursive solution?
+    choices:
+      - Counting every reply in a comment thread where each reply can itself have more replies to any depth
+      - Adding together a fixed group of exactly three numbers
+      - Printing the whole numbers from 1 up to 10 in order
+      - Checking whether a single integer is even or odd
+    correct_choice: Counting every reply in a comment thread where each reply can itself have more replies to any depth
+    explanation: |
+      A comment thread whose replies can hold more replies is a self-similar structure of
+      unknown depth, which is exactly what recursion is built for: each reply solves its own
+      level and trusts a recursive call to handle its children. The other three are flat or
+      fixed-size and are handled more simply by a loop or a single check.
+    concepts:
+      - patterns.recursion
+  - id: q2
+    prompt: |
+      When you design a recursive function, what is the main job of the base case?
+    choices:
+      - It gives the smallest inputs a direct answer so the chain of calls can stop
+      - It makes the function run in constant time no matter the input
+      - It sorts the input into order before the real work starts
+      - It hides any exception the function might raise along the way
+    correct_choice: It gives the smallest inputs a direct answer so the chain of calls can stop
+    explanation: |
+      The base case answers the simplest inputs outright without calling the function again.
+      That is what lets the recursion terminate: once a call hits the base case it returns a
+      concrete value instead of spawning yet another call. It has nothing to do with speed,
+      sorting, or error handling.
+    concepts:
+      - patterns.recursion
+  - id: q3
+    prompt: |
+      For a recursive function to actually finish, what must its recursive case do on
+      every call?
+    choices:
+      - Move its argument closer to a base case each time
+      - Call itself with the exact same arguments every time
+      - Avoid ever calling itself
+      - Always return before making any recursive call
+    correct_choice: Move its argument closer to a base case each time
+    explanation: |
+      Progress toward the base case is what guarantees termination. If each call shrinks or
+      simplifies the input, the base case must eventually be reached. Passing identical
+      arguments would recurse forever, and never calling itself would not be recursion at all.
+    concepts:
+      - patterns.recursion
+  - id: q4
+    prompt: |
+      This function totals every number inside a possibly nested list:
+
+      ```python
+      def deep_count(items):
+          total = 0
+          for x in items:
+              if isinstance(x, list):
+                  total += deep_count(x)   # line A
+              else:
+                  total += 1               # line B
+          return total
+      ```
+
+      Which line is the recursive case that descends into a nested sublist?
+    choices:
+      - Line A, which calls deep_count on the inner list
+      - Line B, which adds one for a plain value
+      - The final return total statement
+      - The for loop header that iterates over items
+    correct_choice: Line A, which calls deep_count on the inner list
+    explanation: |
+      Line A is the recursive case: when an element is itself a list, the function calls
+      itself on that sublist and folds the returned total back in. Line B is the base-level
+      work for a plain value, and the loop and return simply drive and finish one level.
+    concepts:
+      - patterns.recursion

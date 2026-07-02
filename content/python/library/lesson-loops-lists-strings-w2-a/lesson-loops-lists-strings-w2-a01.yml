@@ -1,0 +1,47 @@
+id: lesson.library.loops_lists_strings_w2.a01
+kind: lesson
+version: 1
+language: python
+title: Cutting a Substring Out of a String
+slug: lesson-loops-lists-strings-w2-a01
+difficulty: easy
+concepts:
+  - python.strings
+  - python.slicing
+prerequisites:
+  - python.functions
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings_w2.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original walkthrough of half-open string slicing with omitted bounds.
+body_markdown: |
+  A *slice* copies a run of characters out of a string. You write
+  `text[start:stop]`, and Python gives you everything from position `start`
+  up to *but not including* `stop`. Positions count from `0`.
+
+  ```python
+  word = "harbor"
+  print(word[0:3])   # 'har'  -> indexes 0, 1, 2
+  print(word[3:])    # 'bor'  -> from 3 to the end
+  print(word[:2])    # 'ha'   -> from the start to index 2
+  ```
+
+  Because the stop index is *excluded*, `word[0:3]` gives three letters, not
+  four. Leaving out a bound means "go all the way": drop the start to begin at
+  the front, drop the stop to run to the end. Slicing never changes the
+  original string; it hands you a brand-new one.
+checkpoints:
+  - question: What does "harbor"[0:3] evaluate to?
+    answer: "har"
+    explanation: The slice takes indexes 0, 1, and 2 because the stop index 3 is not included.
+  - question: Is the character at the stop index part of the slice?
+    answer: "No"
+    explanation: Slicing is half-open, so it stops one position before the stop index.
+  - question: What does "harbor"[3:] return when the stop is left out?
+    answer: "bor"
+    explanation: Omitting the stop tells the slice to continue to the end of the string.

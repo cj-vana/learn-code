@@ -1,0 +1,58 @@
+id: lesson.library.debugging_w2.a02
+kind: lesson
+version: 1
+language: python
+title: Off-by-One and the IndexError at the End of a List
+slug: lesson-debugging-w2-a02
+difficulty: easy
+concepts:
+  - python.debugging
+prerequisites:
+  - python.loops
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.debugging_w2.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original walkthrough of the range(len+1) off-by-one mistake and two idiomatic fixes, using a short colors list.
+body_markdown: |
+  List positions start at "0", so a list of three items has valid indices
+  "0", "1", and "2". The last index is always `len(list) - 1`, never
+  `len(list)`. Forgetting that one-step gap is the classic *off-by-one* bug.
+
+  ```python
+  colors = ["red", "green", "blue"]
+  for i in range(len(colors) + 1):
+      print(colors[i])
+  ```
+
+  This prints three colors and then crashes with `IndexError: list index out of
+  range`. The `+ 1` makes `range` yield 0, 1, 2, **3**, but index 3 points one
+  slot past the end of the list.
+
+  Drop the `+ 1` so the loop stops at the last real index:
+
+  ```python
+  for i in range(len(colors)):
+      print(colors[i])
+  ```
+
+  Even simpler, loop over the items directly and skip index math entirely:
+
+  ```python
+  for color in colors:
+      print(color)
+  ```
+checkpoints:
+  - question: For a list of 3 items, what is the last valid index?
+    answer: "2"
+    explanation: Indices start at 0, so a length-3 list uses 0, 1, and 2; the last index is len minus 1.
+  - question: What error does accessing colors[3] on a 3-item list raise?
+    answer: IndexError
+    explanation: Index 3 is one past the final slot of a 3-item list, which raises IndexError, list index out of range.
+  - question: Why does range(len(colors) + 1) cause the crash?
+    answer: It produces one extra number that indexes past the end of the list
+    explanation: range(len + 1) yields 0..len inclusive, and the final value len is not a valid index.

@@ -1,0 +1,109 @@
+id: quiz.library.prefix_sums_w2.a02
+kind: quiz
+version: 1
+language: python
+title: Tracing Prefix Arrays with accumulate
+slug: quiz-prefix-sums-w2-a02
+difficulty: medium
+concepts:
+  - patterns.prefix_sums
+prerequisites:
+  - python.lists
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.prefix_sums_w2.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original code-tracing and off-by-one questions built around itertools.accumulate with numeric near-miss distractors, written from scratch.
+quiz_type: mixed_review
+questions:
+  - id: q1
+    prompt: |
+      A padded prefix array is pre = [0, 3, 3, 9, 9, 14], where pre[k] is the sum of
+      the first k original values. Using "sum of original indices left through
+      right-1 equals pre[right] - pre[left]", what is pre[5] - pre[2]?
+    choices: ["11", "14", "5", "9"]
+    correct_choice: "11"
+    explanation: |
+      pre[5] is 14 and pre[2] is 3, so the range sum is 14 - 3 = 11. That covers the
+      original values sitting at indices 2, 3, and 4.
+    concepts:
+      - patterns.prefix_sums
+  - id: q2
+    prompt: |
+      What does this code print?
+
+      ```python
+      from itertools import accumulate
+
+      data = [4, 1, 0, 6]
+      print(list(accumulate(data)))
+      ```
+    choices:
+      - "[4, 5, 5, 11]"
+      - "[0, 4, 5, 5, 11]"
+      - "[4, 1, 0, 6]"
+      - "[11, 5, 5, 4]"
+    correct_choice: "[4, 5, 5, 11]"
+    explanation: |
+      accumulate yields a running total the same length as the input: 4, then 4+1=5,
+      then 5+0=5, then 5+6=11. There is no leading 0 unless you ask for one.
+    concepts:
+      - patterns.prefix_sums
+      - patterns.running_total
+  - id: q3
+    prompt: |
+      You want a PADDED prefix array that begins with a leading 0 (length n + 1).
+      Which call produces that directly from data?
+    choices:
+      - "list(accumulate(data, initial=0))"
+      - "list(accumulate(data))"
+      - "list(accumulate(data, initial=1))"
+      - "[0] + data"
+    correct_choice: "list(accumulate(data, initial=0))"
+    explanation: |
+      Passing initial=0 tells accumulate to emit that seed first and then keep
+      accumulating, giving the padded array of length n + 1. A plain accumulate omits
+      the leading 0, initial=1 seeds the wrong value, and [0] + data just prepends a
+      zero without computing any running totals.
+    concepts:
+      - patterns.prefix_sums
+  - id: q4
+    prompt: |
+      What does this code print?
+
+      ```python
+      def range_sum(pre, i, j):  # inclusive endpoints i..j, pre is padded
+          return pre[j + 1] - pre[i]
+
+      pre = [0, 5, 8, 8, 12]
+      print(range_sum(pre, 1, 2))
+      ```
+    choices: ["3", "8", "0", "4"]
+    correct_choice: "3"
+    explanation: |
+      The inclusive right endpoint 2 maps to pre[3], and the left endpoint 1 maps to
+      pre[1], so the answer is pre[3] - pre[1] = 8 - 5 = 3. That is the sum of the
+      original values at indices 1 and 2.
+    concepts:
+      - patterns.prefix_sums
+  - id: q5
+    prompt: |
+      For a padded prefix array pre where pre[k] is the sum of the first k original
+      values, what does pre[-1] (the last entry) always equal?
+    choices:
+      - The total of every original value in the list
+      - The final original value alone
+      - The length of the original list
+      - Always zero, matching the leading pad
+    correct_choice: The total of every original value in the list
+    explanation: |
+      The last padded entry has accumulated all n values, so it is the sum of the
+      whole list. The leading 0 sits at pre[0]; it is pre[-1] that holds the grand
+      total.
+    concepts:
+      - patterns.prefix_sums
+      - patterns.running_total

@@ -1,0 +1,52 @@
+id: lesson.library.python_refresh_w2.a06
+kind: lesson
+version: 1
+language: python
+title: Return Hands a Value Back
+slug: lesson-python-refresh-w2-a06
+difficulty: easy
+concepts:
+  - python.functions
+  - python.variables
+prerequisites: []
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh_w2.a06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original explanation contrasting return with print and the None value.
+body_markdown: |
+  `print` and `return` look similar but do very different jobs. `print` shows
+  text on the screen for a human to read. `return` hands a value back to
+  whoever called the function so the program can keep using it.
+
+  ```python
+  def double(n):
+      return n * 2
+
+  def show(n):
+      print(n * 2)     # displays the number, but hands nothing back
+
+  x = double(5)   # x now holds 10 and can be reused
+  y = show(5)      # prints 10, yet y ends up as None
+  ```
+
+  When a function finishes without hitting a `return`, Python quietly returns
+  the special value `None`. That is exactly why `y` above is `None`: `show`
+  only printed, it never returned anything.
+
+  The practical rule: if you need to store, reuse, or pass a result onward,
+  `return` it. Reach for `print` only when the goal is to display something.
+checkpoints:
+  - question: What value does a function return if it has no return statement?
+    answer: "None"
+    explanation: Python implicitly returns None when a function ends without an explicit return.
+  - question: If `show` uses print instead of return, what does `y = show(5)` store in y?
+    answer: "None, because print does not send a value back to the caller"
+    explanation: Only return passes a value out of a function; print just displays text and returns None.
+  - question: Why prefer return over print for a reusable calculation?
+    answer: A returned value can be stored and reused, while printed text only appears on screen
+    explanation: Returning lets the caller keep the result in a variable and use it later; printing does not.

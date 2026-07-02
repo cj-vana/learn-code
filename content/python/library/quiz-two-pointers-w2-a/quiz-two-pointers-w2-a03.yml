@@ -1,0 +1,102 @@
+id: quiz.library.two_pointers_w2.a03
+kind: quiz
+version: 1
+language: python
+title: Python Details for Pointer Loops
+slug: quiz-two-pointers-w2-a03
+difficulty: easy
+concepts:
+  - patterns.two_pointers
+prerequisites:
+  - python.lists
+estimated_time_minutes: 5
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.two_pointers_w2.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax questions targeting the Python constructs two-pointer loops depend on.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: |
+      Which line initializes a left pointer at the front and a right pointer at the
+      last valid index of a list called nums, in a single statement?
+    choices:
+      - "lo, hi = 0, len(nums) - 1"
+      - "lo, hi = len(nums) - 1, 0"
+      - "lo = hi = 0, len(nums)"
+      - "lo, hi = 1, len(nums)"
+    correct_choice: "lo, hi = 0, len(nums) - 1"
+    explanation: |
+      Tuple assignment sets lo to 0 (the front) and hi to len(nums) - 1 (the last valid
+      index). Swapping the values would start the pointers already crossed, and len(nums)
+      alone points one past the end.
+    concepts:
+      - patterns.two_pointers
+  - id: q2
+    prompt: |
+      You want a read pointer to visit every index from 1 up to the end of nums.
+      Which loop header does that?
+    choices:
+      - "for read in range(1, len(nums)):"
+      - "for read in range(len(nums), 1):"
+      - "for read in range(1, len(nums), -1):"
+      - "for read in nums[1:]:"
+    correct_choice: "for read in range(1, len(nums)):"
+    explanation: |
+      range(1, len(nums)) yields the indices 1, 2, ..., len(nums) - 1. The reversed-argument
+      and negative-step versions produce empty ranges, and iterating over nums[1:] gives the
+      values themselves, not the index positions.
+    concepts:
+      - patterns.two_pointers
+  - id: q3
+    prompt: |
+      Inside a palindrome check you compare the characters at the two pointers of a
+      string s. Which condition is valid Python?
+    choices:
+      - "if s[left] == s[right]:"
+      - "if s[left] = s[right]:"
+      - "if s.left == s.right:"
+      - "if s(left) == s(right):"
+    correct_choice: "if s[left] == s[right]:"
+    explanation: |
+      Square brackets index a string, and == tests equality. A single = is assignment (a
+      syntax error in a condition), dot access looks for attributes named left/right, and
+      parentheses would try to call the string.
+    concepts:
+      - patterns.two_pointers
+  - id: q4
+    prompt: |
+      A learner wrote `lo =+ 1` meaning to move the pointer forward by one. What
+      actually happens?
+    choices:
+      - It assigns the value 1 to lo, because =+ is read as = +1 rather than an increment
+      - It adds 1 to lo, behaving exactly like lo += 1
+      - It raises a SyntaxError
+      - It subtracts 1 from lo
+    correct_choice: It assigns the value 1 to lo, because =+ is read as = +1 rather than an increment
+    explanation: |
+      Python has no =+ operator. The parser sees a plain assignment of the unary-positive
+      literal +1, so lo becomes 1 no matter its previous value. The intended in-place add is
+      spelled lo += 1.
+    concepts:
+      - patterns.two_pointers
+  - id: q5
+    prompt: |
+      Which loop header walks a single index i from the last position of nums down
+      to index 0, inclusive?
+    choices:
+      - "for i in range(len(nums) - 1, -1, -1):"
+      - "for i in range(len(nums), 0, -1):"
+      - "for i in range(len(nums) - 1, 0, -1):"
+      - "for i in range(0, len(nums), -1):"
+    correct_choice: "for i in range(len(nums) - 1, -1, -1):"
+    explanation: |
+      The stop value in range is exclusive, so to include index 0 while counting down you
+      must stop at -1. The other options either skip 0, start one past the end, or produce an
+      empty range because the step disagrees with the bounds.
+    concepts:
+      - patterns.two_pointers

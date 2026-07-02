@@ -1,0 +1,61 @@
+id: lesson.library.hashmap_set_w2.a03
+kind: lesson
+version: 1
+language: python
+title: Counting First, Then Testing Membership
+slug: lesson-hashmap-set-w2-a03
+difficulty: medium
+concepts:
+  - patterns.hash_map_counting
+  - patterns.set_membership
+prerequisites:
+  - python.dictionaries
+  - python.sets
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.hashmap_set_w2.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original explanation and worked examples written from scratch.
+body_markdown: |
+  Many tasks split cleanly into two phases: first *count* how often each
+  value occurs, then repeatedly *ask* whether a value clears some bar. A
+  counting dictionary handles the first phase, and a set built from its
+  keys handles the second with fast membership checks.
+
+  Suppose you want to know which items were ordered at least `k` times, then
+  test individual items against that group:
+
+  ```python
+  def frequent_items(items, k):
+      counts = {}
+      for item in items:
+          counts[item] = counts.get(item, 0) + 1
+      # Keep only the keys that reach the threshold, as a set for O(1) lookups.
+      return {item for item, n in counts.items() if n >= k}
+
+  orders = ["a", "b", "a", "c", "a", "b"]
+  qualifies = frequent_items(orders, 2)   # {'a', 'b'}
+  print("a" in qualifies)   # True
+  print("c" in qualifies)   # False  -> ordered only once
+  ```
+
+  The counting pass is O(n) over the input. Filtering the keys into a set is
+  O(u) where `u` is the number of distinct values. After that, each
+  `item in qualifies` check is average O(1), so a thousand later lookups do
+  not re-scan the data. If you had kept the qualifying items in a list
+  instead, every membership test would rescan that list and drag the checks
+  back toward O(u) each.
+checkpoints:
+  - question: Why store the qualifying keys in a set rather than a list?
+    answer: Membership tests on a set are average O(1), so repeated "is this item frequent?" checks stay fast, while a list would rescan its elements on every check.
+    explanation: The two-phase design pays off only if the second phase is cheap; a set keeps each lookup constant time instead of linear.
+  - question: What does frequent_items(["x", "y", "x", "z", "z", "z"], 3) return?
+    answer: "{'z'}"
+    explanation: The counts are x=2, y=1, z=3; only z reaches the threshold of 3, so the resulting set contains just 'z'.
+  - question: In this pattern, what job does the dictionary do and what job does the set do?
+    answer: The dictionary records how many times each value occurred (the counts), and the set holds the values that passed the threshold so membership can be tested quickly.
+    explanation: Counting needs numeric values per key, which a dict provides; testing "does it qualify?" only needs presence, which a set answers in constant time.

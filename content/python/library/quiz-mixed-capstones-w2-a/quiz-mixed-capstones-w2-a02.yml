@@ -1,0 +1,114 @@
+id: quiz.library.mixed_capstones_w2.a02
+kind: quiz
+version: 1
+language: python
+title: Contiguous, Pairwise, or Lookup?
+slug: quiz-mixed-capstones-w2-a02
+difficulty: medium
+concepts:
+  - patterns.sliding_window
+  - patterns.prefix_sums
+  - patterns.two_pointers
+  - patterns.hash_map_counting
+  - concepts.big_o
+prerequisites:
+  - python.lists
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.mixed_capstones_w2.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original questions that contrast look-alike patterns (fixed vs variable windows, prefix sums vs windows, two pointers vs hashing) with fresh distractors.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      Two tasks both talk about a "range." Task A wants the maximum sum of any 6
+      consecutive readings. Task B answers thousands of "sum between indices i and j"
+      queries on a fixed array. Which pairing of patterns fits best?
+    choices:
+      - "A: a fixed sliding window; B: prefix sums"
+      - "A: prefix sums; B: a fixed sliding window"
+      - "A: binary search; B: two pointers"
+      - "A: two pointers; B: hash-map counting"
+    correct_choice: "A: a fixed sliding window; B: prefix sums"
+    explanation: |
+      Task A asks for one contiguous length scanned once, so a fixed window that adds
+      the entering value and drops the leaving one is ideal. Task B asks many
+      arbitrary-range totals, so precomputing prefix sums makes each query a single
+      O(1) subtraction. Swapping the two would recompute work needlessly.
+    concepts:
+      - patterns.sliding_window
+      - patterns.prefix_sums
+  - id: q2
+    prompt: |
+      When does a sliding window need to CHANGE size rather than stay a fixed width?
+    choices:
+      - When the rule is about the window's contents, such as the longest run with at most k distinct values
+      - Whenever the underlying list happens to be sorted
+      - Only when the list contains duplicate values
+      - Never; a window is always a fixed length
+    correct_choice: When the rule is about the window's contents, such as the longest run with at most k distinct values
+    explanation: |
+      A fixed window fits "exactly k consecutive items." When the constraint is on what
+      the window contains (at most k distinct, sum at least W, no repeats), the window
+      must grow to stay valid and shrink when it breaks the rule. That expand/contract
+      motion is the variable-size window.
+    concepts:
+      - patterns.sliding_window
+  - id: q3
+    prompt: |
+      Why do two pointers converging from both ends require a sorted list, while
+      hash-map counting does not?
+    choices:
+      - Sorted order tells you which pointer to move to raise or lower the sum; counting only needs to look up values it has already seen
+      - Two pointers cannot read an unsorted list at all
+      - Hash maps can only store values that are already sorted
+      - Sorting the data makes hashing unnecessary
+    correct_choice: Sorted order tells you which pointer to move to raise or lower the sum; counting only needs to look up values it has already seen
+    explanation: |
+      The converging two-pointer trick relies on monotonicity: because the list is
+      sorted, moving the left pointer can only increase the sum and moving the right can
+      only decrease it. Hash-map counting makes no ordering assumption; it just records
+      and looks up what it has seen, which works on any order.
+    concepts:
+      - patterns.two_pointers
+      - patterns.hash_map_counting
+  - id: q4
+    prompt: |
+      A list is NOT sorted and you must decide whether any two values sum to a target.
+      Which statement is accurate?
+    choices:
+      - You can check all pairs in O(n^2), or store each needed complement in a set for an O(n) average solution
+      - Only two converging pointers can solve it, in O(n)
+      - Binary search alone solves it in O(log n)
+      - A fixed sliding window solves it in O(n)
+    correct_choice: You can check all pairs in O(n^2), or store each needed complement in a set for an O(n) average solution
+    explanation: |
+      Brute force tries every pair and is correct but quadratic. The faster idea makes
+      one pass: for each value x, check whether target - x was already seen (stored in a
+      set), which is O(n) on average. Converging pointers need sorted data, and neither
+      a plain binary search nor a window solves an arbitrary-pair question.
+    concepts:
+      - patterns.hash_map_counting
+      - concepts.big_o
+  - id: q5
+    prompt: |
+      Binary search assumes what property of its input, and what does it buy you
+      compared with a linear scan?
+    choices:
+      - It assumes the data is sorted and reduces a lookup from O(n) to O(log n)
+      - It assumes the data is unsorted and turns O(log n) into O(n)
+      - It assumes there are no duplicates and runs in O(1)
+      - It assumes the input is a dictionary and runs in O(n log n)
+    correct_choice: It assumes the data is sorted and reduces a lookup from O(n) to O(log n)
+    explanation: |
+      Binary search only works on sorted input, because each comparison against the
+      middle element lets it discard the half that cannot contain the target. That
+      halving turns an O(n) linear scan into an O(log n) search.
+    concepts:
+      - patterns.binary_search
+      - concepts.big_o

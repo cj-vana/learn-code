@@ -1,0 +1,57 @@
+id: lesson.library.stack_queue_bfs_w2.a02
+kind: lesson
+version: 1
+language: python
+title: Fast Queues With collections.deque
+slug: lesson-stack-queue-bfs-w2-a02
+difficulty: easy
+concepts:
+  - patterns.queue_bfs
+prerequisites:
+  - python.lists
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.stack_queue_bfs_w2.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original support-ticket queue framing contrasting deque.popleft with the hidden cost of list.pop(0).
+body_markdown: |
+  A **queue** serves items in the order they arrived: **FIFO**, first in, first
+  out. Picture a support desk taking tickets. The ticket that has waited longest
+  is the next one handled, and new tickets join the back of the line.
+
+  You *can* fake a queue with a plain list, but removing from the front with
+  `list.pop(0)` is slow: Python has to shift every remaining element one slot to
+  the left, which is `"O(n)"` work each time. The right tool is
+  `collections.deque`, whose `popleft()` pulls from the front in constant time.
+
+  ```python
+  from collections import deque
+
+  line = deque()
+  line.append("ticket-1")     # join the back
+  line.append("ticket-2")
+  line.append("ticket-3")
+
+  first = line.popleft()      # leave from the front
+  print(first)                # ticket-1  (waited longest)
+  print(line)                 # deque(['ticket-2', 'ticket-3'])
+  ```
+
+  Use `append()` to enqueue at the back and `popleft()` to dequeue from the
+  front. Because both ends of a deque are cheap to touch, each is `"O(1)"`. This
+  is why queue-based algorithms such as breadth-first search reach for a deque
+  instead of a list.
+checkpoints:
+  - question: In what order does a queue release its items?
+    answer: First in, first out (FIFO).
+    explanation: The item that has been waiting longest is served next, the opposite of a stack's last-in, first-out order.
+  - question: Which deque method removes and returns the item at the front of the queue?
+    answer: popleft
+    explanation: deque.popleft() takes from the left (front) end in constant time, matching FIFO order.
+  - question: Why is using list.pop(0) for a queue slower than deque.popleft()?
+    answer: list.pop(0) must shift every remaining element left, which is O(n), while deque.popleft() is O(1).
+    explanation: Removing from the front of a list re-indexes the rest of the list, but a deque is built to add and remove at both ends cheaply.

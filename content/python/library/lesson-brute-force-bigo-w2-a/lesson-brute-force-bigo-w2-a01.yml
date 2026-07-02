@@ -1,0 +1,58 @@
+id: lesson.library.brute_force_bigo_w2.a01
+kind: lesson
+version: 1
+language: python
+title: Scan Everything, Keep the Best
+slug: lesson-brute-force-bigo-w2-a01
+difficulty: easy
+concepts:
+  - patterns.brute_force
+prerequisites:
+  - python.lists
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.brute_force_bigo_w2.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original charging-dock scenario built around a keep-the-best brute-force scan; prose and questions written from scratch.
+body_markdown: |
+  A lot of brute-force problems are not "find the first match" but "look at
+  *every* option and remember the best one you have seen so far." You keep a
+  single variable for the current champion and update it whenever a candidate
+  beats it.
+
+  Imagine a rack of charging docks, each reporting a battery percentage. A dock
+  is worth charging only if it is below full (`100`). You want the highest
+  such reading so a technician can grab the almost-finished dock first:
+
+  ```python
+  def best_to_grab(levels):
+      best = None
+      for level in levels:
+          if level < 100:
+              if best is None or level > best:
+                  best = level
+      return best
+  ```
+
+  There is no shortcut here. We visit each reading once, ask whether it
+  qualifies, and if it beats our current `best` we adopt it. Starting `best` at
+  `None` handles the case where nothing qualifies: if every dock is already at
+  `100`, the `if` never fires and we return `None`.
+
+  This "keep the best so far" shape is the workhorse of brute force. Because it
+  makes exactly one pass over the list, it does about `n` comparisons, which is
+  `O(n)` work.
+checkpoints:
+  - question: Why does best start at None instead of 0?
+    answer: So the function can report that nothing qualified, and so the first qualifying reading is always adopted.
+    explanation: A start of 0 would be a fake candidate; None lets the first valid reading win outright and lets an empty result be distinguished.
+  - question: If every dock reports exactly 100, what does best_to_grab return?
+    answer: "None"
+    explanation: No reading is below 100, so the inner update never runs and best keeps its starting value of None.
+  - question: How many times is each battery reading examined?
+    answer: Once
+    explanation: The single loop makes one pass over the list, so the work grows linearly, O(n).

@@ -1,0 +1,56 @@
+id: lesson.library.dicts_sets_tuples_w2.a04
+kind: lesson
+version: 1
+language: python
+title: Building Dictionaries With Comprehensions
+slug: lesson-dicts-sets-tuples-w2-a04
+difficulty: medium
+concepts:
+  - python.comprehensions
+  - python.dictionaries
+prerequisites:
+  - python.loops
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples_w2.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original squares-and-filter example authored to teach dict and set comprehensions with an if clause.
+body_markdown: |
+  A *dict comprehension* builds a dictionary in one expression. You write
+  a `key: value` pair followed by a `for` clause:
+
+  ```python
+  nums = [1, 2, 3, 4, 5]
+  squares = {n: n * n for n in nums}
+  print(squares)  # {1: 1, 2: 4, 3: 9, 4: 16, 5: 25}
+  ```
+
+  Add an `if` clause at the end to keep only some items. It acts as a
+  filter, deciding which elements make it into the result:
+
+  ```python
+  big_squares = {n: n * n for n in nums if n > 2}
+  print(big_squares)  # {3: 9, 4: 16, 5: 25}
+  ```
+
+  The same brace syntax with a single expression (no colon) builds a
+  *set* instead, which quietly drops duplicates:
+
+  ```python
+  parities = {n % 2 for n in nums}
+  print(parities)  # {0, 1}
+  ```
+checkpoints:
+  - question: "What does `{n: n * n for n in [1, 2, 3]}` produce?"
+    answer: "{1: 1, 2: 4, 3: 9}"
+    explanation: Each number becomes a key mapped to its square as the value.
+  - question: What is the role of the `if` clause in a comprehension?
+    answer: It filters the items, keeping only those for which the condition is true.
+    explanation: Elements that fail the test are skipped and never added to the result.
+  - question: What is the result of `{n for n in [1, 1, 2, 2, 3]}`?
+    answer: "{1, 2, 3}"
+    explanation: A set comprehension keeps each distinct value once, so the repeats collapse.

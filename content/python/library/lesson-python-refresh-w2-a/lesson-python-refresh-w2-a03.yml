@@ -1,0 +1,57 @@
+id: lesson.library.python_refresh_w2.a03
+kind: lesson
+version: 1
+language: python
+title: Joining Conditions Cleanly
+slug: lesson-python-refresh-w2-a03
+difficulty: easy
+concepts:
+  - python.operators
+  - python.conditionals
+prerequisites: []
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh_w2.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original explanation of boolean operators and chained comparisons.
+body_markdown: |
+  When a decision depends on more than one thing, combine tests with `and`,
+  `or`, and `not`:
+
+  - `and` is True only when *both* sides are True.
+  - `or` is True when *at least one* side is True.
+  - `not` flips a single True or False.
+
+  ```python
+  age = 20
+  has_ticket = True
+  if age >= 18 and has_ticket:
+      print("Enjoy the show")
+  ```
+
+  Python can also chain comparisons the way math does. Writing `13 <= age <= 19`
+  means exactly the same as `13 <= age and age <= 19`, but reads more naturally:
+
+  ```python
+  age = 15
+  if 13 <= age <= 19:
+      print("Teenager")
+  ```
+
+  One more useful detail: `and` and `or` stop early. In `True or something`,
+  Python never even looks at the right side once it sees a truthy left side.
+  This "short-circuit" behavior is why `True or (1 / 0)` does not crash.
+checkpoints:
+  - question: Rewrite the chained comparison `1 <= n <= 5` using the word `and`.
+    answer: "1 <= n and n <= 5"
+    explanation: A chained comparison is shorthand for the two separate comparisons joined by and.
+  - question: What does `True or (1 / 0)` evaluate to, and why is there no error?
+    answer: "True, because or short-circuits and never evaluates the right side"
+    explanation: Once the left side of or is truthy the result is decided, so the risky division is skipped.
+  - question: What does `not (3 > 5)` evaluate to?
+    answer: "True"
+    explanation: 3 > 5 is False, and not flips False into True.

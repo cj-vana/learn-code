@@ -1,0 +1,48 @@
+id: lesson.library.loops_lists_strings_w2.a06
+kind: lesson
+version: 1
+language: python
+title: Looping Over a String One Character at a Time
+slug: lesson-loops-lists-strings-w2-a06
+difficulty: easy
+concepts:
+  - python.loops
+  - python.strings
+prerequisites:
+  - python.functions
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings_w2.a06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original explanation of iterating a string character by character and counting matches.
+body_markdown: |
+  A string is a sequence of characters, so a `for` loop can walk it just like
+  a list. Each pass, the loop variable holds a single character. That makes
+  counting or scanning letters straightforward.
+
+  ```python
+  word = "banana"
+  count = 0
+  for letter in word:
+      if letter == "a":
+          count += 1
+  # count is 3
+  ```
+
+  The loop runs once per character, so for `"banana"` it runs six times. You do
+  not index into the string yourself; the loop delivers each character in
+  order, from the first to the last.
+checkpoints:
+  - question: When you loop over a string, what does the loop variable hold on each pass?
+    answer: A single character of the string.
+    explanation: Iterating a string yields its characters one at a time, in left-to-right order.
+  - question: After counting the letter "a" in "banana", what is count?
+    answer: "3"
+    explanation: The string "banana" contains three a characters, so count reaches 3.
+  - question: How many times does the loop body run for the string "banana"?
+    answer: "6"
+    explanation: The loop runs once per character, and "banana" has six characters.

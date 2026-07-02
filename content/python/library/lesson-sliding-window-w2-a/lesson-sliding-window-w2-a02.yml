@@ -1,0 +1,61 @@
+id: lesson.library.sliding_window_w2.a02
+kind: lesson
+version: 1
+language: python
+title: Shrinking a Window to Find the Shortest One
+slug: lesson-sliding-window-w2-a02
+difficulty: medium
+concepts:
+  - patterns.sliding_window
+prerequisites:
+  - python.lists
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sliding_window_w2.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original scenario about topping up a prepaid meter, teaching a variable window that shrinks aggressively to minimise its length.
+body_markdown: |
+  Most window problems ask for the *longest* run, but the same two indices can
+  hunt for the *shortest* one instead. Imagine daily deposits into a prepaid
+  meter, and you need the fewest back-to-back days whose deposits reach a target.
+
+  The idea flips: grow on the right until the total is finally big enough, then
+  shrink from the left *as far as you can* while it still qualifies, recording the
+  length each time you are at or above the target:
+
+  ```python
+  def fewest_days_to_reach(deposits, target):
+      left = 0
+      total = 0
+      best = None
+      for right in range(len(deposits)):
+          total += deposits[right]            # grow on the right
+          while total >= target:              # qualifies, so try to trim
+              length = right - left + 1
+              if best is None or length < best:
+                  best = length
+              total -= deposits[left]         # shrink from the left
+              left += 1
+      return best if best is not None else 0
+
+  print(fewest_days_to_reach([2, 3, 1, 2, 4, 3], 7))  # 2
+  ```
+
+  Here the winner is the two days `[4, 3]`, whose deposits sum to 7. Because the
+  shrink step keeps pulling `left` inward while the window still meets the target,
+  every qualifying window is squeezed to its tightest form. This relies on the
+  deposits being non-negative, so removing a day can only lower the total.
+checkpoints:
+  - question: Why does the while loop keep shrinking instead of stopping the moment the total first reaches the target?
+    answer: To trim the window to its shortest qualifying length; a smaller window that still reaches the target is a better answer.
+    explanation: Since the goal is the fewest days, it removes left-side days as long as the remaining window still meets the target.
+  - question: Why must the deposits be non-negative for this shrinking approach to work?
+    answer: Removing an element must not raise the total; with non-negative values, shrinking can only decrease or keep the sum, so the stop condition stays reliable.
+    explanation: If negatives were allowed, dropping a day could increase the total, and the while condition could no longer guarantee correctness.
+  - question: For deposits [2, 3, 1, 2, 4, 3] and target 7, why is the answer 2 rather than 3?
+    answer: The two consecutive days 4 and 3 already sum to exactly 7, and no single day reaches 7, so two days is the fewest.
+    explanation: The window tightens to [4, 3] at indices 4 and 5, which meets the target with the smallest possible length.

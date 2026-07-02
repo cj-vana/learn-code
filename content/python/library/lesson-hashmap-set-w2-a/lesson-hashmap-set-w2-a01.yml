@@ -1,0 +1,59 @@
+id: lesson.library.hashmap_set_w2.a01
+kind: lesson
+version: 1
+language: python
+title: Counting Faster With collections.Counter
+slug: lesson-hashmap-set-w2-a01
+difficulty: easy
+concepts:
+  - patterns.hash_map_counting
+prerequisites:
+  - python.dictionaries
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.hashmap_set_w2.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original explanation and worked examples written from scratch.
+body_markdown: |
+  Writing `counts[item] = counts.get(item, 0) + 1` by hand works, but the
+  standard library ships a dictionary that already knows how to tally:
+  `collections.Counter`. Hand it any iterable and it returns a dict-like
+  object mapping each value to how many times it appeared.
+
+  ```python
+  from collections import Counter
+
+  votes = ["cat", "dog", "cat", "bird", "dog", "cat"]
+  tally = Counter(votes)
+  print(tally)            # Counter({'cat': 3, 'dog': 2, 'bird': 1})
+  print(tally["cat"])     # 3
+  print(tally["fish"])    # 0  -> missing keys return 0, no KeyError
+  ```
+
+  Two features save real work. Reading a key that was never seen gives back
+  `0` instead of raising `KeyError`, so you never need a `.get` guard. And
+  `.most_common(n)` hands you the top `n` pairs already sorted from highest
+  count to lowest:
+
+  ```python
+  print(tally.most_common(1))   # [('cat', 3)]
+  ```
+
+  Building the Counter walks the input once and each insert is average
+  constant time, so counting `n` items stays O(n). Reach for `Counter` when
+  you just need frequencies; reach for a plain dict when each value needs
+  custom update logic beyond adding one.
+checkpoints:
+  - question: What does tally["fish"] return when "fish" was never in the input?
+    answer: "0"
+    explanation: A Counter treats any missing key as a count of 0 instead of raising KeyError, unlike a normal dict indexed with square brackets.
+  - question: What does Counter(votes).most_common(2) give you for the votes list above?
+    answer: "[('cat', 3), ('dog', 2)]"
+    explanation: most_common(2) returns the two highest-count (value, count) tuples already ordered from most frequent to least.
+  - question: What is the time complexity of building a Counter from n items?
+    answer: "O(n)"
+    explanation: Counter makes a single pass over the input and each dictionary update is average constant time, so the total work is linear.

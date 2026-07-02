@@ -1,0 +1,115 @@
+id: quiz.library.mixed_capstones_w2.a06
+kind: quiz
+version: 1
+language: python
+title: Fixing a Wrong Pattern Choice
+slug: quiz-mixed-capstones-w2-a06
+difficulty: medium
+concepts:
+  - patterns.sliding_window
+  - patterns.prefix_sums
+  - patterns.two_pointers
+  - patterns.binary_search
+  - patterns.hash_map_counting
+prerequisites:
+  - python.lists
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.mixed_capstones_w2.a06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original debugging-style prompts where a working-but-wrong or slow approach must be corrected to the appropriate pattern, with distractors that are tempting non-fixes.
+quiz_type: mixed_review
+questions:
+  - id: q1
+    prompt: |
+      A program runs binary search on an UNSORTED list of prices and returns wrong
+      answers for some lookups. What is the correct diagnosis?
+    choices:
+      - Binary search needs sorted input; either sort first (O(n log n)) or use a linear or hash-based lookup
+      - Binary search never returns correct answers and should be abandoned entirely
+      - The list is simply too short for binary search to work
+      - Binary search only works on lists of strings
+    correct_choice: Binary search needs sorted input; either sort first (O(n log n)) or use a linear or hash-based lookup
+    explanation: |
+      Binary search relies on order to decide which half to discard; on unsorted data
+      those decisions are meaningless, so it can miss present values. The fix is to sort
+      first, or if you only need membership, scan linearly or build a set for O(1)
+      average lookups.
+    concepts:
+      - patterns.binary_search
+      - python.debugging
+  - id: q2
+    prompt: |
+      To find the maximum sum of any 5 consecutive numbers, a program recomputes the
+      full 5-number sum at each starting index. It is correct but slow on huge inputs.
+      What is the best optimization?
+    choices:
+      - Keep a running window sum, adding the entering value and subtracting the leaving value each step
+      - Sort the list before summing
+      - Switch to binary search
+      - Store every element in a set first
+    correct_choice: Keep a running window sum, adding the entering value and subtracting the leaving value each step
+    explanation: |
+      Recomputing all five values at every position repeats work. A sliding window keeps
+      one total and updates it in O(1) per step by adding the value that enters and
+      subtracting the one that leaves, turning an O(n * k) approach into O(n).
+    concepts:
+      - patterns.sliding_window
+      - concepts.big_o
+  - id: q3
+    prompt: |
+      A pair-sum routine on a SORTED list uses two nested loops and runs in O(n^2).
+      Which change keeps it correct while dropping to O(n)?
+    choices:
+      - Replace the nested loops with two pointers from both ends, moving inward based on the current sum
+      - Reverse the list before looping
+      - Delete the inner loop and keep only the outer one
+      - Convert the list to a string first
+    correct_choice: Replace the nested loops with two pointers from both ends, moving inward based on the current sum
+    explanation: |
+      Because the list is sorted, a low and a high pointer can decide their next move
+      from the current sum: too small, advance low; too large, retreat high. That single
+      converging pass is O(n). Reversing or dropping a loop would change or break the
+      logic without giving a correct linear solution.
+    concepts:
+      - patterns.two_pointers
+      - concepts.big_o
+  - id: q4
+    prompt: |
+      Range-sum queries on an array that never changes are slow because each query
+      re-adds the values in the range. What is the best fix?
+    choices:
+      - Precompute a prefix-sum array once and answer each query by subtracting two entries
+      - Sort the array before every query
+      - Cache only the very first query's answer
+      - Run a binary search for each query
+    correct_choice: Precompute a prefix-sum array once and answer each query by subtracting two entries
+    explanation: |
+      Since the array is static, one O(n) pass to build cumulative totals lets every
+      later query be a single O(1) subtraction. Sorting would destroy the index meaning,
+      caching one answer helps only repeats of that exact query, and binary search does
+      not compute sums.
+    concepts:
+      - patterns.prefix_sums
+  - id: q5
+    prompt: |
+      To count how often each word appears, a program scans the whole list again for
+      every distinct word, giving O(n^2) behavior. What is the better approach?
+    choices:
+      - Make a single pass, incrementing a dictionary counter for each word
+      - Sort the words and binary search for each one
+      - Move two pointers inward from both ends
+      - Slide a fixed-size window across the words
+    correct_choice: Make a single pass, incrementing a dictionary counter for each word
+    explanation: |
+      Re-scanning per distinct word multiplies the work. A dictionary keyed by word lets
+      one pass tally everything with average O(1) updates, so the whole count is O(n).
+      The other patterns solve pairing, ordering, or contiguous-range problems, not
+      frequency tallies.
+    concepts:
+      - patterns.hash_map_counting
+      - concepts.big_o

@@ -1,0 +1,112 @@
+id: quiz.library.sliding_window_w2.a02
+kind: quiz
+version: 1
+language: python
+title: Keeping the Window Consistent
+slug: quiz-sliding-window-w2-a02
+difficulty: medium
+concepts:
+  - patterns.sliding_window
+prerequisites:
+  - python.lists
+estimated_time_minutes: 5
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sliding_window_w2.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original mechanics questions on invariants, shrink timing, count bookkeeping, and result timing.
+quiz_type: mixed_review
+questions:
+  - id: q1
+    prompt: |
+      In a variable-size window you track `total` as the sum of `nums[left:right+1]`.
+      After you do `total += nums[right]` to admit a new element, what must stay
+      true before you record any answer for this window?
+    choices:
+      - "total equals the sum of the elements from index left through right"
+      - "total equals the sum of the whole list so far"
+      - "total is always less than left"
+      - "total equals right minus left"
+    correct_choice: "total equals the sum of the elements from index left through right"
+    explanation: |
+      The invariant that makes the window trustworthy is that `total` always
+      mirrors exactly the elements currently between `left` and `right`. Every add
+      or subtract exists to preserve that match before you read off a result.
+    concepts:
+      - patterns.sliding_window
+      - patterns.running_total
+  - id: q2
+    prompt: |
+      You are counting subarrays whose sum is strictly LESS than a limit using a
+      window. After admitting `nums[right]`, the sum is too big. What is the right
+      way to restore validity?
+    choices:
+      - While the sum is at or above the limit, subtract nums[left] and increment left
+      - Reset the sum to zero and keep moving right
+      - Subtract nums[right] and break out of the loop
+      - Move right forward again without changing the sum
+    correct_choice: While the sum is at or above the limit, subtract nums[left] and increment left
+    explanation: |
+      Shrinking from the left drops the oldest elements one at a time, subtracting
+      each from the total, until the window is valid again. Zeroing the sum would
+      throw away elements still inside the window and corrupt later counts.
+    concepts:
+      - patterns.sliding_window
+      - patterns.running_total
+  - id: q3
+    prompt: |
+      A window over a string keeps a dict `freq` mapping each character inside the
+      window to its count. When the left edge moves past a character `c`, which
+      pair of updates keeps `freq` accurate?
+    choices:
+      - "Decrement freq[c], and delete the key if its count reaches 0"
+      - "Increment freq[c], and never delete keys"
+      - "Set freq[c] to 0 but leave the key in place forever"
+      - "Delete every key in freq and rebuild it from scratch"
+    correct_choice: "Decrement freq[c], and delete the key if its count reaches 0"
+    explanation: |
+      Removing a character from the left means one fewer occurrence, so decrement
+      its count. Dropping the key once the count hits 0 keeps `len(freq)` equal to
+      the number of DISTINCT characters actually present, which many window
+      conditions depend on.
+    concepts:
+      - patterns.sliding_window
+      - patterns.hash_map_counting
+  - id: q4
+    prompt: |
+      For "longest window satisfying a constraint," where in the loop body should
+      you update `best = max(best, right - left + 1)`?
+    choices:
+      - After the shrink step, once the window is guaranteed valid again
+      - Before admitting nums[right], while the window may be stale
+      - Only after the loop finishes, using the final left and right
+      - In the middle of shrinking, before the constraint is restored
+    correct_choice: After the shrink step, once the window is guaranteed valid again
+    explanation: |
+      You may only measure a window that currently obeys the constraint. Recording
+      the length after shrinking guarantees `left..right` is valid, so its width is
+      a legitimate candidate for the longest answer.
+    concepts:
+      - patterns.sliding_window
+  - id: q5
+    prompt: |
+      When counting how many subarrays ending at each `right` are valid, a common
+      trick adds `right - left + 1` to the answer each iteration. What does that
+      quantity represent?
+    choices:
+      - The number of valid windows that end exactly at index right
+      - The running sum of the current window
+      - The number of elements still to the right of the window
+      - The index where the next shrink must stop
+    correct_choice: The number of valid windows that end exactly at index right
+    explanation: |
+      Once the window `left..right` is valid, every start position from `left` up
+      to `right` also yields a valid subarray ending at `right`. There are
+      `right - left + 1` such start positions, so adding that count tallies all
+      valid subarrays ending there.
+    concepts:
+      - patterns.sliding_window
+      - patterns.running_total

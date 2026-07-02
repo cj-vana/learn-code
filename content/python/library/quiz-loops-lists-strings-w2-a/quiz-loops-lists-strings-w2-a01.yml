@@ -1,0 +1,97 @@
+id: quiz.library.loops_lists_strings_w2.a01
+kind: quiz
+version: 1
+language: python
+title: Choosing the Right Loop and String Tool
+slug: quiz-loops-lists-strings-w2-a01
+difficulty: easy
+concepts:
+  - python.loops
+  - python.lists
+  - python.strings
+prerequisites:
+  - python.functions
+estimated_time_minutes: 5
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings_w2.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original scenarios and distractors written from scratch.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      You have a list `names` and want to build a matching list of their
+      lengths, keeping the originals in the same order. Which approach reads
+      most idiomatically in Python?
+    choices:
+      - 'A list comprehension: [len(n) for n in names]'
+      - Create an empty list and repeatedly insert lengths at index 0
+      - Sort names by length and hope the order lines up
+      - Join names into one string and count the characters
+    correct_choice: 'A list comprehension: [len(n) for n in names]'
+    explanation: |
+      A list comprehension walks `names` in order and collects `len(n)` for each
+      item, producing a parallel list in one readable pass. Inserting at index 0
+      reverses the order, sorting changes the order entirely, and joining loses
+      the per-name boundaries.
+    concepts:
+      - python.lists
+      - python.loops
+  - id: q2
+    prompt: |
+      You need to check whether a filename stored in `name` ends with the
+      characters `".csv"`. What is the most direct and readable way?
+    choices:
+      - Call `name.endswith(".csv")`
+      - Slice with `name[-4]` and compare it to `".csv"`
+      - Loop over every character looking for a dot
+      - Reverse the string and check its first character
+    correct_choice: Call `name.endswith(".csv")`
+    explanation: |
+      `str.endswith` was built for exactly this suffix check and returns a
+      boolean. `name[-4]` yields a single character, not the four-character
+      suffix, so comparing it to `".csv"` is always False, and the manual
+      approaches are needlessly indirect.
+    concepts:
+      - python.strings
+  - id: q3
+    prompt: |
+      Inside a loop over `orders`, you want to keep a running count of how many
+      orders have already been processed so you can print progress. Which tool
+      gives you that counter cleanly?
+    choices:
+      - 'enumerate(orders, start=1) to pair each order with its number'
+      - Call `orders.index(order)` on every pass
+      - A `while True` loop with no exit condition
+      - Convert orders to a set and read its length
+    correct_choice: 'enumerate(orders, start=1) to pair each order with its number'
+    explanation: |
+      `enumerate` hands you a counter alongside each value, and `start=1` makes
+      the progress numbers human-friendly. `orders.index` is O(n) per call and
+      misreports duplicates, an unbounded `while True` never ends, and a set's
+      length ignores per-iteration progress.
+    concepts:
+      - python.loops
+      - python.lists
+  - id: q4
+    prompt: |
+      Given a list `words`, you want a single string with all the words joined
+      by a single space. Which expression does this correctly?
+    choices:
+      - '" ".join(words)'
+      - 'words.join(" ")'
+      - 'str(words)'
+      - '" ".append(words)'
+    correct_choice: '" ".join(words)'
+    explanation: |
+      `str.join` is called on the separator string and takes the iterable of
+      pieces, so `" ".join(words)` glues the words with spaces. `words.join(" ")`
+      reverses the roles, `str(words)` produces the list's repr with brackets,
+      and strings have no `append` method.
+    concepts:
+      - python.strings
+      - python.lists

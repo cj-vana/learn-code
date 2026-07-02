@@ -1,0 +1,125 @@
+id: quiz.library.brute_force_bigo_w2.a02
+kind: quiz
+version: 1
+language: python
+title: Reading Growth From the Loops
+slug: quiz-brute-force-bigo-w2-a02
+difficulty: medium
+concepts:
+  - concepts.big_o
+  - patterns.brute_force
+prerequisites:
+  - python.loops
+  - python.lists
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.brute_force_bigo_w2.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original code snippets and reasoning prompts written from scratch; distractors target common confusions between sequential and nested loops.
+quiz_type: mixed_review
+questions:
+  - id: q1
+    prompt: |
+      Two loops run one after the other, not nested. What is the overall time
+      complexity in terms of n?
+
+      ```python
+      total = 0
+      for x in range(n):
+          total += x
+      for y in range(n):
+          total += y
+      ```
+    choices: ["O(n)", "O(n^2)", "O(2n^2)", "O(log n)"]
+    correct_choice: "O(n)"
+    explanation: |
+      The loops are sequential, so their step counts add: n + n = 2n. Big-O drops the
+      constant factor, leaving O(n). Sequential loops add their costs; only nesting
+      one loop inside another multiplies them.
+    concepts:
+      - concepts.big_o
+  - id: q2
+    prompt: |
+      The outer loop depends on n, but the inner loop always runs a fixed number of
+      times. What is the time complexity?
+
+      ```python
+      hits = 0
+      for i in range(n):
+          for k in range(5):
+              hits += 1
+      ```
+    choices: ["O(n)", "O(n^2)", "O(5n^2)", "O(1)"]
+    correct_choice: "O(n)"
+    explanation: |
+      The inner loop runs a constant 5 times regardless of n, so the body executes
+      5n times total. A constant factor drops out under Big-O, giving O(n). A nested
+      loop is only O(n^2) when the inner loop's count also grows with n.
+    concepts:
+      - concepts.big_o
+  - id: q3
+    prompt: |
+      This nested loop only pairs each index with later indices. How many times does
+      the body run as a function of n, in Big-O terms?
+
+      ```python
+      pairs = 0
+      for i in range(n):
+          for j in range(i + 1, n):
+              pairs += 1
+      ```
+    choices: ["O(n^2)", "O(n)", "O(n log n)", "O(1)"]
+    correct_choice: "O(n^2)"
+    explanation: |
+      This counts each unordered pair once, about n * (n - 1) / 2 times. Dropping the
+      constant and lower-order term leaves O(n^2). Skipping already-seen pairs halves
+      the exact work but does not change the quadratic growth rate.
+    concepts:
+      - patterns.brute_force
+      - concepts.big_o
+  - id: q4
+    prompt: |
+      An O(n) scan runs, and then a separate O(n) scan runs after it finishes. Why is
+      the combined complexity still O(n) rather than O(n^2)?
+    choices:
+      - The two passes add together (n + n = 2n), and Big-O keeps only the dominant term without the constant
+      - Running two loops always cancels out to a single constant-time step
+      - Any code with two loops is automatically O(n^2)
+      - The second scan reuses the first scan's result, so it costs nothing
+    correct_choice: The two passes add together (n + n = 2n), and Big-O keeps only the dominant term without the constant
+    explanation: |
+      Sequential work is summed, not multiplied. n + n = 2n simplifies to O(n).
+      Multiplication (and thus O(n^2)) happens only when one loop is nested inside
+      another so the inner loop reruns for every outer step.
+    concepts:
+      - concepts.big_o
+  - id: q5
+    prompt: |
+      Which of these snippets is the one with O(n^2) time complexity?
+    choices:
+      - |
+        A double loop where both loops run n times:
+        `for i in range(n): for j in range(n): work()`
+      - |
+        A single loop over n items:
+        `for i in range(n): work()`
+      - |
+        A loop over n items followed by another loop over n items:
+        `for i in range(n): work()` then `for j in range(n): work()`
+      - |
+        A loop whose index doubles each step:
+        `i = 1` then `while i < n: i *= 2`
+    correct_choice: |
+      A double loop where both loops run n times:
+      `for i in range(n): for j in range(n): work()`
+    explanation: |
+      Only the fully nested double loop runs its body n times for each of n outer
+      steps, giving n * n = O(n^2). The single and sequential loops are O(n), and the
+      index-doubling loop runs about log2(n) times, so it is O(log n).
+    concepts:
+      - patterns.brute_force
+      - concepts.big_o

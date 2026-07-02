@@ -1,0 +1,76 @@
+id: lesson.library.binary_search_w2.a03
+kind: lesson
+version: 1
+language: python
+title: Counting Duplicates With Two Boundaries
+slug: lesson-binary-search-w2-a03
+difficulty: medium
+concepts:
+  - patterns.binary_search
+prerequisites:
+  - python.lists
+  - python.sorting
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.binary_search_w2.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original treatment of counting equal values by subtracting two boundary searches, with a fresh sensor-reading example written from scratch.
+body_markdown: |
+  How many times does a value appear in a sorted list? You could scan the whole
+  list, but that is `"O(n)"`. A slicker way runs two binary searches: find where
+  the run of equal values *starts* and where it *ends*, then subtract.
+
+  The first search finds the **lower bound**: the leftmost index where the value
+  could sit. The second finds the **upper bound**: the first index strictly past
+  the value. The gap between them is exactly the count.
+
+  Imagine a sorted log of sensor readings and you want to know how many times the
+  reading `3` was recorded:
+
+  ```python
+  def lower_bound(nums, target):
+      lo, hi = 0, len(nums)
+      while lo < hi:
+          mid = (lo + hi) // 2
+          if nums[mid] < target:   # strictly less -> answer is to the right
+              lo = mid + 1
+          else:
+              hi = mid
+      return lo
+
+  def upper_bound(nums, target):
+      lo, hi = 0, len(nums)
+      while lo < hi:
+          mid = (lo + hi) // 2
+          if nums[mid] <= target:  # <= so equals also move right
+              lo = mid + 1
+          else:
+              hi = mid
+      return lo
+
+  def count_of(nums, target):
+      return upper_bound(nums, target) - lower_bound(nums, target)
+
+  readings = [1, 3, 3, 3, 5, 8, 8]
+  print(count_of(readings, 3))  # 3
+  print(count_of(readings, 4))  # 0, the value is absent
+  ```
+
+  The only difference between the two searches is `<` versus `<=`. That single
+  character decides whether equal values push the boundary right, which is what
+  separates the start of the run from its end. Two `"O(log n)"` searches together
+  are still `"O(log n)"`, far cheaper than counting one by one.
+checkpoints:
+  - question: How do you get the count of a value from the two boundary searches?
+    answer: Subtract the lower bound from the upper bound.
+    explanation: The lower bound is where the run of equal values starts and the upper bound is just past where it ends, so their difference is exactly how many equal values sit between them.
+  - question: What single change turns the lower_bound search into the upper_bound search?
+    answer: Using nums[mid] <= target instead of nums[mid] < target.
+    explanation: Allowing equal values to move lo to the right pushes the boundary past the whole run, giving the first index strictly greater than the target.
+  - question: For readings = [1, 3, 3, 3, 5, 8, 8], what does count_of(readings, 4) return?
+    answer: "0"
+    explanation: 4 never appears, so the lower and upper bounds land on the same index (between 3 and 5), and subtracting equal indices gives a count of zero.

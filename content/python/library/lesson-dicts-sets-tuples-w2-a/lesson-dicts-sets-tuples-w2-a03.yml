@@ -1,0 +1,53 @@
+id: lesson.library.dicts_sets_tuples_w2.a03
+kind: lesson
+version: 1
+language: python
+title: Comparing Groups With Set Operations
+slug: lesson-dicts-sets-tuples-w2-a03
+difficulty: easy
+concepts:
+  - python.sets
+prerequisites:
+  - python.loops
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples_w2.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original class-roster example authored to teach dedup, membership, and the three main set operators.
+body_markdown: |
+  A *set* holds unique values with no duplicates and no fixed order.
+  Wrapping a list in `set()` is the quickest way to drop repeats:
+
+  ```python
+  emails = ["a@x.com", "b@x.com", "a@x.com"]
+  print(len(set(emails)))  # 2
+  ```
+
+  Sets shine when you compare two collections. The operators `&`, `|`,
+  and `-` answer common questions directly:
+
+  ```python
+  morning = {"ana", "ben", "cara"}
+  evening = {"ben", "dan"}
+  print(morning & evening)  # {'ben'}          shared by both
+  print(morning | evening)  # {'ana', 'ben', 'cara', 'dan'}  either group
+  print(morning - evening)  # {'ana', 'cara'}  only in morning
+  ```
+
+  Membership tests are the other big win. Checking `"ben" in morning`
+  uses hashing, so it stays fast (average O(1)) even as the set grows,
+  while scanning a list is O(n).
+checkpoints:
+  - question: What is the value of `len(set(["a", "a", "b"]))`?
+    answer: "2"
+    explanation: A set discards duplicates, so only the distinct values a and b remain.
+  - question: What does `{1, 2, 3} & {2, 3, 4}` evaluate to?
+    answer: "{2, 3}"
+    explanation: The & operator keeps only the elements present in both sets, the intersection.
+  - question: Why is `x in big_set` typically faster than `x in big_list` for large data?
+    answer: Sets use hashing for average O(1) lookups, while a list must scan its elements one by one in O(n).
+    explanation: Hash-based membership avoids checking every element, which matters as the collection grows.

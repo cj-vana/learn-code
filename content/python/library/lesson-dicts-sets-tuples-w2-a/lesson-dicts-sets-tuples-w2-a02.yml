@@ -1,0 +1,55 @@
+id: lesson.library.dicts_sets_tuples_w2.a02
+kind: lesson
+version: 1
+language: python
+title: Counting Items With dict.get
+slug: lesson-dicts-sets-tuples-w2-a02
+difficulty: easy
+concepts:
+  - python.dictionaries
+prerequisites:
+  - python.loops
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples_w2.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original vote-tally example authored to contrast bracket access with the get default pattern.
+body_markdown: |
+  Reading a missing key with square brackets crashes with a
+  `KeyError`. The `.get` method is gentler: if the key is absent it
+  hands back a default you choose instead of raising.
+
+  ```python
+  tally = {"red": 2}
+  print(tally.get("blue"))     # None
+  print(tally.get("blue", 0))  # 0
+  ```
+
+  That second form is the backbone of counting. Start each key at 0 the
+  first time you see it, then add one:
+
+  ```python
+  votes = ["red", "blue", "red", "green", "red"]
+  tally = {}
+  for color in votes:
+      tally[color] = tally.get(color, 0) + 1
+  print(tally)  # {'red': 3, 'blue': 1, 'green': 1}
+  ```
+
+  On the first sighting of a color, `get` returns the default `0`, so
+  the count becomes `1`. Every later sighting reads the stored count and
+  bumps it. Each element is handled once, so the tally is built in O(n).
+checkpoints:
+  - question: What does `tally.get("blue", 0)` return when `"blue"` is not a key in `tally`?
+    answer: "0"
+    explanation: When the key is missing, get returns the supplied default instead of raising a KeyError.
+  - question: How does `tally["blue"]` behave differently from `tally.get("blue")` for a missing key?
+    answer: Bracket access raises a KeyError, while .get returns None (or the default you pass).
+    explanation: Use .get when a missing key is expected and you want a safe fallback value.
+  - question: After counting `["a", "a", "b"]` with the get pattern, what is the dictionary?
+    answer: "{'a': 2, 'b': 1}"
+    explanation: The letter a is seen twice and b once, so their counts are 2 and 1.

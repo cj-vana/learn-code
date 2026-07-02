@@ -1,0 +1,57 @@
+id: lesson.library.dicts_sets_tuples_w2.a01
+kind: lesson
+version: 1
+language: python
+title: Sorting With a Key Function
+slug: lesson-dicts-sets-tuples-w2-a01
+difficulty: easy
+concepts:
+  - python.sorting
+prerequisites:
+  - python.functions
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples_w2.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original fruit-length example authored to teach key= and the sorted vs list.sort distinction.
+body_markdown: |
+  By default `sorted` compares items directly, but you can hand it a
+  *key function* that tells it what to compare instead. The key runs
+  once on each item, and the returned value decides the order:
+
+  ```python
+  words = ["fig", "apple", "kiwi"]
+  by_length = sorted(words, key=len)
+  print(by_length)  # ['fig', 'kiwi', 'apple']
+  ```
+
+  Here `len` turns each word into its length, so the shortest word
+  lands first. Pass `reverse=True` to flip the order:
+
+  ```python
+  print(sorted(words, key=len, reverse=True))  # ['apple', 'kiwi', 'fig']
+  ```
+
+  Note that `sorted` builds a brand-new list and leaves the original
+  alone. The list method `.sort()` is different: it rearranges the list
+  in place and returns `None`.
+
+  ```python
+  scores = [30, 10, 20]
+  scores.sort()
+  print(scores)  # [10, 20, 30]
+  ```
+checkpoints:
+  - question: What does the `key` argument in `sorted(words, key=len)` control?
+    answer: It picks the value used to compare each item, so words are ordered by their length instead of alphabetically.
+    explanation: The key function is applied to every element, and its return value drives the ordering.
+  - question: How do `sorted(data)` and `data.sort()` differ in what they return?
+    answer: sorted returns a new sorted list, while .sort() rearranges the list in place and returns None.
+    explanation: Reach for sorted when you need to keep the original; use .sort() to modify the list itself.
+  - question: What is the result of `sorted(["bb", "a", "ccc"], key=len)`?
+    answer: "['a', 'bb', 'ccc']"
+    explanation: Lengths are 1, 2, and 3, so the strings come out shortest to longest.

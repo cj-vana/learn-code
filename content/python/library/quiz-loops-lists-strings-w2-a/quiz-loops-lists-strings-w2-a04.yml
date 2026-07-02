@@ -1,0 +1,104 @@
+id: quiz.library.loops_lists_strings_w2.a04
+kind: quiz
+version: 1
+language: python
+title: String Methods and List Building Syntax
+slug: quiz-loops-lists-strings-w2-a04
+difficulty: medium
+concepts:
+  - python.strings
+  - python.lists
+  - python.slicing
+prerequisites: []
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings_w2.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original questions probing common method and slice mistakes.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: |
+      What does `"one-two-three".split("-")` return?
+    choices:
+      - "['one', 'two', 'three']"
+      - "['one-two-three']"
+      - "'one two three'"
+      - "['one', '-', 'two', '-', 'three']"
+    correct_choice: "['one', 'two', 'three']"
+    explanation: |
+      `split("-")` cuts the string at each hyphen and returns the pieces in a
+      list, discarding the separators themselves. The result has three elements.
+    concepts:
+      - python.strings
+      - python.lists
+  - id: q2
+    prompt: |
+      Given `nums = [1, 2, 3]`, which statement produces `[1, 2, 3, 4, 5]`?
+    choices:
+      - nums.extend([4, 5])
+      - nums.append([4, 5])
+      - nums.insert([4, 5])
+      - nums + [4, 5] with no reassignment
+    correct_choice: nums.extend([4, 5])
+    explanation: |
+      `extend` adds each element of its iterable argument individually, flattening
+      `[4, 5]` onto the end. `append` would nest the list as one element,
+      `insert` needs an index, and `nums + [4, 5]` builds a new list that is
+      discarded unless assigned.
+    concepts:
+      - python.lists
+  - id: q3
+    prompt: |
+      What does `"Hello World".replace("o", "0")` return?
+    choices:
+      - "Hell0 W0rld"
+      - "Hell0 World"
+      - "Hello W0rld"
+      - "Hello World"
+    correct_choice: "Hell0 W0rld"
+    explanation: |
+      `str.replace` swaps every occurrence of the target by default, so both
+      `o` characters become `0`. Strings are immutable, so this returns a new
+      string rather than editing the original in place.
+    concepts:
+      - python.strings
+  - id: q4
+    prompt: |
+      Given `data = [10, 20, 30, 40]`, what is `data[:-1]`?
+    choices:
+      - "[10, 20, 30]"
+      - "[20, 30, 40]"
+      - "[40]"
+      - "[10, 20, 30, 40]"
+    correct_choice: "[10, 20, 30]"
+    explanation: |
+      An empty start means "from the beginning" and a stop of -1 means "up to but
+      not including the last element", so the final item is dropped and the rest
+      are kept.
+    concepts:
+      - python.slicing
+      - python.lists
+  - id: q5
+    prompt: |
+      Which expression is True for `word = "Level"` if you want a
+      case-insensitive check of whether it reads the same forwards and backwards?
+    choices:
+      - word.lower() == word.lower()[::-1]
+      - word == word[::-1]
+      - word.reverse() == word
+      - word[::-1].lower() == word.upper()
+    correct_choice: word.lower() == word.lower()[::-1]
+    explanation: |
+      Lowercasing first makes the comparison case-insensitive, and `[::-1]`
+      reverses the string. Comparing the lowercased word to its lowercased
+      reverse handles `"Level"` correctly. Plain `word == word[::-1]` fails on the
+      capital `L`, strings have no `reverse` method, and mixing `lower` with
+      `upper` compares mismatched cases.
+    concepts:
+      - python.strings
+      - python.slicing

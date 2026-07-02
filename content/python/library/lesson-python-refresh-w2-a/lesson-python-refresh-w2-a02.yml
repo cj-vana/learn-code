@@ -1,0 +1,56 @@
+id: lesson.library.python_refresh_w2.a02
+kind: lesson
+version: 1
+language: python
+title: Three Ways to Divide
+slug: lesson-python-refresh-w2-a02
+difficulty: easy
+concepts:
+  - python.operators
+  - python.types
+prerequisites: []
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh_w2.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original walkthrough of division, floor division, and modulo.
+body_markdown: |
+  Python gives you three related operators for splitting numbers:
+
+  - `/` is true division and always hands back a `float`, even when the answer
+    is whole.
+  - `//` is floor division and keeps only the whole part, rounding down.
+  - `%` is the modulo operator and gives the remainder left over.
+
+  ```python
+  print(7 / 2)    # 3.5   (float)
+  print(7 // 2)   # 3     (whole part only)
+  print(7 % 2)    # 1     (remainder)
+  ```
+
+  A common use is turning a total into bigger units. Splitting minutes into
+  hours and leftover minutes uses `//` and `%` together:
+
+  ```python
+  total_minutes = 137
+  hours = total_minutes // 60     # 2
+  minutes = total_minutes % 60    # 17
+  print(hours, minutes)           # 2 17
+  ```
+
+  Notice that `9 / 3` is `3.0`, not `3`: the slash operator promises a float no
+  matter what, which can surprise you when you expected a plain integer.
+checkpoints:
+  - question: What is the value and type of `9 / 3`?
+    answer: "3.0, which is a float"
+    explanation: The single slash is true division and always returns a float, even when the division is exact.
+  - question: What does `17 % 5` equal?
+    answer: "2"
+    explanation: 5 goes into 17 three times (15) with 2 left over, and modulo returns that remainder.
+  - question: How would you get how many whole times 4 fits into 25?
+    answer: "25 // 4, which is 6"
+    explanation: Floor division discards the fractional part, so 25 // 4 gives 6.

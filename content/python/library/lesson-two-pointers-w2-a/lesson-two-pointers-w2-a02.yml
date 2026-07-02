@@ -1,0 +1,58 @@
+id: lesson.library.two_pointers_w2.a02
+kind: lesson
+version: 1
+language: python
+title: Herding the Keepers to the Front
+slug: lesson-two-pointers-w2-a02
+difficulty: medium
+concepts:
+  - patterns.two_pointers
+prerequisites:
+  - python.lists
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.two_pointers_w2.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original swap-based partition walkthrough using a same-direction boundary pointer.
+body_markdown: |
+  Sometimes you want every element that passes a test pulled to the front of a
+  list, in place. A boundary pointer named `slow` marks the first slot that has
+  not yet been claimed by a keeper. A `fast` pointer scans ahead looking for the
+  next value that passes. When it finds one, swap it into the boundary slot and
+  push the boundary forward.
+
+  ```python
+  def move_keepers_front(nums, keep):
+      slow = 0
+      for fast in range(len(nums)):
+          if keep(nums[fast]):
+              nums[slow], nums[fast] = nums[fast], nums[slow]
+              slow += 1
+      return slow
+  ```
+
+  After the scan, everything in `nums[0:slow]` passed the test and everything
+  from `slow` onward failed it, and `slow` itself is the count of keepers. The
+  swap keeps the keepers in the same relative order they appeared, though the
+  rejected values may get shuffled among themselves. Only one pass runs, so it
+  is O(n) time and O(1) extra space.
+
+  ```python
+  values = [3, 8, 1, 6, 5]
+  count = move_keepers_front(values, lambda x: x % 2 == 0)
+  # values is now [8, 6, 1, 3, 5]; count is 2
+  ```
+checkpoints:
+  - question: After move_keepers_front finishes, what does the returned value of slow tell you?
+    answer: It is the number of elements that passed the test, and also the index where the failing elements begin.
+    explanation: slow advances exactly once for every keeper, so it both counts the keepers and marks the boundary between the kept front and the rejected tail.
+  - question: When fast points at a value that fails the keep test, what happens on that iteration?
+    answer: Nothing is swapped and slow stays put; only fast moves forward to the next element.
+    explanation: The boundary only advances for passing values, so failing values are simply skipped and left to be overwritten later if a keeper needs their slot.
+  - question: Does this method preserve the original relative order of the elements that fail the test?
+    answer: No, only the passing (kept) elements stay in their original relative order; the rejected ones may be reordered by the swaps.
+    explanation: Each swap can move a previously seen failing value to a later position, so their sequence is not guaranteed, unlike the keepers.

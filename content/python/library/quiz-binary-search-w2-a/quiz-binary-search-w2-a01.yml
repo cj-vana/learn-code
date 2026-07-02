@@ -1,0 +1,95 @@
+id: quiz.library.binary_search_w2.a01
+kind: quiz
+version: 1
+language: python
+title: Binary Search Beyond a Plain Lookup
+slug: quiz-binary-search-w2-a01
+difficulty: easy
+concepts:
+  - patterns.binary_search
+prerequisites:
+  - python.lists
+  - python.sorting
+estimated_time_minutes: 5
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.binary_search_w2.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original scenarios covering answer-space search, rotation, the bisect module, and repeated-query cost; no external problem text reused.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      A courier must choose the smallest daily weight capacity so that every parcel
+      ships within a fixed number of days. As you raise the capacity, the number of
+      days needed only ever stays the same or falls, never rises. Which technique
+      finds the minimum workable capacity fastest?
+    choices:
+      - Binary search over the candidate capacity, testing at each guess whether that capacity finishes in time
+      - Sort the parcels and simply return the weight of the heaviest one
+      - Try every capacity from 1 upward, checking each with a linear pass
+      - Count the parcel weights with a dictionary and return the most common one
+    correct_choice: Binary search over the candidate capacity, testing at each guess whether that capacity finishes in time
+    explanation: |
+      The feasibility of a capacity is monotonic: once a capacity is large enough to meet
+      the deadline, every larger capacity also works. That yes/no boundary is exactly what
+      binary search hunts, so you can search the space of possible answers in O(log range)
+      feasibility checks instead of trying every value.
+    concepts:
+      - patterns.binary_search
+  - id: q2
+    prompt: |
+      You call a textbook ascending binary search that assumes the whole list is in
+      sorted order. On which of these inputs could it return a WRONG answer?
+    choices:
+      - A list that was sorted ascending and then rotated around some pivot index
+      - A sorted list that happens to contain several duplicate values
+      - A sorted list mixing negative and positive numbers
+      - A sorted list whose length is an even number
+    correct_choice: A list that was sorted ascending and then rotated around some pivot index
+    explanation: |
+      Plain binary search depends on a single global ordering so the middle comparison can
+      discard one half. Rotation breaks that: the list is only sorted in two pieces, so a
+      middle comparison no longer reliably rules out a half. Duplicates, mixed signs, and
+      even lengths do not violate the ordering, so they are all fine.
+    concepts:
+      - patterns.binary_search
+  - id: q3
+    prompt: |
+      Values arrive one at a time and you must keep them in a list that stays sorted,
+      so future lookups remain fast. Which approach locates each value's slot with a
+      binary search rather than a full scan?
+    choices:
+      - Use bisect.insort, which binary-searches for the correct insertion point before placing the value
+      - Append every value to the end and call list.sort() again after each insert
+      - Walk from the front each time until you pass the right spot, then insert there
+      - Drop the values into a set and rebuild a sorted list on every lookup
+    correct_choice: Use bisect.insort, which binary-searches for the correct insertion point before placing the value
+    explanation: |
+      The bisect module keeps a list ordered by locating the insertion index with binary
+      search in O(log n). Re-sorting after each append costs O(n log n) every time, and a
+      front-to-back scan finds the slot in O(n) without any binary search at all.
+    concepts:
+      - patterns.binary_search
+  - id: q4
+    prompt: |
+      You will run about 10,000 membership checks against the same 1,000,000-item
+      dataset, which currently arrives unsorted. Why is sorting once and binary
+      searching each query better than running 10,000 linear scans?
+    choices:
+      - Paying O(n log n) to sort a single time turns every later lookup into O(log n), which beats repeating an O(n) scan 10,000 times
+      - Sorting the data makes each later linear scan finish in O(1) time
+      - Binary search lets you discard the dataset, so no storage is needed
+      - A linear scan simply cannot run on a list of one million items
+    correct_choice: Paying O(n log n) to sort a single time turns every later lookup into O(log n), which beats repeating an O(n) scan 10,000 times
+    explanation: |
+      The sort is a one-time cost amortized across all queries. After it, each of the 10,000
+      lookups is O(log n) instead of O(n), so the total is roughly n log n plus 10,000 log n,
+      far below 10,000 times n. Sorting first pays off precisely when many searches share the
+      same data.
+    concepts:
+      - patterns.binary_search
+      - concepts.big_o

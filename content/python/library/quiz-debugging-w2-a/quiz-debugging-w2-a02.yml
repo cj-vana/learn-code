@@ -1,0 +1,123 @@
+id: quiz.library.debugging_w2.a02
+kind: quiz
+version: 1
+language: python
+title: Name That Exception
+slug: quiz-debugging-w2-a02
+difficulty: easy
+concepts:
+  - python.debugging
+prerequisites:
+  - python.loops
+estimated_time_minutes: 5
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.debugging_w2.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original one-line snippets, each engineered to trigger one specific exception the learner identifies.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: |
+      `ages` holds `{"sam": 30, "lee": 25}`. What happens here?
+
+      ```python
+      print(ages["max"])
+      ```
+    choices:
+      - Raises KeyError, because "max" is not a key in the dictionary
+      - Raises IndexError, because dictionaries are read by numeric position
+      - Prints None, because missing keys default to None
+      - Raises ValueError, because "max" is a reserved word
+    correct_choice: Raises KeyError, because "max" is not a key in the dictionary
+    explanation: |
+      Looking up an absent key with square brackets raises `KeyError`. Use
+      `ages.get("max")` to receive `None` instead, or check membership with
+      `"max" in ages` first.
+    concepts:
+      - python.debugging
+      - python.dictionaries
+  - id: q2
+    prompt: |
+      What is the result of running this line?
+
+      ```python
+      value = int("3.5")
+      ```
+    choices:
+      - Raises ValueError, because "3.5" is not a valid whole number for int()
+      - Returns 3, silently dropping the decimal part
+      - Raises TypeError, because int() cannot accept a string
+      - Returns 3.5 as a float
+    correct_choice: Raises ValueError, because "3.5" is not a valid whole number for int()
+    explanation: |
+      `int()` parses a string only if it spells a whole number; the dot makes
+      it invalid, raising `ValueError`. Convert through `float("3.5")` first, or
+      call `int(float("3.5"))` to truncate to 3.
+    concepts:
+      - python.debugging
+      - python.types
+  - id: q3
+    prompt: |
+      A name is stored as text. What does this snippet do?
+
+      ```python
+      name = "ada"
+      name.append("!")
+      ```
+    choices:
+      - Raises AttributeError, because strings have no append method
+      - Changes name to "ada!"
+      - Raises SyntaxError, because methods cannot be called on strings
+      - Raises IndexError, because the string is full
+    correct_choice: Raises AttributeError, because strings have no append method
+    explanation: |
+      `append` belongs to lists, not strings, so Python reports that a `str`
+      has no such attribute. To grow text, build a new string with `name + "!"`.
+    concepts:
+      - python.debugging
+      - python.strings
+  - id: q4
+    prompt: |
+      `nums` is `[4, 8, 15]`. What happens when this runs?
+
+      ```python
+      print(nums[1] + nums[3])
+      ```
+    choices:
+      - Raises IndexError, because index 3 is past the end of a 3-item list
+      - Prints 12
+      - Raises KeyError, because 3 is missing
+      - Raises TypeError, because list items cannot be added
+    correct_choice: Raises IndexError, because index 3 is past the end of a 3-item list
+    explanation: |
+      Valid indices for a 3-item list are 0, 1, and 2, so `nums[3]` overshoots
+      by one and raises `IndexError`. The last element is `nums[2]` or `nums[-1]`.
+    concepts:
+      - python.debugging
+      - python.lists
+  - id: q5
+    prompt: |
+      What stops this snippet from printing the count?
+
+      ```python
+      total = 0
+      for i in range(5):
+          total += 1
+      print(totals)
+      ```
+    choices:
+      - Raises NameError, because `totals` was never defined; the variable is `total`
+      - Prints 5
+      - Raises SyntaxError, because print needs a comma
+      - Raises IndexError, because totals has no index
+    correct_choice: Raises NameError, because `totals` was never defined; the variable is `total`
+    explanation: |
+      The loop builds `total`, but the print references `totals` with a stray
+      `s`. Python has no such name, so it raises `NameError`. Fix the typo to
+      match the defined variable.
+    concepts:
+      - python.debugging

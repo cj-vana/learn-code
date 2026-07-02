@@ -1,0 +1,47 @@
+id: lesson.library.loops_lists_strings_w2.a02
+kind: lesson
+version: 1
+language: python
+title: Reversing and Stepping With Slices
+slug: lesson-loops-lists-strings-w2-a02
+difficulty: medium
+concepts:
+  - python.slicing
+  - python.strings
+prerequisites:
+  - python.functions
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings_w2.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original explanation of the third slice value (step) and negative steps.
+body_markdown: |
+  A slice has a hidden third value: the *step*. The full form is
+  `sequence[start:stop:step]`. The step says how far to jump between picks.
+  A step of `2` grabs every second item; a step of `-1` walks backward.
+
+  ```python
+  text = "abcdef"
+  print(text[::2])    # 'ace'   -> every second character
+  print(text[::-1])   # 'fedcba' -> whole string, reversed
+  nums = [10, 20, 30, 40]
+  print(nums[::-1])   # [40, 30, 20, 10]
+  ```
+
+  The `[::-1]` trick works on any sequence, including lists, and it is the
+  shortest way to reverse one. Since slicing builds a *new* sequence, the
+  original `text` and `nums` are untouched afterward.
+checkpoints:
+  - question: What does "abcdef"[::-1] produce?
+    answer: "fedcba"
+    explanation: A step of -1 starts at the last character and moves toward the front, reversing the string.
+  - question: Which characters does the slice [::2] of "abcdef" select?
+    answer: Every second character starting at index 0, giving "ace".
+    explanation: A step of 2 jumps over one character each time, so it keeps indexes 0, 2, and 4.
+  - question: Does reversing with [::-1] modify the original string?
+    answer: "No"
+    explanation: Slicing returns a new string, and strings are immutable, so the original is unchanged.

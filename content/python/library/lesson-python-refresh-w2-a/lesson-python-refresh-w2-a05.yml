@@ -1,0 +1,54 @@
+id: lesson.library.python_refresh_w2.a05
+kind: lesson
+version: 1
+language: python
+title: Converting Between Types on Purpose
+slug: lesson-python-refresh-w2-a05
+difficulty: easy
+concepts:
+  - python.types
+  - python.operators
+prerequisites: []
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh_w2.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original explanation of explicit type conversion and its pitfalls.
+body_markdown: |
+  Python will not quietly mix text and numbers for you. The expression
+  `"5" + 2` raises a `TypeError`, because `+` cannot join a string and an
+  integer. You have to convert one side on purpose using the built-in
+  functions `int()`, `float()`, and `str()`:
+
+  ```python
+  quantity = int("3")       # the text "3" becomes the number 3
+  price = float("2.50")     # the text "2.50" becomes 2.5
+  total = quantity * price  # 7.5
+  label = "Total: " + str(total)   # "Total: 7.5"
+  print(label)
+  ```
+
+  This matters most with input read as text: a value like `"3"` looks like a
+  number but behaves like a string until you convert it.
+
+  Be careful what you feed `int()`. It happily parses `"42"`, but `int("4.9")`
+  raises a `ValueError` because that text is not a whole number. To turn a
+  decimal string into an integer, convert to a float first and then trim it:
+
+  ```python
+  print(int(float("4.9")))   # 4  (the fraction is dropped)
+  ```
+checkpoints:
+  - question: What happens when you evaluate `"5" + 2`?
+    answer: It raises a TypeError because a string and an integer cannot be added together
+    explanation: The plus operator will not combine text with a number, so you must convert one side first.
+  - question: How do you turn the string "10" into the number 10?
+    answer: 'Call int("10")'
+    explanation: The int() function parses a string of digits into an integer value.
+  - question: Does `int("4.9")` work?
+    answer: No, it raises a ValueError; convert with int(float("4.9")) to get 4
+    explanation: int() only parses whole-number text, so a decimal string must go through float() first.

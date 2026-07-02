@@ -1,0 +1,104 @@
+id: quiz.library.stack_queue_bfs_w2.a03
+kind: quiz
+version: 1
+language: python
+title: How BFS Explores and Why It Finds Short Paths
+slug: quiz-stack-queue-bfs-w2-a03
+difficulty: medium
+concepts:
+  - patterns.queue_bfs
+  - patterns.stack
+prerequisites:
+  - python.lists
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.stack_queue_bfs_w2.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original questions on BFS mechanics, multi-source starts, and complexity with plausible distractors.
+quiz_type: mixed_review
+questions:
+  - id: q1
+    prompt: |
+      You run BFS on a grid of R rows and C columns, visiting each open cell once and
+      checking its four neighbors. What is the time complexity in terms of R and C?
+    choices: ["O(R * C)", "O(R + C)", "O((R * C)^2)", "O(R * C * log(R * C))"]
+    correct_choice: "O(R * C)"
+    explanation: |
+      Each of the R times C cells is enqueued and dequeued at most once, and looking
+      at its four neighbors is constant work per cell. The total is proportional to
+      the number of cells, so the search runs in O(R * C).
+    concepts:
+      - patterns.queue_bfs
+      - concepts.big_o
+  - id: q2
+    prompt: |
+      To recover the actual shortest PATH (not just its length) from start to goal in
+      an unweighted graph, what should BFS record as it explores?
+    choices:
+      - For each node, the neighbor it was first reached from, so you can walk backward from the goal
+      - Only a single integer counting how many nodes were visited
+      - The largest label seen among all visited nodes
+      - Nothing extra, because the queue already stores the finished path
+    correct_choice: For each node, the neighbor it was first reached from, so you can walk backward from the goal
+    explanation: |
+      Storing a "came from" (parent) pointer for each node when it is first
+      discovered lets you start at the goal and follow the pointers back to the
+      start, then reverse that list to get the path. A bare visit count or a max
+      label carries no route information.
+    concepts:
+      - patterns.queue_bfs
+  - id: q3
+    prompt: |
+      Some grid problems start a BFS from SEVERAL sources at once (for example, every
+      cell that is already "on fire"). How do you set that up correctly?
+    choices:
+      - Enqueue all the source cells at distance 0 before the loop begins, marking each visited
+      - Run a separate independent BFS from each source and hope they do not overlap
+      - Enqueue only the first source and ignore the rest
+      - Push all sources onto a stack instead of a queue
+    correct_choice: Enqueue all the source cells at distance 0 before the loop begins, marking each visited
+    explanation: |
+      Multi-source BFS seeds the queue with every source at distance 0 and marks them
+      visited up front. The single expanding frontier then reaches every other cell by
+      its nearest source in one pass, which a stack (depth-first) would not guarantee.
+    concepts:
+      - patterns.queue_bfs
+  - id: q4
+    prompt: |
+      A student writes BFS over a graph that contains cycles but forgets to mark
+      nodes as visited. What is the most likely result?
+    choices:
+      - The same nodes are enqueued over and over, so the search does redundant work and may never stop
+      - The search silently returns the correct answer but uses less memory
+      - Python refuses to import collections.deque
+      - The queue is guaranteed to stay empty
+    correct_choice: The same nodes are enqueued over and over, so the search does redundant work and may never stop
+    explanation: |
+      Without a visited set, a cycle lets neighbors keep re-adding nodes that were
+      already processed. The queue never drains, so the traversal repeats work
+      endlessly instead of terminating. The visited set is what makes BFS finish on
+      cyclic graphs.
+    concepts:
+      - patterns.queue_bfs
+  - id: q5
+    prompt: |
+      Keeping the same traversal skeleton, you swap BFS's queue (popleft from the
+      front) for a stack (pop from the back). What changes about the exploration?
+    choices:
+      - It dives deep along one branch before backing up, becoming depth-first
+      - It still expands strictly ring by ring from the start
+      - It automatically finds shorter paths than BFS did
+      - It visits every node exactly twice instead of once
+    correct_choice: It dives deep along one branch before backing up, becoming depth-first
+    explanation: |
+      The first-in, first-out queue is what produces BFS's ring-by-ring frontier.
+      Replacing it with a last-in, first-out stack makes the search follow the newest
+      node first, plunging down one branch before backtracking, which is depth-first
+      search.
+    concepts:
+      - patterns.queue_bfs
+      - patterns.stack

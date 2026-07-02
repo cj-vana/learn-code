@@ -1,0 +1,115 @@
+id: quiz.library.mixed_capstones_w2.a01
+kind: quiz
+version: 1
+language: python
+title: Reach for the Right Pattern
+slug: quiz-mixed-capstones-w2-a01
+difficulty: medium
+concepts:
+  - patterns.hash_map_counting
+  - patterns.two_pointers
+  - patterns.sliding_window
+  - patterns.prefix_sums
+  - patterns.binary_search
+prerequisites:
+  - python.lists
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.mixed_capstones_w2.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original mixed-review scenarios (subscription plans, cycling elevation, rainfall logs, alphabetical dictionary, package weights) with hand-written distractors drawn from the other patterns in the toolkit.
+quiz_type: mixed_review
+questions:
+  - id: q1
+    prompt: |
+      A subscription service logs which plan each of a million users picked. You
+      must report, for every plan, how many users chose it. Which pattern fits best?
+    choices:
+      - Build a dictionary that maps each plan to a running count as you scan the log once
+      - Sort the users and binary search for each plan name
+      - Slide a fixed-size window across the log
+      - Walk two pointers inward from both ends of the log
+    correct_choice: Build a dictionary that maps each plan to a running count as you scan the log once
+    explanation: |
+      "How many of each" is a counting job. A dictionary keyed by plan gives you an
+      average O(1) update per user, so a single pass produces every tally. Sorting,
+      windows, and converging pointers solve ordering, contiguous-range, or pairing
+      problems instead.
+    concepts:
+      - patterns.hash_map_counting
+      - python.dictionaries
+  - id: q2
+    prompt: |
+      A cyclist recorded the elevation gain for each kilometer of a long ride. You
+      must find the largest total gain over any stretch of exactly 10 consecutive
+      kilometers. Which pattern is most efficient?
+    choices:
+      - Advance a fixed 10-wide window, adding the entering kilometer and dropping the leaving one
+      - Recompute the full 10-kilometer total from scratch at every start position
+      - Binary search for the single steepest kilometer
+      - Count how many times each elevation value appears
+    correct_choice: Advance a fixed 10-wide window, adding the entering kilometer and dropping the leaving one
+    explanation: |
+      A fixed-length window keeps a running total. When it slides one step you add the
+      value entering on the right and subtract the value leaving on the left, so each
+      step is O(1) and the whole scan is O(n). Recomputing all ten values at every
+      position repeats work you already did.
+    concepts:
+      - patterns.sliding_window
+  - id: q3
+    prompt: |
+      You are given an unchanging list of hourly rainfall and must answer many
+      queries of the form "total rainfall from hour i through hour j". What makes
+      each query O(1) after some setup?
+    choices:
+      - Precompute cumulative totals once, then answer each query with a single subtraction
+      - Re-add the values from i to j for every query
+      - Sort the hours before answering each query
+      - Use two converging pointers for each query
+    correct_choice: Precompute cumulative totals once, then answer each query with a single subtraction
+    explanation: |
+      A prefix-sum array stores the total of everything up to each index. The sum of
+      hours i..j is then prefix[j + 1] - prefix[i], one subtraction per query. Building
+      the array is O(n) once; every later query is O(1).
+    concepts:
+      - patterns.prefix_sums
+  - id: q4
+    prompt: |
+      A word list is stored sorted alphabetically. You must test quickly whether a
+      given word is present. Which pattern applies?
+    choices:
+      - Binary search, discarding half the remaining words at each comparison
+      - Read every word from the top until you find it or reach the end
+      - Tally how many words start with each letter
+      - Slide a fixed-size window across the word list
+    correct_choice: Binary search, discarding half the remaining words at each comparison
+    explanation: |
+      Sorted data is exactly what binary search needs. Comparing the target with the
+      middle word lets you throw away half the remaining range each step, giving
+      O(log n) lookups. A top-to-bottom scan is O(n) and wastes the sorted order you
+      were handed.
+    concepts:
+      - patterns.binary_search
+      - concepts.big_o
+  - id: q5
+    prompt: |
+      A sorted list of package weights is given. You must decide whether two distinct
+      packages together weigh exactly a target amount. Which pattern is the natural
+      fit?
+    choices:
+      - Put one pointer at each end and move inward based on the current sum
+      - Build a prefix-sum array of the weights
+      - Slide a fixed-size window across the weights
+      - Binary search for the target value itself
+    correct_choice: Put one pointer at each end and move inward based on the current sum
+    explanation: |
+      On a sorted list a low pointer and a high pointer steer the running sum: too
+      small means advance the low pointer, too large means retreat the high pointer.
+      This settles the pair-sum question in one O(n) pass. Prefix sums and windows
+      target contiguous ranges, not arbitrary pairs.
+    concepts:
+      - patterns.two_pointers

@@ -1,0 +1,86 @@
+id: quiz.library.two_pointers_w2.a01
+kind: quiz
+version: 1
+language: python
+title: Picking the Right Pointer Layout
+slug: quiz-two-pointers-w2-a01
+difficulty: easy
+concepts:
+  - patterns.two_pointers
+prerequisites:
+  - python.lists
+estimated_time_minutes: 5
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.two_pointers_w2.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pattern-recognition prompts about matching a task to the correct two-pointer layout.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      A sorted list of ticket prices is given, and you need to keep just one copy
+      of each price while overwriting the list in place. Which pointer layout fits?
+    choices:
+      - A write pointer marking the next unique slot and a read pointer scanning ahead, both advancing forward
+      - Two pointers starting at opposite ends and stepping toward the middle
+      - A single pointer that restarts from index zero after every match
+      - Two pointers that both begin at the final index and move left together
+    correct_choice: A write pointer marking the next unique slot and a read pointer scanning ahead, both advancing forward
+    explanation: |
+      De-duplicating a sorted list in place is the classic slow/fast (read/write) variant.
+      The read pointer visits every value and, when it finds one that differs from the last
+      kept value, copies it to the write slot. Both pointers move forward in a single pass.
+    concepts:
+      - patterns.two_pointers
+  - id: q2
+    prompt: |
+      You have two already-sorted lists and want to merge them into one sorted
+      result. Why do converging end-to-end pointers NOT fit this task well?
+    choices:
+      - Because each list needs its own forward pointer comparing current heads, not pointers moving inward on one list
+      - Because merging can only be done with a dictionary of counts
+      - Because sorted lists cannot be read from the front
+      - Because two-pointer techniques never work across two separate lists
+    correct_choice: Because each list needs its own forward pointer comparing current heads, not pointers moving inward on one list
+    explanation: |
+      Merging keeps one pointer at the front of each list and repeatedly takes the smaller
+      head, advancing only that list's pointer. That is a two-pointer method, but it uses one
+      forward pointer per list rather than a pair converging from the ends of a single list.
+    concepts:
+      - patterns.two_pointers
+  - id: q3
+    prompt: |
+      Which task is the BEST fit for two pointers converging from opposite ends of
+      one sorted list?
+    choices:
+      - Deciding whether some pair of values adds up to an exact target
+      - Counting how many even numbers the list contains
+      - Finding the most frequently repeated value
+      - Building a new list of every value squared
+    correct_choice: Deciding whether some pair of values adds up to an exact target
+    explanation: |
+      On a sorted list, a left and a right pointer let you grow or shrink the current sum by
+      moving the correct end inward, settling the pair-sum question in one O(n) pass. The
+      other tasks are simple single scans or counting jobs with no need for a converging pair.
+    concepts:
+      - patterns.two_pointers
+  - id: q4
+    prompt: |
+      A function must report whether a phrase reads the same forward and backward,
+      ignoring nothing (compare characters directly). Which layout is most natural?
+    choices:
+      - One pointer at the first character and one at the last, comparing and stepping inward until they meet
+      - Two pointers both starting at the middle and moving outward in lockstep
+      - A read pointer and a write pointer both moving forward
+      - Binary-search style jumps that halve the range each step
+    correct_choice: One pointer at the first character and one at the last, comparing and stepping inward until they meet
+    explanation: |
+      A palindrome check compares the outermost pair, then works inward. A front pointer and
+      a back pointer that step toward each other, returning False on any mismatch, is the
+      converging two-pointer pattern applied to a string.
+    concepts:
+      - patterns.two_pointers

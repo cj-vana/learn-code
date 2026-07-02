@@ -1,0 +1,95 @@
+id: quiz.library.hashmap_set_w2.a01
+kind: quiz
+version: 1
+language: python
+title: Picking the Right Tool for Counts and Membership
+slug: quiz-hashmap-set-w2-a01
+difficulty: easy
+concepts:
+  - patterns.hash_map_counting
+  - patterns.set_membership
+prerequisites:
+  - python.dictionaries
+  - python.sets
+estimated_time_minutes: 5
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.hashmap_set_w2.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original scenarios and distractors authored for this batch; no external problem text reused.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      You are given a string and must return the FIRST character that occurs
+      exactly once, reading left to right. Which plan handles this cleanly?
+    choices:
+      - Count every character's frequency in a dict, then scan the string once more for the first character whose count is 1
+      - Sort the characters and return whichever one lands first
+      - Put every character in a set and return any member of it
+      - Walk two pointers inward from both ends until they meet
+    correct_choice: Count every character's frequency in a dict, then scan the string once more for the first character whose count is 1
+    explanation: |
+      A frequency dict records how many times each character appears in one pass.
+      A second left-to-right pass then returns the first character whose stored
+      count is 1, which preserves original order. A set alone throws away the
+      counts you need, and sorting destroys the "first in the string" ordering.
+    concepts:
+      - patterns.hash_map_counting
+  - id: q2
+    prompt: |
+      Transaction ids arrive one at a time in a stream, and you must stop and
+      report the moment an id you have already handled shows up again. Which
+      approach matches this "seen it before?" check?
+    choices:
+      - Keep a set of ids handled so far and test membership before adding each new id
+      - Append every id to a list and re-sort the list after each arrival
+      - Track only a running sum of the numeric ids
+      - Compare each id against the id immediately before it and nothing else
+    correct_choice: Keep a set of ids handled so far and test membership before adding each new id
+    explanation: |
+      Membership in a set is average O(1), so checking "have I seen this id yet?"
+      as each one arrives is both direct and fast. Comparing only against the
+      previous id would miss a repeat that is not adjacent, and re-sorting a list
+      every step is needless O(n log n) work.
+    concepts:
+      - patterns.set_membership
+  - id: q3
+    prompt: |
+      You must decide whether two words are anagrams of each other (the same
+      letters in some order). Which hash-map-based test is both correct and
+      efficient?
+    choices:
+      - Build a letter-frequency dict for each word and check the two dicts for equality
+      - Confirm only that the two words have the same length
+      - Test whether one word appears as a substring of the other
+      - Drop both words into one shared set and check that its size is small
+    correct_choice: Build a letter-frequency dict for each word and check the two dicts for equality
+    explanation: |
+      Two words are anagrams exactly when each letter appears the same number of
+      times in both, which is precisely what comparing their frequency dicts
+      checks. Equal length is necessary but not sufficient, a substring test is
+      unrelated, and merging into one set discards the per-letter counts.
+    concepts:
+      - patterns.hash_map_counting
+  - id: q4
+    prompt: |
+      A moderation tool must answer thousands of "is this word on the banned
+      list?" queries against a fixed list of n banned words. Converting that
+      list to a set first changes the cost of each query to roughly:
+    choices:
+      - Average O(1) per query, thanks to hash-based lookup
+      - O(n) per query, the same as scanning the list
+      - O(log n) per query, like a binary search
+      - O(n^2) per query
+    correct_choice: Average O(1) per query, thanks to hash-based lookup
+    explanation: |
+      A list membership test scans element by element at O(n) each. A set stores
+      its members in a hash table, so an average query is constant time. Across
+      thousands of queries that difference dominates the total running time.
+    concepts:
+      - patterns.set_membership
+      - concepts.big_o

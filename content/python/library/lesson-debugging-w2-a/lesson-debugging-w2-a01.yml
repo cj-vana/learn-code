@@ -1,0 +1,63 @@
+id: lesson.library.debugging_w2.a01
+kind: lesson
+version: 1
+language: python
+title: The UnboundLocalError That Comes From Assigning a Global
+slug: lesson-debugging-w2-a01
+difficulty: medium
+concepts:
+  - python.debugging
+prerequisites:
+  - python.functions
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.debugging_w2.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original explanation of how assignment inside a function forces a name to be local, told through a score counter example with a return-value fix.
+body_markdown: |
+  Python decides whether a name is *local* by scanning the whole function body
+  once, before it runs. If the name is assigned **anywhere** inside the function,
+  it is treated as local for the entire function, even on lines that run earlier.
+
+  ```python
+  score = 0
+
+  def add_point():
+      score = score + 1   # boom
+      return score
+
+  add_point()
+  ```
+
+  This raises `UnboundLocalError`. Because `score` is assigned in `add_point`,
+  Python marks it local. Then `score + 1` tries to read that local before it has
+  ever been given a value, so there is nothing to read.
+
+  The clean fix is to stop depending on the outer variable: take the value in as
+  an argument and hand the new value back out.
+
+  ```python
+  score = 0
+
+  def add_point(score):
+      return score + 1
+
+  score = add_point(score)   # score is now 1
+  ```
+
+  You *can* write `global score` to reach outward, but passing values in and
+  returning them out keeps functions predictable and easy to test.
+checkpoints:
+  - question: What kind of error does reading score before assigning it inside add_point raise?
+    answer: UnboundLocalError
+    explanation: Assigning to score inside the function makes it local everywhere in that function, so reading it first has no value to return.
+  - question: What makes Python treat score as a local variable inside the function?
+    answer: The fact that score is assigned somewhere inside the function body
+    explanation: Any assignment to a name inside a function marks that name local for the whole function, decided before the code runs.
+  - question: What is the recommended fix instead of writing "global score"?
+    answer: Pass the value in as an argument and return the new value
+    explanation: Taking input as a parameter and returning the result avoids hidden outer state and keeps the function easy to reason about.

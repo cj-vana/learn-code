@@ -1,0 +1,59 @@
+id: lesson.library.sliding_window_w2.a01
+kind: lesson
+version: 1
+language: python
+title: A Window That Holds Only Unique Items
+slug: lesson-sliding-window-w2-a01
+difficulty: medium
+concepts:
+  - patterns.sliding_window
+prerequisites:
+  - python.lists
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sliding_window_w2.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original explanation using a keycard-swipe log to teach a variable window backed by a set that keeps every element distinct.
+body_markdown: |
+  Sometimes the rule for a window is not about a sum but about *duplicates*.
+  Suppose a door logs the badge id of everyone who swipes in, and you want the
+  longest stretch of swipes where nobody repeats. That stretch is a window whose
+  only rule is "every id inside me is different".
+
+  Keep a `set` of the ids currently inside the window. When the value entering on
+  the right is already in the set, the window has a repeat, so shrink from the
+  left, removing ids, until the clash is gone:
+
+  ```python
+  def longest_unique_run(badges):
+      inside = set()
+      left = 0
+      best = 0
+      for right in range(len(badges)):
+          while badges[right] in inside:      # a repeat has appeared
+              inside.remove(badges[left])     # drop the leftmost id
+              left += 1
+          inside.add(badges[right])           # now it is safe to add
+          best = max(best, right - left + 1)
+      return best
+
+  print(longest_unique_run([4, 2, 4, 5, 6, 2]))  # 4
+  ```
+
+  The set answers "is this id already inside?" in constant time, and `left` only
+  ever moves forward, so each badge is added and removed at most once. That keeps
+  the whole scan `O(n)`. The window length, as always, is `right - left + 1`.
+checkpoints:
+  - question: Why does the code shrink from the left before adding the new element on the right?
+    answer: To clear any duplicate first, so the window never holds the same id twice once the new value is added.
+    explanation: The while loop removes leftmost ids until badges[right] is no longer inside, keeping the invariant that all ids are distinct.
+  - question: For the list [4, 2, 4, 5, 6, 2], what is the longest run with no repeated id?
+    answer: "4"
+    explanation: The window covering 4, 5, 6, 2 (indices 2 through 5) has four distinct ids, the longest possible here.
+  - question: What role does the set play compared with checking the window with a loop each time?
+    answer: It reports whether an id is already inside in constant time, avoiding a rescan of the window on every step.
+    explanation: Constant-time membership is what lets the whole algorithm stay O(n) instead of O(n squared).

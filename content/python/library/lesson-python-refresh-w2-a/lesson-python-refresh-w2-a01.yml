@@ -1,0 +1,57 @@
+id: lesson.library.python_refresh_w2.a01
+kind: lesson
+version: 1
+language: python
+title: Which Values Count as True
+slug: lesson-python-refresh-w2-a01
+difficulty: easy
+concepts:
+  - python.conditionals
+  - python.types
+prerequisites: []
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh_w2.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original explanation of truthiness written from scratch.
+body_markdown: |
+  An `if` statement does not need a real `True` or `False`. Python will take
+  *any* value and decide whether it is "truthy" or "falsy". A small set of
+  values are treated as falsy: the number `0`, an empty string `""`, an empty
+  list `[]`, an empty dictionary `{}`, and the special value `None`. Almost
+  everything else is truthy.
+
+  ```python
+  name = ""
+  if name:
+      print("Hello", name)
+  else:
+      print("No name was given")   # this runs, because "" is falsy
+  ```
+
+  You can see how Python judges a value by passing it to `bool()`:
+
+  ```python
+  print(bool(0))      # False
+  print(bool(42))     # True
+  print(bool(""))     # False
+  print(bool("hi"))   # True
+  print(bool([]))     # False
+  ```
+
+  This lets you write natural checks like `if items:` to mean "if the list has
+  anything in it" instead of the longer `if len(items) > 0:`.
+checkpoints:
+  - question: What does bool("") evaluate to?
+    answer: "False"
+    explanation: An empty string is one of Python's falsy values, so bool("") is False.
+  - question: Is the integer 0 truthy or falsy?
+    answer: Falsy
+    explanation: Zero of any numeric type is falsy, while any non-zero number is truthy.
+  - question: Given items = [], does the body of `if items:` run?
+    answer: No, the body is skipped
+    explanation: An empty list is falsy, so the condition is False and the block does not execute.

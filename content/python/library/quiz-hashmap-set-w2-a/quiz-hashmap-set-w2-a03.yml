@@ -1,0 +1,116 @@
+id: quiz.library.hashmap_set_w2.a03
+kind: quiz
+version: 1
+language: python
+title: Tracing Counting and Set Code
+slug: quiz-hashmap-set-w2-a03
+difficulty: medium
+concepts:
+  - patterns.hash_map_counting
+  - patterns.set_membership
+prerequisites:
+  - python.dictionaries
+  - python.sets
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.hashmap_set_w2.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original code-tracing questions and distractors created for this batch.
+quiz_type: mixed_review
+questions:
+  - id: q1
+    prompt: |
+      Trace this code:
+
+      ```python
+      from collections import Counter
+      c = Counter("aabbbc")
+      print(c.most_common(1))
+      ```
+
+      What does it print?
+    choices:
+      - "[('b', 3)]"
+      - "[('a', 2)]"
+      - "('b', 3)"
+      - "{'b': 3}"
+    correct_choice: "[('b', 3)]"
+    explanation: |
+      Counter tallies a:2, b:3, c:1. most_common(1) returns a list holding the
+      single most frequent (value, count) pair, and "b" wins with 3. Note the
+      result is a list of tuples, not a bare tuple or a dict.
+    concepts:
+      - patterns.hash_map_counting
+      - python.strings
+  - id: q2
+    prompt: |
+      Trace this code:
+
+      ```python
+      a = {1, 2, 3}
+      b = {3, 4, 5}
+      print(len(a ^ b))
+      ```
+
+      What does it print?
+    choices:
+      - "4"
+      - "6"
+      - "2"
+      - "1"
+    correct_choice: "4"
+    explanation: |
+      a ^ b is the symmetric difference: values in one set but not both. Here that
+      is {1, 2, 4, 5}, dropping the shared 3, so its length is 4.
+    concepts:
+      - patterns.set_membership
+      - python.sets
+  - id: q3
+    prompt: |
+      You want to group words so that anagrams land together in the same bucket
+      of a dict. Which key computed from each word makes anagrams collide into the
+      same dict entry?
+    choices:
+      - '"".join(sorted(word)) as the key'
+      - len(word) as the key
+      - word[0] as the key
+      - id(word) as the key
+    correct_choice: '"".join(sorted(word)) as the key'
+    explanation: |
+      Sorting a word's letters produces the same string for every anagram of it,
+      so "listen" and "silent" both map to "eilnst" and share a bucket. Length or
+      first letter would lump in non-anagrams, and id() returns a distinct object
+      identity for each string, never grouping anything.
+    concepts:
+      - patterns.hash_map_counting
+      - patterns.set_membership
+  - id: q4
+    prompt: |
+      Trace this code:
+
+      ```python
+      votes = ["red", "blue", "red", "green", "blue", "red"]
+      counts = {}
+      for v in votes:
+          counts[v] = counts.get(v, 0) + 1
+      print(max(counts, key=counts.get))
+      ```
+
+      What does it print?
+    choices:
+      - "red"
+      - "blue"
+      - "green"
+      - "3"
+    correct_choice: "red"
+    explanation: |
+      The loop builds counts of red:3, blue:2, green:1. max(counts, key=counts.get)
+      compares the keys by their counts and returns the key with the largest
+      count, which is "red". It returns the key itself, not the count value.
+    concepts:
+      - patterns.hash_map_counting
+      - python.dictionaries

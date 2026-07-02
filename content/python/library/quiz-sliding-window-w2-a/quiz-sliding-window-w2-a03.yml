@@ -1,0 +1,122 @@
+id: quiz.library.sliding_window_w2.a03
+kind: quiz
+version: 1
+language: python
+title: Tracing Sliding Window Code
+slug: quiz-sliding-window-w2-a03
+difficulty: medium
+concepts:
+  - patterns.sliding_window
+prerequisites:
+  - python.lists
+estimated_time_minutes: 5
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sliding_window_w2.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original code traces plus a planted shrink bug and a window-slice question.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: |
+      Trace this function:
+
+      ```python
+      def g(nums, k):
+          s = sum(nums[:k])
+          best = s
+          for i in range(k, len(nums)):
+              s += nums[i] - nums[i - k]
+              best = min(best, s)
+          return best
+      ```
+
+      What does `g([4, 2, 1, 7, 3], 2)` return?
+    choices: ["3", "6", "8", "1"]
+    correct_choice: "3"
+    explanation: |
+      The size-2 window sums are [4,2]=6, [2,1]=3, [1,7]=8, and [7,3]=10. This
+      function keeps the smallest, which is 3.
+    concepts:
+      - patterns.sliding_window
+  - id: q2
+    prompt: |
+      This function should return the longest run of values whose sum stays at or
+      below `limit`, but it hangs on some inputs:
+
+      ```python
+      def longest_under(nums, limit):
+          left = 0
+          total = 0
+          best = 0
+          for right in range(len(nums)):
+              total += nums[right]
+              while total > limit:
+                  total -= nums[left]
+              best = max(best, right - left + 1)
+          return best
+      ```
+
+      What is the defect?
+    choices:
+      - The shrink loop never does left += 1, so it keeps removing the same element and can loop forever
+      - It should use min instead of max when updating best
+      - sum should be computed with a slice instead of a running total
+      - The loop should iterate over range(1, len(nums))
+    correct_choice: The shrink loop never does left += 1, so it keeps removing the same element and can loop forever
+    explanation: |
+      Shrinking must both subtract `nums[left]` AND advance `left`. Without
+      `left += 1`, the same element is subtracted over and over and the window
+      bounds go stale, so the while condition may never clear.
+    concepts:
+      - patterns.sliding_window
+      - python.debugging
+  - id: q3
+    prompt: |
+      A window's right edge sits at index `i` and the window has width `k`. Which
+      slice returns exactly the `k` elements currently inside the window, ending at
+      and including index `i`?
+    choices:
+      - "nums[i - k + 1:i + 1]"
+      - "nums[i:i + k]"
+      - "nums[i - k:i]"
+      - "nums[i - k + 1:i]"
+    correct_choice: "nums[i - k + 1:i + 1]"
+    explanation: |
+      To include index `i` the slice must stop at `i + 1`, and to hold exactly `k`
+      elements it must start at `i - k + 1`. `nums[i:i + k]` starts at i instead of
+      ending there, and the others either exclude `i` or land off by one.
+    concepts:
+      - patterns.sliding_window
+      - python.slicing
+  - id: q4
+    prompt: |
+      Trace this counter of subarrays whose sum is at most `limit`:
+
+      ```python
+      def count_leq(nums, limit):
+          left = 0
+          total = 0
+          count = 0
+          for right in range(len(nums)):
+              total += nums[right]
+              while total > limit:
+                  total -= nums[left]
+                  left += 1
+              count += right - left + 1
+          return count
+      ```
+
+      What does `count_leq([1, 2, 3], 3)` return?
+    choices: ["4", "6", "3", "5"]
+    correct_choice: "4"
+    explanation: |
+      The subarrays with sum at most 3 are [1], [2], [3], and [1,2]. Runs like
+      [2,3] and [1,2,3] exceed 3, so the count is 4. Each iteration adds
+      `right - left + 1`, the number of valid windows ending at `right`.
+    concepts:
+      - patterns.sliding_window
+      - patterns.running_total

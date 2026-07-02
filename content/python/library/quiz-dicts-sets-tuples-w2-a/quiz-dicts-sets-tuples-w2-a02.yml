@@ -1,0 +1,92 @@
+id: quiz.library.dicts_sets_tuples_w2.a02
+kind: quiz
+version: 1
+language: python
+title: Picking the Right Collection and Sort
+slug: quiz-dicts-sets-tuples-w2-a02
+difficulty: easy
+concepts:
+  - python.dictionaries
+  - python.sets
+  - python.tuples
+  - python.sorting
+prerequisites:
+  - python.loops
+estimated_time_minutes: 5
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples_w2.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original decision scenarios and distractors; no external problem text reused.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      You need to store each delivery drop as a fixed pair of map coordinates
+      (latitude, longitude) that must never be modified and that you later want
+      to use as keys in a lookup table. Which type fits best?
+    choices:
+      - A tuple, because it is immutable and hashable
+      - A list, because it can hold two numbers
+      - A set, because it removes duplicates
+      - A dict, because it stores pairs
+    correct_choice: A tuple, because it is immutable and hashable
+    explanation: |
+      A pair that never changes and must serve as a dict key needs to be
+      hashable. Tuples are immutable and hashable; lists and sets are mutable and
+      therefore unhashable, so they cannot be dict keys.
+    concepts:
+      - python.tuples
+  - id: q2
+    prompt: |
+      You have a long list of newsletter email addresses that contains
+      duplicates. You only need the distinct addresses and do not care about
+      order. What is the most direct way to get them?
+    choices:
+      - set(addresses)
+      - sorted(addresses)
+      - tuple(addresses)
+      - list(addresses)
+    correct_choice: set(addresses)
+    explanation: |
+      Converting to a set drops duplicates in one step because a set holds only
+      distinct values. sorted, tuple, and list all keep every duplicate; they
+      just change order or type.
+    concepts:
+      - python.sets
+  - id: q3
+    prompt: |
+      You have a list of (player_name, points) pairs and must order it from the
+      highest points to the lowest. Which call produces that order?
+    choices:
+      - "sorted(pairs, key=lambda p: p[1], reverse=True)"
+      - "sorted(pairs, key=lambda p: p[0])"
+      - "sorted(pairs, reverse=True)"
+      - "sorted(pairs, key=lambda p: p[1])"
+    correct_choice: "sorted(pairs, key=lambda p: p[1], reverse=True)"
+    explanation: |
+      key=lambda p: p[1] sorts by the points field, and reverse=True flips it to
+      highest-first. Keying on p[0] sorts by name; plain reverse=True sorts by the
+      whole tuple (name first); and without reverse you get lowest-first.
+    concepts:
+      - python.sorting
+      - python.tuples
+  - id: q4
+    prompt: |
+      During a game you must repeatedly look up a player's current score by their
+      name, as fast as possible. Which structure supports that best?
+    choices:
+      - A dict mapping each name to its score
+      - A list of names you scan from the start each time
+      - A set of the names only
+      - A sorted list of the scores only
+    correct_choice: A dict mapping each name to its score
+    explanation: |
+      A dict gives average O(1) lookup by key, which is exactly "score for this
+      name?". Scanning a list is O(n) each time, a set of names alone stores no
+      scores, and a sorted list of scores has lost the name-to-score link.
+    concepts:
+      - python.dictionaries

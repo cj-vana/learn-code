@@ -1,0 +1,96 @@
+id: quiz.library.stack_queue_bfs_w2.a01
+kind: quiz
+version: 1
+language: python
+title: Choosing Between a Stack, a Queue, and BFS
+slug: quiz-stack-queue-bfs-w2-a01
+difficulty: easy
+concepts:
+  - patterns.stack
+  - patterns.queue_bfs
+prerequisites:
+  - python.lists
+estimated_time_minutes: 5
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.stack_queue_bfs_w2.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Fresh scenario prompts and distractors written for this wave-2 batch; no external problem text reused.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      A web browser lets you press "Back" to return to the page you were on just
+      before the current one, again and again, always jumping to the MOST RECENT
+      earlier page. Which structure models the Back history most directly?
+    choices:
+      - A stack that pushes each visited page and pops to go back
+      - A queue that returns the very first page you ever opened
+      - A set of every page you have visited so far
+      - A dictionary mapping page titles to visit counts
+    correct_choice: A stack that pushes each visited page and pops to go back
+    explanation: |
+      "Back" always returns the most recently visited page, which is last-in,
+      first-out behavior. Pushing each page as you visit it and popping to go back
+      is exactly a stack. A queue would hand back the oldest page, and a set or a
+      count dictionary loses the ordering you need.
+    concepts:
+      - patterns.stack
+  - id: q2
+    prompt: |
+      You must print the nodes of a tree LEVEL BY LEVEL: first the root, then every
+      node one step down, then everything two steps down, and so on. Which approach
+      produces that order?
+    choices:
+      - Breadth-first traversal driven by a queue
+      - Depth-first traversal driven by a stack
+      - Sorting the node values before printing them
+      - Repeatedly popping the newest discovered node
+    correct_choice: Breadth-first traversal driven by a queue
+    explanation: |
+      Visiting a tree level by level is breadth-first search: a queue serves nodes
+      in the order they were discovered, so a whole level is emitted before the next
+      one begins. A stack would dive down one branch first, giving depth-first order
+      instead.
+    concepts:
+      - patterns.queue_bfs
+  - id: q3
+    prompt: |
+      Support tickets arrive throughout the day and your rule is to always help the
+      customer who has been WAITING THE LONGEST next. Which structure enforces that
+      rule?
+    choices:
+      - A queue, taking the oldest waiting ticket from the front
+      - A stack, taking the newest ticket off the top
+      - A list you re-sort by ticket text after each arrival
+      - A set that drops any duplicate tickets
+    correct_choice: A queue, taking the oldest waiting ticket from the front
+    explanation: |
+      "Longest waiting served next" is first-in, first-out, the defining behavior of
+      a queue. A stack would serve the newest arrival first, and re-sorting by text
+      ignores arrival time entirely.
+    concepts:
+      - patterns.queue_bfs
+  - id: q4
+    prompt: |
+      Scanning a row of daily temperatures, for each day you want the number of days
+      until a WARMER day appears, and you keep a running list of earlier days that
+      are still waiting for a warmer reading. When today beats the day on top of that
+      pending list, you resolve it and check the next one down. Which structure fits
+      this "resolve the most recent unmatched day first" logic?
+    choices:
+      - A stack of indices for days still awaiting a warmer temperature
+      - A queue that always resolves the earliest pending day first
+      - A single counter of how many days have passed
+      - A sorted list of all temperatures seen so far
+    correct_choice: A stack of indices for days still awaiting a warmer temperature
+    explanation: |
+      You always compare today against the most recently seen unresolved day and
+      pop it once it is beaten, which is last-in, first-out and calls for a stack.
+      A queue resolves the oldest first, and a lone counter cannot remember which
+      specific days are still pending.
+    concepts:
+      - patterns.stack

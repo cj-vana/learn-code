@@ -1,0 +1,55 @@
+id: lesson.library.hashmap_set_w2.a02
+kind: lesson
+version: 1
+language: python
+title: Set Math for Overlap, Difference, and Uniques
+slug: lesson-hashmap-set-w2-a02
+difficulty: easy
+concepts:
+  - patterns.set_membership
+prerequisites:
+  - python.sets
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.hashmap_set_w2.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original explanation and worked examples written from scratch.
+body_markdown: |
+  When a question is really about *which items belong to which group*, sets
+  let you answer it with a single operator instead of nested loops. Put each
+  group into a set, then combine them.
+
+  ```python
+  morning = {"ana", "ben", "cara", "dan"}
+  evening = {"cara", "dan", "eve"}
+
+  print(morning & evening)   # {'cara', 'dan'} -> in BOTH groups
+  print(morning - evening)   # {'ana', 'ben'}  -> only in morning
+  print(morning | evening)   # everyone, duplicates collapsed
+  print(morning ^ evening)   # {'ana', 'ben', 'eve'} -> exactly one group
+  ```
+
+  Read the four operators as plain questions: `&` (intersection) asks "who is
+  in both?", `-` (difference) asks "who is here but not there?", `|` (union)
+  asks "who appears anywhere?", and `^` (symmetric difference) asks "who is in
+  exactly one?". Because each element hashes to a bucket, these run in time
+  proportional to the set sizes rather than the size of one multiplied by the
+  other, which is what a list-of-lists approach would cost.
+
+  Sets also drop duplicates for free, so `morning | evening` never lists a
+  name twice. The trade-off is that a set forgets order and cannot hold
+  unhashable values like lists.
+checkpoints:
+  - question: Which operator returns only the names that appear in both morning and evening?
+    answer: The & (intersection) operator
+    explanation: morning & evening keeps elements common to both sets, which is the "in both" question.
+  - question: What is the result of morning - evening for the sets shown above?
+    answer: "{'ana', 'ben'}"
+    explanation: Difference keeps elements of the left set that are not in the right set; cara and dan are removed because they also appear in evening. (Set display order may vary.)
+  - question: Why is set algebra a better fit than comparing two lists element by element?
+    answer: Set operations rely on average O(1) hashing per element, so overlap and difference cost roughly the total size instead of the product of the two sizes, and duplicates are removed automatically.
+    explanation: Two nested list loops would be O(n*m) and could report duplicates, while set operators stay near-linear and keep each value once.

@@ -1,0 +1,61 @@
+id: lesson.library.binary_search_w2.a01
+kind: lesson
+version: 1
+language: python
+title: Where Would This Value Slot In?
+slug: lesson-binary-search-w2-a01
+difficulty: easy
+concepts:
+  - patterns.binary_search
+prerequisites:
+  - python.lists
+  - python.sorting
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.binary_search_w2.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original leaderboard framing for insertion-point search using Python's standard bisect module, written from scratch.
+body_markdown: |
+  You do not always have to write binary search by hand. Python ships a small
+  module called `bisect` that runs a binary search for you and answers one very
+  common question: *where would a new value go to keep the list sorted?* That
+  spot is called the **insertion point**.
+
+  Picture a leaderboard of scores kept in increasing order. A new score comes in
+  and you want to know its rank without re-sorting the whole board.
+
+  ```python
+  import bisect
+
+  scores = [30, 55, 55, 72, 90]
+
+  left = bisect.bisect_left(scores, 55)   # 1  -> before the first 55
+  right = bisect.bisect_right(scores, 55) # 3  -> after the last 55
+  spot = bisect.bisect_left(scores, 60)   # 3  -> 60 would slot here
+
+  bisect.insort(scores, 60)               # actually inserts, keeping order
+  print(scores)                           # [30, 55, 55, 60, 72, 90]
+  ```
+
+  The two variants differ only when the value is already present.
+  `bisect_left` returns the index *before* any equal values, and
+  `bisect_right` returns the index *after* them. When the value is absent, both
+  return the same index: the one gap where it belongs.
+
+  Because `bisect` uses binary search underneath, finding the insertion point is
+  `"O(log n)"`. Note that `insort` still has to shift later elements over to make
+  room, so the insertion itself is `"O(n)"`.
+checkpoints:
+  - question: For scores = [30, 55, 55, 72, 90], what does bisect.bisect_left(scores, 55) return?
+    answer: "1"
+    explanation: bisect_left returns the index just before any equal values, and the first 55 sits at index 1, so a left insertion point of 1 keeps the list sorted.
+  - question: When the searched value is not already in the list, how do bisect_left and bisect_right compare?
+    answer: They return the same index.
+    explanation: The left/right distinction only matters for values that are already present; with no duplicates to sit before or after, both point to the single gap where the value belongs.
+  - question: What is the time cost of finding an insertion point with bisect?
+    answer: "O(log n)"
+    explanation: bisect performs a binary search over the sorted list, halving the range each step, so locating the insertion point takes logarithmic time.

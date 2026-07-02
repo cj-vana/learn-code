@@ -1,0 +1,114 @@
+id: quiz.library.binary_search_w2.a02
+kind: quiz
+version: 1
+language: python
+title: Reading Bounds and Fixing Binary Search
+slug: quiz-binary-search-w2-a02
+difficulty: medium
+concepts:
+  - patterns.binary_search
+prerequisites:
+  - python.lists
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.binary_search_w2.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original code snippets, hand-traced answers, a mid-computation myth, and a bisect-module choice written for this batch.
+quiz_type: mixed_review
+questions:
+  - id: q1
+    prompt: |
+      This upper-bound routine returns the index just past the last value equal to x.
+      What does upper([5, 7, 7, 7, 9], 7) return?
+
+      ```python
+      def upper(a, x):
+          lo, hi = 0, len(a)
+          while lo < hi:
+              mid = (lo + hi) // 2
+              if a[mid] <= x:
+                  lo = mid + 1
+              else:
+                  hi = mid
+          return lo
+      ```
+    choices:
+      - "4"
+      - "3"
+      - "5"
+      - "1"
+    correct_choice: "4"
+    explanation: |
+      Every time a[mid] is 7 or less, lo jumps past mid, so the window slides to the right of
+      all the 7s. The three 7s sit at indices 1, 2, and 3, and the routine settles on index 4,
+      the first position after the last 7.
+    concepts:
+      - patterns.binary_search
+  - id: q2
+    prompt: |
+      A teammate warns that `mid = (lo + hi) // 2` is dangerous and insists you must
+      always write `mid = lo + (hi - lo) // 2` instead. Which statement is accurate
+      for Python specifically?
+    choices:
+      - Python integers have unlimited precision, so (lo + hi) // 2 cannot overflow; the lo + (hi - lo) // 2 form is a habit carried over from fixed-width integer languages
+      - In Python, (lo + hi) // 2 can silently overflow, so the lo + (hi - lo) // 2 form is strictly required
+      - Integer division in Python rounds to the nearest even number, which corrupts the midpoint
+      - You must use round((lo + hi) / 2) so the midpoint is never off by one
+    correct_choice: Python integers have unlimited precision, so (lo + hi) // 2 cannot overflow; the lo + (hi - lo) // 2 form is a habit carried over from fixed-width integer languages
+    explanation: |
+      Python ints grow as large as needed, so summing lo and hi never overflows the way it can
+      in fixed-width languages like C or Java. Both midpoint formulas give the same floor value
+      here; the subtractive form is a safe reflex from those other languages, not a Python need.
+    concepts:
+      - patterns.binary_search
+  - id: q3
+    prompt: |
+      This search hangs on search([5, 8], 3). What is the defect?
+
+      ```python
+      def search(a, target):
+          lo, hi = 0, len(a) - 1
+          while lo <= hi:
+              mid = (lo + hi) // 2
+              if a[mid] == target:
+                  return mid
+              elif a[mid] < target:
+                  lo = mid + 1
+              else:
+                  hi = mid
+          return -1
+      ```
+    choices:
+      - The else branch sets hi = mid instead of hi = mid - 1, so when the target sits below the middle element hi stops shrinking and the loop spins forever
+      - len(a) - 1 should be len(a), so the very first mid is computed incorrectly
+      - The equality check should be moved below the less-than check for the loop to terminate
+      - Binary search cannot operate on a list that has only two elements
+    correct_choice: The else branch sets hi = mid instead of hi = mid - 1, so when the target sits below the middle element hi stops shrinking and the loop spins forever
+    explanation: |
+      With a = [5, 8] and target 3, mid is 0 and a[0] is 5, which is greater than 3, so the else
+      branch runs and sets hi = mid = 0. Now lo and hi are both 0 and nothing changes on the next
+      pass, so the loop never ends. Writing hi = mid - 1 guarantees the window shrinks each step.
+    concepts:
+      - patterns.binary_search
+  - id: q4
+    prompt: |
+      You keep a running sorted list called data and want the count of elements
+      strictly less than a query value q. Which single call returns that count
+      directly?
+    choices:
+      - bisect.bisect_left(data, q)
+      - bisect.bisect_right(data, q)
+      - data.index(q)
+      - len(data) - bisect.bisect_left(data, q)
+    correct_choice: bisect.bisect_left(data, q)
+    explanation: |
+      bisect_left returns the leftmost index where q could be inserted while keeping order,
+      which equals the number of elements strictly less than q. bisect_right instead counts
+      elements less than or equal to q, index raises an error when q is absent, and the
+      subtraction form counts elements that are greater than or equal to q.
+    concepts:
+      - patterns.binary_search

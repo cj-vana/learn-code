@@ -1,0 +1,102 @@
+id: quiz.library.loops_lists_strings_w2.a02
+kind: quiz
+version: 1
+language: python
+title: Slicing and List Method Syntax
+slug: quiz-loops-lists-strings-w2-a02
+difficulty: easy
+concepts:
+  - python.slicing
+  - python.lists
+  - python.strings
+prerequisites: []
+estimated_time_minutes: 5
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings_w2.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax questions with hand-picked distractors.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: |
+      Given `letters = ['a', 'b', 'c', 'd', 'e']`, what does `letters[::2]`
+      evaluate to?
+    choices:
+      - "['a', 'c', 'e']"
+      - "['b', 'd']"
+      - "['a', 'b']"
+      - "['e', 'c', 'a']"
+    correct_choice: "['a', 'c', 'e']"
+    explanation: |
+      A step of 2 with no start or stop begins at index 0 and takes every second
+      element: indexes 0, 2, and 4. A positive step keeps the original left-to-
+      right order, so the result is `['a', 'c', 'e']`.
+    concepts:
+      - python.slicing
+      - python.lists
+  - id: q2
+    prompt: |
+      Given `s = "banana"`, what is `s[1:5]`?
+    choices:
+      - anan
+      - banan
+      - nana
+      - anana
+    correct_choice: anan
+    explanation: |
+      The slice starts at index 1 (`a`) and stops before index 5, so it includes
+      indexes 1, 2, 3, and 4: `a`, `n`, `a`, `n`. That gives `anan`.
+    concepts:
+      - python.slicing
+      - python.strings
+  - id: q3
+    prompt: |
+      Starting from `nums = [3, 1, 2]`, what does `nums.sort()` return, and what
+      is `nums` afterward?
+    choices:
+      - Returns None; nums becomes [1, 2, 3]
+      - Returns [1, 2, 3]; nums stays [3, 1, 2]
+      - Returns [1, 2, 3]; nums becomes [1, 2, 3]
+      - Returns None; nums stays [3, 1, 2]
+    correct_choice: Returns None; nums becomes [1, 2, 3]
+    explanation: |
+      `list.sort()` sorts the list in place and returns `None`. If you need a new
+      sorted list while leaving the original alone, use the `sorted()` function
+      instead.
+    concepts:
+      - python.lists
+  - id: q4
+    prompt: |
+      Which call counts how many times the letter `"o"` appears in
+      `text = "kangaroo zoo"`?
+    choices:
+      - text.count("o")
+      - text.find("o")
+      - text.index("o")
+      - len(text, "o")
+    correct_choice: text.count("o")
+    explanation: |
+      `str.count` returns the number of non-overlapping occurrences of a
+      substring. `find` and `index` return only the position of the first match,
+      and `len` does not accept a second argument.
+    concepts:
+      - python.strings
+  - id: q5
+    prompt: |
+      What does `"  hello  ".strip()` return?
+    choices:
+      - hello
+      - "  hello"
+      - "hello  "
+      - "  hello  "
+    correct_choice: hello
+    explanation: |
+      `str.strip()` with no argument removes whitespace from both ends of the
+      string, leaving the interior untouched. Here both leading and trailing
+      spaces are trimmed, yielding `"hello"`.
+    concepts:
+      - python.strings

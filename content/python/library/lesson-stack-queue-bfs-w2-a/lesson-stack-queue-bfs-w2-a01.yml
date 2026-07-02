@@ -1,0 +1,62 @@
+id: lesson.library.stack_queue_bfs_w2.a01
+kind: lesson
+version: 1
+language: python
+title: Matching Brackets With a Stack
+slug: lesson-stack-queue-bfs-w2-a01
+difficulty: medium
+concepts:
+  - patterns.stack
+prerequisites:
+  - python.lists
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.stack_queue_bfs_w2.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original bracket-matching walkthrough framed around a stack tracking the most recent unclosed opener.
+body_markdown: |
+  When you nest brackets like `([{}])`, the one you open *last* is the one you
+  must close *first*. That "most recent thing waits at the front of the line to
+  be resolved" behavior is exactly what a **stack** gives you, so a stack is the
+  natural tool for checking whether brackets are balanced.
+
+  The idea: scan the text one character at a time. Push every opener onto the
+  stack. When you hit a closer, the only opener it may legally match is the one
+  currently on top. Pop it and compare; if it does not match (or there is
+  nothing to pop), the string is unbalanced.
+
+  ```python
+  def brackets_ok(text):
+      partner = {")": "(", "]": "[", "}": "{"}
+      stack = []
+      for char in text:
+          if char in "([{":
+              stack.append(char)          # remember this opener
+          elif char in ")]}":
+              if not stack or stack.pop() != partner[char]:
+                  return False            # nothing to match, or wrong type
+      return not stack                    # leftover openers => unbalanced
+
+  print(brackets_ok("(a[b]{c})"))  # True
+  print(brackets_ok("(]"))         # False: ( does not partner with ]
+  print(brackets_ok("(("))         # False: two openers never closed
+  ```
+
+  Two failure cases matter. A closer with an empty stack means there was never a
+  matching opener. And if the loop finishes while the stack still holds items,
+  some opener was never closed. Each character is pushed and popped at most once,
+  so the whole scan is `"O(n)"`.
+checkpoints:
+  - question: When you reach a closing bracket, which opener is the only one that can legally match it?
+    answer: The opener on top of the stack (the most recently pushed one).
+    explanation: Brackets close in reverse order of opening, so the top of the stack is always the pending opener that must be matched next.
+  - question: Why must the stack be empty when the loop ends for the string to count as balanced?
+    answer: Any opener left on the stack was never closed, so the brackets are unbalanced.
+    explanation: Every opener is pushed and only removed when a matching closer appears; leftovers mean missing closers.
+  - question: What should happen if you meet a closing bracket while the stack is empty?
+    answer: Return False, because there is no opener for it to match.
+    explanation: A closer with nothing to pop has no partner, so the string cannot be balanced.

@@ -1,0 +1,108 @@
+id: quiz.library.dicts_sets_tuples_w2.a04
+kind: quiz
+version: 1
+language: python
+title: Reasoning About Collection Behavior
+slug: quiz-dicts-sets-tuples-w2-a04
+difficulty: medium
+concepts:
+  - python.dictionaries
+  - python.sets
+  - python.tuples
+  - python.sorting
+prerequisites:
+  - python.loops
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples_w2.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original behavior-reasoning questions and distractors; no external problem text reused.
+quiz_type: mixed_review
+questions:
+  - id: q1
+    prompt: |
+      A set stores only distinct values. What is the result of this expression?
+
+          len({4, 4, 7, 7, 7, 9})
+    choices:
+      - "3"
+      - "6"
+      - "2"
+      - "9"
+    correct_choice: "3"
+    explanation: |
+      The set collapses to the distinct values {4, 7, 9}, so its length is 3. The
+      repeated 4s and 7s are stored only once each.
+    concepts:
+      - python.sets
+  - id: q2
+    prompt: |
+      Dict keys must be hashable. Which of these values can be used as a dict key
+      without raising an error?
+    choices:
+      - "The tuple (1, 2)"
+      - "The list [1, 2]"
+      - "The set {1, 2}"
+      - "The dict {1: 2}"
+    correct_choice: "The tuple (1, 2)"
+    explanation: |
+      Tuples of immutable values are hashable and make valid keys. Lists, sets,
+      and dicts are mutable and unhashable, so using any of them as a key raises
+      TypeError.
+    concepts:
+      - python.tuples
+      - python.dictionaries
+  - id: q3
+    prompt: |
+      Python's sort is stable: items that compare equal keep their original
+      order. What does this produce?
+
+          sorted(["bb", "a", "dd", "ccc"], key=len)
+    choices:
+      - "['a', 'bb', 'dd', 'ccc']"
+      - "['a', 'dd', 'bb', 'ccc']"
+      - "['ccc', 'bb', 'dd', 'a']"
+      - "['a', 'bb', 'ccc', 'dd']"
+    correct_choice: "['a', 'bb', 'dd', 'ccc']"
+    explanation: |
+      Sorting by length gives lengths 1, 2, 2, 3. "bb" and "dd" both have length
+      2, and because the sort is stable they stay in their original relative
+      order (bb before dd). So the result is ['a', 'bb', 'dd', 'ccc'].
+    concepts:
+      - python.sorting
+  - id: q4
+    prompt: |
+      Given `stock = {"nails": 40}`, what does `stock.get("screws")` return when
+      the key is absent and no default is supplied?
+    choices:
+      - None
+      - "0"
+      - It raises KeyError
+      - An empty string
+    correct_choice: None
+    explanation: |
+      dict.get returns None for a missing key when you do not pass a second
+      argument; it never raises. Only indexing with stock["screws"] would raise
+      KeyError.
+    concepts:
+      - python.dictionaries
+  - id: q5
+    prompt: |
+      Set intersection with the & operator keeps only the shared members. What is
+      the value of `{1, 2, 3} & {2, 3, 4}`?
+    choices:
+      - "{2, 3}"
+      - "{1, 2, 3, 4}"
+      - "{1, 4}"
+      - "{}"
+    correct_choice: "{2, 3}"
+    explanation: |
+      The & operator returns elements present in both sets, which are 2 and 3.
+      The union would be {1, 2, 3, 4}, and the values unique to one side (1 and 4)
+      are excluded by intersection.
+    concepts:
+      - python.sets

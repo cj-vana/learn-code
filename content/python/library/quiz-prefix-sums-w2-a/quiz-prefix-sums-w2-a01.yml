@@ -1,0 +1,95 @@
+id: quiz.library.prefix_sums_w2.a01
+kind: quiz
+version: 1
+language: python
+title: Matching Tasks to Prefix Sums
+slug: quiz-prefix-sums-w2-a01
+difficulty: easy
+concepts:
+  - patterns.prefix_sums
+prerequisites:
+  - python.lists
+estimated_time_minutes: 5
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.prefix_sums_w2.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original transit, review, and range-update scenarios with hand-written distractors; nothing lifted from any external problem set.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      A subway line records how many riders board at each station, and the numbers
+      stay fixed for the day. A dashboard must answer hundreds of "how many riders
+      boarded from station a through station b?" questions quickly. Which plan fits
+      best?
+    choices:
+      - Precompute a prefix-sum array once, then answer each query with a single subtraction
+      - Loop over the stations from a to b and re-add the boardings on every query
+      - Rebuild a sorted copy of the boarding counts before each query
+      - Store the counts in a dictionary keyed by station and look up one value per query
+    correct_choice: Precompute a prefix-sum array once, then answer each query with a single subtraction
+    explanation: |
+      The data never changes but many range-sum questions arrive, so you pay one
+      linear build and then answer every query in constant time by subtracting two
+      stored totals. Re-adding the range repeats work, sorting destroys the station
+      order, and a single dictionary lookup returns one station, not a range total.
+    concepts:
+      - patterns.prefix_sums
+  - id: q2
+    prompt: |
+      Which of these queries over a fixed list is NOT something a plain sum-based
+      prefix array can answer in constant time?
+    choices:
+      - The largest single value between index i and index j
+      - The total of the values between index i and index j
+      - The average of the values between index i and index j
+      - The count of values between index i and index j (from the index range itself)
+    correct_choice: The largest single value between index i and index j
+    explanation: |
+      A prefix-sum array only stores running totals, so it recovers sums, and from a
+      sum you can also get an average by dividing by the count. But a maximum cannot
+      be derived from totals alone; that needs a different structure such as a sparse
+      table or segment tree.
+    concepts:
+      - patterns.prefix_sums
+  - id: q3
+    prompt: |
+      A moderator needs to answer many "how many one-star reviews fall between index
+      i and index j?" questions over a fixed list of star ratings. Which prefix-sum
+      trick answers each query in constant time?
+    choices:
+      - Build a prefix sum over a 0/1 marker list that is 1 where the rating is one star, then subtract two totals
+      - Build a prefix sum over the raw star values and subtract two totals
+      - Sort the ratings and binary search for the one-star block on each query
+      - Count the one-star ratings from scratch inside each query
+    correct_choice: Build a prefix sum over a 0/1 marker list that is 1 where the rating is one star, then subtract two totals
+    explanation: |
+      Counting how many entries satisfy a condition in a range is a prefix sum over a
+      0/1 indicator: mark each qualifying position with 1, accumulate, and the
+      difference of two prefix values is the count. Summing the raw star values would
+      total the ratings, not count the one-star entries.
+    concepts:
+      - patterns.prefix_sums
+  - id: q4
+    prompt: |
+      You must apply many "add v to every element from index i through index j"
+      updates to a list and only read the final list once, after all updates. Which
+      technique makes each update O(1) and reconstructs the result at the end?
+    choices:
+      - A difference array; add v at index i, subtract v just past j, then take a running prefix sum at the end
+      - Slice out data[i:j+1] and add v to each element on every update
+      - Rebuild a fresh prefix-sum array after every single update
+      - Sort the list after each update so the changes stay grouped
+    correct_choice: A difference array; add v at index i, subtract v just past j, then take a running prefix sum at the end
+    explanation: |
+      A difference array records only the boundaries of each range update in O(1),
+      and a single prefix-sum pass at the end turns those marks back into the final
+      values. Editing every element in the slice makes each update O(n), which defeats
+      the purpose.
+    concepts:
+      - patterns.prefix_sums
+      - patterns.running_total

@@ -1,0 +1,97 @@
+id: quiz.library.python_refresh_w2.a03
+kind: quiz
+version: 1
+language: python
+title: Choosing and Reading Conditionals
+slug: quiz-python-refresh-w2-a03
+difficulty: easy
+concepts:
+  - python.conditionals
+  - python.operators
+prerequisites: []
+estimated_time_minutes: 5
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh_w2.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original conditional scenarios and distractors composed for this batch.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      You must print exactly one label, "low", "medium", or "high", based on a
+      score, and the three ranges never overlap. Which structure guarantees that
+      only one label prints?
+    choices:
+      - A single if / elif / elif / else chain
+      - Three separate independent if statements
+      - A while loop that repeats until a label prints
+      - A for loop over the three label strings
+    correct_choice: A single if / elif / elif / else chain
+    explanation: |
+      In an if / elif / else chain, Python checks conditions top to bottom and runs
+      the body of the first one that is true, then skips the rest. That is exactly
+      the "pick one branch" behavior you want. Three independent `if` statements
+      could each fire and print more than one label.
+    concepts:
+      - python.conditionals
+  - id: q2
+    prompt: |
+      What does this code print?
+
+      ```python
+      x = 0
+      if x:
+          print("A")
+      else:
+          print("B")
+      ```
+    choices:
+      - "B"
+      - "A"
+      - It prints nothing
+      - It raises an error
+    correct_choice: "B"
+    explanation: |
+      An `if` evaluates the truthiness of its value. The integer `0` is falsy, so the
+      condition is false and the `else` branch runs, printing `B`. Any non-zero
+      number would have been truthy and printed `A`.
+    concepts:
+      - python.conditionals
+      - python.types
+  - id: q3
+    prompt: |
+      Which condition correctly checks that `n` is between 1 and 10, inclusive of
+      both ends?
+    choices:
+      - "1 <= n <= 10"
+      - "1 < n < 10 or n == 1"
+      - "n >= 1 or n <= 10"
+      - "1 =< n =< 10"
+    correct_choice: "1 <= n <= 10"
+    explanation: |
+      Python lets you chain comparisons, so `1 <= n <= 10` reads naturally and
+      includes both endpoints. Using `or` in `n >= 1 or n <= 10` is true for every
+      number, and `=<` is not a valid operator, so those options fail.
+    concepts:
+      - python.operators
+      - python.conditionals
+  - id: q4
+    prompt: |
+      In an if / elif / else chain, the first condition is true. What happens to the
+      remaining elif and else branches?
+    choices:
+      - They are skipped entirely
+      - They are all evaluated too
+      - Only the final else still runs
+      - Python raises an error
+    correct_choice: They are skipped entirely
+    explanation: |
+      Once a branch's condition is true and its body runs, Python leaves the whole
+      chain without testing any later `elif` or the `else`. Only one branch of a
+      single chain ever executes.
+    concepts:
+      - python.conditionals

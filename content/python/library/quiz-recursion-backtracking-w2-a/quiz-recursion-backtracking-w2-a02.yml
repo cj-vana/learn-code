@@ -1,0 +1,111 @@
+id: quiz.library.recursion_backtracking_w2.a02
+kind: quiz
+version: 1
+language: python
+title: How Backtracking Explores and Prunes
+slug: quiz-recursion-backtracking-w2-a02
+difficulty: medium
+concepts:
+  - patterns.backtracking
+  - patterns.recursion
+prerequisites:
+  - python.functions
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.recursion_backtracking_w2.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original binary-string builder snippet plus hand-written questions on start indices, pruning, undo, and permutation counts; nothing copied from external material.
+quiz_type: mixed_review
+questions:
+  - id: q1
+    prompt: |
+      When backtracking generates combinations (where order does not matter), the
+      recursion is usually passed a "start index" and each loop begins from that index.
+      Why?
+    choices:
+      - So earlier items are not revisited, which stops the same combination from being produced in a different order
+      - So the search always finishes in constant time
+      - So the input list gets sorted as a side effect
+      - So the results list is guaranteed to stay empty
+    correct_choice: So earlier items are not revisited, which stops the same combination from being produced in a different order
+    explanation: |
+      Combinations are unordered, so {1, 2} and {2, 1} are the same answer. Beginning each
+      deeper loop at the current index (or one past it) prevents the search from looking back
+      at already-used earlier items, so each combination is generated exactly once.
+    concepts:
+      - patterns.backtracking
+  - id: q2
+    prompt: |
+      A backtracking search checks a constraint and returns early the moment a partial
+      solution can no longer possibly succeed. What is this early exit usually called, and
+      why is it valuable?
+    choices:
+      - Pruning; it abandons hopeless branches so the search skips large regions of dead-end work
+      - Memoization; it caches and reuses every result the search has ever produced
+      - Base casing; it is what prints the final answer to the screen
+      - Recursion; it is the only mechanism that lets the function call itself
+    correct_choice: Pruning; it abandons hopeless branches so the search skips large regions of dead-end work
+    explanation: |
+      Cutting off a branch as soon as it cannot lead to a valid solution is called pruning.
+      It is what makes backtracking practical: instead of building out every doomed partial
+      solution to the end, the search drops it immediately and moves on to promising branches.
+    concepts:
+      - patterns.backtracking
+  - id: q3
+    prompt: |
+      This function builds every binary string of length n:
+
+      ```python
+      def build(n, path, results):
+          if len(path) == n:
+              results.append("".join(path))
+              return
+          for ch in "01":
+              path.append(ch)
+              build(n, path, results)
+              path.pop()
+      ```
+
+      How many strings does build(3, [], results) place in results?
+    choices: ["8", "6", "3", "9"]
+    correct_choice: "8"
+    explanation: |
+      At each of the 3 positions the loop tries two characters, 0 and 1, and the choices are
+      independent, so the total is 2 * 2 * 2 = 2 ** 3 = 8 distinct strings. The base case fires
+      once the path reaches length n and records the completed string.
+    concepts:
+      - patterns.backtracking
+      - patterns.recursion
+  - id: q4
+    prompt: |
+      In that same build function, what breaks if you delete the path.pop() line at the
+      end of the loop?
+    choices:
+      - path keeps growing and is never restored, so leftover characters leak into sibling branches and the results come out wrong
+      - Nothing changes, because pop() there is purely decorative
+      - Python raises a SyntaxError before the function can run
+      - The function returns immediately without ever recursing
+    correct_choice: path keeps growing and is never restored, so leftover characters leak into sibling branches and the results come out wrong
+    explanation: |
+      The append and pop bracket each recursive call so the shared path returns to its earlier
+      state before the next choice is tried. Without the pop, characters from a finished branch
+      stay behind, the path never shrinks, and the built strings become corrupted.
+    concepts:
+      - patterns.backtracking
+  - id: q5
+    prompt: |
+      Using backtracking to generate every ordering (permutation) of n distinct items
+      produces how many results?
+    choices: ["n!", "2 ** n", "n ** 2", "n"]
+    correct_choice: "n!"
+    explanation: |
+      There are n choices for the first slot, n - 1 remaining for the second, n - 2 for the
+      third, and so on down to 1. Multiplying these gives n * (n - 1) * ... * 1 = n!, which is
+      why exhaustively listing permutations becomes expensive as n grows.
+    concepts:
+      - patterns.backtracking
+      - concepts.big_o

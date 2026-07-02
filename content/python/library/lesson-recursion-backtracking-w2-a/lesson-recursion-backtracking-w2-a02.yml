@@ -1,0 +1,61 @@
+id: lesson.library.recursion_backtracking_w2.a02
+kind: lesson
+version: 1
+language: python
+title: Carrying an Accumulator Down the Recursion
+slug: lesson-recursion-backtracking-w2-a02
+difficulty: medium
+concepts:
+  - patterns.recursion
+prerequisites:
+  - python.functions
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.recursion_backtracking_w2.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original explanation contrasting accumulator-passed-down recursion with combine-on-the-way-up recursion, traced through a summing example.
+body_markdown: |
+  Many recursive functions build their answer *on the way back up*: they call
+  themselves first and then combine the returned value with a bit of local work.
+  There is a second style that carries a running answer *down* through an extra
+  parameter, so the work is finished by the time the base case is reached.
+
+  This summing function keeps a `running` total as an argument:
+
+  ```python
+  def total(nums, running=0):
+      if not nums:                          # base case: nothing left to add
+          return running                    # running already holds the answer
+      return total(nums[1:], running + nums[0])   # fold in nums[0], pass the rest down
+
+  print(total([5, 2, 8]))   # 15
+  ```
+
+  Notice where the addition happens. `running + nums[0]` is computed *before* the
+  recursive call and handed in as the next argument, so each number is absorbed on
+  the way *down*. Trace it:
+
+  ```text
+  total([5, 2, 8], 0)
+  total([2, 8], 5)      # 0 + 5
+  total([8], 7)         # 5 + 2
+  total([], 15)         # 7 + 8  -> returns 15
+  ```
+
+  When the list finally empties, `running` is already the complete total, so the
+  base case just returns it. Nothing is combined as the stack unwinds; that final
+  value simply travels straight back up untouched.
+checkpoints:
+  - question: In this version, is each number added on the way down or on the way back up?
+    answer: On the way down, before each recursive call is made.
+    explanation: The expression running + nums[0] is evaluated first and passed in as an argument, so the arithmetic happens as calls go deeper, not as they return.
+  - question: Why does the base case return running without doing any arithmetic?
+    answer: Because by the time the list is empty, running already holds the full total, so there is nothing left to compute.
+    explanation: Every element was folded into running on the way down, leaving the base case to simply report the finished value.
+  - question: What number is passed as running in the call total([8], ...)?
+    answer: "7"
+    explanation: Starting from 0, the first two calls add 5 and then 2, so running is 7 by the time the list has shrunk to [8].

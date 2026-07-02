@@ -1,0 +1,119 @@
+id: quiz.library.stack_queue_bfs_w2.a02
+kind: quiz
+version: 1
+language: python
+title: Python Syntax for Stacks and Queues
+slug: quiz-stack-queue-bfs-w2-a02
+difficulty: easy
+concepts:
+  - patterns.stack
+  - patterns.queue_bfs
+prerequisites:
+  - python.lists
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.stack_queue_bfs_w2.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original code snippets and syntax-focused distractors about list and deque operations for this batch.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: |
+      Using collections.deque as a stack, which two calls push a value and then
+      remove the value most recently pushed, both from the SAME (right) end?
+    choices:
+      - append(x) to push and pop() to remove the top
+      - appendleft(x) to push and pop() to remove the top
+      - append(x) to push and popleft() to remove the top
+      - push(x) to push and pop() to remove the top
+    correct_choice: append(x) to push and pop() to remove the top
+    explanation: |
+      A deque's right end acts as the top of a stack: append(x) adds on the right and
+      pop() removes from the right, both O(1). Mixing in popleft() or appendleft()
+      would touch the far end, and deque has no push() method.
+    concepts:
+      - patterns.stack
+  - id: q2
+    prompt: |
+      What does this snippet print?
+
+      ```python
+      from collections import deque
+      q = deque()
+      for x in [1, 2, 3]:
+          q.append(x)
+      print(q.popleft(), q.popleft())
+      ```
+    choices:
+      - 1 2
+      - 3 2
+      - 2 1
+      - 1 3
+    correct_choice: 1 2
+    explanation: |
+      Each append adds to the back, so the deque holds [1, 2, 3]. popleft() removes
+      from the front, returning 1 first and then 2. They print in that order,
+      separated by a space.
+    concepts:
+      - patterns.queue_bfs
+  - id: q3
+    prompt: |
+      When a list named ``stack`` is used as a stack, which condition is the
+      idiomatic way to keep looping WHILE it still has items?
+    choices:
+      - "while stack:"
+      - "while stack.isEmpty() == False:"
+      - "while len(stack) != None:"
+      - "while stack.top():"
+    correct_choice: "while stack:"
+    explanation: |
+      A non-empty list is truthy and an empty list is falsy, so ``while stack:`` runs
+      until the last item is popped. Python lists have no isEmpty() or top() method,
+      and comparing a length to None is never False for an int.
+    concepts:
+      - patterns.stack
+  - id: q4
+    prompt: |
+      With ``q = deque([5, 6, 7])`` acting as a FIFO queue, which expression PEEKS at
+      the item that popleft() would remove next, without removing it?
+    choices:
+      - q[0]
+      - q[-1]
+      - q.popleft()
+      - q.front()
+    correct_choice: q[0]
+    explanation: |
+      popleft() takes from the front, which is index 0, and indexing does not modify
+      the deque. q[-1] peeks at the back, q.popleft() would actually remove the item,
+      and deque has no front() method.
+    concepts:
+      - patterns.queue_bfs
+  - id: q5
+    prompt: |
+      What does this snippet print?
+
+      ```python
+      stack = []
+      for ch in "cat":
+          stack.append(ch)
+      out = ""
+      while stack:
+          out += stack.pop()
+      print(out)
+      ```
+    choices:
+      - tac
+      - cat
+      - act
+      - "cta"
+    correct_choice: tac
+    explanation: |
+      The characters are pushed in the order c, a, t, so the stack is ['c', 'a', 't'].
+      pop() removes from the end, producing t, then a, then c, which builds the
+      reversed string "tac". Popping a stack reverses the input order.
+    concepts:
+      - patterns.stack

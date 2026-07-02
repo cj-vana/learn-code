@@ -1,0 +1,112 @@
+id: quiz.library.mixed_capstones_w2.a03
+kind: quiz
+version: 1
+language: python
+title: Weighing the Cost of Each Choice
+slug: quiz-mixed-capstones-w2-a03
+difficulty: medium
+concepts:
+  - patterns.hash_map_counting
+  - patterns.prefix_sums
+  - patterns.binary_search
+  - concepts.big_o
+prerequisites:
+  - python.lists
+  - python.dictionaries
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.mixed_capstones_w2.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original big-O trade-off questions comparing prefix sums, hashing, binary search, and set membership, with numeric distractors chosen to expose common miscounts.
+quiz_type: mixed_review
+questions:
+  - id: q1
+    prompt: |
+      You must answer q range-sum queries on a fixed array of n numbers. Re-adding the
+      values for each query costs O(n) per query. What does building a prefix-sum array
+      change the total cost to?
+    choices:
+      - "O(n + q): O(n) once to build the array, then O(1) per query"
+      - "O(n * q), the same as re-adding every time"
+      - "O(q log n)"
+      - "O(n^2) regardless of q"
+    correct_choice: "O(n + q): O(n) once to build the array, then O(1) per query"
+    explanation: |
+      Building the prefix-sum array is a single O(n) pass. After that, each of the q
+      queries is one subtraction of two stored totals, which is O(1). The combined cost
+      is O(n) plus O(q), written O(n + q), a big win over O(n * q) when q is large.
+    concepts:
+      - patterns.prefix_sums
+      - concepts.big_o
+  - id: q2
+    prompt: |
+      To count duplicates in a list of n items you can tally them in a dictionary in
+      about O(n), or sort first and scan neighbors in about O(n log n). Which is
+      generally faster for large n, and why?
+    choices:
+      - The dictionary tally, because O(n) grows more slowly than O(n log n)
+      - Sorting first, because O(n log n) is smaller than O(n)
+      - They are identical because both touch every element once
+      - Sorting first, because dictionaries are always slow
+    correct_choice: The dictionary tally, because O(n) grows more slowly than O(n log n)
+    explanation: |
+      Both approaches are correct, but the extra log n factor from sorting makes it
+      grow faster than a linear pass. A dictionary tally visits each item once with
+      average O(1) updates, so it is O(n) overall and wins as n gets large.
+    concepts:
+      - patterns.hash_map_counting
+      - concepts.big_o
+  - id: q3
+    prompt: |
+      You run binary search once on a sorted list of about 1,000,000 items. Roughly how
+      many comparisons does it make in the worst case?
+    choices:
+      - About 20
+      - About 1,000,000
+      - About 1,000
+      - About 500,000
+    correct_choice: About 20
+    explanation: |
+      Each comparison halves the remaining range, so the worst case is about log base 2
+      of the size. Since 2 to the 20th is just over a million, roughly 20 comparisons
+      suffice. That logarithmic growth is why binary search scales so well.
+    concepts:
+      - patterns.binary_search
+      - concepts.big_o
+  - id: q4
+    prompt: |
+      You need many membership tests of the form "is value x in this collection?" for
+      different x. Converting a list to a set first changes each test from what to what?
+    choices:
+      - From O(n) list scanning to O(1) average set lookup
+      - From O(1) list lookup to O(n) set scanning
+      - From O(log n) to O(n)
+      - It makes no difference to the cost
+    correct_choice: From O(n) list scanning to O(1) average set lookup
+    explanation: |
+      Checking membership in a list scans until it finds the value, which is O(n) each
+      time. A set is backed by a hash table, so each test is O(1) on average. When many
+      lookups happen, the one-time cost of building the set pays for itself quickly.
+    concepts:
+      - patterns.set_membership
+      - concepts.big_o
+  - id: q5
+    prompt: |
+      Which statement about prefix sums is TRUE?
+    choices:
+      - They shine when the array is fixed and many range-sum queries arrive, but a single change to the array can force a rebuild
+      - They require the array to be sorted before you build them
+      - They make updating one element cheaper than a plain array does
+      - They only work on lists of positive numbers
+    correct_choice: They shine when the array is fixed and many range-sum queries arrive, but a single change to the array can force a rebuild
+    explanation: |
+      Prefix sums trade one-time O(n) setup for O(1) range queries, which is ideal for
+      a static array queried many times. Their weakness is updates: changing one element
+      invalidates every later cumulative total, so a naive approach must rebuild. Order
+      does not matter and negative numbers are fine.
+    concepts:
+      - patterns.prefix_sums

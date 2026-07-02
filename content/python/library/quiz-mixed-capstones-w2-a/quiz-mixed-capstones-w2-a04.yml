@@ -1,0 +1,110 @@
+id: quiz.library.mixed_capstones_w2.a04
+kind: quiz
+version: 1
+language: python
+title: Patterns Hiding in the Wording
+slug: quiz-mixed-capstones-w2-a04
+difficulty: medium
+concepts:
+  - patterns.sliding_window
+  - patterns.two_pointers
+  - patterns.hash_map_counting
+prerequisites:
+  - python.lists
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.mixed_capstones_w2.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original scenario-recognition prompts (request logs, merged check-ins, streaming duplicates, shipment blocks) that hinge on subtle wording, plus a "which does NOT fit" item.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      "Find the length of the longest stretch of a request log that contains no
+      repeated request ID." Which pattern fits, and why?
+    choices:
+      - A variable-size window that grows until a repeat appears, then shrinks from the left
+      - A fixed-size window spanning the whole log
+      - Binary search over the request IDs
+      - A prefix-sum array of the IDs
+    correct_choice: A variable-size window that grows until a repeat appears, then shrinks from the left
+    explanation: |
+      The constraint is on the window's contents (no duplicates), not a fixed length, so
+      the window must resize. You extend the right edge while the stretch stays unique,
+      and when a repeat enters you pull the left edge forward past the earlier copy. A
+      set or dictionary of seen IDs tracks duplicates as the window moves.
+    concepts:
+      - patterns.sliding_window
+      - patterns.hash_map_counting
+  - id: q2
+    prompt: |
+      "Two already-sorted lists of check-in times must be merged into one sorted
+      timeline." Which layout fits?
+    choices:
+      - Keep one pointer at the front of each list and repeatedly take the smaller head
+      - Converge two pointers from the two ends of a single list
+      - Count each time in a dictionary
+      - Binary search each element of one list inside the other
+    correct_choice: Keep one pointer at the front of each list and repeatedly take the smaller head
+    explanation: |
+      Merging sorted inputs is a two-pointer method, but it uses one forward pointer per
+      list rather than a converging pair on one list. At each step you compare the two
+      current heads, append the smaller, and advance only that list's pointer, giving an
+      O(n + m) merge.
+    concepts:
+      - patterns.two_pointers
+  - id: q3
+    prompt: |
+      "Report the first value in a stream that has already appeared earlier." Which
+      pattern gives an O(n) solution?
+    choices:
+      - Track values in a set as you go and stop at the first one already present
+      - Sort the stream and take the middle value
+      - Slide a fixed-size window across the stream
+      - Move two pointers inward from both ends
+    correct_choice: Track values in a set as you go and stop at the first one already present
+    explanation: |
+      Remembering what you have seen in a set lets each new value be checked in O(1) on
+      average; the first value that is already in the set is the answer. Sorting loses
+      arrival order, and windows or converging pointers do not model "seen before".
+    concepts:
+      - patterns.hash_map_counting
+      - patterns.set_membership
+  - id: q4
+    prompt: |
+      "Find the smallest contiguous block of shipments whose total weight is at least
+      W", where all weights are positive. Which pattern fits?
+    choices:
+      - A variable-size window that expands to reach W and then contracts to minimize its length
+      - A fixed-size window of width W
+      - Binary search over the individual shipment weights
+      - A dictionary counting each distinct weight
+    correct_choice: A variable-size window that expands to reach W and then contracts to minimize its length
+    explanation: |
+      Because the weights are positive, growing the window only raises the sum and
+      shrinking only lowers it. You expand the right edge until the total reaches W, then
+      pull the left edge in as far as possible while staying at least W, tracking the
+      shortest valid block. That expand/contract motion is the variable window.
+    concepts:
+      - patterns.sliding_window
+  - id: q5
+    prompt: |
+      Which of these tasks is NOT naturally a sliding-window problem?
+    choices:
+      - Deciding whether a sorted list contains a pair of values summing to a target
+      - Finding the longest substring with no repeating characters
+      - Finding the maximum sum of k consecutive elements
+      - Finding the shortest window that contains every required character
+    correct_choice: Deciding whether a sorted list contains a pair of values summing to a target
+    explanation: |
+      The other three each concern a contiguous stretch that grows or shrinks, which is
+      exactly what a window models. The pair-sum question on a sorted list is about two
+      possibly far-apart values, so converging two pointers, not a window, is the right
+      tool.
+    concepts:
+      - patterns.sliding_window
+      - patterns.two_pointers

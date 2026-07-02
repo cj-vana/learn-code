@@ -1,0 +1,57 @@
+id: lesson.library.dicts_sets_tuples_w2.a05
+kind: lesson
+version: 1
+language: python
+title: Ranking a Dictionary With Tuple Keys
+slug: lesson-dicts-sets-tuples-w2-a05
+difficulty: medium
+concepts:
+  - python.sorting
+  - python.tuples
+  - python.dictionaries
+prerequisites:
+  - python.functions
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples_w2.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original scoreboard example authored to teach sorting dict items by a two-part tuple key with a tiebreaker.
+body_markdown: |
+  To rank a dictionary, first turn it into a list of `(key, value)`
+  tuples with `.items()`, then sort those tuples with a key function:
+
+  ```python
+  scores = {"ana": 3, "ben": 5, "cara": 5}
+  ranking = sorted(scores.items(), key=lambda pair: pair[1])
+  print(ranking)  # [('ana', 3), ('ben', 5), ('cara', 5)]
+  ```
+
+  Sorting climbs from low to high. To rank highest-first, return the
+  *negated* score from the key so large numbers sort earliest:
+
+  ```python
+  ranking = sorted(scores.items(), key=lambda pair: -pair[1])
+  ```
+
+  When two entries tie, you often want a predictable tiebreaker. Return a
+  *tuple* from the key: Python compares the first element, and only on a
+  tie moves to the second. Here we break ties alphabetically by name:
+
+  ```python
+  ranking = sorted(scores.items(), key=lambda pair: (-pair[1], pair[0]))
+  print(ranking)  # [('ben', 5), ('cara', 5), ('ana', 3)]
+  ```
+checkpoints:
+  - question: What kind of objects does `scores.items()` yield for the sort to work on?
+    answer: (key, value) tuples, one per entry in the dictionary.
+    explanation: items() gives pairs, so the key function can read the value with pair[1] and the key with pair[0].
+  - question: "Why does the key `lambda pair: -pair[1]` rank higher scores first?"
+    answer: Negating the score flips the normal ascending order, so the largest values become the smallest keys and sort earliest.
+    explanation: sorted always goes low to high, so negating a number reverses the effect for that field.
+  - question: With the key `(-pair[1], pair[0])`, how is a tie in score resolved?
+    answer: By the name in ascending alphabetical order, the tuple's second element.
+    explanation: Tuples compare element by element, so equal scores fall through to comparing the names.

@@ -1,0 +1,63 @@
+id: lesson.library.prefix_sums_w2.a02
+kind: lesson
+version: 1
+language: python
+title: Range Updates With a Difference Array
+slug: lesson-prefix-sums-w2-a02
+difficulty: medium
+concepts:
+  - patterns.prefix_sums
+prerequisites:
+  - python.lists
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.prefix_sums_w2.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original difference-array explanation framed as the inverse of prefix sums, written from scratch.
+body_markdown: |
+  Prefix sums have a mirror-image partner called a *difference array*. It flips
+  the usual goal: instead of answering range-sum questions quickly, it lets you
+  *apply* many "add some amount to every element between left and right" updates
+  cheaply, then recover the finished list in a single pass.
+
+  Keep a helper list `diff` with one extra slot of slack. To add `amount` across
+  indices `left` through `right` (inclusive), you touch only two spots: add
+  `amount` at `diff[left]` and subtract it at `diff[right + 1]`. Each update is
+  O(1) no matter how wide the range. Once every update is recorded, a single
+  prefix-sum sweep over `diff` turns those two-point marks into the real change
+  at each index.
+
+  ```python
+  def apply_ranges(n, updates):
+      diff = [0] * (n + 1)
+      for left, right, amount in updates:
+          diff[left] += amount
+          diff[right + 1] -= amount
+      result = []
+      running = 0
+      for i in range(n):
+          running += diff[i]
+          result.append(running)
+      return result
+
+  apply_ranges(5, [(0, 2, 3), (1, 4, 2)])  # -> [3, 5, 5, 2, 2]
+  ```
+
+  The extra slot at index `n` catches the subtraction when a range ends at the
+  last real index, so you never write past the end. With `m` updates on a list
+  of length `n`, this runs in O(n + m) instead of the O(n * m) you would pay by
+  looping over every index inside every range.
+checkpoints:
+  - question: To add an amount across indices left through right inclusive, which two positions of the difference array change?
+    answer: diff[left] increases by the amount and diff[right + 1] decreases by it.
+    explanation: The later prefix-sum sweep spreads that amount across exactly the indices from left to right and cancels it afterward.
+  - question: What does apply_ranges(5, [(0, 2, 3), (1, 4, 2)]) return?
+    answer: "[3, 5, 5, 2, 2]"
+    explanation: The first update adds 3 to indices 0 through 2 and the second adds 2 to indices 1 through 4, and the prefix sweep combines both into [3, 5, 5, 2, 2].
+  - question: Why is diff created with length n + 1 instead of n?
+    answer: The extra slot absorbs the subtraction at right + 1 when a range ends at the last index, avoiding an out-of-range write.
+    explanation: Without that spare slot, subtracting at right + 1 for a range that reaches index n - 1 would go past the end of the list.

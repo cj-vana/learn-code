@@ -1,0 +1,92 @@
+id: quiz.library.brute_force_bigo_w2.a01
+kind: quiz
+version: 1
+language: python
+title: Recognizing an All-Pairs Search
+slug: quiz-brute-force-bigo-w2-a01
+difficulty: easy
+concepts:
+  - patterns.brute_force
+  - concepts.big_o
+prerequisites:
+  - python.loops
+  - python.lists
+estimated_time_minutes: 5
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.brute_force_bigo_w2.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original scenarios (rowing crew weights, museum badge scans, seating charts) and hand-written distractors; no external problem text reused.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      A coach has an unsorted list of rower weights and wants to know whether any
+      two different rowers together weigh exactly the target for a two-seat boat.
+      With no other tools allowed, which is the plain brute-force plan?
+    choices:
+      - Compare every rower against every other rower with two nested loops, checking each pair's sum
+      - Return the sum of the first and last weights in the list
+      - Add up all the weights and compare the total to the target
+      - Pick the two heaviest rowers and check only that one pair
+    correct_choice: Compare every rower against every other rower with two nested loops, checking each pair's sum
+    explanation: |
+      Brute force here means testing every possible pair rather than guessing which
+      pair might work. Two nested loops examine all pairs and are guaranteed to find
+      a matching sum if one exists. The other options inspect only a few weights and
+      can easily miss a valid pair.
+    concepts:
+      - patterns.brute_force
+  - id: q2
+    prompt: |
+      To detect whether three different sensors ever recorded the same reading, a
+      routine uses three nested loops and compares every triple of sensors among n
+      of them. What is its time complexity?
+    choices: ["O(n^3)", "O(n^2)", "O(n)", "O(3n)"]
+    correct_choice: "O(n^3)"
+    explanation: |
+      Three nested loops that each run about n times execute their inner body on the
+      order of n times n times n. Checking every triple by brute force is therefore
+      cubic, O(n^3), which grows far faster than the quadratic all-pairs case.
+    concepts:
+      - patterns.brute_force
+      - concepts.big_o
+  - id: q3
+    prompt: |
+      At a museum entrance, badge codes are scanned in the order guests arrive. You
+      must report the first code that matches one scanned earlier the same day.
+      Which description fits a brute-force solution to this task?
+    choices:
+      - For each new code, scan back through all previously seen codes looking for a match
+      - Sort the codes once and return the smallest one
+      - Return the code exactly in the middle of the list
+      - Assume the first and last codes are always the repeat and compare only those two
+    correct_choice: For each new code, scan back through all previously seen codes looking for a match
+    explanation: |
+      The brute-force approach rechecks every earlier code for each new arrival,
+      exhaustively comparing until it finds a repeat. It is simple and correct even
+      though it does redundant work. The other options skip most of the data and can
+      return a wrong answer.
+    concepts:
+      - patterns.brute_force
+  - id: q4
+    prompt: |
+      A seating-chart tool compares every guest against every other guest to flag
+      pairs who should not sit together. As the guest list doubles in size, roughly
+      how does the number of pairwise comparisons change?
+    choices:
+      - It roughly quadruples, because all-pairs work grows with the square of the size
+      - It stays about the same, because the tool still makes one pass
+      - It roughly doubles, matching the doubling of the guest list
+      - It roughly halves, because larger lists share more work
+    correct_choice: It roughly quadruples, because all-pairs work grows with the square of the size
+    explanation: |
+      All-pairs comparison is O(n^2). Doubling n multiplies the work by about two
+      squared, or four. This quadratic growth is why brute-force pair checking gets
+      expensive quickly and why we look for smarter methods on large inputs.
+    concepts:
+      - patterns.brute_force
+      - concepts.big_o

@@ -1,0 +1,61 @@
+id: lesson.library.recursion_backtracking_w2.a03
+kind: lesson
+version: 1
+language: python
+title: Pruning Branches That Cannot Win
+slug: lesson-recursion-backtracking-w2-a03
+difficulty: medium
+concepts:
+  - patterns.backtracking
+  - patterns.recursion
+prerequisites:
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.recursion_backtracking_w2.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original explanation of backtracking pruning using a weight-limit constraint to skip doomed branches, with a worked count.
+body_markdown: |
+  Plain backtracking explores every branch all the way to the end. *Pruning*
+  makes it faster: before you recurse into a choice, you test a constraint, and if
+  the choice already breaks it you skip that whole branch. You never spend time
+  exploring possibilities that cannot possibly succeed.
+
+  Suppose each item has a weight and you want to count how many subsets of items
+  fit inside a weight `limit`. For every item you have two branches - skip it, or
+  take it - but you only take it when it still fits:
+
+  ```python
+  def count_within(weights, limit):
+      def explore(i, load):
+          if i == len(weights):
+              return 1                       # reached a full, valid selection
+          count = explore(i + 1, load)       # branch 1: skip item i (always allowed)
+          if load + weights[i] <= limit:     # branch 2: take it only if it fits
+              count += explore(i + 1, load + weights[i])
+          return count                       # a pruned branch adds nothing
+      return explore(0, 0)
+
+  print(count_within([2, 4, 5], 6))   # 5
+  ```
+
+  The `if load + weights[i] <= limit` line is the prune. When taking an item would
+  push the load over the limit, that branch is never entered. This is safe here
+  because weights are never negative: once the load passes the limit, adding more
+  items can only make it worse, so no deeper choice could ever rescue the branch.
+  For `[2, 4, 5]` with limit `6`, the valid subsets are `[]`, `[2]`, `[4]`, `[5]`,
+  and `[2, 4]` - five of them.
+checkpoints:
+  - question: What does pruning do in this function?
+    answer: It skips the "take item i" branch whenever load + weights[i] would exceed the limit, so that doomed branch is never explored.
+    explanation: Guarding the recursive call with the fit check means the function never descends into selections that already break the weight limit.
+  - question: Why is it safe to abandon a branch the moment the load passes the limit?
+    answer: Because weights are non-negative, so adding more items can only increase the load; a branch already over the limit can never become valid again.
+    explanation: With no negative weights the running load only grows, so once it exceeds the limit every deeper choice stays invalid, making the branch safe to discard.
+  - question: For count_within([2, 4, 5], 6), how many selections are counted?
+    answer: "5"
+    explanation: The subsets that weigh 6 or less are [], [2], [4], [5], and [2, 4]; the remaining three subsets each exceed the limit and are pruned.

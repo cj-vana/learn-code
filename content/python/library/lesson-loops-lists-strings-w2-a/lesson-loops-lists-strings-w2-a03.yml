@@ -1,0 +1,52 @@
+id: lesson.library.loops_lists_strings_w2.a03
+kind: lesson
+version: 1
+language: python
+title: Getting the Index and Value With enumerate
+slug: lesson-loops-lists-strings-w2-a03
+difficulty: easy
+concepts:
+  - python.loops
+  - python.lists
+prerequisites:
+  - python.functions
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings_w2.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original explanation of enumerate pairing positions with values and the start argument.
+body_markdown: |
+  Sometimes you need both *where* an item sits and *what* it is. Instead of
+  managing a counter by hand, wrap the list in `enumerate`. On each pass it
+  hands you a pair: the index, then the value.
+
+  ```python
+  fruits = ["pear", "plum", "fig"]
+  for i, fruit in enumerate(fruits):
+      print(i, fruit)
+  # 0 pear
+  # 1 plum
+  # 2 fig
+  ```
+
+  By default the count starts at `0`. If you want human-friendly numbering,
+  pass a `start`:
+
+  ```python
+  for rank, fruit in enumerate(fruits, start=1):
+      print(rank, fruit)   # 1 pear, 2 plum, 3 fig
+  ```
+checkpoints:
+  - question: What two things does enumerate give you on each pass of the loop?
+    answer: The current index and the current value.
+    explanation: enumerate yields an (index, value) pair, which you unpack into two loop variables.
+  - question: What index does enumerate start counting from by default?
+    answer: "0"
+    explanation: Without a start argument, enumerate begins at 0, matching normal list positions.
+  - question: How do you make enumerate begin its count at 1 instead of 0?
+    answer: Pass start=1, as in enumerate(fruits, start=1).
+    explanation: The start argument sets the first index enumerate reports without changing the values.

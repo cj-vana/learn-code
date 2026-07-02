@@ -1,0 +1,123 @@
+id: quiz.library.loops_lists_strings_w2.a03
+kind: quiz
+version: 1
+language: python
+title: Tracing Loops Over Lists and Strings
+slug: quiz-loops-lists-strings-w2-a03
+difficulty: medium
+concepts:
+  - python.loops
+  - python.lists
+  - python.strings
+  - python.slicing
+prerequisites: []
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings_w2.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original code traces and reasoning distractors.
+quiz_type: mixed_review
+questions:
+  - id: q1
+    prompt: |
+      What does this loop print?
+
+          total = 0
+          for n in [4, 7, 2, 9]:
+              if n % 2 == 1:
+                  total += n
+          print(total)
+    choices:
+      - "16"
+      - "22"
+      - "6"
+      - "9"
+    correct_choice: "16"
+    explanation: |
+      Only the odd numbers pass the `n % 2 == 1` test: 7 and 9. Their sum is 16.
+      The even values 4 and 2 are skipped, so they never touch `total`.
+    concepts:
+      - python.loops
+      - python.lists
+  - id: q2
+    prompt: |
+      What is the value of `result` after this code runs?
+
+          result = []
+          for ch in "abcabc":
+              if ch not in result:
+                  result.append(ch)
+    choices:
+      - "['a', 'b', 'c']"
+      - "['a', 'b', 'c', 'a', 'b', 'c']"
+      - "['a', 'a', 'b', 'b', 'c', 'c']"
+      - "['c', 'b', 'a']"
+    correct_choice: "['a', 'b', 'c']"
+    explanation: |
+      The loop appends a character only the first time it is seen. `a`, `b`, and
+      `c` are added on the first pass through the string; the repeat characters
+      fail the `not in result` check, so they are skipped. Order of first
+      appearance is preserved.
+    concepts:
+      - python.loops
+      - python.strings
+  - id: q3
+    prompt: |
+      A coworker wants to remove every negative number from a list while looping
+      directly over that same list with `for x in data: if x < 0: data.remove(x)`.
+      Why is this risky?
+    choices:
+      - Removing items during iteration shifts indexes and can skip elements
+      - The `remove` method does not exist for lists
+      - It raises a syntax error because you cannot loop over a list twice
+      - It permanently converts the list into a string
+    correct_choice: Removing items during iteration shifts indexes and can skip elements
+    explanation: |
+      Mutating a list while iterating over it moves later elements into positions
+      the loop has already passed, so some values get skipped. Safer options
+      include building a new filtered list with a comprehension or iterating over
+      a copy.
+    concepts:
+      - python.loops
+      - python.lists
+  - id: q4
+    prompt: |
+      Given `s = "python"`, what does `s[-2:]` evaluate to?
+    choices:
+      - "on"
+      - "no"
+      - "n"
+      - "thon"
+    correct_choice: "on"
+    explanation: |
+      A start of -2 counts two positions back from the end (the character `o`),
+      and the empty stop means "to the end", so the slice is the last two
+      characters: `on`.
+    concepts:
+      - python.slicing
+      - python.strings
+  - id: q5
+    prompt: |
+      What does this loop print?
+
+          nums = [1, 2, 3, 4]
+          running = 0
+          for n in nums:
+              running += n
+          print(running)
+    choices:
+      - "10"
+      - "4"
+      - "24"
+      - "0"
+    correct_choice: "10"
+    explanation: |
+      This is a running-total pattern: each pass adds the current value to
+      `running`, accumulating 1 + 2 + 3 + 4 = 10 by the end of the loop.
+    concepts:
+      - python.loops
+      - python.lists

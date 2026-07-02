@@ -1,0 +1,64 @@
+id: lesson.library.stack_queue_bfs_w2.a03
+kind: lesson
+version: 1
+language: python
+title: Measuring Distances With BFS
+slug: lesson-stack-queue-bfs-w2-a03
+difficulty: medium
+concepts:
+  - patterns.queue_bfs
+prerequisites:
+  - python.lists
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.stack_queue_bfs_w2.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original BFS walkthrough that records step counts in a dictionary which also serves as the visited marker.
+body_markdown: |
+  Breadth-first search visits a graph one ring at a time: everything one step
+  from the start, then everything two steps away, and so on. That ordering lets
+  BFS answer a common question cheaply: *how many steps is each node from the
+  start?*
+
+  The trick is to store distances in a dictionary as you discover nodes. That
+  same dictionary doubles as your "already seen" marker, so you do not need a
+  separate `visited` set. When you pull a node from the queue, each of its
+  new neighbors is exactly one step farther than the node itself.
+
+  ```python
+  from collections import deque
+
+  def distances_from(graph, start):
+      dist = {start: 0}              # seen nodes AND their step counts
+      queue = deque([start])
+      while queue:
+          node = queue.popleft()
+          for neighbor in graph[node]:
+              if neighbor not in dist:        # first time we reach it
+                  dist[neighbor] = dist[node] + 1
+                  queue.append(neighbor)
+      return dist
+
+  graph = {"A": ["B", "C"], "B": ["D"], "C": ["D"], "D": ["E"], "E": []}
+  print(distances_from(graph, "A"))
+  # {'A': 0, 'B': 1, 'C': 1, 'D': 2, 'E': 3}
+  ```
+
+  Notice that `D` is reachable from both `B` and `C`, but it is recorded only
+  once, at distance 2, the first time it is discovered. Because BFS finishes each
+  closer ring before the next, the first distance written for any node is its
+  shortest. The whole traversal is `"O(n + e)"` for `n` nodes and `e` edges.
+checkpoints:
+  - question: How does the dist dictionary let BFS skip a separate visited set?
+    answer: A node already appears as a key in dist once it has been discovered, so `neighbor not in dist` filters out repeats.
+    explanation: Recording the distance and marking the node as seen happen in the same step, so the dictionary keys are the visited set.
+  - question: When BFS first reaches a neighbor, what step count does it assign?
+    answer: One more than the node it was reached from (dist[node] + 1).
+    explanation: A neighbor sits exactly one edge beyond the node currently being processed, so its distance is the parent's distance plus one.
+  - question: Why is the first distance recorded for a node guaranteed to be its shortest?
+    answer: BFS processes nodes in order of increasing distance, so the first time a node is reached is along a minimum-length path.
+    explanation: The ring-by-ring expansion finishes all nearer nodes before farther ones, so no later, shorter route to that node can exist.
