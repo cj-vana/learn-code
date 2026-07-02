@@ -6,7 +6,13 @@ from typing import Any
 import yaml
 from pydantic import ValidationError
 
-from learn_code_api.content.models import ContentCatalog, ExerciseContent, ReviewStatus
+from learn_code_api.content.models import (
+    ContentCatalog,
+    ExerciseContent,
+    LessonContent,
+    QuizContent,
+    ReviewStatus,
+)
 
 
 class ContentLoadError(ValueError):
@@ -14,7 +20,7 @@ class ContentLoadError(ValueError):
 
 
 def load_catalog(content_root: Path, include_drafts: bool = False) -> ContentCatalog:
-    """Load exercise content from a recursive YAML tree."""
+    """Load exercise, lesson, and quiz content from a recursive YAML tree."""
     root = Path(content_root)
     if not root.exists():
         raise ContentLoadError(f"content root does not exist: {root}")
@@ -22,15 +28,25 @@ def load_catalog(content_root: Path, include_drafts: bool = False) -> ContentCat
         raise ContentLoadError(f"content root is not a directory: {root}")
 
     exercises: list[ExerciseContent] = []
+    lessons: list[LessonContent] = []
+    quizzes: list[QuizContent] = []
     for path in _yaml_files(root):
         raw = _load_raw_content(path)
         review_status = _load_review_status(path, raw)
         if not include_drafts and review_status != ReviewStatus.PUBLISHED:
             continue
-        exercises.append(_load_exercise(path, raw))
+        kind = raw.get("kind")
+        if kind == "exercise":
+            exercises.append(_load_exercise(path, raw))
+        elif kind == "lesson":
+            lessons.append(_load_lesson(path, raw))
+        elif kind == "quiz":
+            quizzes.append(_load_quiz(path, raw))
+        else:
+            raise ContentLoadError(f"unsupported content kind in {path}: {kind!r}")
 
-    _reject_duplicates(exercises)
-    return ContentCatalog(exercises=exercises)
+    _reject_duplicates([*exercises, *lessons, *quizzes])
+    return ContentCatalog(exercises=exercises, lessons=lessons, quizzes=quizzes)
 
 
 def _yaml_files(root: Path) -> list[Path]:
@@ -65,24 +81,35 @@ def _load_review_status(path: Path, raw: dict[str, Any]) -> ReviewStatus:
 
 
 def _load_exercise(path: Path, raw: dict[str, Any]) -> ExerciseContent:
-    if raw.get("kind") != "exercise":
-        raise ContentLoadError(f"unsupported content kind in {path}: {raw.get('kind')!r}")
-
     try:
         return ExerciseContent.model_validate(raw)
     except ValidationError as exc:
         raise ContentLoadError(f"invalid content in {path}: {exc}") from exc
 
 
-def _reject_duplicates(exercises: list[ExerciseContent]) -> None:
-    _reject_duplicate_field(exercises, "id")
-    _reject_duplicate_field(exercises, "slug")
+def _load_lesson(path: Path, raw: dict[str, Any]) -> LessonContent:
+    try:
+        return LessonContent.model_validate(raw)
+    except ValidationError as exc:
+        raise ContentLoadError(f"invalid content in {path}: {exc}") from exc
 
 
-def _reject_duplicate_field(exercises: list[ExerciseContent], field_name: str) -> None:
-    seen: dict[Any, ExerciseContent] = {}
-    for exercise in exercises:
-        value = getattr(exercise, field_name)
+def _load_quiz(path: Path, raw: dict[str, Any]) -> QuizContent:
+    try:
+        return QuizContent.model_validate(raw)
+    except ValidationError as exc:
+        raise ContentLoadError(f"invalid content in {path}: {exc}") from exc
+
+
+def _reject_duplicates(items: list[Any]) -> None:
+    _reject_duplicate_field(items, "id")
+    _reject_duplicate_field(items, "slug")
+
+
+def _reject_duplicate_field(items: list[Any], field_name: str) -> None:
+    seen: dict[Any, Any] = {}
+    for item in items:
+        value = getattr(item, field_name)
         if value in seen:
             raise ContentLoadError(f"duplicate {field_name}: {value}")
-        seen[value] = exercise
+        seen[value] = item

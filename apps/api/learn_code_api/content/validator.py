@@ -3,7 +3,14 @@ from __future__ import annotations
 from pathlib import Path
 
 from learn_code_api.content.loader import ContentLoadError, load_catalog
-from learn_code_api.content.models import ContentCatalog, ExerciseContent, ValidationIssue, ValidationReport
+from learn_code_api.content.models import (
+    ContentCatalog,
+    ExerciseContent,
+    LessonContent,
+    QuizContent,
+    ValidationIssue,
+    ValidationReport,
+)
 from learn_code_api.content.sample_solution_runner import run_sample_solution
 
 SEED_PROFILE_KNOWN_CONCEPTS = {
@@ -93,6 +100,10 @@ def validate_content_tree(
             enforce_known_concepts,
             run_solutions,
         )
+    for lesson in catalog.lessons:
+        _validate_lesson(lesson, issues, known_concepts, enforce_known_concepts)
+    for quiz in catalog.quizzes:
+        _validate_quiz(quiz, issues, known_concepts, enforce_known_concepts)
 
     return ValidationReport(ok=not issues, issues=issues, catalog=catalog)
 
@@ -143,6 +154,86 @@ def _validate_exercise(
             issues.append(
                 ValidationIssue(path=exercise.id, message=f"sample solution failed: {details}")
             )
+
+
+def _check_item_concepts(
+    item_id: str,
+    kind_label: str,
+    concepts: list[str],
+    prerequisites: list[str],
+    issues: list[ValidationIssue],
+    known_concepts: set[str],
+    enforce_known_concepts: bool,
+) -> None:
+    if enforce_known_concepts:
+        for concept in concepts:
+            if concept not in known_concepts:
+                issues.append(
+                    ValidationIssue(
+                        path=item_id, message=f"unknown {kind_label} concept: {concept}"
+                    )
+                )
+    else:
+        known_concepts.update(concepts)
+
+    for prerequisite in prerequisites:
+        if prerequisite not in known_concepts:
+            issues.append(
+                ValidationIssue(
+                    path=item_id, message=f"unknown prerequisite concept: {prerequisite}"
+                )
+            )
+
+
+def _validate_lesson(
+    lesson: LessonContent,
+    issues: list[ValidationIssue],
+    known_concepts: set[str],
+    enforce_known_concepts: bool,
+) -> None:
+    _check_item_concepts(
+        lesson.id,
+        "lesson",
+        lesson.concepts,
+        lesson.prerequisites,
+        issues,
+        known_concepts,
+        enforce_known_concepts,
+    )
+
+
+def _validate_quiz(
+    quiz: QuizContent,
+    issues: list[ValidationIssue],
+    known_concepts: set[str],
+    enforce_known_concepts: bool,
+) -> None:
+    _check_item_concepts(
+        quiz.id,
+        "quiz",
+        quiz.concepts,
+        quiz.prerequisites,
+        issues,
+        known_concepts,
+        enforce_known_concepts,
+    )
+    for question in quiz.questions:
+        if question.correct_choice not in question.choices:
+            issues.append(
+                ValidationIssue(
+                    path=quiz.id,
+                    message=f"quiz question {question.id}: correct_choice is not one of choices",
+                )
+            )
+        if enforce_known_concepts:
+            for concept in question.concepts:
+                if concept not in known_concepts:
+                    issues.append(
+                        ValidationIssue(
+                            path=quiz.id,
+                            message=f"unknown quiz question concept: {concept}",
+                        )
+                    )
 
 
 def _check_suspicious_metadata(exercise: ExerciseContent, issues: list[ValidationIssue]) -> None:

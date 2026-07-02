@@ -83,10 +83,71 @@ class ExerciseContent(BaseModel):
     common_mistakes: list[str] = Field(default_factory=list)
 
 
+class Checkpoint(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    question: str = Field(min_length=1)
+    answer: str = Field(min_length=1)
+    explanation: str = Field(min_length=1)
+
+
+class LessonContent(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str = Field(min_length=1)
+    kind: Literal["lesson"]
+    version: PositiveInt
+    language: Literal["python"]
+    title: str = Field(min_length=1)
+    slug: str = Field(min_length=1)
+    difficulty: Difficulty
+    concepts: list[str] = Field(min_length=1)
+    prerequisites: list[str] = Field(default_factory=list)
+    estimated_time_minutes: PositiveInt
+    review_status: ReviewStatus
+    source_status: Literal["original"]
+    provenance: Provenance
+    body_markdown: str = Field(min_length=1)
+    checkpoints: list[Checkpoint] = Field(min_length=1)
+
+
+class QuizQuestion(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str = Field(min_length=1)
+    prompt: str = Field(min_length=1)
+    choices: list[str] = Field(min_length=2)
+    correct_choice: str = Field(min_length=1)
+    explanation: str = Field(min_length=1)
+    concepts: list[str] = Field(default_factory=list)
+
+
+class QuizContent(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str = Field(min_length=1)
+    kind: Literal["quiz"]
+    version: PositiveInt
+    language: Literal["python"]
+    title: str = Field(min_length=1)
+    slug: str = Field(min_length=1)
+    difficulty: Difficulty
+    concepts: list[str] = Field(min_length=1)
+    prerequisites: list[str] = Field(default_factory=list)
+    estimated_time_minutes: PositiveInt
+    review_status: ReviewStatus
+    source_status: Literal["original"]
+    provenance: Provenance
+    quiz_type: Literal["pattern_recognition", "syntax", "mixed_review"]
+    questions: list[QuizQuestion] = Field(min_length=1)
+
+
 class ContentCatalog(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     exercises: list[ExerciseContent]
+    lessons: list[LessonContent] = Field(default_factory=list)
+    quizzes: list[QuizContent] = Field(default_factory=list)
 
 
 class ValidationIssue(BaseModel):
