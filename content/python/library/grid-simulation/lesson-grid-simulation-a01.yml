@@ -1,0 +1,100 @@
+id: lesson.library.grid_simulation.a01
+kind: lesson
+version: 1
+language: python
+title: Walking a Grid and Filling a Region
+slug: lesson-grid-simulation-a01
+difficulty: medium
+concepts:
+  - patterns.grid_traversal
+  - patterns.dfs
+prerequisites:
+  - python.lists
+  - python.loops
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.grid_simulation.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original greenhouse-tile flood-fill walkthrough with its own worked stack-based code.
+body_markdown: |
+  Picture the floor of a greenhouse laid out as a rectangular tray of planting
+  cells. We store it as a list of lists, where `grid[r][c]` is the cell in row
+  `r`, column `c`. Row `0` is the back wall; column `0` is the left edge. Almost
+  every grid task starts the same way: for a cell `(r, c)`, its four orthogonal
+  neighbours are the cells directly up, down, left, and right.
+
+  ```python
+  def neighbours(r, c, rows, cols):
+      for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+          nr, nc = r + dr, c + dc
+          if 0 <= nr < rows and 0 <= nc < cols:
+              yield nr, nc
+  ```
+
+  That bounds check, `0 <= nr < rows`, is the single most common source of grid
+  bugs. Test it before you trust it.
+
+  **Flood fill** answers the question: starting from one cell, which connected
+  cells share its value? Imagine spilling dye on one tile and watching it seep to
+  every touching tile of the same colour. We track a stack of cells still to
+  visit. We pop one, recolour it, and push its same-coloured neighbours.
+
+  ```python
+  def flood(grid, sr, sc, new_value):
+      old = grid[sr][sc]
+      if old == new_value:
+          return grid
+      rows, cols = len(grid), len(grid[0])
+      stack = [(sr, sc)]
+      while stack:
+          r, c = stack.pop()
+          if 0 <= r < rows and 0 <= c < cols and grid[r][c] == old:
+              grid[r][c] = new_value
+              stack += [(r + 1, c), (r - 1, c), (r, c + 1), (r, c - 1)]
+      return grid
+  ```
+
+  Notice the guard `old == new_value` at the top. Without it, filling a region
+  with the colour it already has would loop forever, because a recoloured cell
+  still matches `old` and keeps getting pushed back on the stack.
+
+  **Counting regions** is flood fill wearing a different hat. To count the
+  separate patches of planted cells (value `1`) in the tray, scan every cell. The
+  first time you meet an unvisited `1`, add one to your tally and flood the whole
+  patch so you never count it again. A `seen` set keeps you honest across scans.
+
+  ```python
+  def count_patches(grid):
+      rows, cols = len(grid), len(grid[0])
+      seen = set()
+      patches = 0
+      for i in range(rows):
+          for j in range(cols):
+              if grid[i][j] == 1 and (i, j) not in seen:
+                  patches += 1
+                  stack = [(i, j)]
+                  while stack:
+                      r, c = stack.pop()
+                      if (0 <= r < rows and 0 <= c < cols
+                              and grid[r][c] == 1 and (r, c) not in seen):
+                          seen.add((r, c))
+                          stack += [(r+1, c), (r-1, c), (r, c+1), (r, c-1)]
+      return patches
+  ```
+
+  Both routines touch each cell a constant number of times, so they run in
+  O(rows * cols) time. The stack (or a recursion depth) is the extra space.
+checkpoints:
+  - question: Why does the flood-fill function check `old == new_value` and return early before doing any work?
+    answer: If the target value already equals the region's current value, every recoloured cell still matches `old`, so its neighbours keep getting pushed and the loop never ends.
+    explanation: The early return turns a would-be infinite loop into a harmless no-op, which is the correct result anyway.
+  - question: In count_patches, what job does the `seen` set do that the value check alone cannot?
+    answer: It prevents the same land cell from being counted or explored twice across the outer scan and within a flood, since the values are not changed.
+    explanation: Without marking visited cells, the outer loop would start a fresh count at cells that already belong to a patch you have flooded.
+  - question: For a grid with R rows and C columns, roughly how many times is each cell examined during a full region count?
+    answer: A constant number of times, giving O(R times C) total work.
+    explanation: Each cell is pushed and popped a bounded number of times because once it is in `seen` the value or membership guard rejects it.

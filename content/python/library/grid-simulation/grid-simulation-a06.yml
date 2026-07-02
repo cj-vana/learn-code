@@ -1,0 +1,111 @@
+id: exercise.library.grid_simulation.a06
+kind: exercise
+version: 1
+language: python
+title: Unwinding the Orchard from the Air
+slug: grid-simulation-a06
+difficulty: medium
+concepts:
+  - patterns.grid_traversal
+prerequisites:
+  - python.lists
+  - python.loops
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.grid_simulation.a06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original clockwise spiral traversal drill framed as a survey drone reading an orchard grid inward from the outer edge.
+prompt_markdown: |
+  A survey drone flies over an orchard laid out as a rectangular grid, where
+  `grid[r][c]` is the yield of the tree at row `r`, column `c`. Rather than read
+  it row by row, the drone spirals inward: it reads the whole top edge left to
+  right, then the right edge top to bottom, then the bottom edge right to left,
+  then the left edge bottom to top, and keeps circling into the centre.
+
+  Write `spiral_read(grid)` that takes the grid (a list of lists) and returns a
+  single list of all its values in clockwise spiral order, starting from the
+  top-left cell. Every cell appears exactly once. An empty grid `[]` returns `[]`;
+  a single row or single column is returned in its natural order.
+
+  Example: for `[[1, 2, 3], [4, 5, 6], [7, 8, 9]]` the spiral order is
+  `[1, 2, 3, 6, 9, 8, 7, 4, 5]`.
+starter_code: |
+  def spiral_read(grid):
+      return []
+function_name: spiral_read
+input_mode: function
+solution_sketch: Track four shrinking boundaries (top, bottom, left, right); walk the top row, right column, bottom row, and left column in turn, tightening the boundary after each pass.
+sample_solution: |
+  def spiral_read(grid):
+      if not grid:
+          return []
+      result = []
+      top, bottom = 0, len(grid) - 1
+      left, right = 0, len(grid[0]) - 1
+      while top <= bottom and left <= right:
+          for c in range(left, right + 1):
+              result.append(grid[top][c])
+          top += 1
+          for r in range(top, bottom + 1):
+              result.append(grid[r][right])
+          right -= 1
+          if top <= bottom:
+              for c in range(right, left - 1, -1):
+                  result.append(grid[bottom][c])
+              bottom -= 1
+          if left <= right:
+              for r in range(bottom, top - 1, -1):
+                  result.append(grid[r][left])
+              left += 1
+      return result
+hints:
+  - level: 1
+    text: Keep four boundaries, top/bottom/left/right, that mark the ring you have not read yet, and shrink them as you peel off each edge.
+  - level: 2
+    text: Each loop iteration reads the top row (left to right), the right column (top to bottom), the bottom row (right to left), then the left column (bottom to top).
+  - level: 3
+    text: After reading the top row do top += 1 (and likewise for the others); guard the bottom row and left column with top <= bottom and left <= right so a thin strip is not read twice.
+tests:
+  public:
+    - name: three_by_three
+      input: [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+      expected: [1, 2, 3, 6, 9, 8, 7, 4, 5]
+    - name: single_row
+      input: [[1, 2, 3, 4]]
+      expected: [1, 2, 3, 4]
+    - name: single_column
+      input: [[1], [2], [3]]
+      expected: [1, 2, 3]
+  validation:
+    - name: single_cell
+      input: [[7]]
+      expected: [7]
+    - name: empty_grid
+      input: []
+      expected: []
+    - name: two_by_two
+      input: [[1, 2], [3, 4]]
+      expected: [1, 2, 4, 3]
+    - name: wide_rectangle
+      input: [[1, 2, 3, 4], [5, 6, 7, 8]]
+      expected: [1, 2, 3, 4, 8, 7, 6, 5]
+    - name: tall_rectangle
+      input: [[1, 2], [3, 4], [5, 6]]
+      expected: [1, 2, 4, 6, 5, 3]
+explanation_markdown: |
+  The spiral is four directed passes wrapped in a loop. The `top`, `bottom`,
+  `left`, and `right` boundaries fence off the ring you still have to read; after
+  each edge you tighten the matching boundary so the next pass moves one step
+  inward. The two guards, `if top <= bottom` before the bottom row and `if left <=
+  right` before the left column, are what make odd shapes and single strips
+  behave: without them a lone middle row or column would be read a second time on
+  the way back. Every cell is appended exactly once, so the traversal is O(rows *
+  cols).
+common_mistakes:
+  - Dropping the top <= bottom and left <= right guards, which double-reads the centre row or column on non-square grids.
+  - Forgetting to shrink a boundary after a pass, so the same edge is read forever.
+  - Using fixed range limits instead of the current boundaries, which reads cells from already-consumed rings.

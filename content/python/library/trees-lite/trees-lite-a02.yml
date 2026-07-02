@@ -1,0 +1,87 @@
+id: exercise.library.trees_lite.a02
+kind: exercise
+version: 1
+language: python
+title: Observatory Inspection Route (Pre-Order)
+slug: trees-lite-a02
+difficulty: medium
+concepts:
+  - patterns.tree_traversal
+  - patterns.dfs
+  - python.lists
+prerequisites:
+  - patterns.recursion
+  - python.trees_as_data
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.trees_lite.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pre-order traversal drill themed as an observatory inspection route over nested-dict trees.
+prompt_markdown: |
+  An observatory inspector visits the central dome first, then the entire left
+  wing, then the entire right wing - a pre-order walk. The building is a binary
+  tree of nested dictionaries (`{"value", "left", "right"}`, empty branch is
+  `None`).
+
+  Write `preorder_values(tree)` returning a list of node values in pre-order:
+  the current node, then all of its left subtree, then all of its right subtree.
+  An empty tree returns `[]`.
+starter_code: |
+  def preorder_values(tree):
+      # Return node values in pre-order: node, left subtree, right subtree.
+      return []
+function_name: preorder_values
+input_mode: function
+solution_sketch: Return [value] concatenated with the pre-order of the left subtree and the right subtree.
+sample_solution: |
+  def preorder_values(tree):
+      if tree is None:
+          return []
+      return (
+          [tree["value"]]
+          + preorder_values(tree["left"])
+          + preorder_values(tree["right"])
+      )
+hints:
+  - level: 1
+    text: Record the current node's value before you look at either child.
+  - level: 2
+    text: The result is the current value followed by the left subtree's list, then the right subtree's list.
+  - level: 3
+    text: Return [] for None, else [tree["value"]] + preorder_values(tree["left"]) + preorder_values(tree["right"]).
+tests:
+  public:
+    - name: empty
+      input: null
+      expected: []
+    - name: single
+      input: {value: 7, left: null, right: null}
+      expected: [7]
+    - name: full_tree
+      input: {value: 5, left: {value: 3, left: {value: 2, left: null, right: null}, right: {value: 4, left: null, right: null}}, right: {value: 8, left: null, right: {value: 9, left: null, right: null}}}
+      expected: [5, 3, 2, 4, 8, 9]
+  validation:
+    - name: left_chain
+      input: {value: 1, left: {value: 2, left: {value: 3, left: null, right: null}, right: null}, right: null}
+      expected: [1, 2, 3]
+    - name: right_chain
+      input: {value: 1, left: null, right: {value: 2, left: null, right: {value: 3, left: null, right: null}}}
+      expected: [1, 2, 3]
+    - name: two_children
+      input: {value: 10, left: {value: 4, left: null, right: null}, right: {value: 15, left: null, right: null}}
+      expected: [10, 4, 15]
+explanation_markdown: |
+  Pre-order places the current value first, so you emit `tree["value"]` before
+  recursing. Concatenating `[value] + left + right` builds the visiting order
+  directly: the root leads, the fully expanded left wing follows, and the right
+  wing comes last. The empty-tree base case returns `[]`, which contributes
+  nothing when concatenated, so leaves and missing branches fall out naturally.
+  Every node is visited once, giving O(n) time.
+common_mistakes:
+  - Placing tree["value"] in the middle or end, which produces in-order or post-order instead.
+  - Returning None or a bare value for the base case rather than an empty list.
+  - Forgetting to concatenate both subtrees, dropping half the nodes.

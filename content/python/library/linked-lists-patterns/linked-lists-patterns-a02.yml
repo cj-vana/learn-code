@@ -1,0 +1,95 @@
+id: exercise.library.linked_lists_patterns.a02
+kind: exercise
+version: 1
+language: python
+title: Last Stop on the Line
+slug: linked-lists-patterns-a02
+difficulty: easy
+concepts:
+  - patterns.linked_list
+prerequisites:
+  - python.classes
+  - python.loops
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.linked_lists_patterns.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original transit-line framing for walking a chain to its tail node.
+prompt_markdown: |
+  A tram line is stored as a chain of stops, where each stop links only to the one
+  after it. Write `last_stop(stops)` that takes a list of stop names, builds a
+  singly linked list of `Node` objects from them, then walks the chain to the tail
+  and returns the value stored in the final node.
+
+  You must reach the tail by following links, not by indexing the input list. If
+  the line has no stops, return `None`.
+starter_code: |
+  def last_stop(stops):
+      # Build a Node chain, then walk to the final node and return its value.
+      return None
+function_name: last_stop
+input_mode: function
+solution_sketch: Build the chain, then advance a cursor while current.next is not None and return current.value.
+sample_solution: |
+  def last_stop(stops):
+      class Node:
+          def __init__(self, value):
+              self.value = value
+              self.next = None
+
+      head = None
+      for value in reversed(stops):
+          node = Node(value)
+          node.next = head
+          head = node
+
+      if head is None:
+          return None
+
+      current = head
+      while current.next is not None:
+          current = current.next
+      return current.value
+hints:
+  - level: 1
+    text: The tail is the one node whose `.next` link is None.
+  - level: 2
+    text: Walk a cursor forward while current.next is not None; when the loop stops, current is the tail.
+  - level: 3
+    text: Handle the empty chain first by returning None, then loop until current.next is None and return current.value.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: null
+    - name: single
+      input: [Central]
+      expected: Central
+    - name: several
+      input: [Central, Harbor, Ridge, Summit]
+      expected: Summit
+  validation:
+    - name: two
+      input: [North, South]
+      expected: South
+    - name: repeats
+      input: [Loop, Loop, End]
+      expected: End
+    - name: numbers
+      input: [1, 2, 3, 4, 5]
+      expected: 5
+explanation_markdown: |
+  Reaching the tail means following `.next` links until you hit the box whose link
+  is `None`. The guard `while current.next is not None` stops the cursor *on* that
+  final box rather than stepping past it into `None`. Checking for the empty chain
+  first avoids reading `head.value` when there is no head at all. This walk-to-tail
+  pattern is the foundation for appending to a chain and for any algorithm that
+  needs to touch the end of the line.
+common_mistakes:
+  - Looping while `current is not None`, which steps past the tail and then crashes on `current.value`.
+  - Indexing the input list instead of walking the chain, defeating the exercise.
+  - Forgetting to return None for an empty line.

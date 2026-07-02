@@ -1,0 +1,118 @@
+id: exercise.library.data_wrangling_python.a03
+kind: exercise
+version: 1
+language: python
+title: Latest RSVP Wins
+slug: data-wrangling-python-a03
+difficulty: medium
+concepts:
+  - concepts.grouping_aggregation
+  - python.dictionaries
+prerequisites:
+  - python.dictionaries
+  - python.loops
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.data_wrangling_python.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original keep-last dedupe drill framed around a community hall guest list where guests re-reply.
+prompt_markdown: |
+  Guests keep re-replying to a community hall invitation, so the RSVP log has
+  several rows for some people. The rule is simple: the **last** reply a guest
+  sends is the one that counts, and the final list should appear in the order
+  guests **first** turned up in the log.
+
+  Write `latest_rsvp(payload)` that takes a single dictionary with two keys:
+
+  - `"rows"`: a list of RSVP dictionaries, in the order they arrived.
+  - `"key"`: the field name that identifies a guest.
+
+  Return a list with **one row per distinct key value**, keeping the **last**
+  row seen for that key, ordered by when each key **first** appeared in the input.
+
+  Edge cases the tests cover:
+
+  - An empty `"rows"` list returns an empty list.
+  - When there are no duplicates, the rows come back in their original order.
+
+  Example:
+
+  ```python
+  latest_rsvp({
+      "rows": [
+          {"guest": "Ada", "status": "yes"},
+          {"guest": "Ben", "status": "no"},
+          {"guest": "Ada", "status": "maybe"},
+      ],
+      "key": "guest",
+  })
+  # -> [{"guest": "Ada", "status": "maybe"}, {"guest": "Ben", "status": "no"}]
+  ```
+starter_code: |
+  def latest_rsvp(payload):
+      return []
+function_name: latest_rsvp
+input_mode: function
+solution_sketch: Track first-seen key order in a list and the latest row per key in a dict, then rebuild the result from the order list.
+sample_solution: |
+  def latest_rsvp(payload):
+      rows = payload["rows"]
+      key = payload["key"]
+      order = []
+      latest = {}
+      for row in rows:
+          k = row[key]
+          if k not in latest:
+              order.append(k)
+          latest[k] = row
+      return [latest[k] for k in order]
+hints:
+  - level: 1
+    text: You need two things per key - when it first appeared, and the most recent row for it. Keep them in separate structures.
+  - level: 2
+    text: Append a key to an order list only the first time you see it, but overwrite its stored row every time so the last row wins.
+  - level: 3
+    text: After the loop, build the result by reading latest[k] for each k in the order list to preserve first-appearance order.
+tests:
+  public:
+    - name: empty_log
+      input: {"rows": [], "key": "guest"}
+      expected: []
+    - name: no_duplicates
+      input: {"rows": [{"guest": "Ada", "status": "yes"}, {"guest": "Ben", "status": "no"}], "key": "guest"}
+      expected: [{"guest": "Ada", "status": "yes"}, {"guest": "Ben", "status": "no"}]
+    - name: last_wins
+      input: {"rows": [{"guest": "Ada", "status": "yes"}, {"guest": "Ben", "status": "no"}, {"guest": "Ada", "status": "maybe"}], "key": "guest"}
+      expected: [{"guest": "Ada", "status": "maybe"}, {"guest": "Ben", "status": "no"}]
+  validation:
+    - name: triple_update
+      input: {"rows": [{"guest": "Cy", "seat": 1}, {"guest": "Cy", "seat": 4}, {"guest": "Cy", "seat": 9}], "key": "guest"}
+      expected: [{"guest": "Cy", "seat": 9}]
+    - name: interleaved
+      input: {"rows": [{"guest": "Ada", "seat": 1}, {"guest": "Ben", "seat": 2}, {"guest": "Ada", "seat": 5}, {"guest": "Cy", "seat": 3}, {"guest": "Ben", "seat": 9}], "key": "guest"}
+      expected: [{"guest": "Ada", "seat": 5}, {"guest": "Ben", "seat": 9}, {"guest": "Cy", "seat": 3}]
+    - name: first_appearance_order
+      input: {"rows": [{"guest": "Zoe", "status": "yes"}, {"guest": "Amy", "status": "maybe"}, {"guest": "Zoe", "status": "no"}], "key": "guest"}
+      expected: [{"guest": "Zoe", "status": "no"}, {"guest": "Amy", "status": "maybe"}]
+    - name: dedupe_on_other_field
+      input: {"rows": [{"table": "T1", "note": "a"}, {"table": "T2", "note": "b"}, {"table": "T1", "note": "c"}], "key": "table"}
+      expected: [{"table": "T1", "note": "c"}, {"table": "T2", "note": "b"}]
+explanation_markdown: |
+  Deduplication is an indexing problem: derive each row's key and decide what to
+  do on a collision. Keeping the *last* occurrence is the easy part - just
+  overwrite the stored row every time you meet the key. The subtlety is the output
+  order. Iterating the dictionary would order by insertion, which happens to be
+  first-appearance here, but relying on that couples correctness to an incidental
+  detail. Recording first-seen order in an explicit `order` list states the intent
+  outright and stays robust.
+
+  One pass builds both structures, and a final pass rebuilds the list, so the work
+  is linear in the number of rows.
+common_mistakes:
+  - Keeping the first occurrence instead of overwriting, so later replies are ignored.
+  - Appending to the order list every time the key is seen, which produces duplicate entries in the result.
+  - Returning latest.values() and assuming its order, instead of following the recorded first-appearance order.

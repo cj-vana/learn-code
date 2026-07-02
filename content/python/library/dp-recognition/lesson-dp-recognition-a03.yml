@@ -1,0 +1,89 @@
+id: lesson.library.dp_recognition.a03
+kind: lesson
+version: 1
+language: python
+title: 'Counting Paths and Packing Knapsacks'
+slug: lesson-dp-recognition-a03
+difficulty: hard
+concepts:
+  - patterns.dynamic_programming
+  - patterns.grid_traversal
+prerequisites:
+  - python.lists
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dp_recognition.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original greenhouse-gantry grid and expedition-pack scenarios used to show grid counting DP alongside 0/1 knapsack.
+body_markdown: |
+  Two DP shapes show up constantly once you leave one-dimensional sequences
+  behind: counting paths across a grid, and choosing a subset of items under a
+  limit. They look unrelated, but both are just "fill a table where each cell
+  combines a few neighbours."
+
+  **Counting paths on a grid.** A watering gantry in a greenhouse starts at the
+  top-left bed and can only step *right* or *down* to reach the bottom-right bed.
+  How many distinct routes exist? Any route into a cell arrived from directly
+  above or directly to the left, so the number of routes to `(r, c)` is the sum
+  of the routes to those two neighbours. The top row and left column each have
+  exactly one route (you can only go straight).
+
+  ```python
+  def count_routes(rows, cols):
+      table = [[0] * cols for _ in range(rows)]
+      for r in range(rows):
+          for c in range(cols):
+              if r == 0 and c == 0:
+                  table[r][c] = 1
+              else:
+                  above = table[r - 1][c] if r > 0 else 0
+                  left = table[r][c - 1] if c > 0 else 0
+                  table[r][c] = above + left
+      return table[rows - 1][cols - 1]
+  ```
+
+  If some beds are blocked by equipment, the change is tiny and telling: a
+  blocked cell simply holds `0`, because no route can pass through it. The
+  recurrence does not change; you just refuse to seed or accumulate at obstacles.
+  Recognizing that a constraint often means "force this cell to zero" is a big
+  part of reading DP problems quickly.
+
+  **The 0/1 knapsack.** An expedition pack holds a fixed weight capacity. Each
+  piece of gear has a weight and a usefulness score, and you either take a piece
+  or you leave it, never a fraction. Maximize total usefulness without exceeding
+  capacity. For each item you face a binary choice, so the best value at a given
+  remaining capacity is: the better of *skipping* the item (value unchanged) or
+  *taking* it (its value plus the best value at `capacity - weight`).
+
+  Filled into a 1-D table indexed by capacity, with one subtlety, this becomes:
+
+  ```python
+  def best_pack(capacity, gear):        # gear: list of (weight, value)
+      best = [0] * (capacity + 1)
+      for weight, value in gear:
+          for cap in range(capacity, weight - 1, -1):
+              best[cap] = max(best[cap], best[cap - weight] + value)
+      return best[capacity]
+  ```
+
+  The inner loop runs *downward* on purpose. Because each item may be used at
+  most once, `best[cap]` must be updated from a `best[cap - weight]` that does not
+  yet include the current item. Iterating high-to-low guarantees that; iterating
+  low-to-high would let a single item be packed repeatedly, silently solving a
+  different (unbounded) problem. That direction is the single most common
+  knapsack bug, and spotting it is what separates copying the pattern from
+  understanding it.
+checkpoints:
+  - question: When a greenhouse bed is blocked, what single change to the path-counting recurrence handles it?
+    answer: Force that cell's route count to `0`, since no path can pass through a blocked bed.
+    explanation: The neighbours-sum recurrence is unchanged; a blocked cell simply contributes nothing to the cells below and to its right.
+  - question: In the 0/1 knapsack loop, why is the capacity iterated from high to low?
+    answer: So each item updates `best[cap]` from a `best[cap - weight]` that has not yet counted the current item, which enforces using each item at most once.
+    explanation: Iterating low-to-high would let the same item be added multiple times in one pass, which solves the unbounded-knapsack problem instead of the 0/1 one.
+  - question: Both the grid and knapsack tables combine a small number of earlier entries. What is the general pattern that lets you build such a table bottom-up?
+    answer: Each cell's answer depends only on strictly smaller subproblems, so filling entries in an order where dependencies come first lets every cell read finished neighbours.
+    explanation: Identifying which earlier cells a state depends on, and an ordering that computes those first, is the core skill behind every tabulated DP.

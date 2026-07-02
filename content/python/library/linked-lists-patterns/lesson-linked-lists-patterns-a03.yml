@@ -1,0 +1,99 @@
+id: lesson.library.linked_lists_patterns.a03
+kind: lesson
+version: 1
+language: python
+title: Fast and Slow Pointers on a Chain
+slug: lesson-linked-lists-patterns-a03
+difficulty: medium
+concepts:
+  - patterns.linked_list
+  - patterns.two_pointers
+prerequisites:
+  - python.classes
+  - python.loops
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.linked_lists_patterns.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original tram-line framing of two runners at different speeds for middle, cycle, and nth-from-end.
+body_markdown: |
+  Some chain problems seem to need the length up front: find the middle box, find
+  the box `n` from the end, or decide whether the chain loops forever. You *could*
+  walk the chain once to count and again to act, but a single pass with two
+  cursors moving at different speeds solves all three.
+
+  **Finding the middle.** Send a `slow` cursor one box at a time and a `fast`
+  cursor two boxes at a time. When `fast` runs off the end, `slow` sits at the
+  middle, because it has travelled exactly half as far.
+
+  ```python
+  def middle(head):
+      slow = head
+      fast = head
+      while fast is not None and fast.next is not None:
+          slow = slow.next
+          fast = fast.next.next
+      return slow   # for even length, this is the second of the two middles
+  ```
+
+  The loop test checks both `fast` and `fast.next` before the double hop, because
+  reaching for `fast.next.next` when either is `None` would crash. That guard is
+  the single most important detail of every fast/slow walk.
+
+  **Detecting a cycle.** If the tail secretly points back into the chain, a plain
+  walk never ends. But the same two speeds settle it: on a loop, the fast cursor
+  keeps lapping the track and must eventually land on the exact box the slow
+  cursor is on. If `fast` reaches `None`, the chain is a dead-ended line with no
+  cycle.
+
+  ```python
+  def has_cycle(head):
+      slow = head
+      fast = head
+      while fast is not None and fast.next is not None:
+          slow = slow.next
+          fast = fast.next.next
+          if slow is fast:   # they collided: there is a loop
+              return True
+      return False
+  ```
+
+  Notice the collision test uses `is`: we are asking whether the two cursors are
+  on the *same box*, not whether two boxes hold equal values.
+
+  **The nth box from the end.** Here the two cursors move at the *same* speed but
+  start a fixed gap apart. Advance a `lead` cursor `n` boxes ahead, then move
+  `lead` and a `trail` cursor together until `lead` falls off the end. The gap is
+  preserved the whole way, so `trail` lands exactly `n` boxes from the tail.
+
+  ```python
+  def nth_from_end(head, n):
+      lead = head
+      for _ in range(n):
+          lead = lead.next
+      trail = head
+      while lead is not None:
+          lead = lead.next
+          trail = trail.next
+      return trail   # n boxes from the end
+  ```
+
+  A dummy node in front of `head` makes the removal version of this pattern
+  painless, because it gives you a handle on the box *before* the one you want to
+  drop even when that box is the head itself. Across all three techniques the idea
+  is the same: let a controlled gap or a controlled speed difference reveal a
+  position you would otherwise have to measure by counting.
+checkpoints:
+  - question: Why must the fast/slow loop test both `fast is not None` and `fast.next is not None` before hopping?
+    answer: Because the fast cursor reads `fast.next.next`, and if either `fast` or `fast.next` is None that access would raise an AttributeError.
+    explanation: The double hop touches two links ahead, so both must be confirmed present before the step is safe.
+  - question: In the cycle detector, why do we compare the cursors with `slow is fast` instead of `slow.value == fast.value`?
+    answer: We need to know whether both cursors are standing on the exact same box, which is an identity check, not a value comparison.
+    explanation: Different boxes can hold equal values, so only `is` correctly detects that the fast runner has lapped onto the slow runner's position.
+  - question: To find the box `n` from the end, how far apart are the two cursors kept?
+    answer: The lead cursor starts `n` boxes ahead of the trail cursor, and both then move at the same speed until lead reaches the end.
+    explanation: Preserving a gap of `n` means that when lead falls off the end, trail is exactly `n` boxes back from the tail.

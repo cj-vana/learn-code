@@ -1,0 +1,103 @@
+id: exercise.library.linked_lists_patterns.a03
+kind: exercise
+version: 1
+language: python
+title: Reverse the Conveyor Belt
+slug: linked-lists-patterns-a03
+difficulty: medium
+concepts:
+  - patterns.linked_list
+prerequisites:
+  - python.classes
+  - python.loops
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.linked_lists_patterns.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original conveyor-belt in-place reversal graded through a list round trip.
+prompt_markdown: |
+  A packaging line sends parcels along a conveyor modeled as a singly linked list.
+  Write `reverse_belt(parcels)` that takes a list of parcel codes, builds a chain
+  of `Node` objects, reverses that chain **in place** by flipping each `.next`
+  pointer, and returns a plain list of the codes in their new order.
+
+  Do the reversal by rewiring links, not by reversing the input list. An empty
+  input returns an empty list.
+starter_code: |
+  def reverse_belt(parcels):
+      # Build the chain, flip every .next pointer, then walk it back into a list.
+      return []
+function_name: reverse_belt
+input_mode: function
+solution_sketch: Walk with prev/current/nxt, flipping current.next to prev at each step, then serialize from prev.
+sample_solution: |
+  def reverse_belt(parcels):
+      class Node:
+          def __init__(self, value):
+              self.value = value
+              self.next = None
+
+      head = None
+      for value in reversed(parcels):
+          node = Node(value)
+          node.next = head
+          head = node
+
+      prev = None
+      current = head
+      while current is not None:
+          nxt = current.next
+          current.next = prev
+          prev = current
+          current = nxt
+
+      result = []
+      current = prev
+      while current is not None:
+          result.append(current.value)
+          current = current.next
+      return result
+hints:
+  - level: 1
+    text: Carry three references as you walk, the part already flipped, the box you are on, and the untouched rest.
+  - level: 2
+    text: Save `nxt = current.next` before you overwrite `current.next = prev`, or you lose the rest of the chain.
+  - level: 3
+    text: After the loop, prev points at the old tail, which is now the head, so serialize starting from prev.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: single
+      input: [A1]
+      expected: [A1]
+    - name: several
+      input: [A1, B2, C3, D4]
+      expected: [D4, C3, B2, A1]
+  validation:
+    - name: two
+      input: [X, Y]
+      expected: [Y, X]
+    - name: numbers
+      input: [1, 2, 3, 4, 5]
+      expected: [5, 4, 3, 2, 1]
+    - name: repeats
+      input: [7, 7, 8, 9]
+      expected: [9, 8, 7, 7]
+explanation_markdown: |
+  In-place reversal flips every link so the tail becomes the head. The three
+  cursors matter: `prev` is the already-reversed prefix, `current` is the node
+  being flipped, and `nxt` preserves the rest of the chain before the flip
+  destroys the forward link. Skip the save and you strand every box past
+  `current`. When `current` walks off the end, `prev` holds the new head, and a
+  final walk collects the values in reversed order using O(1) extra space beyond
+  the output list.
+common_mistakes:
+  - Overwriting `current.next` before saving `nxt`, which loses the rest of the chain.
+  - Returning `current` (now None) instead of `prev` after the loop.
+  - Building a reversed copy instead of rewiring the existing links.

@@ -1,0 +1,96 @@
+id: exercise.library.linked_lists_patterns.a01
+kind: exercise
+version: 1
+language: python
+title: Ticket Queue Round Trip
+slug: linked-lists-patterns-a01
+difficulty: easy
+concepts:
+  - patterns.linked_list
+  - python.classes
+prerequisites:
+  - python.lists
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.linked_lists_patterns.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original print-shop ticket-queue round trip that builds a node chain and reads it back.
+prompt_markdown: |
+  A print shop stores its job tickets as a chain of boxes, where each box holds
+  one ticket number and a link to the next box. Write `queue_round_trip(tickets)`
+  that takes a list of ticket numbers, builds a singly linked list of `Node`
+  objects from them (in the same order), then walks that chain and returns a plain
+  list of the ticket numbers it finds.
+
+  For a correct build-and-walk, the returned list must match the input exactly. An
+  empty input should return an empty list.
+starter_code: |
+  def queue_round_trip(tickets):
+      # Build a Node chain from `tickets`, then walk it back into a list.
+      return []
+function_name: queue_round_trip
+input_mode: function
+solution_sketch: Prepend nodes while iterating the input in reverse, then walk from head collecting values.
+sample_solution: |
+  def queue_round_trip(tickets):
+      class Node:
+          def __init__(self, value):
+              self.value = value
+              self.next = None
+
+      head = None
+      for value in reversed(tickets):
+          node = Node(value)
+          node.next = head
+          head = node
+
+      result = []
+      current = head
+      while current is not None:
+          result.append(current.value)
+          current = current.next
+      return result
+hints:
+  - level: 1
+    text: You need two phases, build the chain of Node objects first, then walk it to collect the values.
+  - level: 2
+    text: If you prepend each new node onto the front, iterate the input with reversed() so the final order matches.
+  - level: 3
+    text: Start a cursor at head and, while it is not None, append current.value and set current = current.next.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: single
+      input: [42]
+      expected: [42]
+    - name: several
+      input: [7, 3, 9, 1]
+      expected: [7, 3, 9, 1]
+  validation:
+    - name: two
+      input: [5, 8]
+      expected: [5, 8]
+    - name: repeats
+      input: [4, 4, 4]
+      expected: [4, 4, 4]
+    - name: longer
+      input: [10, 20, 30, 40, 50, 60]
+      expected: [10, 20, 30, 40, 50, 60]
+explanation_markdown: |
+  Building a chain from a list and reading it back is the round trip every
+  linked-list technique relies on. Prepending each value onto the front reverses
+  the order once, so iterating the input in reverse cancels that out and preserves
+  the original sequence. Walking the chain then follows `.next` links from the
+  head until a cursor reaches `None`, appending each stored value. Because the
+  graders compare plain data, the linked list only ever lives inside the function.
+common_mistakes:
+  - Prepending nodes while iterating forward, which silently reverses the output.
+  - Forgetting the empty-input case and trying to read `head.value` when head is None.
+  - Losing the head reference so the walk starts from the wrong box.

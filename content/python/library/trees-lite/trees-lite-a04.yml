@@ -1,0 +1,89 @@
+id: exercise.library.trees_lite.a04
+kind: exercise
+version: 1
+language: python
+title: Dismantling a Scaffold From the Leaves Up
+slug: trees-lite-a04
+difficulty: medium
+concepts:
+  - patterns.tree_traversal
+  - patterns.dfs
+  - python.lists
+prerequisites:
+  - patterns.recursion
+  - python.trees_as_data
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.trees_lite.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original post-order traversal drill framed as safely dismantling a branching scaffold from the leaves up.
+prompt_markdown: |
+  A crew dismantling a branching scaffold must remove every supported section
+  before the beam that holds it up. That is a *post-order* walk: clear the whole
+  left subtree, then the whole right subtree, and only then record the current
+  joint.
+
+  The scaffold is a binary tree of nested dictionaries (`{"value", "left",
+  "right"}`, empty branch is `None`). Write `postorder_values(tree)` returning a
+  list of node values in post-order: left subtree, right subtree, then the
+  current node. An empty tree returns `[]`.
+starter_code: |
+  def postorder_values(tree):
+      # Return node values in post-order: left subtree, right subtree, node.
+      return []
+function_name: postorder_values
+input_mode: function
+solution_sketch: Concatenate the post-order of the left subtree, the post-order of the right subtree, then the node's value.
+sample_solution: |
+  def postorder_values(tree):
+      if tree is None:
+          return []
+      return (
+          postorder_values(tree["left"])
+          + postorder_values(tree["right"])
+          + [tree["value"]]
+      )
+hints:
+  - level: 1
+    text: A node is recorded only after both of its subtrees are fully handled.
+  - level: 2
+    text: Concatenate the left subtree's list, then the right subtree's list, then the current value.
+  - level: 3
+    text: Return [] for None, else postorder_values(tree["left"]) + postorder_values(tree["right"]) + [tree["value"]].
+tests:
+  public:
+    - name: empty
+      input: null
+      expected: []
+    - name: single
+      input: {value: 7, left: null, right: null}
+      expected: [7]
+    - name: full_tree
+      input: {value: 5, left: {value: 3, left: {value: 2, left: null, right: null}, right: {value: 4, left: null, right: null}}, right: {value: 8, left: null, right: {value: 9, left: null, right: null}}}
+      expected: [2, 4, 3, 9, 8, 5]
+  validation:
+    - name: left_chain
+      input: {value: 1, left: {value: 2, left: {value: 3, left: null, right: null}, right: null}, right: null}
+      expected: [3, 2, 1]
+    - name: right_chain
+      input: {value: 1, left: null, right: {value: 2, left: null, right: {value: 3, left: null, right: null}}}
+      expected: [3, 2, 1]
+    - name: two_children
+      input: {value: 10, left: {value: 4, left: null, right: null}, right: {value: 15, left: null, right: null}}
+      expected: [4, 15, 10]
+explanation_markdown: |
+  Post-order defers the current value until *after* both recursive calls, so the
+  root always appears last and every parent trails its descendants. That is why
+  the full tree yields `[2, 4, 3, 9, 8, 5]` with 5 at the end. This ordering is
+  the one to reach for whenever a node's result depends on its children being
+  processed first, such as summing a subtree or safely tearing a structure down.
+  The empty-tree base case contributes `[]`, and each node is visited once for
+  O(n) time.
+common_mistakes:
+  - Placing the value first or in the middle, producing pre-order or in-order.
+  - Swapping the two subtree calls, which reverses left and right within a level.
+  - Forgetting the None base case and indexing an empty branch.

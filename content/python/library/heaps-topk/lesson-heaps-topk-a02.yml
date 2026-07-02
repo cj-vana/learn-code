@@ -1,0 +1,93 @@
+id: lesson.library.heaps_topk.a02
+kind: lesson
+version: 1
+language: python
+title: Top-K and K-Way Merge Without Sorting Everything
+slug: lesson-heaps-topk-a02
+difficulty: medium
+concepts:
+  - patterns.heap_topk
+  - python.heapq_bisect
+prerequisites:
+  - python.heapq_bisect
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.heaps_topk.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original top-k and k-way-merge lesson set at an observatory and a delivery depot with its own code.
+body_markdown: |
+  An observatory streams brightness readings for millions of stars, but the
+  astronomer only cares about the ten brightest tonight. Sorting all million
+  readings to keep ten is wasteful. This is the **top-k** problem, and a heap of
+  size k solves it in O(n log k) time and O(k) space.
+
+  The counter-intuitive trick: to keep the k *largest* values, maintain a
+  *min*-heap of size k. The smallest of your current winners sits at the root,
+  ready to be evicted the moment something better arrives.
+
+  ```python
+  import heapq
+
+  def k_brightest(readings, k):
+      winners = []                      # min-heap of size k
+      for value in readings:
+          if len(winners) < k:
+              heapq.heappush(winners, value)
+          elif value > winners[0]:      # better than the weakest winner?
+              heapq.heapreplace(winners, value)   # pop min, push value
+      return sorted(winners, reverse=True)
+
+  print(k_brightest([4, 9, 1, 7, 3], 2))   # [9, 7]
+  ```
+
+  Because `winners[0]` is the weakest kept value, the comparison `value >
+  winners[0]` is an O(1) gate that skips most candidates. `heapreplace` does the
+  eviction and insertion in one balanced step. The same structure answers "what
+  is the k-th largest element?": run the loop, then `winners[0]` is your answer.
+
+  When you already know all the data and just want a quick top-k, `heapq` offers
+  shortcuts: `heapq.nlargest(k, data)` and `heapq.nsmallest(k, data)` return a
+  sorted list directly, and both accept a `key=` function like `sorted` does.
+
+  ### K-way merge
+
+  Now a different shape: several delivery depots each hand you an *already sorted*
+  log, and you want one merged sorted stream. Concatenating and re-sorting throws
+  away the fact that each list is ordered. Instead, keep one heap entry per list,
+  holding the smallest unconsumed value and enough bookkeeping to fetch the next
+  one.
+
+  ```python
+  import heapq
+
+  def merge_sorted(lists):
+      heap = [(lst[0], i, 0) for i, lst in enumerate(lists) if lst]
+      heapq.heapify(heap)
+      out = []
+      while heap:
+          value, i, j = heapq.heappop(heap)
+          out.append(value)
+          if j + 1 < len(lists[i]):
+              heapq.heappush(heap, (lists[i][j + 1], i, j + 1))
+      return out
+  ```
+
+  The tuple `(value, list_index, element_index)` lets the heap compare by value
+  while remembering which list to advance. With k lists totalling n elements the
+  merge costs O(n log k), because the heap never holds more than k entries at
+  once. Storing the index alongside the value also breaks ties deterministically
+  and is the standard way to make heaps carry a payload.
+checkpoints:
+  - question: To keep the k largest values from a stream, should you use a min-heap or a max-heap of size k, and what does the root represent?
+    answer: Use a min-heap of size k; its root is the smallest of the values you are currently keeping, i.e. the weakest winner that gets evicted first.
+    explanation: Keeping the weakest winner at the root lets you decide in O(1) whether a new value belongs in the top k before doing any O(log k) work.
+  - question: In the k-way merge, why does each heap entry store a tuple of (value, list_index, element_index) instead of just the value?
+    answer: The list_index tells you which source list to pull the next value from, and the element_index tells you where you are in that list, so you can push the correct successor after popping.
+    explanation: The heap compares on the first tuple field (the value) while the extra fields carry the bookkeeping needed to advance exactly one list per pop.
+  - question: For k sorted lists with n total elements, what is the time complexity of the heap-based k-way merge and why?
+    answer: O(n log k), because every one of the n elements is pushed and popped once and the heap never holds more than k entries, making each operation O(log k).
+    explanation: Bounding the heap size at k (one pending entry per list) keeps each push and pop at log k rather than log n.

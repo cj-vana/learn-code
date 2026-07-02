@@ -1,0 +1,80 @@
+id: exercise.library.trees_lite.a01
+kind: exercise
+version: 1
+language: python
+title: Counting Junctions in an Irrigation Manifold
+slug: trees-lite-a01
+difficulty: easy
+concepts:
+  - python.trees_as_data
+  - patterns.recursion
+prerequisites:
+  - python.functions
+  - python.dictionaries
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.trees_lite.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original node-counting drill on the nested-dict tree convention, themed as a greenhouse manifold.
+prompt_markdown: |
+  A greenhouse irrigation manifold is modelled as a binary tree of nested
+  dictionaries. Each node is `{"value": ..., "left": ..., "right": ...}`, where
+  `left` and `right` are child nodes or `None`, and an empty manifold is `None`.
+
+  Write `count_nodes(tree)` that returns the total number of nodes (junctions) in
+  the tree. An empty tree has 0 nodes.
+starter_code: |
+  def count_nodes(tree):
+      # Return the number of nodes in the tree.
+      return 0
+function_name: count_nodes
+input_mode: function
+solution_sketch: Recurse - an empty tree is 0, otherwise 1 plus the counts of both subtrees.
+sample_solution: |
+  def count_nodes(tree):
+      if tree is None:
+          return 0
+      return 1 + count_nodes(tree["left"]) + count_nodes(tree["right"])
+hints:
+  - level: 1
+    text: An empty branch (None) contributes nothing to the count.
+  - level: 2
+    text: A node's total is itself plus whatever its left and right subtrees contain.
+  - level: 3
+    text: Return 0 when tree is None, otherwise 1 + count_nodes(tree["left"]) + count_nodes(tree["right"]).
+tests:
+  public:
+    - name: empty
+      input: null
+      expected: 0
+    - name: single
+      input: {value: 7, left: null, right: null}
+      expected: 1
+    - name: three_nodes
+      input: {value: 1, left: {value: 2, left: null, right: null}, right: {value: 3, left: null, right: null}}
+      expected: 3
+  validation:
+    - name: left_chain
+      input: {value: 1, left: {value: 2, left: {value: 3, left: null, right: null}, right: null}, right: null}
+      expected: 3
+    - name: right_chain
+      input: {value: 1, left: null, right: {value: 2, left: null, right: {value: 3, left: null, right: null}}}
+      expected: 3
+    - name: manifold_six
+      input: {value: 5, left: {value: 3, left: {value: 2, left: null, right: null}, right: {value: 4, left: null, right: null}}, right: {value: 8, left: null, right: {value: 9, left: null, right: null}}}
+      expected: 6
+explanation_markdown: |
+  Counting nodes is the simplest recursive tree pattern. The base case is the
+  empty tree, which has zero nodes. Any non-empty node contributes one for
+  itself plus the counts returned by recursing into its two children. Because
+  each child is itself a valid tree, the same function handles it, and the `None`
+  guard stops the descent at every empty branch. The work is O(n): each node is
+  visited exactly once.
+common_mistakes:
+  - Forgetting the None base case and indexing None["value"], which raises a TypeError.
+  - Counting only leaves or only one side instead of adding both subtree counts.
+  - Returning 1 for an empty tree instead of 0.

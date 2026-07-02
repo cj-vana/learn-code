@@ -1,0 +1,93 @@
+id: exercise.library.error_handling.a03
+kind: exercise
+version: 1
+language: python
+title: A Log That Always Closes
+slug: error-handling-a03
+difficulty: easy
+concepts:
+  - python.exceptions
+  - python.lists
+prerequisites:
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.error_handling.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original audit-log task that reveals the ordering of except and finally through the returned trace.
+prompt_markdown: |
+  An audit tool records what happened while it tried to parse a meter reading. It
+  should leave behind a trace no matter how the parse turns out.
+
+  Write `log_attempt(sample)` where `sample` is a string. Build and return a list
+  of step labels:
+
+  - Start every trace with `"trying"`.
+  - Attempt `int(sample)`. If it succeeds, append `"parsed"`.
+  - If the conversion raises `ValueError`, append `"failed"` instead.
+  - Whatever happens, append `"closed"` as the final step before returning.
+
+  Use a `finally` block so the closing step is guaranteed even when parsing fails.
+starter_code: |
+  def log_attempt(sample):
+      log = ["trying"]
+      # Try to parse, record "parsed" or "failed", then always record "closed".
+      return log
+function_name: log_attempt
+input_mode: function
+solution_sketch: Try int(sample) recording parsed/failed, and append the closing step in a finally clause.
+sample_solution: |
+  def log_attempt(sample):
+      log = ["trying"]
+      try:
+          int(sample)
+          log.append("parsed")
+      except ValueError:
+          log.append("failed")
+      finally:
+          log.append("closed")
+      return log
+hints:
+  - level: 1
+    text: A `finally` block runs on both the success path and the failure path.
+  - level: 2
+    text: Record "parsed" as the last line of the try, "failed" in the except, and "closed" in finally.
+  - level: 3
+    text: "Order the appends so failed cases read [trying, failed, closed] and successes read [trying, parsed, closed]."
+tests:
+  public:
+    - name: clean_number
+      input: '42'
+      expected: ['trying', 'parsed', 'closed']
+    - name: garbage
+      input: oops
+      expected: ['trying', 'failed', 'closed']
+    - name: negative
+      input: '-5'
+      expected: ['trying', 'parsed', 'closed']
+  validation:
+    - name: decimal_string
+      input: '3.5'
+      expected: ['trying', 'failed', 'closed']
+    - name: zero
+      input: '0'
+      expected: ['trying', 'parsed', 'closed']
+    - name: padded
+      input: '  8 '
+      expected: ['trying', 'parsed', 'closed']
+explanation_markdown: |
+  `finally` is the block Python promises to run on the way out of a `try`, whether
+  it exited normally, through an `except`, or even via an uncaught exception. That
+  makes it the right home for cleanup or closing steps. Because `"parsed"` sits
+  inside the `try` after the conversion, it is only reached when `int(sample)`
+  does not raise; a `ValueError` jumps straight to the `except` and then to
+  `finally`. Note that `int("3.5")` raises `ValueError` (only whole-number strings
+  convert), while `int("  8 ")` succeeds because surrounding whitespace is ignored.
+common_mistakes:
+  - Appending "closed" at the end of the try block, so it is skipped whenever a failure occurs.
+  - Putting "parsed" before the `int()` call, so it is recorded even on failure.
+  - Assuming `int("3.5")` works; it raises `ValueError` because the string is not a whole number.

@@ -1,0 +1,98 @@
+id: exercise.library.oop_classes.a05
+kind: exercise
+version: 1
+language: python
+title: Counting Distinct Paint Mixes
+slug: oop-classes-a05
+difficulty: medium
+concepts:
+  - python.dataclasses_dunder
+  - python.classes
+prerequisites:
+  - python.classes
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.oop_classes.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original paint-mixing scenario drilling __eq__ so value-based equality drives a distinct count.
+prompt_markdown: |
+  A paint counter mixes custom colours. Each mix is described by three integer
+  parts: red, yellow, and blue. Two mixes are the *same colour* when all three
+  parts match, even if a customer ordered them separately. The shop wants to know
+  how many genuinely different colours were mixed in a day.
+
+  Complete `distinct_mixes(orders)`, where `orders` is a list of `[red, yellow,
+  blue]` triples. Inside the function, define a `Mix` class that stores the three
+  parts and defines `__eq__` so two mixes with identical parts compare equal. Build
+  a `Mix` for each order, then count how many distinct colours appear -- using your
+  `__eq__` to decide sameness (for example, with the `in` operator against a list
+  of the mixes you have already seen). Return that count as an integer.
+starter_code: |
+  def distinct_mixes(orders):
+      # Define a Mix class with an __eq__ that compares the three parts,
+      # then count how many distinct mixes appear across the orders.
+      return 0
+function_name: distinct_mixes
+input_mode: function
+solution_sketch: Give Mix an __eq__ comparing its three parts, then collect mixes not already present (by ==) and count them.
+sample_solution: |
+  def distinct_mixes(orders):
+      class Mix:
+          def __init__(self, red, yellow, blue):
+              self.red = red
+              self.yellow = yellow
+              self.blue = blue
+
+          def __eq__(self, other):
+              return (self.red, self.yellow, self.blue) == (
+                  other.red, other.yellow, other.blue)
+
+      seen = []
+      for red, yellow, blue in orders:
+          mix = Mix(red, yellow, blue)
+          if mix not in seen:
+              seen.append(mix)
+      return len(seen)
+hints:
+  - level: 1
+    text: Two mixes are equal when their red, yellow, and blue parts all match; that comparison belongs in __eq__.
+  - level: 2
+    text: Implement __eq__ to compare the tuple (self.red, self.yellow, self.blue) against the other mix's tuple.
+  - level: 3
+    text: Keep a list of mixes seen so far; the expression mix not in seen uses your __eq__, so append only new colours and return len(seen).
+tests:
+  public:
+    - name: one_repeat
+      input: [[1, 0, 0], [1, 0, 0], [0, 1, 0]]
+      expected: 2
+    - name: all_distinct
+      input: [[1, 2, 3], [4, 5, 6]]
+      expected: 2
+    - name: empty
+      input: []
+      expected: 0
+  validation:
+    - name: all_same
+      input: [[2, 2, 2], [2, 2, 2], [2, 2, 2]]
+      expected: 1
+    - name: single
+      input: [[9, 9, 9]]
+      expected: 1
+    - name: near_misses
+      input: [[1, 0, 0], [0, 1, 0], [0, 0, 1], [1, 0, 0]]
+      expected: 3
+explanation_markdown: |
+  By default `==` on custom objects checks identity, so two separately built mixes
+  would never match. Defining `__eq__` to compare the three parts gives the class
+  value-based equality: any two mixes with the same red, yellow, and blue are now
+  equal. The `in` operator walks the `seen` list calling that `__eq__`, so a colour
+  is added only the first time it appears. The length of `seen` is the count of
+  distinct colours.
+common_mistakes:
+  - Relying on the default identity comparison, so every mix looks unique and the count equals the number of orders.
+  - Comparing raw triples with a set of tuples but claiming the class did the work -- the exercise wants __eq__ to drive the sameness test.
+  - Forgetting that mix not in seen already applies __eq__, and re-implementing a manual nested loop that mishandles the empty case.

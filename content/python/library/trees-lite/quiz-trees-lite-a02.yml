@@ -1,0 +1,110 @@
+id: quiz.library.trees_lite.a02
+kind: quiz
+version: 1
+language: python
+title: Tracing Traversals, Height, and Levels
+slug: quiz-trees-lite-a02
+difficulty: medium
+concepts:
+  - patterns.tree_traversal
+  - patterns.dfs
+  - patterns.queue_bfs
+prerequisites: []
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.trees_lite.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original trace-the-output quiz over a fixed small tree covering the three DFS orders, height, and level-order.
+quiz_type: mixed_review
+questions:
+  - id: q1
+    prompt: |
+      For this tree, what is the in-order traversal?
+
+          {"value": 4,
+           "left":  {"value": 2, "left": {"value": 1, "left": None, "right": None},
+                                   "right": {"value": 3, "left": None, "right": None}},
+           "right": {"value": 6, "left": {"value": 5, "left": None, "right": None},
+                                   "right": {"value": 7, "left": None, "right": None}}}
+    choices:
+      - "[1, 2, 3, 4, 5, 6, 7]"
+      - "[4, 2, 1, 3, 6, 5, 7]"
+      - "[1, 3, 2, 5, 7, 6, 4]"
+      - "[4, 2, 6, 1, 3, 5, 7]"
+    correct_choice: "[1, 2, 3, 4, 5, 6, 7]"
+    explanation: |
+      In-order visits left, node, right. Because this is a search tree, that walk
+      emits the values in ascending order: 1 through 7.
+    concepts:
+      - patterns.tree_traversal
+      - patterns.dfs
+  - id: q2
+    prompt: |
+      For the same tree (root 4), what is the pre-order traversal?
+    choices:
+      - "[4, 2, 1, 3, 6, 5, 7]"
+      - "[1, 2, 3, 4, 5, 6, 7]"
+      - "[1, 3, 2, 5, 7, 6, 4]"
+      - "[4, 6, 2, 7, 5, 3, 1]"
+    correct_choice: "[4, 2, 1, 3, 6, 5, 7]"
+    explanation: |
+      Pre-order records the node first: 4, then the whole left subtree (2, 1, 3),
+      then the whole right subtree (6, 5, 7).
+    concepts:
+      - patterns.tree_traversal
+      - patterns.dfs
+  - id: q3
+    prompt: |
+      For the same tree (root 4), what is the post-order traversal?
+    choices:
+      - "[1, 3, 2, 5, 7, 6, 4]"
+      - "[4, 2, 1, 3, 6, 5, 7]"
+      - "[1, 2, 3, 4, 5, 6, 7]"
+      - "[7, 6, 5, 4, 3, 2, 1]"
+    correct_choice: "[1, 3, 2, 5, 7, 6, 4]"
+    explanation: |
+      Post-order records the node last: left subtree (1, 3, 2), right subtree
+      (5, 7, 6), then the root 4 at the very end.
+    concepts:
+      - patterns.tree_traversal
+      - patterns.dfs
+  - id: q4
+    prompt: |
+      Using height = number of nodes on the longest root-to-leaf path (empty tree
+      = 0), what is the height of this tree?
+
+          {"value": 1,
+           "left": None,
+           "right": {"value": 2, "left": None,
+                     "right": {"value": 3, "left": None, "right": None}}}
+    choices:
+      - "3"
+      - "2"
+      - "1"
+      - "0"
+    correct_choice: "3"
+    explanation: |
+      The longest path runs 1 -> 2 -> 3, which is three nodes, so the height is 3.
+      The empty left branches never contribute.
+    concepts:
+      - patterns.tree_traversal
+  - id: q5
+    prompt: |
+      A level-order traversal that groups values by depth is run on the root-4
+      tree from question 1. What does it return?
+    choices:
+      - "[[4], [2, 6], [1, 3, 5, 7]]"
+      - "[[4], [2], [6], [1], [3], [5], [7]]"
+      - "[[1, 3, 5, 7], [2, 6], [4]]"
+      - "[4, 2, 6, 1, 3, 5, 7]"
+    correct_choice: "[[4], [2, 6], [1, 3, 5, 7]]"
+    explanation: |
+      Level-order groups by distance from the root: the root alone, then its two
+      children, then the four leaves, each row read left to right.
+    concepts:
+      - patterns.queue_bfs
+      - patterns.tree_traversal

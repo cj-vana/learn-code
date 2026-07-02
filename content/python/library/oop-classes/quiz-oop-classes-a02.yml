@@ -1,0 +1,99 @@
+id: quiz.library.oop_classes.a02
+kind: quiz
+version: 1
+language: python
+title: Class and Dunder Syntax
+slug: quiz-oop-classes-a02
+difficulty: easy
+concepts:
+  - python.classes
+  - python.dataclasses_dunder
+prerequisites:
+  - python.classes
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.oop_classes.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax questions on __init__, self, classmethod, dunder names, and the dataclass decorator.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: |
+      What is the conventional name of the first parameter of a normal instance
+      method, which refers to the instance the method was called on?
+    choices:
+      - self
+      - this
+      - cls
+      - instance
+    correct_choice: self
+    explanation: |
+      By convention the first parameter of an instance method is named self, and
+      Python passes the calling instance into it automatically.
+    concepts:
+      - python.classes
+  - id: q2
+    prompt: |
+      Which method name does Python call automatically to set up a new instance's
+      starting attributes right after it is created?
+    choices:
+      - __init__
+      - __new__init__
+      - __setup__
+      - initialize
+    correct_choice: __init__
+    explanation: |
+      __init__ is the initializer; it runs on each new instance and is where you
+      assign the object's starting instance attributes through self.
+    concepts:
+      - python.classes
+  - id: q3
+    prompt: |
+      Which decorator turns a method into a class method whose first parameter is the
+      class itself (cls)?
+    choices:
+      - '@classmethod'
+      - '@class'
+      - '@staticmethod'
+      - '@instancemethod'
+    correct_choice: '@classmethod'
+    explanation: |
+      @classmethod makes Python pass the class as the first argument (cls), which is
+      what lets the method act as an alternative constructor via cls(...).
+    concepts:
+      - python.classes
+  - id: q4
+    prompt: |
+      Which dunder method should you define so that the built-in sorted() can order
+      your objects using the < operator?
+    choices:
+      - __lt__
+      - __sort__
+      - __order__
+      - __cmp__
+    correct_choice: __lt__
+    explanation: |
+      sorted() compares pairs of items with <, which is implemented by __lt__.
+      Defining it is enough for sorting; __cmp__ no longer exists in modern Python.
+    concepts:
+      - python.dataclasses_dunder
+  - id: q5
+    prompt: |
+      Given `from dataclasses import dataclass`, which snippet correctly declares a
+      dataclass with two integer fields?
+    choices:
+      - "@dataclass\nclass Point:\n    x: int\n    y: int"
+      - "@dataclass\nclass Point:\n    x = int\n    y = int"
+      - "dataclass(Point):\n    x: int\n    y: int"
+      - "class Point(dataclass):\n    x: int\n    y: int"
+    correct_choice: "@dataclass\nclass Point:\n    x: int\n    y: int"
+    explanation: |
+      A dataclass is a normal class decorated with @dataclass whose fields are given
+      as annotations (name: type). Using = would define class attributes with
+      default type values, and dataclass is a decorator, not a base class.
+    concepts:
+      - python.dataclasses_dunder

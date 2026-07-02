@@ -1,0 +1,98 @@
+id: lesson.library.bit_number_theory.a03
+kind: lesson
+version: 1
+language: python
+title: A Number Theory Toolkit — GCD, Sieves, and Modular Powers
+slug: lesson-bit-number-theory-a03
+difficulty: hard
+concepts:
+  - concepts.number_theory
+  - patterns.bit_manipulation
+prerequisites:
+  - python.loops
+  - python.operators
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.bit_number_theory.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original number-theory walkthrough tying Euclid, the sieve, and square-and-multiply to an observatory scheduling theme.
+body_markdown: |
+  Number theory gives you a handful of small, exact algorithms that show up
+  everywhere from scheduling to cryptography. This lesson collects three of them.
+
+  **The Euclidean algorithm** finds the greatest common divisor. Its insight is
+  that `gcd(a, b)` equals `gcd(b, a % b)`: any number dividing both `a` and `b`
+  also divides their remainder, so you can keep shrinking the pair until the
+  second number hits zero. From the GCD you get the least common multiple for
+  free, because `a * b == gcd(a, b) * lcm(a, b)`.
+
+  ```python
+  def gcd(a, b):
+      while b:
+          a, b = b, a % b     # replace the pair with (b, a mod b)
+      return a
+
+  def lcm(a, b):
+      return a // gcd(a, b) * b   # divide first to avoid a large intermediate
+  ```
+
+  An observatory whose three cameras cycle every 6, 10, and 15 seconds realigns
+  every `lcm(6, 10, 15) == 30` seconds, which you compute by folding `lcm`
+  across the list.
+
+  **The sieve of Eratosthenes** finds every prime up to `n`. Start assuming all
+  numbers are prime, then for each prime `p` cross off its multiples `p*p`,
+  `p*p + p`, and onward. A close cousin records, for each number, its *smallest
+  prime factor*; that table lets you factor any number by repeatedly dividing
+  out its smallest factor.
+
+  ```python
+  def smallest_prime_factors(n):
+      spf = list(range(n + 1))          # spf[i] starts as i
+      i = 2
+      while i * i <= n:
+          if spf[i] == i:               # i is prime
+              for multiple in range(i * i, n + 1, i):
+                  if spf[multiple] == multiple:
+                      spf[multiple] = i
+          i += 1
+      return spf
+  ```
+
+  **Modular exponentiation** computes `base**exp % mod` without ever building the
+  astronomically large `base**exp`. The trick reads the exponent one *bit* at a
+  time, which ties number theory back to bit manipulation. Square the running
+  base every step, and whenever the current low bit of the exponent is 1,
+  multiply it into the answer. Because you look at each bit once, the cost is
+  about `log2(exp)` multiplications instead of `exp` of them.
+
+  ```python
+  def power_mod(base, exp, mod):
+      result = 1
+      base %= mod
+      while exp:
+          if exp & 1:                   # this bit of the exponent is set
+              result = result * base % mod
+          base = base * base % mod      # square for the next bit
+          exp >>= 1                     # move to the next bit
+      return result
+  ```
+
+  Reducing with `% mod` after every multiply keeps the numbers small, so a
+  thousand-bit exponent still finishes in well under a millisecond. These three
+  routines are exact integer algorithms — no floating point, no rounding — which
+  is exactly what number-theoretic code needs.
+checkpoints:
+  - question: In the Euclidean algorithm, what replaces the pair (a, b) on each step, and when does it stop?
+    answer: The pair becomes (b, a % b), and the loop stops when the second value reaches 0, at which point the first value is the GCD.
+    explanation: Any common divisor of a and b also divides a % b, so the GCD is preserved while the numbers shrink until nothing remains to divide.
+  - question: Why does modular exponentiation examine the exponent bit by bit instead of multiplying base by itself exp times?
+    answer: Reading the exponent in binary lets it square the base once per bit and only multiply into the result on set bits, cutting the work from exp steps to about log2(exp) steps.
+    explanation: Square-and-multiply exploits that base**exp can be assembled from base raised to powers of two, which correspond to the exponent's bits.
+  - question: How does a smallest-prime-factor table let you fully factor a number n?
+    answer: Repeatedly divide n by spf[n], recording that prime, until n becomes 1, which yields all prime factors with multiplicity.
+    explanation: spf[n] is always the smallest prime dividing n, so dividing it out and repeating peels off prime factors in ascending order.

@@ -5,11 +5,12 @@ version: 1
 language: python
 title: Algorithm Patterns II
 slug: algorithm-patterns-2
-description: Prefix sums, stacks and queues, binary search, recursion, and mixed capstones.
+description: Prefix sums, stacks and queues, binary search, recursion, heaps, intervals, and mixed capstones.
 outcomes:
 - Apply prefix sums, stacks, and binary search to fresh problems
+- Reach for heaps and greedy interval sweeps when they fit
 - Hold your own on mixed problems that hide which pattern applies
-estimated_hours: 14
+estimated_hours: 21
 review_status: published
 source_status: original
 provenance:
@@ -90,6 +91,48 @@ units:
   - exercise.library.recursion_backtracking.a08
   - quiz.library.recursion_backtracking.a01
   - quiz.library.recursion_backtracking.a02
+- id: unit.heaps_topk
+  title: Heaps & Top-K
+  description: Lessons, drills, and quizzes for heaps & top-k.
+  items:
+  - lesson.library.heaps_topk.a01
+  - lesson.library.heaps_topk.a02
+  - lesson.library.heaps_topk.a03
+  - exercise.library.heaps_topk.a01
+  - exercise.library.heaps_topk.a02
+  - exercise.library.heaps_topk.a03
+  - exercise.library.heaps_topk.a04
+  - exercise.library.heaps_topk.a05
+  - exercise.library.heaps_topk.a06
+  - exercise.library.heaps_topk.a07
+  - exercise.library.heaps_topk.a08
+  - exercise.library.heaps_topk.a09
+  - exercise.library.heaps_topk.a10
+  - exercise.library.heaps_topk.a11
+  - exercise.library.heaps_topk.a12
+  - quiz.library.heaps_topk.a01
+  - quiz.library.heaps_topk.a02
+- id: unit.intervals_greedy
+  title: Intervals & Greedy
+  description: Lessons, drills, and quizzes for intervals & greedy.
+  items:
+  - lesson.library.intervals_greedy.a01
+  - lesson.library.intervals_greedy.a02
+  - lesson.library.intervals_greedy.a03
+  - exercise.library.intervals_greedy.a01
+  - exercise.library.intervals_greedy.a02
+  - exercise.library.intervals_greedy.a03
+  - exercise.library.intervals_greedy.a04
+  - exercise.library.intervals_greedy.a05
+  - exercise.library.intervals_greedy.a06
+  - exercise.library.intervals_greedy.a07
+  - exercise.library.intervals_greedy.a08
+  - exercise.library.intervals_greedy.a09
+  - exercise.library.intervals_greedy.a10
+  - exercise.library.intervals_greedy.a11
+  - exercise.library.intervals_greedy.a12
+  - quiz.library.intervals_greedy.a01
+  - quiz.library.intervals_greedy.a02
 - id: unit.mixed_capstones
   title: Mixed Capstones
   description: Lessons, drills, and quizzes for mixed capstones.

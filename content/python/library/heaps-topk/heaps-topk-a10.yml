@@ -1,0 +1,109 @@
+id: exercise.library.heaps_topk.a10
+kind: exercise
+version: 1
+language: python
+title: The K Lightest Load-Outs
+slug: heaps-topk-a10
+difficulty: hard
+concepts:
+  - patterns.heap_topk
+  - python.heapq_bisect
+  - python.tuples
+prerequisites:
+  - python.heapq_bisect
+estimated_time_minutes: 26
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.heaps_topk.a10
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original k-smallest-pair-sums drill framed around pairing crates from two sorted conveyor belts without enumerating every combination.
+prompt_markdown: |
+  A loading dock has two conveyor belts of crate weights, each **sorted ascending**.
+  A load-out takes exactly one crate from belt A and one from belt B, and its
+  weight is the sum of the two crates. The dock wants the `k` **lightest** possible
+  load-outs, but the belts are long, so enumerating every pair is too slow.
+
+  Write `lightest_loadouts(data)` where `data` is a dict with keys `a` and `b`
+  (sorted lists of integer weights) and `k` (a non-negative integer). Return the
+  `k` smallest pair sums in **ascending** order. If either belt is empty or `k` is
+  `0`, return an empty list; if `k` exceeds the number of pairs, return every pair
+  sum sorted ascending.
+
+  Explore pairs lazily with a heap: start from the lightest pair `(a[0], b[0])`
+  and, each time you extract a pair, only then push its immediate neighbours.
+starter_code: |
+  import heapq
+
+
+  def lightest_loadouts(data):
+      return []
+function_name: lightest_loadouts
+input_mode: function
+solution_sketch: Seed a heap with the (a0+b0, 0, 0) pair, then pop k times, each time pushing the (i+1, j) and (i, j+1) neighbours guarded by a visited set.
+sample_solution: |
+  import heapq
+
+
+  def lightest_loadouts(data):
+      a = data["a"]
+      b = data["b"]
+      k = data["k"]
+      if not a or not b or k <= 0:
+          return []
+      heap = [(a[0] + b[0], 0, 0)]
+      seen = {(0, 0)}
+      out = []
+      while heap and len(out) < k:
+          total, i, j = heapq.heappop(heap)
+          out.append(total)
+          if i + 1 < len(a) and (i + 1, j) not in seen:
+              seen.add((i + 1, j))
+              heapq.heappush(heap, (a[i + 1] + b[j], i + 1, j))
+          if j + 1 < len(b) and (i, j + 1) not in seen:
+              seen.add((i, j + 1))
+              heapq.heappush(heap, (a[i] + b[j + 1], i, j + 1))
+      return out
+hints:
+  - level: 1
+    text: The lightest load-out is always a[0] + b[0]; the next lightest is one step down either belt from a pair you have already taken.
+  - level: 2
+    text: Store each candidate as (sum, i, j) so the heap orders by weight while remembering which crates formed it.
+  - level: 3
+    text: After popping (sum, i, j), push (i+1, j) and (i, j+1) but guard with a visited set so the same index pair is never queued twice.
+tests:
+  public:
+    - name: small_grid
+      input: {a: [1, 2], b: [3, 4], k: 3}
+      expected: [4, 5, 5]
+    - name: k_zero
+      input: {a: [1, 2], b: [3, 4], k: 0}
+      expected: []
+    - name: empty_belt
+      input: {a: [], b: [3, 4], k: 2}
+      expected: []
+  validation:
+    - name: k_exceeds_pairs
+      input: {a: [1, 2], b: [5], k: 10}
+      expected: [6, 7]
+    - name: single_each
+      input: {a: [4], b: [9], k: 1}
+      expected: [13]
+    - name: duplicates_and_negatives
+      input: {a: [-1, 0, 2], b: [-3, 1], k: 4}
+      expected: [-4, -3, -1, 0]
+explanation_markdown: |
+  Every pair sum can be pictured as a cell in a grid whose rows and columns are
+  each sorted, so the smallest unused sum is always adjacent to a sum you have
+  already taken. Seeding the heap with `(a[0]+b[0], 0, 0)` and, after each pop,
+  pushing only the two neighbours `(i+1, j)` and `(i, j+1)` explores the grid in
+  weight order while touching far fewer than all `len(a) * len(b)` pairs. The
+  visited set stops the same cell from entering the heap along both of its
+  approaches. Extracting k pairs costs O(k log k), independent of how long the
+  belts are.
+common_mistakes:
+  - Building every pair sum and sorting, which is O(len(a) * len(b)) and defeats the point.
+  - Pushing neighbours without a visited set, so cells reachable two ways are counted twice.
+  - Comparing sums by index instead of value, or forgetting to carry i and j needed to find neighbours.

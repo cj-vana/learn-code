@@ -1,0 +1,102 @@
+id: exercise.library.linked_lists_patterns.a04
+kind: exercise
+version: 1
+language: python
+title: Middle Carriage of the Train
+slug: linked-lists-patterns-a04
+difficulty: medium
+concepts:
+  - patterns.linked_list
+  - patterns.two_pointers
+prerequisites:
+  - python.classes
+  - python.loops
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.linked_lists_patterns.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original train-carriage framing for the fast/slow middle-node walk.
+prompt_markdown: |
+  A train is stored as a chain of carriages. Write `middle_carriage(carriages)`
+  that takes a list of carriage labels, builds a singly linked list of `Node`
+  objects, and returns the label of the **middle** carriage found with a fast/slow
+  pointer walk (no counting the length first).
+
+  When the train has an even number of carriages, return the label of the *second*
+  of the two middle carriages (for example `[a, b, c, d]` returns `c`). An empty
+  train returns `None`.
+starter_code: |
+  def middle_carriage(carriages):
+      # Build the chain, then use slow (one hop) and fast (two hops) to find the middle.
+      return None
+function_name: middle_carriage
+input_mode: function
+solution_sketch: Advance slow by one and fast by two until fast falls off the end; slow is the middle.
+sample_solution: |
+  def middle_carriage(carriages):
+      class Node:
+          def __init__(self, value):
+              self.value = value
+              self.next = None
+
+      head = None
+      for value in reversed(carriages):
+          node = Node(value)
+          node.next = head
+          head = node
+
+      if head is None:
+          return None
+
+      slow = head
+      fast = head
+      while fast is not None and fast.next is not None:
+          slow = slow.next
+          fast = fast.next.next
+      return slow.value
+hints:
+  - level: 1
+    text: Move one cursor one box at a time and another two boxes at a time from the same start.
+  - level: 2
+    text: The loop must check both `fast` and `fast.next` before hopping, or `fast.next.next` will crash.
+  - level: 3
+    text: When fast can no longer take a double step, slow sits on the middle; return slow.value.
+tests:
+  public:
+    - name: single
+      input: [only]
+      expected: only
+    - name: odd
+      input: [a, b, c]
+      expected: b
+    - name: even_second_middle
+      input: [a, b, c, d]
+      expected: c
+  validation:
+    - name: empty
+      input: []
+      expected: null
+    - name: two
+      input: [first, second]
+      expected: second
+    - name: five
+      input: [1, 2, 3, 4, 5]
+      expected: 3
+    - name: six
+      input: [1, 2, 3, 4, 5, 6]
+      expected: 4
+explanation_markdown: |
+  The fast cursor covers two boxes for every one the slow cursor covers, so it
+  reaches the end in half the steps and leaves the slow cursor exactly at the
+  middle. The loop guard checks both `fast` and `fast.next` because the double hop
+  reads two links ahead. Starting both cursors at `head` makes even-length chains
+  land on the second of the two middles, which is the convention this problem
+  asks for. No length count is needed, and the walk is a single pass.
+common_mistakes:
+  - Reading `fast.next.next` without first confirming `fast` and `fast.next` are not None.
+  - Starting fast at `head.next`, which shifts the result on even-length chains.
+  - Counting the length in a separate pass instead of using the two-speed walk.

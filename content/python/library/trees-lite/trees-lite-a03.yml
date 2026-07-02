@@ -1,0 +1,88 @@
+id: exercise.library.trees_lite.a03
+kind: exercise
+version: 1
+language: python
+title: Reading a Catalogue Index In Order
+slug: trees-lite-a03
+difficulty: medium
+concepts:
+  - patterns.tree_traversal
+  - patterns.dfs
+  - python.lists
+prerequisites:
+  - patterns.recursion
+  - python.trees_as_data
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.trees_lite.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original in-order traversal drill themed as reading a shelved catalogue index over nested-dict trees.
+prompt_markdown: |
+  A rare-book room stores its catalogue as a binary tree of nested dictionaries
+  (`{"value", "left", "right"}`, an empty branch is `None`). A clerk reads the
+  shelf *in order*: everything in the left branch first, then the current card,
+  then everything in the right branch.
+
+  Write `inorder_values(tree)` returning a list of node values in that order:
+  the entire left subtree, then the current node, then the entire right subtree.
+  An empty tree returns `[]`.
+starter_code: |
+  def inorder_values(tree):
+      # Return node values in-order: left subtree, node, right subtree.
+      return []
+function_name: inorder_values
+input_mode: function
+solution_sketch: Concatenate the in-order of the left subtree, the node's value, then the in-order of the right subtree.
+sample_solution: |
+  def inorder_values(tree):
+      if tree is None:
+          return []
+      return (
+          inorder_values(tree["left"])
+          + [tree["value"]]
+          + inorder_values(tree["right"])
+      )
+hints:
+  - level: 1
+    text: The current node's value belongs between its two subtrees, not before them.
+  - level: 2
+    text: Build the left subtree's list first, then add the current value, then the right subtree's list.
+  - level: 3
+    text: Return [] for None, else inorder_values(tree["left"]) + [tree["value"]] + inorder_values(tree["right"]).
+tests:
+  public:
+    - name: empty
+      input: null
+      expected: []
+    - name: single
+      input: {value: 7, left: null, right: null}
+      expected: [7]
+    - name: search_tree_sorted
+      input: {value: 5, left: {value: 3, left: {value: 2, left: null, right: null}, right: {value: 4, left: null, right: null}}, right: {value: 8, left: null, right: {value: 9, left: null, right: null}}}
+      expected: [2, 3, 4, 5, 8, 9]
+  validation:
+    - name: left_chain
+      input: {value: 1, left: {value: 2, left: {value: 3, left: null, right: null}, right: null}, right: null}
+      expected: [3, 2, 1]
+    - name: right_chain
+      input: {value: 1, left: null, right: {value: 2, left: null, right: {value: 3, left: null, right: null}}}
+      expected: [1, 2, 3]
+    - name: two_children
+      input: {value: 10, left: {value: 4, left: null, right: null}, right: {value: 15, left: null, right: null}}
+      expected: [4, 10, 15]
+explanation_markdown: |
+  In-order places the current value *between* the two recursive calls, so you
+  emit the whole left subtree before `tree["value"]` and the whole right subtree
+  after it. Notice the `search_tree_sorted` case comes back `[2, 3, 4, 5, 8, 9]`:
+  when the input happens to be a binary search tree, in-order visits smaller
+  values before larger ones and the result is sorted. The empty-tree base case
+  returns `[]`, which vanishes on concatenation. Each node is visited once, so
+  the traversal is O(n).
+common_mistakes:
+  - Putting tree["value"] first, which yields pre-order instead of in-order.
+  - Returning None for the base case, breaking the list concatenation.
+  - Recursing into only one subtree and dropping half the values.

@@ -1,0 +1,115 @@
+id: exercise.library.heaps_topk.a11
+kind: exercise
+version: 1
+language: python
+title: The Kth Coldest Reading Across Sensors
+slug: heaps-topk-a11
+difficulty: medium
+concepts:
+  - python.heapq_bisect
+  - patterns.heap_topk
+prerequisites:
+  - python.lists
+  - python.tuples
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.heaps_topk.a11
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original k-way merge drill framed around finding a global rank across several already-sorted sensor logs without materialising the full merge.
+prompt_markdown: |
+  A weather station keeps one log per sensor, and each sensor writes its
+  temperature readings **already sorted ascending**. Analysts often want the
+  `k`-th **coldest** reading across *all* sensors combined, but the logs are huge
+  and stitching them into one giant sorted list wastes memory.
+
+  Write `kth_smallest(data)` where `data` is a dict with two keys:
+
+  - `rows`: a list of lists, where each inner list is a sensor log sorted in
+    ascending order (logs may have different lengths, and some may be empty).
+  - `k`: a positive integer (1-indexed) with `1 <= k <= total number of readings`.
+
+  Return the single `k`-th smallest value across every log, found by a **heap-based
+  k-way merge** using `heapq` -- advance through the logs in value order and stop
+  as soon as you have popped `k` readings. Do **not** concatenate all logs and sort
+  them.
+
+  For example, `{"rows": [[1, 4], [2, 3]], "k": 3}` returns `3`, because the merged
+  order is `1, 2, 3, 4` and the 3rd value is `3`.
+starter_code: |
+  import heapq
+
+
+  def kth_smallest(data):
+      return None
+function_name: kth_smallest
+input_mode: function
+solution_sketch: Seed a min-heap with the first element of every non-empty log tagged by (value, row_index, col_index), then pop k times, each pop pushing the next element from that same log.
+sample_solution: |
+  import heapq
+
+
+  def kth_smallest(data):
+      rows = data["rows"]
+      k = data["k"]
+      heap = []
+      for r, row in enumerate(rows):
+          if row:
+              heap.append((row[0], r, 0))
+      heapq.heapify(heap)
+      value = None
+      for _ in range(k):
+          value, r, c = heapq.heappop(heap)
+          if c + 1 < len(rows[r]):
+              heapq.heappush(heap, (rows[r][c + 1], r, c + 1))
+      return value
+hints:
+  - level: 1
+    text: The very smallest reading has to be the first element of one of the logs, so a heap only ever needs to hold one "front" candidate per log at a time.
+  - level: 2
+    text: Push tuples like (value, row_index, col_index) so the heap orders by value while remembering which log the value came from and where in that log you are.
+  - level: 3
+    text: Pop exactly k times. Each time you pop from log r at column c, push (rows[r][c+1], r, c+1) if that log still has a next element; the value from the k-th pop is the answer.
+tests:
+  public:
+    - name: example_two_rows
+      input: {rows: [[1, 4], [2, 3]], k: 3}
+      expected: 3
+    - name: single_row_second
+      input: {rows: [[5, 10, 15]], k: 2}
+      expected: 10
+    - name: smallest_overall
+      input: {rows: [[3, 8], [1, 9], [2]], k: 1}
+      expected: 1
+  validation:
+    - name: largest_element
+      input: {rows: [[1, 4], [2, 3]], k: 4}
+      expected: 4
+    - name: all_duplicates
+      input: {rows: [[1, 1, 1], [1, 1]], k: 4}
+      expected: 1
+    - name: negatives_mixed
+      input: {rows: [[-5, 0, 7], [-2, 3]], k: 3}
+      expected: 0
+    - name: empty_row_present
+      input: {rows: [[], [4, 6], [5]], k: 2}
+      expected: 5
+explanation_markdown: |
+  Because each log is already sorted, the globally smallest reading you have not
+  taken yet is always sitting at the current front of one of the logs. A min-heap
+  that holds one `(value, row, col)` tuple per active log lets you pull that global
+  minimum in `O(log R)` time, where `R` is the number of logs. Every time you pop
+  the front of a log, you replace it with that log's next element, keeping exactly
+  one candidate per log in the heap. Doing this `k` times walks through the merged
+  order without ever building it in full, so the value from the `k`-th pop is the
+  answer. Tagging tuples with the row and column indices is what tells you which
+  log to advance after each pop. The total work is `O(R + k log R)` and the extra
+  memory is only `O(R)`, versus `O(total)` if you concatenated and sorted.
+common_mistakes:
+  - Concatenating every log into one list and sorting it, which the prompt forbids and wastes O(total) memory.
+  - Pushing all readings from a log at once instead of only the next single element after each pop.
+  - Forgetting to guard c + 1 against the length of that specific log, causing an IndexError when a short log is exhausted.
+  - Storing only the value in the heap, losing track of which log and position to advance next.

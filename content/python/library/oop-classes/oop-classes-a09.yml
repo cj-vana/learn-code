@@ -1,0 +1,105 @@
+id: exercise.library.oop_classes.a09
+kind: exercise
+version: 1
+language: python
+title: Postage for a Mixed Parcel Batch
+slug: oop-classes-a09
+difficulty: medium
+concepts:
+  - python.classes
+prerequisites:
+  - python.classes
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.oop_classes.a09
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original parcel-depot scenario drilling inheritance, method overriding, and polymorphic dispatch.
+prompt_markdown: |
+  A parcel depot ships three classes of parcel, each priced differently by weight
+  (in whole grams):
+
+  - `"standard"`: 2 cents per gram.
+  - `"express"`: 2 cents per gram, plus a flat 500-cent handling fee.
+  - `"fragile"`: 3 cents per gram (careful packing), with no flat fee.
+
+  Complete `batch_postage(parcels)`, where `parcels` is a list of `[kind, grams]`
+  pairs. Inside the function, define a base `Parcel` class with a `cost` method and
+  three subclasses that **override** `cost` with their own rule. Build the right
+  subclass for each parcel, then sum `cost()` across the batch without checking the
+  kind again -- let polymorphism pick each object's version. Return the total cost in
+  cents as an integer.
+starter_code: |
+  def batch_postage(parcels):
+      # Define a Parcel base class and Standard/Express/Fragile subclasses
+      # that override cost(), then total cost() over the batch.
+      return 0
+function_name: batch_postage
+input_mode: function
+solution_sketch: Make three Parcel subclasses each overriding cost(), map kinds to classes, and sum cost() polymorphically.
+sample_solution: |
+  def batch_postage(parcels):
+      class Parcel:
+          def __init__(self, grams):
+              self.grams = grams
+
+          def cost(self):
+              return 0
+
+      class Standard(Parcel):
+          def cost(self):
+              return self.grams * 2
+
+      class Express(Parcel):
+          def cost(self):
+              return self.grams * 2 + 500
+
+      class Fragile(Parcel):
+          def cost(self):
+              return self.grams * 3
+
+      kinds = {"standard": Standard, "express": Express, "fragile": Fragile}
+      objects = [kinds[kind](grams) for kind, grams in parcels]
+      return sum(parcel.cost() for parcel in objects)
+hints:
+  - level: 1
+    text: Put the shared grams field in the base Parcel, then give each subclass its own cost() method.
+  - level: 2
+    text: A dict mapping "standard"/"express"/"fragile" to the subclasses lets you build the right object without a chain of ifs.
+  - level: 3
+    text: After building objects = [kinds[kind](grams) ...], return sum(p.cost() for p in objects); each object runs its own overridden cost().
+tests:
+  public:
+    - name: one_of_each
+      input: [[standard, 100], [express, 100], [fragile, 100]]
+      expected: 1200
+    - name: empty
+      input: []
+      expected: 0
+    - name: single_standard
+      input: [[standard, 250]]
+      expected: 500
+  validation:
+    - name: express_fee_applies
+      input: [[express, 0]]
+      expected: 500
+    - name: fragile_premium
+      input: [[fragile, 200], [fragile, 50]]
+      expected: 750
+    - name: mixed_batch
+      input: [[standard, 10], [express, 10], [standard, 10]]
+      expected: 560
+explanation_markdown: |
+  Each subclass inherits the shared `grams` field from `Parcel` but overrides
+  `cost` with its own pricing rule. The kind-to-class dictionary turns each input
+  pair into the correct object, and the summing loop calls `cost()` without ever
+  asking what kind it holds. That is polymorphism: Python dispatches to the object's
+  own `cost`, so adding a new parcel type later means adding one subclass, not
+  editing the loop.
+common_mistakes:
+  - Keeping a chain of if kind == ... inside the loop instead of letting each subclass's cost() method do the work.
+  - Forgetting the flat 500-cent fee for express, or applying it per gram instead of once.
+  - Charging fragile parcels 2 cents per gram like standard ones rather than the 3-cent premium.

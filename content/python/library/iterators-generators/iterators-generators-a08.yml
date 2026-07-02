@@ -1,0 +1,89 @@
+id: exercise.library.iterators_generators.a08
+kind: exercise
+version: 1
+language: python
+title: Metronome Beat Times
+slug: iterators-generators-a08
+difficulty: medium
+concepts:
+  - python.iterators_generators
+  - patterns.running_total
+prerequisites:
+  - python.iterators_generators
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.iterators_generators.a08
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original metronome scenario taking a fixed count from an infinite arithmetic generator with next().
+prompt_markdown: |
+  A rehearsal metronome ticks at a steady interval: the first beat lands at `step`
+  milliseconds, the next at `2 * step`, the next at `3 * step`, and so on forever.
+  Write `beat_times(spec)` where `spec` is a dict with keys `"count"` (how many
+  beat times to report) and `"step"` (the interval). Return a **list** of the
+  first `count` beat times.
+
+  Model the beats with an **infinite generator**, then pull exactly `count` values
+  from it using `next()`. A `count` of `0` returns an empty list.
+
+  For example, `beat_times({"count": 3, "step": 5})` returns `[5, 10, 15]`.
+starter_code: |
+  def beat_times(spec):
+      # Make an infinite generator of beat times, then take exactly count values with next().
+      return []
+function_name: beat_times
+input_mode: function
+solution_sketch: An infinite generator accumulates step each tick; call next() count times to collect a fixed prefix.
+sample_solution: |
+  def beat_times(spec):
+      def beats(step):
+          t = step
+          while True:
+              yield t
+              t += step
+
+      gen = beats(spec["step"])
+      return [next(gen) for _ in range(spec["count"])]
+hints:
+  - level: 1
+    text: The generator can run forever; you decide how many values to take from the outside.
+  - level: 2
+    text: Build the generator once, then call next() on it count times to collect a fixed number of beats.
+  - level: 3
+    text: A list comprehension like [next(gen) for _ in range(count)] pulls exactly count values from the infinite generator.
+tests:
+  public:
+    - name: three_beats
+      input: {count: 3, step: 5}
+      expected: [5, 10, 15]
+    - name: one_beat
+      input: {count: 1, step: 100}
+      expected: [100]
+    - name: no_beats
+      input: {count: 0, step: 5}
+      expected: []
+  validation:
+    - name: step_one
+      input: {count: 5, step: 1}
+      expected: [1, 2, 3, 4, 5]
+    - name: larger_step
+      input: {count: 4, step: 250}
+      expected: [250, 500, 750, 1000]
+    - name: many
+      input: {count: 6, step: 2}
+      expected: [2, 4, 6, 8, 10, 12]
+explanation_markdown: |
+  The `beats` generator would tick forever, but pairing it with a fixed number of
+  `next()` calls turns "endless" into "as many as I asked for." Building the
+  generator once and pulling from it `count` times keeps its internal `t` moving
+  forward across calls, so each beat is `step` larger than the last. The
+  comprehension `[next(gen) for _ in range(count)]` is just a compact way to take
+  that prefix, and it naturally yields an empty list when `count` is zero.
+common_mistakes:
+  - Rebuilding the generator inside the loop, which restarts it at the first beat every time.
+  - Using range(count + 1) or an off-by-one loop, which takes the wrong number of beats.
+  - Trying to list() the infinite generator instead of taking a bounded prefix.

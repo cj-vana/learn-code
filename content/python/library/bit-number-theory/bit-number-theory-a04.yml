@@ -1,0 +1,91 @@
+id: exercise.library.bit_number_theory.a04
+kind: exercise
+version: 1
+language: python
+title: The Unpaired Calibration Reading
+slug: bit-number-theory-a04
+difficulty: medium
+concepts:
+  - patterns.bit_manipulation
+prerequisites:
+  - python.loops
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.bit_number_theory.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original XOR-folding drill framed around finding the one calibration reading logged an odd number of times.
+prompt_markdown: |
+  A test rig logs a calibration reading twice for every routine check — once
+  before and once after — so each value should appear an even number of times.
+  A single stray reading got logged an odd number of times, and you need to
+  recover it.
+
+  Write `find_unpaired_reading(readings)` that takes a list of integers in which
+  every value appears an even number of times except exactly one, and returns
+  that one unpaired value.
+
+  Use XOR folding: because `x ^ x` is `0` and `x ^ 0` is `x`, XOR-ing the whole
+  list together cancels every paired value and leaves only the odd one out. The
+  order of the readings is not guaranteed. The unpaired value may itself be `0`.
+starter_code: |
+  def find_unpaired_reading(readings):
+      return 0
+function_name: find_unpaired_reading
+input_mode: function
+solution_sketch: Fold XOR across the whole list starting from 0; paired values cancel to 0 and only the unpaired reading survives.
+sample_solution: |
+  def find_unpaired_reading(readings):
+      result = 0
+      for value in readings:
+          result ^= value
+      return result
+hints:
+  - level: 1
+    text: XOR has two properties that matter here — a value XOR-ed with itself is 0, and any value XOR-ed with 0 is unchanged.
+  - level: 2
+    text: Because XOR is order-independent, every value that appears an even number of times collapses to 0 no matter where it sits in the list.
+  - level: 3
+    text: Start an accumulator at 0 and XOR every reading into it with `result ^= value`; the leftover is the unpaired value.
+tests:
+  public:
+    - name: single_pair_plus_one
+      input: [4, 4, 7]
+      expected: 7
+    - name: two_pairs_plus_one
+      input: [1, 2, 1, 2, 9]
+      expected: 9
+    - name: lone_reading
+      input: [5]
+      expected: 5
+  validation:
+    - name: four_of_a_kind
+      input: [3, 3, 3, 3, 8]
+      expected: 8
+    - name: shuffled
+      input: [10, 20, 10, 30, 20, 30, 42]
+      expected: 42
+    - name: unpaired_is_zero
+      input: [7, 7, 0]
+      expected: 0
+    - name: paired_zero_stays_hidden
+      input: [0, 0, 6]
+      expected: 6
+    - name: many_pairs
+      input: [100, 200, 100, 200, 100, 200, 100, 200, 55]
+      expected: 55
+explanation_markdown: |
+  XOR is associative and commutative, so you can reorder the readings freely and
+  group each matched pair together. Every pair XOR-es to `0`, and folding those
+  zeros into the running result leaves it unchanged, so after the whole pass only
+  the value with an odd count remains. This runs in a single linear scan using one
+  integer of extra space — no counting dictionary and no sorting required. Note it
+  works even when the unpaired value is `0`, since `0` is just the neutral element
+  of XOR.
+common_mistakes:
+  - Initialising the accumulator to the first element and re-XOR-ing it, or to something other than 0.
+  - Reaching for a frequency dictionary, which works but misses the point and uses extra memory.
+  - Assuming a value that appears four or six times counts as unpaired; only an odd count survives the fold.

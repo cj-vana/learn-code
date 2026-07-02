@@ -1,0 +1,110 @@
+id: exercise.library.regex_text_processing.a11
+kind: exercise
+version: 1
+language: python
+title: Pull Dollar Amounts From a Receipt Line
+slug: regex-text-processing-a11
+difficulty: medium
+concepts:
+  - python.regex
+prerequisites:
+  - python.strings
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.regex_text_processing.a11
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original receipt-scanning task that pulls dollar amounts out of free text with the re module.
+prompt_markdown: |
+  A corner store keeps its daily promotions as one long line of plain text, and
+  the accounting tool needs the raw dollar figures pulled out of that sentence.
+
+  Write `extract_prices(text)` that takes a single string and, using the `re`
+  module, finds every dollar amount written as `$` followed by one or more digits,
+  optionally followed by a decimal point and one or more digits. So `$12` and
+  `$3.50` both count, but a lone `$` with no digits after it does not.
+
+  Return the amounts as a list of **floats**, in the order they appear in the
+  string. If the text contains no dollar amounts, return an empty list `[]`.
+
+  Example: `extract_prices('buy $12 and $3.50, save $0.99')` returns
+  `[12.0, 3.5, 0.99]`.
+starter_code: |
+  import re
+
+
+  def extract_prices(text):
+      return []
+function_name: extract_prices
+input_mode: function
+solution_sketch: Use re.findall with a pattern capturing digits and an optional decimal part, then map each match to float.
+sample_solution: |
+  import re
+
+
+  def extract_prices(text):
+      matches = re.findall(r"\$(\d+(?:\.\d+)?)", text)
+      return [float(m) for m in matches]
+hints:
+  - level: 1
+    text: A dollar sign is special in regex only inside a pattern; escape it as \$ so it matches a literal $ character.
+  - level: 2
+    text: The number part is one or more digits, optionally followed by a dot and more digits, which is \d+(?:\.\d+)? inside a capturing group.
+  - level: 3
+    text: re.findall with one capturing group returns just the captured digit strings; convert each to a number with float() to build the result list.
+tests:
+  public:
+    - name: example_mixed
+      input: 'buy $12 and $3.50, save $0.99'
+      expected:
+        - 12.0
+        - 3.5
+        - 0.99
+    - name: single_integer_amount
+      input: 'Grand total: $100 even'
+      expected:
+        - 100.0
+    - name: no_prices
+      input: 'free samples all day, no charge'
+      expected: []
+  validation:
+    - name: empty_string
+      input: ''
+      expected: []
+    - name: several_decimals
+      input: '$1.25 then $2.50 then $3.75'
+      expected:
+        - 1.25
+        - 2.5
+        - 3.75
+    - name: bare_dollar_signs_ignored
+      input: 'just a $ sign and more $ symbols'
+      expected: []
+    - name: prices_at_edges
+      input: '$5 off today or $19.99 tomorrow'
+      expected:
+        - 5.0
+        - 19.99
+explanation_markdown: |
+  The pattern `\$(\d+(?:\.\d+)?)` describes exactly the amounts you want. The
+  `\$` matches a literal dollar sign (the backslash strips the special
+  end-of-string meaning `$` has in regex). Inside the capturing group, `\d+`
+  requires at least one digit, and `(?:\.\d+)?` optionally allows a decimal point
+  followed by one or more digits. Because the fractional part is optional, both
+  `$12` and `$3.50` match.
+
+  `re.findall` returns every non-overlapping match in left-to-right order, and
+  since the pattern has a single capturing group, it yields just the digit text
+  (without the `$`). Converting each string with `float()` produces the numbers,
+  so `'3.50'` becomes `3.5`. A lone `$` never matches because `\d+` demands a
+  digit right after the dollar sign, and an empty string simply produces an empty
+  list.
+common_mistakes:
+  - Writing $ instead of \$ in the pattern, which treats it as an end-of-string anchor and matches nothing.
+  - Returning the matched strings instead of converting them with float, so you get ['12', '3.50'] rather than numbers.
+  - Making the digit part optional (\d*), which lets a bare $ match and adds empty or wrong entries.
+  - Forgetting that re.findall already returns [] on no matches, and adding special-case code that breaks the empty input.

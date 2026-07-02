@@ -1,0 +1,79 @@
+id: exercise.library.collections_itertools.a02
+kind: exercise
+version: 1
+language: python
+title: Turnstile Tally
+slug: collections-itertools-a02
+difficulty: easy
+concepts:
+  - python.collections_module
+  - patterns.hash_map_counting
+prerequisites:
+  - python.dictionaries
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.collections_itertools.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original museum-turnstile counting task drilling defaultdict(int) tallies.
+prompt_markdown: |
+  A museum records the exhibit code scanned at each turnstile as visitors enter.
+  Write `tally_scans(scans)` where `scans` is a list of exhibit codes (strings).
+  Return a dictionary mapping each code to the number of times it was scanned.
+  An empty list returns an empty dictionary.
+starter_code: |
+  def tally_scans(scans):
+      return {}
+function_name: tally_scans
+input_mode: function
+solution_sketch: Increment a defaultdict(int) once per scanned code.
+sample_solution: |
+  from collections import defaultdict
+
+
+  def tally_scans(scans):
+      counts = defaultdict(int)
+      for code in scans:
+          counts[code] += 1
+      return dict(counts)
+hints:
+  - level: 1
+    text: You need a running count per code, so each value should be a number that grows.
+  - level: 2
+    text: A defaultdict(int) starts every unseen code at 0, so `counts[code] += 1` just works.
+  - level: 3
+    text: Loop over scans, do `counts[code] += 1`, then return dict(counts).
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: {}
+    - name: repeats
+      input: [east, east, west]
+      expected: {east: 2, west: 1}
+    - name: single
+      input: [atrium]
+      expected: {atrium: 1}
+  validation:
+    - name: all_unique
+      input: [a, b, c]
+      expected: {a: 1, b: 1, c: 1}
+    - name: one_code_many
+      input: [fossils, fossils, fossils, fossils]
+      expected: {fossils: 4}
+    - name: mixed
+      input: [gems, gems, coins, gems, coins]
+      expected: {gems: 3, coins: 2}
+explanation_markdown: |
+  `defaultdict(int)` returns `0` for any code you have not seen yet, so the very
+  first `counts[code] += 1` reads that zero, adds one, and stores the result.
+  There is no separate "have I seen this before?" branch. Wrapping the result in
+  `dict(...)` produces a plain dictionary that compares equal to the expected
+  counts.
+common_mistakes:
+  - Writing `counts[code] = counts[code] + 1` against a plain dict, which raises KeyError on the first sighting.
+  - Counting distinct codes rather than total scans by using a set.
+  - Returning the defaultdict without converting when an exact plain-dict result is expected (harmless here, but a good habit).

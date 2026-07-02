@@ -1,0 +1,97 @@
+id: quiz.library.iterators_generators.a02
+kind: quiz
+version: 1
+language: python
+title: Generator and Iterator Syntax
+slug: quiz-iterators-generators-a02
+difficulty: easy
+concepts:
+  - python.iterators_generators
+  - python.classes
+prerequisites:
+  - python.iterators_generators
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.iterators_generators.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax-focused questions on yield, generator expressions, next, and the iterator protocol.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: |
+      Which keyword turns an ordinary function into a generator function?
+    choices:
+      - yield
+      - return
+      - lazy
+      - generate
+    correct_choice: yield
+    explanation: |
+      The presence of yield anywhere in a function body makes it a generator
+      function; calling it returns a generator object instead of running the body.
+    concepts:
+      - python.iterators_generators
+  - id: q2
+    prompt: |
+      Which expression is a generator expression rather than a list comprehension?
+    choices:
+      - (x * 2 for x in nums)
+      - '[x * 2 for x in nums]'
+      - '{x * 2 for x in nums}'
+      - '{x: x * 2 for x in nums}'
+    correct_choice: (x * 2 for x in nums)
+    explanation: |
+      Round parentheses create a lazy generator expression. Square brackets build a
+      list, and curly braces build a set or dict comprehension.
+    concepts:
+      - python.iterators_generators
+      - python.comprehensions
+  - id: q3
+    prompt: |
+      Which two methods must a class define to follow the iterator protocol
+      directly?
+    choices:
+      - __iter__ and __next__
+      - __init__ and __call__
+      - __get__ and __set__
+      - __enter__ and __exit__
+    correct_choice: __iter__ and __next__
+    explanation: |
+      __iter__ returns the iterator and __next__ returns the next value (or raises
+      StopIteration). Together they are what a for loop drives.
+    concepts:
+      - python.iterators_generators
+      - python.classes
+  - id: q4
+    prompt: |
+      Inside __next__, what should you do to signal that there are no more values?
+    choices:
+      - raise StopIteration
+      - return None
+      - return False
+      - break
+    correct_choice: raise StopIteration
+    explanation: |
+      Raising StopIteration is the agreed signal that iteration is finished; a for
+      loop catches it to end cleanly. Returning None would just yield a None value.
+    concepts:
+      - python.iterators_generators
+  - id: q5
+    prompt: |
+      Given `gen = (n for n in [10, 20, 30])`, what does `next(gen)` return the
+      first time it is called?
+    choices:
+      - '10'
+      - '30'
+      - '[10, 20, 30]'
+      - the whole generator object
+    correct_choice: '10'
+    explanation: |
+      next() advances the generator to its first yielded value, which is 10. Each
+      further next() call produces the following value.
+    concepts:
+      - python.iterators_generators

@@ -1,0 +1,81 @@
+id: exercise.library.regex_text_processing.a02
+kind: exercise
+version: 1
+language: python
+title: First Room Code
+slug: regex-text-processing-a02
+difficulty: easy
+concepts:
+  - python.regex
+  - python.strings
+prerequisites:
+  - python.functions
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.regex_text_processing.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original facilities-notice room-code extraction task with its own prompt and tests.
+prompt_markdown: |
+  A facilities notice mentions rooms using codes like `R12` or `R204`: a capital
+  `R` followed by one or more digits. Write `first_room_code(text)` that returns
+  the first room code found anywhere in `text`. If the text contains no room
+  code, return an empty string `""`.
+starter_code: |
+  import re
+
+
+  def first_room_code(text):
+      return ""
+function_name: first_room_code
+input_mode: function
+solution_sketch: Use re.search for R followed by digits, then return the match text or an empty string when there is no match.
+sample_solution: |
+  import re
+
+
+  def first_room_code(text):
+      m = re.search(r"R\d+", text)
+      return m.group() if m else ""
+hints:
+  - level: 1
+    text: A room code is the letter R followed by one or more digits, and you only want the first one.
+  - level: 2
+    text: re.search returns a match object for the first hit anywhere in the string, or None when nothing matches.
+  - level: 3
+    text: Store re.search(r"R\d+", text) in a variable, then return m.group() if m else "".
+tests:
+  public:
+    - name: two_codes_returns_first
+      input: Go to R204 then swing by R12
+      expected: R204
+    - name: none_present
+      input: no rooms mentioned today
+      expected: ''
+    - name: embedded_in_text
+      input: The lab (aR55b) is open
+      expected: R55
+  validation:
+    - name: r_without_digit
+      input: Section R is closed
+      expected: ''
+    - name: single_digit
+      input: Report to R7 now
+      expected: R7
+    - name: skips_bad_r_then_finds
+      input: Room service before R9 opens
+      expected: R9
+explanation_markdown: |
+  `re.search` roams the entire string and returns a match object for the first
+  place `R\d+` fits, or `None` if it never does. Because a failed search returns
+  `None`, you must guard before calling `.group()`; the expression
+  `m.group() if m else ""` does exactly that, returning the matched code or a
+  clean empty string. Note that `R` with no digit after it (as in "Section R")
+  never matches, since `\d+` demands at least one digit.
+common_mistakes:
+  - Calling m.group() without first checking whether the search returned None.
+  - Using re.findall and returning the whole list instead of just the first code.
+  - Writing the pattern as R\d* so a bare R (zero digits) matches unintentionally.

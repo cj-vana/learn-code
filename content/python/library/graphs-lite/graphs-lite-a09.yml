@@ -1,0 +1,107 @@
+id: exercise.library.graphs_lite.a09
+kind: exercise
+version: 1
+language: python
+title: Counting Solar Arrays on the Roof Map
+slug: graphs-lite-a09
+difficulty: medium
+concepts:
+  - patterns.grid_traversal
+  - patterns.dfs
+  - patterns.graph_traversal
+prerequisites:
+  - python.lists
+  - python.sets
+estimated_time_minutes: 16
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.graphs_lite.a09
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original rooftop solar-panel scenario counting four-connected regions in a grid treated as an implicit graph.
+prompt_markdown: |
+  A facilities team maps a warehouse roof as a grid. A cell holds `1` if a solar
+  panel sits there and `0` if the spot is bare. Panels that touch edge-to-edge
+  (up, down, left, or right) are wired together into a single *array*. Panels that
+  only touch at a diagonal corner are **not** in the same array.
+
+  Write `count_arrays(grid)` where `grid` is a list of rows, each a list of `0`s
+  and `1`s. Return the number of separate arrays. An empty grid has zero arrays.
+starter_code: |
+  def count_arrays(grid):
+      # Return the number of four-connected regions of 1s.
+      return 0
+function_name: count_arrays
+input_mode: function
+solution_sketch: Treat each panel cell as a graph node linked to its four orthogonal neighbours; flood-fill from every unvisited panel and count how many flood-fills you start.
+sample_solution: |
+  def count_arrays(grid):
+      if not grid or not grid[0]:
+          return 0
+      rows = len(grid)
+      cols = len(grid[0])
+      seen = set()
+      arrays = 0
+      for r in range(rows):
+          for c in range(cols):
+              if grid[r][c] == 1 and (r, c) not in seen:
+                  arrays += 1
+                  stack = [(r, c)]
+                  seen.add((r, c))
+                  while stack:
+                      cr, cc = stack.pop()
+                      for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                          nr, nc = cr + dr, cc + dc
+                          if (0 <= nr < rows and 0 <= nc < cols
+                                  and grid[nr][nc] == 1
+                                  and (nr, nc) not in seen):
+                              seen.add((nr, nc))
+                              stack.append((nr, nc))
+      return arrays
+hints:
+  - level: 1
+    text: Each panel is a node; its neighbours are the panels directly above, below, left, and right of it -- never the diagonals.
+  - level: 2
+    text: Scan every cell; the first time you land on a panel you have not marked, you have discovered a new array, so flood-fill outward to mark the rest of it.
+  - level: 3
+    text: Count one new array per unvisited panel found in the scan, then run a stack-based flood-fill that marks every four-connected panel before continuing the scan.
+tests:
+  public:
+    - name: two_diagonal_panels
+      input: [[1, 0], [0, 1]]
+      expected: 2
+    - name: l_shaped_array
+      input: [[1, 1], [0, 1]]
+      expected: 1
+    - name: bare_roof
+      input: [[0, 0], [0, 0]]
+      expected: 0
+  validation:
+    - name: empty_grid
+      input: []
+      expected: 0
+    - name: single_panel
+      input: [[1]]
+      expected: 1
+    - name: plus_shape_is_one
+      input: [[0, 1, 0], [1, 1, 1], [0, 1, 0]]
+      expected: 1
+    - name: four_corners
+      input: [[1, 0, 1], [0, 0, 0], [1, 0, 1]]
+      expected: 4
+explanation_markdown: |
+  A grid is a graph in disguise: each cell is a node, and the edges are the
+  up/down/left/right adjacencies. Counting arrays is therefore identical to
+  counting connected components -- you scan for a panel the traversal has not yet
+  reached, count it as a new array, and flood-fill to swallow the rest of that
+  component so you never count it twice. The `seen` set doubles as both the
+  visited marker and the guard that keeps the flood-fill from walking off already
+  claimed cells. The only grid-specific care is the neighbour rule: offering just
+  the four orthogonal moves (and not the diagonals) is what makes `four_corners`
+  count as four separate arrays rather than one.
+common_mistakes:
+  - Including diagonal neighbours, which merges arrays that should stay separate.
+  - Forgetting the bounds check, so a neighbour index runs off the edge of the grid.
+  - Marking a cell seen only when it is popped, allowing it to be pushed by several neighbours and counted twice.

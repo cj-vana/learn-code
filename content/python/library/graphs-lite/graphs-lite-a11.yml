@@ -1,0 +1,112 @@
+id: exercise.library.graphs_lite.a11
+kind: exercise
+version: 1
+language: python
+title: Splitting the Rehearsal Into Two Rooms
+slug: graphs-lite-a11
+difficulty: hard
+concepts:
+  - patterns.queue_bfs
+  - patterns.graph_traversal
+  - python.dictionaries
+prerequisites:
+  - python.sets
+  - python.collections_module
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.graphs_lite.a11
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original theatre-rehearsal scenario testing two-colourability (bipartiteness) of a conflict graph with breadth-first search.
+prompt_markdown: |
+  A theatre wants to run two rehearsal rooms at once. Some pairs of actors clash
+  and must never share a room. You are handed the list of clashing pairs and asked
+  whether everyone can be split into exactly two rooms so that no clashing pair
+  ends up together.
+
+  You are given `data` with `nodes` (every actor id) and `edges` (a list of
+  `[a, b]` two-way clashes). Write `can_use_two_rooms(data)` that returns `True`
+  if such a split is possible and `False` if it is not. Actors with no clashes can
+  go in either room.
+starter_code: |
+  def can_use_two_rooms(data):
+      # Return True if the clash graph can be two-coloured.
+      return True
+function_name: can_use_two_rooms
+input_mode: function
+solution_sketch: Breadth-first search each component, assigning alternating room labels; a clash between two actors already given the same label proves no split exists.
+sample_solution: |
+  from collections import deque
+
+
+  def can_use_two_rooms(data):
+      nodes = data["nodes"]
+      edges = data["edges"]
+      adjacency = {node: [] for node in nodes}
+      for a, b in edges:
+          adjacency[a].append(b)
+          adjacency[b].append(a)
+
+      room = {}
+      for start in nodes:
+          if start in room:
+              continue
+          room[start] = 0
+          queue = deque([start])
+          while queue:
+              actor = queue.popleft()
+              for other in adjacency[actor]:
+                  if other not in room:
+                      room[other] = 1 - room[actor]
+                      queue.append(other)
+                  elif room[other] == room[actor]:
+                      return False
+      return True
+hints:
+  - level: 1
+    text: Think of the two rooms as two colours; every clash edge must join actors of different colours.
+  - level: 2
+    text: Walk each connected group, giving the start actor one room and forcing every neighbour into the opposite room.
+  - level: 3
+    text: If breadth-first search ever reaches a neighbour already assigned the same room as the current actor, an odd-length clash loop exists and the split is impossible.
+tests:
+  public:
+    - name: even_clash_loop
+      input: {"nodes": [a, b, c, d], "edges": [[a, b], [b, c], [c, d], [d, a]]}
+      expected: true
+    - name: three_way_clash
+      input: {"nodes": [a, b, c], "edges": [[a, b], [b, c], [c, a]]}
+      expected: false
+    - name: single_clash
+      input: {"nodes": [a, b], "edges": [[a, b]]}
+      expected: true
+  validation:
+    - name: no_clashes
+      input: {"nodes": [a, b, c], "edges": []}
+      expected: true
+    - name: triangle_hides_in_component
+      input: {"nodes": [a, b, c, d, e], "edges": [[a, b], [c, d], [d, e], [e, c]]}
+      expected: false
+    - name: star_is_splittable
+      input: {"nodes": [a, b, c, d], "edges": [[a, b], [a, c], [a, d]]}
+      expected: true
+    - name: odd_loop_with_tail
+      input: {"nodes": [a, b, c, d], "edges": [[a, b], [b, c], [c, a], [c, d]]}
+      expected: false
+explanation_markdown: |
+  Splitting into two rooms with no internal clash is exactly asking whether the
+  clash graph is *bipartite* -- two-colourable. Breadth-first search assigns the
+  first actor of each component to room 0 and every direct neighbour to the
+  opposite room, propagating outward. The whole thing works if and only if no edge
+  ever connects two actors that end up in the same room. That failure happens
+  precisely when the graph contains an odd-length cycle, which is why the triangle
+  fails but the four-cycle succeeds. Handling each unvisited node as a fresh start
+  covers graphs made of several disconnected casts, so a bad triangle hiding in one
+  component still sinks the whole plan.
+common_mistakes:
+  - Assuming any graph can be split; odd-length clash cycles make it impossible.
+  - Only colouring one component and forgetting the rest of the cast in a disconnected graph.
+  - Checking equality of rooms before assigning, so an unlabelled neighbour is mistaken for a conflict.

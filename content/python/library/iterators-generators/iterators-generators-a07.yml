@@ -1,0 +1,93 @@
+id: exercise.library.iterators_generators.a07
+kind: exercise
+version: 1
+language: python
+title: Quarry Tiles Under Budget
+slug: iterators-generators-a07
+difficulty: medium
+concepts:
+  - python.iterators_generators
+  - patterns.filtering
+prerequisites:
+  - python.iterators_generators
+  - python.loops
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.iterators_generators.a07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original quarry square-tile scenario consuming an infinite generator with an early break.
+prompt_markdown: |
+  A quarry cuts square tiles of ever-increasing side length: side 1, side 2,
+  side 3, and so on, forever. The area of the tile with side `n` is `n * n`. Write
+  `tiles_under(limit)` that returns a **list** of the tile areas that are strictly
+  less than `limit`, starting from side 1 and going up.
+
+  The catch: model the tiles with an **infinite generator** (a `while True` loop
+  that yields `n * n` for growing `n`). Since it never stops on its own, you must
+  control consumption yourself, breaking out as soon as an area reaches `limit`.
+
+  For example, `tiles_under(30)` returns `[1, 4, 9, 16, 25]`.
+starter_code: |
+  def tiles_under(limit):
+      # Make an infinite generator of square areas, then break once area >= limit.
+      return []
+function_name: tiles_under
+input_mode: function
+solution_sketch: An infinite generator yields 1, 4, 9, ...; loop over it, appending until an area reaches the limit, then break.
+sample_solution: |
+  def tiles_under(limit):
+      def areas():
+          n = 1
+          while True:
+              yield n * n
+              n += 1
+
+      result = []
+      for area in areas():
+          if area >= limit:
+              break
+          result.append(area)
+      return result
+hints:
+  - level: 1
+    text: An infinite generator is safe as long as something outside it stops pulling values.
+  - level: 2
+    text: Loop over the generator and break the moment an area is not strictly less than the limit.
+  - level: 3
+    text: In the loop, if area >= limit break; otherwise append it. This stops right before the first area that meets the limit.
+tests:
+  public:
+    - name: thirty
+      input: 30
+      expected: [1, 4, 9, 16, 25]
+    - name: two
+      input: 2
+      expected: [1]
+    - name: one
+      input: 1
+      expected: []
+  validation:
+    - name: exact_square_excluded
+      input: 25
+      expected: [1, 4, 9, 16]
+    - name: zero
+      input: 0
+      expected: []
+    - name: fifty
+      input: 50
+      expected: [1, 4, 9, 16, 25, 36, 49]
+explanation_markdown: |
+  The `areas` generator has no natural end, so responsibility for stopping sits
+  with the consumer. The `for` loop pulls one area at a time and breaks the instant
+  an area is no longer strictly below `limit`, which is why an area equal to
+  `limit` (like `25` when the limit is `25`) is excluded. Because the generator
+  computes each square only when asked, the loop touches just a handful of values
+  and never tries to build the impossible infinite list.
+common_mistakes:
+  - Calling list() on the infinite generator, which loops forever.
+  - Using > instead of >= so an area equal to the limit sneaks in.
+  - Appending first and breaking afterward, which includes one area too many.

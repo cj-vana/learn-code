@@ -1,0 +1,88 @@
+id: path.skill.text_data_collections
+kind: path
+path_type: skill
+version: 1
+language: python
+title: Text, Data & Collections
+slug: text-data-and-collections
+description: Regex-powered text processing, the collections/itertools toolbox, and pandas-style wrangling
+  in pure Python.
+outcomes:
+- Extract and rewrite structured text with regex
+- Group, join, and pivot records with stdlib tools
+estimated_hours: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: brief.paths.v1
+  author: agent
+  generated_at: '2026-07-02T18:00:00Z'
+  inspiration_sources: []
+  originality_notes: Curated ordering over the repository's original content bank; no external syllabus
+    copied.
+units:
+- id: unit.regex_text_processing
+  title: Regex & Text Processing
+  description: Lessons, drills, and quizzes for regex & text processing.
+  items:
+  - lesson.library.regex_text_processing.a01
+  - lesson.library.regex_text_processing.a02
+  - lesson.library.regex_text_processing.a03
+  - exercise.library.regex_text_processing.a01
+  - exercise.library.regex_text_processing.a02
+  - exercise.library.regex_text_processing.a03
+  - exercise.library.regex_text_processing.a04
+  - exercise.library.regex_text_processing.a05
+  - exercise.library.regex_text_processing.a06
+  - exercise.library.regex_text_processing.a07
+  - exercise.library.regex_text_processing.a08
+  - exercise.library.regex_text_processing.a09
+  - exercise.library.regex_text_processing.a10
+  - exercise.library.regex_text_processing.a11
+  - exercise.library.regex_text_processing.a12
+  - quiz.library.regex_text_processing.a01
+  - quiz.library.regex_text_processing.a02
+- id: unit.collections_itertools
+  title: Collections & Itertools
+  description: Lessons, drills, and quizzes for collections & itertools.
+  items:
+  - lesson.library.collections_itertools.a01
+  - lesson.library.collections_itertools.a02
+  - lesson.library.collections_itertools.a03
+  - lesson.library.collections_itertools.a04
+  - exercise.library.collections_itertools.a01
+  - exercise.library.collections_itertools.a02
+  - exercise.library.collections_itertools.a03
+  - exercise.library.collections_itertools.a04
+  - exercise.library.collections_itertools.a05
+  - exercise.library.collections_itertools.a06
+  - exercise.library.collections_itertools.a07
+  - exercise.library.collections_itertools.a08
+  - exercise.library.collections_itertools.a09
+  - exercise.library.collections_itertools.a10
+  - exercise.library.collections_itertools.a11
+  - exercise.library.collections_itertools.a12
+  - quiz.library.collections_itertools.a01
+  - quiz.library.collections_itertools.a02
+  - quiz.library.collections_itertools.a03
+- id: unit.data_wrangling_python
+  title: Pure-Python Data Wrangling
+  description: Lessons, drills, and quizzes for pure-python data wrangling.
+  items:
+  - lesson.library.data_wrangling_python.a01
+  - lesson.library.data_wrangling_python.a02
+  - lesson.library.data_wrangling_python.a03
+  - exercise.library.data_wrangling_python.a01
+  - exercise.library.data_wrangling_python.a02
+  - exercise.library.data_wrangling_python.a03
+  - exercise.library.data_wrangling_python.a04
+  - exercise.library.data_wrangling_python.a05
+  - exercise.library.data_wrangling_python.a06
+  - exercise.library.data_wrangling_python.a07
+  - exercise.library.data_wrangling_python.a08
+  - exercise.library.data_wrangling_python.a09
+  - exercise.library.data_wrangling_python.a10
+  - exercise.library.data_wrangling_python.a11
+  - exercise.library.data_wrangling_python.a12
+  - quiz.library.data_wrangling_python.a01
+  - quiz.library.data_wrangling_python.a02

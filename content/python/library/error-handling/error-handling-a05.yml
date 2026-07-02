@@ -1,0 +1,106 @@
+id: exercise.library.error_handling.a05
+kind: exercise
+version: 1
+language: python
+title: Vetting a Tool-Room Checkout
+slug: error-handling-a05
+difficulty: medium
+concepts:
+  - python.exceptions
+  - python.dictionaries
+  - python.conditionals
+prerequisites:
+  - python.functions
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.error_handling.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original workshop checkout validator using raise-then-catch with an else clause for the clean result.
+prompt_markdown: |
+  A community workshop lends out power tools. Before a checkout is accepted it must
+  pass three rules. Write `validate_checkout(request)` where `request` is a dict
+  with keys `member_id`, `tool`, and `days`.
+
+  Validate in this order and raise `ValueError` with the exact message shown the
+  moment a rule fails:
+
+  1. `member_id` must be a non-empty string, else raise `ValueError("missing member id")`.
+  2. `tool` must be one of `drill`, `sander`, `router`, `lathe`, else `ValueError("unknown tool")`.
+  3. `days` must be from 1 to 14 inclusive, else `ValueError("days out of range")`.
+
+  Catch your own `ValueError` and return `{"ok": False, "error": <message>}`. If
+  every rule passes, use an `else` clause to return
+  `{"ok": True, "member_id": <member_id>, "days": <days>}`.
+starter_code: |
+  ALLOWED_TOOLS = {"drill", "sander", "router", "lathe"}
+
+
+  def validate_checkout(request):
+      # Raise ValueError on the first broken rule; catch it and report the message.
+      # On success, return the approved record from an else clause.
+      return {}
+function_name: validate_checkout
+input_mode: function
+solution_sketch: Raise ValueError per failed rule, catch it into an error dict, and return the approval from try/except/else.
+sample_solution: |
+  ALLOWED_TOOLS = {"drill", "sander", "router", "lathe"}
+
+
+  def validate_checkout(request):
+      try:
+          member = request["member_id"]
+          if not isinstance(member, str) or member == "":
+              raise ValueError("missing member id")
+          if request["tool"] not in ALLOWED_TOOLS:
+              raise ValueError("unknown tool")
+          days = request["days"]
+          if days < 1 or days > 14:
+              raise ValueError("days out of range")
+      except ValueError as exc:
+          return {"ok": False, "error": str(exc)}
+      else:
+          return {"ok": True, "member_id": member, "days": days}
+hints:
+  - level: 1
+    text: Raise a ValueError with a clear message the instant a rule is broken.
+  - level: 2
+    text: Wrap the checks in a try, catch ValueError with `as exc`, and read the text with `str(exc)`.
+  - level: 3
+    text: Put the success return in an `else:` clause so it only runs when no rule raised.
+tests:
+  public:
+    - name: all_good
+      input: {member_id: M12, tool: drill, days: 3}
+      expected: {ok: true, member_id: M12, days: 3}
+    - name: blank_member
+      input: {member_id: '', tool: drill, days: 3}
+      expected: {ok: false, error: missing member id}
+    - name: bad_tool
+      input: {member_id: M9, tool: welder, days: 2}
+      expected: {ok: false, error: unknown tool}
+  validation:
+    - name: upper_bound_ok
+      input: {member_id: M1, tool: lathe, days: 14}
+      expected: {ok: true, member_id: M1, days: 14}
+    - name: zero_days
+      input: {member_id: M2, tool: router, days: 0}
+      expected: {ok: false, error: days out of range}
+    - name: too_long
+      input: {member_id: M3, tool: sander, days: 20}
+      expected: {ok: false, error: days out of range}
+explanation_markdown: |
+  Raising `ValueError` from inside the checks lets each rule fail loudly at the
+  exact point it is violated, and a single `except ValueError as exc` collects any
+  of them into one uniform error record. The `else` clause is the clean part of
+  the pattern: it runs only when the `try` finished without raising, so the
+  approval record is built exactly once and never on a failed request. Ordering
+  the checks means the earliest broken rule is the one reported, which keeps the
+  feedback predictable.
+common_mistakes:
+  - Returning the success dict at the end of the try block, where it can run even after appending an error.
+  - Catching `Exception` instead of `ValueError`, which would also swallow a genuine `KeyError` from a missing key.
+  - Reading the message with `exc.args[0]` inconsistently; `str(exc)` is the simplest reliable form.

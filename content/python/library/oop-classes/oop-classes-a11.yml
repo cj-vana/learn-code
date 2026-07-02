@@ -1,0 +1,98 @@
+id: exercise.library.oop_classes.a11
+kind: exercise
+version: 1
+language: python
+title: Deepest Chain in the Org Chart
+slug: oop-classes-a11
+difficulty: hard
+concepts:
+  - python.classes
+  - patterns.recursion
+prerequisites:
+  - python.classes
+estimated_time_minutes: 20
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.oop_classes.a11
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original theatre-company org-chart scenario building a composed object graph and recursing over it to find the longest reporting chain.
+prompt_markdown: |
+  A theatre company organises its staff as a reporting tree. One person sits at the
+  top; each person has a (possibly empty) list of direct reports, and those reports
+  may have reports of their own. The producer wants the length of the **longest
+  chain of command** -- the number of people you pass through going from the top
+  down to the most deeply nested staff member (the top person alone counts as a
+  chain of length 1).
+
+  Complete `longest_chain(org)`. The input `org` is a nested dict with two keys:
+  `"name"` (a string) and `"reports"` (a list of dicts in the same shape). Inside
+  the function, build a composed object model: a `Person` class where each instance
+  *holds* a list of `Person` objects for its direct reports. Give `Person` a method
+  that recursively measures the longest chain beneath and including itself, then
+  return that number for the whole org as an integer.
+starter_code: |
+  def longest_chain(org):
+      # Build Person objects that hold their direct reports, then recursively
+      # measure the longest chain from the top down.
+      return 0
+function_name: longest_chain
+input_mode: function
+solution_sketch: Recursively construct Person objects, then let each Person report 1 plus the max chain among its reports.
+sample_solution: |
+  def longest_chain(org):
+      class Person:
+          def __init__(self, name, reports):
+              self.name = name
+              self.reports = reports
+
+          def depth(self):
+              if not self.reports:
+                  return 1
+              return 1 + max(report.depth() for report in self.reports)
+
+      def build(node):
+          return Person(node["name"], [build(child) for child in node["reports"]])
+
+      return build(org).depth()
+hints:
+  - level: 1
+    text: A person with no reports is a chain of length 1; otherwise the chain runs through the deepest single report.
+  - level: 2
+    text: Build the tree of Person objects first (recursively), then give Person a depth method that recurses over self.reports.
+  - level: 3
+    text: In depth, return 1 if there are no reports, else 1 + max(report.depth() for report in self.reports); build each node's reports with a recursive helper.
+tests:
+  public:
+    - name: two_levels
+      input: {name: A, reports: [{name: B, reports: []}, {name: C, reports: [{name: D, reports: []}]}]}
+      expected: 3
+    - name: just_the_top
+      input: {name: solo, reports: []}
+      expected: 1
+    - name: single_line
+      input: {name: A, reports: [{name: B, reports: [{name: C, reports: []}]}]}
+      expected: 3
+  validation:
+    - name: wide_but_shallow
+      input: {name: A, reports: [{name: B, reports: []}, {name: C, reports: []}, {name: D, reports: []}]}
+      expected: 2
+    - name: deep_branch_wins
+      input: {name: A, reports: [{name: B, reports: [{name: E, reports: [{name: F, reports: []}]}]}, {name: C, reports: []}]}
+      expected: 4
+    - name: balanced_two_deep
+      input: {name: root, reports: [{name: L, reports: [{name: LL, reports: []}]}, {name: R, reports: [{name: RR, reports: []}]}]}
+      expected: 3
+explanation_markdown: |
+  The object model mirrors the data: each `Person` *holds* the `Person` objects for
+  its direct reports, so the composed graph has the same shape as the nested dict.
+  The `depth` method is a classic tree recursion -- a leaf is a chain of length 1,
+  and any manager's longest chain is one (for themselves) plus the deepest chain
+  among their reports. Building the objects with a small recursive helper keeps
+  construction and measurement cleanly separated.
+common_mistakes:
+  - Summing the reports' depths instead of taking the maximum, which counts breadth rather than the single longest chain.
+  - Forgetting the base case, so a person with no reports never returns and the recursion errors on an empty list via max.
+  - Counting edges instead of people, returning one less than the requested chain length.

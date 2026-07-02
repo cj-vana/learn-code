@@ -1,0 +1,112 @@
+id: exercise.library.heaps_topk.a12
+kind: exercise
+version: 1
+language: python
+title: Trending Tags on the Notice Board
+slug: heaps-topk-a12
+difficulty: medium
+concepts:
+  - python.heapq_bisect
+  - patterns.heap_topk
+prerequisites:
+  - python.lists
+  - python.dictionaries
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.heaps_topk.a12
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original top-k-frequency drill themed around a community notice board tracking repeated tag codes.
+prompt_markdown: |
+  A community notice board logs a numeric tag code every time someone pins a
+  message. At the end of the day the volunteers want the short list of codes that
+  came up most often.
+
+  Write `top_k_frequent(data)` where `data` is a dict with two keys:
+
+  - `values`: a list of integer tag codes (may be empty, may contain repeats)
+  - `k`: an integer, how many of the most frequent codes to return
+
+  Return a list of the `k` most frequent codes ordered by their count from
+  highest to lowest. When two codes share the same count, the smaller code comes
+  first. If `k` is 0 or `values` is empty, return an empty list. If `k` is larger
+  than the number of distinct codes, just return all distinct codes in that same
+  order.
+
+  Example: `{"values": [1, 1, 2, 2, 2, 3], "k": 2}` returns `[2, 1]`, because 2
+  appears three times, 1 appears twice, and 3 (appearing once) is left off.
+starter_code: |
+  import heapq
+  from collections import Counter
+
+
+  def top_k_frequent(data):
+      return []
+function_name: top_k_frequent
+input_mode: function
+solution_sketch: Count with Counter, then heapq.nlargest by key (count, -value) so higher counts win and ties favour the smaller value; return just the values.
+sample_solution: |
+  import heapq
+  from collections import Counter
+
+
+  def top_k_frequent(data):
+      values = data["values"]
+      k = data["k"]
+      counts = Counter(values)
+      top = heapq.nlargest(k, counts.items(), key=lambda item: (item[1], -item[0]))
+      return [value for value, _count in top]
+hints:
+  - level: 1
+    text: Start by tallying how many times each code appears; collections.Counter turns the list into a code-to-count mapping in one step.
+  - level: 2
+    text: You want the largest counts, so heapq.nlargest is a natural fit; pass counts.items() and a key so it ranks by count.
+  - level: 3
+    text: Use key=lambda item (item[1], -item[0]) so a bigger count wins and, for equal counts, the smaller code sorts first; then pull out just the code from each pair.
+tests:
+  public:
+    - name: example
+      input: {values: [1, 1, 2, 2, 2, 3], k: 2}
+      expected: [2, 1]
+    - name: empty_values
+      input: {values: [], k: 2}
+      expected: []
+    - name: single_kind
+      input: {values: [7, 7, 7], k: 1}
+      expected: [7]
+  validation:
+    - name: all_ties_sort_by_value
+      input: {values: [3, 1, 2], k: 3}
+      expected: [1, 2, 3]
+    - name: k_exceeds_distinct
+      input: {values: [9, 9, 8], k: 5}
+      expected: [9, 8]
+    - name: k_zero_returns_empty
+      input: {values: [5, 5, 6], k: 0}
+      expected: []
+    - name: tie_break_cuts_larger_value
+      input: {values: [5, 5, 3, 3, 1], k: 1}
+      expected: [3]
+    - name: mixed_counts
+      input: {values: [4, 4, 4, 2, 2, 7, 7, 7, 7, 1], k: 2}
+      expected: [7, 4]
+explanation_markdown: |
+  The job splits into two parts: counting and ranking. `Counter(values)` does the
+  counting in a single O(n) pass, giving a mapping from each code to how many
+  times it was pinned.
+
+  For the ranking, `heapq.nlargest(k, items, key=...)` keeps only the k best
+  pairs using a heap of size k, which costs O(n log k) rather than sorting the
+  whole thing. The trick is the sort key `(count, -value)`. `nlargest` picks the
+  pairs whose key is largest, so a higher count always wins first. When two codes
+  tie on count, comparing `-value` means the code with the smaller value has the
+  larger key and is chosen ahead of the bigger one, and the results come back in
+  that same descending-key order. Finally we discard the counts and return just
+  the codes.
+common_mistakes:
+  - Forgetting the tie-break, so equal-count codes come out in an arbitrary order instead of smallest value first.
+  - Using +value instead of -value in the key, which reverses the tie-break and prefers the larger code.
+  - Returning the (value, count) pairs from nlargest instead of extracting just the code from each pair.

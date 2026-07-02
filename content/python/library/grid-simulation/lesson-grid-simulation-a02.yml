@@ -1,0 +1,96 @@
+id: lesson.library.grid_simulation.a02
+kind: lesson
+version: 1
+language: python
+title: Reshaping a Grid - Transpose, Rotate, and Counting Paths
+slug: lesson-grid-simulation-a02
+difficulty: medium
+concepts:
+  - patterns.grid_traversal
+  - patterns.dynamic_programming
+prerequisites:
+  - python.lists
+  - python.slicing
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.grid_simulation.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original photo-mosaic reshaping lesson pairing transpose/rotate identities with an obstacle path-count table.
+body_markdown: |
+  A print shop stores each photo mosaic as a grid of colour codes and constantly
+  needs to reorient it. Two moves cover almost everything: transpose and rotate.
+
+  **Transpose** swaps rows and columns: the value at `(r, c)` moves to `(c, r)`.
+  A grid that was `rows x cols` becomes `cols x rows`. Python's `zip` lines the
+  rows up column-by-column, which is exactly a transpose:
+
+  ```python
+  def transpose(grid):
+      return [list(col) for col in zip(*grid)]
+
+  transpose([[1, 2, 3],
+             [4, 5, 6]])
+  # -> [[1, 4], [2, 5], [3, 6]]
+  ```
+
+  **Rotating 90 degrees clockwise** is a transpose plus a horizontal mirror, and
+  there is a tidy shortcut: reverse the row order first, then transpose. The top
+  row of the original becomes the rightmost column of the result.
+
+  ```python
+  def rotate_clockwise(grid):
+      return [list(col) for col in zip(*grid[::-1])]
+
+  rotate_clockwise([[1, 2],
+                    [3, 4]])
+  # -> [[3, 1], [4, 2]]
+  ```
+
+  Read that result carefully: `3` was bottom-left and lands top-left, `1` was
+  top-left and lands top-right. Rotating counter-clockwise is the mirror image:
+  transpose first, then reverse each column order (`zip(*grid)` then `[::-1]` on
+  the outer list).
+
+  **Counting paths with obstacles** is a different kind of grid reasoning. A
+  gantry robot starts at the top-left cell and may step only right or down to
+  reach the bottom-right cell. Some cells are blocked (value `1`). How many
+  distinct routes exist? Brute force explodes, but there is a clean insight: the
+  number of ways to reach a cell equals the ways to reach the cell above it plus
+  the ways to reach the cell to its left, because those are the only two cells
+  that can step into it.
+
+  ```python
+  def count_paths(grid):
+      rows, cols = len(grid), len(grid[0])
+      dp = [[0] * cols for _ in range(rows)]
+      for i in range(rows):
+          for j in range(cols):
+              if grid[i][j] == 1:          # blocked: no route lands here
+                  dp[i][j] = 0
+              elif i == 0 and j == 0:      # start: exactly one route (staying)
+                  dp[i][j] = 1
+              else:
+                  top = dp[i - 1][j] if i > 0 else 0
+                  left = dp[i][j - 1] if j > 0 else 0
+                  dp[i][j] = top + left
+      return dp[rows - 1][cols - 1]
+  ```
+
+  Filling the table top-to-bottom, left-to-right guarantees that `dp[i-1][j]` and
+  `dp[i][j-1]` are already known when you need them. A blocked start or a blocked
+  destination simply forces the answer to zero. The table has one entry per cell,
+  so the routine is O(rows * cols) in both time and space.
+checkpoints:
+  - question: A grid is 4 rows by 2 columns. After transposing it, what are its dimensions?
+    answer: 2 rows by 4 columns.
+    explanation: Transpose swaps the axes, so an R by C grid becomes C by R.
+  - question: In count_paths, why is it safe to read `dp[i-1][j]` and `dp[i][j-1]` when computing `dp[i][j]`?
+    answer: The nested loops fill the table in increasing row then column order, so both the cell above and the cell to the left are already computed.
+    explanation: Dynamic programming works only when each subproblem is solved before the problem that depends on it.
+  - question: How can you rotate a grid 90 degrees clockwise using only a reverse and a transpose?
+    answer: Reverse the order of the rows first, then transpose the result.
+    explanation: Reversing the rows puts the original bottom row on top, and transposing then turns that top row into the leftmost column, matching a clockwise turn.

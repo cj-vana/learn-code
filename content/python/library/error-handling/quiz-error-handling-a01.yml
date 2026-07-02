@@ -1,0 +1,87 @@
+id: quiz.library.error_handling.a01
+kind: quiz
+version: 1
+language: python
+title: Which Block Runs, and When
+slug: quiz-error-handling-a01
+difficulty: easy
+concepts:
+  - python.exceptions
+prerequisites: []
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.error_handling.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original control-flow prediction questions across the four try clauses.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      In a try statement with try, except, else, and finally blocks, the try body
+      runs without raising any exception. Which of the other blocks run?
+    choices:
+      - Both else and finally run.
+      - Only finally runs.
+      - Only else runs.
+      - Only except runs.
+    correct_choice: Both else and finally run.
+    explanation: |
+      `else` runs precisely because no exception was raised, and `finally` always
+      runs on the way out. The `except` block is skipped since there was nothing to
+      catch.
+    concepts:
+      - python.exceptions
+  - id: q2
+    prompt: |
+      A block does `total = values[i]` where `i` may be past the end of the list.
+      You only expect an out-of-range index. Which handler catches that failure
+      most precisely?
+    choices:
+      - except IndexError
+      - except KeyError
+      - except ValueError
+      - except (a bare except with no type)
+    correct_choice: except IndexError
+    explanation: |
+      Indexing a list past its end raises `IndexError`. `KeyError` is for missing
+      dict keys and `ValueError` for bad values; a bare except is too broad and
+      would also hide unrelated bugs.
+    concepts:
+      - python.exceptions
+  - id: q3
+    prompt: |
+      You want a failed lookup to let the caller keep going with a safe stand-in
+      value instead of crashing. Which approach fits "handle gracefully"?
+    choices:
+      - Catch the expected exception and return a sentinel or fallback value.
+      - Let the exception propagate uncaught so the program stops.
+      - Wrap everything in a bare except and re-raise immediately.
+      - Replace the lookup with an assert statement.
+    correct_choice: Catch the expected exception and return a sentinel or fallback value.
+    explanation: |
+      Graceful handling means catching the failure you anticipated and returning a
+      value the caller can use. Letting it propagate is the opposite (failing
+      loudly), which is sometimes right but not what "keep going" asks for.
+    concepts:
+      - python.exceptions
+  - id: q4
+    prompt: |
+      A try block opens a resource and its finally block closes it. Inside the try,
+      an exception is raised that no except clause handles. What happens to the
+      finally block?
+    choices:
+      - finally still runs, then the exception continues to propagate.
+      - finally is skipped because the exception was not handled.
+      - finally runs and silently suppresses the exception.
+      - finally runs only if there is a matching except clause.
+    correct_choice: finally still runs, then the exception continues to propagate.
+    explanation: |
+      `finally` runs on every exit path, including while an unhandled exception is
+      propagating. It performs the cleanup but does not swallow the exception, which
+      keeps unwinding afterward.
+    concepts:
+      - python.exceptions

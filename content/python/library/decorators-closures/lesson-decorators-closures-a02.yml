@@ -1,0 +1,102 @@
+id: lesson.library.decorators_closures.a02
+kind: lesson
+version: 1
+language: python
+title: Writing Decorators, With and Without Arguments
+slug: lesson-decorators-closures-a02
+difficulty: medium
+concepts:
+  - python.closures_decorators
+prerequisites:
+  - python.closures_decorators
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.decorators_closures.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original bakery-label decorator scenario covering functools.wraps, decorator factories, and stacking order.
+body_markdown: |
+  A **decorator** is a function that takes another function, wraps it in extra
+  behavior, and returns the wrapper. The `@name` syntax is just shorthand:
+  `@shout` above `def greet` means `greet = shout(greet)`.
+
+  Here a bakery wants every label function to gain a unit suffix. The wrapper
+  calls the original function and reshapes its result:
+
+  ```python
+  import functools
+
+  def with_grams(func):
+      @functools.wraps(func)
+      def wrapper(*args, **kwargs):
+          return f"{func(*args, **kwargs)} g"
+      return wrapper
+
+  @with_grams
+  def net_mass(loaves):
+      """Total dough mass for the given loaf count."""
+      return loaves * 450
+
+  net_mass(2)   # '900 g'
+  ```
+
+  The `@functools.wraps(func)` line matters. Without it, the wrapper would
+  masquerade as itself: `net_mass.__name__` would be `'wrapper'` and the
+  docstring would vanish. `wraps` copies `__name__`, `__doc__`, and other
+  metadata from the original onto the wrapper, so tools and tracebacks still see
+  the real function.
+
+  ### Decorators that take arguments
+
+  To configure a decorator, add one more layer. A **decorator factory** takes
+  the arguments and returns an actual decorator:
+
+  ```python
+  def repeat(times):
+      def decorator(func):
+          @functools.wraps(func)
+          def wrapper(*args, **kwargs):
+              return [func(*args, **kwargs) for _ in range(times)]
+          return wrapper
+      return decorator
+
+  @repeat(3)
+  def stamp(label):
+      return label.upper()
+
+  stamp("rye")   # ['RYE', 'RYE', 'RYE']
+  ```
+
+  Read it from the inside out: `repeat(3)` runs first and returns `decorator`,
+  then `decorator(stamp)` runs and returns `wrapper`. Three nested functions is
+  the signature shape of an argument-taking decorator.
+
+  ### Stacking decorators
+
+  You can apply several decorators to one function. They compose from the
+  bottom up: the decorator nearest the `def` wraps first.
+
+  ```python
+  @with_grams      # applied second (outer)
+  @repeat(2)       # applied first (inner)
+  def slab(n):
+      return n * 100
+  ```
+
+  This is `with_grams(repeat(2)(slab))`. Order changes behavior, so when two
+  decorators both transform the result, swapping them usually gives a different
+  answer. Keep the reading order in mind: nearest the function runs first, and
+  the outermost decorator sees the already-wrapped result.
+checkpoints:
+  - question: What does the plain @shout above def greet actually do to the name greet?
+    answer: It rebinds greet to shout(greet), so calling greet now runs the wrapper that shout returned.
+    explanation: The @ syntax is sugar for reassigning the decorated name to the decorator's return value.
+  - question: What breaks if you remove @functools.wraps(func) from a wrapper?
+    answer: The wrapped function loses its identity metadata, so its __name__ becomes 'wrapper' and its original __doc__ is dropped.
+    explanation: functools.wraps copies __name__, __doc__, and similar attributes from the original onto the wrapper for honest introspection.
+  - question: Given @with_grams stacked above @repeat(2) above a function, which decorator wraps first and which sees the final result?
+    answer: repeat(2) wraps first because it is nearest the def, and with_grams is the outer decorator that sees and reshapes the already-wrapped result.
+    explanation: Stacked decorators compose bottom-up, equivalent to with_grams(repeat(2)(func)).

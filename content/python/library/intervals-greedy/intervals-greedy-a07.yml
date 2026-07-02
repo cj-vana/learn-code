@@ -1,0 +1,91 @@
+id: exercise.library.intervals_greedy.a07
+kind: exercise
+version: 1
+language: python
+title: Most Films the Single Screen Can Show
+slug: intervals-greedy-a07
+difficulty: medium
+concepts:
+  - patterns.greedy
+  - patterns.intervals
+  - python.sorting
+prerequisites:
+  - python.lists
+estimated_time_minutes: 16
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.intervals_greedy.a07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original single-screen film-festival framing for the earliest-finish greedy activity-selection count.
+prompt_markdown: |
+  A one-screen cinema hosts a festival and wants to screen as **many** films as
+  possible in a day. Each film is a `[start, end]` slot, and no two screenings
+  may overlap on the single screen. Write `most_films(films)` returning the
+  largest number of non-overlapping films you can schedule.
+
+  A film starting exactly when another ends (`[1, 3]` then `[3, 5]`) is allowed —
+  back-to-back is fine. An empty lineup schedules `0` films.
+starter_code: |
+  def most_films(films):
+      return 0
+function_name: most_films
+input_mode: function
+solution_sketch: Sort by end time and greedily take each film that starts at or after the last one taken ends.
+sample_solution: |
+  def most_films(films):
+      ordered = sorted(films, key=lambda f: f[1])
+      count = 0
+      last_end = None
+      for start, end in ordered:
+          if last_end is None or start >= last_end:
+              count += 1
+              last_end = end
+      return count
+hints:
+  - level: 1
+    text: Neither the shortest film nor the earliest-starting film is the right greedy pick.
+  - level: 2
+    text: Sort the films by their end time so you can always commit to whichever finishes soonest.
+  - level: 3
+    text: Walk the end-sorted list keeping last_end; take a film when start >= last_end, then update last_end to its end.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: 0
+    - name: single
+      input: [[1, 3]]
+      expected: 1
+    - name: two_back_to_back
+      input: [[1, 3], [3, 5]]
+      expected: 2
+  validation:
+    - name: greedy_beats_earliest_start
+      input: [[1, 10], [2, 3], [4, 5]]
+      expected: 2
+    - name: pick_three
+      input: [[1, 2], [2, 4], [3, 5], [5, 7]]
+      expected: 3
+    - name: all_overlap
+      input: [[1, 5], [2, 6], [3, 7]]
+      expected: 1
+    - name: unsorted_input
+      input: [[6, 8], [1, 3], [4, 6], [2, 5]]
+      expected: 3
+explanation_markdown: |
+  The winning greedy rule is to always take the film that *finishes* earliest
+  among those that still fit. Sorting by end time lets you scan once, holding
+  only `last_end`, the finish time of the most recent film you committed to. A
+  film fits when it starts at or after `last_end`, so `start >= last_end` (the
+  `>=` permits back-to-back screenings). Every earliest-finishing choice leaves
+  the maximum remaining time for later films, which is exactly why the greedy is
+  optimal — an exchange argument shows any optimal schedule can be reshaped to
+  begin with the earliest finisher without losing any films. Sorting by start
+  instead would let one sprawling early film block the scan.
+common_mistakes:
+  - Sorting by start time, which lets a single long early film crowd out several short ones.
+  - Using a strict start > last_end and rejecting legal back-to-back screenings.
+  - Trying to maximise total screen time rather than the count of films, which is a different problem.

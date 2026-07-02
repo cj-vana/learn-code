@@ -1,0 +1,129 @@
+id: exercise.library.linked_lists_patterns.a12
+kind: exercise
+version: 1
+language: python
+title: Add Two Odometer Reels
+slug: linked-lists-patterns-a12
+difficulty: medium
+concepts:
+  - patterns.linked_list
+prerequisites:
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.linked_lists_patterns.a12
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original odometer-reel digit-chain addition graded through least-significant-first digit lists.
+prompt_markdown: |
+  Two mechanical odometers each store a non-negative reading as a reel of decimal
+  digits wound **least-significant digit first** — so the reading 342 is spooled as
+  `[2, 4, 3]`. Write `add_digit_chains(data)` where `data` is a dict with keys
+  `"first"` and `"second"`, each a list of single decimal digits (0..9) in that
+  same least-significant-first order.
+
+  Thread each list onto a chain of `Node` objects, then walk both chains together
+  adding digit by digit and carrying any overflow into the next position, exactly
+  like a hand-cranked adder. Return the total as a fresh list of digits, again
+  **least-significant first**.
+
+  The result should carry as far as it naturally needs to (an extra digit may
+  appear when the final carry overflows) and should not be padded with extra
+  leading zeros beyond that. If both reels read zero, return `[0]`.
+
+  Example: `{"first": [2, 4, 3], "second": [5, 6, 4]}` represents 342 + 465 = 807,
+  so the answer is `[7, 0, 8]`.
+starter_code: |
+  def add_digit_chains(data):
+      # data = {"first": [...], "second": [...]}, each digits least-significant first.
+      # Build a Node chain per reel, add with carry, return the sum as a digit list.
+      return []
+function_name: add_digit_chains
+input_mode: function
+solution_sketch: Build a Node chain per reel, walk both while summing digit+carry, appending each ones-place digit and carrying the tens.
+sample_solution: |
+  def add_digit_chains(data):
+      class Node:
+          def __init__(self, value):
+              self.value = value
+              self.next = None
+
+      def build(digits):
+          head = None
+          for digit in reversed(digits):
+              node = Node(digit)
+              node.next = head
+              head = node
+          return head
+
+      a = build(data["first"])
+      b = build(data["second"])
+
+      result = []
+      carry = 0
+      while a is not None or b is not None or carry:
+          total = carry
+          if a is not None:
+              total += a.value
+              a = a.next
+          if b is not None:
+              total += b.value
+              b = b.next
+          result.append(total % 10)
+          carry = total // 10
+      return result if result else [0]
+hints:
+  - level: 1
+    text: The lists are already least-significant first, which is the order addition works in, so build each chain and walk both from their heads.
+  - level: 2
+    text: At each step add this node's digit from each chain plus any carry; the ones place (total % 10) is the output digit and the tens place (total // 10) becomes the next carry.
+  - level: 3
+    text: Keep looping while either chain still has a node OR a carry remains, so a final overflow like 99 + 1 grows a new leading digit; if nothing was ever appended, return [0].
+tests:
+  public:
+    - name: example_342_plus_465
+      input: {first: [2, 4, 3], second: [5, 6, 4]}
+      expected: [7, 0, 8]
+    - name: both_zero
+      input: {first: [0], second: [0]}
+      expected: [0]
+    - name: carry_grows_new_digit
+      input: {first: [9, 9], second: [1]}
+      expected: [0, 0, 1]
+  validation:
+    - name: single_digit_carry
+      input: {first: [5], second: [5]}
+      expected: [0, 1]
+    - name: uneven_lengths_with_ripple
+      input: {first: [9, 9, 9], second: [1]}
+      expected: [0, 0, 0, 1]
+    - name: no_carry_at_all
+      input: {first: [1, 2, 3], second: [4, 5, 1]}
+      expected: [5, 7, 4]
+    - name: empty_reel_is_zero
+      input: {first: [], second: [7, 3]}
+      expected: [7, 3]
+explanation_markdown: |
+  Storing digits least-significant first is the whole trick: it lines the reels up
+  in exactly the order pencil-and-paper addition proceeds, so the heads of both
+  chains are the ones places you add first.
+
+  Each step sums the current digit from each chain plus the incoming carry. That
+  total is at most 9 + 9 + 1 = 19, so it always splits cleanly into one output
+  digit `total % 10` and a next-step carry `total // 10` that is 0 or 1. Appending
+  the ones digit as you go builds the answer already in least-significant-first
+  order — no final reversal needed.
+
+  The loop condition keeps going while *either* chain has nodes left or a carry is
+  still pending. That last clause is what lets 99 + 1 = 100 sprout a brand-new
+  leading digit instead of silently dropping the overflow. The only reading that
+  produces no digits at all is empty-plus-empty, so a final guard returns `[0]` to
+  honor the zero case.
+common_mistakes:
+  - Stopping the loop as soon as both chains are exhausted, which drops a final carry and turns 99 + 1 into 00 instead of 001.
+  - Reversing the result at the end out of habit, even though appending ones-first already yields least-significant-first order.
+  - Forgetting that one reel may be shorter (or empty) and indexing a None node instead of treating the missing digit as 0.
+  - Emitting the full total at a position instead of just total % 10, so a two-digit step like 5 + 5 = 10 fails to carry.

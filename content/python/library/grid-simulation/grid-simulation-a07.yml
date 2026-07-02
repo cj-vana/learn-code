@@ -1,0 +1,111 @@
+id: exercise.library.grid_simulation.a07
+kind: exercise
+version: 1
+language: python
+title: The Gallery Floor Robot
+slug: grid-simulation-a07
+difficulty: medium
+concepts:
+  - patterns.simulation
+  - patterns.state_machine
+prerequisites:
+  - python.strings
+  - python.conditionals
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.grid_simulation.a07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original bounded-grid movement drill themed around a floor-cleaning robot in an art gallery.
+prompt_markdown: |
+  A small floor-cleaning robot trundles across the polished tiles of an art
+  gallery. The floor is a rectangular grid with `height` rows and `width`
+  columns. Row `0` is the north wall and column `0` is the west wall, so a valid
+  position `[r, c]` satisfies `0 <= r < height` and `0 <= c < width`.
+
+  The robot is handed a route as a string of single-letter moves:
+
+  - `U` moves one tile up (row `- 1`)
+  - `D` moves one tile down (row `+ 1`)
+  - `L` moves one tile left (column `- 1`)
+  - `R` moves one tile right (column `+ 1`)
+
+  The robot is cautious: any move that would carry it off the floor is ignored,
+  and it simply stays put for that step before reading the next letter. The move
+  string contains only the characters `U`, `D`, `L`, and `R`.
+
+  Write `clean_floor(job)` where `job` is a single dictionary with keys
+  `"width"`, `"height"`, `"start"` (a `[r, c]` list), and `"moves"` (the route
+  string). Apply every move in order and **return the final position as a list**
+  `[r, c]`.
+
+  For example, `clean_floor({"width": 3, "height": 3, "start": [0, 0],
+  "moves": "RRDD"})` returns `[2, 2]`: the robot walks to the east wall, then
+  down to the south-east corner. An empty move string leaves the robot on its
+  starting tile.
+starter_code: |
+  def clean_floor(job):
+      return [0, 0]
+function_name: clean_floor
+input_mode: function
+solution_sketch: Track the current (r, c). For each move letter, compute the candidate cell and adopt it only when it lands inside the grid; otherwise keep the current cell.
+sample_solution: |
+  def clean_floor(job):
+      height, width = job["height"], job["width"]
+      r, c = job["start"]
+      deltas = {"U": (-1, 0), "D": (1, 0), "L": (0, -1), "R": (0, 1)}
+      for move in job["moves"]:
+          dr, dc = deltas.get(move, (0, 0))
+          nr, nc = r + dr, c + dc
+          if 0 <= nr < height and 0 <= nc < width:
+              r, c = nr, nc
+      return [r, c]
+hints:
+  - level: 1
+    text: Keep two running numbers, the current row and column, and update them one move at a time rather than all at once.
+  - level: 2
+    text: Map each letter to a (dr, dc) offset. Before committing to the new cell, check that both the new row and new column are still inside the grid.
+  - level: 3
+    text: If `0 <= nr < height and 0 <= nc < width`, assign r, c = nr, nc; otherwise do nothing and move on to the next letter. Return [r, c] at the end.
+tests:
+  public:
+    - name: straight_then_down
+      input: {width: 3, height: 3, start: [0, 0], moves: "RRDD"}
+      expected: [2, 2]
+    - name: bounces_off_walls
+      input: {width: 2, height: 2, start: [0, 0], moves: "UULL"}
+      expected: [0, 0]
+    - name: no_moves
+      input: {width: 4, height: 3, start: [1, 2], moves: ""}
+      expected: [1, 2]
+  validation:
+    - name: ignores_one_wall_hit
+      input: {width: 3, height: 3, start: [1, 1], moves: "UURDL"}
+      expected: [1, 1]
+    - name: tall_narrow_column
+      input: {width: 1, height: 5, start: [0, 0], moves: "DDDDDD"}
+      expected: [4, 0]
+    - name: single_cell_grid
+      input: {width: 1, height: 1, start: [0, 0], moves: "UDLRUDLR"}
+      expected: [0, 0]
+    - name: hugs_east_wall
+      input: {width: 4, height: 2, start: [0, 3], moves: "RDLL"}
+      expected: [1, 1]
+explanation_markdown: |
+  This is a state machine whose state is the robot's `(r, c)` position and whose
+  events are the move letters. The whole problem hinges on validating each step
+  *before* you take it. By computing the candidate cell `(nr, nc)` and adopting
+  it only when the bounds check passes, an off-grid move becomes a harmless no-op
+  and the robot keeps its place.
+
+  Because you look at every character once and do constant work per character,
+  the routine runs in O(number of moves) time and O(1) extra space. Note that the
+  grid itself is never built; you only need its dimensions to know where the
+  walls are.
+common_mistakes:
+  - Confusing rows with columns, so that `U`/`D` change the column and `L`/`R` change the row.
+  - Checking bounds against `width` for the row and `height` for the column instead of the other way around.
+  - Moving first and clamping afterward, which lets the robot slide along a wall instead of standing still on a blocked step.

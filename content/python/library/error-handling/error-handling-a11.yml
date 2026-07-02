@@ -1,0 +1,103 @@
+id: exercise.library.error_handling.a11
+kind: exercise
+version: 1
+language: python
+title: Safe Division Across a Ledger
+slug: error-handling-a11
+difficulty: easy
+concepts:
+  - python.exceptions
+prerequisites:
+  - python.lists
+  - python.dictionaries
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.error_handling.a11
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original ledger-division scenario that teaches catching ZeroDivisionError instead of guarding with an if.
+prompt_markdown: |
+  A bookkeeping tool processes a ledger of ratios. Each row records a numerator and
+  a denominator, and the tool must report the quotient of each row. Some rows,
+  though, were entered with a denominator of zero, and dividing by them would blow
+  up the whole batch. Your job is to keep the batch running.
+
+  Write `safe_divide_batch(rows)` where `rows` is a list of dicts, each shaped like
+  `{"num": <int>, "den": <int>}`. Return a list with one entry per row, in the same
+  order as the input:
+
+  - If the division is valid, the entry is `num / den` as a float.
+  - If `den` is `0`, the entry is the string `"undefined"`.
+
+  There is one firm rule: you must let the division run and **catch the
+  `ZeroDivisionError`** rather than checking `den == 0` with an `if` beforehand.
+
+  For example, `safe_divide_batch([{"num": 6, "den": 2}, {"num": 1, "den": 0}])`
+  returns `[3.0, "undefined"]`. An empty ledger returns an empty list `[]`.
+starter_code: |
+  def safe_divide_batch(rows):
+      # Divide each row's num by its den; catch ZeroDivisionError -> "undefined".
+      return []
+function_name: safe_divide_batch
+input_mode: function
+solution_sketch: Iterate rows, attempt num/den inside try, and append "undefined" from the except ZeroDivisionError branch.
+sample_solution: |
+  def safe_divide_batch(rows):
+      results = []
+      for row in rows:
+          try:
+              results.append(row["num"] / row["den"])
+          except ZeroDivisionError:
+              results.append("undefined")
+      return results
+hints:
+  - level: 1
+    text: Build a fresh result list and append exactly one entry for each row so the output stays aligned with the input order.
+  - level: 2
+    text: Wrap the division num / den in a try block; the specific error raised when the denominator is zero is ZeroDivisionError.
+  - level: 3
+    text: "In the except ZeroDivisionError branch, append the string \"undefined\"; in the try branch, append the float result of the division."
+tests:
+  public:
+    - name: example_mixed
+      input: [{num: 6, den: 2}, {num: 1, den: 0}]
+      expected: [3.0, 'undefined']
+    - name: all_valid
+      input: [{num: 10, den: 4}, {num: 9, den: 3}]
+      expected: [2.5, 3.0]
+    - name: empty_ledger
+      input: []
+      expected: []
+  validation:
+    - name: all_zero_denominators
+      input: [{num: 5, den: 0}, {num: 0, den: 0}]
+      expected: ['undefined', 'undefined']
+    - name: negatives_divide
+      input: [{num: -8, den: 2}, {num: 7, den: -2}]
+      expected: [-4.0, -3.5]
+    - name: zero_numerator_is_valid
+      input: [{num: 0, den: 5}]
+      expected: [0.0]
+    - name: order_preserved_around_gaps
+      input: [{num: 1, den: 0}, {num: 4, den: 2}, {num: 3, den: 0}]
+      expected: ['undefined', 2.0, 'undefined']
+explanation_markdown: |
+  The batch must survive a bad row without aborting, so each division is isolated in
+  its own `try`. When `den` is `0`, Python raises `ZeroDivisionError`, and the
+  `except` branch turns that failure into the sentinel string `"undefined"` instead
+  of letting it propagate and stop the loop. Every other row divides normally, and
+  because Python's `/` operator always yields a float, valid quotients come back as
+  floats like `3.0` and `2.5`.
+
+  Appending one entry per row inside the loop guarantees the output length and order
+  match the input exactly. Catching the exception rather than pre-checking `den == 0`
+  is the point of the exercise: it models the "ask forgiveness, not permission"
+  style that keeps the happy path clean and pushes the rare failure into a handler.
+common_mistakes:
+  - Guarding with `if den == 0` instead of catching the raised ZeroDivisionError, which the exercise forbids.
+  - Catching a broad `except Exception` (or bare `except`) that would also swallow unrelated bugs like a missing key.
+  - Returning integer quotients or skipping bad rows, which breaks the float contract or misaligns the output order.

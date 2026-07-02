@@ -1,0 +1,105 @@
+id: exercise.library.data_wrangling_python.a04
+kind: exercise
+version: 1
+language: python
+title: Parcels Per Delivery Zone
+slug: data-wrangling-python-a04
+difficulty: medium
+concepts:
+  - concepts.grouping_aggregation
+prerequisites:
+  - python.dictionaries
+  - python.loops
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.data_wrangling_python.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original group-and-count drill framed around a courier depot tallying parcels by delivery zone.
+prompt_markdown: |
+  A courier depot scans every parcel into a flat log, one dictionary per parcel.
+  Dispatch wants a headcount: how many parcels are headed to each delivery zone?
+
+  Write `count_by_zone(payload)` that takes a single dictionary with two keys:
+
+  - `"rows"`: a list of parcel dictionaries.
+  - `"key"`: the field name to group by.
+
+  Return a dictionary that maps each distinct value of `"key"` to the **number of
+  rows** that carry it. You may assume `"key"` is present in every row.
+
+  Edge cases the tests cover:
+
+  - An empty `"rows"` list returns an empty dictionary `{}`.
+
+  Example:
+
+  ```python
+  count_by_zone({
+      "rows": [{"id": "P1", "zone": "A"}, {"id": "P2", "zone": "B"}, {"id": "P3", "zone": "A"}],
+      "key": "zone",
+  })
+  # -> {"A": 2, "B": 1}
+  ```
+starter_code: |
+  def count_by_zone(payload):
+      return {}
+function_name: count_by_zone
+input_mode: function
+solution_sketch: Walk the rows once, and for each row's key value add 1 to a running tally in a counts dictionary using dict.get with default 0.
+sample_solution: |
+  def count_by_zone(payload):
+      rows = payload["rows"]
+      key = payload["key"]
+      counts = {}
+      for row in rows:
+          value = row[key]
+          counts[value] = counts.get(value, 0) + 1
+      return counts
+hints:
+  - level: 1
+    text: You want one bucket per distinct key value, and each row bumps its bucket by one.
+  - level: 2
+    text: counts.get(value, 0) gives you the running tally, or 0 the first time a value appears, so you never need a separate seen check.
+  - level: 3
+    text: Loop over the rows and write counts[value] = counts.get(value, 0) + 1, then return counts.
+tests:
+  public:
+    - name: empty_log
+      input: {"rows": [], "key": "zone"}
+      expected: {}
+    - name: one_each
+      input: {"rows": [{"id": "P1", "zone": "A"}, {"id": "P2", "zone": "B"}], "key": "zone"}
+      expected: {"A": 1, "B": 1}
+    - name: repeated_zone
+      input: {"rows": [{"id": "P1", "zone": "A"}, {"id": "P2", "zone": "A"}, {"id": "P3", "zone": "B"}], "key": "zone"}
+      expected: {"A": 2, "B": 1}
+  validation:
+    - name: single_zone_many
+      input: {"rows": [{"zone": "north"}, {"zone": "north"}, {"zone": "north"}, {"zone": "north"}], "key": "zone"}
+      expected: {"north": 4}
+    - name: three_zones
+      input: {"rows": [{"zone": "A"}, {"zone": "B"}, {"zone": "C"}, {"zone": "B"}, {"zone": "C"}, {"zone": "C"}], "key": "zone"}
+      expected: {"A": 1, "B": 2, "C": 3}
+    - name: group_by_carrier
+      input: {"rows": [{"zone": "A", "carrier": "van-1"}, {"zone": "B", "carrier": "van-2"}, {"zone": "C", "carrier": "van-1"}], "key": "carrier"}
+      expected: {"van-1": 2, "van-2": 1}
+    - name: numeric_key_values
+      input: {"rows": [{"route": 7}, {"route": 7}, {"route": 3}], "key": "route"}
+      expected: {7: 2, 3: 1}
+explanation_markdown: |
+  Counting is the simplest aggregate: every row contributes exactly one tally
+  regardless of its other fields. The `counts.get(value, 0) + 1` idiom folds the
+  "first time I've seen this key" case into the same line as the update, so there
+  is no separate initialisation branch.
+
+  The grouped-by value can be any hashable - a string zone, a carrier name, or a
+  numeric route number - because you use `row[key]` directly as the dictionary
+  key. One pass over the rows makes this linear in the number of parcels.
+common_mistakes:
+  - Storing the whole row instead of a running integer count under each key.
+  - Forgetting the default in dict.get, which raises KeyError the first time a new zone appears.
+  - Overwriting counts[value] with 1 every time instead of incrementing the existing tally.

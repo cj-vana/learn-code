@@ -1,0 +1,96 @@
+id: exercise.library.iterators_generators.a10
+kind: exercise
+version: 1
+language: python
+title: Bakery Box Packer
+slug: iterators-generators-a10
+difficulty: hard
+concepts:
+  - python.iterators_generators
+  - concepts.grouping_aggregation
+prerequisites:
+  - python.iterators_generators
+  - python.lists
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.iterators_generators.a10
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original bakery box-packing scenario for a chunking generator that yields fixed-size groups with a partial final group.
+prompt_markdown: |
+  A bakery packs pastries into boxes that each hold a fixed number. Pastries come
+  off the line in order and get boxed as soon as a box fills; whatever is left at
+  the end goes into a smaller final box. Write `pack_boxes(spec)` where `spec` is a
+  dict with keys `"items"` (the list of pastries in order) and `"size"` (box
+  capacity, a positive integer). Return a **list of lists**: each inner list is one
+  box, full except possibly the last.
+
+  Write a **generator** that accumulates items and yields a box whenever it reaches
+  `size`, then yields any leftover items as a final partial box. Materialize with
+  `list()`.
+
+  For example, `pack_boxes({"items": [1, 2, 3, 4, 5], "size": 2})` returns
+  `[[1, 2], [3, 4], [5]]`.
+starter_code: |
+  def pack_boxes(spec):
+      # Generator: collect items into a box, yield it when full, yield leftovers at the end.
+      return []
+function_name: pack_boxes
+input_mode: function
+solution_sketch: A generator gathers items into a bucket, yields it once it reaches size and starts a fresh one, then yields a non-empty leftover bucket after the loop.
+sample_solution: |
+  def pack_boxes(spec):
+      def boxes(items, size):
+          bucket = []
+          for item in items:
+              bucket.append(item)
+              if len(bucket) == size:
+                  yield bucket
+                  bucket = []
+          if bucket:
+              yield bucket
+
+      return list(boxes(spec["items"], spec["size"]))
+hints:
+  - level: 1
+    text: Keep a growing bucket list; when it reaches the box size, yield it and start a brand-new bucket.
+  - level: 2
+    text: After the loop ends, a partly filled bucket may remain; yield it only if it is non-empty.
+  - level: 3
+    text: Append to bucket; when len(bucket) == size, yield bucket then set bucket = [] (a fresh list); finally, if bucket, yield it.
+tests:
+  public:
+    - name: partial_last
+      input: {items: [1, 2, 3, 4, 5], size: 2}
+      expected: [[1, 2], [3, 4], [5]]
+    - name: exact_fit
+      input: {items: [1, 2, 3, 4], size: 2}
+      expected: [[1, 2], [3, 4]]
+    - name: one_box
+      input: {items: [7, 8], size: 5}
+      expected: [[7, 8]]
+  validation:
+    - name: size_one
+      input: {items: [1, 2, 3], size: 1}
+      expected: [[1], [2], [3]]
+    - name: empty
+      input: {items: [], size: 3}
+      expected: []
+    - name: size_three
+      input: {items: [1, 2, 3, 4, 5, 6, 7], size: 3}
+      expected: [[1, 2, 3], [4, 5, 6], [7]]
+explanation_markdown: |
+  The generator carries a `bucket` list across iterations. Each item is appended,
+  and the moment the bucket reaches `size` it is yielded as a completed box and
+  replaced with a *fresh* empty list, so the next box starts clean. When the loop
+  ends, any items still in the bucket form a smaller final box, which is why the
+  post-loop `if bucket:` check matters, and why an empty input yields nothing at
+  all. Reassigning `bucket = []` (rather than clearing it in place) ensures each
+  yielded box keeps its own contents.
+common_mistakes:
+  - Clearing the bucket in place with bucket.clear() after yielding, which mutates the already-yielded box to empty.
+  - Forgetting the post-loop yield, dropping the final partial box.
+  - Yielding an empty leftover bucket when the items divide evenly, adding a stray [] to the output.

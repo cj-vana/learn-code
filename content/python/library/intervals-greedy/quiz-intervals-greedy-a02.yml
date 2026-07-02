@@ -1,0 +1,109 @@
+id: quiz.library.intervals_greedy.a02
+kind: quiz
+version: 1
+language: python
+title: Interval Code Under the Microscope
+slug: quiz-intervals-greedy-a02
+difficulty: medium
+concepts:
+  - patterns.intervals
+  - python.sorting
+prerequisites:
+  - patterns.intervals
+  - python.sorting
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.intervals_greedy.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax quiz on the sorting keys, comparisons, and off-by-one decisions inside interval-sweep Python code.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: |
+      Intervals are pairs like [start, end]. What does
+      `intervals.sort(key=lambda iv: iv[1])` arrange, and which algorithm wants it?
+    choices:
+      - Sorts by end time — the greedy "take the earliest finish" scheduler
+      - Sorts by start time — the merge-overlaps pass
+      - Sorts by duration — the shortest-job scheduler
+      - Sorts lexicographically by both fields at once
+    correct_choice: Sorts by end time — the greedy "take the earliest finish" scheduler
+    explanation: |
+      iv[1] is the end value. Earliest-finish greedy needs end-sorted intervals,
+      while merging wants start-sorted ones — mixing the two keys is the classic
+      interval bug.
+    concepts:
+      - python.sorting
+      - patterns.greedy
+  - id: q2
+    prompt: |
+      A merge loop keeps the current block as [cur_start, cur_end] and reads the
+      next start-sorted interval [s, e]. Which update correctly absorbs an
+      overlapping interval?
+    choices:
+      - cur_end = max(cur_end, e)
+      - cur_end = e
+      - cur_end = min(cur_end, e)
+      - cur_start = s
+    correct_choice: cur_end = max(cur_end, e)
+    explanation: |
+      An interval nested inside the current block has e < cur_end; assigning
+      cur_end = e would shrink the block and falsely re-open space for later
+      intervals. The max keeps the frontier honest.
+    concepts:
+      - patterns.intervals
+  - id: q3
+    prompt: |
+      Meetings [9, 10] and [10, 11] should NOT clash — a meeting ending at 10
+      frees the room for one starting at 10. Which overlap test encodes that?
+    choices:
+      - They clash only if s < cur_end (strict inequality)
+      - They clash only if s <= cur_end
+      - They clash only if s == cur_end
+      - They clash only if e > cur_end
+    correct_choice: They clash only if s < cur_end (strict inequality)
+    explanation: |
+      Half-open [start, end) semantics make touching endpoints compatible; using
+      <= would count back-to-back bookings as conflicts. Deciding open versus
+      closed endpoints FIRST is half of interval correctness.
+    concepts:
+      - patterns.intervals
+  - id: q4
+    prompt: |
+      A sweep builds events as (time, +1) for starts and (time, -1) for ends,
+      then sorts the tuples. With half-open intervals, why is it important that
+      (10, -1) sorts before (10, +1)?
+    choices:
+      - So a visitor leaving at 10 is counted out before one arriving at 10, keeping the peak honest
+      - Because Python cannot sort tuples with equal first elements
+      - So the running count can never go negative
+      - It is not important; either order gives the same peak
+    correct_choice: So a visitor leaving at 10 is counted out before one arriving at 10, keeping the peak honest
+    explanation: |
+      Tuple sorting is lexicographic and -1 < +1, so ends naturally process before
+      starts at the same instant — matching half-open semantics where a departure
+      at t frees space for an arrival at t.
+    concepts:
+      - patterns.intervals
+      - python.tuples
+  - id: q5
+    prompt: |
+      After sorting bookings by end time, the greedy loop is
+      `if s >= last_end: count += 1; last_end = e`. What does `last_end` track?
+    choices:
+      - The finish time of the most recently accepted booking
+      - The finish time of the last booking examined, accepted or not
+      - The latest end time seen anywhere in the input
+      - The earliest end time still unprocessed
+    correct_choice: The finish time of the most recently accepted booking
+    explanation: |
+      Only accepted bookings move the frontier; rejected ones are skipped
+      entirely. Updating last_end on every iteration — accepted or not — is the
+      bug that makes the greedy under-count.
+    concepts:
+      - patterns.greedy
+      - patterns.intervals

@@ -1,0 +1,154 @@
+id: exercise.library.decorators_closures.a07
+kind: exercise
+version: 1
+language: python
+title: Preserving Identity With functools.wraps
+slug: decorators-closures-a07
+difficulty: medium
+concepts:
+  - python.closures_decorators
+  - python.string_formatting
+prerequisites:
+  - python.closures_decorators
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.decorators_closures.a07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original coffee-bar probe registry that proves functools.wraps copies both __name__ and __doc__ onto the wrapper.
+prompt_markdown: |
+  When a decorator forgets `functools.wraps`, the wrapped function loses its
+  identity: its `__name__` becomes `"wrapper"` and its docstring disappears.
+  Your job is to write a decorator that preserves both.
+
+  Write a decorator `traced` that wraps a function without changing its behavior
+  but keeps its metadata. Several coffee-bar probe functions are already
+  decorated with `@traced` in the starter code. Finish `identity_of(name)`,
+  which looks up the decorated probe by `name` and returns the string
+  `"<__name__>/<__doc__>"`.
+
+  If `traced` uses `functools.wraps` correctly, `identity_of("pull")` returns
+  `"pull/Pull a shot of espresso."` rather than `"wrapper/None"`.
+starter_code: |
+  import functools
+
+
+  def traced(func):
+      # Wrap func without changing its behavior, but preserve its metadata.
+      def wrapper(*args, **kwargs):
+          return func(*args, **kwargs)
+      return wrapper
+
+
+  @traced
+  def pull():
+      """Pull a shot of espresso."""
+      return 1
+
+
+  @traced
+  def steam():
+      """Steam the milk."""
+      return 2
+
+
+  @traced
+  def grind():
+      """Grind the beans."""
+      return 3
+
+
+  @traced
+  def pour():
+      """Pour the latte art."""
+      return 4
+
+
+  def identity_of(name):
+      probes = {"pull": pull, "steam": steam, "grind": grind, "pour": pour}
+      probe = probes[name]
+      return f"{probe.__name__}/{probe.__doc__}"
+function_name: identity_of
+input_mode: function
+solution_sketch: Add @functools.wraps(func) to the wrapper so __name__ and __doc__ are copied from the original probe.
+sample_solution: |
+  import functools
+
+
+  def traced(func):
+      @functools.wraps(func)
+      def wrapper(*args, **kwargs):
+          return func(*args, **kwargs)
+      return wrapper
+
+
+  @traced
+  def pull():
+      """Pull a shot of espresso."""
+      return 1
+
+
+  @traced
+  def steam():
+      """Steam the milk."""
+      return 2
+
+
+  @traced
+  def grind():
+      """Grind the beans."""
+      return 3
+
+
+  @traced
+  def pour():
+      """Pour the latte art."""
+      return 4
+
+
+  def identity_of(name):
+      probes = {"pull": pull, "steam": steam, "grind": grind, "pour": pour}
+      probe = probes[name]
+      return f"{probe.__name__}/{probe.__doc__}"
+hints:
+  - level: 1
+    text: The wrapper currently reports its own name and no docstring; you need to copy the original function's metadata onto it.
+  - level: 2
+    text: functools.wraps is itself a decorator you apply to the inner wrapper, passing the original func.
+  - level: 3
+    text: Put @functools.wraps(func) directly above def wrapper so __name__ and __doc__ are copied from func.
+tests:
+  public:
+    - name: pull
+      input: pull
+      expected: pull/Pull a shot of espresso.
+    - name: steam
+      input: steam
+      expected: steam/Steam the milk.
+    - name: grind
+      input: grind
+      expected: grind/Grind the beans.
+  validation:
+    - name: pour
+      input: pour
+      expected: pour/Pour the latte art.
+    - name: pull_again
+      input: pull
+      expected: pull/Pull a shot of espresso.
+    - name: steam_again
+      input: steam
+      expected: steam/Steam the milk.
+explanation_markdown: |
+  `functools.wraps(func)` is a decorator applied to your inner `wrapper`. It
+  copies `__name__`, `__doc__`, `__module__`, and other attributes from the
+  original function onto the wrapper, so introspection and tracebacks still see
+  the true identity. Without it, every decorated probe would report
+  `"wrapper/None"` and the lookup would return the wrong string. Preserving
+  metadata is why `wraps` appears in nearly every well-behaved decorator.
+common_mistakes:
+  - Leaving the wrapper undecorated, so probe.__name__ is "wrapper" and probe.__doc__ is None.
+  - Calling functools.wraps without passing func, so it has nothing to copy from.
+  - Copying only the name by hand and forgetting the docstring.

@@ -1,0 +1,107 @@
+id: exercise.library.heaps_topk.a08
+kind: exercise
+version: 1
+language: python
+title: The Latency Median Service
+slug: heaps-topk-a08
+difficulty: hard
+concepts:
+  - patterns.heap_topk
+  - python.heapq_bisect
+  - patterns.simulation
+prerequisites:
+  - python.heapq_bisect
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.heaps_topk.a08
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original two-heap running-median exercise driven by an add/query command stream from a latency monitor.
+prompt_markdown: |
+  A latency monitor accepts a stream of commands. Each command is a list: either
+  `["add", x]` to record an integer latency sample `x`, or `["median"]` to ask for
+  the current median of everything added so far.
+
+  Write `median_service(commands)` that returns a list with one integer per
+  `"median"` command, in order. Use the **lower median** convention: with an odd
+  number of samples it is the middle value; with an even number it is the smaller
+  of the two middle values. A `"median"` command never appears before at least one
+  `"add"`.
+
+  Keep the samples split across **two heaps** — a max-heap for the lower half and
+  a min-heap for the upper half — so each query is answered from a heap top rather
+  than by re-sorting.
+starter_code: |
+  import heapq
+
+
+  def median_service(commands):
+      return []
+function_name: median_service
+input_mode: function
+solution_sketch: Maintain a negated max-heap (lower half) and a min-heap (upper half) kept balanced with the lower half never smaller; the lower median is the top of the lower half.
+sample_solution: |
+  import heapq
+
+
+  def median_service(commands):
+      low = []   # max-heap via negation: smaller half
+      high = []  # min-heap: larger half
+      out = []
+      for command in commands:
+          if command[0] == "add":
+              x = command[1]
+              if low and x > -low[0]:
+                  heapq.heappush(high, x)
+              else:
+                  heapq.heappush(low, -x)
+              if len(low) > len(high) + 1:
+                  heapq.heappush(high, -heapq.heappop(low))
+              elif len(high) > len(low):
+                  heapq.heappush(low, -heapq.heappop(high))
+          else:
+              out.append(-low[0])
+      return out
+hints:
+  - level: 1
+    text: Split the data so the smaller half lives in a max-heap and the larger half in a min-heap; the median sits at a boundary top.
+  - level: 2
+    text: Route each new sample to a half by comparing it against the current lower-half maximum, then rebalance so the halves differ in size by at most one.
+  - level: 3
+    text: Keep the lower half equal to or one larger than the upper half; then the lower median is always -low[0] for a "median" command.
+tests:
+  public:
+    - name: odd_then_even
+      input: [[add, 5], [median], [add, 2], [median], [add, 8], [median]]
+      expected: [5, 2, 5]
+    - name: single_add
+      input: [[add, 7], [median]]
+      expected: [7]
+    - name: even_lower_of_middles
+      input: [[add, 1], [add, 4], [median]]
+      expected: [1]
+  validation:
+    - name: interleaved
+      input: [[add, 5], [add, 2], [add, 8], [add, 1], [median]]
+      expected: [2]
+    - name: duplicates
+      input: [[add, 3], [add, 3], [add, 3], [median]]
+      expected: [3]
+    - name: many_queries
+      input: [[add, 10], [median], [add, 4], [add, 6], [median], [add, 4], [median]]
+      expected: [10, 6, 4]
+explanation_markdown: |
+  Two heaps turn "give me the middle" into "peek at a heap top." The lower half is
+  a max-heap (stored negated) so its top is the largest small value; the upper half
+  is a min-heap so its top is the smallest large value. By keeping the lower half
+  equal in size to the upper half or exactly one larger, the lower median is always
+  `-low[0]`. Each `"add"` routes the value to a half and then does at most one
+  cross-heap move to restore the size invariant, so every command is O(log n),
+  decisively better than re-sorting on each query.
+common_mistakes:
+  - Letting the two halves drift apart in size, so the top no longer marks the median.
+  - Comparing the newcomer against the wrong heap top when deciding which half it joins.
+  - Answering a "median" from the upper heap, giving the higher median instead of the required lower one.

@@ -1,0 +1,86 @@
+id: lesson.library.collections_itertools.a04
+kind: lesson
+version: 1
+language: python
+title: Combinators From itertools
+slug: lesson-collections-itertools-a04
+difficulty: medium
+concepts:
+  - python.itertools_module
+prerequisites:
+  - python.lists
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.collections_itertools.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original tour of four itertools combinators grounded in fresh enumeration and streaming scenarios.
+body_markdown: |
+  `itertools` is a toolbox of lazy building blocks that combine sequences without
+  writing nested loops by hand. Four of them cover an enormous amount of ground.
+
+  **groupby** collapses *consecutive* equal items into groups. The crucial word
+  is consecutive: `groupby` never reorders anything, so you almost always sort by
+  the same key first. It yields `(key, group)` pairs, and the group is a lazy
+  iterator you usually turn into a list.
+
+  ```python
+  from itertools import groupby
+
+  strip = ["r", "r", "g", "g", "g", "r"]
+  runs = [(color, len(list(g))) for color, g in groupby(strip)]
+  # [("r", 2), ("g", 3), ("r", 1)]  -- run-length encoding
+  ```
+
+  **product** is the cartesian product: every combination of one item from each
+  input, like nested `for` loops flattened out. `product(*lists)` even spreads a
+  list of lists, which is perfect for "every way to roll these dice".
+
+  ```python
+  from itertools import product
+
+  for size, color in product(["A4", "A3"], ["red", "blue"]):
+      ...   # A4/red, A4/blue, A3/red, A3/blue -- leftmost varies slowest
+  ```
+
+  **combinations** picks unordered subsets of a fixed size -- `(a, b)` and
+  `(b, a)` count once -- while **permutations** keeps order, so both arrangements
+  appear. Use combinations when position does not matter (which two sessions to
+  pair) and permutations when it does (what order to visit stops).
+
+  ```python
+  from itertools import combinations, permutations
+
+  list(combinations([1, 2, 3], 2))   # [(1,2), (1,3), (2,3)]
+  list(permutations([1, 2, 3], 2))   # [(1,2), (2,1), (1,3), (3,1), (2,3), (3,2)]
+  ```
+
+  **chain** and **islice** work on streams. `chain.from_iterable` glues several
+  sequences into one continuous stream without copying them into a big list, and
+  `islice(stream, start, stop)` takes a slice of any iterator -- the lazy cousin
+  of `seq[start:stop]` that works even on things you cannot index.
+
+  ```python
+  from itertools import chain, islice
+
+  streams = [[1, 2, 3], [4, 5], [6, 7, 8]]
+  merged = chain.from_iterable(streams)      # 1 2 3 4 5 6 7 8 ...
+  window = list(islice(merged, 2, 6))        # [3, 4, 5, 6]
+  ```
+
+  Because these tools are lazy, they compose: chain several logs, islice a page
+  out of the middle, groupby the runs. The payoff is that a nest of manual loops
+  and index bookkeeping becomes a short, readable pipeline.
+checkpoints:
+  - question: Why must you usually sort your data before calling `groupby` on a key?
+    answer: '`groupby` only groups consecutive equal keys, so unsorted data would split the same key into several separate groups.'
+    explanation: Unlike a SQL GROUP BY, itertools.groupby walks the sequence once and starts a new group whenever the key changes, so identical keys must already be adjacent.
+  - question: What is the difference between `combinations([1,2,3], 2)` and `permutations([1,2,3], 2)`?
+    answer: combinations yields unordered pairs (3 of them), while permutations yields ordered pairs (6 of them), counting `(1,2)` and `(2,1)` separately.
+    explanation: Use combinations when order is irrelevant and permutations when the arrangement itself matters.
+  - question: What does `islice(chain.from_iterable([[1,2],[3,4,5]]), 1, 3)` produce?
+    answer: The items `[2, 3]` -- the merged stream is 1,2,3,4,5 and islice takes indices 1 up to (not including) 3.
+    explanation: chain flattens the two lists lazily and islice takes a positional slice of that iterator, just like `seq[1:3]` but for any iterable.

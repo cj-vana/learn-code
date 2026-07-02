@@ -1,0 +1,95 @@
+id: lesson.library.oop_classes.a03
+kind: lesson
+version: 1
+language: python
+title: Dunder Methods and Dataclasses for Value Objects
+slug: lesson-oop-classes-a03
+difficulty: medium
+concepts:
+  - python.dataclasses_dunder
+  - python.classes
+prerequisites:
+  - python.classes
+  - python.sorting
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.oop_classes.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original observatory star-catalogue scenario teaching __repr__, __eq__, __lt__, and dataclasses together.
+body_markdown: |
+  Some objects are really just *values*: two of them with the same fields should
+  count as equal, print readably, and sort sensibly. Think of entries in an
+  observatory's star catalogue, each holding a name and a brightness. Python lets
+  you teach a class how to behave with the built-in operators by defining
+  **dunder methods** -- specially named methods wrapped in double underscores.
+
+  Three dunders matter most for value objects. `__repr__` controls what
+  `repr(obj)` and the interactive echo show. `__eq__` decides what `==` means.
+  `__lt__` ("less than") powers `<` and, crucially, `sorted()`.
+
+  ```python
+  class Star:
+      def __init__(self, name, magnitude):
+          self.name = name
+          self.magnitude = magnitude
+
+      def __repr__(self):
+          return f"Star({self.name!r}, {self.magnitude})"
+
+      def __eq__(self, other):
+          return (self.name, self.magnitude) == (other.name, other.magnitude)
+
+      def __lt__(self, other):
+          return self.magnitude < other.magnitude
+  ```
+
+  By default, `==` on custom objects checks identity -- whether they are the very
+  same object in memory. Defining `__eq__` overrides that so two distinct `Star`
+  objects with matching fields are equal. If you define `__eq__` and also want to
+  put objects in a `set` or use them as `dict` keys, define `__hash__` too, usually
+  as `hash((self.name, self.magnitude))`, so that equal objects share a hash.
+
+  With `__lt__` in place, sorting just works, because `sorted()` compares items
+  pairwise with `<`:
+
+  ```python
+  catalogue = [Star("Vega", 0.0), Star("Rigel", 0.1), Star("Sirius", -1.5)]
+  brightest_first = sorted(catalogue)
+  print(brightest_first[0])   # Star('Sirius', -1.5)
+  ```
+
+  Writing all four dunders by hand is repetitive. The `dataclasses` module
+  generates them for you. Decorate a class with `@dataclass`, list its fields as
+  annotations, and Python writes `__init__`, `__repr__`, and `__eq__` automatically:
+
+  ```python
+  from dataclasses import dataclass
+
+  @dataclass
+  class Star:
+      name: str
+      magnitude: float
+  ```
+
+  Now `Star("Vega", 0.0) == Star("Vega", 0.0)` is `True` and `repr` is tidy, with
+  no boilerplate. Add `order=True` to also get comparison dunders based on field
+  order, or `frozen=True` to make instances immutable and hashable. Dataclasses
+  are ideal when a function needs to bundle a few related values and hand them back
+  as a clean, comparable result -- the `dataclasses.asdict` helper even converts an
+  instance into a plain dictionary when you need one. Reach for a plain class with
+  hand-written dunders when you need custom logic, and for a dataclass when you just
+  want a well-behaved value object with minimal ceremony.
+checkpoints:
+  - question: What does defining __eq__ change about how == behaves for a class?
+    answer: It replaces the default identity check so two different objects are considered equal when their compared fields match.
+    explanation: Without __eq__, == is True only for the same object in memory; __eq__ lets you define value-based equality.
+  - question: Why does sorted() work once you define __lt__?
+    answer: Because sorted compares elements pairwise using the < operator, which __lt__ implements.
+    explanation: Providing __lt__ tells Python how to order any two instances, which is all sorted needs.
+  - question: Which methods does the @dataclass decorator generate for you by default?
+    answer: It generates __init__, __repr__, and __eq__ from the annotated fields.
+    explanation: You can opt into comparison methods with order=True and immutability with frozen=True, but the three basics come for free.

@@ -1,0 +1,107 @@
+id: exercise.library.oop_classes.a12
+kind: exercise
+version: 1
+language: python
+title: Total Time the Observatory Was Booked
+slug: oop-classes-a12
+difficulty: hard
+concepts:
+  - python.dataclasses_dunder
+  - python.classes
+  - patterns.intervals
+prerequisites:
+  - python.classes
+  - python.sorting
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.oop_classes.a12
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original telescope-booking scenario using __lt__ to sort Booking objects before merging overlaps to measure covered time.
+prompt_markdown: |
+  An observatory's single telescope is reserved in bookings measured in whole
+  minutes past midnight. Bookings can overlap or touch, and the director wants to
+  know the total number of minutes the telescope was reserved for at least one
+  booking -- counting any overlapping stretch only once.
+
+  Complete `booked_minutes(bookings)`, where `bookings` is a list of `[start, end]`
+  pairs with `start < end`. Inside the function, define a `Booking` class that
+  stores a start and end and defines `__lt__` so bookings sort by start time. Sort
+  your `Booking` objects, merge any that overlap or touch (an end equal to the next
+  start joins them), and return the total covered length in minutes as an integer.
+starter_code: |
+  def booked_minutes(bookings):
+      # Define a Booking class with __lt__ (order by start), sort the
+      # bookings, merge overlaps, and total the covered minutes.
+      return 0
+function_name: booked_minutes
+input_mode: function
+solution_sketch: Sort Booking objects by start via __lt__, sweep once merging overlapping or touching ranges, and sum their lengths.
+sample_solution: |
+  def booked_minutes(bookings):
+      class Booking:
+          def __init__(self, start, end):
+              self.start = start
+              self.end = end
+
+          def __lt__(self, other):
+              return self.start < other.start
+
+      objs = sorted(Booking(start, end) for start, end in bookings)
+      if not objs:
+          return 0
+
+      total = 0
+      cur_start = objs[0].start
+      cur_end = objs[0].end
+      for booking in objs[1:]:
+          if booking.start <= cur_end:
+              cur_end = max(cur_end, booking.end)
+          else:
+              total += cur_end - cur_start
+              cur_start = booking.start
+              cur_end = booking.end
+      total += cur_end - cur_start
+      return total
+hints:
+  - level: 1
+    text: Sorting the bookings by start time (via __lt__) lets you merge overlaps in a single left-to-right sweep.
+  - level: 2
+    text: Track a current merged range; if the next booking starts at or before the current end, extend the end to the larger of the two, otherwise bank the finished range and start a new one.
+  - level: 3
+    text: After the loop remember to add the final open range; a booking whose start <= cur_end (touching counts) merges, otherwise total += cur_end - cur_start and reset.
+tests:
+  public:
+    - name: overlap_and_gap
+      input: [[1, 4], [2, 6], [8, 10]]
+      expected: 7
+    - name: empty
+      input: []
+      expected: 0
+    - name: single
+      input: [[3, 9]]
+      expected: 6
+  validation:
+    - name: touching_merges
+      input: [[1, 3], [3, 5]]
+      expected: 4
+    - name: nested_inside
+      input: [[0, 10], [2, 4], [5, 6]]
+      expected: 10
+    - name: unsorted_input
+      input: [[8, 9], [1, 2], [1, 5]]
+      expected: 5
+explanation_markdown: |
+  Merging overlaps only works if the ranges are in order, so the class defines
+  `__lt__` to sort `Booking` objects by start time. After sorting, one sweep keeps a
+  running merged range: a booking that starts at or before the current end overlaps
+  (or touches) and extends it, while a later start banks the finished range and
+  opens a new one. Summing each finished range -- including the last one after the
+  loop -- gives the total covered minutes, counting shared time once.
+common_mistakes:
+  - Summing every booking length directly, which double-counts overlapping minutes.
+  - Using a strict start < cur_end test, so exactly touching bookings are wrongly treated as a gap.
+  - Forgetting to add the final merged range after the loop ends, dropping the last stretch.

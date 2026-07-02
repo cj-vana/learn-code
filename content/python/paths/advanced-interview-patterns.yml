@@ -1,0 +1,112 @@
+id: path.skill.advanced_interview_patterns
+kind: path
+path_type: skill
+version: 1
+language: python
+title: Advanced Interview Patterns
+slug: advanced-interview-patterns
+description: 'The four classic families most prep skips: linked lists, trees, graphs, and heaps/top-k,
+  simulated with plain data structures.'
+outcomes:
+- Reverse, merge, and cycle-check linked structures
+- Traverse trees and graphs in every standard order
+- Solve top-k and k-way-merge problems with heaps
+estimated_hours: 17
+review_status: published
+source_status: original
+provenance:
+  brief_id: brief.paths.v1
+  author: agent
+  generated_at: '2026-07-02T18:00:00Z'
+  inspiration_sources: []
+  originality_notes: Curated ordering over the repository's original content bank; no external syllabus
+    copied.
+units:
+- id: unit.linked_lists_patterns
+  title: Linked Lists
+  description: Lessons, drills, and quizzes for linked lists.
+  items:
+  - lesson.library.linked_lists_patterns.a01
+  - lesson.library.linked_lists_patterns.a02
+  - lesson.library.linked_lists_patterns.a03
+  - exercise.library.linked_lists_patterns.a01
+  - exercise.library.linked_lists_patterns.a02
+  - exercise.library.linked_lists_patterns.a03
+  - exercise.library.linked_lists_patterns.a04
+  - exercise.library.linked_lists_patterns.a05
+  - exercise.library.linked_lists_patterns.a06
+  - exercise.library.linked_lists_patterns.a07
+  - exercise.library.linked_lists_patterns.a08
+  - exercise.library.linked_lists_patterns.a09
+  - exercise.library.linked_lists_patterns.a10
+  - exercise.library.linked_lists_patterns.a11
+  - exercise.library.linked_lists_patterns.a12
+  - quiz.library.linked_lists_patterns.a01
+  - quiz.library.linked_lists_patterns.a02
+- id: unit.trees_lite
+  title: Trees
+  description: Lessons, drills, and quizzes for trees.
+  items:
+  - lesson.library.trees_lite.a01
+  - lesson.library.trees_lite.a02
+  - lesson.library.trees_lite.a03
+  - lesson.library.trees_lite.a04
+  - exercise.library.trees_lite.a01
+  - exercise.library.trees_lite.a02
+  - exercise.library.trees_lite.a03
+  - exercise.library.trees_lite.a04
+  - exercise.library.trees_lite.a05
+  - exercise.library.trees_lite.a06
+  - exercise.library.trees_lite.a07
+  - exercise.library.trees_lite.a08
+  - exercise.library.trees_lite.a09
+  - exercise.library.trees_lite.a10
+  - exercise.library.trees_lite.a11
+  - exercise.library.trees_lite.a12
+  - quiz.library.trees_lite.a01
+  - quiz.library.trees_lite.a02
+  - quiz.library.trees_lite.a03
+- id: unit.graphs_lite
+  title: Graphs
+  description: Lessons, drills, and quizzes for graphs.
+  items:
+  - lesson.library.graphs_lite.a01
+  - lesson.library.graphs_lite.a02
+  - lesson.library.graphs_lite.a03
+  - lesson.library.graphs_lite.a04
+  - exercise.library.graphs_lite.a01
+  - exercise.library.graphs_lite.a02
+  - exercise.library.graphs_lite.a03
+  - exercise.library.graphs_lite.a04
+  - exercise.library.graphs_lite.a05
+  - exercise.library.graphs_lite.a06
+  - exercise.library.graphs_lite.a07
+  - exercise.library.graphs_lite.a08
+  - exercise.library.graphs_lite.a09
+  - exercise.library.graphs_lite.a10
+  - exercise.library.graphs_lite.a11
+  - exercise.library.graphs_lite.a12
+  - quiz.library.graphs_lite.a01
+  - quiz.library.graphs_lite.a02
+  - quiz.library.graphs_lite.a03
+- id: unit.heaps_topk
+  title: Heaps & Top-K
+  description: Lessons, drills, and quizzes for heaps & top-k.
+  items:
+  - lesson.library.heaps_topk.a01
+  - lesson.library.heaps_topk.a02
+  - lesson.library.heaps_topk.a03
+  - exercise.library.heaps_topk.a01
+  - exercise.library.heaps_topk.a02
+  - exercise.library.heaps_topk.a03
+  - exercise.library.heaps_topk.a04
+  - exercise.library.heaps_topk.a05
+  - exercise.library.heaps_topk.a06
+  - exercise.library.heaps_topk.a07
+  - exercise.library.heaps_topk.a08
+  - exercise.library.heaps_topk.a09
+  - exercise.library.heaps_topk.a10
+  - exercise.library.heaps_topk.a11
+  - exercise.library.heaps_topk.a12
+  - quiz.library.heaps_topk.a01
+  - quiz.library.heaps_topk.a02

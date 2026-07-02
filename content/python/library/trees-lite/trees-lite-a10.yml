@@ -1,0 +1,103 @@
+id: exercise.library.trees_lite.a10
+kind: exercise
+version: 1
+language: python
+title: Where Two Delivery Routes Rejoin
+slug: trees-lite-a10
+difficulty: hard
+concepts:
+  - patterns.tree_traversal
+  - patterns.recursion
+  - python.trees_as_data
+prerequisites:
+  - patterns.dfs
+  - python.trees_as_data
+estimated_time_minutes: 16
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.trees_lite.a10
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original lowest-common-ancestor drill framed as the last shared depot of two delivery routes, input packed in a dict.
+prompt_markdown: |
+  Two delivery vans start at the central depot and drive outward down a branching
+  road network, each ending at its own value. The *last depot they share* - the
+  deepest fork that both destinations hang beneath - is their lowest common
+  ancestor. A node counts as an ancestor of itself.
+
+  The network is a binary tree of nested dictionaries (`{"value", "left",
+  "right"}`, empty branch is `None`). Write `shared_depot(data)` where `data` is a
+  dict with:
+
+  - `data["tree"]` - the tree (never empty for this task)
+  - `data["a"]` and `data["b"]` - two distinct values, both guaranteed present
+
+  Return the *value* of their lowest common ancestor. Do not assume the tree is a
+  search tree - values are not ordered.
+starter_code: |
+  def shared_depot(data):
+      # data = {"tree": <node>, "a": <value>, "b": <value>}
+      # Return the value of the lowest common ancestor of a and b.
+      return None
+function_name: shared_depot
+input_mode: function
+solution_sketch: Recurse both sides; a node whose left and right searches each find one target is the meeting point, otherwise bubble up the side that found something.
+sample_solution: |
+  def shared_depot(data):
+      a = data["a"]
+      b = data["b"]
+
+      def find(node):
+          if node is None or node["value"] in (a, b):
+              return node
+          left = find(node["left"])
+          right = find(node["right"])
+          if left is not None and right is not None:
+              return node
+          return left if left is not None else right
+
+      return find(data["tree"])["value"]
+hints:
+  - level: 1
+    text: Search both subtrees for the two targets and watch where they first split apart.
+  - level: 2
+    text: If one target is found in a node's left subtree and the other in its right, that node is the answer.
+  - level: 3
+    text: Return the node itself when it equals a or b; if both child searches come back non-None the current node is the LCA, otherwise return whichever side found a hit.
+tests:
+  public:
+    - name: split_left_right
+      input: {tree: {value: 5, left: {value: 3, left: {value: 2, left: null, right: null}, right: {value: 4, left: null, right: null}}, right: {value: 8, left: null, right: {value: 9, left: null, right: null}}}, a: 2, b: 9}
+      expected: 5
+    - name: same_subtree
+      input: {tree: {value: 5, left: {value: 3, left: {value: 2, left: null, right: null}, right: {value: 4, left: null, right: null}}, right: {value: 8, left: null, right: {value: 9, left: null, right: null}}}, a: 2, b: 4}
+      expected: 3
+    - name: ancestor_is_target
+      input: {tree: {value: 5, left: {value: 3, left: {value: 2, left: null, right: null}, right: {value: 4, left: null, right: null}}, right: {value: 8, left: null, right: {value: 9, left: null, right: null}}}, a: 8, b: 9}
+      expected: 8
+  validation:
+    - name: parent_and_child
+      input: {tree: {value: 5, left: {value: 3, left: {value: 2, left: null, right: null}, right: {value: 4, left: null, right: null}}, right: {value: 8, left: null, right: {value: 9, left: null, right: null}}}, a: 3, b: 4}
+      expected: 3
+    - name: cross_deep
+      input: {tree: {value: 5, left: {value: 3, left: {value: 2, left: null, right: null}, right: {value: 4, left: null, right: null}}, right: {value: 8, left: null, right: {value: 9, left: null, right: null}}}, a: 4, b: 9}
+      expected: 5
+    - name: left_pair
+      input: {tree: {value: 5, left: {value: 3, left: {value: 2, left: null, right: null}, right: {value: 4, left: null, right: null}}, right: {value: 8, left: null, right: {value: 9, left: null, right: null}}}, a: 2, b: 3}
+      expected: 3
+explanation_markdown: |
+  The general-tree LCA is one elegant recursion. `find` returns a node whenever it
+  contains either target below it (or is a target itself). At each node you look
+  left and right: if *both* sides come back non-empty, the two targets diverge
+  right here, so this node is their lowest common ancestor. If only one side
+  reports a hit, the answer lies entirely on that side, so you pass it upward.
+  The `ancestor_is_target` case shows why "a node is its own ancestor" matters -
+  searching for 8 and 9 stops at 8 the moment it is reached, since 9 already
+  hangs beneath it. Because the recursion touches each node at most once, it runs
+  in O(n) without needing the values to be sorted.
+common_mistakes:
+  - Assuming a search tree and comparing values to pick a direction, which breaks on unordered trees.
+  - Returning the node object instead of its value, so the exact-match grader fails.
+  - Forgetting that a target found at the current node already covers its whole subtree.

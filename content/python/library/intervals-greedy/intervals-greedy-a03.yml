@@ -1,0 +1,93 @@
+id: exercise.library.intervals_greedy.a03
+kind: exercise
+version: 1
+language: python
+title: Collapse the Greenhouse Watering Windows
+slug: intervals-greedy-a03
+difficulty: medium
+concepts:
+  - patterns.intervals
+  - python.sorting
+prerequisites:
+  - python.lists
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.intervals_greedy.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original greenhouse-irrigation framing for the classic sort-then-sweep interval merge.
+prompt_markdown: |
+  A greenhouse controller logs every stretch of time the misters run as a
+  `[start, end]` window. Overlapping windows waste log space, so write
+  `merge_windows(windows)` that returns the windows collapsed into the fewest
+  continuous blocks, sorted by start time. Each block is a `[start, end]` list.
+
+  Windows that overlap merge into one. Windows that only touch at an endpoint
+  (`[1, 3]` and `[3, 5]`) are back to back and stay **separate**. An empty log
+  returns `[]`.
+starter_code: |
+  def merge_windows(windows):
+      return []
+function_name: merge_windows
+input_mode: function
+solution_sketch: Sort by start, then sweep, extending the current block whenever the next window starts before it ends.
+sample_solution: |
+  def merge_windows(windows):
+      if not windows:
+          return []
+      ordered = sorted(windows)
+      merged = [list(ordered[0])]
+      for start, end in ordered[1:]:
+          last = merged[-1]
+          if start < last[1]:
+              last[1] = max(last[1], end)
+          else:
+              merged.append([start, end])
+      return merged
+hints:
+  - level: 1
+    text: Sort the windows by start time so any window that can merge with the current block comes next.
+  - level: 2
+    text: Keep a list of merged blocks; for each window either extend the last block or start a new one.
+  - level: 3
+    text: Extend when start < last_end using last_end = max(last_end, end); use strict < so touching windows stay separate.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: two_overlap
+      input: [[1, 4], [2, 5]]
+      expected: [[1, 5]]
+    - name: back_to_back_kept
+      input: [[1, 3], [3, 5]]
+      expected: [[1, 3], [3, 5]]
+  validation:
+    - name: unsorted_chain
+      input: [[13, 14], [1, 5], [4, 8]]
+      expected: [[1, 8], [13, 14]]
+    - name: nested_window
+      input: [[1, 10], [3, 4], [5, 6]]
+      expected: [[1, 10]]
+    - name: no_merges
+      input: [[7, 8], [1, 2], [4, 5]]
+      expected: [[1, 2], [4, 5], [7, 8]]
+    - name: cascading
+      input: [[1, 3], [2, 6], [5, 9], [12, 13]]
+      expected: [[1, 9], [12, 13]]
+explanation_markdown: |
+  Sorting by start time guarantees that the only block a new window could join
+  is the one you are currently building, so a single sweep suffices. You seed
+  the result with the first window and, for each later one, ask whether it starts
+  before the current block ends. If it does, you stretch the block's end to
+  `max(current_end, new_end)` — the `max` is essential so a window nested inside
+  the block (like `[3, 4]` within `[1, 10]`) does not shrink it. If it does not,
+  the window opens a fresh block. The strict `<` keeps back-to-back windows
+  apart, matching the greenhouse's logging rule.
+common_mistakes:
+  - Assigning last_end = end instead of max(last_end, end), which shrinks the block when a nested window has a smaller end.
+  - Forgetting to sort, so windows that belong together are never adjacent during the sweep.
+  - Merging on start <= last_end, which incorrectly fuses back-to-back windows.

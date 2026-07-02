@@ -1,0 +1,106 @@
+id: quiz.library.graphs_lite.a01
+kind: quiz
+version: 1
+language: python
+title: Choosing the Right Graph Technique
+slug: quiz-graphs-lite-a01
+difficulty: medium
+concepts:
+  - patterns.graph_traversal
+  - patterns.dfs
+  - patterns.queue_bfs
+prerequisites: []
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.graphs_lite.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original scenario-to-technique matching questions written for this area.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      You must return the fewest number of hops between two stations on a
+      transit map where every hop counts the same. Which technique fits best?
+    choices:
+      - Breadth-first search from the start station
+      - Depth-first search from the start station
+      - Topological sort of the stations
+      - Sorting the stations alphabetically
+    correct_choice: Breadth-first search from the start station
+    explanation: |
+      On an unweighted graph BFS reaches every node by a shortest path, so the
+      first time it touches the goal gives the minimum hop count. DFS may reach
+      the goal by a longer route first.
+    concepts:
+      - patterns.queue_bfs
+      - patterns.graph_traversal
+  - id: q2
+    prompt: |
+      A build system has steps with "must run before" dependencies and you need a
+      full order to run them in, or proof that no order exists. Which technique
+      fits best?
+    choices:
+      - Topological sort of the dependency graph
+      - Breadth-first shortest path
+      - Counting connected components
+      - Two-colouring the graph
+    correct_choice: Topological sort of the dependency graph
+    explanation: |
+      A topological sort linearises a directed acyclic graph so every dependency
+      points forward, and it reports impossibility exactly when a cycle exists.
+    concepts:
+      - patterns.graph_traversal
+  - id: q3
+    prompt: |
+      You need to count how many separate clusters of connected sensors exist,
+      where isolated sensors count as clusters of one. Which technique fits best?
+    choices:
+      - Run a traversal from each unvisited node and count the fresh starts
+      - Sort the sensors and count duplicates
+      - Breadth-first search once from a single sensor
+      - Detect a cycle in the sensor graph
+    correct_choice: Run a traversal from each unvisited node and count the fresh starts
+    explanation: |
+      Each time the outer loop finds a node no traversal has reached yet, it has
+      found a new connected component, so the number of fresh starts is the count.
+    concepts:
+      - patterns.graph_traversal
+      - patterns.dfs
+  - id: q4
+    prompt: |
+      A contamination begins in several cells of a grid at once and you must find
+      how many minutes until it reaches every reachable cell. Which technique fits
+      best?
+    choices:
+      - Multi-source breadth-first search seeded with every starting cell
+      - Depth-first search from one cell
+      - Topological sort of the grid
+      - Binary search on the minute count
+    correct_choice: Multi-source breadth-first search seeded with every starting cell
+    explanation: |
+      Seeding the BFS queue with all sources at distance zero spreads outward in
+      simultaneous rings, and the last cell reached gives the total time.
+    concepts:
+      - patterns.queue_bfs
+      - patterns.grid_traversal
+  - id: q5
+    prompt: |
+      You want to know whether a set of clashing pairs can be split into exactly
+      two groups with no clash inside either group. Which technique fits best?
+    choices:
+      - Two-colour the graph with breadth-first search and check for conflicts
+      - Topological sort the clash graph
+      - Count the edges and divide by two
+      - Find the shortest path between every pair
+    correct_choice: Two-colour the graph with breadth-first search and check for conflicts
+    explanation: |
+      The split is possible exactly when the graph is bipartite; a BFS that
+      assigns alternating colours succeeds unless it finds an edge joining two
+      same-coloured nodes (an odd cycle).
+    concepts:
+      - patterns.queue_bfs
+      - patterns.graph_traversal

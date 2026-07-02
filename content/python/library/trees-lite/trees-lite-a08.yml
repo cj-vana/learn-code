@@ -1,0 +1,96 @@
+id: exercise.library.trees_lite.a08
+kind: exercise
+version: 1
+language: python
+title: Auditing a Sorted Filing System
+slug: trees-lite-a08
+difficulty: hard
+concepts:
+  - patterns.tree_traversal
+  - python.trees_as_data
+  - patterns.recursion
+prerequisites:
+  - patterns.dfs
+  - patterns.binary_search
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.trees_lite.a08
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original BST-validation drill built around the bounds-not-parents pitfall, themed as auditing a filing system.
+prompt_markdown: |
+  An archivist claims every drawer in a filing system obeys the search-tree rule:
+  at every node, *all* values in the left subtree are strictly smaller and *all*
+  values in the right subtree are strictly larger. You must audit that claim.
+
+  The system is a binary tree of nested dictionaries (`{"value", "left",
+  "right"}`, empty branch is `None`). Write `is_valid_filing(tree)` returning
+  `True` if the whole tree is a valid binary search tree (no duplicates allowed)
+  and `False` otherwise. An empty tree is valid.
+
+  Beware the classic trap: it is *not* enough to check each node against its
+  parent. A node must respect every ancestor above it.
+starter_code: |
+  def is_valid_filing(tree):
+      # Return True if tree is a strictly-ordered binary search tree.
+      return True
+function_name: is_valid_filing
+input_mode: function
+solution_sketch: Recurse with a (low, high) open interval, tightening the high bound on left moves and the low bound on right moves.
+sample_solution: |
+  def is_valid_filing(tree, low=None, high=None):
+      if tree is None:
+          return True
+      value = tree["value"]
+      if low is not None and value <= low:
+          return False
+      if high is not None and value >= high:
+          return False
+      return (
+          is_valid_filing(tree["left"], low, value)
+          and is_valid_filing(tree["right"], value, high)
+      )
+hints:
+  - level: 1
+    text: Comparing a node only to its immediate parent misses violations that span several levels.
+  - level: 2
+    text: Carry an allowed (low, high) range into each recursive call; going left lowers the ceiling, going right raises the floor.
+  - level: 3
+    text: A node must satisfy low < value < high; recurse left with high = value and right with low = value, using <= and >= to reject duplicates.
+tests:
+  public:
+    - name: empty
+      input: null
+      expected: true
+    - name: single
+      input: {value: 7, left: null, right: null}
+      expected: true
+    - name: valid_tree
+      input: {value: 5, left: {value: 3, left: {value: 2, left: null, right: null}, right: {value: 4, left: null, right: null}}, right: {value: 8, left: null, right: {value: 9, left: null, right: null}}}
+      expected: true
+  validation:
+    - name: ancestor_violation
+      input: {value: 5, left: {value: 3, left: null, right: {value: 6, left: null, right: null}}, right: {value: 8, left: null, right: null}}
+      expected: false
+    - name: left_bigger_than_root
+      input: {value: 5, left: {value: 9, left: null, right: null}, right: null}
+      expected: false
+    - name: duplicate_value
+      input: {value: 5, left: {value: 5, left: null, right: null}, right: null}
+      expected: false
+explanation_markdown: |
+  The reliable way to validate a BST is to hand each recursive call the open
+  interval `(low, high)` the node is allowed to occupy. Every left move tightens
+  the ceiling to the current value; every right move raises the floor. The
+  `ancestor_violation` case is exactly the trap: node 6 beats its parent 3
+  (`6 > 3`), yet it lives in the left subtree of 5, so it arrives with
+  `high = 5` and `6 >= 5` fails. A per-parent check would wave it through. Using
+  `<=` and `>=` also rejects duplicates, as the `duplicate_value` case shows.
+  Each node is checked once, so the audit runs in O(n).
+common_mistakes:
+  - Comparing each node only to its parent, which passes trees like the ancestor_violation case.
+  - Using strict-less on one side but allowing equality on the other, letting duplicates slip through.
+  - Resetting the bounds at each node instead of threading them down the recursion.

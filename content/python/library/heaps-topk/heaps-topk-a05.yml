@@ -1,0 +1,106 @@
+id: exercise.library.heaps_topk.a05
+kind: exercise
+version: 1
+language: python
+title: Nearest Wavelengths to the Filter
+slug: heaps-topk-a05
+difficulty: medium
+concepts:
+  - patterns.heap_topk
+  - python.heapq_bisect
+  - python.tuples
+prerequisites:
+  - python.heapq_bisect
+estimated_time_minutes: 16
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.heaps_topk.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original k-closest drill framed around an optics lab matching wavelengths to a filter, with a deterministic tie-break.
+prompt_markdown: |
+  An optics lab has a filter tuned to a target wavelength and a tray of sample
+  wavelengths (integers). It wants the `k` samples **closest** to the target.
+
+  Write `k_nearest(data)` where `data` is a dict with keys `samples` (a list of
+  integers), `target` (an integer), and `k` (a non-negative integer). A sample's
+  closeness is `abs(sample - target)`. Return the `k` nearest samples **sorted
+  ascending**. Break ties in closeness by preferring the **smaller** wavelength.
+  If `k` is `0` return an empty list; if `k` is at least the number of samples,
+  return all of them sorted ascending.
+
+  Maintain a size-`k` heap keyed so that the *worst* kept candidate sits at the
+  root, ready to be evicted when a nearer sample arrives.
+starter_code: |
+  import heapq
+
+
+  def k_nearest(data):
+      return []
+function_name: k_nearest
+input_mode: function
+solution_sketch: Keep a size-k max-heap keyed on (distance, value) via negation so the worst kept candidate is evicted first, then return the kept samples sorted.
+sample_solution: |
+  import heapq
+
+
+  def k_nearest(data):
+      samples = data["samples"]
+      target = data["target"]
+      k = data["k"]
+      if k <= 0:
+          return []
+      heap = []  # min-heap of (-distance, -value); root is the worst kept candidate
+      for value in samples:
+          key = (abs(value - target), value)
+          entry = (-key[0], -key[1])
+          if len(heap) < k:
+              heapq.heappush(heap, entry)
+          else:
+              worst = (-heap[0][0], -heap[0][1])
+              if key < worst:
+                  heapq.heapreplace(heap, entry)
+      kept = [-entry[1] for entry in heap]
+      return sorted(kept)
+hints:
+  - level: 1
+    text: Rank candidates by the pair (distance, value); the k you want are the k smallest such pairs.
+  - level: 2
+    text: A size-k max-heap keyed on that pair keeps the worst survivor at the root; negate both fields to fake the max-heap.
+  - level: 3
+    text: Only replace the root when a new (distance, value) pair is strictly smaller than the worst kept pair, then sort the surviving samples ascending.
+tests:
+  public:
+    - name: basic
+      input: {samples: [1, 2, 3, 8], target: 4, k: 2}
+      expected: [2, 3]
+    - name: k_zero
+      input: {samples: [1, 2, 3], target: 2, k: 0}
+      expected: []
+    - name: k_covers_all
+      input: {samples: [10, 4, 7], target: 6, k: 5}
+      expected: [4, 7, 10]
+  validation:
+    - name: tie_prefers_smaller
+      input: {samples: [2, 6], target: 4, k: 1}
+      expected: [2]
+    - name: exact_hit_wins
+      input: {samples: [3, 5, 4, 9], target: 4, k: 2}
+      expected: [3, 4]
+    - name: negatives
+      input: {samples: [-3, -1, 0, 5], target: -2, k: 3}
+      expected: [-3, -1, 0]
+explanation_markdown: |
+  Closeness plus a tie-break is naturally a *tuple* comparison: `(distance, value)`
+  orders candidates exactly the way the problem asks, since Python compares tuples
+  field by field. Keeping the k smallest such pairs is a top-k problem in reverse,
+  so you keep a size-k max-heap (built by negating both fields) whose root is the
+  worst survivor. Each sample costs at most O(log k), and the final sort of k
+  values is cheap. Sorting the surviving samples ascending gives the required
+  output order regardless of the order they were evicted in.
+common_mistakes:
+  - Forgetting the tie-break, so equally close samples come out in an unpredictable order.
+  - Keeping a min-heap of the best candidates, which evicts the wrong end when the heap is full.
+  - Returning distances or negated values instead of recovering the original samples before sorting.

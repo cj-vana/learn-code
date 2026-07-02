@@ -1,0 +1,119 @@
+id: exercise.library.graphs_lite.a10
+kind: exercise
+version: 1
+language: python
+title: Mould Spreading Through the Seed Trays
+slug: graphs-lite-a10
+difficulty: hard
+concepts:
+  - patterns.queue_bfs
+  - patterns.grid_traversal
+  - patterns.graph_traversal
+prerequisites:
+  - python.collections_module
+  - python.lists
+estimated_time_minutes: 24
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.graphs_lite.a10
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original greenhouse seed-tray scenario using multi-source breadth-first search to measure how long a contamination takes to reach every seedling.
+prompt_markdown: |
+  A greenhouse bench holds a grid of seed cells. Each cell is `0` (empty), `1` (a
+  healthy seedling), or `2` (a seedling already covered in mould). Every hour,
+  mould spreads from each contaminated cell to any healthy seedling directly above,
+  below, left, or right of it. Empty cells never carry mould and never block the
+  grid layout.
+
+  Write `hours_until_all_mouldy(grid)` returning the number of hours until no
+  healthy seedling remains. If the whole bench starts with no healthy seedlings,
+  return `0`. If at least one healthy seedling can never be reached by the mould,
+  return `-1`.
+starter_code: |
+  def hours_until_all_mouldy(grid):
+      # Return hours for mould to reach every seedling, or -1 if impossible.
+      return -1
+function_name: hours_until_all_mouldy
+input_mode: function
+solution_sketch: Seed a breadth-first search with every already-mouldy cell at time zero, spread outward hour by hour, and track the last hour any seedling flips plus how many healthy seedlings remain.
+sample_solution: |
+  from collections import deque
+
+
+  def hours_until_all_mouldy(grid):
+      if not grid or not grid[0]:
+          return 0
+      rows = len(grid)
+      cols = len(grid[0])
+      queue = deque()
+      healthy = 0
+      for r in range(rows):
+          for c in range(cols):
+              if grid[r][c] == 2:
+                  queue.append((r, c, 0))
+              elif grid[r][c] == 1:
+                  healthy += 1
+      if healthy == 0:
+          return 0
+
+      state = [row[:] for row in grid]
+      hours = 0
+      while queue:
+          r, c, t = queue.popleft()
+          for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+              nr, nc = r + dr, c + dc
+              if 0 <= nr < rows and 0 <= nc < cols and state[nr][nc] == 1:
+                  state[nr][nc] = 2
+                  healthy -= 1
+                  hours = t + 1
+                  queue.append((nr, nc, t + 1))
+      return hours if healthy == 0 else -1
+hints:
+  - level: 1
+    text: Every contaminated cell spreads at the same time, so the search must start from all of them at once rather than from a single source.
+  - level: 2
+    text: Put every mouldy cell into the queue with an initial time of 0, then spread outward; a newly infected cell inherits its infector's time plus one.
+  - level: 3
+    text: Count the healthy seedlings up front and decrement as each turns; the answer is the largest time stamp reached, or -1 if any healthy seedlings remain after the queue empties.
+tests:
+  public:
+    - name: spreads_across_bench
+      input: [[2, 1, 1], [1, 1, 0], [0, 1, 1]]
+      expected: 4
+    - name: already_all_mouldy
+      input: [[2, 2], [2, 2]]
+      expected: 0
+    - name: seedling_walled_off
+      input: [[2, 0, 1]]
+      expected: -1
+  validation:
+    - name: no_seedlings_at_all
+      input: [[0, 0], [0, 0]]
+      expected: 0
+    - name: single_row_chain
+      input: [[2, 1, 1, 1]]
+      expected: 3
+    - name: healthy_with_no_source
+      input: [[1, 1], [1, 1]]
+      expected: -1
+    - name: two_sources_meet
+      input: [[2, 1, 2]]
+      expected: 1
+explanation_markdown: |
+  When several sources spread at once, a single breadth-first search still works
+  -- you just prime the queue with *all* of them at distance zero. Because BFS
+  visits cells in nondecreasing time order, the first time the mould reaches any
+  seedling is the earliest possible hour, and the last flip recorded is when the
+  final seedling succumbs. That final time stamp is the answer. Two independent
+  checks keep the edge cases honest: starting `healthy == 0` short-circuits to `0`,
+  and comparing the remaining `healthy` count against zero after the queue drains
+  catches seedlings the mould can never reach (walled off by empty cells or the
+  bench edge), which must return `-1`. In `two_sources_meet`, both mould cells act
+  in the same hour, so the lone seedling between them flips at hour one.
+common_mistakes:
+  - Starting BFS from only one contaminated cell, which overcounts the hours or misses simultaneous spread.
+  - Forgetting to return -1 when a healthy seedling is unreachable, reporting the partial time instead.
+  - Overwriting the original grid while still iterating it, so cells are recounted; copy the grid or track counts separately.

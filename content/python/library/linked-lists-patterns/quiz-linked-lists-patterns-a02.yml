@@ -1,0 +1,117 @@
+id: quiz.library.linked_lists_patterns.a02
+kind: quiz
+version: 1
+language: python
+title: Tracing Node Rewiring by Hand
+slug: quiz-linked-lists-patterns-a02
+difficulty: medium
+concepts:
+  - patterns.linked_list
+  - python.classes
+prerequisites: []
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.linked_lists_patterns.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original code-trace questions about building, walking, and rewiring a simulated node chain.
+quiz_type: mixed_review
+questions:
+  - id: q1
+    prompt: |
+      A `Node` has `.value` and `.next`. What does this build produce when read
+      from `head`?
+
+          head = None
+          for value in [1, 2, 3]:
+              node = Node(value)
+              node.next = head
+              head = node
+      Reading `head`, then `.next`, then `.next` gives which value order?
+    choices:
+      - '3, 2, 1'
+      - '1, 2, 3'
+      - '1, 3, 2'
+      - '2, 1, 3'
+    correct_choice: '3, 2, 1'
+    explanation: |
+      Each new node is prepended to the front, so iterating the input forwards
+      reverses the order. The last value pushed, 3, ends up at the head.
+    concepts:
+      - patterns.linked_list
+      - python.loops
+  - id: q2
+    prompt: |
+      Given a chain `a -> b -> c` (each letter a node), what does this leave the
+      chain looking like, starting from `a`?
+
+          a.next = c
+    choices:
+      - 'a -> c (b is now unreachable from a)'
+      - 'a -> b -> c unchanged'
+      - 'a -> b -> c -> a'
+      - 'c -> a -> b'
+    correct_choice: 'a -> c (b is now unreachable from a)'
+    explanation: |
+      Overwriting `a.next` to point at `c` skips `b` entirely. Node `b` still exists
+      in memory, but nothing in the chain reachable from `a` links to it anymore.
+    concepts:
+      - patterns.linked_list
+      - python.classes
+  - id: q3
+    prompt: |
+      What does this cursor walk print for the chain `10 -> 20 -> 30`?
+
+          current = head
+          total = 0
+          while current is not None:
+              total += current.value
+              current = current.next
+          print(total)
+    choices:
+      - '60'
+      - '30'
+      - '10'
+      - It loops forever
+    correct_choice: '60'
+    explanation: |
+      The cursor visits every node once, adding 10, 20, and 30, then becomes None at
+      the tail's `.next` and ends the loop, printing 60.
+    concepts:
+      - patterns.linked_list
+      - python.loops
+  - id: q4
+    prompt: |
+      In an in-place reversal step, which line ordering correctly flips one link
+      without losing the rest of the chain?
+    choices:
+      - 'nxt = current.next; current.next = prev; prev = current; current = nxt'
+      - 'current.next = prev; nxt = current.next; prev = current; current = nxt'
+      - 'prev = current; current.next = prev; current = current.next'
+      - 'current = current.next; current.next = prev; prev = current'
+    correct_choice: 'nxt = current.next; current.next = prev; prev = current; current = nxt'
+    explanation: |
+      You must save `current.next` before overwriting it; otherwise the pointer to
+      the rest of the chain is lost. The other orderings read `current.next` after it
+      has already been reassigned.
+    concepts:
+      - patterns.linked_list
+  - id: q5
+    prompt: |
+      Why does a fast/slow loop guard test `fast is not None and fast.next is not None`
+      rather than just `fast is not None`?
+    choices:
+      - Because the step reads `fast.next.next`, which needs both fast and fast.next to exist.
+      - Because the slow cursor might overtake the fast cursor otherwise.
+      - Because `fast.next` is always None at the start.
+      - Because Python evaluates the second condition first.
+    correct_choice: Because the step reads `fast.next.next`, which needs both fast and fast.next to exist.
+    explanation: |
+      The double hop dereferences two links ahead. If `fast` or `fast.next` is None,
+      reaching for `fast.next.next` raises an AttributeError, so both must be checked.
+    concepts:
+      - patterns.linked_list
+      - patterns.two_pointers

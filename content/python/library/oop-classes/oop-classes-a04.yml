@@ -1,0 +1,93 @@
+id: exercise.library.oop_classes.a04
+kind: exercise
+version: 1
+language: python
+title: Building Lockers From Label Strings
+slug: oop-classes-a04
+difficulty: easy
+concepts:
+  - python.classes
+prerequisites:
+  - python.classes
+  - python.strings
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.oop_classes.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original gym-locker scenario drilling a classmethod alternative constructor that parses label strings.
+prompt_markdown: |
+  A gym stores its lockers as short label strings printed on the doors. Each label
+  looks like `"code-size"`, for example `"L14-large"` or `"L02-small"`. You want a
+  clean `Locker` object for each one.
+
+  Complete `open_lockers(labels)`, where `labels` is a list of label strings.
+  Inside the function, define a `Locker` class whose `__init__` takes a separate
+  `code` and `size`, and add a **class method** `from_label` that parses one label
+  string and returns a `Locker` built through the normal constructor. Use
+  `Locker.from_label` on each label and return a list of `"size code"` strings, for
+  example `"large L14"`, in the same order as the input.
+starter_code: |
+  def open_lockers(labels):
+      # Define a Locker class with a from_label class method that parses
+      # a "code-size" string, then build one Locker per label.
+      return []
+function_name: open_lockers
+input_mode: function
+solution_sketch: Give Locker an __init__ taking code and size, plus a from_label classmethod that splits the string and calls cls.
+sample_solution: |
+  def open_lockers(labels):
+      class Locker:
+          def __init__(self, code, size):
+              self.code = code
+              self.size = size
+
+          @classmethod
+          def from_label(cls, label):
+              code, size = label.split("-")
+              return cls(code, size)
+
+      lockers = [Locker.from_label(label) for label in labels]
+      return [f"{locker.size} {locker.code}" for locker in lockers]
+hints:
+  - level: 1
+    text: Split each label on the "-" character to separate the code from the size.
+  - level: 2
+    text: Decorate from_label with @classmethod so it receives cls; inside it, call cls(code, size) to build the object.
+  - level: 3
+    text: 'Parse with code, size = label.split("-"), return cls(code, size), then format each locker as f"{locker.size} {locker.code}".'
+tests:
+  public:
+    - name: two_lockers
+      input: [L14-large, L02-small]
+      expected: [large L14, small L02]
+    - name: none
+      input: []
+      expected: []
+    - name: single
+      input: [M07-medium]
+      expected: [medium M07]
+  validation:
+    - name: preserves_order
+      input: [A1-small, A2-large, A3-small]
+      expected: [small A1, large A2, small A3]
+    - name: mixed_sizes
+      input: [Z99-large, Z98-medium]
+      expected: [large Z99, medium Z98]
+    - name: one_small
+      input: [B5-small]
+      expected: [small B5]
+explanation_markdown: |
+  The class method `from_label` is an alternative constructor: it accepts the messy
+  label string, splits it into a `code` and a `size`, then delegates to the normal
+  `__init__` through `cls(code, size)`. Because it is decorated with
+  `@classmethod`, Python passes the class as `cls`, so the method builds and returns
+  a fully formed `Locker`. Keeping the parsing in `from_label` leaves `__init__`
+  simple and focused on storing already-clean values.
+common_mistakes:
+  - Parsing the string inside __init__ instead of the class method, which forces every caller to pass a raw label.
+  - Forgetting the @classmethod decorator, so from_label receives an instance as self rather than the class as cls.
+  - Formatting the result as "code size" instead of the requested "size code" order.

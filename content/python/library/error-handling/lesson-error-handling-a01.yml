@@ -1,0 +1,88 @@
+id: lesson.library.error_handling.a01
+kind: lesson
+version: 1
+language: python
+title: Catching What Breaks - try, except, else, finally
+slug: lesson-error-handling-a01
+difficulty: easy
+concepts:
+  - python.exceptions
+prerequisites:
+  - python.functions
+  - python.conditionals
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.error_handling.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original walkthrough of the four try-block clauses framed around a ticket-kiosk reading.
+body_markdown: |
+  When Python hits something it cannot do -- dividing by zero, converting `"abc"`
+  to a number, indexing past the end of a list -- it does not quietly return a
+  wrong answer. It *raises an exception*, an object that describes the failure and
+  interrupts the normal flow. Left alone, that exception unwinds all the way out
+  and crashes the program. The `try` statement is how you decide to handle it
+  instead.
+
+  A ticket kiosk reads a code a rider types and looks up the fare. The lookup can
+  fail, so we wrap it:
+
+  ```python
+  fares = {"A": 250, "B": 400}
+
+  def look_up(code):
+      try:
+          return fares[code]        # may raise KeyError
+      except KeyError:
+          return -1                 # a graceful sentinel
+  ```
+
+  The `except KeyError` clause runs *only* when a `KeyError` is raised inside the
+  `try`. Catching the specific type matters: a bare `except:` would also swallow a
+  typo in your own code, hiding real bugs. Catch the narrowest exception that
+  describes the failure you actually expect.
+
+  A full `try` statement has four parts, and each has a distinct job:
+
+  ```python
+  def read_amount(text, log):
+      try:
+          value = int(text)         # the risky work
+      except ValueError:
+          return "unreadable"       # runs on failure
+      else:
+          return value              # runs only if no exception
+      finally:
+          log.append("scan done")   # runs no matter what
+  ```
+
+  - `try` holds the code that might raise.
+  - `except` handles a matching exception. You can stack several clauses, each for
+    a different type; Python runs the first one that matches.
+  - `else` runs only when the `try` finished without raising. Keeping the success
+    path here makes it obvious that it never runs on the failure path.
+  - `finally` runs on the way out every single time -- after success, after a
+    handled exception, even while an unhandled one is propagating. It is where
+    cleanup belongs.
+
+  There are two honest ways to respond to a failure. You can handle it
+  *gracefully*, returning a sentinel like `-1` or a fallback value so the caller
+  can continue. Or you can let it propagate -- sometimes the right move is to do
+  nothing and let a loud crash reveal a problem early. The skill is choosing which
+  failures are expected (catch those) and which mean something is genuinely wrong
+  (let those through). A handler that catches everything and returns a bland
+  default is often worse than no handler at all, because it turns a visible bug
+  into a silent one.
+checkpoints:
+  - question: In the four-clause form, which block runs only when the try body did not raise, and which runs no matter what?
+    answer: The `else` block runs only when no exception was raised; the `finally` block runs every time, on both the success and failure paths.
+    explanation: "`else` is the clean success path, separated from `try` so it is obvious it never runs after an exception; `finally` is guaranteed cleanup that runs even while an exception is propagating."
+  - question: Why is `except KeyError` usually better than a bare `except:` when you only expect a missing-key failure?
+    answer: A bare except also catches unrelated errors like typos or logic bugs, hiding them; `except KeyError` only handles the failure you actually anticipated.
+    explanation: Narrow handlers keep genuinely unexpected exceptions visible so they surface during testing instead of being silently swallowed at runtime.
+  - question: What is the difference between handling a failure gracefully and letting it propagate?
+    answer: Handling gracefully means catching the exception and returning a sentinel or fallback so the caller continues; letting it propagate means not catching it, so the program stops and the failure is loud.
+    explanation: Expected, recoverable failures deserve a graceful response, while failures that signal a real bug are often better left loud so they are noticed and fixed.

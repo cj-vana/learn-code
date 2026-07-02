@@ -1,0 +1,88 @@
+id: exercise.library.collections_itertools.a09
+kind: exercise
+version: 1
+language: python
+title: Rolling Window Totals
+slug: collections-itertools-a09
+difficulty: medium
+concepts:
+  - python.collections_module
+  - patterns.sliding_window
+prerequisites:
+  - python.lists
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.collections_itertools.a09
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original weather-station scenario using a bounded deque as a fixed-size sliding buffer.
+prompt_markdown: |
+  A weather station streams temperature readings one at a time and keeps only
+  the most recent `k` of them in a small buffer. Every time the buffer is full,
+  it records the sum of those `k` readings. Write `window_totals(payload)` where
+  `payload` is a dict with keys `readings` (a list of integers arriving in
+  order) and `k` (a positive integer window size). Return the list of window
+  sums, in the order they were recorded. If fewer than `k` readings ever arrive,
+  the buffer never fills, so return an empty list.
+starter_code: |
+  def window_totals(payload):
+      return []
+function_name: window_totals
+input_mode: function
+solution_sketch: Feed readings into a deque(maxlen=k); once it holds k items, record its sum after each new reading.
+sample_solution: |
+  from collections import deque
+
+
+  def window_totals(payload):
+      readings = payload["readings"]
+      k = payload["k"]
+      buffer = deque(maxlen=k)
+      totals = []
+      for reading in readings:
+          buffer.append(reading)
+          if len(buffer) == k:
+              totals.append(sum(buffer))
+      return totals
+hints:
+  - level: 1
+    text: Keep a buffer that never grows beyond the last k readings as new ones arrive.
+  - level: 2
+    text: deque(maxlen=k) automatically drops the oldest reading whenever a new append would exceed k.
+  - level: 3
+    text: After each append, if len(buffer) == k record sum(buffer); collect those sums in order.
+tests:
+  public:
+    - name: pairs
+      input: {readings: [1, 2, 3, 4], k: 2}
+      expected: [3, 5, 7]
+    - name: triples
+      input: {readings: [1, 2, 3, 4, 5], k: 3}
+      expected: [6, 9, 12]
+    - name: k_equals_length
+      input: {readings: [5, 5, 5], k: 3}
+      expected: [15]
+  validation:
+    - name: window_too_large
+      input: {readings: [1, 2], k: 3}
+      expected: []
+    - name: window_of_one
+      input: {readings: [4, 7, 2], k: 1}
+      expected: [4, 7, 2]
+    - name: steady_stream
+      input: {readings: [2, 2, 2, 2, 2], k: 2}
+      expected: [4, 4, 4, 4]
+explanation_markdown: |
+  A `deque(maxlen=k)` is a fixed-size sliding buffer: appending a `k+1`-th item
+  silently discards the item on the far end, so the buffer always holds the most
+  recent `k` readings. Once its length reaches `k`, every new reading yields a
+  fresh full window whose sum you record. If the stream is shorter than `k`, the
+  buffer never reaches full length and the result stays empty -- no manual index
+  arithmetic or boundary checks required.
+common_mistakes:
+  - Recording a sum before the buffer is full, producing extra short-window totals.
+  - Using a plain list and forgetting to drop the oldest reading, so windows keep growing.
+  - Checking len(buffer) >= k after it can never exceed k, which is harmless but hides the maxlen guarantee.

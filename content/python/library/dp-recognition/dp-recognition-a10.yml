@@ -1,0 +1,116 @@
+id: exercise.library.dp_recognition.a10
+kind: exercise
+version: 1
+language: python
+title: Patterning A Bench From Plank Stock
+slug: dp-recognition-a10
+difficulty: medium
+concepts:
+  - patterns.dynamic_programming
+prerequisites:
+  - python.lists
+  - python.loops
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dp_recognition.a10
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original woodworking bench-slat framing of ordered compositions of an integer using an unlimited supply of allowed part sizes.
+prompt_markdown: |
+  A woodworker is laying planks end to end to build a bench of a fixed length. The
+  shop stocks planks in a handful of lengths, with an unlimited supply of each. She
+  wants to count how many distinct *patterns* fill the bench exactly, where the
+  order the planks are laid in matters: laying a short plank then a long plank is a
+  different pattern from long then short.
+
+  Write `bench_patterns(order)` where `order` is a dict with two keys:
+
+  - `length`: a non-negative integer, the exact bench length to fill
+  - `boards`: a list of positive integers, the plank lengths in stock
+
+  Return a single integer: the number of ordered sequences of planks whose lengths
+  add up to exactly `length`. Each plank length may be reused any number of times.
+
+  Edges: a bench of `length` `0` has exactly one pattern, the empty sequence, so
+  return `1`. If no sequence can total `length` (for example filling `1` with only
+  a `2`-length plank), return `0`.
+
+  Example: with `length = 4` and `boards = [1, 2]`, the answer is `5` (1+1+1+1,
+  1+1+2, 1+2+1, 2+1+1, 2+2).
+starter_code: |
+  def bench_patterns(order):
+      return 0
+function_name: bench_patterns
+input_mode: function
+solution_sketch: Build a table of pattern counts by total length, where each length sums the counts of the shorter lengths reachable by removing one plank.
+sample_solution: |
+  def bench_patterns(order):
+      length = order["length"]
+      boards = order["boards"]
+      ways = [0] * (length + 1)
+      ways[0] = 1
+      for i in range(1, length + 1):
+          for board in boards:
+              if board <= i:
+                  ways[i] += ways[i - board]
+      return ways[length]
+hints:
+  - level: 1
+    text: Think about the last plank laid. If it has length b, the planks before it must fill length - b, which is a smaller version of the same counting question.
+  - level: 2
+    text: Let ways[i] be the number of ordered patterns that fill length i. Seed ways[0] = 1 for the empty bench, then build up.
+  - level: 3
+    text: For each length i, add ways[i - board] for every board with board <= i, so ways[i] = sum over boards of ways[i - board]. Return ways[length].
+tests:
+  public:
+    - name: two_lengths
+      input: {length: 4, boards: [1, 2]}
+      expected: 5
+    - name: zero_length
+      input: {length: 0, boards: [1, 2, 3]}
+      expected: 1
+    - name: only_pairs
+      input: {length: 5, boards: [2, 3]}
+      expected: 2
+  validation:
+    - name: three_lengths
+      input: {length: 3, boards: [1, 2, 3]}
+      expected: 4
+    - name: cannot_fill
+      input: {length: 1, boards: [2]}
+      expected: 0
+    - name: exact_single_board
+      input: {length: 4, boards: [4]}
+      expected: 1
+    - name: mixed_stock
+      input: {length: 7, boards: [1, 3, 4]}
+      expected: 15
+    - name: fibonacci_shape
+      input: {length: 6, boards: [1, 2]}
+      expected: 13
+explanation_markdown: |
+  This is an ordered-composition count: how many sequences of allowed plank lengths
+  sum to `length`, where order matters. The recognition step is to look at the
+  *last* plank laid. If that final plank has length `b`, everything before it is an
+  ordered pattern filling `length - b`, which is the same question on a smaller
+  bench. Summing over every choice of final plank gives the recurrence
+  `ways[i] = sum(ways[i - b] for b in boards if b <= i)`.
+
+  We build the table bottom-up. `ways[0] = 1` because there is exactly one way to
+  fill a zero-length bench: lay nothing. Then for each length from `1` to `length`,
+  we add up the counts of the shorter lengths reachable by removing one plank of
+  each stocked size. Because every dependency `ways[i - b]` is smaller than `i`, it
+  is already finished by the time we need it.
+
+  Counting ordered sequences is why we loop lengths on the outside and boards on the
+  inside: every plank size gets a chance to be the last plank at every length. (If
+  you instead wanted unordered combinations, you would swap the loop nesting.) The
+  work is O(length * number of boards).
+common_mistakes:
+  - Setting ways[0] to 0 instead of 1, which zeroes out the entire table.
+  - Swapping the loop order (boards outside, lengths inside), which counts unordered combinations rather than ordered patterns.
+  - Forgetting the board <= i guard, which reads a negative index and mixes in the wrong counts.
+  - Assuming a length that cannot be filled should error, rather than returning 0.

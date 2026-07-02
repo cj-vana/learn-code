@@ -1,0 +1,117 @@
+id: exercise.library.graphs_lite.a12
+kind: exercise
+version: 1
+language: python
+title: Steering the Warehouse Robot
+slug: graphs-lite-a12
+difficulty: hard
+concepts:
+  - patterns.queue_bfs
+  - patterns.grid_traversal
+  - patterns.graph_traversal
+prerequisites:
+  - python.collections_module
+  - python.tuples
+estimated_time_minutes: 24
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.graphs_lite.a12
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original warehouse-robot scenario finding the fewest grid moves around shelf obstacles with breadth-first search.
+prompt_markdown: |
+  A warehouse robot rolls across a grid of floor tiles. A tile is `0` if it is
+  open floor and `1` if a shelf blocks it. The robot moves one tile at a time, up,
+  down, left, or right, and can never enter a shelf tile.
+
+  You are given `data` with `grid`, `start` as `[row, col]`, and `goal` as
+  `[row, col]`. Write `fewest_moves(data)` returning the smallest number of moves
+  to roll from `start` to `goal`. The start and goal are the same tile means `0`
+  moves. If either endpoint sits on a shelf, or no open path connects them, return
+  `-1`.
+starter_code: |
+  def fewest_moves(data):
+      # Return the fewest grid moves from start to goal, or -1.
+      return -1
+function_name: fewest_moves
+input_mode: function
+solution_sketch: Run breadth-first search over open tiles, treating each tile as a node linked to its four open neighbours, and return the distance layer at which the goal is first reached.
+sample_solution: |
+  from collections import deque
+
+
+  def fewest_moves(data):
+      grid = data["grid"]
+      start = tuple(data["start"])
+      goal = tuple(data["goal"])
+      rows = len(grid)
+      cols = len(grid[0])
+      sr, sc = start
+      gr, gc = goal
+      if grid[sr][sc] == 1 or grid[gr][gc] == 1:
+          return -1
+      if start == goal:
+          return 0
+
+      seen = {start}
+      queue = deque([(sr, sc, 0)])
+      while queue:
+          r, c, dist = queue.popleft()
+          for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+              nr, nc = r + dr, c + dc
+              if (0 <= nr < rows and 0 <= nc < cols
+                      and grid[nr][nc] == 0
+                      and (nr, nc) not in seen):
+                  if (nr, nc) == goal:
+                      return dist + 1
+                  seen.add((nr, nc))
+                  queue.append((nr, nc, dist + 1))
+      return -1
+hints:
+  - level: 1
+    text: Each open tile is a node; its neighbours are the open tiles directly up, down, left, and right. Shelves are simply missing nodes.
+  - level: 2
+    text: Breadth-first search explores tiles in rings of increasing distance, so the first time you touch the goal you have used the fewest moves.
+  - level: 3
+    text: Store each tile with its distance from the start, skip shelves and the grid edges, and return distance + 1 the moment a neighbour equals the goal; check blocked endpoints and start == goal first.
+tests:
+  public:
+    - name: open_floor
+      input: {"grid": [[0, 0, 0], [0, 0, 0]], "start": [0, 0], "goal": [1, 2]}
+      expected: 3
+    - name: detour_around_shelves
+      input: {"grid": [[0, 1, 0], [0, 1, 0], [0, 0, 0]], "start": [0, 0], "goal": [0, 2]}
+      expected: 6
+    - name: walled_off
+      input: {"grid": [[0, 1, 0], [0, 1, 0]], "start": [0, 0], "goal": [0, 2]}
+      expected: -1
+  validation:
+    - name: same_tile
+      input: {"grid": [[0]], "start": [0, 0], "goal": [0, 0]}
+      expected: 0
+    - name: goal_on_shelf
+      input: {"grid": [[0, 1]], "start": [0, 0], "goal": [0, 1]}
+      expected: -1
+    - name: straight_corridor
+      input: {"grid": [[0, 0, 0, 0]], "start": [0, 0], "goal": [0, 3]}
+      expected: 3
+    - name: around_a_block
+      input: {"grid": [[0, 0, 0], [1, 1, 0], [0, 0, 0]], "start": [0, 0], "goal": [2, 0]}
+      expected: 6
+explanation_markdown: |
+  A grid with obstacles is still just an unweighted graph, so breadth-first search
+  gives the fewest moves for free: it expands the frontier one ring at a time, and
+  every tile is first reached by a shortest route. The shelves need no special
+  machinery -- they are simply tiles you refuse to enqueue, exactly like a missing
+  edge in an adjacency list. Marking a tile `seen` at enqueue time keeps the
+  frontier from revisiting tiles and holds the running time to one pass over the
+  grid. The three guard clauses matter: a blocked start or goal is unreachable by
+  definition, and `start == goal` is zero moves before the search even begins. In
+  `detour_around_shelves`, the direct rightward route is blocked, so the robot must
+  dip down and back up, spending six moves instead of two.
+common_mistakes:
+  - Using depth-first search, which finds a path but not necessarily the shortest one.
+  - Forgetting to reject a start or goal tile that sits on a shelf.
+  - Marking tiles seen only when dequeued, letting the same tile enter the queue from several neighbours.

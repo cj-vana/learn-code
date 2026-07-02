@@ -1,0 +1,92 @@
+id: exercise.library.decorators_closures.a02
+kind: exercise
+version: 1
+language: python
+title: Freezing the Loop Variable
+slug: decorators-closures-a02
+difficulty: medium
+concepts:
+  - python.closures_decorators
+  - python.functions
+  - python.lists
+prerequisites:
+  - python.closures_decorators
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.decorators_closures.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original loom scenario forcing correct per-iteration capture to avoid the late-binding closure trap.
+prompt_markdown: |
+  A textile loom is configured with a list of thread multipliers. For each
+  multiplier you must build a separate scaling function *inside a loop*, then
+  apply every built function to one base length and return the results in order.
+
+  Write `scaled_lengths(data)` where `data` is a dict with keys `"factors"` (a
+  list of ints) and `"base"` (an int). Build one function per factor in a loop,
+  each returning `base_value * factor`, then call them all on `base` and return
+  the list of results.
+
+  For `{"factors": [2, 3, 4], "base": 10}` the result is `[20, 30, 40]`. The
+  catch: naive loop capture makes every function use the *last* factor. Capture
+  each factor at definition time so the functions stay independent.
+starter_code: |
+  def scaled_lengths(data):
+      factors = data["factors"]
+      base = data["base"]
+      scalers = []
+      # Build one scaler per factor here, capturing the factor correctly.
+      return [scaler(base) for scaler in scalers]
+function_name: scaled_lengths
+input_mode: function
+solution_sketch: Bind the loop factor as a default argument so each closure freezes its own value, then apply each scaler to base.
+sample_solution: |
+  def scaled_lengths(data):
+      factors = data["factors"]
+      base = data["base"]
+      scalers = []
+      for factor in factors:
+          scalers.append(lambda value, f=factor: value * f)
+      return [scaler(base) for scaler in scalers]
+hints:
+  - level: 1
+    text: Closures read captured variables when they run, not when they are defined, so a plain loop-variable capture will surprise you.
+  - level: 2
+    text: If every built function multiplies by the last factor, you captured the live loop variable instead of its per-iteration value.
+  - level: 3
+    text: "Snapshot the factor by binding it as a default argument, e.g. lambda value, f=factor: value * f, which evaluates f=factor immediately."
+tests:
+  public:
+    - name: three_factors
+      input: {"factors": [2, 3, 4], "base": 10}
+      expected: [20, 30, 40]
+    - name: single_factor
+      input: {"factors": [5], "base": 8}
+      expected: [40]
+    - name: empty_factors
+      input: {"factors": [], "base": 9}
+      expected: []
+  validation:
+    - name: includes_one_and_zero
+      input: {"factors": [1, 0, 6], "base": 7}
+      expected: [7, 0, 42]
+    - name: repeated_factors
+      input: {"factors": [3, 3, 3], "base": 2}
+      expected: [6, 6, 6]
+    - name: negative_base
+      input: {"factors": [2, 5], "base": -4}
+      expected: [-8, -20]
+explanation_markdown: |
+  Inside the loop each lambda would ordinarily close over the *same* `factor`
+  name, which by the time you call the functions has settled on the final value.
+  Binding `f=factor` as a default argument sidesteps this: default arguments are
+  evaluated once, at definition time, so each lambda freezes the factor from its
+  own iteration. This is the standard cure for the loop late-binding trap and
+  keeps the generated functions genuinely independent.
+common_mistakes:
+  - "Writing lambda value: value * factor, so every scaler multiplies by the final factor."
+  - Reusing a shared mutable variable instead of a per-iteration snapshot.
+  - Building the functions correctly but returning the scalers instead of their results on base.

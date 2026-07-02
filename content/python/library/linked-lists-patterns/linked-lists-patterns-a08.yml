@@ -1,0 +1,120 @@
+id: exercise.library.linked_lists_patterns.a08
+kind: exercise
+version: 1
+language: python
+title: Where the Loop Begins
+slug: linked-lists-patterns-a08
+difficulty: hard
+concepts:
+  - patterns.linked_list
+  - patterns.two_pointers
+prerequisites:
+  - python.classes
+  - python.loops
+estimated_time_minutes: 20
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.linked_lists_patterns.a08
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original patrol-route framing that asks for the exact junction where a wired loop rejoins the line, using the two-phase meeting-point argument.
+prompt_markdown: |
+  A security guard patrols a route of checkpoints. When the route is wired into a
+  loop, the guard wants to know the *junction* checkpoint where the loop rejoins
+  the line, because that is where the endless circling begins. Write
+  `loop_start(route)` where `route` is a dict with:
+
+  - `"checkpoints"`: a list of distinct checkpoint names in order.
+  - `"connect_to"`: an integer index. If `-1`, the route ends normally with no
+    loop; otherwise the last checkpoint links back to the checkpoint at that index.
+
+  Build a singly linked list of `Node` objects, apply the wiring, and return the
+  **name of the checkpoint where the loop starts**. If there is no loop, return
+  `None`. Do it with pointers, not by storing every node you visit.
+starter_code: |
+  def loop_start(route):
+      # Detect a collision with fast/slow, then find the junction node.
+      return None
+function_name: loop_start
+input_mode: function
+solution_sketch: Find a fast/slow collision inside the loop, then move one cursor back to the head and advance both one step at a time; they meet at the loop's entry node.
+sample_solution: |
+  def loop_start(route):
+      class Node:
+          def __init__(self, value):
+              self.value = value
+              self.next = None
+
+      checkpoints = route["checkpoints"]
+      connect_to = route["connect_to"]
+      if not checkpoints:
+          return None
+
+      nodes = [Node(name) for name in checkpoints]
+      for i in range(len(nodes) - 1):
+          nodes[i].next = nodes[i + 1]
+      if connect_to >= 0:
+          nodes[-1].next = nodes[connect_to]
+
+      slow = nodes[0]
+      fast = nodes[0]
+      while fast is not None and fast.next is not None:
+          slow = slow.next
+          fast = fast.next.next
+          if slow is fast:
+              probe = nodes[0]
+              while probe is not slow:
+                  probe = probe.next
+                  slow = slow.next
+              return probe.value
+      return None
+hints:
+  - level: 1
+    text: First reuse the fast/slow walk to find a collision; a collision only happens when a loop exists.
+  - level: 2
+    text: After the collision, there is a tidy fact, the distance from the head to the loop entry equals the distance from the collision point to the loop entry.
+  - level: 3
+    text: Reset one cursor to the head, keep the other at the collision point, then advance both one step at a time; the box where they meet is the loop's entry.
+tests:
+  public:
+    - name: mid_loop
+      input: {checkpoints: [gate, hall, vault, roof, yard], connect_to: 2}
+      expected: vault
+    - name: no_loop
+      input: {checkpoints: [gate, hall, vault], connect_to: -1}
+      expected: null
+    - name: self_loop
+      input: {checkpoints: [gate], connect_to: 0}
+      expected: gate
+  validation:
+    - name: loop_to_head
+      input: {checkpoints: [gate, hall, vault, roof], connect_to: 0}
+      expected: gate
+    - name: loop_to_tail
+      input: {checkpoints: [gate, hall, vault, roof], connect_to: 3}
+      expected: roof
+    - name: empty
+      input: {checkpoints: [], connect_to: -1}
+      expected: null
+    - name: long_mid_loop
+      input: {checkpoints: [a, b, c, d, e, f, g, h], connect_to: 3}
+      expected: d
+    - name: single_no_loop
+      input: {checkpoints: [only], connect_to: -1}
+      expected: null
+explanation_markdown: |
+  This is the two-phase version of cycle detection. Phase one runs the ordinary
+  fast/slow walk until the cursors collide, which can only occur somewhere inside
+  the loop. Phase two rests on a small piece of arithmetic: let the head sit `a`
+  steps before the loop entry, and let the collision point sit `a` steps before
+  the entry as well when measured around the loop. Resetting one cursor to the
+  head and advancing both one step at a time therefore makes them arrive at the
+  entry together. If the fast cursor ever reaches `None`, there is no loop and the
+  answer is `None`. Because the checkpoint names are distinct, returning the
+  entry node's value names the junction unambiguously.
+common_mistakes:
+  - Moving both cursors two steps in phase two; the entry-finding phase must step one at a time.
+  - Returning the collision node instead of continuing to the loop entry.
+  - Forgetting the no-loop case, so the function walks off the end and raises instead of returning None.

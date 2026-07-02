@@ -1,0 +1,117 @@
+id: exercise.library.dp_recognition.a08
+kind: exercise
+version: 1
+language: python
+title: Shared Stitches In Two Patterns
+slug: dp-recognition-a08
+difficulty: medium
+concepts:
+  - patterns.dynamic_programming
+  - concepts.memoization
+prerequisites:
+  - python.strings
+  - python.loops
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dp_recognition.a08
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original knitting-chart framing of the longest-common-subsequence length solved with a two-axis tabulation table.
+prompt_markdown: |
+  Two knitters each write down a pattern as a string of stitch symbols, one letter
+  per stitch (for example `K` for knit, `P` for purl, `C` for cable). They want to
+  measure how much their patterns *overlap*: the longest run of stitches that
+  appears in both charts in the same relative order, though the shared stitches do
+  not have to sit next to each other.
+
+  Write `stitch_overlap(patterns)` where `patterns` is a dict with two keys:
+
+  - `a`: the first pattern as a string of stitch letters
+  - `b`: the second pattern as a string of stitch letters
+
+  Return a single integer: the length of the longest common subsequence of `a`
+  and `b`. A subsequence keeps letters in order but may skip any of them.
+
+  Edges: if either pattern is the empty string `""`, the overlap length is `0`.
+  If the two patterns share no stitch symbol at all, the answer is also `0`.
+
+  Example: with `a = "ABCBDAB"` and `b = "BDCAB"`, the answer is `4` (one longest
+  shared run is `BCAB`).
+starter_code: |
+  def stitch_overlap(patterns):
+      return 0
+function_name: stitch_overlap
+input_mode: function
+solution_sketch: Build a table indexed by prefix lengths of each pattern; a matching pair extends the diagonal by one, otherwise take the better of dropping one stitch from either side.
+sample_solution: |
+  def stitch_overlap(patterns):
+      a = patterns["a"]
+      b = patterns["b"]
+      m, n = len(a), len(b)
+      table = [[0] * (n + 1) for _ in range(m + 1)]
+      for i in range(1, m + 1):
+          for j in range(1, n + 1):
+              if a[i - 1] == b[j - 1]:
+                  table[i][j] = table[i - 1][j - 1] + 1
+              else:
+                  table[i][j] = max(table[i - 1][j], table[i][j - 1])
+      return table[m][n]
+hints:
+  - level: 1
+    text: Describe a subproblem by how many stitches of each pattern you have consumed so far, then compare the current pair of stitches.
+  - level: 2
+    text: If a[i-1] equals b[j-1] the shared stitch extends the overlap of the two shorter prefixes; otherwise drop one stitch from one side and keep the better result.
+  - level: 3
+    text: Fill table[i][j] = table[i-1][j-1] + 1 on a match, else max(table[i-1][j], table[i][j-1]). Row 0 and column 0 stay 0, and the answer is table[m][n].
+tests:
+  public:
+    - name: classic_overlap
+      input: {a: "ABCBDAB", b: "BDCAB"}
+      expected: 4
+    - name: one_empty
+      input: {a: "", b: "KPKP"}
+      expected: 0
+    - name: identical
+      input: {a: "CABLE", b: "CABLE"}
+      expected: 5
+  validation:
+    - name: no_shared_symbol
+      input: {a: "ABC", b: "XYZ"}
+      expected: 0
+    - name: order_conflict
+      input: {a: "PURL", b: "LOOP"}
+      expected: 1
+    - name: scattered_match
+      input: {a: "AGGTAB", b: "GXTXAYB"}
+      expected: 4
+    - name: partial_words
+      input: {a: "KNITPURL", b: "KNOTS"}
+      expected: 3
+    - name: both_empty
+      input: {a: "", b: ""}
+      expected: 0
+explanation_markdown: |
+  This is the longest common subsequence, the template two-string DP. The trick is
+  to describe every subproblem by a pair of prefix lengths: `table[i][j]` is the
+  overlap length using the first `i` stitches of `a` and the first `j` stitches of
+  `b`. That pair of small numbers is exactly the "few small values" that make a
+  slow recursion cacheable.
+
+  Compare the current pair of stitches. When `a[i-1] == b[j-1]`, that shared stitch
+  can be appended to the best overlap of the two prefixes that exclude it, so the
+  entry is the diagonal `table[i-1][j-1]` plus one. When they differ, the shared
+  run cannot use both current stitches, so you drop one from one side and keep the
+  larger of `table[i-1][j]` and `table[i][j-1]`.
+
+  The first row and first column are all `0` because comparing against an empty
+  pattern yields no shared stitches, which also handles both empty-string edges.
+  Filling the table row by row guarantees every entry reads already-computed
+  neighbours. The work is O(m*n) time and O(m*n) space.
+common_mistakes:
+  - Requiring the shared stitches to be contiguous, which computes the longest common substring instead of subsequence.
+  - Adding one in the mismatch branch instead of only on a real match, inflating the count.
+  - Forgetting the extra row and column of zeros, so prefixes of length zero are mishandled.
+  - Returning a table entry other than table[m][n], which uses only part of one pattern.

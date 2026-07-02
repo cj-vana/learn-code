@@ -1,0 +1,81 @@
+id: exercise.library.error_handling.a02
+kind: exercise
+version: 1
+language: python
+title: Reading Fares Off Transit Tags
+slug: error-handling-a02
+difficulty: easy
+concepts:
+  - python.exceptions
+  - python.strings
+prerequisites:
+  - python.functions
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.error_handling.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original transit-tag parsing task that catches ValueError from a failed int() conversion.
+prompt_markdown: |
+  A transit gate scans paper tags that end in a fare amount, like `"FARE-275"` or
+  `"ZONE-40"`. Sometimes the printer smears the number and you get junk like
+  `"FARE-abc"` or an empty tail.
+
+  Write `parse_fare(tag)`. Split the tag on `-`, take the final piece, and convert
+  it to an integer number of cents. A plain numeric string such as `"88"` (no
+  prefix) should also work. If the final piece is not a valid whole number, return
+  `-1` to mark the read as unreadable.
+starter_code: |
+  def parse_fare(tag):
+      # Convert the trailing number to an int, or return -1 if it is not numeric.
+      return 0
+function_name: parse_fare
+input_mode: function
+solution_sketch: Take the last dash-separated piece and int() it inside try/except ValueError.
+sample_solution: |
+  def parse_fare(tag):
+      try:
+          return int(tag.split("-")[-1])
+      except ValueError:
+          return -1
+hints:
+  - level: 1
+    text: "`int(\"abc\")` does not return None, it raises an exception you can catch."
+  - level: 2
+    text: Grab the last piece with `tag.split(\"-\")[-1]`, then try to convert it.
+  - level: 3
+    text: Wrap `int(...)` in try/except and return -1 from `except ValueError:`.
+tests:
+  public:
+    - name: prefixed
+      input: FARE-275
+      expected: 275
+    - name: other_prefix
+      input: GATE-40
+      expected: 40
+    - name: smeared
+      input: FARE-abc
+      expected: -1
+  validation:
+    - name: bare_number
+      input: '88'
+      expected: 88
+    - name: empty_tail
+      input: TAG-
+      expected: -1
+    - name: large_fare
+      input: ZONE-1200
+      expected: 1200
+explanation_markdown: |
+  Conversions like `int()` communicate failure by *raising* `ValueError`, not by
+  returning a special value. Catching that one exception type lets you keep the
+  happy path (`return int(...)`) short and readable while still handling smeared
+  reads. Because `int("")` also raises `ValueError`, the empty-tail case is
+  covered by the very same handler without any extra code.
+common_mistakes:
+  - Testing the string with `.isdigit()` first, which misses negative signs and defeats the point of practising exception handling.
+  - Catching `Exception` broadly, which would also hide an `IndexError` from an unexpected shape.
+  - Forgetting that `int("")` raises `ValueError` and adding a redundant emptiness check.

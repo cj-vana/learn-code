@@ -1,0 +1,96 @@
+id: lesson.library.trees_lite.a03
+kind: lesson
+version: 1
+language: python
+title: Level-Order Traversal, Depth, and Balance
+slug: lesson-trees-lite-a03
+difficulty: medium
+concepts:
+  - patterns.tree_traversal
+  - patterns.queue_bfs
+  - python.collections_module
+prerequisites:
+  - python.trees_as_data
+  - patterns.recursion
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.trees_lite.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original BFS-and-height explanation framed around a transit network fanning out station by station.
+body_markdown: |
+  Depth-first traversals plunge down one branch at a time. Sometimes you want the
+  opposite: visit a tree row by row, top to bottom. That is a **level-order** or
+  **breadth-first** traversal, and it is powered by a queue rather than
+  recursion.
+
+  Think of a transit map. The root is the central hub; level one is every
+  station one hop away; level two is every station two hops away. A queue lets
+  you process stations in exactly the order you discover them. Load the root,
+  then repeatedly pop the front node, record it, and push its non-empty children
+  to the back. A `collections.deque` gives O(1) pops from the left:
+
+  ```python
+  from collections import deque
+
+  def level_order(tree):
+      if tree is None:
+          return []
+      rows = []
+      queue = deque([tree])
+      while queue:
+          row = []
+          for _ in range(len(queue)):        # freeze this level's width
+              node = queue.popleft()
+              row.append(node["value"])
+              if node["left"] is not None:
+                  queue.append(node["left"])
+              if node["right"] is not None:
+                  queue.append(node["right"])
+          rows.append(row)
+      return rows
+  ```
+
+  The trick is capturing `len(queue)` before the inner loop. That snapshot is
+  exactly how many nodes belong to the current level, so you drain precisely one
+  row before starting the next. On the search tree from earlier lessons this
+  returns `[[5], [3, 8], [2, 4, 9]]` - one list per depth.
+
+  ### Height and balance
+
+  The **height** of a tree is the number of nodes on the longest path from the
+  root down to a leaf. We define an empty tree as height 0 and a single leaf as
+  height 1. Recursion computes it directly:
+
+  ```python
+  def height(tree):
+      if tree is None:
+          return 0
+      return 1 + max(height(tree["left"]), height(tree["right"]))
+  ```
+
+  Each node adds one to the taller of its two subtrees. A tree is
+  **height-balanced** when, at *every* node, the heights of its two subtrees
+  differ by no more than one. Balance is a per-node property, not just a
+  root-level one: a tree can look even at the top yet hide a long unbalanced
+  chain deeper down. That is why a correct balance check has to inspect every
+  node, usually by computing heights from the bottom up and reporting failure the
+  moment any node's two sides differ by more than one.
+
+  Keep the two engines straight: a queue drives breadth-first, level-by-level
+  work, while recursion drives depth measurements. You will reach for the queue
+  whenever "closest first" or "row by row" matters, and for recursive height
+  whenever a node's answer depends on how deep its subtrees run.
+checkpoints:
+  - question: Why do you record len(queue) before draining a level in the BFS loop?
+    answer: It snapshots how many nodes are in the current level so you process exactly one row before children of that row are handled.
+    explanation: Children get appended during the loop, so without freezing the count you could not tell where one level ends and the next begins.
+  - question: Using the lesson's definition, what is the height of a single leaf node and of an empty tree?
+    answer: A single leaf has height 1 and an empty tree has height 0.
+    explanation: Height counts nodes on the longest root-to-leaf path; a leaf is one node, and None contributes zero.
+  - question: Why is it not enough to check only the root's two subtree heights to decide if a tree is balanced?
+    answer: Balance must hold at every node, so a tree can be even at the root yet contain a deeper node whose subtrees differ by more than one.
+    explanation: Height-balance is a property of all nodes, so a correct check inspects each node rather than just comparing the root's two sides.

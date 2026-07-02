@@ -1,0 +1,106 @@
+id: exercise.library.iterators_generators.a12
+kind: exercise
+version: 1
+language: python
+title: Merging Two Delivery Manifests
+slug: iterators-generators-a12
+difficulty: hard
+concepts:
+  - python.iterators_generators
+  - patterns.two_pointers
+prerequisites:
+  - python.iterators_generators
+  - python.lists
+estimated_time_minutes: 17
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.iterators_generators.a12
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original delivery-manifest scenario merging two sorted streams with a generator that consumes two iterators via next().
+prompt_markdown: |
+  Two loading docks each produce a manifest of parcel weights, already sorted in
+  ascending order. Dispatch needs a single combined manifest that is still sorted.
+  Write `merge_manifests(spec)` where `spec` is a dict with keys `"a"` and `"b"`,
+  each a list of numbers sorted ascending. Return a **list** containing every
+  weight from both manifests, in sorted order (duplicates kept).
+
+  Do the merge with a **generator that consumes two iterators**: use `iter()` and
+  `next(..., None)` to walk both inputs at once, always yielding the smaller
+  current value, then drain whichever iterator still has values. Finish with
+  `list()`. Do not simply concatenate and call `sorted`; walk the two streams.
+
+  For example, `merge_manifests({"a": [1, 4, 7], "b": [2, 3, 8]})` returns
+  `[1, 2, 3, 4, 7, 8]`.
+starter_code: |
+  def merge_manifests(spec):
+      # Generator: pull from two iterators with next(), always yielding the smaller head.
+      return []
+function_name: merge_manifests
+input_mode: function
+solution_sketch: Two iterators track a current head each; yield the smaller head and advance that iterator, then drain the remaining one, using None as the exhausted sentinel.
+sample_solution: |
+  def merge_manifests(spec):
+      def merged(a, b):
+          ia = iter(a)
+          ib = iter(b)
+          x = next(ia, None)
+          y = next(ib, None)
+          while x is not None and y is not None:
+              if x <= y:
+                  yield x
+                  x = next(ia, None)
+              else:
+                  yield y
+                  y = next(ib, None)
+          while x is not None:
+              yield x
+              x = next(ia, None)
+          while y is not None:
+              yield y
+              y = next(ib, None)
+
+      return list(merged(spec["a"], spec["b"]))
+hints:
+  - level: 1
+    text: Keep the current head of each stream; compare the two heads and yield the smaller, then advance only that stream.
+  - level: 2
+    text: next(it, None) returns None when a stream is exhausted, which is a clean way to know a side is finished.
+  - level: 3
+    text: While both heads exist, yield the smaller and pull its replacement; afterward, run two drain loops that empty whichever stream still has a head.
+tests:
+  public:
+    - name: interleaved
+      input: {a: [1, 4, 7], b: [2, 3, 8]}
+      expected: [1, 2, 3, 4, 7, 8]
+    - name: one_empty
+      input: {a: [], b: [5, 9]}
+      expected: [5, 9]
+    - name: both_empty
+      input: {a: [], b: []}
+      expected: []
+  validation:
+    - name: duplicates_kept
+      input: {a: [2, 2, 5], b: [2, 6]}
+      expected: [2, 2, 2, 5, 6]
+    - name: one_runs_out_first
+      input: {a: [1, 2, 3], b: [10]}
+      expected: [1, 2, 3, 10]
+    - name: negatives
+      input: {a: [-5, 0, 4], b: [-3, 4]}
+      expected: [-5, -3, 0, 4, 4]
+explanation_markdown: |
+  This is the merge step at the heart of a merge sort, written as a lazy generator.
+  Two iterators each expose one "current head" at a time; comparing the heads and
+  yielding the smaller keeps the output sorted, and advancing only the stream you
+  took from means nothing is skipped. Using `next(it, None)` as a sentinel turns
+  "is this stream finished?" into a simple `is None` check. Once one side empties,
+  the two drain loops flush whatever remains, and since each input was already
+  sorted, the drained tail is already in order. Duplicates survive because equal
+  heads are handled by `x <= y`, yielding from `a` first.
+common_mistakes:
+  - Concatenating and sorting instead of walking the two streams, which ignores the point of consuming iterators.
+  - Advancing both iterators each step, which drops values from one side.
+  - Forgetting the drain loops, so the tail of the longer manifest is lost.

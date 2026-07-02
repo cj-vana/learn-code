@@ -1,0 +1,92 @@
+id: exercise.library.grid_simulation.a05
+kind: exercise
+version: 1
+language: python
+title: Turning the Stencil for the Print Bed
+slug: grid-simulation-a05
+difficulty: medium
+concepts:
+  - patterns.grid_traversal
+prerequisites:
+  - python.lists
+  - python.comprehensions
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.grid_simulation.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original 90-degree clockwise rotation drill framed as reorienting a stencil before laying it on a print bed.
+prompt_markdown: |
+  A print shop stores each stencil as a rectangular grid of ink codes, where
+  `grid[r][c]` is the code at row `r`, column `c`. To line the stencil up with
+  the press, the operator turns it a quarter-turn clockwise before laying it on
+  the print bed.
+
+  Write `rotate_stencil(grid)` that takes the grid (a list of lists) and returns
+  a brand-new grid rotated 90 degrees clockwise. Do not modify the input. A grid
+  with `r` rows and `c` columns becomes a grid with `c` rows and `r` columns: the
+  original top row becomes the new rightmost column, and the original left column
+  becomes the new top row. An empty grid `[]` returns `[]`.
+
+  Example: for `[[1, 2], [3, 4]]` the clockwise turn gives `[[3, 1], [4, 2]]`,
+  because the bottom-left `3` moves to the top-left and the top-left `1` moves to
+  the top-right.
+starter_code: |
+  def rotate_stencil(grid):
+      return []
+function_name: rotate_stencil
+input_mode: function
+solution_sketch: Reverse the row order so the bottom row is on top, then transpose so that top row becomes the leftmost column, producing a clockwise turn.
+sample_solution: |
+  def rotate_stencil(grid):
+      return [list(row) for row in zip(*grid[::-1])]
+hints:
+  - level: 1
+    text: A clockwise quarter-turn is a reverse of the row order followed by a transpose (swapping rows and columns).
+  - level: 2
+    text: zip(*grid) transposes a grid; feeding it grid[::-1] first handles the reversal in one step.
+  - level: 3
+    text: zip yields tuples, so wrap each with list(...) in a comprehension to return lists, and note the empty grid falls out naturally as [].
+tests:
+  public:
+    - name: two_by_two
+      input: [[1, 2], [3, 4]]
+      expected: [[3, 1], [4, 2]]
+    - name: wide_to_tall
+      input: [[1, 2, 3], [4, 5, 6]]
+      expected: [[4, 1], [5, 2], [6, 3]]
+    - name: single_row_becomes_column
+      input: [[1, 2, 3]]
+      expected: [[1], [2], [3]]
+  validation:
+    - name: single_cell
+      input: [[5]]
+      expected: [[5]]
+    - name: single_column_becomes_row
+      input: [[1], [2], [3]]
+      expected: [[3, 2, 1]]
+    - name: empty_grid
+      input: []
+      expected: []
+    - name: three_by_three
+      input: [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+      expected: [[7, 4, 1], [8, 5, 2], [9, 6, 3]]
+    - name: tall_to_wide
+      input: [[1, 2], [3, 4], [5, 6]]
+      expected: [[5, 3, 1], [6, 4, 2]]
+explanation_markdown: |
+  Rotating clockwise combines two familiar moves. Reversing the row order with
+  `grid[::-1]` lifts the original bottom row to the top; transposing with
+  `zip(*...)` then turns that top row into the leftmost column, which is exactly
+  where a clockwise turn sends it. Because `zip` produces tuples, wrapping each in
+  `list(...)` returns the mutable lists the tests expect. Building the result from
+  scratch leaves the caller's grid untouched, and an empty input produces no rows
+  to zip, so `[]` comes back on its own. The routine visits each cell once, so it
+  runs in O(rows * cols) time.
+common_mistakes:
+  - Rotating counter-clockwise by mistake (transpose then reverse) instead of reversing the rows first.
+  - Returning tuples from zip without converting to lists, so the result will not compare equal to the expected lists.
+  - Mutating the input grid in place instead of returning a fresh rotated grid.

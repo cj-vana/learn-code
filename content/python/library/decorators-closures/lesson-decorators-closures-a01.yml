@@ -1,0 +1,99 @@
+id: lesson.library.decorators_closures.a01
+kind: lesson
+version: 1
+language: python
+title: Closures That Remember State
+slug: lesson-decorators-closures-a01
+difficulty: medium
+concepts:
+  - python.closures_decorators
+prerequisites:
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.decorators_closures.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original ferry-toll factory scenario used to teach variable capture and the loop late-binding trap.
+body_markdown: |
+  A **closure** is a function that keeps a private reference to variables from
+  the scope where it was defined, even after that outer scope has returned.
+  The inner function does not copy those variables; it remembers the enclosing
+  *environment* and reads it live whenever it runs.
+
+  Imagine a ferry terminal that needs a fresh toll calculator for each vehicle
+  class. Rather than repeat the arithmetic, write a **factory** that builds a
+  configured function on demand:
+
+  ```python
+  def make_toll(base_fare):
+      def charge(passengers):
+          return base_fare + 2 * passengers
+      return charge
+
+  car_toll = make_toll(6)
+  truck_toll = make_toll(15)
+  car_toll(3)    # 6 + 6  -> 12
+  truck_toll(1)  # 15 + 2 -> 17
+  ```
+
+  Each returned `charge` carries its own captured `base_fare`. The two toll
+  functions never interfere because each call to `make_toll` creates a new
+  local environment.
+
+  When a closure needs to *update* a captured variable rather than just read it,
+  a plain assignment would create a new local instead. The `nonlocal` keyword
+  tells Python to rebind the enclosing name:
+
+  ```python
+  def make_counter():
+      count = 0
+      def tick():
+          nonlocal count
+          count += 1
+          return count
+      return tick
+
+  gate = make_counter()
+  gate(); gate(); gate()   # returns 1, then 2, then 3
+  ```
+
+  The captured `count` persists between calls, giving you stateful behavior
+  without a global variable or a class.
+
+  There is one classic trap. Because closures read captured variables *live*,
+  building functions inside a loop can surprise you:
+
+  ```python
+  builders = []
+  for factor in (2, 3, 4):
+      builders.append(lambda n: n * factor)
+  builders[0](10)   # 40, not 20!
+  ```
+
+  Every lambda shares the same `factor`, and by the time you call them the loop
+  has finished with `factor == 4`. To capture the value *at definition time*,
+  bind it as a default argument, which is evaluated immediately:
+
+  ```python
+  builders = []
+  for factor in (2, 3, 4):
+      builders.append(lambda n, f=factor: n * f)
+  builders[0](10)   # 20, as intended
+  ```
+
+  Closures are the foundation of decorators, which you will meet next: a
+  decorator is simply a function factory whose product wraps another function.
+checkpoints:
+  - question: In make_toll, why do car_toll and truck_toll produce different results even though both run the same charge body?
+    answer: Each call to make_toll creates a new local environment, so each returned charge captures its own base_fare (6 for the car, 15 for the truck).
+    explanation: A closure remembers the specific enclosing frame it was born in, and separate calls to the factory create separate frames.
+  - question: Why is the nonlocal keyword needed inside tick when it does count += 1?
+    answer: Without nonlocal, assigning to count would create a new local variable; nonlocal tells Python to rebind the count from the enclosing make_counter scope so the state persists.
+    explanation: Augmented assignment counts as assignment, which by default makes the name local unless you declare it nonlocal.
+  - question: "In the loop that appends lambda n: n * factor, why does builders[0](10) return 40 instead of 20, and how do you fix it?"
+    answer: All the lambdas share the same live factor, which equals 4 after the loop ends, so builders[0](10) is 40; binding f=factor as a default argument captures the value at definition time and fixes it.
+    explanation: Closures read captured names when called, not when defined, so a default-argument snapshot is the standard way to freeze the loop value.

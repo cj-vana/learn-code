@@ -1,0 +1,82 @@
+id: lesson.library.intervals_greedy.a02
+kind: lesson
+version: 1
+language: python
+title: Counting Concurrency With a Sweep Line
+slug: lesson-intervals-greedy-a02
+difficulty: medium
+concepts:
+  - patterns.intervals
+  - python.sorting
+prerequisites:
+  - python.lists
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.intervals_greedy.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original charging-bay framing for the two-pointer sweep that counts peak concurrency.
+body_markdown: |
+  A delivery depot charges its electric vans overnight. Each van needs a bay for
+  an interval `[plug_in, unplug]`, and the depot planner has one question: what
+  is the *most* bays in use at any single moment? That peak tells you the
+  minimum number of charging bays you must build. The same question hides inside
+  "how many meeting rooms do we need" and "did this schedule ever double-book".
+
+  A tempting wrong approach is to merge the intervals first. But merging throws
+  away exactly the information you need — three vans charging at once merge into
+  one block that looks identical to a single van. Instead you want to walk a
+  *sweep line* across time and watch the count rise and fall.
+
+  The trick is to separate the endpoints. Pull every start time into one sorted
+  list and every end time into another. Then walk both with two pointers. When
+  the next event is a start, a van plugs in, so the count goes up; when the next
+  event is an end, a van leaves, so the count goes down. Track the highest the
+  count ever reaches.
+
+  ```python
+  def peak_bays(vans):
+      starts = sorted(v[0] for v in vans)
+      ends = sorted(v[1] for v in vans)
+      i = j = 0
+      in_use = 0
+      peak = 0
+      while i < len(starts):
+          if starts[i] < ends[j]:      # a van plugs in before the next unplugs
+              in_use += 1
+              peak = max(peak, in_use)
+              i += 1
+          else:                        # a van finishes first, freeing a bay
+              in_use -= 1
+              j += 1
+      return peak
+  ```
+
+  The comparison `starts[i] < ends[j]` encodes our back-to-back rule. If one van
+  unplugs at 7 and another plugs in at 7, the start is *not* before the end, so
+  we process the departure first and reuse the freed bay — no extra bay needed.
+
+  Trace `[[1, 4], [2, 6], [5, 7]]`. Starts are `[1, 2, 5]`, ends are `[4, 6,
+  7]`. Event 1: start at 1 (in_use 1, peak 1). Event 2: start at 2 (in_use 2,
+  peak 2). Next start is 5, next end is 4; since 5 is not before 4, a van leaves
+  (in_use 1). Now start 5 versus end 6: 5 is before 6, so a van plugs in (in_use
+  2, peak stays 2). We exhaust the starts and stop. Peak is 2, so two bays
+  suffice even though three vans charged over the night.
+
+  Once you can compute the peak, related questions fall out cheaply. "Is there
+  any conflict?" is just "is the peak at least 2?" And because each list is
+  sorted once and each pointer only moves forward, the whole sweep is O(n log n)
+  for the sort and O(n) for the walk.
+checkpoints:
+  - question: Why is separating the start times and end times into two sorted lists better than merging the intervals for this problem?
+    answer: Merging collapses simultaneous intervals into a single block and loses the count of how many overlap at once, whereas separate sorted endpoints let the sweep raise and lower a running count to find the true peak.
+    explanation: The peak concurrent count is exactly the minimum number of resources (bays, rooms) needed, and only the sweep preserves it.
+  - question: In peak_bays, what does the strict comparison starts[i] < ends[j] decide when a start and an end fall on the same value?
+    answer: It processes the end first, so a resource freed at time t can be reused by something starting at time t without allocating an extra one.
+    explanation: This matches the module rule that back-to-back intervals sharing an endpoint do not overlap, so they can share a single bay.
+  - question: How would you answer "does this schedule contain any conflict?" using the same sweep?
+    answer: Run the sweep and check whether the peak count ever reaches 2; if it does, at least two intervals overlapped and there is a conflict.
+    explanation: Conflict detection is just the peak-concurrency question with a threshold of two, so one routine answers both.

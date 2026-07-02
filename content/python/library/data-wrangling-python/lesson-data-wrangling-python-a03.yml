@@ -1,0 +1,106 @@
+id: lesson.library.data_wrangling_python.a03
+kind: lesson
+version: 1
+language: python
+title: 'Sorting, Ranking, and Reshaping Records'
+slug: lesson-data-wrangling-python-a03
+difficulty: medium
+concepts:
+  - concepts.grouping_aggregation
+  - python.sorting
+prerequisites:
+  - python.sorting
+  - python.dictionaries
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.data_wrangling_python.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original walkthrough of multi-key sorting, top-n-per-group ranking, and pivoting, framed around a regatta results sheet with fresh worked code.
+body_markdown: |
+  A sailing club keeps regatta results as a flat list of dicts — one row per
+  boat per race. Flat rows are easy to collect but awkward to read. The last
+  wrangling skills you need are ordering rows the way a person wants to read
+  them, keeping only the best few per group, and reshaping the long list into
+  a table.
+
+  ### Multi-key sorting
+
+  `sorted` takes a `key` function, and tuples compare element by element, so a
+  tuple key sorts by several fields at once:
+
+  ```python
+  results = [
+      {"cls": "laser", "skipper": "Ada", "seconds": 812},
+      {"cls": "laser", "skipper": "Ben", "seconds": 799},
+      {"cls": "skiff", "skipper": "Cleo", "seconds": 655},
+  ]
+  by_class_then_time = sorted(results, key=lambda r: (r["cls"], r["seconds"]))
+  ```
+
+  Mixing directions (class ascending, time descending) is trickier. Negating
+  works for numbers, but not for strings. The reliable trick uses the fact that
+  Python's sort is **stable**: sort by the least important key first, then by
+  the most important one, and earlier orderings survive as tie-breaks.
+
+  ```python
+  rows = sorted(results, key=lambda r: r["seconds"], reverse=True)
+  rows = sorted(rows, key=lambda r: r["cls"])       # stable: within a class,
+                                                    # the time ordering remains
+  ```
+
+  ### Top-n per group
+
+  "Fastest two boats in each class" is a group-by followed by a per-group sort
+  and slice:
+
+  ```python
+  from collections import defaultdict
+
+  groups = defaultdict(list)
+  for row in results:
+      groups[row["cls"]].append(row)
+
+  podium = {
+      cls: sorted(rows, key=lambda r: r["seconds"])[:2]
+      for cls, rows in groups.items()
+  }
+  ```
+
+  Because each group is sorted independently, this stays correct even when the
+  input arrives in a jumbled order.
+
+  ### Pivoting long data into a table
+
+  A flat "long" log with one row per (boat, race, time) becomes a readable
+  grid by nesting dicts — outer key is the row label, inner key is the column:
+
+  ```python
+  log = [
+      {"skipper": "Ada", "race": "r1", "seconds": 812},
+      {"skipper": "Ada", "race": "r2", "seconds": 790},
+      {"skipper": "Ben", "race": "r1", "seconds": 799},
+  ]
+  table = {}
+  for row in log:
+      table.setdefault(row["skipper"], {})[row["race"]] = row["seconds"]
+  # {"Ada": {"r1": 812, "r2": 790}, "Ben": {"r1": 799}}
+  ```
+
+  This is the same reshaping a spreadsheet pivot table does, built from two
+  dictionary lookups. Together with grouping and joining from the earlier
+  lessons, you can now express most of what a dataframe library does using
+  nothing but lists, dicts, and `sorted`.
+checkpoints:
+  - question: You need rows ordered by department ascending and salary descending, and negating only works for numbers. How do you get both directions with string fields involved?
+    answer: Use two stable sorts — first sort by salary descending, then sort the result by department ascending; the second sort preserves the salary order within each department.
+    explanation: Python's sort is stable, so applying sorts from least to most significant key composes the orderings without needing negatable keys.
+  - question: To keep the three highest scores per team from a flat list of rows, what two steps do you combine?
+    answer: Group the rows into a dict of lists keyed by team, then sort each group's list by score descending and slice the first three.
+    explanation: Top-n per group is always a group-by followed by an independent per-group sort and slice; neither step alone is enough.
+  - question: What structure does pivoting a long log of (station, hour, reading) rows produce, and which two values pick out a single cell?
+    answer: 'A nested dict like {station: {hour: reading}}; the station selects the row and the hour selects the column.'
+    explanation: Pivoting nests one dict inside another so the pair of keys addresses one cell, exactly like row and column labels in a spreadsheet.

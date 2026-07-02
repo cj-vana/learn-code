@@ -1,0 +1,107 @@
+id: exercise.library.data_wrangling_python.a01
+kind: exercise
+version: 1
+language: python
+title: Trimming the Nursery Inventory Export
+slug: data-wrangling-python-a01
+difficulty: easy
+concepts:
+  - concepts.grouping_aggregation
+  - python.dictionaries
+prerequisites:
+  - python.lists
+  - python.dictionaries
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.data_wrangling_python.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original column-projection drill framed around a plant nursery's oversized inventory export.
+prompt_markdown: |
+  A plant nursery exports its stock as a long list of records, one dictionary per
+  plant, and every record carries far more fields than the front desk needs. Your
+  job is to trim each record down to just the requested columns.
+
+  Write `project_columns(payload)` that takes a single dictionary with two keys:
+
+  - `"rows"`: a list of record dictionaries, in display order.
+  - `"columns"`: a list of column names to keep.
+
+  Return a **new list** of dictionaries, one per input row in the same order,
+  where each output dictionary contains only the keys named in `"columns"` (with
+  their original values). You may assume every requested column is present in
+  every row.
+
+  Edge cases the tests cover:
+
+  - An empty `"rows"` list returns an empty list.
+  - An empty `"columns"` list returns one empty dictionary `{}` per row.
+
+  Example:
+
+  ```python
+  project_columns({
+      "rows": [{"sku": "FR-01", "common_name": "Fern", "price": 8, "aisle": 3}],
+      "columns": ["common_name", "price"],
+  })
+  # -> [{"common_name": "Fern", "price": 8}]
+  ```
+starter_code: |
+  def project_columns(payload):
+      return []
+function_name: project_columns
+input_mode: function
+solution_sketch: For each row build a fresh dict comprehension that pulls only the requested column keys, preserving row order.
+sample_solution: |
+  def project_columns(payload):
+      rows = payload["rows"]
+      columns = payload["columns"]
+      return [{col: row[col] for col in columns} for row in rows]
+hints:
+  - level: 1
+    text: You need one output dictionary per input row, so start by iterating over payload["rows"] in order.
+  - level: 2
+    text: 'For a single row, a dict comprehension over payload["columns"] like {col: row[col] for col in columns} keeps only the requested keys.'
+  - level: 3
+    text: Wrap that inner dict comprehension inside a list comprehension over the rows so the result is a list of trimmed dictionaries.
+tests:
+  public:
+    - name: empty_export
+      input: {"rows": [], "columns": ["common_name", "price"]}
+      expected: []
+    - name: single_row
+      input: {"rows": [{"sku": "FR-01", "common_name": "Fern", "price": 8, "aisle": 3}], "columns": ["common_name", "price"]}
+      expected: [{"common_name": "Fern", "price": 8}]
+    - name: two_rows
+      input: {"rows": [{"sku": "A", "common_name": "Aloe", "price": 12, "aisle": 1}, {"sku": "B", "common_name": "Basil", "price": 4, "aisle": 2}], "columns": ["sku", "price"]}
+      expected: [{"sku": "A", "price": 12}, {"sku": "B", "price": 4}]
+  validation:
+    - name: single_column
+      input: {"rows": [{"common_name": "Moss", "price": 3}, {"common_name": "Ivy", "price": 6}], "columns": ["common_name"]}
+      expected: [{"common_name": "Moss"}, {"common_name": "Ivy"}]
+    - name: keep_all_columns
+      input: {"rows": [{"common_name": "Sage", "price": 5}], "columns": ["common_name", "price"]}
+      expected: [{"common_name": "Sage", "price": 5}]
+    - name: empty_columns
+      input: {"rows": [{"a": 1}, {"a": 2}], "columns": []}
+      expected: [{}, {}]
+    - name: preserves_order
+      input: {"rows": [{"common_name": "Yew", "aisle": 9, "price": 20}, {"common_name": "Elm", "aisle": 2, "price": 30}, {"common_name": "Oak", "aisle": 5, "price": 25}], "columns": ["common_name", "aisle"]}
+      expected: [{"common_name": "Yew", "aisle": 9}, {"common_name": "Elm", "aisle": 2}, {"common_name": "Oak", "aisle": 5}]
+explanation_markdown: |
+  Projection is the "keep only these columns" half of data wrangling. The clean
+  way to express it is a nested comprehension: an inner dict comprehension that
+  rebuilds each row from the requested column names, and an outer list
+  comprehension that walks the rows in order. Because you construct brand-new
+  dictionaries, the caller's original records are never mutated.
+
+  The two empty cases fall out for free: no rows means the outer comprehension
+  yields an empty list, and no columns means each inner comprehension yields an
+  empty dictionary. One pass over the rows makes this O(rows x columns).
+common_mistakes:
+  - Returning the original row dictionaries unchanged instead of building trimmed copies.
+  - Deleting unwanted keys from each row in place, which mutates the caller's data.
+  - Iterating over row.items() and filtering, which is more code than iterating the requested columns directly.

@@ -1,0 +1,125 @@
+id: exercise.library.linked_lists_patterns.a10
+kind: exercise
+version: 1
+language: python
+title: Palindrome Signal Relay
+slug: linked-lists-patterns-a10
+difficulty: hard
+concepts:
+  - patterns.linked_list
+  - patterns.two_pointers
+prerequisites:
+  - python.classes
+  - python.loops
+estimated_time_minutes: 20
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.linked_lists_patterns.a10
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original relay-tower framing that checks chain symmetry by combining a fast/slow midpoint with an in-place reversal of the second half.
+prompt_markdown: |
+  A relay of signal towers passes a code down a chain, and the network is healthy
+  only if the sequence of codes reads the same from either end. Write
+  `is_symmetric_relay(codes)` that takes a list of tower codes, builds a singly
+  linked list of `Node` objects, and returns `True` if the chain is a palindrome
+  and `False` otherwise.
+
+  Aim for the linked-list technique rather than an obvious shortcut: find the
+  midpoint with a fast/slow walk, reverse the second half in place, then compare
+  it against the first half node by node. An empty relay and a single-tower relay
+  both count as symmetric.
+starter_code: |
+  def is_symmetric_relay(codes):
+      # Find the middle, reverse the second half, then compare the two halves.
+      return False
+function_name: is_symmetric_relay
+input_mode: function
+solution_sketch: Use fast/slow to land slow on the second half, reverse from slow, then walk the front half and reversed back half in lockstep comparing values.
+sample_solution: |
+  def is_symmetric_relay(codes):
+      class Node:
+          def __init__(self, value):
+              self.value = value
+              self.next = None
+
+      if not codes:
+          return True
+
+      nodes = [Node(code) for code in codes]
+      for i in range(len(nodes) - 1):
+          nodes[i].next = nodes[i + 1]
+      head = nodes[0]
+
+      slow = head
+      fast = head
+      while fast is not None and fast.next is not None:
+          slow = slow.next
+          fast = fast.next.next
+
+      prev = None
+      current = slow
+      while current is not None:
+          nxt = current.next
+          current.next = prev
+          prev = current
+          current = nxt
+
+      left = head
+      right = prev
+      while right is not None:
+          if left.value != right.value:
+              return False
+          left = left.next
+          right = right.next
+      return True
+hints:
+  - level: 1
+    text: A palindrome check only needs to compare the first half against the reversed second half.
+  - level: 2
+    text: Use a fast/slow walk to reach the start of the second half, then reverse that half in place with the prev/current dance.
+  - level: 3
+    text: Walk one cursor from the head and one from the reversed second half at the same time; stop when the shorter (back) half runs out and report any value mismatch.
+tests:
+  public:
+    - name: odd_palindrome
+      input: [7, 4, 7]
+      expected: true
+    - name: even_palindrome
+      input: [3, 8, 8, 3]
+      expected: true
+    - name: not_palindrome
+      input: [1, 2, 3]
+      expected: false
+  validation:
+    - name: empty
+      input: []
+      expected: true
+    - name: single
+      input: [9]
+      expected: true
+    - name: even_mismatch
+      input: [1, 2, 4, 1]
+      expected: false
+    - name: long_palindrome
+      input: [2, 5, 1, 9, 1, 5, 2]
+      expected: true
+    - name: near_miss
+      input: [5, 6, 7, 6, 6]
+      expected: false
+explanation_markdown: |
+  This problem stitches together two techniques from the module. First a fast/slow
+  walk lands `slow` at the start of the second half without ever counting the
+  length. Then an in-place reversal turns that second half around so its values run
+  outward-to-center. Finally two cursors, one from the original head and one from
+  the reversed half, march together and compare values; the walk stops when the
+  back half is exhausted, which handles both odd and even lengths cleanly. The
+  whole check runs in one linear pass with only a handful of pointers, and it works
+  because comparing the front half against the reversed back half is exactly what
+  it means to read the same from either end.
+common_mistakes:
+  - Comparing until the front cursor ends instead of stopping when the reversed back half runs out.
+  - Forgetting the empty and single-node cases, which are trivially symmetric.
+  - Reversing the whole chain instead of just the second half, which misaligns the comparison.

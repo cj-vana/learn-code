@@ -1,0 +1,109 @@
+id: exercise.library.heaps_topk.a09
+kind: exercise
+version: 1
+language: python
+title: The Print Shop Scheduler
+slug: heaps-topk-a09
+difficulty: hard
+concepts:
+  - patterns.heap_topk
+  - python.heapq_bisect
+  - patterns.simulation
+prerequisites:
+  - python.heapq_bisect
+estimated_time_minutes: 24
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.heaps_topk.a09
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original non-preemptive priority-scheduling simulation framed around a single print-shop press served as a pure function.
+prompt_markdown: |
+  A print shop runs a single press. Jobs are submitted over the day, each with a
+  submission time, a priority (a smaller number means more important), and a run
+  duration. The press works one job at a time and never interrupts a running job.
+
+  When the press becomes free it starts the **most important waiting job** (lowest
+  priority number); ties go to the **earlier submission time**, and any further tie
+  to the **smaller job id**. If no job has been submitted yet, the press idles
+  until the next submission arrives.
+
+  Write `run_press(data)` where `data` is a dict with key `jobs`, a list of jobs.
+  Each job is a list `[job_id, submit_time, priority, duration]` of integers.
+  Return the list of `job_id`s in the order the press completes them. Assume all
+  ids are distinct and the press starts at time `0`.
+starter_code: |
+  import heapq
+
+
+  def run_press(data):
+      return []
+function_name: run_press
+input_mode: function
+solution_sketch: Sort jobs by submit time, then repeatedly admit all jobs submitted by the current clock into a heap keyed on (priority, submit, id) and run the heap's top, advancing the clock or jumping to the next submission when idle.
+sample_solution: |
+  import heapq
+
+
+  def run_press(data):
+      jobs = sorted(data["jobs"], key=lambda job: job[1])
+      ready = []
+      order = []
+      clock = 0
+      i = 0
+      n = len(jobs)
+      while i < n or ready:
+          while i < n and jobs[i][1] <= clock:
+              job_id, submit, priority, duration = jobs[i]
+              heapq.heappush(ready, (priority, submit, job_id, duration))
+              i += 1
+          if not ready:
+              clock = jobs[i][1]
+              continue
+          priority, submit, job_id, duration = heapq.heappop(ready)
+          order.append(job_id)
+          clock += duration
+      return order
+hints:
+  - level: 1
+    text: Keep a heap of jobs that have been submitted but not yet run, ordered by (priority, submit_time, id).
+  - level: 2
+    text: Before choosing a job, admit every job whose submit time is at or before the current clock; then pop the heap's top and advance the clock by its duration.
+  - level: 3
+    text: If the heap is empty but jobs remain, the press is idle, so jump the clock forward to the next unsubmitted job's submit time before admitting again.
+tests:
+  public:
+    - name: priority_wins_at_free_moment
+      input: {jobs: [[1, 0, 2, 3], [2, 1, 1, 2], [3, 2, 3, 1]]}
+      expected: [1, 2, 3]
+    - name: single_job
+      input: {jobs: [[7, 0, 5, 4]]}
+      expected: [7]
+    - name: idle_gap
+      input: {jobs: [[9, 10, 1, 2], [8, 12, 1, 1]]}
+      expected: [9, 8]
+  validation:
+    - name: submit_time_tiebreak
+      input: {jobs: [[1, 0, 1, 5], [2, 1, 1, 1], [3, 1, 1, 1]]}
+      expected: [1, 2, 3]
+    - name: later_important_job_waits
+      input: {jobs: [[1, 0, 5, 4], [2, 1, 1, 1]]}
+      expected: [1, 2]
+    - name: all_at_once
+      input: {jobs: [[3, 0, 3, 1], [1, 0, 1, 1], [2, 0, 2, 1]]}
+      expected: [1, 2, 3]
+explanation_markdown: |
+  A non-preemptive scheduler only makes a decision when the press is free, so the
+  simulation loops on those moments. A heap keyed on `(priority, submit_time,
+  job_id)` makes "pick the most important waiting job" an O(log n) `heappop`, with
+  the extra tuple fields encoding the exact tie-break rules. Admitting jobs whose
+  submit time has passed before each choice models the queue filling up over time,
+  and jumping the clock to the next submission when the heap is empty models an
+  idle press. Sorting the jobs by submit time once lets you admit them with a
+  single moving index, giving O(n log n) overall as a clean pure function.
+common_mistakes:
+  - Choosing among all jobs instead of only those already submitted by the current clock.
+  - Forgetting the idle case, so an empty ready heap loops forever or errors instead of jumping the clock.
+  - Encoding the tie-breaks in the wrong order, letting a later or higher-id job jump ahead of an equally important earlier one.

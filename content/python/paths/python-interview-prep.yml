@@ -12,7 +12,7 @@ outcomes:
 - Recognize the right algorithm pattern before you start coding
 - Solve original easy and easy-medium problems across all core patterns
 - Explain your solution and its Big-O out loud
-estimated_hours: 41
+estimated_hours: 66
 review_status: published
 source_status: original
 provenance:
@@ -292,6 +292,137 @@ units:
   - exercise.library.recursion_backtracking.a08
   - quiz.library.recursion_backtracking.a01
   - quiz.library.recursion_backtracking.a02
+- id: unit.linked_lists_patterns
+  title: Linked Lists
+  description: Lessons, drills, and quizzes for linked lists.
+  items:
+  - lesson.library.linked_lists_patterns.a01
+  - lesson.library.linked_lists_patterns.a02
+  - lesson.library.linked_lists_patterns.a03
+  - exercise.library.linked_lists_patterns.a01
+  - exercise.library.linked_lists_patterns.a02
+  - exercise.library.linked_lists_patterns.a03
+  - exercise.library.linked_lists_patterns.a04
+  - exercise.library.linked_lists_patterns.a05
+  - exercise.library.linked_lists_patterns.a06
+  - exercise.library.linked_lists_patterns.a07
+  - exercise.library.linked_lists_patterns.a08
+  - exercise.library.linked_lists_patterns.a09
+  - exercise.library.linked_lists_patterns.a10
+  - exercise.library.linked_lists_patterns.a11
+  - exercise.library.linked_lists_patterns.a12
+  - quiz.library.linked_lists_patterns.a01
+  - quiz.library.linked_lists_patterns.a02
+- id: unit.trees_lite
+  title: Trees
+  description: Lessons, drills, and quizzes for trees.
+  items:
+  - lesson.library.trees_lite.a01
+  - lesson.library.trees_lite.a02
+  - lesson.library.trees_lite.a03
+  - lesson.library.trees_lite.a04
+  - exercise.library.trees_lite.a01
+  - exercise.library.trees_lite.a02
+  - exercise.library.trees_lite.a03
+  - exercise.library.trees_lite.a04
+  - exercise.library.trees_lite.a05
+  - exercise.library.trees_lite.a06
+  - exercise.library.trees_lite.a07
+  - exercise.library.trees_lite.a08
+  - exercise.library.trees_lite.a09
+  - exercise.library.trees_lite.a10
+  - exercise.library.trees_lite.a11
+  - exercise.library.trees_lite.a12
+  - quiz.library.trees_lite.a01
+  - quiz.library.trees_lite.a02
+  - quiz.library.trees_lite.a03
+- id: unit.graphs_lite
+  title: Graphs
+  description: Lessons, drills, and quizzes for graphs.
+  items:
+  - lesson.library.graphs_lite.a01
+  - lesson.library.graphs_lite.a02
+  - lesson.library.graphs_lite.a03
+  - lesson.library.graphs_lite.a04
+  - exercise.library.graphs_lite.a01
+  - exercise.library.graphs_lite.a02
+  - exercise.library.graphs_lite.a03
+  - exercise.library.graphs_lite.a04
+  - exercise.library.graphs_lite.a05
+  - exercise.library.graphs_lite.a06
+  - exercise.library.graphs_lite.a07
+  - exercise.library.graphs_lite.a08
+  - exercise.library.graphs_lite.a09
+  - exercise.library.graphs_lite.a10
+  - exercise.library.graphs_lite.a11
+  - exercise.library.graphs_lite.a12
+  - quiz.library.graphs_lite.a01
+  - quiz.library.graphs_lite.a02
+  - quiz.library.graphs_lite.a03
+- id: unit.heaps_topk
+  title: Heaps & Top-K
+  description: Lessons, drills, and quizzes for heaps & top-k.
+  items:
+  - lesson.library.heaps_topk.a01
+  - lesson.library.heaps_topk.a02
+  - lesson.library.heaps_topk.a03
+  - exercise.library.heaps_topk.a01
+  - exercise.library.heaps_topk.a02
+  - exercise.library.heaps_topk.a03
+  - exercise.library.heaps_topk.a04
+  - exercise.library.heaps_topk.a05
+  - exercise.library.heaps_topk.a06
+  - exercise.library.heaps_topk.a07
+  - exercise.library.heaps_topk.a08
+  - exercise.library.heaps_topk.a09
+  - exercise.library.heaps_topk.a10
+  - exercise.library.heaps_topk.a11
+  - exercise.library.heaps_topk.a12
+  - quiz.library.heaps_topk.a01
+  - quiz.library.heaps_topk.a02
+- id: unit.intervals_greedy
+  title: Intervals & Greedy
+  description: Lessons, drills, and quizzes for intervals & greedy.
+  items:
+  - lesson.library.intervals_greedy.a01
+  - lesson.library.intervals_greedy.a02
+  - lesson.library.intervals_greedy.a03
+  - exercise.library.intervals_greedy.a01
+  - exercise.library.intervals_greedy.a02
+  - exercise.library.intervals_greedy.a03
+  - exercise.library.intervals_greedy.a04
+  - exercise.library.intervals_greedy.a05
+  - exercise.library.intervals_greedy.a06
+  - exercise.library.intervals_greedy.a07
+  - exercise.library.intervals_greedy.a08
+  - exercise.library.intervals_greedy.a09
+  - exercise.library.intervals_greedy.a10
+  - exercise.library.intervals_greedy.a11
+  - exercise.library.intervals_greedy.a12
+  - quiz.library.intervals_greedy.a01
+  - quiz.library.intervals_greedy.a02
+- id: unit.dp_recognition
+  title: Dynamic Programming
+  description: Lessons, drills, and quizzes for dynamic programming.
+  items:
+  - lesson.library.dp_recognition.a01
+  - lesson.library.dp_recognition.a02
+  - lesson.library.dp_recognition.a03
+  - lesson.library.dp_recognition.a04
+  - exercise.library.dp_recognition.a01
+  - exercise.library.dp_recognition.a02
+  - exercise.library.dp_recognition.a03
+  - exercise.library.dp_recognition.a04
+  - exercise.library.dp_recognition.a05
+  - exercise.library.dp_recognition.a06
+  - exercise.library.dp_recognition.a07
+  - exercise.library.dp_recognition.a08
+  - exercise.library.dp_recognition.a09
+  - exercise.library.dp_recognition.a10
+  - exercise.library.dp_recognition.a11
+  - exercise.library.dp_recognition.a12
+  - quiz.library.dp_recognition.a01
+  - quiz.library.dp_recognition.a02
 - id: unit.mixed_capstones
   title: Mixed Capstones
   description: Lessons, drills, and quizzes for mixed capstones.

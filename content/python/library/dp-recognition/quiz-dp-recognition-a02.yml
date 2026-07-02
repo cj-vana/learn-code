@@ -1,0 +1,105 @@
+id: quiz.library.dp_recognition.a02
+kind: quiz
+version: 1
+language: python
+title: Recurrences and Caches, Line by Line
+slug: quiz-dp-recognition-a02
+difficulty: medium
+concepts:
+  - patterns.dynamic_programming
+  - concepts.memoization
+  - python.functions
+prerequisites:
+  - patterns.dynamic_programming
+  - python.functions
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dp_recognition.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax quiz on memo dictionaries, table initialization, base cases, and iteration order in Python DP code.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: |
+      A memoized helper starts with `if n in memo: return memo[n]`. What must
+      happen just before every `return` of a freshly computed result?
+    choices:
+      - Store it with memo[n] = result so later calls hit the cache
+      - Delete the oldest cache entry to bound memory
+      - Reset memo to {} for the next top-level call
+      - Sort the memo keys
+    correct_choice: Store it with memo[n] = result so later calls hit the cache
+    explanation: |
+      Forgetting the store is the classic memoization bug: the code stays
+      correct but every branch recomputes, and the runtime remains exponential.
+    concepts:
+      - concepts.memoization
+  - id: q2
+    prompt: |
+      Why is `def ways(n, memo={})` a risky signature for a memoized function
+      in Python?
+    choices:
+      - The default dict is created once and shared across every call to the function
+      - Dicts cannot be default arguments
+      - The memo is re-created on each call, so nothing is cached
+      - Keyword arguments disable recursion
+    correct_choice: The default dict is created once and shared across every call to the function
+    explanation: |
+      Mutable defaults persist between calls. For a pure function the shared
+      cache can even be intentional — but stale entries survive across calls,
+      which surprises anyone who expected a fresh memo.
+    concepts:
+      - python.functions
+      - concepts.memoization
+  - id: q3
+    prompt: |
+      A bottom-up table for "ways to make an amount from coin values" begins
+      `dp = [0] * (amount + 1)`. What must dp[0] be set to before the loops
+      run, and why?
+    choices:
+      - 1 — there is exactly one way to make zero (use nothing), and it seeds every other count
+      - 0 — nothing has been computed yet
+      - amount — the table counts down from the target
+      - -1 — to mark it as unvisited
+    correct_choice: 1 — there is exactly one way to make zero (use nothing), and it seeds every other count
+    explanation: |
+      Every combination is built by extending the empty combination, so the base
+      case dp[0] = 1 is where all counts flow from; leaving it 0 makes the whole
+      table zero.
+    concepts:
+      - patterns.dynamic_programming
+  - id: q4
+    prompt: |
+      In a 0/1 selection problem with a 1-D table, the update loop runs
+      `for cap in range(capacity, weight - 1, -1)`. Why must it iterate downward?
+    choices:
+      - Iterating upward would let the same item be counted twice in one pass
+      - Python range cannot count upward from a variable start
+      - Downward iteration is faster due to caching
+      - The table must end at index zero
+    correct_choice: Iterating upward would let the same item be counted twice in one pass
+    explanation: |
+      Going down ensures dp[cap - weight] still holds the previous item-set's
+      value. Upward iteration reads entries already updated with the current
+      item — silently turning 0/1 selection into unlimited reuse.
+    concepts:
+      - patterns.dynamic_programming
+      - concepts.space_complexity
+  - id: q5
+    prompt: What does decorating a recursive function with `functools.lru_cache(maxsize=None)` do?
+    choices:
+      - Caches results keyed by the call's arguments, memoizing it automatically
+      - Limits the recursion depth to the cache size
+      - Converts the recursion into an iterative loop
+      - Precomputes the function for all possible inputs at import time
+    correct_choice: Caches results keyed by the call's arguments, memoizing it automatically
+    explanation: |
+      lru_cache wraps the function with an argument-keyed cache, giving hand-written
+      memoization behaviour in one line; arguments must be hashable for it to work.
+    concepts:
+      - concepts.memoization
+      - python.functions

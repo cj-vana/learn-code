@@ -1,0 +1,88 @@
+id: lesson.library.dp_recognition.a04
+kind: lesson
+version: 1
+language: python
+title: 'Two-String DP and Knowing When to Memoize'
+slug: lesson-dp-recognition-a04
+difficulty: hard
+concepts:
+  - patterns.dynamic_programming
+  - concepts.memoization
+prerequisites:
+  - python.strings
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dp_recognition.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original plating-sequence comparison used to teach two-string grid DP and a recognition checklist for memoization.
+body_markdown: |
+  Some of the most useful DP problems compare *two* sequences. Two chefs each
+  plate a tasting menu as an ordered list of ingredients, and you want the
+  longest run of ingredients that appears in both, in the same relative order,
+  though not necessarily adjacent. That is the **longest common subsequence**
+  (LCS), and it is the template for spell-checkers, diff tools, and DNA
+  alignment.
+
+  The insight is to build a table indexed by *how much of each sequence you have
+  consumed*. Let `L[i][j]` be the LCS length using the first `i` items of
+  sequence `a` and the first `j` items of sequence `b`. Compare the current pair:
+
+  - if `a[i-1] == b[j-1]`, that shared item extends the best alignment of the
+    two shorter prefixes: `L[i][j] = L[i-1][j-1] + 1`.
+  - otherwise, drop one item from one side and keep the better result:
+    `L[i][j] = max(L[i-1][j], L[i][j-1])`.
+
+  ```python
+  def lcs_length(a, b):
+      m, n = len(a), len(b)
+      table = [[0] * (n + 1) for _ in range(m + 1)]
+      for i in range(1, m + 1):
+          for j in range(1, n + 1):
+              if a[i - 1] == b[j - 1]:
+                  table[i][j] = table[i - 1][j - 1] + 1
+              else:
+                  table[i][j] = max(table[i - 1][j], table[i][j - 1])
+      return table[m][n]
+  ```
+
+  The first row and column stay `0`: comparing against an empty prefix yields no
+  common items. This is O(m*n) time and O(m*n) space. The same two-axis table,
+  with a different transition, solves edit distance, string interleaving, and
+  many alignment questions. Once you recognize "state = a prefix of each input,"
+  the table almost writes itself.
+
+  The deeper skill this whole module trains is **recognition**: knowing when a
+  brute-force recursion is secretly a DP. Run through this checklist when a
+  recursive solution feels too slow:
+
+  1. **Can you phrase the answer in terms of smaller versions of the same
+     problem?** If yes, you have a recurrence.
+  2. **Do different recursive paths reach the same subproblem?** If the same
+     arguments recur, you have overlapping subproblems, the DP trigger.
+  3. **Is the subproblem fully described by a few small values** (an index, a
+     remaining capacity, a pair of prefix lengths)? Those values are your cache
+     key or table coordinates.
+
+  When all three hold, you have a choice of technique, and the trade-off is
+  concrete. **Top-down memoization** mirrors the recursion, only computes states
+  the input actually reaches, and is easiest to write from a working brute force,
+  at the cost of call-stack depth. **Bottom-up tabulation** computes every state
+  in dependency order, avoids recursion limits, and opens the door to rolling-
+  array space savings, at the cost of sometimes computing states you did not
+  need. Both are the same asymptotic time. Reach for memoization when the state
+  space is sparse or the recurrence is awkward to order; reach for tabulation
+  when you want tight control over space or worry about deep recursion.
+checkpoints:
+  - question: In the LCS table, what does a matching pair `a[i-1] == b[j-1]` let you do?
+    answer: Extend the best alignment of the two shorter prefixes by one, so `L[i][j] = L[i-1][j-1] + 1`.
+    explanation: A shared item can always be appended to the LCS of the prefixes that exclude it, which is why the diagonal entry drives the match case.
+  - question: What are the three signs that a slow recursion should be turned into a DP?
+    answer: The answer decomposes into smaller versions of the same problem, different recursive paths hit the same subproblem, and each subproblem is described by a few small values.
+    explanation: Those three together, a recurrence, overlapping subproblems, and a small state, are exactly the conditions memoization or tabulation exploit.
+  - question: Given equal asymptotic time, when would you prefer top-down memoization over bottom-up tabulation?
+    answer: When only a sparse subset of states is actually reached, or when the recurrence is awkward to order, since memoization computes only the states the input visits and mirrors the recursion directly.
+    explanation: Tabulation must fill every state in dependency order, so on sparse state spaces or hard-to-order recurrences the top-down cache does strictly less work and is easier to derive from a brute force.

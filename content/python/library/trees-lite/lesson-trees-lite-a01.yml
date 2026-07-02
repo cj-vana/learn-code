@@ -1,0 +1,91 @@
+id: lesson.library.trees_lite.a01
+kind: lesson
+version: 1
+language: python
+title: Modelling a Binary Tree With Nested Dicts
+slug: lesson-trees-lite-a01
+difficulty: medium
+concepts:
+  - python.trees_as_data
+  - python.dictionaries
+prerequisites:
+  - python.functions
+  - python.dictionaries
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.trees_lite.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original nested-dict node convention framed around a greenhouse irrigation manifold.
+body_markdown: |
+  A binary tree is any structure where each item branches into at most two
+  children. You do not need a class to hold one. In this module we model every
+  tree with plain dictionaries so the whole shape is just data you can read,
+  print, and compare with `==`.
+
+  One **node** is a dictionary with exactly three keys:
+
+  ```python
+  node = {"value": 5, "left": None, "right": None}
+  ```
+
+  - `"value"` is the payload stored at that node.
+  - `"left"` and `"right"` are the two children. Each is either another node
+    dictionary or `None` when that branch is empty.
+
+  An empty tree is simply `None`. A single leaf is a node whose `left` and
+  `right` are both `None`. Larger trees nest node dictionaries inside one
+  another. Picture a greenhouse irrigation manifold: the main valve splits into
+  two pipes, and each of those may split again before ending at a sprinkler.
+
+  ```python
+  manifold = {
+      "value": 5,
+      "left": {
+          "value": 3,
+          "left": {"value": 2, "left": None, "right": None},
+          "right": {"value": 4, "left": None, "right": None},
+      },
+      "right": {
+          "value": 8,
+          "left": None,
+          "right": {"value": 9, "left": None, "right": None},
+      },
+  }
+  ```
+
+  To reach a value, you index by key: `manifold["left"]["right"]["value"]` is
+  `4`. Notice how each child is a fully-formed tree in its own right. That
+  self-similarity is the whole reason recursion fits trees so naturally: a
+  function that expects a tree can hand `node["left"]` straight back to itself,
+  because a subtree obeys the exact same rules as the root.
+
+  Because a node is a dictionary and children may be `None`, the two questions
+  you ask constantly are *"is this branch empty?"* and *"what are its
+  children?"*:
+
+  ```python
+  def is_leaf(node):
+      return node is not None and node["left"] is None and node["right"] is None
+  ```
+
+  Two habits will save you from most bugs. First, always test for `None` before
+  indexing, because `None["value"]` raises a `TypeError`. Second, treat the
+  empty tree as a real, valid input rather than an afterthought; almost every
+  tree function has a clean base case of "if the tree is `None`, return the
+  empty answer." Get comfortable building these dictionaries by hand and reading
+  a value out of a deep branch. Every traversal, height calculation, and search
+  in the rest of this module is built on the same three-key node.
+checkpoints:
+  - question: How do you represent an empty tree, and how do you represent a single leaf node holding the value 7?
+    answer: 'An empty tree is None; a single leaf is {"value": 7, "left": None, "right": None}.'
+    explanation: Every node carries value, left, and right; a leaf simply has both children set to None, while a wholly empty tree is just None.
+  - question: Given the manifold tree in the lesson, what expression retrieves the value 9?
+    answer: manifold["right"]["right"]["value"]
+    explanation: 9 sits on the right child of the root's right child, so you index right, then right, then read the value key.
+  - question: Why must you check whether a node is None before reading node["value"]?
+    answer: Indexing None raises a TypeError, so an empty branch would crash the function unless you handle it first.
+    explanation: None has no keys, so the None check is the base case that lets recursion stop safely at empty branches.

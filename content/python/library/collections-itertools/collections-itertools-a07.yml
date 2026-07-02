@@ -1,0 +1,82 @@
+id: exercise.library.collections_itertools.a07
+kind: exercise
+version: 1
+language: python
+title: Sensor Pairs That Balance
+slug: collections-itertools-a07
+difficulty: medium
+concepts:
+  - python.itertools_module
+  - patterns.brute_force
+prerequisites:
+  - python.lists
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.collections_itertools.a07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original greenhouse sensor-calibration scenario counting unordered pairs with itertools.combinations.
+prompt_markdown: |
+  A greenhouse calibrates its humidity sensors in balanced pairs: two sensors
+  balance when their readings add up to exactly a target value. Write
+  `count_balanced_pairs(payload)` where `payload` is a dict with keys `readings`
+  (a list of integers) and `target` (an integer). Return the number of
+  *unordered* pairs of positions whose two readings sum to the target. A pair is
+  chosen by position, so equal readings at different positions still count as
+  separate sensors, but each pair `{i, j}` is counted only once.
+starter_code: |
+  def count_balanced_pairs(payload):
+      return 0
+function_name: count_balanced_pairs
+input_mode: function
+solution_sketch: Use itertools.combinations to walk each unordered pair once and count those that sum to the target.
+sample_solution: |
+  from itertools import combinations
+
+
+  def count_balanced_pairs(payload):
+      readings = payload["readings"]
+      target = payload["target"]
+      return sum(1 for a, b in combinations(readings, 2) if a + b == target)
+hints:
+  - level: 1
+    text: You want every pair of two different positions, without counting a pair twice.
+  - level: 2
+    text: itertools.combinations(readings, 2) yields each unordered pair (a, b) exactly once.
+  - level: 3
+    text: Count the pairs where a + b == target; a generator with sum(1 for ...) totals them cleanly.
+tests:
+  public:
+    - name: single_pair
+      input: {readings: [1, 2, 3], target: 5}
+      expected: 1
+    - name: no_pair
+      input: {readings: [1, 2, 3], target: 100}
+      expected: 0
+    - name: duplicate_values
+      input: {readings: [2, 2, 3], target: 4}
+      expected: 1
+  validation:
+    - name: several_pairs
+      input: {readings: [1, 4, 3, 2, 5], target: 6}
+      expected: 2
+    - name: all_equal
+      input: {readings: [3, 3, 3, 3], target: 6}
+      expected: 6
+    - name: empty
+      input: {readings: [], target: 0}
+      expected: 0
+explanation_markdown: |
+  `combinations(readings, 2)` yields every unordered pair of positions exactly
+  once -- `(a, b)` appears but `(b, a)` never does -- which is precisely what
+  "count each pair once" demands. Summing `1` for every pair whose values add to
+  the target counts the matches in a single readable pass. Because combinations
+  works on positions rather than values, four identical readings still produce
+  `C(4, 2) = 6` distinct pairs.
+common_mistakes:
+  - Using permutations or a double loop over all i and j, which counts every pair twice.
+  - Deduplicating by value and undercounting when equal readings sit at different positions.
+  - Comparing with `<=` or `>=` instead of an exact `==` to the target.

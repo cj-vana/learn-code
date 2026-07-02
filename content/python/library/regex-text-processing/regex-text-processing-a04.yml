@@ -1,0 +1,118 @@
+id: exercise.library.regex_text_processing.a04
+kind: exercise
+version: 1
+language: python
+title: Parse a Transit Log Line
+slug: regex-text-processing-a04
+difficulty: medium
+concepts:
+  - python.regex
+  - python.dictionaries
+prerequisites:
+  - python.regex
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.regex_text_processing.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original transit-boarding log line parsed into a structured dict with capture groups.
+prompt_markdown: |
+  A transit control desk records boarding events as single lines like:
+
+      07:45 LINE-2 BOARD 34
+
+  That is a time (`HH:MM`), a line label (`LINE-` plus digits), an action word,
+  and a passenger count. Write `parse_transit_log(line)` that uses capture groups
+  to split one such line into a dictionary:
+
+      {"time": "07:45", "line": "LINE-2", "action": "BOARD", "count": 34}
+
+  The `count` value must be an integer; the others are strings. You may assume
+  every input follows this exact shape.
+starter_code: |
+  import re
+
+
+  def parse_transit_log(line):
+      return {}
+function_name: parse_transit_log
+input_mode: function
+solution_sketch: Match the line with four capture groups and build a dict, converting the final group to int.
+sample_solution: |
+  import re
+
+
+  def parse_transit_log(line):
+      m = re.match(r"(\d{2}:\d{2}) (LINE-\d+) (\w+) (\d+)", line)
+      return {
+          "time": m.group(1),
+          "line": m.group(2),
+          "action": m.group(3),
+          "count": int(m.group(4)),
+      }
+hints:
+  - level: 1
+    text: Wrap each of the four fields in parentheses so it becomes its own capture group.
+  - level: 2
+    text: The groups are numbered 1 to 4 in order; read them with m.group(1) through m.group(4).
+  - level: 3
+    text: Use r"(\d{2}:\d{2}) (LINE-\d+) (\w+) (\d+)" and wrap the fourth group in int() for the count.
+tests:
+  public:
+    - name: boarding
+      input: 07:45 LINE-2 BOARD 34
+      expected:
+        time: '07:45'
+        line: LINE-2
+        action: BOARD
+        count: 34
+    - name: alighting
+      input: 18:03 LINE-11 EXIT 8
+      expected:
+        time: '18:03'
+        line: LINE-11
+        action: EXIT
+        count: 8
+    - name: zero_count
+      input: 05:00 LINE-1 HOLD 0
+      expected:
+        time: '05:00'
+        line: LINE-1
+        action: HOLD
+        count: 0
+  validation:
+    - name: large_count
+      input: 12:30 LINE-7 BOARD 125
+      expected:
+        time: '12:30'
+        line: LINE-7
+        action: BOARD
+        count: 125
+    - name: single_digit_line
+      input: 09:15 LINE-3 TRANSFER 12
+      expected:
+        time: '09:15'
+        line: LINE-3
+        action: TRANSFER
+        count: 12
+    - name: midnight
+      input: 00:00 LINE-9 SWEEP 2
+      expected:
+        time: '00:00'
+        line: LINE-9
+        action: SWEEP
+        count: 2
+explanation_markdown: |
+  Each field is wrapped in parentheses, so a single `re.match` produces four
+  numbered capture groups. `m.group(1)` through `m.group(4)` return the matched
+  fragments as strings in left-to-right order. The passenger count is the one
+  field that should be numeric, so it is wrapped in `int(...)` before going into
+  the dictionary. Because the whole line is well-formed, `re.match` succeeds and
+  every group is present.
+common_mistakes:
+  - Leaving count as a string, so the dictionary compares unequal to the integer-valued expected result.
+  - Miscounting the parentheses and reading the wrong group number for a field.
+  - Forgetting the spaces between groups in the pattern, so the match fails.

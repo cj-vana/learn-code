@@ -1,0 +1,98 @@
+id: lesson.library.data_wrangling_python.a02
+kind: lesson
+version: 1
+language: python
+title: Joining and Deduplicating In-Memory Tables
+slug: lesson-data-wrangling-python-a02
+difficulty: medium
+concepts:
+  - concepts.grouping_aggregation
+  - python.dictionaries
+  - python.tuples
+prerequisites:
+  - python.dictionaries
+  - python.tuples
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.data_wrangling_python.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original join-and-dedupe explanation framed around a bike-share depot's orders and riders.
+body_markdown: |
+  Two lists of records often describe the same world from different angles: one
+  table of rentals, another of riders; one table of orders, another of
+  customers. **Joining** stitches them together on a shared key so each combined
+  row carries fields from both. The naive approach — a nested loop that compares
+  every order against every customer — works but does O(orders x customers)
+  comparisons. On real data that quadratic cost hurts.
+
+  The fix is to build a **lookup index** once: a dictionary that maps each key to
+  its row in the second table. After that, every match is a single dictionary
+  read.
+
+  ```python
+  def join_on_customer(orders, customers):
+      by_id = {c["customer_id"]: c["name"] for c in customers}
+      joined = []
+      for o in orders:
+          cid = o["customer_id"]
+          if cid in by_id:
+              joined.append({
+                  "order_id": o["order_id"],
+                  "name": by_id[cid],
+                  "amount": o["amount"],
+              })
+      return joined
+  ```
+
+  Because we skip orders whose customer is missing from the index, this is an
+  **inner join** — only keys present on both sides survive. Building `by_id`
+  costs one pass over the customers; the main loop costs one pass over the
+  orders. Two linear passes beat one quadratic loop handily.
+
+  **Composite keys** appear the moment a single field is not unique. A sensor
+  reading might only be identified by *both* its station and its metric; a
+  seat by *both* row and number. Python tuples are hashable, so you can use a
+  tuple of several fields directly as a dictionary key:
+
+  ```python
+  index = {}
+  for row in readings:
+      key = (row["station"], row["metric"])
+      index[key] = row["value"]
+  ```
+
+  **Deduplicating** is the same indexing idea pointed at one table. Walk the
+  records, derive each one's key, and decide what to do on a collision. To keep
+  the *first* occurrence, remember which keys you have already emitted with a
+  `set` and skip repeats. To keep the *last* occurrence while preserving the
+  order in which keys first appeared, record the first-seen order separately and
+  keep overwriting the stored row:
+
+  ```python
+  def dedupe_keep_last(rows, fields):
+      order, latest = [], {}
+      for row in rows:
+          key = tuple(row[f] for f in fields)
+          if key not in latest:
+              order.append(key)
+          latest[key] = row
+      return [latest[k] for k in order]
+  ```
+
+  Join, index, dedupe — all three are the same dictionary-keyed-by-a-field
+  reflex. Once you see a task as "what is the key, and what do I store under it?"
+  the code writes itself.
+checkpoints:
+  - question: Why does building a lookup dictionary before the join loop turn an O(n*m) task into two linear passes?
+    answer: Each order's matching customer is found with a single dictionary lookup instead of scanning the whole customer list, so the total work is one pass to build the index plus one pass over the orders.
+    explanation: Dictionary membership and reads are on average O(1), so replacing the inner scan with a lookup removes the multiplicative cost.
+  - question: What makes a tuple like (station, metric) usable as a dictionary key when a plain list of the same values would not be?
+    answer: Tuples are immutable and therefore hashable, so Python can use them as dictionary keys, whereas lists are mutable and unhashable.
+    explanation: Dictionaries require hashable keys, and immutability is what lets a tuple have a stable hash for the life of the mapping.
+  - question: In dedupe_keep_last, why is the separate `order` list needed instead of just returning `latest.values()`?
+    answer: It records the position where each key first appeared so the result stays in first-seen order, which iterating the dictionary would not reliably guarantee for this intent.
+    explanation: The intent is to keep the last row per key but present them in first-appearance order, so the appearance order must be tracked explicitly rather than inferred from overwrites.

@@ -625,7 +625,10 @@ def test_paths_list_shows_seed_paths(tmp_path):
     items = resp.json()
     ids = {item["id"] for item in items}
     assert "path.career.python_interview_prep" in ids
-    assert len(items) == 7
+    assert "path.career.python_developer_mastery" in ids
+    assert "path.career.algorithms_specialist" in ids
+    assert "path.career.python_data_automation" in ids
+    assert len(items) == 16
     for item in items:
         assert item["enrolled"] is False
         assert item["percent_complete"] == 0

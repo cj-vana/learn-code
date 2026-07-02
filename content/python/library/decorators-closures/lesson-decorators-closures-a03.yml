@@ -1,0 +1,113 @@
+id: lesson.library.decorators_closures.a03
+kind: lesson
+version: 1
+language: python
+title: Practical Decorators — Memoize, Log, Retry
+slug: lesson-decorators-closures-a03
+difficulty: hard
+concepts:
+  - python.closures_decorators
+prerequisites:
+  - python.closures_decorators
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.decorators_closures.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original relay-station scenarios showing memoization caches, call logs, and retry loops built from closures.
+body_markdown: |
+  Decorators earn their keep when the wrapper holds *state* in a closure. Three
+  workhorse patterns show up constantly.
+
+  ### Memoize: cache results in a closure
+
+  A memoizing decorator keeps a private dictionary keyed by the argument. On a
+  cache miss it runs the real function once and stores the answer; on a hit it
+  skips the work entirely.
+
+  ```python
+  import functools
+
+  def memoize(func):
+      cache = {}
+      @functools.wraps(func)
+      def wrapper(n):
+          if n not in cache:
+              cache[n] = func(n)
+          return cache[n]
+      return wrapper
+
+  @memoize
+  def relays(k):
+      if k < 2:
+          return 1
+      return relays(k - 1) + relays(k - 2)
+  ```
+
+  Because the recursive calls also go through `wrapper`, each `k` is computed
+  exactly once. That turns an exponential blowup into a linear walk. The `cache`
+  lives in the closure, so it survives between calls but stays private.
+
+  ### Log: record calls as a side effect
+
+  A logging decorator appends a record to a list it captured. This is how you
+  grade a decorator by *observable side effects* rather than a return value:
+
+  ```python
+  def logged(log):
+      def decorator(func):
+          @functools.wraps(func)
+          def wrapper(x):
+              result = func(x)
+              log.append(f"{func.__name__}({x}) -> {result}")
+              return result
+          return wrapper
+      return decorator
+
+  history = []
+  @logged(history)
+  def slew(deg):
+      return deg * 2
+
+  slew(15)
+  history   # ['slew(15) -> 30']
+  ```
+
+  ### Retry: loop until the call stops raising
+
+  A retry decorator wraps the call in a loop that swallows a chosen exception
+  and tries again, up to a limit:
+
+  ```python
+  def retry(max_attempts):
+      def decorator(func):
+          @functools.wraps(func)
+          def wrapper():
+              last = None
+              for _ in range(max_attempts):
+                  try:
+                      return func()
+                  except ValueError as exc:
+                      last = exc
+              raise last
+          return wrapper
+      return decorator
+  ```
+
+  Each pattern is the same skeleton — a factory (optionally taking arguments), a
+  wrapper that adds behavior, and captured state — reused with different intent.
+  Once you see the shape, you can build validation guards, rate limiters, and
+  timers the same way.
+checkpoints:
+  - question: In the memoize decorator, why does the recursion become linear instead of exponential?
+    answer: Because the recursive calls also pass through wrapper, each argument is computed once and then served from the cache, so no subproblem is recomputed.
+    explanation: Memoization trades memory for time by storing each result the first time it is produced.
+  - question: How can you grade a logging decorator when the wrapped function's return value is unchanged?
+    answer: By inspecting the side effect it produced, such as the entries appended to the captured log list.
+    explanation: Logging and timing decorators are observed through the state they mutate, not through the pass-through return value.
+  - question: In the retry decorator, what happens when every attempt raises the chosen exception?
+    answer: The loop exhausts its max_attempts and the wrapper re-raises the last captured exception.
+    explanation: Retry hides transient failures but must still surface a permanent one, so it stores and re-raises the final error.

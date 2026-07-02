@@ -1,0 +1,111 @@
+id: exercise.library.graphs_lite.a07
+kind: exercise
+version: 1
+language: python
+title: Deadlock in the Render Pipeline
+slug: graphs-lite-a07
+difficulty: hard
+concepts:
+  - patterns.dfs
+  - patterns.graph_traversal
+  - python.dictionaries
+prerequisites:
+  - python.sets
+  - python.functions
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.graphs_lite.a07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original render-pipeline scenario detecting a cycle in a directed graph with three-colour depth-first search.
+prompt_markdown: |
+  A studio's render pipeline is a set of stages where some stages feed their
+  output into others. A directed link `[a, b]` means stage `a` must finish before
+  stage `b` can start. If those dependencies ever form a directed loop, no stage
+  can go first and the pipeline deadlocks.
+
+  You are given `data` with `nodes` (every stage id) and `edges` (a list of
+  `[a, b]` directed links). Write `has_deadlock(data)` that returns `True` if the
+  dependencies contain a directed cycle, and `False` otherwise. A stage that
+  depends on itself is a cycle of one.
+starter_code: |
+  def has_deadlock(data):
+      # Return True if a directed cycle exists.
+      return False
+function_name: has_deadlock
+input_mode: function
+solution_sketch: Depth-first search colouring each node white, grey while on the active path, black when finished; reaching a grey node closes a directed cycle.
+sample_solution: |
+  def has_deadlock(data):
+      nodes = data["nodes"]
+      edges = data["edges"]
+      adjacency = {node: [] for node in nodes}
+      for source, target in edges:
+          adjacency[source].append(target)
+
+      WHITE, GREY, BLACK = 0, 1, 2
+      colour = {node: WHITE for node in nodes}
+
+      def visit(stage):
+          colour[stage] = GREY
+          for nxt in adjacency[stage]:
+              if colour[nxt] == GREY:
+                  return True
+              if colour[nxt] == WHITE and visit(nxt):
+                  return True
+          colour[stage] = BLACK
+          return False
+
+      for node in nodes:
+          if colour[node] == WHITE and visit(node):
+              return True
+      return False
+hints:
+  - level: 1
+    text: In a directed graph the undirected parent trick fails; you must know whether a node is still on the path you are currently exploring.
+  - level: 2
+    text: Give each node three states -- untouched, on the active recursion path, and fully finished -- and update them as you enter and leave a node.
+  - level: 3
+    text: Colour a node grey on entry and black on exit; if depth-first search ever reaches a grey node, that back-edge closes a directed cycle, so return True.
+tests:
+  public:
+    - name: simple_chain
+      input: {"nodes": [a, b, c], "edges": [[a, b], [b, c]]}
+      expected: false
+    - name: two_stage_loop
+      input: {"nodes": [a, b], "edges": [[a, b], [b, a]]}
+      expected: true
+    - name: self_dependency
+      input: {"nodes": [a], "edges": [[a, a]]}
+      expected: true
+  validation:
+    - name: no_links
+      input: {"nodes": [a, b, c], "edges": []}
+      expected: false
+    - name: three_stage_cycle
+      input: {"nodes": [x, y, z], "edges": [[x, y], [y, z], [z, x]]}
+      expected: true
+    - name: diamond_is_acyclic
+      input: {"nodes": [a, b, c, d], "edges": [[a, b], [a, c], [b, d], [c, d]]}
+      expected: false
+    - name: cycle_in_second_component
+      input: {"nodes": [a, b, c, d], "edges": [[a, b], [c, d], [d, c]]}
+      expected: true
+explanation_markdown: |
+  Directed cycle detection cannot use the "ignore the parent" rule from the
+  undirected case, because direction matters: reaching an already-finished node is
+  perfectly fine, but reaching a node that is still open on the current path is a
+  back-edge that closes a loop. The three colours capture exactly that
+  distinction. **Grey** means "on the stack right now"; **black** means "explored
+  and safely exited." A grey neighbour is the deadlock signal. Marking a node
+  black only after its whole subtree is done is what lets a diamond like
+  `a -> b -> d` and `a -> c -> d` pass -- `d` is reached twice but is never grey on
+  a path back to itself. Running the search from every white node covers pipelines
+  split into independent groups.
+common_mistakes:
+  - Using a single visited set, which cannot tell a finished node from one still on the active path and reports false cycles on diamonds.
+  - Marking a node black as soon as it is first seen instead of when its recursion returns.
+  - Only searching from one start node, missing a cycle that lives in a separate component.

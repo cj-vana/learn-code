@@ -1,0 +1,125 @@
+id: exercise.library.dp_recognition.a02
+kind: exercise
+version: 1
+language: python
+title: Fewest Tokens To Dispense
+slug: dp-recognition-a02
+difficulty: medium
+concepts:
+  - patterns.dynamic_programming
+prerequisites:
+  - python.lists
+  - python.dictionaries
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dp_recognition.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original arcade token-dispenser framing of the minimum-coin-change problem with fresh prompt, tests, and explanation.
+prompt_markdown: |
+  An arcade has a token dispenser that hands out prize credits. The machine
+  is stocked with an unlimited supply of tokens in a fixed set of
+  denominations, and it wants to pay out an exact credit total using as FEW
+  tokens as possible.
+
+  Write `min_coins(data)` where `data` is a dict with two keys:
+
+  - `coins`: a list of positive integer token denominations
+  - `amount`: a non-negative integer credit total to dispense
+
+  Return the smallest number of tokens whose values sum exactly to `amount`.
+  You may use each denomination any number of times. If no combination sums
+  to `amount`, return `-1`.
+
+  Edge case: when `amount` is `0`, the answer is `0` (dispense nothing),
+  regardless of which denominations are stocked.
+
+  For example, with `coins = [1, 2, 5]` and `amount = 11`, the answer is `3`
+  (5 + 5 + 1). With `coins = [2]` and `amount = 3`, it is impossible, so the
+  answer is `-1`.
+starter_code: |
+  def min_coins(data):
+      return -1
+function_name: min_coins
+input_mode: function
+solution_sketch: Bottom-up DP where dp[v] is the fewest tokens summing to v, built from smaller sub-totals.
+sample_solution: |
+  def min_coins(data):
+      coins = data["coins"]
+      amount = data["amount"]
+      unreachable = amount + 1
+      dp = [0] + [unreachable] * amount
+      for value in range(1, amount + 1):
+          for coin in coins:
+              if coin <= value and dp[value - coin] + 1 < dp[value]:
+                  dp[value] = dp[value - coin] + 1
+      return dp[amount] if dp[amount] != unreachable else -1
+hints:
+  - level: 1
+    text: The fewest tokens for a total depends on the fewest tokens for smaller totals, so solve every total from 0 up to amount.
+  - level: 2
+    text: Let dp[v] be the minimum tokens that sum to exactly v. Start dp[0] = 0 and mark every other total as unreachable.
+  - level: 3
+    text: For each total v, try every coin that fits and set dp[v] = min(dp[v], dp[v - coin] + 1). If dp[amount] stays unreachable, return -1.
+tests:
+  public:
+    - name: classic_example
+      input: {coins: [1, 2, 5], amount: 11}
+      expected: 3
+    - name: impossible_total
+      input: {coins: [2], amount: 3}
+      expected: -1
+    - name: zero_amount
+      input: {coins: [1], amount: 0}
+      expected: 0
+    - name: single_denomination
+      input: {coins: [7], amount: 14}
+      expected: 2
+  validation:
+    - name: greedy_would_fail
+      input: {coins: [1, 3, 4], amount: 6}
+      expected: 2
+    - name: no_coins_nonzero
+      input: {coins: [], amount: 5}
+      expected: -1
+    - name: no_coins_zero
+      input: {coins: [], amount: 0}
+      expected: 0
+    - name: smallest_coin_too_big
+      input: {coins: [2, 5, 10], amount: 1}
+      expected: -1
+    - name: many_denominations
+      input: {coins: [186, 419, 83, 408], amount: 6249}
+      expected: 20
+explanation_markdown: |
+  This is the minimum-coin-change problem, a staple of dynamic programming.
+  The key insight is that the fewest tokens summing to `amount` can be
+  expressed in terms of smaller sub-totals: if the last token you place has
+  value `c`, then the rest must optimally make `amount - c`, so the answer is
+  `1 + min_coins(amount - c)` over every usable `c`.
+
+  Rather than recomputing those sub-answers repeatedly, we build a table
+  `dp` from the bottom up. `dp[v]` holds the fewest tokens that sum to exactly
+  `v`. We seed `dp[0] = 0` (an empty payout) and mark every larger total as
+  unreachable using the sentinel `amount + 1`, which can never be a real
+  count. For each total `v` from `1` to `amount`, we try every denomination
+  that fits and keep the best `dp[v - coin] + 1`.
+
+  Because unlimited copies of each coin are allowed, we simply reuse the same
+  table entries as we build up, so a single denomination can be picked many
+  times. If `dp[amount]` never improves past the sentinel, no exact
+  combination exists and we return `-1`. The work is O(amount * number of
+  coins), which handles large totals far faster than trying every combination.
+
+  A greedy "take the largest coin that fits" strategy is tempting but wrong:
+  with `coins = [1, 3, 4]` and `amount = 6`, greedy grabs 4 then 1 then 1
+  (three tokens), while the optimal answer is 3 + 3 (two tokens). The table
+  considers all options and always finds the true minimum.
+common_mistakes:
+  - Using a greedy largest-coin-first approach, which fails on sets like [1, 3, 4] where two 3s beat a 4 plus two 1s.
+  - Returning the sentinel value instead of -1 when the amount cannot be formed.
+  - Forgetting that amount 0 should return 0 rather than -1 or an error, even when no coins are stocked.
+  - Skipping the check that a coin fits (coin <= value), which reads a negative index and corrupts the table.

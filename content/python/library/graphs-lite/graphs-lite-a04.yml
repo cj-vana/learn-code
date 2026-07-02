@@ -1,0 +1,98 @@
+id: exercise.library.graphs_lite.a04
+kind: exercise
+version: 1
+language: python
+title: Fewest Depot Hops
+slug: graphs-lite-a04
+difficulty: medium
+concepts:
+  - patterns.queue_bfs
+  - patterns.graph_traversal
+prerequisites:
+  - python.dictionaries
+  - python.lists
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.graphs_lite.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original courier-depot scenario computing the minimum edge count via breadth-first search.
+prompt_markdown: |
+  A courier company moves parcels between depots along fixed routes. Every route
+  takes the same effort, so the cheapest plan is simply the one with the fewest
+  hops between depots.
+
+  You are given `data` with `adj` (an adjacency dictionary), `start`, and `goal`.
+  Write `shortest_hops(data)` returning the minimum number of routes needed to
+  get from `start` to `goal`. A depot reaches itself in `0` hops. If no chain of
+  routes connects them, return `-1`.
+starter_code: |
+  def shortest_hops(data):
+      return -1
+function_name: shortest_hops
+input_mode: function
+solution_sketch: Run breadth-first search from the start, tracking distance layers, and return the distance when the goal is dequeued or found.
+sample_solution: |
+  from collections import deque
+
+
+  def shortest_hops(data):
+      adjacency = data["adj"]
+      start = data["start"]
+      goal = data["goal"]
+      if start == goal:
+          return 0
+      seen = {start}
+      queue = deque([(start, 0)])
+      while queue:
+          depot, distance = queue.popleft()
+          for neighbour in sorted(adjacency.get(depot, [])):
+              if neighbour == goal:
+                  return distance + 1
+              if neighbour not in seen:
+                  seen.add(neighbour)
+                  queue.append((neighbour, distance + 1))
+      return -1
+hints:
+  - level: 1
+    text: Breadth-first search explores everything one hop away, then two hops away, and so on, so the first time you reach the goal is via a shortest route.
+  - level: 2
+    text: Store each depot in the queue together with its distance from the start, and mark depots seen as you enqueue them.
+  - level: 3
+    text: Handle start == goal up front returning 0, and when a neighbour equals the goal return distance + 1 immediately.
+tests:
+  public:
+    - name: short_line
+      input: {"adj": {"a": [b], "b": [a, c], "c": [b]}, "start": a, "goal": c}
+      expected: 2
+    - name: diamond
+      input: {"adj": {"a": [b, c], "b": [a, d], "c": [a, d], "d": [b, c]}, "start": a, "goal": d}
+      expected: 2
+    - name: disconnected
+      input: {"adj": {"a": [b], "b": [a], "c": [d], "d": [c]}, "start": a, "goal": d}
+      expected: -1
+  validation:
+    - name: same_depot
+      input: {"adj": {"a": []}, "start": a, "goal": a}
+      expected: 0
+    - name: long_chain
+      input: {"adj": {"a": [b], "b": [a, c], "c": [b, d], "d": [c, e], "e": [d]}, "start": a, "goal": e}
+      expected: 4
+    - name: direct_neighbour
+      input: {"adj": {"a": [b, c], "b": [a, c], "c": [a, b]}, "start": a, "goal": b}
+      expected: 1
+explanation_markdown: |
+  On an unweighted graph, breadth-first search finds shortest paths because it
+  fans out in concentric rings: all depots one hop away are visited before any
+  two hops away. The distance stored alongside each depot in the queue is exactly
+  the length of the shortest route discovered so far, so the moment the goal
+  first appears you can return. Marking a depot `seen` at *enqueue* time (not
+  dequeue) prevents it from being added by two different neighbours and keeps the
+  work linear in the number of routes.
+common_mistakes:
+  - Using a stack instead of a queue, which turns BFS into DFS and can report a longer path.
+  - Marking a node seen only when it is dequeued, letting duplicates pile up in the queue.
+  - Forgetting the start == goal case and returning 1 or -1 instead of 0.

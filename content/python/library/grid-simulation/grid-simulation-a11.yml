@@ -1,0 +1,133 @@
+id: exercise.library.grid_simulation.a11
+kind: exercise
+version: 1
+language: python
+title: Shortest Cart Route Through the Shelving
+slug: grid-simulation-a11
+difficulty: hard
+concepts:
+  - patterns.grid_traversal
+  - patterns.queue_bfs
+prerequisites:
+  - python.lists
+  - patterns.queue_bfs
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.grid_simulation.a11
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original breadth-first shortest-path drill themed around routing a picking cart through warehouse shelving.
+prompt_markdown: |
+  A warehouse floor is mapped as a grid where each cell is either open aisle
+  (`0`) or a run of shelving the cart cannot pass through (`1`). A picking cart
+  starts at one open cell and needs to reach a goal cell, moving one step at a
+  time in the four orthogonal directions (up, down, left, right). It may never
+  enter a shelving cell or leave the grid.
+
+  Write `shortest_route(job)` where `job` is a single dictionary with keys:
+
+  - `"grid"`: a list of rows of `0`/`1` values (at least one row and one column),
+  - `"start"`: the `[r, c]` cell where the cart begins,
+  - `"goal"`: the `[r, c]` cell the cart must reach.
+
+  **Return the fewest number of steps** to get from start to goal. Return `0`
+  when the start and goal are the same cell. Return `-1` when no route exists,
+  including the case where the start or goal cell is itself shelving (`1`).
+
+  For example, on
+  ```
+  0 1 0
+  0 1 0
+  0 0 0
+  ```
+  travelling from `[0, 0]` to `[0, 2]` must detour down and around the shelving
+  wall, taking `6` steps.
+starter_code: |
+  from collections import deque
+
+
+  def shortest_route(job):
+      return -1
+function_name: shortest_route
+input_mode: function
+solution_sketch: Breadth-first search from the start over open cells, expanding the four neighbours and tracking distance. The first time you reach the goal, that distance is the answer; if the queue drains first, return -1.
+sample_solution: |
+  from collections import deque
+
+
+  def shortest_route(job):
+      grid = job["grid"]
+      start = tuple(job["start"])
+      goal = tuple(job["goal"])
+      rows = len(grid)
+      cols = len(grid[0]) if rows else 0
+      sr, sc = start
+      gr, gc = goal
+      if grid[sr][sc] == 1 or grid[gr][gc] == 1:
+          return -1
+      if start == goal:
+          return 0
+      seen = {start}
+      queue = deque([(sr, sc, 0)])
+      while queue:
+          r, c, dist = queue.popleft()
+          for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+              nr, nc = r + dr, c + dc
+              if 0 <= nr < rows and 0 <= nc < cols and grid[nr][nc] == 0 and (nr, nc) not in seen:
+                  if (nr, nc) == goal:
+                      return dist + 1
+                  seen.add((nr, nc))
+                  queue.append((nr, nc, dist + 1))
+      return -1
+hints:
+  - level: 1
+    text: Because every step costs the same, breadth-first search reaches each cell by its shortest number of steps. Use a queue of cells to visit paired with their distance from the start.
+  - level: 2
+    text: Guard the edge cases first, when the start or goal is shelving, or when start equals goal. Keep a `seen` set so you never re-enqueue a cell and never loop.
+  - level: 3
+    text: Pop a cell, and for each of the four in-bounds open unseen neighbours, return `dist + 1` if it is the goal, otherwise mark it seen and enqueue it with `dist + 1`. If the queue empties, return -1.
+tests:
+  public:
+    - name: straight_corridor
+      input: {grid: [[0, 0, 0]], start: [0, 0], goal: [0, 2]}
+      expected: 2
+    - name: around_the_shelf
+      input: {grid: [[0, 1, 0], [0, 1, 0], [0, 0, 0]], start: [0, 0], goal: [0, 2]}
+      expected: 6
+    - name: walled_in_start
+      input: {grid: [[0, 1, 0], [1, 1, 0], [0, 1, 0]], start: [0, 0], goal: [0, 2]}
+      expected: -1
+  validation:
+    - name: already_there
+      input: {grid: [[0, 0], [0, 0]], start: [1, 1], goal: [1, 1]}
+      expected: 0
+    - name: goal_is_shelving
+      input: {grid: [[0, 0], [0, 1]], start: [0, 0], goal: [1, 1]}
+      expected: -1
+    - name: open_floor_diagonal
+      input: {grid: [[0, 0, 0], [0, 0, 0], [0, 0, 0]], start: [0, 0], goal: [2, 2]}
+      expected: 4
+    - name: forced_long_detour
+      input: {grid: [[0, 0, 0, 0], [0, 1, 1, 0], [0, 1, 0, 0], [0, 0, 0, 0]], start: [0, 0], goal: [2, 2]}
+      expected: 6
+explanation_markdown: |
+  When every move has the same cost, breadth-first search is the right tool: it
+  visits cells in rings of increasing distance, so the first time it touches the
+  goal it has found a shortest route. Storing `(row, col, distance)` in the queue
+  keeps each cell's step count travelling alongside it. The `seen` set is what
+  makes it both correct and fast, because it stops the search revisiting cells and
+  guarantees each cell is enqueued at most once.
+
+  Handle the degenerate inputs up front: a blocked start or goal has no valid
+  route, and a start that already equals the goal costs zero steps. Every cell
+  enters the queue at most once and does constant work, so the search runs in
+  O(rows * cols) time and space. Using a plain list with `pop(0)` instead of a
+  `deque` would still be correct but slower, since popping from the front of a
+  list is O(n).
+common_mistakes:
+  - Using depth-first search (a stack) instead of breadth-first, which finds *a* route but not the shortest one.
+  - Marking a cell seen only when you pop it rather than when you enqueue it, allowing the same cell onto the queue many times.
+  - Forgetting the -1 and 0 special cases when the start or goal is blocked or when start already equals goal.

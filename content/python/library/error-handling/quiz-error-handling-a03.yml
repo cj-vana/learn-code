@@ -1,0 +1,108 @@
+id: quiz.library.error_handling.a03
+kind: quiz
+version: 1
+language: python
+title: Defensive Python - Mixed Review
+slug: quiz-error-handling-a03
+difficulty: medium
+concepts:
+  - python.exceptions
+  - python.classes
+prerequisites: []
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.error_handling.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original mixed-review questions spanning hierarchies, backoff accounting, and handler design.
+quiz_type: mixed_review
+questions:
+  - id: q1
+    prompt: |
+      `CardExpiredError` subclasses `TransactionError`, which subclasses `Exception`.
+      A block raises `CardExpiredError`. Which except clause will NOT catch it?
+    choices:
+      - except KeyError
+      - except CardExpiredError
+      - except TransactionError
+      - except Exception
+    correct_choice: except KeyError
+    explanation: |
+      An exception is caught by a clause naming its class or any ancestor class.
+      `CardExpiredError`, `TransactionError`, and `Exception` are all on its
+      inheritance chain; `KeyError` is unrelated, so it does not match.
+    concepts:
+      - python.exceptions
+      - python.classes
+  - id: q2
+    prompt: |
+      A retry loop makes attempts that fail, fail, then succeed on the third, with
+      base_delay 1 and a delay of base_delay * 2 ** i added only between attempts
+      (i is the zero-based index of the attempt that failed). What is the total
+      delay?
+    choices:
+      - '3'
+      - '7'
+      - '2'
+      - '6'
+    correct_choice: '3'
+    explanation: |
+      After attempt 0 fails: 1 * 2**0 = 1. After attempt 1 fails: 1 * 2**1 = 2.
+      Attempt 2 succeeds, so no delay follows it. Total = 1 + 2 = 3.
+    concepts:
+      - python.exceptions
+      - patterns.simulation
+  - id: q3
+    prompt: |
+      A function must reject invalid input. Callers should be forced to notice the
+      problem rather than receive a silently wrong default. Which design fails
+      loudly?
+    choices:
+      - Raise a ValueError with a descriptive message.
+      - Return None whenever the input is invalid.
+      - Catch every exception and return 0.
+      - Log a note and continue with the bad value.
+    correct_choice: Raise a ValueError with a descriptive message.
+    explanation: |
+      Failing loudly means raising so the caller cannot ignore the problem.
+      Returning None or 0, or continuing with the bad value, hides the failure and
+      is the opposite of failing loudly.
+    concepts:
+      - python.exceptions
+  - id: q4
+    prompt: |
+      Why is catching `except Exception` and returning a default often worse than
+      catching a specific exception type?
+    choices:
+      - It also swallows unexpected bugs, turning a visible failure into a silent one.
+      - It runs slower because Exception is a larger class.
+      - It is a syntax error to catch Exception directly.
+      - It prevents the finally block from running.
+    correct_choice: It also swallows unexpected bugs, turning a visible failure into a silent one.
+    explanation: |
+      A broad `except Exception` catches failures you never anticipated -- including
+      typos and logic bugs -- and hides them behind a default. Catching the specific
+      type you expect keeps real bugs visible.
+    concepts:
+      - python.exceptions
+  - id: q5
+    prompt: |
+      A context manager's `__exit__` appends "closed" to a log and returns True. The
+      with block appends "work" and then raises RuntimeError. After the block, what
+      is in the log and does the error propagate?
+    choices:
+      - Log has "work" then "closed"; the error does not propagate.
+      - Log has only "work"; the error propagates.
+      - Log has only "closed"; the error propagates.
+      - Log is empty; the error propagates.
+    correct_choice: Log has "work" then "closed"; the error does not propagate.
+    explanation: |
+      "work" is appended before the raise, then `__exit__` runs and appends
+      "closed". Because `__exit__` returns True, the RuntimeError is suppressed and
+      does not propagate out of the with block.
+    concepts:
+      - python.exceptions
+      - python.classes

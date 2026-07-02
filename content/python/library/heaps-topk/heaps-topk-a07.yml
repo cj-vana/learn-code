@@ -1,0 +1,92 @@
+id: exercise.library.heaps_topk.a07
+kind: exercise
+version: 1
+language: python
+title: Live Rank on the Leaderboard
+slug: heaps-topk-a07
+difficulty: medium
+concepts:
+  - python.heapq_bisect
+  - patterns.binary_search
+prerequisites:
+  - python.heapq_bisect
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.heaps_topk.a07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original bisect.insort drill framed around reporting each incoming score's live rank as a climbing wall leaderboard fills.
+prompt_markdown: |
+  A climbing gym posts scores to a leaderboard one at a time. As each new score
+  arrives, the display shows how many **already-posted** scores are strictly lower
+  than it, then the new score is filed into the sorted board.
+
+  Write `live_ranks(scores)` where `scores` is a list of integers arriving in
+  order. Return a list the same length as `scores`: entry `i` is the count of
+  earlier scores strictly less than `scores[i]` at the moment it arrives. Maintain
+  the seen scores as a **sorted list** using the `bisect` module so each lookup is
+  a binary search rather than a full scan.
+starter_code: |
+  import bisect
+
+
+  def live_ranks(scores):
+      return []
+function_name: live_ranks
+input_mode: function
+solution_sketch: Keep a sorted list of seen scores; for each new score record bisect_left (count strictly below), then insort it.
+sample_solution: |
+  import bisect
+
+
+  def live_ranks(scores):
+      seen = []
+      ranks = []
+      for score in scores:
+          ranks.append(bisect.bisect_left(seen, score))
+          bisect.insort(seen, score)
+      return ranks
+hints:
+  - level: 1
+    text: The number of earlier scores strictly below the newcomer is exactly where it would be inserted at the left.
+  - level: 2
+    text: bisect.bisect_left returns that leftmost insertion index, counting only strictly smaller values.
+  - level: 3
+    text: Record bisect_left before inserting, then bisect.insort the score so the list stays sorted for the next arrival.
+tests:
+  public:
+    - name: descending_then_up
+      input: [3, 1, 2]
+      expected: [0, 0, 1]
+    - name: ascending
+      input: [1, 2, 3]
+      expected: [0, 1, 2]
+    - name: single
+      input: [42]
+      expected: [0]
+  validation:
+    - name: duplicates_are_not_below
+      input: [5, 5, 5]
+      expected: [0, 0, 0]
+    - name: mixed
+      input: [10, 4, 10, 7, 4]
+      expected: [0, 0, 1, 1, 0]
+    - name: negatives
+      input: [-2, -5, 0, -5]
+      expected: [0, 0, 2, 0]
+explanation_markdown: |
+  `bisect_left` returns the leftmost position where the value could be inserted
+  while keeping the list sorted, which equals the number of existing elements
+  strictly less than it, so equal scores never count as "below." The search is
+  O(log n); `insort` finds its spot in O(log n) but shifts later elements, making
+  the insertion O(n). Since you need the whole collection ordered for every
+  future rank query, that shifting cost is the price of keeping a plain list
+  sorted, and it is exactly when a heap would not help, because a heap exposes
+  only its extreme, not an arbitrary rank.
+common_mistakes:
+  - Using bisect_right, which counts equal scores as below and reports the wrong rank on duplicates.
+  - Inserting the score before recording its rank, so it counts itself.
+  - Re-sorting the list on every arrival instead of using insort to keep it ordered incrementally.

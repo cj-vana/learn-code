@@ -1,0 +1,103 @@
+id: exercise.library.graphs_lite.a03
+kind: exercise
+version: 1
+language: python
+title: Counting Sensor Clusters
+slug: graphs-lite-a03
+difficulty: medium
+concepts:
+  - patterns.graph_traversal
+  - patterns.dfs
+  - python.sets
+prerequisites:
+  - python.dictionaries
+  - python.lists
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.graphs_lite.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original wireless-sensor scenario for counting connected components from a node list and edge list.
+prompt_markdown: |
+  A field of wireless soil sensors forms clusters: two sensors are in the same
+  cluster when there is some chain of direct radio links connecting them. A
+  sensor with no links at all is a cluster of one.
+
+  You are given `data` with `nodes` (a list of every sensor id) and `edges` (a
+  list of `[a, b]` two-way links). Write `count_connected_components(data)` that
+  returns how many separate clusters exist. Remember that a sensor listed in
+  `nodes` might never appear in `edges` -- it still counts.
+starter_code: |
+  def count_connected_components(data):
+      return 0
+function_name: count_connected_components
+input_mode: function
+solution_sketch: Build an adjacency map, then start a fresh traversal from each unseen node and count how many traversals it takes to cover every node.
+sample_solution: |
+  def count_connected_components(data):
+      nodes = data["nodes"]
+      edges = data["edges"]
+      adjacency = {node: [] for node in nodes}
+      for node_a, node_b in edges:
+          adjacency[node_a].append(node_b)
+          adjacency[node_b].append(node_a)
+
+      seen = set()
+      clusters = 0
+      for node in nodes:
+          if node in seen:
+              continue
+          clusters += 1
+          stack = [node]
+          seen.add(node)
+          while stack:
+              current = stack.pop()
+              for neighbour in adjacency[current]:
+                  if neighbour not in seen:
+                      seen.add(neighbour)
+                      stack.append(neighbour)
+      return clusters
+hints:
+  - level: 1
+    text: Each time you begin exploring from a node that has not been seen yet, you have found a brand-new cluster.
+  - level: 2
+    text: Build an adjacency map first, then loop over every node and flood-fill from the ones still missing from your seen set.
+  - level: 3
+    text: Increment the counter once per outer-loop node that is unseen, then run a stack-based traversal to mark that node's whole cluster before moving on.
+tests:
+  public:
+    - name: one_link_two_singletons
+      input: {"nodes": [a, b, c, d], "edges": [[a, b]]}
+      expected: 3
+    - name: single_chain
+      input: {"nodes": [a, b, c], "edges": [[a, b], [b, c]]}
+      expected: 1
+    - name: all_isolated
+      input: {"nodes": [a, b, c], "edges": []}
+      expected: 3
+  validation:
+    - name: empty_field
+      input: {"nodes": [], "edges": []}
+      expected: 0
+    - name: two_pairs_one_lonely
+      input: {"nodes": [a, b, c, d, e], "edges": [[a, b], [c, d]]}
+      expected: 3
+    - name: triangle_plus_extra
+      input: {"nodes": [a, b, c, d], "edges": [[a, b], [b, c], [c, a]]}
+      expected: 2
+explanation_markdown: |
+  Counting connected components is a direct application of traversal: every time
+  the outer loop lands on a node the traversal has not yet reached, that node
+  must belong to a component you have never touched, so you bump the counter and
+  then mark the entire component as seen. Because each node and each edge is
+  visited a constant number of times, the whole routine runs in O(nodes + edges).
+  Initialising the adjacency map from `nodes` (not just from the edges) is what
+  guarantees isolated sensors are still counted -- a subtle case the empty-edges
+  test checks directly.
+common_mistakes:
+  - Building adjacency only from edges, so isolated nodes never get counted.
+  - Marking a node seen when you pop it instead of when you push it, allowing it onto the stack twice.
+  - Resetting the seen set inside the loop, which recounts nodes across components.

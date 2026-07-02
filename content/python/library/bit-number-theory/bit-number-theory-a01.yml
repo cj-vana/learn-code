@@ -1,0 +1,109 @@
+id: exercise.library.bit_number_theory.a01
+kind: exercise
+version: 1
+language: python
+title: Reading One Indicator Lamp
+slug: bit-number-theory-a01
+difficulty: easy
+concepts:
+  - patterns.bit_manipulation
+  - python.operators
+prerequisites:
+  - python.types
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.bit_number_theory.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original single-bit test drill framed around reading one lamp from a packed control-panel status word.
+prompt_markdown: |
+  A control panel packs the on/off state of all its indicator lamps into one
+  non-negative integer called a *status word*. Bit 0 (the least significant bit)
+  is lamp 0, bit 1 is lamp 1, and so on upward.
+
+  Write `is_lamp_lit(reading)` where `reading` is a dict with exactly two keys:
+
+  - `"mask"`: the status word, a non-negative integer.
+  - `"bit"`: the lamp index to inspect, where `0` means the least significant bit.
+
+  Return `True` if that lamp is lit (its bit is set to `1`) and `False`
+  otherwise. Return an actual boolean, not `0` or `1`.
+
+  For example, `is_lamp_lit({"mask": 5, "bit": 0})` is `True` because `5` is
+  binary `101`, whose bit 0 is set. `is_lamp_lit({"mask": 5, "bit": 1})` is
+  `False` because bit 1 of `101` is `0`.
+starter_code: |
+  def is_lamp_lit(reading):
+      return False
+function_name: is_lamp_lit
+input_mode: function
+solution_sketch: Shift the mask right by the bit index so the target bit lands in position 0, then AND with 1 and compare to 1 to get a boolean.
+sample_solution: |
+  def is_lamp_lit(reading):
+      mask = reading["mask"]
+      bit = reading["bit"]
+      return (mask >> bit) & 1 == 1
+hints:
+  - level: 1
+    text: A single bit can be isolated by lining up a mask with just that one position set, using either a shift-down or a shift-up.
+  - level: 2
+    text: Shifting the status word right by `bit` moves the lamp you care about into the lowest position; then `& 1` keeps only that bit.
+  - level: 3
+    text: Return `(mask >> bit) & 1 == 1`. The `== 1` turns the 0-or-1 result into a real boolean.
+tests:
+  public:
+    - name: bit0_set
+      input:
+        mask: 5
+        bit: 0
+      expected: true
+    - name: bit1_clear
+      input:
+        mask: 5
+        bit: 1
+      expected: false
+    - name: bit2_set
+      input:
+        mask: 5
+        bit: 2
+      expected: true
+  validation:
+    - name: zero_word
+      input:
+        mask: 0
+        bit: 0
+      expected: false
+    - name: high_bit
+      input:
+        mask: 8
+        bit: 3
+      expected: true
+    - name: far_index
+      input:
+        mask: 1024
+        bit: 10
+      expected: true
+    - name: even_word_low_bit
+      input:
+        mask: 6
+        bit: 0
+      expected: false
+    - name: even_word_high_bit
+      input:
+        mask: 6
+        bit: 2
+      expected: true
+explanation_markdown: |
+  A status word stores independent switches in its binary digits, so testing one
+  lamp means ignoring every bit except the one you want. Shifting right by `bit`
+  slides that lamp down into position 0, and `& 1` erases everything above it,
+  leaving just `0` or `1`. Comparing to `1` converts that into the boolean the
+  prompt asks for. The whole test is constant time regardless of how large the
+  status word is.
+common_mistakes:
+  - Returning the integer `1` or `0` instead of a boolean; the `== 1` comparison fixes this.
+  - Shifting the mask by `1` instead of by `bit`, which always inspects the same position.
+  - Confusing bit 0 with bit 1 by counting lamps from one; the least significant bit is index 0.

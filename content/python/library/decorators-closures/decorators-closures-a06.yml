@@ -1,0 +1,134 @@
+id: exercise.library.decorators_closures.a06
+kind: exercise
+version: 1
+language: python
+title: Stacking Order Matters
+slug: decorators-closures-a06
+difficulty: hard
+concepts:
+  - python.closures_decorators
+prerequisites:
+  - python.closures_decorators
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.decorators_closures.a06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original signal-mixer scenario contrasting the two stacking orders of a bump and a double decorator.
+prompt_markdown: |
+  A signal mixer applies two transforms to a reading. `bump` adds 1 to a
+  function's result; `double` multiplies a function's result by 2. Because
+  decorators compose from the bottom up, the *order* you stack them in changes
+  the outcome.
+
+  Write both decorators (`bump` and `double`), then finish
+  `compare_orders(readings)`. For each reading it must compute two values from an
+  identity function:
+
+  - `double` stacked over `bump` (double is outer): result is `(x + 1) * 2`
+  - `bump` stacked over `double` (bump is outer): result is `(x * 2) + 1`
+
+  Return a list of `[double_over_bump, bump_over_double]` pairs, one per reading.
+  For `compare_orders([3])` the result is `[[8, 7]]` because `(3+1)*2 = 8` and
+  `(3*2)+1 = 7`.
+starter_code: |
+  import functools
+
+
+  def bump(func):
+      # Return a wrapper that adds 1 to func's result.
+      return func
+
+
+  def double(func):
+      # Return a wrapper that multiplies func's result by 2.
+      return func
+
+
+  def compare_orders(readings):
+      @double
+      @bump
+      def a(x):
+          return x
+
+      @bump
+      @double
+      def b(x):
+          return x
+
+      return [[a(r), b(r)] for r in readings]
+function_name: compare_orders
+input_mode: function
+solution_sketch: Implement bump (+1) and double (*2) as wrappers; the two stacking orders yield (x+1)*2 and (x*2)+1.
+sample_solution: |
+  import functools
+
+
+  def bump(func):
+      @functools.wraps(func)
+      def wrapper(*args, **kwargs):
+          return func(*args, **kwargs) + 1
+      return wrapper
+
+
+  def double(func):
+      @functools.wraps(func)
+      def wrapper(*args, **kwargs):
+          return func(*args, **kwargs) * 2
+      return wrapper
+
+
+  def compare_orders(readings):
+      @double
+      @bump
+      def a(x):
+          return x
+
+      @bump
+      @double
+      def b(x):
+          return x
+
+      return [[a(r), b(r)] for r in readings]
+hints:
+  - level: 1
+    text: Stacked decorators apply bottom-up; the one nearest the def wraps first and the outer one sees its result.
+  - level: 2
+    text: For @double over @bump, bump runs first so the value becomes x + 1, then double turns it into (x + 1) * 2.
+  - level: 3
+    text: Implement bump to return func(...) + 1 and double to return func(...) * 2; the two identity functions then produce (x+1)*2 and (x*2)+1.
+tests:
+  public:
+    - name: single_three
+      input: [3]
+      expected: [[8, 7]]
+    - name: zero
+      input: [0]
+      expected: [[2, 1]]
+    - name: two_readings
+      input: [3, 5]
+      expected: [[8, 7], [12, 11]]
+  validation:
+    - name: empty
+      input: []
+      expected: []
+    - name: negative
+      input: [-1]
+      expected: [[0, -1]]
+    - name: larger
+      input: [10, 1]
+      expected: [[22, 21], [4, 3]]
+explanation_markdown: |
+  Because `@double` over `@bump` is `double(bump(a))`, the innermost `bump`
+  transforms first (`x + 1`) and the outer `double` transforms its output,
+  giving `(x + 1) * 2`. Reversing the stack to `bump(double(b))` runs `double`
+  first (`x * 2`) and `bump` last, giving `(x * 2) + 1`. The two results diverge
+  for every input except where the algebra happens to coincide, which is why
+  decorator order is a real design decision, not a formatting preference.
+common_mistakes:
+  - Assuming the top decorator runs first; the one nearest the def wraps first.
+  - Swapping which order produces (x+1)*2 versus (x*2)+1.
+  - Returning a flat list instead of a list of two-element pairs.

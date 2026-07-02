@@ -1,0 +1,84 @@
+id: lesson.library.iterators_generators.a02
+kind: lesson
+version: 1
+language: python
+title: Generator Expressions and Memory-Aware Iteration
+slug: lesson-iterators-generators-a02
+difficulty: easy
+concepts:
+  - python.iterators_generators
+  - python.comprehensions
+prerequisites:
+  - python.comprehensions
+  - python.lists
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.iterators_generators.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original print-shop ink framing contrasting list comprehensions with lazy generator expressions.
+body_markdown: |
+  You already know the list comprehension: square brackets that build a whole
+  list in one go.
+
+  ```python
+  drops = [2, 5, 8, 1, 9]
+  big = [d * d for d in drops if d > 4]   # [25, 64, 81]
+  ```
+
+  Swap the square brackets for round ones and you get a **generator
+  expression**. It looks almost identical, but it does not build a list. It
+  builds a lazy generator that produces each value on demand:
+
+  ```python
+  big = (d * d for d in drops if d > 4)   # a generator, not a list
+  print(next(big))   # 25
+  ```
+
+  The difference is *when the work happens and how much memory it costs*. A list
+  comprehension computes every element immediately and stores them all. A
+  generator expression stores only the recipe and a tiny bit of bookkeeping,
+  then computes one value each time it is asked.
+
+  Imagine a print shop auditing a huge log of ink readings. If you only need the
+  total, feeding a generator expression straight into `sum` never builds an
+  intermediate list at all:
+
+  ```python
+  total = sum(d * d for d in drops if d > 4)   # 170, no list created
+  ```
+
+  When a generator expression is the *only* argument to a function, you can even
+  drop the extra parentheses, as shown above. That pattern, piping a lazy stream
+  into `sum`, `max`, `any`, `all`, or `min`, is both readable and memory-light.
+
+  So when do you pick each one?
+
+  - Use a **list comprehension** when you need the results more than once, want
+    to index or slice them, or need to know the length.
+  - Use a **generator expression** when you will pass through the values exactly
+    once, especially if the source is large or you might stop early.
+
+  "Stopping early" is where laziness really pays. With a generator expression,
+  code that finds the first match does no work past that match:
+
+  ```python
+  first_big = next((d for d in drops if d > 7), None)   # 8
+  ```
+
+  The list version would compute the entire filtered list first, then throw most
+  of it away. When you only need a concrete list at the end, wrap the generator
+  in `list()` to exhaust it, exactly as you would with a generator function.
+checkpoints:
+  - question: What is the concrete difference in memory behavior between [d*d for d in xs] and (d*d for d in xs)?
+    answer: The square-bracket version builds and stores the entire list at once; the round-bracket version is a lazy generator that computes one value at a time and stores none of them ahead of use.
+    explanation: The generator expression trades stored results for on-demand computation, which matters when the source is large or you may stop early.
+  - question: Why can you write sum(d*d for d in drops) without an extra pair of parentheses?
+    answer: When a generator expression is the sole argument to a call, Python lets you omit the surrounding parentheses.
+    explanation: This keeps piping a lazy stream into an aggregate like sum, max, or any clean and readable.
+  - question: You need to index into results and also compute their length. List comprehension or generator expression?
+    answer: A list comprehension, because indexing and len require a materialized sequence.
+    explanation: Generators have no length and no indexing; they are single-pass, so needing random access or a count means you want a real list.

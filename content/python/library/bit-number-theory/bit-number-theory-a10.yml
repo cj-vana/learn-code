@@ -1,0 +1,104 @@
+id: exercise.library.bit_number_theory.a10
+kind: exercise
+version: 1
+language: python
+title: When Every Ferry Leaves Together
+slug: bit-number-theory-a10
+difficulty: medium
+concepts:
+  - concepts.number_theory
+prerequisites:
+  - python.loops
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.bit_number_theory.a10
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original least-common-multiple drill framed as finding when several ferry routes next depart together.
+prompt_markdown: |
+  A harbour runs several ferry routes. Each route leaves the dock, sails its loop,
+  and returns after a fixed number of minutes, then immediately departs again. If
+  every route departs together at minute 0, they will all depart together again at
+  the least common multiple of their cycle lengths.
+
+  Write `next_joint_departure(cycles)` that takes a list of positive integers (the
+  loop times in minutes) and returns the least common multiple of all of them.
+  Compute the LCM from the GCD using `lcm(a, b) == a // gcd(a, b) * b`, folding it
+  across the list.
+
+  Rules:
+
+  - Every cycle length is a positive integer.
+  - If the list is empty, return `1` (the LCM of no numbers is the identity).
+  - Divide before multiplying, as shown, to keep the intermediate value small.
+
+  Example: `next_joint_departure([6, 10, 15])` returns `30`, the first minute at
+  which all three routes depart together again.
+starter_code: |
+  def next_joint_departure(cycles):
+      return 0
+function_name: next_joint_departure
+input_mode: function
+solution_sketch: Define a two-number gcd via Euclid, then fold lcm(result, cycle) = result // gcd * cycle across the list starting from 1.
+sample_solution: |
+  def next_joint_departure(cycles):
+      def gcd(a, b):
+          while b:
+              a, b = b, a % b
+          return a
+
+      result = 1
+      for cycle in cycles:
+          result = result // gcd(result, cycle) * cycle
+      return result
+hints:
+  - level: 1
+    text: All routes realign at the least common multiple of their cycle lengths.
+  - level: 2
+    text: The LCM of two numbers is a // gcd(a, b) * b; get the gcd from Euclid's algorithm.
+  - level: 3
+    text: Start a running result at 1 and fold the two-number lcm across every cycle length in the list.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: 1
+    - name: pair
+      input: [4, 6]
+      expected: 12
+    - name: triple
+      input: [6, 10, 15]
+      expected: 30
+  validation:
+    - name: single
+      input: [3]
+      expected: 3
+    - name: consecutive
+      input: [2, 3, 4]
+      expected: 12
+    - name: nested_multiple
+      input: [7, 14]
+      expected: 14
+    - name: all_equal
+      input: [5, 5, 5]
+      expected: 5
+    - name: larger_set
+      input: [12, 18, 24]
+      expected: 72
+explanation_markdown: |
+  Two events on cycles `a` and `b` line up again after `lcm(a, b)` steps, and
+  because `a * b == gcd(a, b) * lcm(a, b)`, you can get the LCM from the GCD you
+  already know how to compute. Writing it as `a // gcd(a, b) * b` divides before
+  multiplying, which avoids a needlessly large intermediate product. Extending to
+  a whole list works because the LCM is associative: fold the pairwise version
+  across the cycles. Seeding the running result at `1` makes the first cycle drop
+  straight in (`lcm(1, n) == n`) and gives the right answer, `1`, for an empty
+  list.
+common_mistakes:
+  - Multiplying every cycle together instead of taking the LCM, which overshoots the true realignment time.
+  - Seeding the running result at 0, so lcm(0, n) collapses everything to 0.
+  - Writing a * b // gcd(a, b) with the multiply first; correct but risks a large intermediate, whereas dividing first stays small.

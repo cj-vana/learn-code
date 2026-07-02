@@ -1,0 +1,115 @@
+id: exercise.library.error_handling.a10
+kind: exercise
+version: 1
+language: python
+title: Retrying a Flaky Weather Sensor
+slug: error-handling-a10
+difficulty: hard
+concepts:
+  - python.exceptions
+  - patterns.simulation
+  - python.dictionaries
+prerequisites:
+  - python.functions
+  - python.loops
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.error_handling.a10
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pure-function model of retry-with-exponential-backoff that accounts delay only between attempts.
+prompt_markdown: |
+  A weather station polls a flaky sensor that sometimes throws before returning a
+  reading. You will model retry-with-exponential-backoff as a *pure* function: no
+  real sleeping or randomness, just an accounting of what would happen.
+
+  Write `poll_with_backoff(plan)` where `plan` is a dict with:
+
+  - `outcomes`: a list of strings, one per available attempt; `"ok"` means that
+    attempt would succeed, anything else means it would raise.
+  - `base_delay`: the base wait unit (an int).
+  - `max_attempts`: a cap on how many attempts you may make (an int).
+
+  Rules:
+
+  - You may make at most `min(max_attempts, len(outcomes))` attempts, in order.
+  - Each attempt that fails schedules a wait *before the next* attempt of
+    `base_delay * (2 ** i)`, where `i` is the zero-based index of the attempt that
+    just failed. There is no wait after the final attempt you make (whether it
+    succeeds or you have run out).
+  - Model a failing attempt by raising (and catching) an exception inside the loop.
+
+  Return a dict `{"status": ..., "attempts": ..., "total_delay": ...}` where
+  `status` is `"ok"` if some attempt succeeded within the cap, otherwise
+  `"exhausted"`; `attempts` is how many attempts you actually made; and
+  `total_delay` is the sum of the waits you scheduled.
+starter_code: |
+  def poll_with_backoff(plan):
+      # Attempt in order up to the cap; add base_delay * 2**i only between attempts.
+      # Return status/attempts/total_delay.
+      return {}
+function_name: poll_with_backoff
+input_mode: function
+solution_sketch: Loop up to the cap, raise/catch on non-ok, and accumulate base_delay * 2**i only when another attempt will follow.
+sample_solution: |
+  def poll_with_backoff(plan):
+      outcomes = plan["outcomes"]
+      base = plan["base_delay"]
+      cap = plan["max_attempts"]
+      total_delay = 0
+      attempts = 0
+      limit = min(cap, len(outcomes))
+      for i in range(limit):
+          attempts += 1
+          try:
+              if outcomes[i] != "ok":
+                  raise RuntimeError("transient failure")
+              return {"status": "ok", "attempts": attempts, "total_delay": total_delay}
+          except RuntimeError:
+              if i < limit - 1:
+                  total_delay += base * (2 ** i)
+      return {"status": "exhausted", "attempts": attempts, "total_delay": total_delay}
+hints:
+  - level: 1
+    text: The number of attempts is bounded by both the outcomes list and max_attempts, so cap the loop by the smaller of the two.
+  - level: 2
+    text: A backoff wait belongs between two attempts, so only add it when another attempt will follow the one that just failed.
+  - level: 3
+    text: "Loop i in range(min(cap, len(outcomes))); on failure add base * 2**i only when i < limit - 1; return on the first \"ok\"."
+tests:
+  public:
+    - name: succeeds_third_try
+      input: {outcomes: ['fail', 'fail', 'ok'], base_delay: 1, max_attempts: 5}
+      expected: {status: ok, attempts: 3, total_delay: 3}
+    - name: succeeds_immediately
+      input: {outcomes: ['ok'], base_delay: 2, max_attempts: 3}
+      expected: {status: ok, attempts: 1, total_delay: 0}
+    - name: runs_out_of_outcomes
+      input: {outcomes: ['fail', 'fail'], base_delay: 1, max_attempts: 5}
+      expected: {status: exhausted, attempts: 2, total_delay: 1}
+  validation:
+    - name: cap_stops_early
+      input: {outcomes: ['fail', 'fail', 'fail', 'ok'], base_delay: 2, max_attempts: 2}
+      expected: {status: exhausted, attempts: 2, total_delay: 2}
+    - name: no_attempts
+      input: {outcomes: [], base_delay: 1, max_attempts: 3}
+      expected: {status: exhausted, attempts: 0, total_delay: 0}
+    - name: one_retry_then_ok
+      input: {outcomes: ['fail', 'ok', 'ok'], base_delay: 3, max_attempts: 5}
+      expected: {status: ok, attempts: 2, total_delay: 3}
+explanation_markdown: |
+  The subtle part of backoff is that delay lives *between* attempts, not after
+  them. Adding `base * 2 ** i` only when `i < limit - 1` means a run that succeeds
+  or gives up on its last permitted attempt never charges a trailing wait. Two
+  independent limits bound the work: you stop as soon as an attempt succeeds, and
+  you never exceed `min(max_attempts, len(outcomes))` tries. The exponent `2 ** i`
+  keyed to the failed attempt's index is what makes the waits grow 1, 2, 4, 8...
+  the hallmark of exponential backoff. Modelling failures as raised-and-caught
+  exceptions keeps the loop honest about what a real retry wrapper would do.
+common_mistakes:
+  - Adding a delay after the final attempt, which overcounts total_delay by one term.
+  - Letting the loop run for `max_attempts` even when `outcomes` is shorter, causing an IndexError.
+  - Basing the delay on the attempt count instead of the zero-based index, shifting every wait by a factor of two.

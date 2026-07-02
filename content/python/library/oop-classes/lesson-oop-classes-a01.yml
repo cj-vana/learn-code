@@ -1,0 +1,83 @@
+id: lesson.library.oop_classes.a01
+kind: lesson
+version: 1
+language: python
+title: Building Objects With __init__ and Instance Methods
+slug: lesson-oop-classes-a01
+difficulty: easy
+concepts:
+  - python.classes
+prerequisites:
+  - python.functions
+  - python.dictionaries
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.oop_classes.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original ferry-boarding scenario introducing __init__ and instance methods from scratch.
+body_markdown: |
+  A class is a blueprint. It describes what data each object of that kind should
+  carry and what actions it can perform. When you *call* the class, you get back
+  an **instance**: one concrete object built from the blueprint. Object-oriented
+  code shines when you have many things that share the same shape but hold their
+  own separate state.
+
+  Picture a small harbour running several ferries. Every ferry has the same rules
+  (a maximum number of passengers, a way to board people) but each boat tracks its
+  own load independently. That is exactly what a class gives us.
+
+  ```python
+  class Ferry:
+      def __init__(self, capacity):
+          self.capacity = capacity
+          self.aboard = 0
+
+      def board(self, people):
+          room = self.capacity - self.aboard
+          boarded = min(room, people)
+          self.aboard += boarded
+          return boarded
+  ```
+
+  The `__init__` method runs automatically the moment you create an instance. Its
+  job is to set up the object's starting **state**. The first parameter, `self`,
+  is the instance being built; assigning `self.capacity` and `self.aboard` stores
+  those values *on that specific object*. These are called **instance attributes**
+  because every ferry gets its own copy.
+
+  ```python
+  morning = Ferry(50)
+  evening = Ferry(120)
+  morning.board(30)     # returns 30, morning.aboard is now 30
+  evening.board(200)    # returns 120, the boat fills to capacity
+  print(morning.aboard) # 30  -- untouched by the evening ferry
+  ```
+
+  Notice that `board` also takes `self` as its first parameter even though we call
+  it as `morning.board(30)`. Python quietly passes the instance in for you: the
+  method reads and updates `self.aboard`, so the two ferries never interfere with
+  each other. A method is simply a function that lives inside a class and receives
+  the instance it was called on.
+
+  Two habits will keep your classes clean. First, do all attribute set-up in
+  `__init__` so that a freshly built object is never missing a field. Second, let
+  methods be the *only* way outside code changes that state; `board` enforces the
+  capacity rule, so no caller can accidentally overfill a ferry. That bundling of
+  data together with the operations allowed on it is the heart of what "object"
+  means. Once you are comfortable creating instances and calling methods that read
+  and mutate `self`, everything else in object-oriented Python builds on this same
+  foundation.
+checkpoints:
+  - question: What does the __init__ method do, and when does it run?
+    answer: It sets up the object's starting instance attributes, and it runs automatically each time you create a new instance by calling the class.
+    explanation: '`Ferry(50)` triggers `__init__(self, 50)`, which stores the capacity and initial load on that specific object before you get it back.'
+  - question: Why do two Ferry instances not share the same aboard count?
+    answer: Because aboard is assigned through self in __init__, so each instance stores its own separate copy of the attribute.
+    explanation: Instance attributes live on the individual object; mutating one ferry's self.aboard leaves every other ferry untouched.
+  - question: In morning.board(30), which object does self refer to inside board?
+    answer: self refers to the morning instance, because Python passes the object before the dot in as the first argument.
+    explanation: Calling a method through an instance binds self to that instance, so board updates morning.aboard specifically.

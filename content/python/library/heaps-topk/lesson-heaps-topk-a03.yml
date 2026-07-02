@@ -1,0 +1,92 @@
+id: lesson.library.heaps_topk.a03
+kind: lesson
+version: 1
+language: python
+title: Two Heaps and bisect, Keeping Order as Data Streams In
+slug: lesson-heaps-topk-a03
+difficulty: hard
+concepts:
+  - python.heapq_bisect
+  - patterns.heap_topk
+prerequisites:
+  - python.heapq_bisect
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.heaps_topk.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original two-heap running-median and bisect.insort lesson framed around network latency monitoring.
+body_markdown: |
+  A network operator watches latency samples arrive one per second and wants the
+  running *median* after every sample. Re-sorting the whole history each second
+  is O(n log n) per update. The elegant answer keeps **two heaps** that split the
+  data into a lower half and an upper half.
+
+  - `low` is a **max-heap** (stored with negated values) holding the smaller half,
+    so `-low[0]` is the largest of the small numbers.
+  - `high` is a **min-heap** holding the larger half, so `high[0]` is the smallest
+    of the large numbers.
+
+  If you keep the two halves balanced in size, the median is sitting at the top of
+  one heap. Here we keep `low` the same size as `high` or exactly one larger, so
+  its top is always the lower-middle element.
+
+  ```python
+  import heapq
+
+  def running_median(stream):
+      low, high, out = [], [], []       # low: max-heap (negated); high: min-heap
+      for x in stream:
+          if low and x > -low[0]:
+              heapq.heappush(high, x)
+          else:
+              heapq.heappush(low, -x)
+          if len(low) > len(high) + 1:          # low too big
+              heapq.heappush(high, -heapq.heappop(low))
+          elif len(high) > len(low):            # high too big
+              heapq.heappush(low, -heapq.heappop(high))
+          out.append(-low[0])                   # lower median
+      return out
+
+  print(running_median([5, 2, 8, 1]))   # [5, 2, 5, 2]
+  ```
+
+  Each insertion decides which half the value belongs to, then a single rebalance
+  step moves at most one element across so the sizes never drift apart by more
+  than one. Every update is O(log n), a decisive win over re-sorting. The upper
+  median or a true average is one comparison away once both tops are exposed.
+
+  ### bisect: order without a heap
+
+  Sometimes you need the *whole* collection kept sorted, not just its extremes,
+  for example a live leaderboard you binary-search into. The `bisect` module
+  maintains a plain list in sorted order:
+
+  ```python
+  import bisect
+
+  board = [10, 20, 30]
+  pos = bisect.bisect_right(board, 25)   # 2  -> where 25 would land
+  bisect.insort(board, 25)               # board is now [10, 20, 25, 30]
+  ```
+
+  `bisect_left` and `bisect_right` find an insertion index in O(log n), and
+  `insort` inserts there while preserving order. Be aware of the cost model: the
+  *search* is logarithmic, but the *insert* shifts later elements, so a single
+  `insort` is O(n). It shines when you need ranked queries against a mostly-stable
+  list, whereas two heaps win when you only ever need the middle or the extremes
+  of a fast-moving stream. Choosing between them is really a question of which
+  slice of the order you keep asking for.
+checkpoints:
+  - question: In the two-heap running median, which heap is a max-heap, how is it stored, and why must it be a max-heap?
+    answer: The low heap holding the smaller half is the max-heap, stored by pushing negated values; it must be a max-heap so its top is the largest of the small numbers, which is the median candidate.
+    explanation: Python only provides min-heaps, so negating the lower half turns heapq into a max-heap whose root touches the boundary between the two halves.
+  - question: After inserting a value, why is at most one rebalance step ever needed, and what does it do?
+    answer: A single insert can make one heap at most one element too large, so moving a single element from the bigger heap to the smaller restores the size invariant.
+    explanation: The invariant only allows a size gap of one, so one cross-heap move is always enough to repair it, keeping every update O(log n).
+  - question: You need every element kept in sorted order for repeated ranked lookups, so you use bisect.insort. What is the cost of one insertion and which part dominates?
+    answer: One insort is O(n); the binary search for the position is O(log n) but the insertion shifts all later elements, and that shifting dominates.
+    explanation: Lists store elements contiguously, so inserting in the middle must move everything after it, making the shift the expensive step despite the fast search.

@@ -1,0 +1,95 @@
+id: lesson.library.iterators_generators.a03
+kind: lesson
+version: 1
+language: python
+title: Building a Custom Iterable With __iter__ and __next__
+slug: lesson-iterators-generators-a03
+difficulty: medium
+concepts:
+  - python.iterators_generators
+  - python.classes
+prerequisites:
+  - python.classes
+  - python.functions
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.iterators_generators.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original ticket-dispenser class illustrating the iterator protocol from first principles.
+body_markdown: |
+  Generators are the easy way to make something iterable. But it helps to see
+  the machinery underneath, because it explains what a `for` loop is really
+  doing. Python defines the **iterator protocol** with two methods:
+
+  - `__iter__(self)` returns an *iterator* (an object with `__next__`).
+  - `__next__(self)` returns the next value, or raises `StopIteration` when the
+    values run out.
+
+  When you write `for x in thing:`, Python calls `iter(thing)` once to get an
+  iterator, then calls `next(...)` on it repeatedly until `StopIteration`. That
+  is the whole loop.
+
+  Let's build a ticket dispenser that hands out a fixed run of numbered stubs.
+  The object is *its own iterator*: `__iter__` returns `self`, and `__next__`
+  tracks how many stubs remain.
+
+  ```python
+  class TicketDispenser:
+      def __init__(self, start, count):
+          self.current = start
+          self.remaining = count
+
+      def __iter__(self):
+          return self
+
+      def __next__(self):
+          if self.remaining <= 0:
+              raise StopIteration
+          stub = self.current
+          self.current += 1
+          self.remaining -= 1
+          return stub
+
+  print(list(TicketDispenser(100, 3)))   # [100, 101, 102]
+  ```
+
+  Notice how `list()` drives the protocol for us: it calls `iter()`, then pulls
+  with `next()` until the dispenser raises `StopIteration`. The raise is not an
+  error to fear; it is the agreed-upon signal that iteration is finished.
+
+  One subtlety: because this object *is* its own iterator, it can only be
+  consumed once. After you exhaust it, `remaining` is `0` and every future
+  `__next__` immediately stops. If you needed a reusable, restartable iterable,
+  you would instead make `__iter__` return a *fresh* helper object (or simply
+  `yield` from inside `__iter__`, since a generator method satisfies the protocol
+  automatically):
+
+  ```python
+  class Countdown:
+      def __init__(self, start):
+          self.start = start
+      def __iter__(self):
+          n = self.start
+          while n > 0:
+              yield n
+              n -= 1
+  ```
+
+  Here every `for` over a `Countdown` gets a brand-new generator, so it restarts
+  cleanly each time. Choosing between "object is its own iterator" and "object
+  produces fresh iterators" is really a choice about whether iteration should be
+  one-shot or repeatable.
+checkpoints:
+  - question: What two methods must an object provide to follow the iterator protocol, and what does each do?
+    answer: __iter__ returns an iterator object, and __next__ returns the next value or raises StopIteration when finished.
+    explanation: A for loop calls iter() once then next() repeatedly, so these two methods are exactly what it drives.
+  - question: In the TicketDispenser, why can you only iterate one instance once before it is empty?
+    answer: The instance is its own iterator and mutates self.remaining as it goes, so once remaining hits zero every further __next__ stops immediately.
+    explanation: Because __iter__ returns self, there is a single shared state; exhausting it leaves nothing for a second pass.
+  - question: How can you make a class produce a fresh, restartable iteration each time it is looped over?
+    answer: Have __iter__ return a new iterator each call, for example by using yield inside __iter__ so a new generator is created per loop.
+    explanation: A generator-based __iter__ hands back independent state every time, so repeated for loops each start from the beginning.

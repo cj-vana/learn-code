@@ -1,0 +1,92 @@
+id: exercise.library.decorators_closures.a03
+kind: exercise
+version: 1
+language: python
+title: Greenhouse Threshold Factory
+slug: decorators-closures-a03
+difficulty: medium
+concepts:
+  - python.closures_decorators
+  - python.functions
+prerequisites:
+  - python.closures_decorators
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.decorators_closures.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original greenhouse sensor scenario using a closure factory to build a configured predicate.
+prompt_markdown: |
+  A greenhouse controller needs alert checkers tuned to different sensors. Write
+  a factory that builds a predicate function, then use it.
+
+  Write `flag_readings(data)` where `data` is a dict with keys `"threshold"` (an
+  int) and `"readings"` (a list of ints). Build a single predicate function from
+  a factory that captures the threshold, then apply it to each reading and
+  return a list of booleans: `True` when a reading is **strictly above** the
+  threshold, `False` otherwise.
+
+  For `{"threshold": 30, "readings": [28, 30, 31]}` the result is
+  `[False, False, True]`.
+starter_code: |
+  def flag_readings(data):
+      threshold = data["threshold"]
+      readings = data["readings"]
+      # Build a predicate from a factory that captures threshold, then apply it.
+      return []
+function_name: flag_readings
+input_mode: function
+solution_sketch: A factory returns an inner predicate capturing the threshold; map it over the readings.
+sample_solution: |
+  def flag_readings(data):
+      threshold = data["threshold"]
+      readings = data["readings"]
+
+      def make_alert(limit):
+          def is_high(reading):
+              return reading > limit
+          return is_high
+
+      alert = make_alert(threshold)
+      return [alert(reading) for reading in readings]
+hints:
+  - level: 1
+    text: Write a factory that takes the threshold and returns a small function that checks one reading against it.
+  - level: 2
+    text: The inner function should close over the threshold and return reading > limit; build it once, then use it for every reading.
+  - level: 3
+    text: Define make_alert(limit) returning is_high(reading) -> reading > limit, call make_alert(threshold), and map it across readings.
+tests:
+  public:
+    - name: around_threshold
+      input: {"threshold": 30, "readings": [28, 30, 31]}
+      expected: [false, false, true]
+    - name: all_below
+      input: {"threshold": 100, "readings": [10, 20, 30]}
+      expected: [false, false, false]
+    - name: empty_readings
+      input: {"threshold": 5, "readings": []}
+      expected: []
+  validation:
+    - name: all_above
+      input: {"threshold": 0, "readings": [1, 2, 3]}
+      expected: [true, true, true]
+    - name: negatives
+      input: {"threshold": -5, "readings": [-6, -5, -4]}
+      expected: [false, false, true]
+    - name: exact_boundary_is_false
+      input: {"threshold": 42, "readings": [42, 43, 41]}
+      expected: [false, true, false]
+explanation_markdown: |
+  The factory `make_alert` captures `limit` and returns `is_high`, a configured
+  predicate that remembers its threshold. Building the predicate once and
+  reusing it keeps the comparison logic in a single place while the captured
+  threshold personalizes it. Note that strictly-above means the boundary value
+  itself is not flagged, which the exact-boundary test checks.
+common_mistakes:
+  - Using >= instead of >, which wrongly flags a reading equal to the threshold.
+  - Rebuilding the predicate inside the loop for each reading instead of once from the factory.
+  - Returning the predicate function instead of the list of boolean results.

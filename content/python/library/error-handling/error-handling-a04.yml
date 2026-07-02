@@ -1,0 +1,91 @@
+id: exercise.library.error_handling.a04
+kind: exercise
+version: 1
+language: python
+title: Naming the Failure at the Sorting Belt
+slug: error-handling-a04
+difficulty: easy
+concepts:
+  - python.exceptions
+  - python.string_formatting
+prerequisites:
+  - python.functions
+  - python.conditionals
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.error_handling.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original sorting-belt scenario that distinguishes two specific exception types and reports which one occurred.
+prompt_markdown: |
+  A parcel belt computes how many parcels fit per bin by dividing a count by a bin
+  size. Bad control data can break the division two different ways: a bin size of
+  zero, or a non-numeric value that cannot be divided at all.
+
+  Write `describe_outcome(pair)` where `pair` is a two-element list `[count, size]`.
+
+  - On success, return `"result:N"` where `N` is `count // size`.
+  - If the division raises `ZeroDivisionError`, return `"error:ZeroDivisionError"`.
+  - If it raises `TypeError` (a value is not a number), return `"error:TypeError"`.
+
+  Handle the two exception types with separate `except` clauses so the report says
+  which failure actually happened.
+starter_code: |
+  def describe_outcome(pair):
+      count, size = pair[0], pair[1]
+      # Return "result:N" on success, or "error:<ExceptionName>" on failure.
+      return ""
+function_name: describe_outcome
+input_mode: function
+solution_sketch: Try count // size and return a formatted result, with one except clause per error type.
+sample_solution: |
+  def describe_outcome(pair):
+      count, size = pair[0], pair[1]
+      try:
+          return f"result:{count // size}"
+      except ZeroDivisionError:
+          return "error:ZeroDivisionError"
+      except TypeError:
+          return "error:TypeError"
+hints:
+  - level: 1
+    text: One try block can be followed by more than one except clause, each for a different error.
+  - level: 2
+    text: Dividing by zero raises ZeroDivisionError; dividing a string raises TypeError.
+  - level: 3
+    text: "Return f\"result:{count // size}\" from the try, and a matching \"error:...\" string from each except."
+tests:
+  public:
+    - name: clean_divide
+      input: [10, 2]
+      expected: 'result:5'
+    - name: zero_size
+      input: [5, 0]
+      expected: 'error:ZeroDivisionError'
+    - name: floor_divide
+      input: [9, 4]
+      expected: 'result:2'
+  validation:
+    - name: count_not_number
+      input: ['x', 2]
+      expected: 'error:TypeError'
+    - name: size_not_number
+      input: [7, 'y']
+      expected: 'error:TypeError'
+    - name: zero_count
+      input: [0, 3]
+      expected: 'result:0'
+explanation_markdown: |
+  A single `try` can be followed by several `except` clauses, and Python runs the
+  first one whose type matches the raised error. Catching `ZeroDivisionError` and
+  `TypeError` separately lets the report name the exact cause instead of lumping
+  every failure together. The clauses are checked top to bottom, so put the more
+  specific handlers first; a broad `except Exception` at the end would catch
+  anything that slipped through.
+common_mistakes:
+  - Collapsing both cases into one `except Exception`, which loses the information about which failure occurred.
+  - Returning the raw integer instead of the `"result:N"` string the grader compares against.
+  - Assuming `"x" // 2` raises ValueError; unsupported operand types raise TypeError.

@@ -1,0 +1,94 @@
+id: quiz.library.collections_itertools.a02
+kind: quiz
+version: 1
+language: python
+title: Reading Collections and Itertools Output
+slug: quiz-collections-itertools-a02
+difficulty: medium
+concepts:
+  - python.collections_module
+  - python.itertools_module
+prerequisites:
+  - python.lists
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.collections_itertools.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original output-prediction questions written from scratch to drill exact behaviour.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: |
+      What does `deque([1, 2, 3, 4])` contain after calling `.rotate(1)` on it?
+    choices:
+      - 'deque([4, 1, 2, 3])'
+      - 'deque([2, 3, 4, 1])'
+      - 'deque([1, 2, 3, 4])'
+      - 'deque([3, 4, 1, 2])'
+    correct_choice: 'deque([4, 1, 2, 3])'
+    explanation: |
+      A positive rotate argument shifts elements toward the right, popping the
+      last item and pushing it onto the front, so 4 moves to the head.
+    concepts:
+      - python.collections_module
+  - id: q2
+    prompt: |
+      After `d = defaultdict(int); d["x"] += 1`, what does `dict(d)` equal?
+    choices:
+      - "{'x': 1}"
+      - '{}'
+      - "{'x': 0}"
+      - 'it raises a KeyError'
+    correct_choice: "{'x': 1}"
+    explanation: |
+      defaultdict(int) supplies 0 for the missing key "x", then += 1 stores 1.
+      No KeyError occurs because the factory creates the value before the read.
+    concepts:
+      - python.collections_module
+  - id: q3
+    prompt: |
+      How many pairs does `list(itertools.combinations([1, 2, 3, 4], 2))`
+      contain?
+    choices:
+      - '6'
+      - '12'
+      - '8'
+      - '16'
+    correct_choice: '6'
+    explanation: |
+      combinations picks unordered pairs, so the count is 4 choose 2 = 6:
+      (1,2), (1,3), (1,4), (2,3), (2,4), (3,4).
+    concepts:
+      - python.itertools_module
+  - id: q4
+    prompt: |
+      What is `list(itertools.islice(itertools.chain([1, 2], [3, 4, 5]), 1, 4))`?
+    choices:
+      - '[2, 3, 4]'
+      - '[1, 2, 3]'
+      - '[3, 4, 5]'
+      - '[2, 3, 4, 5]'
+    correct_choice: '[2, 3, 4]'
+    explanation: |
+      chain merges the two lists into the stream 1, 2, 3, 4, 5; islice takes
+      indices 1 up to but not including 4, giving 2, 3, 4.
+    concepts:
+      - python.itertools_module
+  - id: q5
+    prompt: |
+      How many items does `list(itertools.permutations([1, 2, 3], 2))` contain?
+    choices:
+      - '6'
+      - '3'
+      - '9'
+      - '2'
+    correct_choice: '6'
+    explanation: |
+      permutations keeps order, so it yields 3 * 2 = 6 ordered pairs, counting
+      (1,2) and (2,1) as different arrangements.
+    concepts:
+      - python.itertools_module

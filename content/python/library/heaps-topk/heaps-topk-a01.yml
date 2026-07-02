@@ -1,0 +1,84 @@
+id: exercise.library.heaps_topk.a01
+kind: exercise
+version: 1
+language: python
+title: Draining the Repair Bench
+slug: heaps-topk-a01
+difficulty: easy
+concepts:
+  - python.heapq_bisect
+prerequisites:
+  - python.lists
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.heaps_topk.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original heap-drain drill themed around a bicycle workshop repair queue.
+prompt_markdown: |
+  A bicycle workshop stores each waiting repair as a numeric priority, where a
+  smaller number means a more urgent job. Write `drain_queue(priorities)` that
+  returns every priority in ascending order (most urgent first) by loading them
+  into a min-heap and popping until it is empty. An empty input returns an empty
+  list. Use `heapq`, not `sorted`, so you practise the push/pop cycle.
+starter_code: |
+  import heapq
+
+
+  def drain_queue(priorities):
+      return []
+function_name: drain_queue
+input_mode: function
+solution_sketch: Heapify the list, then repeatedly heappop into a result list until the heap is empty.
+sample_solution: |
+  import heapq
+
+
+  def drain_queue(priorities):
+      heap = list(priorities)
+      heapq.heapify(heap)
+      result = []
+      while heap:
+          result.append(heapq.heappop(heap))
+      return result
+hints:
+  - level: 1
+    text: A min-heap always hands back its smallest element first, so popping repeatedly yields ascending order.
+  - level: 2
+    text: Copy the input into a list, call heapq.heapify on it, then loop while the heap is non-empty.
+  - level: 3
+    text: Inside the loop, append heapq.heappop(heap) to your result each iteration; stop when the heap is empty.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: single
+      input: [5]
+      expected: [5]
+    - name: three_unsorted
+      input: [3, 1, 2]
+      expected: [1, 2, 3]
+  validation:
+    - name: duplicates
+      input: [5, 5, 1, 3]
+      expected: [1, 3, 5, 5]
+    - name: negatives
+      input: [10, -2, 7, -2]
+      expected: [-2, -2, 7, 10]
+    - name: mixed
+      input: [0, 9, 4, 4, 1]
+      expected: [0, 1, 4, 4, 9]
+explanation_markdown: |
+  Heapifying is O(n) and each of the n pops is O(log n), so draining the whole
+  queue costs O(n log n) overall, the same as sorting but expressed as a live
+  priority queue. The key property you rely on is that `heappop` always removes
+  the current minimum, so appending each popped value produces a fully ascending
+  sequence.
+common_mistakes:
+  - Mutating the caller's list in place by heapifying it directly instead of copying first.
+  - Reading heap[0] repeatedly without popping, so the same minimum is recorded forever.
+  - Assuming the list is already in sorted order after heapify; only index 0 is guaranteed to be smallest.

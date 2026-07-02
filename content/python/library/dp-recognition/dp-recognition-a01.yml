@@ -1,0 +1,97 @@
+id: exercise.library.dp_recognition.a01
+kind: exercise
+version: 1
+language: python
+title: Counting Ways Up The Belltower
+slug: dp-recognition-a01
+difficulty: easy
+concepts:
+  - patterns.dynamic_programming
+prerequisites:
+  - patterns.recursion
+  - python.functions
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dp_recognition.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original belltower-climbing framing of the step-counting recurrence, with fresh prompt, tests, and explanation.
+prompt_markdown: |
+  A bell-ringer stands at the foot of an old belltower staircase. On every move
+  she hops up either 1 step or 2 steps. She wonders how many distinct sequences
+  of hops carry her all the way to the top.
+
+  Write `climb_stairs(n)` where `n` is an integer number of steps in the
+  staircase, with `n >= 0`. Return the number of distinct ordered ways to reach
+  the top using hops of size 1 or 2.
+
+  There is exactly one way to climb a staircase of `0` steps: take no hops at
+  all, so `climb_stairs(0)` returns `1`. As a larger example,
+  `climb_stairs(4)` returns `5`, counting the sequences 1+1+1+1, 1+1+2, 1+2+1,
+  2+1+1, and 2+2.
+starter_code: |
+  def climb_stairs(n):
+      return None
+function_name: climb_stairs
+input_mode: function
+solution_sketch: The count for n equals the count for n-1 plus the count for n-2, so roll two running totals upward from the base cases.
+sample_solution: |
+  def climb_stairs(n):
+      prev, curr = 0, 1
+      for _ in range(n):
+          prev, curr = curr, prev + curr
+      return curr
+hints:
+  - level: 1
+    text: Think about the very last hop. It was either a single step from n-1 or a double step from n-2.
+  - level: 2
+    text: That splits the problem into two smaller ones, so ways(n) = ways(n-1) + ways(n-2) with ways(0) = ways(1) = 1.
+  - level: 3
+    text: Instead of recursion, keep two running totals and slide them upward n times so each answer is built from the two below it.
+tests:
+  public:
+    - name: zero_steps
+      input: 0
+      expected: 1
+    - name: one_step
+      input: 1
+      expected: 1
+    - name: two_steps
+      input: 2
+      expected: 2
+    - name: four_steps_example
+      input: 4
+      expected: 5
+  validation:
+    - name: three_steps
+      input: 3
+      expected: 3
+    - name: five_steps
+      input: 5
+      expected: 8
+    - name: ten_steps
+      input: 10
+      expected: 89
+    - name: twenty_steps
+      input: 20
+      expected: 10946
+explanation_markdown: |
+  Every path to step `n` must finish with a final hop, and that hop is either a
+  single step landing from step `n-1` or a double step landing from step `n-2`.
+  Those two groups never overlap and together cover every possibility, so the
+  number of ways obeys `ways(n) = ways(n-1) + ways(n-2)`.
+
+  The base cases anchor the recurrence: an empty staircase (`n = 0`) has one way
+  (do nothing), and a single step (`n = 1`) also has exactly one way. From there
+  the counts follow the Fibonacci shape 1, 1, 2, 3, 5, 8, ...
+
+  Rather than recompute overlapping subproblems with recursion, the solution
+  carries just the two most recent counts in `prev` and `curr` and slides them
+  upward `n` times. This runs in O(n) time and O(1) space.
+common_mistakes:
+  - Returning 0 for n = 0 instead of 1, breaking the base case of the recurrence.
+  - Writing a plain recursion without memoization, which recomputes the same subproblems and becomes exponentially slow.
+  - Mixing up the two running totals during the update so the sum is taken from the wrong pair of values.

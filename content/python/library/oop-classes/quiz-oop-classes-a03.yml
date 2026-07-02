@@ -1,0 +1,175 @@
+id: quiz.library.oop_classes.a03
+kind: quiz
+version: 1
+language: python
+title: Objects in Practice -- Mixed Review
+slug: quiz-oop-classes-a03
+difficulty: medium
+concepts:
+  - python.classes
+  - python.dataclasses_dunder
+prerequisites:
+  - python.classes
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.oop_classes.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original mixed-review questions tracing behaviour of instance state, class attributes, dunders, and overriding.
+quiz_type: mixed_review
+questions:
+  - id: q1
+    prompt: |
+      Given this class, what does the final print show?
+
+      ```python
+      class Counter:
+          def __init__(self):
+              self.n = 0
+          def bump(self):
+              self.n += 1
+
+      a = Counter()
+      b = Counter()
+      a.bump()
+      a.bump()
+      b.bump()
+      print(a.n, b.n)
+      ```
+    choices:
+      - 2 1
+      - 3 3
+      - 2 2
+      - 1 1
+    correct_choice: 2 1
+    explanation: |
+      n is an instance attribute set through self, so each Counter keeps its own
+      count. a is bumped twice and b once, giving 2 and 1.
+    concepts:
+      - python.classes
+  - id: q2
+    prompt: |
+      What does this print, and why?
+
+      ```python
+      class Tag:
+          count = 0
+          def __init__(self):
+              Tag.count += 1
+
+      Tag()
+      Tag()
+      Tag()
+      print(Tag.count)
+      ```
+    choices:
+      - 3, because count is a class attribute shared by every instance.
+      - 1, because count resets each time __init__ runs.
+      - 0, because __init__ never changes class attributes.
+      - An error, because you cannot read Tag.count.
+    correct_choice: 3, because count is a class attribute shared by every instance.
+    explanation: |
+      count lives on the class, and each __init__ does Tag.count += 1 on that shared
+      value, so after three instances it is 3.
+    concepts:
+      - python.classes
+  - id: q3
+    prompt: |
+      Two Point objects are built with the same coordinates. Given the class below,
+      what does the comparison print?
+
+      ```python
+      class Point:
+          def __init__(self, x, y):
+              self.x = x
+              self.y = y
+          def __eq__(self, other):
+              return (self.x, self.y) == (other.x, other.y)
+
+      print(Point(1, 2) == Point(1, 2))
+      ```
+    choices:
+      - True, because __eq__ compares the fields.
+      - False, because they are different objects in memory.
+      - True, but only because Python compares ids.
+      - An error, because == is not allowed on custom objects.
+    correct_choice: True, because __eq__ compares the fields.
+    explanation: |
+      Defining __eq__ replaces the default identity check with a field comparison,
+      so two distinct Points with matching coordinates are equal.
+    concepts:
+      - python.dataclasses_dunder
+  - id: q4
+    prompt: |
+      With this hierarchy, what does the loop print?
+
+      ```python
+      class Animal:
+          def sound(self):
+              return "..."
+      class Dog(Animal):
+          def sound(self):
+              return "woof"
+      class Cat(Animal):
+          def sound(self):
+              return "meow"
+
+      print([a.sound() for a in [Dog(), Cat(), Animal()]])
+      ```
+    choices:
+      - "['woof', 'meow', '...']"
+      - "['...', '...', '...']"
+      - "['woof', 'woof', 'woof']"
+      - "['woof', 'meow']"
+    correct_choice: "['woof', 'meow', '...']"
+    explanation: |
+      Each subclass overrides sound, and the base Animal keeps its own. Polymorphic
+      dispatch calls each object's own version, so the results are woof, meow, and
+      the base placeholder.
+    concepts:
+      - python.classes
+  - id: q5
+    prompt: |
+      An Order holds a list of Item objects, each with a `price()` method. Which
+      expression correctly totals the order by delegating to the items?
+    choices:
+      - sum(item.price() for item in self.items)
+      - sum(self.items)
+      - Order.price(self.items)
+      - sum(item.price for item in self.items)
+    correct_choice: sum(item.price() for item in self.items)
+    explanation: |
+      Composition means asking each held object to compute its own value, so you
+      call item.price() on every item and sum the results. Omitting the parentheses
+      would sum method objects, not their returned prices.
+    concepts:
+      - python.classes
+  - id: q6
+    prompt: |
+      What is printed?
+
+      ```python
+      from dataclasses import dataclass, asdict
+
+      @dataclass
+      class Box:
+          w: int
+          h: int
+
+      print(asdict(Box(2, 3)))
+      ```
+    choices:
+      - "{'w': 2, 'h': 3}"
+      - Box(w=2, h=3)
+      - "(2, 3)"
+      - "[2, 3]"
+    correct_choice: "{'w': 2, 'h': 3}"
+    explanation: |
+      dataclasses.asdict converts a dataclass instance into a plain dict mapping each
+      field name to its value, which is handy for returning results in a comparable
+      form.
+    concepts:
+      - python.dataclasses_dunder

@@ -1,0 +1,121 @@
+id: exercise.library.error_handling.a08
+kind: exercise
+version: 1
+language: python
+title: A Gate That Always Closes
+slug: error-handling-a08
+difficulty: medium
+concepts:
+  - python.exceptions
+  - python.classes
+prerequisites:
+  - python.functions
+  - python.classes
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.error_handling.a08
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original irrigation-gate context manager whose __exit__ enforces try/finally-style cleanup and swallows the abort.
+prompt_markdown: |
+  An irrigation channel is guarded by a gate that must always be closed again, even
+  if a step in the middle goes wrong. Model the gate as a context manager class so
+  the closing happens automatically.
+
+  Write a class `Gate` with:
+
+  - `__init__(self, log)` that stores the given list.
+  - `__enter__(self)` that appends `"opened"` to the log and returns `self`.
+  - `__exit__(self, exc_type, exc, tb)` that appends `"closed"` and returns `True`
+    (so any error raised inside the `with` block is suppressed).
+
+  Then write `run_gate(steps)`. Create a fresh `log = []`, open a `Gate(log)` in a
+  `with` block, and loop over `steps`. For each step: if it equals `"stop"`, raise
+  `RuntimeError("halted")`; otherwise append `"pass:<step>"` to the log. Return the
+  log.
+starter_code: |
+  class Gate:
+      def __init__(self, log):
+          self.log = log
+
+      def __enter__(self):
+          # Record the open and return the gate.
+          return self
+
+      def __exit__(self, exc_type, exc, tb):
+          # Record the close and suppress any error from the block.
+          return True
+
+
+  def run_gate(steps):
+      log = []
+      # Use `with Gate(log)` and process the steps.
+      return log
+function_name: run_gate
+input_mode: function
+solution_sketch: Implement __enter__/__exit__ so closing always logs, then drive steps in a with block that raises on "stop".
+sample_solution: |
+  class Gate:
+      def __init__(self, log):
+          self.log = log
+
+      def __enter__(self):
+          self.log.append("opened")
+          return self
+
+      def __exit__(self, exc_type, exc, tb):
+          self.log.append("closed")
+          return True
+
+
+  def run_gate(steps):
+      log = []
+      with Gate(log) as gate:
+          for step in steps:
+              if step == "stop":
+                  raise RuntimeError("halted")
+              log.append(f"pass:{step}")
+      return log
+hints:
+  - level: 1
+    text: A `with` block calls `__enter__` on the way in and `__exit__` on the way out, even when an exception fires.
+  - level: 2
+    text: Append "opened" in __enter__ and "closed" in __exit__; returning True from __exit__ swallows the error.
+  - level: 3
+    text: Inside the with block, `raise RuntimeError("halted")` on "stop"; the gate's __exit__ still logs "closed".
+tests:
+  public:
+    - name: no_stop
+      input: ['a', 'b']
+      expected: ['opened', 'pass:a', 'pass:b', 'closed']
+    - name: stop_midway
+      input: ['x', 'stop', 'y']
+      expected: ['opened', 'pass:x', 'closed']
+    - name: empty
+      input: []
+      expected: ['opened', 'closed']
+  validation:
+    - name: stop_first
+      input: ['stop']
+      expected: ['opened', 'closed']
+    - name: all_pass
+      input: ['one', 'two', 'three']
+      expected: ['opened', 'pass:one', 'pass:two', 'pass:three', 'closed']
+    - name: stop_last
+      input: ['go', 'stop']
+      expected: ['opened', 'pass:go', 'closed']
+explanation_markdown: |
+  A context manager is Python's structured `try/finally`: `__enter__` runs the
+  setup and `__exit__` runs the cleanup no matter how the block ends. When a step
+  raises `RuntimeError`, control leaves the `with` block immediately, but `__exit__`
+  still appends `"closed"` before returning. Returning `True` from `__exit__` tells
+  Python the exception has been handled, so it does not propagate out of
+  `run_gate` and the already-collected log is returned intact. Returning `False`
+  (or nothing) would instead let the error escape.
+common_mistakes:
+  - Returning `False` or nothing from `__exit__`, so the RuntimeError escapes and the function never returns its log.
+  - Appending "opened" or "closed" outside the enter/exit methods, breaking the ordering on the abort path.
+  - Continuing the loop after "stop"; raising an exception ends the block, it does not skip one iteration.

@@ -1,0 +1,127 @@
+id: exercise.library.decorators_closures.a09
+kind: exercise
+version: 1
+language: python
+title: A Logging Decorator With Side Effects
+slug: decorators-closures-a09
+difficulty: hard
+concepts:
+  - python.closures_decorators
+  - python.string_formatting
+prerequisites:
+  - python.closures_decorators
+estimated_time_minutes: 16
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.decorators_closures.a09
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original observatory command scenario where a decorator factory records each call into a captured log list.
+prompt_markdown: |
+  An observatory wants an audit trail of every command it sends to a telescope
+  mount, without changing what the commands return. Write a decorator factory
+  `logged(log)` that captures a list and, each time the wrapped function runs,
+  appends a record of the form `"<func_name>(<arg>) -> <result>"` to that list.
+  The wrapped function's own return value must pass through unchanged.
+
+  Then finish `trace_commands(degrees)`, where `degrees` is a list of ints. It
+  builds a fresh log, decorates a `slew` command (which returns `arg * 2`) with
+  `logged(log)`, calls it once per degree, and returns the completed log.
+
+  For `trace_commands([15, 4])` the result is
+  `["slew(15) -> 30", "slew(4) -> 8"]`.
+starter_code: |
+  import functools
+
+
+  def logged(log):
+      # Return a decorator that records each call into log, then passes the result through.
+      def decorator(func):
+          @functools.wraps(func)
+          def wrapper(arg):
+              return func(arg)
+          return wrapper
+      return decorator
+
+
+  def trace_commands(degrees):
+      log = []
+
+      @logged(log)
+      def slew(arg):
+          return arg * 2
+
+      for deg in degrees:
+          slew(deg)
+      return log
+function_name: trace_commands
+input_mode: function
+solution_sketch: logged captures the list; the wrapper computes the result, appends a formatted record, and returns the result unchanged.
+sample_solution: |
+  import functools
+
+
+  def logged(log):
+      def decorator(func):
+          @functools.wraps(func)
+          def wrapper(arg):
+              result = func(arg)
+              log.append(f"{func.__name__}({arg}) -> {result}")
+              return result
+          return wrapper
+      return decorator
+
+
+  def trace_commands(degrees):
+      log = []
+
+      @logged(log)
+      def slew(arg):
+          return arg * 2
+
+      for deg in degrees:
+          slew(deg)
+      return log
+hints:
+  - level: 1
+    text: The decorator needs access to both the log list and the function, so use a factory that captures the log and returns a decorator.
+  - level: 2
+    text: Inside the wrapper, compute result = func(arg) first, then append the formatted record, then return result so behavior is unchanged.
+  - level: 3
+    text: Use func.__name__ for the name and an f-string like f"{func.__name__}({arg}) -> {result}"; append it to the captured log before returning result.
+tests:
+  public:
+    - name: two_commands
+      input: [15, 4]
+      expected: ["slew(15) -> 30", "slew(4) -> 8"]
+    - name: single
+      input: [7]
+      expected: ["slew(7) -> 14"]
+    - name: empty
+      input: []
+      expected: []
+  validation:
+    - name: with_zero
+      input: [0, 3]
+      expected: ["slew(0) -> 0", "slew(3) -> 6"]
+    - name: repeats_are_all_logged
+      input: [5, 5, 5]
+      expected: ["slew(5) -> 10", "slew(5) -> 10", "slew(5) -> 10"]
+    - name: negatives
+      input: [-2, 6]
+      expected: ["slew(-2) -> -4", "slew(6) -> 12"]
+explanation_markdown: |
+  `logged` is a decorator factory: it captures the `log` list in a closure and
+  returns a decorator, whose `wrapper` records a line for every call. The
+  crucial ordering is to compute `result = func(arg)` first, append the record,
+  and then return `result` untouched, so logging is a pure side effect that
+  never disturbs the command's output. Using `func.__name__` keeps the record
+  honest even when several functions share the same wrapper shape. This is the
+  standard way to grade a decorator by what it *did* rather than what it
+  returned.
+common_mistakes:
+  - Appending the record but returning None, which corrupts the wrapped function's output.
+  - Formatting the arg and result out of order, e.g. "30 -> slew(15)".
+  - Deduplicating repeated calls, when every invocation should produce its own log line.

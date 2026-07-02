@@ -1,0 +1,186 @@
+id: exercise.library.data_wrangling_python.a08
+kind: exercise
+version: 1
+language: python
+title: Assigning Lockers to the Crew
+slug: data-wrangling-python-a08
+difficulty: medium
+concepts:
+  - concepts.grouping_aggregation
+  - python.dictionaries
+prerequisites:
+  - python.dictionaries
+  - python.loops
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.data_wrangling_python.a08
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original left-join-with-defaults drill framed around a ferry crew roster paired with optional locker assignments.
+prompt_markdown: |
+  A ferry terminal keeps a **crew roster** (one row per member) and a separate,
+  optional list of **locker assignments**. Every crew member must appear in the
+  final table whether or not they have a locker; members without one get filler
+  values so every row has the same shape.
+
+  Write `left_join_fill(payload)` that takes **one dictionary** with four entries:
+
+  - `"left"`: a list of dictionaries (the roster rows) — every one appears in the output.
+  - `"right"`: a list of dictionaries (the locker rows).
+  - `"key"`: the string name of the field to join on.
+  - `"defaults"`: a dictionary of locker fields with fallback values.
+
+  Example call:
+
+  ```python
+  left_join_fill({
+      "left": [{"member": "m1", "name": "Ada"}, {"member": "m2", "name": "Ben"}],
+      "right": [{"member": "m1", "locker": "L7", "floor": 2}],
+      "key": "member",
+      "defaults": {"locker": "none", "floor": 0},
+  })
+  # -> [{"member": "m1", "name": "Ada", "locker": "L7", "floor": 2},
+  #     {"member": "m2", "name": "Ben", "locker": "none", "floor": 0}]
+  ```
+
+  Return a **list of dictionaries**, one per left row, in left row order. Build
+  each output row in three layers, lowest priority first:
+
+  1. Start from a copy of `defaults`.
+  2. Lay the left row on top.
+  3. If the key value has a matching right row, lay that right row on top too.
+
+  So a real right value beats a default, the left row beats a default, and on any
+  shared field the **right value wins**. A right field that is absent from the
+  matched row stays at its default. If the same key appears in several right rows,
+  match the **first** occurrence. If `left` is empty, return an empty list.
+starter_code: |
+  def left_join_fill(payload):
+      return []
+function_name: left_join_fill
+input_mode: function
+solution_sketch: Index the right rows by key (first occurrence wins), then for each left row build a dict from defaults, update it with the left row, and if a match exists update it with the matched right row.
+sample_solution: |
+  def left_join_fill(payload):
+      left = payload["left"]
+      right = payload["right"]
+      key = payload["key"]
+      defaults = payload["defaults"]
+      index = {}
+      for row in right:
+          k = row[key]
+          if k not in index:
+              index[k] = row
+      result = []
+      for row in left:
+          merged = dict(defaults)
+          merged.update(row)
+          k = row[key]
+          if k in index:
+              merged.update(index[k])
+          result.append(merged)
+      return result
+hints:
+  - level: 1
+    text: Every left row must survive, so unlike an inner join you never skip a left row -- you only decide whether a real right match is available.
+  - level: 2
+    text: Start each output row as dict(defaults) so absent locker fields already hold their fallback before you overlay anything.
+  - level: 3
+    text: Apply the layers in order -- defaults, then .update(left_row), then .update(matched_right) if the key is in your index -- so right beats left beats defaults.
+tests:
+  public:
+    - name: mixed_match_and_fill
+      input:
+        left:
+          - {member: "m1", name: "Ada"}
+          - {member: "m2", name: "Ben"}
+        right:
+          - {member: "m1", locker: "L7", floor: 2}
+        key: member
+        defaults: {locker: "none", floor: 0}
+      expected:
+        - {member: "m1", name: "Ada", locker: "L7", floor: 2}
+        - {member: "m2", name: "Ben", locker: "none", floor: 0}
+    - name: all_unmatched_filled
+      input:
+        left:
+          - {member: "m1", name: "Ada"}
+          - {member: "m2", name: "Ben"}
+        right: []
+        key: member
+        defaults: {locker: "none", floor: 0}
+      expected:
+        - {member: "m1", name: "Ada", locker: "none", floor: 0}
+        - {member: "m2", name: "Ben", locker: "none", floor: 0}
+    - name: collision_right_wins
+      input:
+        left:
+          - {member: "m1", name: "Ada", zone: "west"}
+        right:
+          - {member: "m1", zone: "east", locker: "L1"}
+        key: member
+        defaults: {zone: "none", locker: "none"}
+      expected:
+        - {member: "m1", name: "Ada", zone: "east", locker: "L1"}
+  validation:
+    - name: empty_left
+      input:
+        left: []
+        right:
+          - {member: "m1", locker: "L7", floor: 2}
+        key: member
+        defaults: {locker: "none", floor: 0}
+      expected: []
+    - name: duplicate_right_first_wins
+      input:
+        left:
+          - {member: "m1", name: "Ada"}
+        right:
+          - {member: "m1", locker: "L7", floor: 2}
+          - {member: "m1", locker: "L9", floor: 5}
+        key: member
+        defaults: {locker: "none", floor: 0}
+      expected:
+        - {member: "m1", name: "Ada", locker: "L7", floor: 2}
+    - name: partial_right_fills_missing_field
+      input:
+        left:
+          - {member: "m1", name: "Ada"}
+        right:
+          - {member: "m1", locker: "L7"}
+        key: member
+        defaults: {locker: "none", floor: 0}
+      expected:
+        - {member: "m1", name: "Ada", locker: "L7", floor: 0}
+    - name: order_follows_left
+      input:
+        left:
+          - {member: "m3", name: "Cy"}
+          - {member: "m1", name: "Ada"}
+        right:
+          - {member: "m1", locker: "L1", floor: 1}
+        key: member
+        defaults: {locker: "none", floor: 0}
+      expected:
+        - {member: "m3", name: "Cy", locker: "none", floor: 0}
+        - {member: "m1", name: "Ada", locker: "L1", floor: 1}
+explanation_markdown: |
+  A left join keeps every row from the left table; the right table only enriches
+  it. The three-layer build makes the fill rule automatic: because each output row
+  starts as a copy of `defaults`, any locker field the right side never supplies
+  is already sitting at its fallback value. Laying the left row on top adds the
+  roster fields, and overlaying a matched right row (when one exists) replaces the
+  defaults with real data.
+
+  Ordering the layers as defaults, then left, then right encodes the priority
+  right > left > default in a single reading of the merged dict. Indexing the
+  right rows first, keeping only the first occurrence of each key, gives O(1)
+  match lookups and the required first-match tie-break, so the whole routine stays
+  linear in the number of rows.
+common_mistakes:
+  - Skipping unmatched left rows as if it were an inner join, so members without a locker vanish.
+  - Mutating the shared defaults dictionary directly instead of copying it per row, so fills leak between rows.
+  - Applying defaults after the right row, which clobbers real locker values with fallbacks.

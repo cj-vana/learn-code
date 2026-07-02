@@ -1,0 +1,101 @@
+id: exercise.library.oop_classes.a08
+kind: exercise
+version: 1
+language: python
+title: Total Runtime of a Composed Playlist
+slug: oop-classes-a08
+difficulty: medium
+concepts:
+  - python.classes
+prerequisites:
+  - python.classes
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.oop_classes.a08
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original radio-playlist scenario drilling composition where a Playlist delegates to its Track objects.
+prompt_markdown: |
+  A community radio show builds each hour from a playlist of tracks. Every track
+  has a length given in minutes and seconds, and the show needs the playlist's total
+  runtime in whole seconds.
+
+  Complete `playlist_seconds(spec)`. The input is a dict with one key, `"tracks"`,
+  whose value is a list of `[minutes, seconds]` pairs. Inside the function, define a
+  small object graph: a `Track` class whose method returns that track's length in
+  seconds, and a `Playlist` class that *holds* a list of `Track` objects and asks
+  each one for its length to compute the total. Build the playlist from the spec and
+  return the total runtime in seconds as an integer.
+starter_code: |
+  def playlist_seconds(spec):
+      # Define a Track class (length in seconds) and a Playlist class that
+      # holds Track objects and sums their lengths.
+      return 0
+function_name: playlist_seconds
+input_mode: function
+solution_sketch: Compose a Playlist that stores Track objects and totals each track's minutes*60 + seconds.
+sample_solution: |
+  def playlist_seconds(spec):
+      class Track:
+          def __init__(self, minutes, seconds):
+              self.minutes = minutes
+              self.seconds = seconds
+
+          def length(self):
+              return self.minutes * 60 + self.seconds
+
+      class Playlist:
+          def __init__(self):
+              self.tracks = []
+
+          def add(self, track):
+              self.tracks.append(track)
+
+          def total(self):
+              return sum(track.length() for track in self.tracks)
+
+      playlist = Playlist()
+      for minutes, seconds in spec["tracks"]:
+          playlist.add(Track(minutes, seconds))
+      return playlist.total()
+hints:
+  - level: 1
+    text: A track's length in seconds is minutes * 60 + seconds; put that in a Track method.
+  - level: 2
+    text: Give Playlist a list of tracks and a total() method that sums track.length() over every track it holds.
+  - level: 3
+    text: Build a Playlist, add a Track for each [minutes, seconds] pair from spec["tracks"], then return playlist.total().
+tests:
+  public:
+    - name: two_tracks
+      input: {tracks: [[3, 30], [2, 15]]}
+      expected: 345
+    - name: no_tracks
+      input: {tracks: []}
+      expected: 0
+    - name: whole_minutes
+      input: {tracks: [[4, 0]]}
+      expected: 240
+  validation:
+    - name: seconds_only
+      input: {tracks: [[0, 45], [0, 20]]}
+      expected: 65
+    - name: three_tracks
+      input: {tracks: [[1, 10], [1, 10], [1, 10]]}
+      expected: 210
+    - name: single_long
+      input: {tracks: [[10, 5]]}
+      expected: 605
+explanation_markdown: |
+  This is composition: a `Playlist` *has* a list of `Track` objects and delegates
+  the per-track arithmetic to them. Each `Track` knows how to report its own length
+  in seconds, and `Playlist.total` simply asks every track it holds and sums the
+  answers. The pieces stay small and independent -- you could test a `Track` on its
+  own -- and the playlist never needs to reach inside a track's fields.
+common_mistakes:
+  - Doing all the minutes-times-sixty arithmetic in one flat loop instead of letting each Track compute its own length.
+  - Storing raw pairs in the Playlist rather than Track objects, so there is nothing to delegate to.
+  - Adding minutes and seconds directly without converting minutes to seconds first.

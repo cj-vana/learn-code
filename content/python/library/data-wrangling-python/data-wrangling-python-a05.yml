@@ -1,0 +1,126 @@
+id: exercise.library.data_wrangling_python.a05
+kind: exercise
+version: 1
+language: python
+title: Per-Orchard Harvest Stats
+slug: data-wrangling-python-a05
+difficulty: medium
+concepts:
+  - concepts.grouping_aggregation
+prerequisites:
+  - python.dictionaries
+  - python.loops
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.data_wrangling_python.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original grouped min/max/total aggregation drill framed around an orchard co-op's crate log.
+prompt_markdown: |
+  An orchard co-op logs every crate picked as a flat list of records. Each record
+  names the orchard it came from and how many crates it holds. The co-op wants a
+  per-orchard summary: the smallest haul, the largest haul, and the running total.
+
+  Write `harvest_stats(payload)` that takes a single dictionary with three keys:
+
+  - `"rows"`: a list of pick dictionaries.
+  - `"key"`: the field naming the orchard to group by.
+  - `"value"`: the field holding the numeric crate count.
+
+  Return a dictionary that maps each distinct orchard to a summary dictionary with
+  exactly these keys:
+
+  - `"min"`: the smallest value seen for that orchard.
+  - `"max"`: the largest value seen for that orchard.
+  - `"total"`: the sum of all values for that orchard.
+
+  You may assume both `"key"` and `"value"` are present in every row and that the
+  value is a number.
+
+  Edge cases the tests cover:
+
+  - An empty `"rows"` list returns an empty dictionary `{}`.
+  - An orchard seen once has that single value as its `"min"`, `"max"`, and `"total"`.
+
+  Example:
+
+  ```python
+  harvest_stats({
+      "rows": [{"orchard": "Elm", "crates": 7}, {"orchard": "Oak", "crates": 3}, {"orchard": "Elm", "crates": 5}],
+      "key": "orchard",
+      "value": "crates",
+  })
+  # -> {"Elm": {"min": 5, "max": 7, "total": 12}, "Oak": {"min": 3, "max": 3, "total": 3}}
+  ```
+starter_code: |
+  def harvest_stats(payload):
+      return {}
+function_name: harvest_stats
+input_mode: function
+solution_sketch: Seed each orchard's summary from its first row, then fold later rows in with min, max, and running addition.
+sample_solution: |
+  def harvest_stats(payload):
+      rows = payload["rows"]
+      key = payload["key"]
+      value = payload["value"]
+      stats = {}
+      for row in rows:
+          group = row[key]
+          v = row[value]
+          if group not in stats:
+              stats[group] = {"min": v, "max": v, "total": v}
+          else:
+              summary = stats[group]
+              summary["min"] = min(summary["min"], v)
+              summary["max"] = max(summary["max"], v)
+              summary["total"] = summary["total"] + v
+      return stats
+hints:
+  - level: 1
+    text: There is no safe starting value for a minimum, so seed each orchard's summary from the first row that lands in it.
+  - level: 2
+    text: On the first sighting set min, max, and total all to that row's value; on later sightings fold the new value in.
+  - level: 3
+    text: For an existing orchard, update summary["min"] with min(...), summary["max"] with max(...), and add the value to summary["total"].
+tests:
+  public:
+    - name: empty_log
+      input: {"rows": [], "key": "orchard", "value": "crates"}
+      expected: {}
+    - name: single_pick
+      input: {"rows": [{"orchard": "Elm", "crates": 7}], "key": "orchard", "value": "crates"}
+      expected: {"Elm": {"min": 7, "max": 7, "total": 7}}
+    - name: two_orchards
+      input: {"rows": [{"orchard": "Elm", "crates": 7}, {"orchard": "Oak", "crates": 3}, {"orchard": "Elm", "crates": 5}], "key": "orchard", "value": "crates"}
+      expected: {"Elm": {"min": 5, "max": 7, "total": 12}, "Oak": {"min": 3, "max": 3, "total": 3}}
+  validation:
+    - name: single_orchard_many
+      input: {"rows": [{"orchard": "Birch", "crates": 4}, {"orchard": "Birch", "crates": 9}, {"orchard": "Birch", "crates": 2}], "key": "orchard", "value": "crates"}
+      expected: {"Birch": {"min": 2, "max": 9, "total": 15}}
+    - name: includes_negatives
+      input: {"rows": [{"orchard": "Pear", "net": -3}, {"orchard": "Pear", "net": 8}, {"orchard": "Pear", "net": -1}], "key": "orchard", "value": "net"}
+      expected: {"Pear": {"min": -3, "max": 8, "total": 4}}
+    - name: three_groups
+      input: {"rows": [{"orchard": "A", "crates": 5}, {"orchard": "B", "crates": 2}, {"orchard": "C", "crates": 8}, {"orchard": "A", "crates": 1}, {"orchard": "B", "crates": 6}], "key": "orchard", "value": "crates"}
+      expected: {"A": {"min": 1, "max": 5, "total": 6}, "B": {"min": 2, "max": 6, "total": 8}, "C": {"min": 8, "max": 8, "total": 8}}
+    - name: float_values
+      input: {"rows": [{"orchard": "Fig", "kilos": 2.5}, {"orchard": "Fig", "kilos": 1.5}], "key": "orchard", "value": "kilos"}
+      expected: {"Fig": {"min": 1.5, "max": 2.5, "total": 4.0}}
+explanation_markdown: |
+  A single running number cannot carry a min, a max, and a total at once, so each
+  bucket holds a small summary dictionary instead. The tricky part is min and max:
+  unlike a sum, they have no neutral starting value, since seeding at `0` would be
+  wrong whenever every value is above or below zero. Seeding each summary from the
+  *first* row in its group sidesteps that entirely - the first value is trivially
+  its own min, max, and total, and every later row just folds in with `min`,
+  `max`, and addition.
+
+  This is one pass over the rows with O(1) work per row, so it stays linear even
+  though it tracks three aggregates at once.
+common_mistakes:
+  - Initialising min to 0 (or max to 0), which is wrong whenever all values are positive or all negative.
+  - Recomputing min or max by rescanning the group each time instead of folding the current value in.
+  - Returning min and max but forgetting to keep the running total updated on every row.

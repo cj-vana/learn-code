@@ -1,0 +1,96 @@
+id: lesson.library.graphs_lite.a02
+kind: lesson
+version: 1
+language: python
+title: Depth-First Search and Finding Connectivity
+slug: lesson-graphs-lite-a02
+difficulty: medium
+concepts:
+  - patterns.dfs
+  - patterns.graph_traversal
+prerequisites:
+  - python.dictionaries
+  - python.sets
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.graphs_lite.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original depth-first-search walkthrough covering visitation order, connected components, and cycle detection.
+body_markdown: |
+  **Depth-first search** (DFS) explores a graph by committing to one path as far
+  as it will go before backtracking. From a node you step into a neighbour, then
+  that node's neighbour, and so on, only retreating when you hit a dead end or a
+  node you have already seen. A `visited` set is what makes this safe: without it,
+  the first cycle would send the search into an infinite loop.
+
+  ```python
+  def dfs_order(graph, start):
+      visited = set()
+      order = []
+
+      def visit(node):
+          visited.add(node)
+          order.append(node)                 # record on first entry
+          for nxt in sorted(graph[node]):    # sorted -> deterministic
+              if nxt not in visited:
+                  visit(nxt)
+
+      visit(start)
+      return order
+  ```
+
+  Two details control the output. Recording a node **when you first enter it**
+  gives the *preorder* sequence; recording it after its children are done would
+  give a different order. And iterating `sorted(graph[node])` fixes the tie-break
+  so the walk is reproducible instead of depending on insertion order. The same
+  logic can run iteratively with an explicit `stack = [start]` and a `while stack`
+  loop, which avoids Python's recursion limit on deep graphs.
+
+  DFS answers **connectivity** questions directly. To count *connected
+  components* -- the separate clumps of a graph -- loop over every node and start a
+  fresh DFS from any node the search has not yet reached. Each fresh start is one
+  new component:
+
+  ```python
+  def count_components(nodes, graph):
+      seen = set()
+      components = 0
+      for node in nodes:
+          if node not in seen:
+              components += 1
+              stack = [node]
+              seen.add(node)
+              while stack:
+                  cur = stack.pop()
+                  for nxt in graph[cur]:
+                      if nxt not in seen:
+                          seen.add(nxt)
+                          stack.append(nxt)
+      return components
+  ```
+
+  Notice the outer loop runs over *all* nodes, not just those in the edge list, so
+  a node with zero edges is correctly counted as its own component.
+
+  DFS also detects **cycles**, but the rule differs by graph type. In an
+  *undirected* graph you will always re-encounter the node you just came from --
+  that is not a cycle -- so you carry each node's *parent* and only flag a cycle
+  when a visited neighbour is something other than the parent. In a *directed*
+  graph parents do not help; instead you track three states (untouched, on the
+  current path, finished) and flag a cycle when the search reaches a node still on
+  the active path. Both are small variations on the same walk, which is why
+  learning the plain traversal first pays off everywhere else.
+checkpoints:
+  - question: What is the purpose of the visited set in depth-first search, and what breaks without it?
+    answer: It records nodes already explored so they are never re-entered; without it, any cycle sends the recursion or stack loop into an infinite loop.
+    explanation: Graphs can contain cycles, so the search must remember where it has been to guarantee termination.
+  - question: To count the connected components of a graph, why must the outer loop iterate over every node rather than only the nodes seen in edges?
+    answer: Because a node with no edges is still its own component, and it would be missed if you only looped over endpoints of edges.
+    explanation: Each unvisited node encountered by the outer loop starts a new component; isolated nodes must be included to be counted.
+  - question: Why does undirected cycle detection track each node's parent while directed cycle detection tracks three colour states instead?
+    answer: In an undirected graph the edge back to the parent always looks visited but is not a cycle, so the parent is excluded; in a directed graph a cycle is a back-edge to a node still on the active path, which the grey/on-path state captures.
+    explanation: Direction changes what counts as a genuine back-edge, so the two cases need different bookkeeping even though the underlying traversal is the same.

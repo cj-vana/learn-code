@@ -39,9 +39,50 @@ AREA_TITLES = {
     "binary_search": "Binary Search",
     "recursion_backtracking": "Recursion & Backtracking",
     "mixed_capstones": "Mixed Capstones",
+    # Wave-3 expansion
+    "oop_classes": "Object-Oriented Python",
+    "iterators_generators": "Iterators & Generators",
+    "decorators_closures": "Closures & Decorators",
+    "error_handling": "Errors & Exceptions",
+    "collections_itertools": "Collections & Itertools",
+    "regex_text_processing": "Regex & Text Processing",
+    "linked_lists_patterns": "Linked Lists",
+    "trees_lite": "Trees",
+    "graphs_lite": "Graphs",
+    "heaps_topk": "Heaps & Top-K",
+    "intervals_greedy": "Intervals & Greedy",
+    "dp_recognition": "Dynamic Programming",
+    "data_wrangling_python": "Pure-Python Data Wrangling",
+    "grid_simulation": "Grids & Simulation",
+    "bit_number_theory": "Bits & Number Theory",
 }
 
-CAREER_UNIT_ORDER = list(AREA_TITLES)
+_ORIGINAL_AREAS = [
+    "python_refresh",
+    "loops_lists_strings",
+    "dicts_sets_tuples",
+    "debugging",
+    "brute_force_bigo",
+    "hashmap_set",
+    "two_pointers",
+    "sliding_window",
+    "prefix_sums",
+    "stack_queue_bfs",
+    "binary_search",
+    "recursion_backtracking",
+]
+
+# Interview prep now runs through the advanced pattern families before capstones.
+CAREER_UNIT_ORDER = [
+    *_ORIGINAL_AREAS,
+    "linked_lists_patterns",
+    "trees_lite",
+    "graphs_lite",
+    "heaps_topk",
+    "intervals_greedy",
+    "dp_recognition",
+    "mixed_capstones",
+]
 
 PATHS = [
     {
@@ -91,12 +132,19 @@ PATHS = [
         "path_type": "skill",
         "title": "Data Structures in Python",
         "slug": "data-structures-in-python",
-        "description": "Dictionaries, sets, tuples, and sorting — the containers interviews lean on.",
+        "description": "Dictionaries, sets, tuples, and sorting — then the structures they build: objects, linked lists, and trees.",
         "outcomes": [
             "Pick the right container for the job",
             "Sort with keys and reason about lookup costs",
+            "Model data with classes and traverse linked and tree-shaped structures",
         ],
-        "areas": [("dicts_sets_tuples", 1), ("dicts_sets_tuples", 2)],
+        "areas": [
+            ("dicts_sets_tuples", 1),
+            ("dicts_sets_tuples", 2),
+            ("oop_classes", 1),
+            ("linked_lists_patterns", 1),
+            ("trees_lite", 1),
+        ],
     },
     {
         "id": "path.skill.debugging",
@@ -132,9 +180,10 @@ PATHS = [
         "path_type": "skill",
         "title": "Algorithm Patterns II",
         "slug": "algorithm-patterns-2",
-        "description": "Prefix sums, stacks and queues, binary search, recursion, and mixed capstones.",
+        "description": "Prefix sums, stacks and queues, binary search, recursion, heaps, intervals, and mixed capstones.",
         "outcomes": [
             "Apply prefix sums, stacks, and binary search to fresh problems",
+            "Reach for heaps and greedy interval sweeps when they fit",
             "Hold your own on mixed problems that hide which pattern applies",
         ],
         "areas": [
@@ -142,8 +191,184 @@ PATHS = [
             ("stack_queue_bfs", 1),
             ("binary_search", 1),
             ("recursion_backtracking", 1),
+            ("heaps_topk", 1),
+            ("intervals_greedy", 1),
             ("mixed_capstones", 1),
         ],
+    },
+    {
+        "id": "path.career.python_developer_mastery",
+        "path_type": "career",
+        "title": "Python Developer Mastery",
+        "slug": "python-developer-mastery",
+        "description": (
+            "The full beginner-to-advanced language arc: syntax fluency and core data "
+            "structures, then every professional Python skill — OOP, iterators and "
+            "generators, decorators, error handling, collections and itertools, regex, "
+            "and pure-Python data wrangling — capped by mixed capstones."
+        ),
+        "outcomes": [
+            "Write idiomatic Python from fundamentals through advanced idioms",
+            "Model programs with classes, generators, and decorators",
+            "Handle errors deliberately and process real-world text and records",
+            "Finish with capstones that mix everything without hints",
+        ],
+        "areas": [
+            ("python_refresh", 1),
+            ("loops_lists_strings", 1),
+            ("dicts_sets_tuples", 1),
+            ("debugging", 1),
+            ("error_handling", 1),
+            ("oop_classes", 1),
+            ("iterators_generators", 1),
+            ("decorators_closures", 1),
+            ("collections_itertools", 1),
+            ("regex_text_processing", 1),
+            ("data_wrangling_python", 1),
+            ("mixed_capstones", 1),
+        ],
+    },
+    {
+        "id": "path.career.algorithms_specialist",
+        "path_type": "career",
+        "title": "Algorithms Specialist",
+        "slug": "algorithms-specialist",
+        "description": (
+            "A deep, pattern-by-pattern algorithms arc from Big-O and hashing through "
+            "every classic interview family: linked lists, trees, graphs, heaps, "
+            "intervals and greedy, dynamic programming, and bit-level puzzles."
+        ),
+        "outcomes": [
+            "Name the pattern before you write a line of code",
+            "Traverse linked, tree, and graph structures from memory",
+            "Recognize DP structure and apply memoization or tabulation",
+            "Handle bitwise and number-theory problems without flinching",
+        ],
+        "areas": [
+            ("brute_force_bigo", 1),
+            ("hashmap_set", 1),
+            ("two_pointers", 1),
+            ("sliding_window", 1),
+            ("prefix_sums", 1),
+            ("stack_queue_bfs", 1),
+            ("binary_search", 1),
+            ("recursion_backtracking", 1),
+            ("linked_lists_patterns", 1),
+            ("trees_lite", 1),
+            ("graphs_lite", 1),
+            ("heaps_topk", 1),
+            ("intervals_greedy", 1),
+            ("dp_recognition", 1),
+            ("bit_number_theory", 1),
+            ("mixed_capstones", 1),
+        ],
+    },
+    {
+        "id": "path.career.python_data_automation",
+        "path_type": "career",
+        "title": "Python Data & Automation Specialist",
+        "slug": "python-data-and-automation",
+        "description": (
+            "A data-and-scripting arc: robust code with OOP and error handling, then "
+            "collections and itertools, regex and text processing, pure-Python data "
+            "wrangling, and grid/simulation puzzles, finishing with mixed capstones."
+        ),
+        "outcomes": [
+            "Build robust, well-structured data-processing functions",
+            "Group, join, pivot, and dedupe records with the standard library alone",
+            "Parse and transform messy text with regex confidently",
+        ],
+        "areas": [
+            ("oop_classes", 1),
+            ("error_handling", 1),
+            ("collections_itertools", 1),
+            ("regex_text_processing", 1),
+            ("data_wrangling_python", 1),
+            ("grid_simulation", 1),
+            ("mixed_capstones", 1),
+        ],
+    },
+    {
+        "id": "path.skill.oop_error_handling",
+        "path_type": "skill",
+        "title": "OOP & Error Handling",
+        "slug": "oop-and-error-handling",
+        "description": "Model data with classes and dunder methods, then make code resilient with structured exception handling.",
+        "outcomes": [
+            "Design small class hierarchies with clean interfaces",
+            "Raise, catch, and define exceptions deliberately",
+        ],
+        "areas": [("oop_classes", 1), ("error_handling", 1)],
+    },
+    {
+        "id": "path.skill.generators_decorators",
+        "path_type": "skill",
+        "title": "Generators & Decorators",
+        "slug": "generators-and-decorators",
+        "description": "Master lazy iteration with generators and higher-order composition with closures and decorators — the two most senior-signaling Python idioms.",
+        "outcomes": [
+            "Write and chain generator pipelines",
+            "Build decorators, including parameterized and stacked ones",
+        ],
+        "areas": [("iterators_generators", 1), ("decorators_closures", 1)],
+    },
+    {
+        "id": "path.skill.advanced_interview_patterns",
+        "path_type": "skill",
+        "title": "Advanced Interview Patterns",
+        "slug": "advanced-interview-patterns",
+        "description": "The four classic families most prep skips: linked lists, trees, graphs, and heaps/top-k, simulated with plain data structures.",
+        "outcomes": [
+            "Reverse, merge, and cycle-check linked structures",
+            "Traverse trees and graphs in every standard order",
+            "Solve top-k and k-way-merge problems with heaps",
+        ],
+        "areas": [
+            ("linked_lists_patterns", 1),
+            ("trees_lite", 1),
+            ("graphs_lite", 1),
+            ("heaps_topk", 1),
+        ],
+    },
+    {
+        "id": "path.skill.greedy_intervals_dp",
+        "path_type": "skill",
+        "title": "Greedy, Intervals & Dynamic Programming",
+        "slug": "greedy-intervals-and-dp",
+        "description": "From greedy interval-sweep reasoning to recognizing and solving overlapping-subproblem DP.",
+        "outcomes": [
+            "Merge, sweep, and schedule intervals greedily",
+            "Spot overlapping subproblems and memoize them away",
+        ],
+        "areas": [("intervals_greedy", 1), ("dp_recognition", 1)],
+    },
+    {
+        "id": "path.skill.text_data_collections",
+        "path_type": "skill",
+        "title": "Text, Data & Collections",
+        "slug": "text-data-and-collections",
+        "description": "Regex-powered text processing, the collections/itertools toolbox, and pandas-style wrangling in pure Python.",
+        "outcomes": [
+            "Extract and rewrite structured text with regex",
+            "Group, join, and pivot records with stdlib tools",
+        ],
+        "areas": [
+            ("regex_text_processing", 1),
+            ("collections_itertools", 1),
+            ("data_wrangling_python", 1),
+        ],
+    },
+    {
+        "id": "path.skill.grid_puzzles_bits",
+        "path_type": "skill",
+        "title": "Grid Puzzles & Bits",
+        "slug": "grid-puzzles-and-bits",
+        "description": "Spatial reasoning on 2D grids and simulations, plus bitwise tricks and number theory for the math-minded.",
+        "outcomes": [
+            "Flood-fill, rotate, and simulate on 2D grids",
+            "Use bitmasks, GCD, and modular arithmetic fluently",
+        ],
+        "areas": [("grid_simulation", 1), ("bit_number_theory", 1)],
     },
 ]
 

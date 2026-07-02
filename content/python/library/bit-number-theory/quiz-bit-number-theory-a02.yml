@@ -1,0 +1,95 @@
+id: quiz.library.bit_number_theory.a02
+kind: quiz
+version: 1
+language: python
+title: Bitwise Operators, Line by Line
+slug: quiz-bit-number-theory-a02
+difficulty: medium
+concepts:
+  - patterns.bit_manipulation
+  - python.operators
+prerequisites:
+  - patterns.bit_manipulation
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.bit_number_theory.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax quiz on Python's bitwise operators, shifts, and gcd mechanics.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: What does the expression `(mask >> 3) & 1` evaluate for a non-negative integer `mask`?
+    choices:
+      - 1 if bit 3 of mask is set, otherwise 0
+      - The value of mask with bit 3 cleared
+      - mask divided by 3, rounded down
+      - 1 if mask is divisible by 8, otherwise 0
+    correct_choice: 1 if bit 3 of mask is set, otherwise 0
+    explanation: |
+      Shifting right by 3 moves bit 3 into the ones place, and & 1 isolates it,
+      yielding exactly that bit's value.
+    concepts:
+      - patterns.bit_manipulation
+      - python.operators
+  - id: q2
+    prompt: Which expression sets bit `k` of `mask` without disturbing any other bit?
+    choices:
+      - mask | (1 << k)
+      - mask & (1 << k)
+      - mask + (1 << k)
+      - mask ^ k
+    correct_choice: mask | (1 << k)
+    explanation: |
+      OR-ing with a one-hot value forces that bit to 1 and leaves the rest alone.
+      Addition corrupts neighbouring bits when bit k is already set.
+    concepts:
+      - patterns.bit_manipulation
+      - python.operators
+  - id: q3
+    prompt: For a positive integer n, what does `n & (n - 1)` compute?
+    choices:
+      - n with its lowest set bit cleared
+      - n with its highest set bit cleared
+      - Always zero
+      - n rounded down to an even number
+    correct_choice: n with its lowest set bit cleared
+    explanation: |
+      Subtracting 1 flips the lowest set bit and everything below it, so the AND
+      erases exactly that bit — the trick behind fast popcounts and the
+      power-of-two test n & (n - 1) == 0.
+    concepts:
+      - patterns.bit_manipulation
+      - python.operators
+  - id: q4
+    prompt: |
+      Euclid's algorithm computes gcd(48, 18) by repeatedly replacing the pair.
+      Which sequence of pairs does it visit?
+    choices:
+      - (48, 18) -> (18, 12) -> (12, 6) -> (6, 0)
+      - (48, 18) -> (30, 18) -> (12, 18) -> (12, 6)
+      - (48, 18) -> (24, 9) -> (12, 4) -> (6, 2)
+      - (48, 18) -> (18, 48) -> (48, 18) forever
+    correct_choice: (48, 18) -> (18, 12) -> (12, 6) -> (6, 0)
+    explanation: |
+      Each step maps (a, b) to (b, a % b): 48 % 18 = 12, 18 % 12 = 6, 12 % 6 = 0,
+      and the answer is the last non-zero value, 6.
+    concepts:
+      - concepts.number_theory
+  - id: q5
+    prompt: In Python, what is the difference between `x << 2` and `x * 4` for a non-negative int `x`?
+    choices:
+      - Nothing — both produce the same value
+      - The shift overflows for large x while the multiply does not
+      - The shift rounds toward zero while the multiply is exact
+      - The shift only works if x is a power of two
+    correct_choice: Nothing — both produce the same value
+    explanation: |
+      Left-shifting by k multiplies by 2^k, and Python ints are arbitrary
+      precision, so neither form overflows; they are interchangeable for
+      non-negative integers.
+    concepts:
+      - python.operators

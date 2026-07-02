@@ -1,0 +1,96 @@
+id: lesson.library.dp_recognition.a01
+kind: lesson
+version: 1
+language: python
+title: 'Top-Down Memoization: Teaching Recursion to Remember'
+slug: lesson-dp-recognition-a01
+difficulty: medium
+concepts:
+  - patterns.dynamic_programming
+  - concepts.memoization
+  - patterns.recursion
+prerequisites:
+  - python.functions
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dp_recognition.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original freight-lift climbing scenario used to motivate a cache dict over plain recursion.
+body_markdown: |
+  A freight lift in a distribution centre rises one or two decks per pull of the
+  chain. If a picker wants to reach deck `n`, how many distinct pull-sequences
+  get them there? The natural way to describe the answer is recursive: the last
+  pull was either a single deck (leaving `n - 1` to solve) or a double deck
+  (leaving `n - 2`). So the count for `n` is the count for `n - 1` plus the count
+  for `n - 2`.
+
+  ```python
+  def ways(n):
+      if n == 0:
+          return 1        # already parked: one empty sequence
+      if n < 0:
+          return 0        # overshot the top deck
+      return ways(n - 1) + ways(n - 2)
+  ```
+
+  This is correct, but it is catastrophically slow. To compute `ways(30)` the
+  function recomputes `ways(28)` twice, `ways(27)` three times, `ways(26)` five
+  times, and so on. The number of calls itself grows like the answer, so the
+  runtime is exponential. The waste has a name: **overlapping subproblems**. The
+  same `ways(k)` question is asked over and over, and each time we solve it from
+  scratch.
+
+  The fix is **memoization**: solve each subproblem once, store the answer, and
+  hand back the stored copy on every later request. A plain dictionary keyed by
+  the argument is all you need.
+
+  ```python
+  def count_climb_ways(n):
+      cache = {}
+
+      def ways(k):
+          if k == 0:
+              return 1
+          if k < 0:
+              return 0
+          if k in cache:            # already solved this exact subproblem
+              return cache[k]
+          cache[k] = ways(k - 1) + ways(k - 2)
+          return cache[k]
+
+      return ways(n)
+  ```
+
+  Read the shape of that inner function, because every top-down DP you write will
+  wear the same three-part uniform:
+
+  1. **Base cases** that return an answer directly with no further recursion.
+  2. **A cache check** right after the base cases: if the key is present, return
+     it immediately.
+  3. **A recursive combination** whose result is stored in the cache *before* it
+     is returned.
+
+  With the cache in place, each distinct `k` from `0` to `n` is computed exactly
+  once, and every computation does O(1) work on top of two cache lookups. The
+  runtime collapses from exponential to O(n) time with O(n) space for the cache
+  and the call stack.
+
+  The mental move that matters most is not the code but the recognition. Whenever
+  you find yourself writing a recursion where the *same argument* can be reached
+  along many different paths, that is your cue that a cache turns an intractable
+  function into a fast one. You did not change *what* the function computes; you
+  only stopped it from forgetting.
+checkpoints:
+  - question: What property of the plain recursive `ways(n)` makes it exponential rather than linear?
+    answer: It has overlapping subproblems, the same `ways(k)` is recomputed many times along different recursive paths.
+    explanation: Because each call splits into two smaller calls that share sub-results, the total number of calls grows like the answer itself unless results are cached.
+  - question: In the memoized version, why must you store the result in the cache before returning it?
+    answer: So that any later call asking for the same `k` finds the stored answer instead of recomputing the whole subtree.
+    explanation: The whole speedup depends on each subproblem being solved once; writing to the cache is what guarantees the second request is a lookup, not a recomputation.
+  - question: After adding the cache, how many times is `ways(5)` actually computed when you call `count_climb_ways(30)`?
+    answer: Exactly once, the first time it is needed; every request after that returns the cached value.
+    explanation: Memoization reduces each distinct subproblem to a single computation, which is what turns the O(exponential) recursion into O(n).

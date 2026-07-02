@@ -1,0 +1,103 @@
+id: quiz.library.grid_simulation.a01
+kind: quiz
+version: 1
+language: python
+title: Reading the Grid Problem Before You Code
+slug: quiz-grid-simulation-a01
+difficulty: medium
+concepts:
+  - patterns.grid_traversal
+  - patterns.simulation
+prerequisites:
+  - patterns.grid_traversal
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.grid_simulation.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pattern-recognition quiz on classifying grid traversal, flood fill, BFS, and simulation problems.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      A spilled dye spreads from one floor tile to every orthogonally connected
+      tile of the same colour. Counting the stained tiles is which pattern?
+    choices:
+      - Flood fill from the start cell, tracking visited tiles
+      - Binary search over the grid rows
+      - A prefix-sum sweep across each row
+      - Sorting the tiles by colour
+    correct_choice: Flood fill from the start cell, tracking visited tiles
+    explanation: |
+      Region growth from a seed through same-valued neighbours is flood fill —
+      DFS or BFS over the four neighbours with a visited set.
+    concepts:
+      - patterns.grid_traversal
+      - patterns.dfs
+  - id: q2
+    prompt: |
+      You need the minimum number of moves for a mail cart to reach the loading
+      dock through open corridor cells. Why BFS rather than DFS?
+    choices:
+      - BFS explores cells in order of distance, so the first arrival is via a shortest route
+      - BFS uses less memory than DFS on all inputs
+      - DFS cannot handle grids that contain walls
+      - DFS revisits cells while BFS never needs a visited set
+    correct_choice: BFS explores cells in order of distance, so the first arrival is via a shortest route
+    explanation: |
+      With unit-cost moves, breadth-first order visits all cells k steps away
+      before any at k+1, so reaching the goal guarantees minimality. DFS finds a
+      path, not the shortest one.
+    concepts:
+      - patterns.queue_bfs
+      - patterns.grid_traversal
+  - id: q3
+    prompt: |
+      Every seat in a theatre model updates at once based on how many occupied
+      neighbours it has. What must a correct single-step implementation do?
+    choices:
+      - Read neighbour counts from the old grid while writing results into a new one
+      - Update the grid in place, row by row, for speed
+      - Process seats in random order to avoid bias
+      - Apply the rule twice and average the results
+    correct_choice: Read neighbour counts from the old grid while writing results into a new one
+    explanation: |
+      Simultaneous rules define generation n+1 purely from generation n; in-place
+      updates let freshly changed seats corrupt their neighbours' counts.
+    concepts:
+      - patterns.simulation
+  - id: q4
+    prompt: |
+      A dockside crane accepts a script of commands, and its behaviour in each
+      mode differs — "lift" while idle starts a lift, but while loaded it is
+      ignored. What is the cleanest model?
+    choices:
+      - A state machine with a transition table from (state, command) to next state
+      - A flood fill over the command list
+      - One boolean flag per command seen so far
+      - Sorting the commands before applying them
+    correct_choice: A state machine with a transition table from (state, command) to next state
+    explanation: |
+      Mode-dependent responses to events are exactly a finite state machine; a
+      nested dict of transitions keeps the rules as data and the loop trivial.
+    concepts:
+      - patterns.state_machine
+  - id: q5
+    prompt: |
+      To visit the 4-directional neighbours of cell (r, c) in a grid with R rows
+      and C columns, what must you check before reading grid[nr][nc]?
+    choices:
+      - 0 <= nr < R and 0 <= nc < C
+      - nr != r and nc != c
+      - grid[nr][nc] is not None
+      - nr + nc is even
+    correct_choice: 0 <= nr < R and 0 <= nc < C
+    explanation: |
+      Bounds come first: Python's negative indexing means grid[-1] silently wraps
+      to the last row instead of failing, so a missing bounds check corrupts
+      logic rather than raising.
+    concepts:
+      - patterns.grid_traversal
