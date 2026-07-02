@@ -313,22 +313,49 @@ def test_playground_run(tmp_path):
     assert runner.requests[0].test_profile == TestProfile.PLAYGROUND
 
 
-def test_quiz_answer_records_mastery(tmp_path):
+def test_quiz_answer_grades_correct_choice(tmp_path):
     client, _, _ = make_client(tmp_path)
     resp = client.post(
         "/api/v1/quizzes/answer",
-        json={"question_id": "q-recursion-1", "correct": True, "concepts": ["python.recursion"]},
+        json={
+            "quiz_id": QUIZ.id,
+            "question_id": QUESTION.id,
+            "choice": QUESTION.correct_choice,
+        },
     )
     assert resp.status_code == 200
     body = resp.json()
-    assert body["question_id"] == "q-recursion-1"
     assert body["correct"] is True
-    assert body["concepts_changed"] == ["python.recursion"]
+    assert body["explanation"] == QUESTION.explanation
+    assert body["question_id"] == QUESTION.id
+    assert body["concepts_changed"]
     assert body["next_review_due_at"]
 
     progress = client.get("/api/v1/progress").json()
     recorded = {c["id"]: c["mastery"] for c in progress["concepts"]}
-    assert recorded.get("python.recursion", 0) > 0
+    graded_concepts = QUESTION.concepts or QUIZ.concepts
+    assert recorded.get(graded_concepts[0], 0) > 0
+
+
+def test_quiz_answer_grades_wrong_choice(tmp_path):
+    client, _, _ = make_client(tmp_path)
+    wrong = next(c for c in QUESTION.choices if c != QUESTION.correct_choice)
+    resp = client.post(
+        "/api/v1/quizzes/answer",
+        json={"quiz_id": QUIZ.id, "question_id": QUESTION.id, "choice": wrong},
+    )
+    assert resp.status_code == 200
+    assert resp.json()["correct"] is False
+
+
+def test_quiz_answer_unknown_question_is_404(tmp_path):
+    client, _, _ = make_client(tmp_path)
+    resp = client.post(
+        "/api/v1/quizzes/answer",
+        json={"quiz_id": QUIZ.id, "question_id": "nope", "choice": "x"},
+    )
+    assert resp.status_code == 404
+    assert resp.json()["error"]["code"] == "content_not_found"
 
 
 def test_review_unavailable_returns_exact_payload(tmp_path):

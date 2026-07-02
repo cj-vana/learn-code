@@ -16,4 +16,6 @@ def quiz_answer(
     deps: AppDependencies = Depends(get_deps),
     repo: ProgressRepository = Depends(get_repo),
 ) -> QuizAnswerResponse:
-    return answer_quiz(repo, request, session_id=deps.session_id, now=deps.clock())
+    return answer_quiz(
+        deps.catalog, repo, request, session_id=deps.session_id, now=deps.clock()
+    )

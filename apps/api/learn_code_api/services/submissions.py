@@ -21,6 +21,7 @@ from learn_code_api.contracts import (
     SubmissionResponse,
 )
 from learn_code_api.content.models import ContentCatalog
+from learn_code_api.errors import ContentNotFoundError
 from learn_code_api.progress.db import ProgressRepository
 from learn_code_api.progress.events import EventType, ProgressEvent, new_event_id
 from learn_code_api.runner_broker.client import (
@@ -29,7 +30,7 @@ from learn_code_api.runner_broker.client import (
     RunnerRequest,
     TestProfile,
 )
-from learn_code_api.services import find_exercise
+from learn_code_api.services import find_exercise, find_quiz
 from learn_code_api.services.runs import to_run_result
 
 
@@ -93,36 +94,56 @@ def submit_exercise(
 
 
 def answer_quiz(
+    catalog: ContentCatalog,
     repo: ProgressRepository,
     request: QuizAnswerRequest,
     *,
     session_id: str,
     now: datetime,
 ) -> QuizAnswerResponse:
-    before = repo.concept_mastery_map()
-    event = ProgressEvent(
-        id=new_event_id(),
-        type=EventType.QUIZ_ANSWERED,
-        created_at=now,
-        content_id=request.question_id,
-        language="python",
-        session_id=session_id,
-        payload={"correct": request.correct, "concepts": list(request.concepts)},
+    quiz = find_quiz(catalog, request.quiz_id)
+    question = next(
+        (item for item in quiz.questions if item.id == request.question_id), None
     )
-    repo.append_event(event)
+    if question is None:
+        raise ContentNotFoundError(
+            f"quiz {quiz.id!r} has no question {request.question_id!r}",
+            details={"quiz_id": quiz.id, "question_id": request.question_id},
+        )
+
+    correct = request.choice == question.correct_choice
+    concepts = list(question.concepts) if question.concepts else list(quiz.concepts)
+
+    before = repo.concept_mastery_map()
+    repo.append_event(
+        ProgressEvent(
+            id=new_event_id(),
+            type=EventType.QUIZ_ANSWERED,
+            created_at=now,
+            content_id=quiz.id,
+            content_version=quiz.version,
+            language="python",
+            session_id=session_id,
+            payload={
+                "question_id": question.id,
+                "correct": correct,
+                "concepts": concepts,
+            },
+        )
+    )
     after = repo.concept_mastery_map()
     review_due = repo.review_due_map()
 
     concepts_changed = [
-        concept for concept in request.concepts if after.get(concept, 0) != before.get(concept, 0)
+        concept for concept in concepts if after.get(concept, 0) != before.get(concept, 0)
     ]
-    due_dates = [review_due[c] for c in request.concepts if c in review_due]
+    due_dates = [review_due[c] for c in concepts if c in review_due]
     next_review_due_at = min(due_dates).isoformat() if due_dates else None
 
     return QuizAnswerResponse(
-        question_id=request.question_id,
-        correct=request.correct,
-        explanation=request.explanation,
+        question_id=question.id,
+        correct=correct,
+        explanation=question.explanation,
         concepts_changed=concepts_changed,
         next_review_due_at=next_review_due_at,
     )

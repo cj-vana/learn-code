@@ -218,15 +218,13 @@ class SubmissionResponse(BaseModel):
 
 
 class QuizAnswerRequest(BaseModel):
-    """V1 ships no quiz content, so correctness is asserted by the caller and
-    the concepts it touched are recorded for mastery (spec: QuizAnswered)."""
+    """The learner's chosen answer; the API grades it against the catalog."""
 
     model_config = ConfigDict(extra="forbid")
 
+    quiz_id: str
     question_id: str
-    correct: bool
-    concepts: list[str] = Field(min_length=1)
-    explanation: str = ""
+    choice: str
 
 
 class QuizAnswerResponse(BaseModel):
