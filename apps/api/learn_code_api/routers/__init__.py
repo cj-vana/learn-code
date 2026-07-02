@@ -9,6 +9,7 @@ from learn_code_api.routers import (
     exercises,
     health,
     lessons,
+    paths,
     plan,
     progress,
     quizzes,
@@ -17,5 +18,16 @@ from learn_code_api.routers import (
 )
 
 api_router = APIRouter(prefix="/api/v1")
-for module in (health, content, plan, progress, exercises, runs, lessons, quizzes, reviews):
+for module in (
+    health,
+    content,
+    plan,
+    progress,
+    exercises,
+    runs,
+    lessons,
+    quizzes,
+    paths,
+    reviews,
+):
     api_router.include_router(module.router)

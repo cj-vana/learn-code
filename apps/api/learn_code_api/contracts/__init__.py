@@ -39,6 +39,11 @@ __all__ = [
     "QuizQuestionDetail",
     "QuizDetail",
     "LessonCompletionResponse",
+    "PathItemStatus",
+    "PathUnitDetail",
+    "PathSummary",
+    "PathDetail",
+    "PathEnrollmentResponse",
 ]
 
 
@@ -159,6 +164,65 @@ class QuizDetail(BaseModel):
     estimated_time_minutes: int
     quiz_type: str
     questions: list[QuizQuestionDetail]
+
+
+class PathItemStatus(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    kind: str
+    title: str
+    estimated_time_minutes: int
+    status: Literal["todo", "complete"]
+
+
+class PathUnitDetail(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    title: str
+    description: str
+    items: list[PathItemStatus]
+    percent_complete: int
+
+
+class PathSummary(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    path_type: str
+    title: str
+    slug: str
+    description: str
+    outcomes: list[str]
+    estimated_hours: int
+    units: int
+    items: int
+    enrolled: bool
+    percent_complete: int
+
+
+class PathDetail(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    path_type: str
+    title: str
+    slug: str
+    description: str
+    outcomes: list[str]
+    estimated_hours: int
+    enrolled: bool
+    percent_complete: int
+    units: list[PathUnitDetail]
+    next_item_id: str | None
+
+
+class PathEnrollmentResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    path_id: str
+    enrolled: bool
 
 
 class RunResult(BaseModel):

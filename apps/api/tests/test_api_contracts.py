@@ -616,3 +616,61 @@ def test_complete_lesson_unknown_id_is_404(tmp_path):
     resp = client.post("/api/v1/lessons/lesson.nope/complete")
     assert resp.status_code == 404
     assert resp.json()["error"]["code"] == "content_not_found"
+
+
+def test_paths_list_shows_seed_paths(tmp_path):
+    client, _, _ = make_client(tmp_path)
+    resp = client.get("/api/v1/paths")
+    assert resp.status_code == 200
+    items = resp.json()
+    ids = {item["id"] for item in items}
+    assert "path.career.python_interview_prep" in ids
+    assert len(items) == 7
+    for item in items:
+        assert item["enrolled"] is False
+        assert item["percent_complete"] == 0
+        assert item["path_type"] in {"career", "skill"}
+        assert item["units"] > 0
+        assert item["items"] > 0
+
+
+def test_path_detail_tracks_completion_and_next_item(tmp_path):
+    client, _, _ = make_client(tmp_path)
+    detail = client.get("/api/v1/paths/path.skill.python_foundations").json()
+    first_unit = detail["units"][0]
+    first_item = first_unit["items"][0]
+    assert first_item["status"] == "todo"
+    assert detail["next_item_id"] == first_item["id"]
+    assert first_item["kind"] == "lesson"
+
+    done = client.post(f"/api/v1/lessons/{first_item['id']}/complete")
+    assert done.status_code == 200
+
+    detail = client.get("/api/v1/paths/path.skill.python_foundations").json()
+    assert detail["units"][0]["items"][0]["status"] == "complete"
+    assert detail["next_item_id"] == first_unit["items"][1]["id"]
+    assert detail["percent_complete"] > 0
+
+
+def test_path_enroll_unenroll_roundtrip(tmp_path):
+    client, _, _ = make_client(tmp_path)
+    resp = client.post("/api/v1/paths/path.skill.python_foundations/enroll")
+    assert resp.status_code == 200
+    assert resp.json() == {"path_id": "path.skill.python_foundations", "enrolled": True}
+
+    listing = client.get("/api/v1/paths").json()
+    enrolled = {item["id"]: item["enrolled"] for item in listing}
+    assert enrolled["path.skill.python_foundations"] is True
+    assert enrolled["path.career.python_interview_prep"] is False
+
+    resp = client.post("/api/v1/paths/path.skill.python_foundations/unenroll")
+    assert resp.json() == {"path_id": "path.skill.python_foundations", "enrolled": False}
+    listing = client.get("/api/v1/paths").json()
+    assert all(item["enrolled"] is False for item in listing)
+
+
+def test_path_unknown_id_is_404(tmp_path):
+    client, _, _ = make_client(tmp_path)
+    resp = client.get("/api/v1/paths/path.skill.nope")
+    assert resp.status_code == 404
+    assert resp.json()["error"]["code"] == "content_not_found"

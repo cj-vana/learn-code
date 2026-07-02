@@ -6,6 +6,7 @@ from learn_code_api.content.models import (
     ContentCatalog,
     ExerciseContent,
     LessonContent,
+    PathContent,
     QuizContent,
 )
 from learn_code_api.errors import ContentNotFoundError
@@ -38,6 +39,16 @@ def find_quiz(catalog: ContentCatalog, quiz_id: str) -> QuizContent:
     raise ContentNotFoundError(
         f"no published quiz with id {quiz_id!r}",
         details={"quiz_id": quiz_id},
+    )
+
+
+def find_path(catalog: ContentCatalog, path_id: str) -> PathContent:
+    for path_content in catalog.paths:
+        if path_content.id == path_id:
+            return path_content
+    raise ContentNotFoundError(
+        f"no published path with id {path_id!r}",
+        details={"path_id": path_id},
     )
 
 
