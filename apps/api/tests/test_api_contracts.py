@@ -46,6 +46,11 @@ NOW = datetime(2026, 7, 2, 12, 0, 0, tzinfo=timezone.utc)
 COUNT_TAGS_ID = "exercise.seed.count-tags-001"
 COUNT_TAGS_CONCEPTS = ["python.dictionaries", "patterns.hash_map_counting"]
 
+LESSON_ID = CATALOG.lessons[0].id
+QUIZ = CATALOG.quizzes[0]
+QUIZ_ID = QUIZ.id
+QUESTION = QUIZ.questions[0]
+
 
 def passed_response(status: RunStatus = RunStatus.PASSED) -> RunnerResponse:
     return RunnerResponse(
@@ -534,3 +539,37 @@ def test_importing_main_has_no_import_time_catalog_load(monkeypatch):
     main_module = importlib.import_module("learn_code_api.main")
     importlib.reload(main_module)  # must not raise despite the invalid content root
     assert callable(main_module.create_app)
+
+
+def test_content_list_includes_all_kinds_and_filters(tmp_path):
+    client, _, _ = make_client(tmp_path)
+    items = client.get("/api/v1/content").json()
+    kinds = {item["kind"] for item in items}
+    assert kinds == {"exercise", "lesson", "quiz"}
+
+    lessons = client.get("/api/v1/content", params={"kind": "lesson"}).json()
+    assert lessons and all(item["kind"] == "lesson" for item in lessons)
+
+
+def test_lesson_detail_returns_body_and_checkpoints(tmp_path):
+    client, _, _ = make_client(tmp_path)
+    resp = client.get(f"/api/v1/content/{LESSON_ID}")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["kind"] == "lesson"
+    assert body["body_markdown"]
+    assert body["checkpoints"][0]["question"]
+    assert body["checkpoints"][0]["answer"]
+
+
+def test_quiz_detail_never_leaks_answers(tmp_path):
+    client, _, _ = make_client(tmp_path)
+    resp = client.get(f"/api/v1/content/{QUIZ_ID}")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["kind"] == "quiz"
+    assert body["questions"]
+    for question in body["questions"]:
+        assert question["choices"]
+        assert "correct_choice" not in question
+        assert "explanation" not in question

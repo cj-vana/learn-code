@@ -34,6 +34,10 @@ __all__ = [
     "QuizAnswerResponse",
     "ReviewRequest",
     "ErrorEnvelope",
+    "CheckpointDetail",
+    "LessonDetail",
+    "QuizQuestionDetail",
+    "QuizDetail",
 ]
 
 
@@ -91,6 +95,62 @@ class ContentDetail(BaseModel):
     hints: list[dict[str, Any]]
     public_tests: list[PublicTestCase]
     common_mistakes: list[str]
+
+
+class CheckpointDetail(BaseModel):
+    """Ungraded self-check; the UI hides answer/explanation behind a reveal."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    question: str
+    answer: str
+    explanation: str
+
+
+class LessonDetail(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    kind: Literal["lesson"]
+    version: int
+    language: str
+    title: str
+    slug: str
+    difficulty: str
+    concepts: list[str]
+    prerequisites: list[str]
+    estimated_time_minutes: int
+    body_markdown: str
+    checkpoints: list[CheckpointDetail]
+
+
+class QuizQuestionDetail(BaseModel):
+    """One quiz question as shown to the learner: never the answer or its
+    explanation (spec: quiz detail must not leak ``correct_choice``)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    prompt: str
+    choices: list[str]
+    concepts: list[str]
+
+
+class QuizDetail(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    kind: Literal["quiz"]
+    version: int
+    language: str
+    title: str
+    slug: str
+    difficulty: str
+    concepts: list[str]
+    prerequisites: list[str]
+    estimated_time_minutes: int
+    quiz_type: str
+    questions: list[QuizQuestionDetail]
 
 
 class RunResult(BaseModel):
