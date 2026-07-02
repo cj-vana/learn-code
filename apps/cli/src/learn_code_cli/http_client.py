@@ -100,22 +100,11 @@ class ApiClient:
             json={"language": "python", "source": source, "stdin": stdin},
         )
 
-    def answer_quiz(
-        self,
-        question_id: str,
-        correct: bool,
-        concepts: list[str],
-        explanation: str = "",
-    ) -> dict[str, Any]:
+    def answer_quiz(self, quiz_id: str, question_id: str, choice: str) -> dict[str, Any]:
         return self._request(
             "POST",
             "/quizzes/answer",
-            json={
-                "question_id": question_id,
-                "correct": correct,
-                "concepts": concepts,
-                "explanation": explanation,
-            },
+            json={"quiz_id": quiz_id, "question_id": question_id, "choice": choice},
         )
 
     def review(

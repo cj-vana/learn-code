@@ -77,15 +77,20 @@ def render_submission(response: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
-def render_quiz(response: dict[str, Any]) -> str:
-    verdict = "correct" if response.get("correct") else "incorrect"
-    lines = [f"{response.get('question_id')}: {verdict}"]
-    if response.get("explanation"):
-        lines.append(response["explanation"])
-    changed = ", ".join(response.get("concepts_changed", [])) or "-"
-    lines.append(f"concepts: {changed}")
-    if response.get("next_review_due_at"):
-        lines.append(f"next review: {response['next_review_due_at']}")
+def render_lesson(detail: dict[str, Any]) -> str:
+    lines = [
+        f"{detail['title']}  ({detail.get('difficulty', '?')} · "
+        f"{detail.get('estimated_time_minutes', '?')} min)",
+        "",
+        detail["body_markdown"],
+    ]
+    checkpoints = detail.get("checkpoints", [])
+    if checkpoints:
+        lines.extend(["", "Checkpoints:"])
+        for number, checkpoint in enumerate(checkpoints, start=1):
+            lines.append(f"  {number}. {checkpoint['question']}")
+            lines.append(f"     -> {checkpoint['answer']} ({checkpoint['explanation']})")
+    lines.extend(["", f"Mark it done in the browser: /lesson/{detail['id']}"])
     return "\n".join(lines)
 
 

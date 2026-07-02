@@ -120,19 +120,38 @@ def playground(
 
 
 @app.command()
-def quiz(
-    concept: list[str] = typer.Option(
-        ..., "--concept", help="Concept id the question touched (repeatable)."
-    ),
-    question_id: str = typer.Option("quiz-adhoc", "--question-id"),
-    correct: bool = typer.Option(True, "--correct/--incorrect"),
-    explanation: str = typer.Option("", "--explanation"),
-) -> None:
-    """Record a quiz answer. V1 has no quiz bank, so the answer is supplied here."""
-    response = _handle(
-        lambda: _client().answer_quiz(question_id, correct, concept, explanation)
-    )
-    typer.echo(render.render_quiz(response))
+def lesson(lesson_id: str) -> None:
+    """Read a lesson and its self-check questions."""
+    detail = _handle(lambda: _client().content_detail(lesson_id))
+    if detail.get("kind") != "lesson":
+        _fail(f"{lesson_id} is not a lesson.")
+    typer.echo(render.render_lesson(detail))
+
+
+@app.command()
+def quiz(quiz_id: str) -> None:
+    """Take a quiz; each answer is graded by the API."""
+    detail = _handle(lambda: _client().content_detail(quiz_id))
+    if detail.get("kind") != "quiz":
+        _fail(f"{quiz_id} is not a quiz.")
+    questions = detail["questions"]
+    correct_count = 0
+    for number, question in enumerate(questions, start=1):
+        typer.echo(f"\n[{number}/{len(questions)}] {question['prompt']}")
+        for choice_number, choice in enumerate(question["choices"], start=1):
+            typer.echo(f"  {choice_number}. {choice}")
+        picked = typer.prompt("Answer number", type=int)
+        if not 1 <= picked <= len(question["choices"]):
+            _fail(f"Pick a number between 1 and {len(question['choices'])}.")
+        response = _handle(
+            lambda q=question, p=picked: _client().answer_quiz(
+                detail["id"], q["id"], q["choices"][p - 1]
+            )
+        )
+        correct_count += 1 if response["correct"] else 0
+        verdict = "Correct." if response["correct"] else "Not this time."
+        typer.echo(f"{verdict} {response['explanation']}")
+    typer.echo(f"\nScore: {correct_count}/{len(questions)}")
 
 
 @app.command()

@@ -155,28 +155,82 @@ def test_playground_runs_file_with_stdin(runner, api_base, tmp_path):
     assert b'"stdin":"hi"' in body
 
 
+QUIZ_DETAIL = {
+    "id": "quiz.t.1",
+    "kind": "quiz",
+    "title": "Loop check",
+    "quiz_type": "mixed_review",
+    "concepts": ["python.loops"],
+    "questions": [
+        {
+            "id": "q1",
+            "prompt": "What repeats the body?",
+            "choices": ["a loop", "a dict"],
+            "concepts": ["python.loops"],
+        }
+    ],
+}
+
+LESSON_DETAIL = {
+    "id": "lesson.t.1",
+    "kind": "lesson",
+    "title": "Intro to Loops",
+    "difficulty": "easy",
+    "estimated_time_minutes": 8,
+    "concepts": ["python.loops"],
+    "body_markdown": "Loops repeat work until a condition ends them.",
+    "checkpoints": [
+        {"question": "What repeats?", "answer": "The body", "explanation": "Each pass runs the body."}
+    ],
+}
+
+
 @respx.mock
-def test_quiz_posts_answer(runner, api_base):
+def test_quiz_grades_answers_via_api(runner, api_base):
+    respx.get(f"{api_base}/content/quiz.t.1").mock(
+        return_value=httpx.Response(200, json=QUIZ_DETAIL)
+    )
     route = respx.post(f"{api_base}/quizzes/answer").mock(
         return_value=httpx.Response(
             200,
             json={
                 "question_id": "q1",
                 "correct": True,
-                "explanation": "Yes.",
+                "explanation": "Loops repeat the body.",
                 "concepts_changed": ["python.loops"],
                 "next_review_due_at": "2026-07-05T00:00:00Z",
             },
         )
     )
-    result = runner.invoke(
-        app, ["quiz", "--question-id", "q1", "--concept", "python.loops", "--correct"]
-    )
+    result = runner.invoke(app, ["quiz", "quiz.t.1"], input="1\n")
     assert result.exit_code == 0
-    assert "q1: correct" in result.stdout
+    assert "Loops repeat the body." in result.stdout
+    assert "Score: 1/1" in result.stdout
     body = route.calls.last.request.content.replace(b" ", b"")
-    assert b'"concepts":["python.loops"]' in body
-    assert b'"correct":true' in body
+    assert b'"quiz_id":"quiz.t.1"' in body
+    assert b'"question_id":"q1"' in body
+    assert b'"choice":"aloop"' in body
+
+
+@respx.mock
+def test_quiz_rejects_non_quiz_content(runner, api_base):
+    respx.get(f"{api_base}/content/lesson.t.1").mock(
+        return_value=httpx.Response(200, json=LESSON_DETAIL)
+    )
+    result = runner.invoke(app, ["quiz", "lesson.t.1"])
+    assert result.exit_code == 1
+    assert "not a quiz" in result.stdout
+
+
+@respx.mock
+def test_lesson_prints_body_and_checkpoints(runner, api_base):
+    respx.get(f"{api_base}/content/lesson.t.1").mock(
+        return_value=httpx.Response(200, json=LESSON_DETAIL)
+    )
+    result = runner.invoke(app, ["lesson", "lesson.t.1"])
+    assert result.exit_code == 0
+    assert "Loops repeat work until a condition ends them." in result.stdout
+    assert "What repeats?" in result.stdout
 
 
 @respx.mock
