@@ -18,7 +18,7 @@ def test_build_container_options_matches_security_baseline():
         "security_opt": ["no-new-privileges"],
         "read_only": True,
         "user": "1000:1000",
-        "remove": True,
+        "auto_remove": True,
     }
 
 
@@ -59,7 +59,7 @@ def test_executor_passes_security_options_to_adapter(tmp_path):
         "security_opt": ["no-new-privileges"],
         "read_only": True,
         "user": "1000:1000",
-        "remove": True,
+        "auto_remove": True,
     }
 
 
@@ -141,7 +141,7 @@ class _FakeNotFound(Exception):
 
 
 class _FakeContainer:
-    """Mimics an auto-removed (remove=True) container: reload() 404s post-exit."""
+    """Mimics an auto-removed (auto_remove=True) container: reload() 404s post-exit."""
 
     def __init__(self, status_code: int):
         self._status_code = status_code
@@ -168,6 +168,11 @@ class _FakeContainers:
         self._container = container
 
     def create(self, **kwargs):
+        # Real docker-py containers.create() rejects run()-only kwargs such as
+        # `remove`; mirror that so a regression to `remove` fails here instead of
+        # only at runtime against a live daemon.
+        if "remove" in kwargs:
+            raise TypeError("run() got an unexpected keyword argument 'remove'")
         return self._container
 
 
@@ -177,7 +182,7 @@ class _FakeClient:
 
 
 def test_docker_adapter_infers_oom_when_autoremoved_container_exits_137():
-    # Under AutoRemove (remove=True) the daemon deletes the container on exit,
+    # Under auto_remove=True the daemon deletes the container on exit,
     # so container.reload()/inspect races and cannot report OOMKilled. Exit
     # code 137 (128 + SIGKILL) must still surface as memory_exceeded.
     adapter = DockerPyAdapter()
@@ -187,7 +192,7 @@ def test_docker_adapter_infers_oom_when_autoremoved_container_exits_137():
         image="img",
         command=["python3", "/app/harness.py"],
         volumes={},
-        options={"remove": True},
+        options={"auto_remove": True},
         timeout_seconds=5.0,
     )
 

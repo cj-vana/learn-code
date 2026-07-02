@@ -39,7 +39,10 @@ def build_container_options(limits: RunLimits) -> dict[str, Any]:
         "security_opt": ["no-new-privileges"],
         "read_only": True,
         "user": "1000:1000",
-        "remove": True,
+        # `auto_remove` (not `remove`) is the kwarg docker-py's containers.create()
+        # accepts; `remove` is a run()-only convenience and makes create() raise
+        # TypeError. It maps to the daemon's HostConfig AutoRemove.
+        "auto_remove": True,
     }
 
 
@@ -118,7 +121,7 @@ class DockerPyAdapter:
                     container.reload()
                     oom_killed = bool(container.attrs.get("State", {}).get("OOMKilled"))
                 except Exception:
-                    # With AutoRemove (remove=True) the daemon deletes the
+                    # With auto_remove=True the daemon deletes the
                     # container on exit, so reload()/inspect usually 404s here
                     # and can never report OOMKilled. Fall through to the exit
                     # code below.
