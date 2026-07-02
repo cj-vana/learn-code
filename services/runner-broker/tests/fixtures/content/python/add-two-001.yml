@@ -1,0 +1,20 @@
+id: exercise.seed.add-two-001
+kind: exercise
+version: 1
+language: python
+title: Add Two
+slug: add-two-001
+function_name: add_two
+input_mode: function
+tests:
+  public:
+    - name: basic
+      input: [1, 2]
+      expected: 3
+    - name: zero
+      input: [0, 0]
+      expected: 0
+  validation:
+    - name: negative
+      input: [-1, -1]
+      expected: -2
