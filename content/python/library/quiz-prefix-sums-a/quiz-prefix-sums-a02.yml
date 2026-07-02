@@ -1,0 +1,109 @@
+id: quiz.library.prefix_sums.a02
+kind: quiz
+version: 1
+language: python
+title: Reading and Querying a Prefix Array
+slug: quiz-prefix-sums-a02
+difficulty: medium
+concepts:
+  - patterns.prefix_sums
+prerequisites:
+  - python.lists
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.prefix_sums.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original code-tracing and off-by-one questions with numeric near-miss distractors, written from scratch.
+quiz_type: mixed_review
+questions:
+  - id: q1
+    prompt: |
+      A padded prefix array is pre = [0, 4, 4, 10, 13], where pre[k] is the sum of
+      the first k original values. Using "sum from index left up to but not
+      including right equals pre[right] - pre[left]", what is pre[4] - pre[1]?
+    choices: ["9", "13", "10", "17"]
+    correct_choice: "9"
+    explanation: |
+      pre[4] is 13 and pre[1] is 4, so the range sum is 13 - 4 = 9. That covers the
+      original values at indices 1, 2, and 3.
+    concepts:
+      - patterns.prefix_sums
+  - id: q2
+    prompt: |
+      What does this code print?
+
+      ```python
+      def build(values):
+          pre = [0]
+          for v in values:
+              pre.append(pre[-1] + v)
+          return pre
+
+      print(build([2, 0, 6]))
+      ```
+    choices:
+      - "[0, 2, 2, 8]"
+      - "[2, 2, 8]"
+      - "[0, 2, 0, 6]"
+      - "[2, 0, 6, 8]"
+    correct_choice: "[0, 2, 2, 8]"
+    explanation: |
+      Starting from [0], each step appends the last total plus the next value:
+      0 + 2 = 2, 2 + 0 = 2, 2 + 6 = 8. The result keeps the leading 0.
+    concepts:
+      - patterns.prefix_sums
+  - id: q3
+    prompt: |
+      You have a padded prefix array pre where pre[k] is the sum of the first k
+      elements of a list. To get the sum of the original elements at indices i
+      through j inclusive, which expression is correct?
+    choices:
+      - "pre[j + 1] - pre[i]"
+      - "pre[j] - pre[i]"
+      - "pre[j] - pre[i - 1]"
+      - "pre[i] - pre[j + 1]"
+    correct_choice: "pre[j + 1] - pre[i]"
+    explanation: |
+      An inclusive right endpoint j maps to the exclusive boundary j + 1 in the
+      padded array, while the inclusive left endpoint i maps directly to pre[i].
+      Subtracting gives exactly the elements i through j.
+    concepts:
+      - patterns.prefix_sums
+  - id: q4
+    prompt: |
+      A program answers many range-sum queries on the same unchanging list by
+      calling sum(data[i:j+1]) fresh for every query. Compared with precomputing a
+      prefix array, what is the main drawback?
+    choices:
+      - Each query re-adds its slice, so q queries over a list of length n cost about O(q * n) instead of O(n + q)
+      - It uses too little memory to hold the answers
+      - It cannot handle lists that contain zeros
+      - Slicing silently sorts the data and corrupts the order
+    correct_choice: Each query re-adds its slice, so q queries over a list of length n cost about O(q * n) instead of O(n + q)
+    explanation: |
+      Re-summing the slice repeats work on every query. A prefix array pays one
+      O(n) build and then answers each query in O(1), for O(n + q) overall. Slicing
+      does not sort, and zeros are handled fine.
+    concepts:
+      - patterns.prefix_sums
+      - concepts.big_o
+  - id: q5
+    prompt: |
+      Using a padded prefix array pre where pre[k] is the sum of the first k
+      values, what does pre[i + 1] - pre[i] equal?
+    choices:
+      - The single original value at index i
+      - Always zero
+      - The sum of the entire list
+      - The value at index i plus the value at index i + 1
+    correct_choice: The single original value at index i
+    explanation: |
+      Consecutive entries of the padded array differ by exactly one element, so
+      their difference recovers the original value that was added at that step.
+    concepts:
+      - patterns.prefix_sums
+      - patterns.running_total

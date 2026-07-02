@@ -1,0 +1,111 @@
+id: quiz.library.mixed_capstones.a06
+kind: quiz
+version: 1
+language: python
+title: The Syntax Behind the Patterns
+slug: quiz-mixed-capstones-a06
+difficulty: easy
+concepts:
+  - patterns.hash_map_counting
+  - patterns.binary_search
+  - patterns.prefix_sums
+prerequisites:
+  - python.dictionaries
+  - python.lists
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.mixed_capstones.a06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax questions covering the exact Python expressions used to implement each core pattern; distractors are subtly wrong syntax.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: |
+      Which single line correctly increments the count for key `k` in a counting
+      dictionary `counts`, working even when `k` has not been seen before?
+    choices:
+      - "counts[k] = counts.get(k, 0) + 1"
+      - "counts[k] = counts[k] + 1"
+      - "counts.get(k) += 1"
+      - "counts[k] += counts.get(k)"
+    correct_choice: "counts[k] = counts.get(k, 0) + 1"
+    explanation: |
+      get(k, 0) returns the current count or 0 when the key is missing, so adding 1
+      and storing it back is safe on the first sighting. Indexing counts[k] directly
+      raises KeyError for a new key, and the other lines are invalid or use None.
+    concepts:
+      - patterns.hash_map_counting
+      - python.dictionaries
+  - id: q2
+    prompt: |
+      In a binary search over indices `lo` and `hi`, which expression computes the
+      middle index without skipping any element?
+    choices:
+      - "mid = (lo + hi) // 2"
+      - "mid = (lo + hi) / 2"
+      - "mid = lo + hi // 2"
+      - "mid = (lo * hi) // 2"
+    correct_choice: "mid = (lo + hi) // 2"
+    explanation: |
+      Floor division of the summed bounds gives an integer index at the midpoint.
+      Plain / yields a float that cannot index a list, lo + hi // 2 divides only hi
+      because of operator precedence, and multiplying the bounds is meaningless here.
+    concepts:
+      - patterns.binary_search
+      - python.operators
+  - id: q3
+    prompt: |
+      You are building a prefix-sum list. Which loop body correctly appends each new
+      running total, given `prefix` starts as `[0]`?
+    choices:
+      - "prefix.append(prefix[-1] + x)"
+      - "prefix.append(x)"
+      - "prefix[-1] += x"
+      - "prefix.append(prefix[0] + x)"
+    correct_choice: "prefix.append(prefix[-1] + x)"
+    explanation: |
+      prefix[-1] is the most recent cumulative total; adding the current value x and
+      appending it extends the running sum. Appending x alone stores raw values, and
+      prefix[0] always adds to the initial 0 rather than the latest total.
+    concepts:
+      - patterns.prefix_sums
+      - python.lists
+  - id: q4
+    prompt: |
+      Which expression tests, in average O(1) time, whether the value `v` has
+      already been recorded in a `set` named `seen`?
+    choices:
+      - "v in seen"
+      - "seen.index(v) >= 0"
+      - "seen.contains(v)"
+      - "v in seen.keys()"
+    correct_choice: "v in seen"
+    explanation: |
+      The in operator on a set is a hash-based membership test averaging O(1). Sets
+      have no index method, no contains method, and no keys method; those belong to
+      lists or dicts, not sets.
+    concepts:
+      - patterns.set_membership
+      - python.sets
+  - id: q5
+    prompt: |
+      Given a prefix array `prefix` where `prefix[i]` is the sum of the first `i`
+      elements, which expression returns the sum of the original values from index
+      `i` up to and including index `j`?
+    choices:
+      - "prefix[j + 1] - prefix[i]"
+      - "prefix[j] - prefix[i]"
+      - "prefix[j] - prefix[i - 1]"
+      - "prefix[i] - prefix[j + 1]"
+    correct_choice: "prefix[j + 1] - prefix[i]"
+    explanation: |
+      Because prefix[i] excludes element i and prefix[j+1] includes element j,
+      subtracting them leaves exactly the values from i through j. Using prefix[j]
+      drops element j, and reversing the operands gives a negative result.
+    concepts:
+      - patterns.prefix_sums
+      - python.lists

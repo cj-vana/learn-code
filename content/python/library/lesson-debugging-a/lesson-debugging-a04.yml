@@ -1,0 +1,57 @@
+id: lesson.library.debugging.a04
+kind: lesson
+version: 1
+language: python
+title: Equality Versus Identity, == and is
+slug: lesson-debugging-a04
+difficulty: easy
+concepts:
+  - python.debugging
+prerequisites: []
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.debugging.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original contrast of value equality and object identity, with the None check guidance.
+body_markdown: |
+  Two operators look similar but ask different questions. `==` asks "do these
+  have the same value?" while `is` asks "are these the exact same object in
+  memory?" Mixing them up is a common source of confusing bugs.
+
+  ```python
+  a = [1, 2, 3]
+  b = [1, 2, 3]
+  print(a == b)   # True  -> same contents
+  print(a is b)   # False -> two separate list objects
+  ```
+
+  `a` and `b` hold equal values, so `==` is `True`. But they are distinct lists
+  built separately, so `is` is `False`. Reaching for `is` to compare values will
+  eventually bite you, because it depends on object identity, not content.
+
+  The one place `is` is the right tool is checking for `None`, which is a single
+  unique object:
+
+  ```python
+  def greet(name=None):
+      if name is None:
+          name = "friend"
+      return "hi " + name
+  ```
+
+  Guideline: use `==` to compare values, and reserve `is` for `None` (and other
+  singletons like `True`/`False`).
+checkpoints:
+  - question: Which operator checks whether two variables point to the exact same object?
+    answer: "is"
+    explanation: The is operator tests identity, meaning whether both names refer to one and the same object.
+  - question: For two different lists with identical contents, what does "a == b" return?
+    answer: "True"
+    explanation: == compares values, and both lists contain the same items, so it evaluates to True.
+  - question: What is the recommended way to test whether a variable is None?
+    answer: Use "x is None"
+    explanation: None is a unique singleton, so identity with is is the clear and idiomatic check.

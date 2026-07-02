@@ -1,0 +1,54 @@
+id: lesson.library.hashmap_set.a01
+kind: lesson
+version: 1
+language: python
+title: Tallying Items in a Dictionary
+slug: lesson-hashmap-set-a01
+difficulty: easy
+concepts:
+  - patterns.hash_map_counting
+prerequisites:
+  - python.dictionaries
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.hashmap_set.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original explanation and worked examples written from scratch.
+body_markdown: |
+  When you need to know *how many times* each value shows up in a
+  collection, a dictionary makes a natural tally sheet. The keys are the
+  things you are counting and the values are the running counts.
+
+  The trick is handling a key you have never seen before. Reading a
+  missing key with square brackets raises `KeyError`, so use `.get(key, 0)`
+  to fall back to zero, then add one:
+
+  ```python
+  def count_letters(word):
+      counts = {}
+      for letter in word:
+          counts[letter] = counts.get(letter, 0) + 1
+      return counts
+
+  print(count_letters("mississippi"))
+  # {'m': 1, 'i': 4, 's': 4, 'p': 2}
+  ```
+
+  Each character is visited once and dictionary reads and writes are
+  constant time on average, so counting `n` items is O(n) overall. Once the
+  tally is built, questions like "which value appears most often?" become a
+  quick pass over `counts.items()` instead of rescanning the original data.
+checkpoints:
+  - question: Why use counts.get(letter, 0) instead of counts[letter] when a letter is new?
+    answer: Indexing a missing key raises KeyError, while .get supplies a default of 0 so the first increment starts from zero.
+    explanation: The default keeps brand-new keys from crashing the loop and lets every count begin at zero.
+  - question: What is the overall time complexity of counting n items this way?
+    answer: "O(n)"
+    explanation: Each item is processed once and each dictionary read/write is average constant time, giving a single linear pass.
+  - question: After running count_letters("noon"), what is the value stored for the key 'o'?
+    answer: "2"
+    explanation: The two 'o' characters each increment the count once, so counts['o'] ends at 2.

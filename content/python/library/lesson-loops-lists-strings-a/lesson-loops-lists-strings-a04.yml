@@ -1,0 +1,46 @@
+id: lesson.library.loops_lists_strings.a04
+kind: lesson
+version: 1
+language: python
+title: Grabbing Part of a List with Slices
+slug: lesson-loops-lists-strings-a04
+difficulty: medium
+concepts:
+  - python.slicing
+  - python.lists
+prerequisites:
+  - python.functions
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original explanation and worked example about half-open slice ranges on lists.
+body_markdown: |
+  A slice `seq[start:stop]` copies out a run of elements. The rule to memorize is
+  that `start` is included but `stop` is *not* -- the range is half-open.
+
+  ```python
+  letters = ["a", "b", "c", "d", "e"]
+  letters[1:4]   # ['b', 'c', 'd']
+  letters[:2]    # ['a', 'b']
+  letters[3:]    # ['d', 'e']
+  ```
+
+  Leaving out `start` means "from the beginning" and leaving out `stop` means
+  "through the end". A handy consequence of the half-open rule: `letters[1:4]`
+  yields `4 - 1 = 3` items. Slicing a list returns a **new** list, so the
+  original is left untouched.
+checkpoints:
+  - question: What does `letters[1:4]` return for `letters = ["a", "b", "c", "d", "e"]`?
+    answer: "['b', 'c', 'd']"
+    explanation: Index 1 is included and index 4 is excluded, giving the three elements at positions 1, 2, and 3.
+  - question: Is the `stop` index included in the slice result?
+    answer: No.
+    explanation: Slices are half-open, so the element at the stop index is left out.
+  - question: Does `letters[:2]` change the original `letters` list?
+    answer: No, it returns a new list and leaves the original unchanged.
+    explanation: A basic slice produces a fresh copy of the selected elements rather than modifying the source.

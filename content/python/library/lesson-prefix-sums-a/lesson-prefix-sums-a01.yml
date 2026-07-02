@@ -1,0 +1,55 @@
+id: lesson.library.prefix_sums.a01
+kind: lesson
+version: 1
+language: python
+title: Building a Prefix Sum Array
+slug: lesson-prefix-sums-a01
+difficulty: easy
+concepts:
+  - patterns.prefix_sums
+prerequisites:
+  - python.lists
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.prefix_sums.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original explanation using a step-counter scenario, written from scratch.
+body_markdown: |
+  A *prefix sum* array stores the total of everything seen so far at each
+  position. Imagine a fitness tracker logging steps each hour: `[200, 0, 450]`.
+  You often want "how many steps by the end of hour i?" instead of the raw hourly
+  counts. That is exactly what a prefix sum answers.
+
+  You build it with a single left-to-right pass, carrying one running total:
+
+  ```python
+  def prefix_sums(steps):
+      result = []
+      running = 0
+      for count in steps:
+          running += count
+          result.append(running)
+      return result
+
+  prefix_sums([200, 0, 450])  # -> [200, 200, 650]
+  ```
+
+  Position `0` is just the first value. Every later position is the previous
+  total plus the current value, so each entry is never smaller than the one
+  before it when the inputs are non-negative. Because you touch each element
+  exactly once, building the array is O(n) rather than the O(n^2) you would pay
+  by re-summing `steps[:i+1]` at every index.
+checkpoints:
+  - question: What does prefix_sums([200, 0, 450]) return?
+    answer: "[200, 200, 650]"
+    explanation: Position 0 is 200, position 1 adds 0 to stay at 200, and position 2 adds 450 to reach 650.
+  - question: Why is building a prefix sum array O(n) instead of O(n^2)?
+    answer: Each element is visited once and added to a running total, so no earlier values are re-summed.
+    explanation: Carrying one running total avoids recomputing steps[:i+1] at every position, which would repeat work.
+  - question: With non-negative inputs, can a later entry in the prefix sum array be smaller than an earlier one?
+    answer: "No"
+    explanation: Each entry is the previous total plus a value that is zero or positive, so the totals never decrease.

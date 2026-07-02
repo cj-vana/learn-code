@@ -1,0 +1,62 @@
+id: lesson.library.brute_force_bigo.a03
+kind: lesson
+version: 1
+language: python
+title: When Brute Force Starts to Hurt
+slug: lesson-brute-force-bigo-a03
+difficulty: medium
+concepts:
+  - patterns.brute_force
+  - concepts.big_o
+prerequisites:
+  - python.lists
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.brute_force_bigo.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original duplicate-badge scenario connecting a brute-force pair scan to its O(n^2) cost; all prose and questions written fresh.
+body_markdown: |
+  Brute force and Big-O are two halves of the same conversation. First you
+  write the direct solution; then you ask how well it scales.
+
+  Say a conference hands out badge numbers and you want to know whether any
+  number was printed twice. The most direct idea is to compare every badge with
+  every later badge:
+
+  ```python
+  def has_duplicate(badges):
+      n = len(badges)
+      for i in range(n):
+          for j in range(i + 1, n):
+              if badges[i] == badges[j]:
+                  return True
+      return False
+  ```
+
+  This is textbook brute force: we try every unordered pair until one matches.
+  Starting the inner index at `i + 1` means we never compare a badge with
+  itself and never check the same pair twice. It is clearly correct.
+
+  The cost is the catch. With `n` badges there are about `n * (n - 1) / 2`
+  pairs, which grows like `O(n^2)`. For 100 badges that is a few thousand
+  comparisons, which is nothing. For 100,000 badges it becomes billions, and
+  the function crawls.
+
+  That is the whole lesson: brute force is a great first draft, but a quadratic
+  first draft warns you that a smarter approach may be needed once the input
+  gets large. Recognizing the `O(n^2)` shape is what tells you *when* to reach
+  for something faster.
+checkpoints:
+  - question: Why does the inner loop start at i + 1 instead of 0?
+    answer: So each badge is never compared with itself and each pair is checked only once.
+    explanation: Starting after i skips the self-comparison and avoids re-examining a pair in the opposite order.
+  - question: What is the Big-O time complexity of has_duplicate in the worst case?
+    answer: "O(n^2)"
+    explanation: It checks roughly n * (n - 1) / 2 pairs, and dropping constants leaves the quadratic term O(n^2).
+  - question: The function can return True early on the first match. Does that change its worst-case Big-O?
+    answer: "No"
+    explanation: Big-O describes the worst case; if the only duplicate is the final pair (or there is none), it still examines every pair, so the worst case stays O(n^2).

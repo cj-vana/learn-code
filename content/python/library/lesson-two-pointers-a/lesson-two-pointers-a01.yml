@@ -1,0 +1,59 @@
+id: lesson.library.two_pointers.a01
+kind: lesson
+version: 1
+language: python
+title: Meeting in the Middle With Two Pointers
+slug: lesson-two-pointers-a01
+difficulty: easy
+concepts:
+  - patterns.two_pointers
+prerequisites:
+  - python.lists
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.two_pointers.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original converging-pointers explanation built around a sorted-list pair search.
+body_markdown: |
+  When a list is already sorted, you rarely need to test every possible pair.
+  Instead, keep one index at the far left (the smallest value) and one at the
+  far right (the largest value). The sum of those two values tells you which
+  pointer to move:
+
+  - If the sum is *too small*, the left value is holding you back, so step the
+    left index forward to a larger number.
+  - If the sum is *too big*, the right value is too heavy, so step the right
+    index backward to a smaller number.
+
+  ```python
+  def has_pair_with_sum(sorted_nums, target):
+      left = 0
+      right = len(sorted_nums) - 1
+      while left < right:
+          current = sorted_nums[left] + sorted_nums[right]
+          if current == target:
+              return True
+          if current < target:
+              left += 1      # need a larger sum
+          else:
+              right -= 1     # need a smaller sum
+      return False
+  ```
+
+  Every iteration moves exactly one pointer inward, so the two indices meet or
+  cross after at most `n` steps. That makes the search O(n) time and O(1) extra
+  space, a clear win over the O(n squared) work of comparing every pair.
+checkpoints:
+  - question: In has_pair_with_sum, the current sum is smaller than the target. Which pointer moves, and in which direction?
+    answer: The left pointer moves one step forward (its index increases by one).
+    explanation: A larger sum is needed, and because the list is sorted the next-bigger value sits just to the right of the current left index.
+  - question: Why does this converging-pointers technique require the list to be sorted first?
+    answer: Sorting guarantees that moving left forward always reaches a larger value and moving right backward always reaches a smaller one, so each step changes the sum predictably.
+    explanation: Without order, a single step could raise or lower the sum unpredictably, so you could no longer rule out the values you skipped.
+  - question: What ends the while loop, and how many iterations can it run for a list of length n?
+    answer: The loop ends once left is no longer less than right, after at most n iterations.
+    explanation: Each iteration moves one pointer inward, shrinking the gap between them by one, which gives the linear O(n) running time.

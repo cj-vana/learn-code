@@ -1,0 +1,103 @@
+id: quiz.library.stack_queue_bfs.a03
+kind: quiz
+version: 1
+language: python
+title: How Breadth-First Search Works
+slug: quiz-stack-queue-bfs-a03
+difficulty: medium
+concepts:
+  - patterns.queue_bfs
+  - patterns.stack
+prerequisites:
+  - python.lists
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.stack_queue_bfs.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original questions on BFS mechanics, the visited set, and complexity, with plausible distractors.
+quiz_type: mixed_review
+questions:
+  - id: q1
+    prompt: |
+      In a breadth-first search over a graph with cycles, when should a node be
+      added to the visited set?
+    choices:
+      - The moment it is enqueued, so it is never added to the queue twice
+      - Only after it is dequeued and fully processed
+      - Never, because BFS cannot revisit nodes
+      - Only if it turns out to be the goal node
+    correct_choice: The moment it is enqueued, so it is never added to the queue twice
+    explanation: |
+      Marking a node visited as soon as you enqueue it prevents two different
+      neighbors from each pushing that same node onto the queue. If you wait until
+      the node is dequeued, duplicates can pile up in the queue and cause wasted
+      work or, with cycles, an endless loop.
+    concepts:
+      - patterns.queue_bfs
+  - id: q2
+    prompt: |
+      What is the time complexity of BFS on a graph with n nodes and e edges, where
+      each node and edge is handled once?
+    choices: ["O(n + e)", "O(n^2)", "O(n log n)", "O(e^2)"]
+    correct_choice: "O(n + e)"
+    explanation: |
+      Every node is enqueued and dequeued once, and every edge is examined once when
+      its source node is processed. The total work is therefore proportional to the
+      number of nodes plus the number of edges.
+    concepts:
+      - patterns.queue_bfs
+      - concepts.big_o
+  - id: q3
+    prompt: |
+      You keep the exact structure of a BFS but replace its queue with a stack,
+      popping the most recently added node each time. How does the traversal change?
+    choices:
+      - It explores deep down one path before backtracking, like a depth-first search
+      - It still visits nodes in strict ring-by-ring order
+      - It always finds the shortest path in fewer steps
+      - It stops working entirely and returns nothing
+    correct_choice: It explores deep down one path before backtracking, like a depth-first search
+    explanation: |
+      A queue's first-in, first-out order is what produces BFS's expanding rings.
+      Swapping in a last-in, first-out stack makes the search follow the newest
+      node first, diving down a single branch before backing up, which is the
+      hallmark of depth-first search.
+    concepts:
+      - patterns.queue_bfs
+      - patterns.stack
+  - id: q4
+    prompt: |
+      In an unweighted graph, what is guaranteed about the first time BFS reaches a
+      given node?
+    choices:
+      - It arrived along a path using the fewest possible edges
+      - It arrived along the longest available path
+      - It arrived through the node with the largest label
+      - Nothing is guaranteed about the distance
+    correct_choice: It arrived along a path using the fewest possible edges
+    explanation: |
+      Because BFS finishes every node at distance k before touching any node at
+      distance k+1, the first arrival at a node is always by a minimum-length path
+      in an unweighted graph.
+    concepts:
+      - patterns.queue_bfs
+  - id: q5
+    prompt: |
+      A BFS keeps its frontier in a collections.deque. Which two deque operations
+      match "add a newly discovered node" and "take the next node to process"?
+    choices:
+      - append() to add at the back and popleft() to take from the front
+      - appendleft() to add at the front and pop() to take from the back
+      - append() to add at the back and pop() to take from the back
+      - insert(0, x) to add and popleft() to take from the front
+    correct_choice: append() to add at the back and popleft() to take from the front
+    explanation: |
+      A FIFO frontier grows at the back with append() and is served from the front
+      with popleft(), both O(1) on a deque. Using pop() from the back instead would
+      turn the search into a stack-driven depth-first traversal.
+    concepts:
+      - patterns.queue_bfs

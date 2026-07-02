@@ -1,0 +1,54 @@
+id: lesson.library.python_refresh.a04
+kind: lesson
+version: 1
+language: python
+title: Combining Conditions with and, or, not
+slug: lesson-python-refresh-a04
+difficulty: medium
+concepts:
+  - python.operators
+  - python.conditionals
+prerequisites: []
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original explanation of comparison and boolean operators with short-circuit behavior.
+body_markdown: |
+  A *comparison* asks a yes/no question and produces a boolean. The operators
+  are `==` (equal), `!=` (not equal), and the orderings `<`, `<=`, `>`, `>=`.
+
+  ```python
+  age = 20
+  age >= 18    # True
+  age == 21    # False
+  ```
+
+  To ask more than one question at once, glue comparisons together with the
+  boolean operators `and`, `or`, and `not`. `and` is True only when *both*
+  sides are True; `or` is True when *at least one* side is True; `not` flips a
+  boolean.
+
+  ```python
+  age >= 18 and age < 65   # True: both parts hold
+  age < 13 or age > 64     # False: neither part holds
+  not (age == 20)          # False: age really is 20
+  ```
+
+  Python is lazy here: in `A and B` it never bothers to check `B` if `A` is
+  already False, and in `A or B` it skips `B` once `A` is True. This
+  "short-circuit" behavior is why a cheap check is usually written first.
+checkpoints:
+  - question: What does `3 < 5 and 5 < 4` evaluate to?
+    answer: "False"
+    explanation: The first comparison is True but the second (5 < 4) is False, and `and` requires both sides to be True.
+  - question: What does `not (2 == 2)` evaluate to?
+    answer: "False"
+    explanation: "The expression 2 == 2 is True, and `not` flips it to False."
+  - question: Does `or` require both of its sides to be True?
+    answer: "No: or is True when at least one side is True."
+    explanation: "The `or` operator yields True whenever either operand is True, and only yields False when both are False."

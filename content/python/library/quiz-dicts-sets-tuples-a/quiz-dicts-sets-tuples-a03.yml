@@ -1,0 +1,101 @@
+id: quiz.library.dicts_sets_tuples.a03
+kind: quiz
+version: 1
+language: python
+title: Sorting Keys and Comprehensions
+slug: quiz-dicts-sets-tuples-a03
+difficulty: medium
+concepts:
+  - python.sorting
+  - python.comprehensions
+  - python.dictionaries
+prerequisites:
+  - python.functions
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original questions on sort keys, comprehension shape, and dict inversion.
+quiz_type: mixed_review
+questions:
+  - id: q1
+    prompt: 'What does sorted(["pear", "fig", "apple"], key=len) return?'
+    choices:
+      - "['fig', 'pear', 'apple']"
+      - "['apple', 'pear', 'fig']"
+      - "['apple', 'fig', 'pear']"
+      - "['pear', 'fig', 'apple']"
+    correct_choice: "['fig', 'pear', 'apple']"
+    explanation: |
+      key=len sorts by string length in ascending order: fig (3), then pear (4),
+      then apple (5). The original values are still what gets returned, just
+      reordered by their length.
+    concepts:
+      - python.sorting
+  - id: q2
+    prompt: |
+      You want a new list containing the squares of only the even numbers in
+      nums. Which comprehension is correct?
+    choices:
+      - "[n*n for n in nums if n % 2 == 0]"
+      - "[n*n if n % 2 == 0 for n in nums]"
+      - "[n*n for n in nums if n % 2 == 1]"
+      - "{n*n for n in nums if n % 2 == 0}"
+    correct_choice: "[n*n for n in nums if n % 2 == 0]"
+    explanation: |
+      A filtering condition goes after the for clause, and n % 2 == 0 selects the
+      even numbers. Putting if before for (without else) is a syntax error, n % 2
+      == 1 keeps odds, and braces would build a set instead of a list.
+    concepts:
+      - python.comprehensions
+  - id: q3
+    prompt: Which call returns the numbers in nums sorted from largest to smallest?
+    choices:
+      - "sorted(nums, reverse=True)"
+      - "sorted(nums, descending=True)"
+      - "sorted(nums, key=reverse)"
+      - "sorted(nums).reverse()"
+    correct_choice: "sorted(nums, reverse=True)"
+    explanation: |
+      The reverse=True flag sorts in descending order. There is no descending
+      parameter, key=reverse references an undefined name, and
+      sorted(nums).reverse() reverses a list in place and returns None.
+    concepts:
+      - python.sorting
+  - id: q4
+    prompt: |
+      m maps each name to an id. Which dict comprehension builds the inverted
+      mapping from id back to name?
+    choices:
+      - "{v: k for k, v in m.items()}"
+      - "{k: v for k, v in m.items()}"
+      - "{v: k for v, k in m.items()}"
+      - "[v: k for k, v in m.items()]"
+    correct_choice: "{v: k for k, v in m.items()}"
+    explanation: |
+      m.items() yields (name, id) pairs unpacked as (k, v), so making v the new
+      key and k the new value gives id-to-name. The second keeps the original
+      direction, the third swaps the unpacking so it rebuilds name-to-id, and the
+      fourth uses square brackets, which is not valid for a dict.
+    concepts:
+      - python.comprehensions
+      - python.dictionaries
+  - id: q5
+    prompt: 'What does sorted([(2, "b"), (1, "z"), (1, "a")]) return?'
+    choices:
+      - "[(1, 'a'), (1, 'z'), (2, 'b')]"
+      - "[(1, 'z'), (1, 'a'), (2, 'b')]"
+      - "[(2, 'b'), (1, 'a'), (1, 'z')]"
+      - "[(1, 'a'), (2, 'b'), (1, 'z')]"
+    correct_choice: "[(1, 'a'), (1, 'z'), (2, 'b')]"
+    explanation: |
+      Tuples compare element by element: first by index 0, and only on ties by
+      index 1. So the two tuples starting with 1 come first, ordered 'a' before
+      'z', and (2, 'b') comes last.
+    concepts:
+      - python.sorting
+      - python.tuples

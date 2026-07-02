@@ -1,0 +1,50 @@
+id: lesson.library.loops_lists_strings.a02
+kind: lesson
+version: 1
+language: python
+title: Building a New List as You Go
+slug: lesson-loops-lists-strings-a02
+difficulty: easy
+concepts:
+  - python.lists
+  - python.loops
+prerequisites:
+  - python.functions
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original explanation and worked example about collecting matching items into a fresh list.
+body_markdown: |
+  A common shape is: start with an empty list, walk the input, and `append`
+  only the items you want to keep. The result is a shorter list built from the
+  pieces that passed your test.
+
+  This collects the warm readings (70 or above) into a brand-new list:
+
+  ```python
+  temps = [68, 75, 59, 82, 71]
+  warm = []
+  for t in temps:
+      if t >= 70:
+          warm.append(t)
+  # warm == [75, 82, 71]
+  ```
+
+  Two details matter. First, `warm` must exist *before* the loop, or the first
+  `append` has nothing to add to. Second, items are appended in the order they
+  are visited, so the kept elements stay in their original relative order.
+checkpoints:
+  - question: What does `warm.append(t)` do to the list `warm`?
+    answer: It adds t to the end of the list.
+    explanation: append grows the list by one item, placing the new value after everything already there.
+  - question: Why is `warm = []` written before the loop rather than inside it?
+    answer: So the list is created once; putting it inside the loop would reset it to empty on every pass.
+    explanation: Re-initializing inside the loop would discard everything collected so far, leaving only the last matching item.
+  - question: After the loop, what order are the elements of `warm` in?
+    answer: The same relative order they appeared in `temps`.
+    explanation: A single forward pass with append preserves the input ordering of the kept items.

@@ -1,0 +1,110 @@
+id: quiz.library.debugging.a03
+kind: quiz
+version: 1
+language: python
+title: Sneaky Bugs and How to Chase Them
+slug: quiz-debugging-a03
+difficulty: medium
+concepts:
+  - python.debugging
+prerequisites:
+  - python.functions
+  - python.loops
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.debugging.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original mix of a debugging-workflow question with several classic silent-bug scenarios.
+quiz_type: mixed_review
+questions:
+  - id: q1
+    prompt: |
+      This function seems fine, but the second call surprises everyone:
+
+      ```python
+      def collect(item, bucket=[]):
+          bucket.append(item)
+          return bucket
+
+      collect("a")   # -> ['a']
+      collect("b")   # -> ['a', 'b']   (!)
+      ```
+
+      Why does the second call already contain `"a"`?
+    choices:
+      - The default list is created once and reused across every call, so items pile up
+      - Python secretly caches the last return value
+      - "`append` mutates the argument name, not the list"
+      - Default arguments are recomputed on each call, duplicating data
+    correct_choice: The default list is created once and reused across every call, so items pile up
+    explanation: |
+      A mutable default is evaluated a single time when the function is
+      defined, and that same list persists between calls. Use `bucket=None`
+      and create a fresh list inside the body.
+    concepts:
+      - python.debugging
+      - python.functions
+  - id: q2
+    prompt: |
+      Your function returns the wrong answer for a few inputs but you are not
+      sure where it goes off track. What is the most productive first move?
+    choices:
+      - Print or log the intermediate values so you can see where reality diverges from your expectation
+      - Rewrite the entire function from scratch and hope the bug disappears
+      - Delete the failing case so the suite turns green
+      - Assume the Python interpreter itself is broken
+    correct_choice: Print or log the intermediate values so you can see where reality diverges from your expectation
+    explanation: |
+      Debugging is about narrowing down where the actual state stops matching
+      the expected state. Inspecting intermediate values (with prints or a
+      debugger) pinpoints the exact line that misbehaves.
+    concepts:
+      - python.debugging
+  - id: q3
+    prompt: |
+      This average calculator works on normal input but throws an exception
+      when handed an empty list:
+
+      ```python
+      def mean(nums):
+          return sum(nums) / len(nums)
+      ```
+
+      What breaks, and what is the fix?
+    choices:
+      - ZeroDivisionError; check for an empty list and handle it before dividing
+      - IndexError; sort the list before averaging
+      - TypeError; cast `sum(nums)` to a string first
+      - KeyError; store the numbers in a dictionary instead
+    correct_choice: ZeroDivisionError; check for an empty list and handle it before dividing
+    explanation: |
+      With no elements, `len(nums)` is 0 and dividing by zero raises
+      `ZeroDivisionError`. Guard the edge case, e.g. `return 0` (or `None`)
+      when `nums` is empty.
+    concepts:
+      - python.debugging
+  - id: q4
+    prompt: |
+      A learner is baffled that this prints `False`:
+
+      ```python
+      print(0.1 + 0.2 == 0.3)
+      ```
+
+      What actually explains it?
+    choices:
+      - Floating-point numbers store tiny rounding errors, so 0.1 + 0.2 is not exactly 0.3
+      - Python cannot add two decimal numbers together
+      - "`==` never works between float values"
+      - The literal `0.3` is secretly stored as text
+    correct_choice: Floating-point numbers store tiny rounding errors, so 0.1 + 0.2 is not exactly 0.3
+    explanation: |
+      Binary floating point cannot represent many decimals exactly, so the sum
+      lands a hair away from 0.3. Compare with a tolerance, e.g.
+      `math.isclose(0.1 + 0.2, 0.3)`.
+    concepts:
+      - python.debugging

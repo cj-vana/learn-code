@@ -1,0 +1,66 @@
+id: lesson.library.stack_queue_bfs.a03
+kind: lesson
+version: 1
+language: python
+title: Breadth-First Search - Exploring in Rings
+slug: lesson-stack-queue-bfs-a03
+difficulty: medium
+concepts:
+  - patterns.queue_bfs
+prerequisites:
+  - python.lists
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.stack_queue_bfs.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original walkthrough of breadth-first search framed as expanding rings, with a queue and a visited set on a small adjacency map.
+body_markdown: |
+  *Breadth-first search* (BFS) explores a graph in expanding rings. Starting
+  from one node, it visits every direct neighbor first, then every node two
+  steps away, then three steps, and so on. Because it always finishes the
+  nearer ring before the next, the first time BFS reaches a node it has arrived
+  by the **fewest possible steps**.
+
+  BFS is powered by a queue. You enqueue the start, then repeatedly dequeue a
+  node and enqueue any neighbors you have not seen yet. A `visited` set keeps
+  you from processing the same node twice, which would otherwise cause repeated
+  work or an infinite loop when the graph has cycles.
+
+  ```python
+  from collections import deque
+
+  def reachable_order(graph, start):
+      visited = {start}
+      queue = deque([start])
+      order = []
+      while queue:
+          node = queue.popleft()      # oldest discovery leaves first
+          order.append(node)
+          for neighbor in graph[node]:
+              if neighbor not in visited:
+                  visited.add(neighbor)  # mark on discovery, not on removal
+                  queue.append(neighbor)
+      return order
+
+  graph = {"A": ["B", "C"], "B": ["D"], "C": ["D"], "D": []}
+  print(reachable_order(graph, "A"))  # ['A', 'B', 'C', 'D']
+  ```
+
+  Marking a node as visited the moment you enqueue it (not when you dequeue it)
+  is the key detail: it stops the same neighbor from being added to the queue
+  twice. Each node and edge is handled once, so BFS runs in `"O(n + e)"` for a
+  graph with `n` nodes and `e` edges.
+checkpoints:
+  - question: What data structure decides which node breadth-first search visits next, and in what order does it serve them?
+    answer: A queue, serving nodes in first-in, first-out order.
+    explanation: The FIFO queue guarantees that all nearer nodes are processed before farther ones, producing the ring-by-ring expansion.
+  - question: Why does BFS keep a visited set?
+    answer: To avoid processing the same node more than once, which prevents wasted work and infinite loops in graphs with cycles.
+    explanation: Without tracking visited nodes, a cycle would let BFS enqueue and revisit nodes endlessly.
+  - question: In an unweighted graph, what is special about the first time BFS reaches a particular node?
+    answer: It has arrived by the shortest path, using the fewest number of edges.
+    explanation: Because BFS finishes each ring of equal distance before moving outward, the first arrival is always along a minimum-length path.

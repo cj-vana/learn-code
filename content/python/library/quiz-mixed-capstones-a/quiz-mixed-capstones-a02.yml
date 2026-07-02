@@ -1,0 +1,100 @@
+id: quiz.library.mixed_capstones.a02
+kind: quiz
+version: 1
+language: python
+title: How Fast Does Each Pattern Run?
+slug: quiz-mixed-capstones-a02
+difficulty: medium
+concepts:
+  - concepts.big_o
+  - patterns.hash_map_counting
+  - patterns.binary_search
+  - patterns.sliding_window
+  - patterns.prefix_sums
+prerequisites:
+  - python.lists
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.mixed_capstones.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original complexity-comparison questions pairing each core pattern with its running time; distractors are common Big-O misreadings.
+quiz_type: mixed_review
+questions:
+  - id: q1
+    prompt: |
+      You build a frequency dictionary by looping once over n items and doing one
+      dict update per item. What is the overall time complexity?
+    choices: ["O(n)", "O(n log n)", "O(n^2)", "O(log n)"]
+    correct_choice: "O(n)"
+    explanation: |
+      There are n items and each triggers one average-O(1) dictionary update, so the
+      total work grows linearly. Counting with a hash map does not add a log or a
+      squared factor.
+    concepts:
+      - patterns.hash_map_counting
+      - concepts.big_o
+  - id: q2
+    prompt: |
+      Binary search looks for a value in a sorted list of n elements. Which
+      complexity describes its worst case?
+    choices: ["O(log n)", "O(n)", "O(1)", "O(n log n)"]
+    correct_choice: "O(log n)"
+    explanation: |
+      Each comparison discards half of what remains, so the number of steps is how
+      many times you can halve n before reaching one element. That count is about
+      log base 2 of n, giving O(log n).
+    concepts:
+      - patterns.binary_search
+      - concepts.big_o
+  - id: q3
+    prompt: |
+      Two approaches find the maximum sum of every window of size k in a list of n
+      values. Approach A re-adds all k values at each of the n positions. Approach B
+      slides the window, adding one value and subtracting one per step. How do their
+      complexities compare?
+    choices:
+      - A is O(n*k) while B is O(n)
+      - Both are O(n)
+      - A is O(n) while B is O(n*k)
+      - Both are O(n^2) regardless of k
+    correct_choice: A is O(n*k) while B is O(n)
+    explanation: |
+      Re-summing k values at each of n positions costs about n*k operations. The
+      sliding window instead maintains a running total with O(1) work per step, so it
+      visits each element a constant number of times and runs in O(n).
+    concepts:
+      - patterns.sliding_window
+      - concepts.big_o
+  - id: q4
+    prompt: |
+      After you spend O(n) time building a prefix-sum array, what is the cost of
+      answering a single "sum from index i to j" range query?
+    choices: ["O(1)", "O(n)", "O(log n)", "O(j - i)"]
+    correct_choice: "O(1)"
+    explanation: |
+      With the prefix array precomputed, a range sum is prefix[j+1] - prefix[i]: a
+      single subtraction. The one-time O(n) build is what buys you these constant-time
+      queries afterward.
+    concepts:
+      - patterns.prefix_sums
+      - concepts.big_o
+  - id: q5
+    prompt: |
+      A step count works out to 4n + 20. Which Big-O class does it belong to, and
+      why?
+    choices:
+      - "O(n), because the fastest-growing term dominates as n gets large and constants are dropped"
+      - "O(4n), because the coefficient must be kept"
+      - "O(n + 20), because every term is preserved"
+      - "O(n^2), because there are two separate terms"
+    correct_choice: "O(n), because the fastest-growing term dominates as n gets large and constants are dropped"
+    explanation: |
+      Big-O describes growth for large n. The 4n term outgrows the constant 20, and
+      constant factors like 4 are dropped, so 4n + 20 simplifies to O(n). Keeping
+      coefficients or additive constants misstates the notation.
+    concepts:
+      - concepts.big_o

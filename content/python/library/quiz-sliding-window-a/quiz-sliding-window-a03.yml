@@ -1,0 +1,114 @@
+id: quiz.library.sliding_window.a03
+kind: quiz
+version: 1
+language: python
+title: Reading Sliding Window Code
+slug: quiz-sliding-window-a03
+difficulty: medium
+concepts:
+  - patterns.sliding_window
+prerequisites:
+  - python.lists
+estimated_time_minutes: 5
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sliding_window.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original code-tracing snippets and a planted-bug question about the slide update.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: |
+      Trace this function:
+
+      ```python
+      def f(nums, k):
+          s = sum(nums[:k])
+          best = s
+          for i in range(k, len(nums)):
+              s += nums[i] - nums[i - k]
+              best = max(best, s)
+          return best
+      ```
+
+      What does `f([2, 1, 5, 1, 3, 2], 3)` return?
+    choices: ["9", "8", "11", "6"]
+    correct_choice: "9"
+    explanation: |
+      The size-3 window sums are [2,1,5]=8, [1,5,1]=7, [5,1,3]=9, and [1,3,2]=6.
+      The largest is 9.
+    concepts:
+      - patterns.sliding_window
+  - id: q2
+    prompt: |
+      Which expression returns exactly the first `k` elements of the list `nums`,
+      the slice used to seed the initial window?
+    choices: ["nums[:k]", "nums[k:]", "nums[k]", "nums[0:k:2]"]
+    correct_choice: "nums[:k]"
+    explanation: |
+      `nums[:k]` slices from the start up to (but not including) index k, giving
+      the first k elements. `nums[k:]` gives everything after them, `nums[k]` is a
+      single element, and the step of 2 skips every other value.
+    concepts:
+      - patterns.sliding_window
+      - python.slicing
+  - id: q3
+    prompt: |
+      This function is meant to return the maximum sum over any window of size k,
+      but it has a bug:
+
+      ```python
+      def window_max(nums, k):
+          s = sum(nums[:k])
+          best = s
+          for i in range(k, len(nums)):
+              s += nums[i]
+              best = max(best, s)
+          return best
+      ```
+
+      What is wrong?
+    choices:
+      - It never subtracts nums[i - k], so the window keeps growing instead of sliding
+      - It calls max with the arguments in the wrong order
+      - The loop should start at index 0 instead of k
+      - sum(nums[:k]) should be sum(nums)
+    correct_choice: It never subtracts nums[i - k], so the window keeps growing instead of sliding
+    explanation: |
+      Adding nums[i] without subtracting nums[i - k] turns `s` into a running
+      total of the whole prefix, not a fixed-size window. The fix is
+      `s += nums[i] - nums[i - k]` so the element leaving on the left is removed.
+    concepts:
+      - patterns.sliding_window
+      - python.debugging
+  - id: q4
+    prompt: |
+      This skeleton finds the longest window whose sum stays within `limit`. Which
+      line belongs in the blank to shrink the window correctly?
+
+      ```python
+      left = 0
+      total = 0
+      best = 0
+      for right in range(len(nums)):
+          total += nums[right]
+          while total > limit:
+              ______
+          best = max(best, right - left + 1)
+      ```
+    choices:
+      - "total -= nums[left]; left += 1"
+      - "total += nums[left]; left += 1"
+      - "left += 1"
+      - "right -= 1"
+    correct_choice: "total -= nums[left]; left += 1"
+    explanation: |
+      To shrink from the left you must remove the left element from the running
+      total AND advance the pointer. Only moving `left` without subtracting leaves
+      `total` too large, so the while loop would never end.
+    concepts:
+      - patterns.sliding_window
+      - patterns.running_total

@@ -1,0 +1,106 @@
+id: quiz.library.hashmap_set.a02
+kind: quiz
+version: 1
+language: python
+title: Counting and Membership Syntax
+slug: quiz-hashmap-set-a02
+difficulty: easy
+concepts:
+  - patterns.hash_map_counting
+  - patterns.set_membership
+prerequisites:
+  - python.dictionaries
+  - python.sets
+estimated_time_minutes: 5
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.hashmap_set.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original code fragments and answer options authored for this batch.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: |
+      A count is being kept in a dict named `counts`. What does
+      `counts.get("apple", 0)` return when the key "apple" is not present?
+    choices:
+      - "0"
+      - It raises a KeyError
+      - "None"
+      - It inserts "apple" with value 0 and returns that entry
+    correct_choice: "0"
+    explanation: |
+      dict.get(key, default) returns the stored value if the key exists and the
+      supplied default otherwise. It never raises for a missing key and does not
+      add the key to the dict. Passing 0 as the default is the usual way to start
+      a running tally.
+    concepts:
+      - patterns.hash_map_counting
+      - python.dictionaries
+  - id: q2
+    prompt: |
+      You want to add one to the count for `word` using a plain dict `counts`
+      that may not yet contain `word`. Which line does this safely in one step?
+    choices:
+      - counts[word] = counts.get(word, 0) + 1
+      - counts[word] = counts[word] + 1
+      - counts[word] += counts
+      - counts.add(word)
+    correct_choice: counts[word] = counts.get(word, 0) + 1
+    explanation: |
+      Using get(word, 0) supplies a starting value of 0 when the key is new, so
+      the increment works on the first sighting too. Writing counts[word] + 1
+      directly raises KeyError the first time, and add() is a set method, not a
+      dict method.
+    concepts:
+      - patterns.hash_map_counting
+      - python.dictionaries
+  - id: q3
+    prompt: |
+      What is the value of the set literal `{3, 1, 2, 2, 3, 1}` after Python
+      evaluates it?
+    choices:
+      - A set equal to {1, 2, 3}
+      - A set with six elements, one per listed value
+      - A list [1, 2, 3]
+      - It raises an error because of the repeated values
+    correct_choice: A set equal to {1, 2, 3}
+    explanation: |
+      A set stores only distinct values, so duplicates are dropped as the literal
+      is built. Order is not preserved, but the members are exactly 1, 2, and 3.
+    concepts:
+      - patterns.set_membership
+      - python.sets
+  - id: q4
+    prompt: |
+      On average, how expensive is the membership test `code in seen` when `seen`
+      is a Python set?
+    choices: ["O(1)", "O(n)", "O(log n)", "O(n^2)"]
+    correct_choice: "O(1)"
+    explanation: |
+      Sets are backed by a hash table, so an average membership test is constant
+      time regardless of how many elements the set holds. The same test against a
+      list would be O(n).
+    concepts:
+      - patterns.set_membership
+      - concepts.big_o
+  - id: q5
+    prompt: |
+      Given `a = {1, 2, 3}` and `b = {2, 3, 4}`, which expression returns the
+      values present in BOTH sets, that is `{2, 3}`?
+    choices:
+      - a & b
+      - a | b
+      - a - b
+      - a + b
+    correct_choice: a & b
+    explanation: |
+      The & operator is set intersection and yields the shared members {2, 3}.
+      The | operator is union, - is difference, and + is not defined for sets and
+      raises a TypeError.
+    concepts:
+      - patterns.set_membership
+      - python.sets

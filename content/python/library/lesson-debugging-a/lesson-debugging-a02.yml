@@ -1,0 +1,59 @@
+id: lesson.library.debugging.a02
+kind: lesson
+version: 1
+language: python
+title: The Shared Mutable Default Argument Trap
+slug: lesson-debugging-a02
+difficulty: medium
+concepts:
+  - python.debugging
+prerequisites:
+  - python.functions
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.debugging.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original explanation of the mutable default pitfall using a basket-building example and the None sentinel fix.
+body_markdown: |
+  Here is a bug that surprises almost every beginner. A default value like `[]`
+  is created **once**, when the function is defined, not fresh on every call.
+  So a mutable default (a list or a dict) is quietly *shared* between calls.
+
+  ```python
+  def add_item(item, basket=[]):
+      basket.append(item)
+      return basket
+
+  print(add_item("apple"))   # ['apple']
+  print(add_item("pear"))    # ['apple', 'pear']  <- leftover apple!
+  ```
+
+  The second call did not start with an empty basket. It reused the same list
+  object the first call already filled.
+
+  The standard fix is a `None` sentinel: default to `None`, then build a new list
+  inside the function when nothing was passed.
+
+  ```python
+  def add_item(item, basket=None):
+      if basket is None:
+          basket = []
+      basket.append(item)
+      return basket
+  ```
+
+  Now each call that omits `basket` gets a brand-new empty list.
+checkpoints:
+  - question: How many times is the default list in "def add_item(item, basket=[])" actually created?
+    answer: Once, when the function is defined
+    explanation: Default values are evaluated a single time at definition, so a mutable default is shared across every call.
+  - question: What value should you use as a safe default instead of an empty list?
+    answer: "None"
+    explanation: Defaulting to None and creating the list inside the function guarantees a fresh object on each call.
+  - question: What does the buggy add_item print on its second call, add_item("pear")?
+    answer: "['apple', 'pear']"
+    explanation: The shared list still holds 'apple' from the first call, so 'pear' is appended onto it.

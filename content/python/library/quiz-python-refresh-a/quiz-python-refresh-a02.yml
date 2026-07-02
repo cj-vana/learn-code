@@ -1,0 +1,69 @@
+id: quiz.library.python_refresh.a02
+kind: quiz
+version: 1
+language: python
+title: Arithmetic and Comparison Operators
+slug: quiz-python-refresh-a02
+difficulty: easy
+concepts:
+  - python.operators
+  - python.types
+prerequisites: []
+estimated_time_minutes: 5
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original operator-evaluation questions with plausible near-miss distractors.
+quiz_type: mixed_review
+questions:
+  - id: q1
+    prompt: What does `17 % 5` evaluate to?
+    choices: ["2", "3", "3.4", "12"]
+    correct_choice: "2"
+    explanation: |
+      % is the remainder operator. 17 is 3 * 5 + 2, so the remainder is 2.
+    concepts:
+      - python.operators
+  - id: q2
+    prompt: What does `7 // 2` evaluate to?
+    choices: ["3", "3.5", "4", "1"]
+    correct_choice: "3"
+    explanation: |
+      // is floor division: it divides and discards the fractional part, so 7 // 2 is 3.
+    concepts:
+      - python.operators
+  - id: q3
+    prompt: Which one of these comparisons is True?
+    choices:
+      - 3 <= 3
+      - 3 < 3
+      - 3 != 3
+      - 3 > 5
+    correct_choice: 3 <= 3
+    explanation: |
+      <= is true when the left side is less than OR equal to the right side, and 3 equals 3.
+      The other three are all false for these values.
+    concepts:
+      - python.operators
+  - id: q4
+    prompt: What does `(5 > 2) and (2 > 8)` evaluate to?
+    choices: ["False", "True", "None", "it raises an error"]
+    correct_choice: "False"
+    explanation: |
+      and is true only when both sides are true. 5 > 2 is true but 2 > 8 is false,
+      so the whole expression is False.
+    concepts:
+      - python.operators
+  - id: q5
+    prompt: What is the result of `not 0`?
+    choices: ["True", "False", "0", "1"]
+    correct_choice: "True"
+    explanation: |
+      The integer 0 is falsy, so not 0 flips it to True.
+    concepts:
+      - python.operators
+      - python.types

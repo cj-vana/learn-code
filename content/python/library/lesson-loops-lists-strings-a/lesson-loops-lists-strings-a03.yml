@@ -1,0 +1,50 @@
+id: lesson.library.loops_lists_strings.a03
+kind: lesson
+version: 1
+language: python
+title: Walking Through a String One Character at a Time
+slug: lesson-loops-lists-strings-a03
+difficulty: easy
+concepts:
+  - python.strings
+  - python.loops
+prerequisites:
+  - python.functions
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original explanation and worked example about iterating a string and counting a character.
+body_markdown: |
+  A string is a sequence of characters, so a `for` loop can step through it just
+  like a list. Each pass gives you one character, which is itself a length-one
+  string.
+
+  Here we count how many times the letter `"a"` shows up:
+
+  ```python
+  word = "banana"
+  count = 0
+  for letter in word:
+      if letter == "a":
+          count += 1
+  # count == 3
+  ```
+
+  The comparison `letter == "a"` is case-sensitive: an uppercase `"A"` would not
+  match. Because we look at every character once, counting like this is an O(n)
+  scan over the length of the string.
+checkpoints:
+  - question: When you loop over a string with `for letter in word`, what type is `letter`?
+    answer: A string (a single-character string).
+    explanation: Python has no separate character type; each item yielded is a one-character string.
+  - question: Would the loop count an uppercase `"A"` as a match against `"a"`?
+    answer: No.
+    explanation: String equality is case-sensitive, so "A" and "a" are different characters.
+  - question: How many times does the loop body run for the string `"banana"`?
+    answer: "6"
+    explanation: The loop runs once per character, and "banana" has six characters.

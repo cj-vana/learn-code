@@ -1,0 +1,50 @@
+id: lesson.library.loops_lists_strings.a01
+kind: lesson
+version: 1
+language: python
+title: Reading Every Item in a List
+slug: lesson-loops-lists-strings-a01
+difficulty: easy
+concepts:
+  - python.loops
+  - python.lists
+prerequisites:
+  - python.functions
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original explanation and worked example about scanning a list for a maximum.
+body_markdown: |
+  A `for` loop hands you the list's items one at a time, in order. You do not
+  reach for indexes yourself; the loop variable simply *becomes* each value.
+
+  Here we find the highest score by keeping a "best so far" and updating it
+  whenever we meet something bigger:
+
+  ```python
+  scores = [40, 90, 65, 90, 12]
+  best = scores[0]
+  for score in scores:
+      if score > best:
+          best = score
+  # best is now 90
+  ```
+
+  Starting `best` at the first element (not at `0`) keeps the code correct even
+  when every score is negative. The loop looks at each item exactly once, so the
+  work grows in step with the list length, which is O(n).
+checkpoints:
+  - question: In `for score in scores:`, what does `score` hold on each pass of the loop?
+    answer: The value of the current list element.
+    explanation: A for loop assigns each item to the loop variable in turn, so score is the element itself, not its index.
+  - question: Why start `best` at `scores[0]` instead of at 0?
+    answer: Because 0 might be larger than every real score (for example if all scores are negative), which would give a wrong answer.
+    explanation: Seeding from a real element guarantees the starting value is one of the actual data points.
+  - question: For a list of n items, how many times does the loop body run?
+    answer: "n"
+    explanation: One pass per element makes the scan linear, O(n).

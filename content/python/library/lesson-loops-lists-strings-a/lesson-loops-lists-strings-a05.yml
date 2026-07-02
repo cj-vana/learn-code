@@ -1,0 +1,45 @@
+id: lesson.library.loops_lists_strings.a05
+kind: lesson
+version: 1
+language: python
+title: Stepping and Reversing with Slices
+slug: lesson-loops-lists-strings-a05
+difficulty: medium
+concepts:
+  - python.slicing
+  - python.strings
+prerequisites: []
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original explanation and worked example about the slice step value and reversing strings.
+body_markdown: |
+  Slices accept a third number, the *step*: `seq[start:stop:step]`. The step
+  controls how far to jump between picks. A step of `2` takes every other item; a
+  negative step walks backward.
+
+  ```python
+  text = "python"
+  text[::2]    # 'pto'
+  text[::-1]   # 'nohtyp'
+  text[1:5:2]  # 'yh'
+  ```
+
+  `text[::-1]` is the classic one-line string reversal: empty start and stop with
+  a step of `-1` walks from the last character to the first. Since strings are
+  immutable, every slice hands back a new string and never edits the original.
+checkpoints:
+  - question: What does `"python"[::-1]` produce?
+    answer: "nohtyp"
+    explanation: A step of -1 walks the characters from the end to the start, reversing the string.
+  - question: In the slice `text[1:5:2]`, what is the number `2` called?
+    answer: The step.
+    explanation: The third slice value is the step, the distance between successive indices that are picked.
+  - question: What does a step of `2`, as in `text[::2]`, select?
+    answer: Every other character, starting at index 0.
+    explanation: The step skips one index each time, so you get characters at positions 0, 2, 4, and so on.

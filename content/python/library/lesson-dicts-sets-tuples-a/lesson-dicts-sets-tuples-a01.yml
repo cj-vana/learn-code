@@ -1,0 +1,56 @@
+id: lesson.library.dicts_sets_tuples.a01
+kind: lesson
+version: 1
+language: python
+title: Looking Things Up in a Dictionary
+slug: lesson-dicts-sets-tuples-a01
+difficulty: easy
+concepts:
+  - python.dictionaries
+prerequisites:
+  - python.loops
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original coat-check scenario written from scratch to teach dict lookups and get defaults.
+body_markdown: |
+  A dictionary maps a *key* to a *value*, like a coat-check counter that
+  hands you a jacket when you show your ticket number. You read a value by
+  putting the key in square brackets:
+
+  ```python
+  coats = {12: "red parka", 7: "blue raincoat"}
+  print(coats[12])  # red parka
+  ```
+
+  Asking for a key that is not stored raises `KeyError` and stops the
+  program. When you are not sure the key exists, reach for `.get()`, which
+  hands back `None` (or a default you choose) instead of crashing:
+
+  ```python
+  print(coats.get(99))       # None
+  print(coats.get(99, "?"))  # ?
+  ```
+
+  To walk over everything, loop with `.items()`, which unpacks each pair
+  into a key and a value:
+
+  ```python
+  for ticket, jacket in coats.items():
+      print(ticket, jacket)
+  ```
+checkpoints:
+  - question: What does coats.get(99, 0) return when 99 is not a key in coats?
+    answer: "0"
+    explanation: The second argument to .get() is the fallback returned when the key is missing, so you get 0 instead of an error.
+  - question: What happens when you evaluate coats[99] and 99 is not a stored key?
+    answer: It raises a KeyError.
+    explanation: Square-bracket lookup has no fallback, so a missing key stops the program with a KeyError.
+  - question: In `for ticket, jacket in coats.items():`, what does jacket hold on each pass?
+    answer: The value stored for that key (the current key's value).
+    explanation: .items() yields (key, value) pairs, so ticket takes the key and jacket takes its matching value.

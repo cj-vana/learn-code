@@ -1,0 +1,59 @@
+id: lesson.library.sliding_window.a02
+kind: lesson
+version: 1
+language: python
+title: Growing and Shrinking a Window
+slug: lesson-sliding-window-a02
+difficulty: medium
+concepts:
+  - patterns.sliding_window
+prerequisites:
+  - python.lists
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sliding_window.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original variable-width window explanation using a data-usage budget scenario.
+body_markdown: |
+  Not every window has a fixed width. In a *variable-size window* you keep two
+  indices, `left` and `right`, and let the window breathe: it grows by moving
+  `right` forward, and it shrinks by moving `left` forward whenever a rule is
+  broken.
+
+  Say each number is the data a phone app used that minute, and you want the
+  longest run of minutes whose total stays at or below a budget. Expand on the
+  right; if the total goes over budget, pull `left` in until it fits again:
+
+  ```python
+  def longest_within_budget(usage, budget):
+      left = 0
+      total = 0
+      best = 0
+      for right in range(len(usage)):
+          total += usage[right]           # grow on the right
+          while total > budget:           # too big, shrink on the left
+              total -= usage[left]
+              left += 1
+          best = max(best, right - left + 1)
+      return best
+
+  print(longest_within_budget([2, 1, 5, 1, 1, 1], 4))  # 3
+  ```
+
+  Each index only ever moves forward, so even with the inner `while` loop every
+  element is added once and removed at most once. That keeps the scan `O(n)`. The
+  current window length is always `right - left + 1`.
+checkpoints:
+  - question: What causes the left index to move forward in a variable-size window?
+    answer: The window breaking its rule, such as the running total exceeding the budget.
+    explanation: You shrink from the left only while the constraint is violated, then stop once it holds again.
+  - question: Given left and right, how do you compute the current window length?
+    answer: right - left + 1
+    explanation: Both endpoints are inclusive, so the count of items is the difference plus one.
+  - question: Why is the two-index scan still O(n) even with the inner while loop?
+    answer: Because left and right each only move forward, so every element enters and leaves the window at most once.
+    explanation: The inner loop's total steps across the whole run are bounded by n, not multiplied by it.

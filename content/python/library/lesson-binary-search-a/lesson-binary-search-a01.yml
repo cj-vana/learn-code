@@ -1,0 +1,62 @@
+id: lesson.library.binary_search.a01
+kind: lesson
+version: 1
+language: python
+title: Halving a Sorted Search Space
+slug: lesson-binary-search-a01
+difficulty: easy
+concepts:
+  - patterns.binary_search
+prerequisites:
+  - python.lists
+  - python.sorting
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.binary_search.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original number-guessing framing with a fresh worked walkthrough written from scratch.
+body_markdown: |
+  Imagine a friend picks a number between 1 and 100 and you must find it. If
+  you guess one at a time (1, 2, 3, ...) you might need 100 guesses. But if the
+  friend tells you "higher" or "lower" after each guess, you can start at the
+  middle and throw away half the range every single time. That is *binary
+  search*, and it only works because the values are **sorted**.
+
+  The trick is to keep a window described by two indices, `lo` and `hi`, that is
+  guaranteed to contain the target if it exists. You look at the middle of the
+  window and use the comparison to shrink the window to just the half that could
+  still hold the answer.
+
+  ```python
+  def index_of(sorted_nums, target):
+      lo, hi = 0, len(sorted_nums) - 1
+      while lo <= hi:
+          mid = (lo + hi) // 2
+          if sorted_nums[mid] == target:
+              return mid
+          if sorted_nums[mid] < target:
+              lo = mid + 1   # target must be to the right
+          else:
+              hi = mid - 1   # target must be to the left
+      return -1
+
+  print(index_of([2, 5, 8, 12, 16, 23, 38], 23))  # 5
+  ```
+
+  Each pass throws away about half of what is left, so a list of a million
+  items is solved in roughly 20 comparisons. That halving behavior is why the
+  cost is `"O(log n)"` instead of the `"O(n)"` of scanning every element.
+checkpoints:
+  - question: Why does binary search require the list to be sorted first?
+    answer: Because the comparison at the middle only tells you which half to keep when values are in order.
+    explanation: If the list were unsorted, a middle value being smaller than the target would say nothing about where the target lives, so you could not safely discard a half.
+  - question: About how many comparisons does binary search need for a list of one million items?
+    answer: About 20.
+    explanation: Each step halves the range, and roughly 2 to the 20th power exceeds one million, so about log2 of a million (~20) steps suffice.
+  - question: When the middle element is smaller than the target, how do you shrink the window?
+    answer: Move lo to mid + 1.
+    explanation: A smaller middle means the target can only be to the right, so you discard the middle and everything left of it by setting lo = mid + 1.

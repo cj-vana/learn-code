@@ -1,0 +1,118 @@
+id: quiz.library.two_pointers.a02
+kind: quiz
+version: 1
+language: python
+title: Tracing Two-Pointer Code
+slug: quiz-two-pointers-a02
+difficulty: medium
+concepts:
+  - patterns.two_pointers
+prerequisites:
+  - python.lists
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.two_pointers.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original code-tracing snippets and hand-computed answers for two-pointer routines.
+quiz_type: mixed_review
+questions:
+  - id: q1
+    prompt: |
+      What does this function return for mystery([1, 2, 3, 4])?
+
+      ```python
+      def mystery(a):
+          lo, hi = 0, len(a) - 1
+          while lo < hi:
+              a[lo], a[hi] = a[hi], a[lo]
+              lo += 1
+              hi -= 1
+          return a
+      ```
+    choices:
+      - "[4, 3, 2, 1]"
+      - "[1, 2, 3, 4]"
+      - "[4, 1, 2, 3]"
+      - "[2, 1, 4, 3]"
+    correct_choice: "[4, 3, 2, 1]"
+    explanation: |
+      The pointers swap 1 with 4 and 2 with 3, then meet in the middle and stop. The list
+      is reversed in place, so the function returns [4, 3, 2, 1].
+    concepts:
+      - patterns.two_pointers
+  - id: q2
+    prompt: |
+      In the reversing loop above, why is the condition `while lo < hi` used
+      instead of `while lo <= hi`?
+    choices:
+      - When lo equals hi both pointers point at the same middle item, so swapping it with itself is wasted work
+      - Using <= would raise an IndexError on the last iteration
+      - Using <= would skip the final element of the list
+      - The two conditions produce different results for every list
+    correct_choice: When lo equals hi both pointers point at the same middle item, so swapping it with itself is wasted work
+    explanation: |
+      For an odd-length list the pointers land on the same middle index. Swapping that
+      element with itself changes nothing, so stopping at lo < hi simply avoids a pointless
+      step. The final reversed result is identical either way.
+    concepts:
+      - patterns.two_pointers
+  - id: q3
+    prompt: |
+      What integer does this function return for nums = [2, 2, 5, 5, 5, 9]?
+
+      ```python
+      def compact(nums):
+          if not nums:
+              return 0
+          write = 1
+          for read in range(1, len(nums)):
+              if nums[read] != nums[write - 1]:
+                  nums[write] = nums[read]
+                  write += 1
+          return write
+      ```
+    choices:
+      - "3"
+      - "6"
+      - "2"
+      - "5"
+    correct_choice: "3"
+    explanation: |
+      The routine keeps only values that differ from the last kept value, compacting the
+      distinct entries 2, 5, and 9 to the front. write ends at 3, the count of distinct
+      values.
+    concepts:
+      - patterns.two_pointers
+  - id: q4
+    prompt: |
+      What does this function return for nums = [1, 3, 4, 7, 9] and target = 11?
+
+      ```python
+      def has_pair(nums, target):
+          lo, hi = 0, len(nums) - 1
+          while lo < hi:
+              s = nums[lo] + nums[hi]
+              if s == target:
+                  return True
+              if s < target:
+                  lo += 1
+              else:
+                  hi -= 1
+          return False
+      ```
+    choices:
+      - "True, because 4 + 7 equals 11"
+      - "False, because no pair adds up to 11"
+      - "True, because 2 + 9 equals 11"
+      - "True, because 1 + 9 equals 11"
+    correct_choice: "True, because 4 + 7 equals 11"
+    explanation: |
+      The sums walk 1+9=10 (too small, move lo), 3+9=12 (too big, move hi), 3+7=10 (too
+      small, move lo), then 4+7=11, which matches the target and returns True. The value 2
+      is not even in the list, so that distractor is impossible.
+    concepts:
+      - patterns.two_pointers

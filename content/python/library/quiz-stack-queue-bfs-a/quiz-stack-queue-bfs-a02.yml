@@ -1,0 +1,114 @@
+id: quiz.library.stack_queue_bfs.a02
+kind: quiz
+version: 1
+language: python
+title: Stack and Queue Operations in Python
+slug: quiz-stack-queue-bfs-a02
+difficulty: easy
+concepts:
+  - patterns.stack
+  - patterns.queue_bfs
+prerequisites:
+  - python.lists
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.stack_queue_bfs.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original code snippets and syntax-focused distractors about Python list and deque operations.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: |
+      Which pair of plain-list methods lets a Python list act as a stack, both
+      working at the END of the list?
+    choices:
+      - append() to push and pop() to remove the top
+      - append() to push and pop(0) to remove the top
+      - insert(0, x) to push and pop() to remove the top
+      - push() to add and pull() to remove
+    correct_choice: append() to push and pop() to remove the top
+    explanation: |
+      A list uses append() to add to the right end and pop() with no argument to
+      remove from that same end, both in O(1). pop(0) removes from the front, and
+      Python lists have no push() or pull() methods.
+    concepts:
+      - patterns.stack
+  - id: q2
+    prompt: |
+      What does this snippet print?
+
+      ```python
+      stack = []
+      stack.append("a")
+      stack.append("b")
+      stack.append("c")
+      print(stack.pop(), stack.pop())
+      ```
+    choices:
+      - c b
+      - a b
+      - b c
+      - c a
+    correct_choice: c b
+    explanation: |
+      pop() removes from the end, so the first pop() returns "c" (the last pushed)
+      and the second returns "b". They print in that order, separated by a space.
+    concepts:
+      - patterns.stack
+  - id: q3
+    prompt: |
+      You need an efficient FIFO queue. What does this snippet print?
+
+      ```python
+      from collections import deque
+      q = deque([10, 20, 30])
+      q.append(40)
+      print(q.popleft())
+      ```
+    choices:
+      - "10"
+      - "40"
+      - "30"
+      - "20"
+    correct_choice: "10"
+    explanation: |
+      append() adds 40 to the back, so the deque is [10, 20, 30, 40]. popleft()
+      removes and returns the front item, which is 10.
+    concepts:
+      - patterns.queue_bfs
+  - id: q4
+    prompt: |
+      Why is calling list.pop(0) in a loop a poor way to run a queue on a long list?
+    choices:
+      - Each pop(0) is O(n) because every remaining element shifts left one slot
+      - pop(0) raises an error unless the list is sorted
+      - pop(0) removes from the back, giving the wrong order
+      - pop(0) copies the whole list into a set first
+    correct_choice: Each pop(0) is O(n) because every remaining element shifts left one slot
+    explanation: |
+      Removing the front element of a list forces every other element to move down
+      one index, so each pop(0) costs O(n) and the loop becomes O(n^2) overall.
+      collections.deque.popleft() avoids this by removing from the front in O(1).
+    concepts:
+      - patterns.queue_bfs
+      - concepts.big_o
+  - id: q5
+    prompt: |
+      Using a list as a stack, which expression peeks at the top item WITHOUT
+      removing it?
+    choices:
+      - stack[-1]
+      - stack[0]
+      - stack.pop()
+      - stack.peek()
+    correct_choice: stack[-1]
+    explanation: |
+      The top of a list-backed stack is the last element, reached with the index
+      -1, and indexing does not modify the list. stack.pop() would remove the top,
+      stack[0] reads the bottom, and lists have no peek() method.
+    concepts:
+      - patterns.stack

@@ -1,0 +1,93 @@
+id: quiz.library.loops_lists_strings.a01
+kind: quiz
+version: 1
+language: python
+title: Picking the Right Loop or List Tool
+slug: quiz-loops-lists-strings-a01
+difficulty: easy
+concepts:
+  - python.loops
+  - python.lists
+  - python.strings
+  - python.slicing
+prerequisites:
+  - python.functions
+estimated_time_minutes: 5
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original scenarios and distractors written from scratch.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      You have a list `prices` and want a brand-new list holding only the
+      values below 100, leaving the original untouched. Which approach is the
+      cleanest, idiomatic choice?
+    choices:
+      - 'A list comprehension: [p for p in prices if p < 100]'
+      - Delete each item over 100 from prices while looping over prices
+      - Sort prices and slice off the second half
+      - Convert prices to a string and search for small numbers
+    correct_choice: 'A list comprehension: [p for p in prices if p < 100]'
+    explanation: |
+      A filtering list comprehension builds a fresh list in one readable pass and
+      never mutates the source. Deleting items while iterating over the same list
+      skips elements, and sorting or string tricks do not express "keep values
+      below 100".
+    concepts:
+      - python.lists
+      - python.loops
+  - id: q2
+    prompt: |
+      You need to know whether the substring `"error"` appears anywhere inside a
+      log line stored in the string `line`. What is the most direct way?
+    choices:
+      - Use the membership test `"error" in line`
+      - Loop over every character and compare it to the whole word
+      - Reverse `line` and slice its last five characters
+      - Sort the characters of `line` and check the middle
+    correct_choice: Use the membership test `"error" in line`
+    explanation: |
+      The `in` operator performs a substring search on strings, so `"error" in
+      line` is True whenever those characters appear consecutively. The other
+      options either misuse slicing or ignore how substring matching works.
+    concepts:
+      - python.strings
+  - id: q3
+    prompt: |
+      While looping through a list `items`, you need both each value and its
+      index position. Which is the idiomatic Python approach?
+    choices:
+      - 'for i, value in enumerate(items):'
+      - 'for value in items:  then call items.index(value) each pass'
+      - 'while True:  with a counter you never increment'
+      - Convert items to a dictionary and iterate its keys
+    correct_choice: 'for i, value in enumerate(items):'
+    explanation: |
+      `enumerate` yields `(index, value)` pairs directly. Calling `items.index`
+      each pass is O(n) per lookup and returns the wrong index for duplicates,
+      and a non-incrementing while loop never terminates.
+    concepts:
+      - python.loops
+      - python.lists
+  - id: q4
+    prompt: |
+      Given a string `s`, which slice expression produces the string reversed?
+    choices:
+      - 's[::-1]'
+      - 's[-1:]'
+      - 's[0:-1]'
+      - 's[::1]'
+    correct_choice: 's[::-1]'
+    explanation: |
+      A step of -1 walks the string from the last character to the first,
+      yielding the reversal. `s[-1:]` keeps only the final character, `s[0:-1]`
+      drops the last one, and `s[::1]` returns an unchanged copy.
+    concepts:
+      - python.slicing
+      - python.strings

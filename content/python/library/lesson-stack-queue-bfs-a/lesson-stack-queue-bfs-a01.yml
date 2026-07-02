@@ -1,0 +1,54 @@
+id: lesson.library.stack_queue_bfs.a01
+kind: lesson
+version: 1
+language: python
+title: Stacks - Last In, First Out
+slug: lesson-stack-queue-bfs-a01
+difficulty: easy
+concepts:
+  - patterns.stack
+prerequisites:
+  - python.lists
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.stack_queue_bfs.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original explanation using an undo-history framing and a plain Python list as a stack.
+body_markdown: |
+  A *stack* is a pile where you only ever touch the top. The last item you put
+  on is the first one you take back off, which is why it is called
+  **LIFO**: last in, first out. Think of an undo history in a text editor:
+  the most recent action is the first one that gets reversed.
+
+  In Python you do not need a special class for this. A regular list already
+  works as a stack when you stick to two operations at the end of the list:
+  `append` to push a value on, and `pop` to take the top value off.
+
+  ```python
+  history = []
+  history.append("type hello")   # push
+  history.append("bold it")      # push
+  history.append("delete word")  # push
+
+  last_action = history.pop()    # pop -> "delete word"
+  print(last_action)             # the most recent action leaves first
+  print(history)                 # ['type hello', 'bold it']
+  ```
+
+  Both `append()` and `pop()` (with no argument) work on the right end of the
+  list, and each one runs in constant time, `"O(1)"`. Because you only read
+  `history[-1]` (the top), you never have to shuffle the rest of the pile.
+checkpoints:
+  - question: A stack is often described as LIFO. What does that stand for?
+    answer: Last in, first out.
+    explanation: The most recently pushed item is the next one to be popped, like the top plate on a pile.
+  - question: If you push "a", then "b", then "c" onto a stack and pop once, which value comes out?
+    answer: '"c"'
+    explanation: The last value pushed, "c", sits on top, so it is the first one removed.
+  - question: Which two list methods let a plain Python list act as a stack, and on which end do they operate?
+    answer: append and pop, both on the right end (the last element).
+    explanation: append adds to the end and pop() removes from the end, so the end of the list is the top of the stack.

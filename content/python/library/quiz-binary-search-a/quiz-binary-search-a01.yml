@@ -1,0 +1,90 @@
+id: quiz.library.binary_search.a01
+kind: quiz
+version: 1
+language: python
+title: When Binary Search Actually Applies
+slug: quiz-binary-search-a01
+difficulty: easy
+concepts:
+  - patterns.binary_search
+prerequisites:
+  - python.lists
+  - python.sorting
+estimated_time_minutes: 5
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.binary_search.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original scenarios and distractors written for this batch; no external problem text reused.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      You are handed a list of employee ID numbers and asked to check whether a
+      given ID is present. The list arrives in no particular order, and you only
+      need to answer this one lookup. Is plain binary search the right tool?
+    choices:
+      - No, binary search needs sorted data, so on one unsorted lookup a single linear scan is simpler and just as fast
+      - Yes, binary search works on any list regardless of order
+      - Yes, but only after reversing the list first
+      - No, you must always sort and then binary search, no matter how few lookups you do
+    correct_choice: No, binary search needs sorted data, so on one unsorted lookup a single linear scan is simpler and just as fast
+    explanation: |
+      Binary search relies on order to decide which half to discard. Sorting first
+      costs O(n log n), which is more than the O(n) of a single linear scan. Sorting
+      only pays off when you will perform many searches on the same data.
+    concepts:
+      - patterns.binary_search
+  - id: q2
+    prompt: |
+      A list of daily temperatures is sorted in ascending order. You need the index
+      of the first day whose temperature is at least 20 degrees. Which strategy is
+      the natural binary-search fit?
+    choices:
+      - Search for the leftmost position where the value is not less than 20 (a lower-bound search)
+      - Scan from the left and stop at the first value below 20
+      - Look only at the exact middle element and return its index
+      - Compare the first and last elements and pick the larger one
+    correct_choice: Search for the leftmost position where the value is not less than 20 (a lower-bound search)
+    explanation: |
+      Because the data is sorted, the days split into "below 20" then "20 or more."
+      Binary search can hunt that boundary in O(log n) by moving the high bound to
+      mid whenever the middle value qualifies, converging on the leftmost match.
+    concepts:
+      - patterns.binary_search
+  - id: q3
+    prompt: |
+      Which property of the input is the essential precondition that makes binary
+      search correct?
+    choices:
+      - The elements are ordered so that a comparison at the middle tells you which half to keep
+      - The list contains only unique values
+      - The list length is a power of two
+      - The values are all positive integers
+    correct_choice: The elements are ordered so that a comparison at the middle tells you which half to keep
+    explanation: |
+      The one thing binary search truly requires is a monotonic ordering: the middle
+      comparison must reliably rule out one half. Duplicates, odd lengths, and
+      negative or non-integer values are all fine as long as the order holds.
+    concepts:
+      - patterns.binary_search
+  - id: q4
+    prompt: |
+      Roughly how many steps does binary search take in the worst case on a sorted
+      list of about one million items?
+    choices:
+      - About 20, since it needs roughly log2(n) comparisons
+      - About one million, since it may inspect every item
+      - About one thousand, since it inspects the square root of n
+      - Exactly 2, one for each half of the list
+    correct_choice: About 20, since it needs roughly log2(n) comparisons
+    explanation: |
+      Each step halves the remaining window, so the count is about log2(n). Since
+      2 to the 20th is just over a million, roughly 20 comparisons suffice. That
+      O(log n) growth is why binary search scales so well.
+    concepts:
+      - patterns.binary_search
+      - concepts.big_o

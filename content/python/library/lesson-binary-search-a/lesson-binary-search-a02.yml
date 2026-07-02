@@ -1,0 +1,63 @@
+id: lesson.library.binary_search.a02
+kind: lesson
+version: 1
+language: python
+title: Getting the Boundaries Right
+slug: lesson-binary-search-a02
+difficulty: medium
+concepts:
+  - patterns.binary_search
+prerequisites:
+  - python.lists
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.binary_search.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original explanation centered on the loop invariant and the two classic off-by-one bugs, written independently.
+body_markdown: |
+  Binary search is short, but almost everyone writes an infinite loop or misses
+  an element the first few times. The cure is to name the *invariant*: the
+  promise that stays true on every pass. Here the promise is "if the target is
+  in the list, it sits somewhere in `sorted_nums[lo..hi]`, inclusive."
+
+  Two decisions keep that promise honest.
+
+  First, the loop condition. Use `while lo <= hi`, not `lo < hi`. When the
+  window shrinks to a single slot, `lo` equals `hi`, and you still need to check
+  that one slot:
+
+  ```python
+  def contains(sorted_nums, target):
+      lo, hi = 0, len(sorted_nums) - 1
+      while lo <= hi:            # <= so a size-1 window is still checked
+          mid = (lo + hi) // 2
+          if sorted_nums[mid] == target:
+              return True
+          if sorted_nums[mid] < target:
+              lo = mid + 1        # skip past mid, never reuse it
+          else:
+              hi = mid - 1        # skip past mid, never reuse it
+      return False
+  ```
+
+  Second, always move *past* `mid`. If you write `lo = mid` instead of
+  `lo = mid + 1`, then on a two-element window `mid` can equal `lo` forever and
+  the loop never ends. Excluding `mid` also guarantees the window gets strictly
+  smaller each pass, which is what makes the search finish.
+
+  One more safety note: `mid = (lo + hi) // 2` uses integer floor division, so
+  `mid` is always a valid index between `lo` and `hi`.
+checkpoints:
+  - question: Why use "while lo <= hi" instead of "while lo < hi"?
+    answer: So a window that has shrunk to one element still gets checked.
+    explanation: When lo equals hi the window holds exactly one candidate; with a strict "<" the loop would exit early and could miss a match sitting in that last slot.
+  - question: What bug appears if you write "lo = mid" instead of "lo = mid + 1"?
+    answer: An infinite loop, because the window can stop shrinking.
+    explanation: Leaving mid inside the window means mid can keep computing to the same index, so lo and hi never converge and the loop never terminates.
+  - question: What does the invariant of this binary search guarantee on every pass?
+    answer: If the target exists, it lies within sorted_nums[lo..hi] inclusive.
+    explanation: Each update only discards a half that provably cannot contain the target, so the remaining window always still holds the answer if it is present.

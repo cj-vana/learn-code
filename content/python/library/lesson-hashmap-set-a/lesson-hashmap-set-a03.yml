@@ -1,0 +1,67 @@
+id: lesson.library.hashmap_set.a03
+kind: lesson
+version: 1
+language: python
+title: Spotting the First Repeat in One Pass
+slug: lesson-hashmap-set-a03
+difficulty: medium
+concepts:
+  - patterns.hash_map_counting
+  - patterns.set_membership
+prerequisites:
+  - python.dictionaries
+  - python.sets
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.hashmap_set.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original explanation and worked examples written from scratch.
+body_markdown: |
+  Hash-map counting and set membership often work together. Suppose you scan
+  a stream of ids and want the first id that appears twice. A `seen` set lets
+  you decide, in constant time per step, whether the current value already
+  showed up:
+
+  ```python
+  def first_repeat(values):
+      seen = set()
+      for value in values:
+          if value in seen:      # O(1) membership test
+              return value
+          seen.add(value)
+      return None
+
+  print(first_repeat([4, 7, 2, 7, 9]))   # 7
+  print(first_repeat([1, 2, 3]))         # None
+  ```
+
+  Because the check and the insert are both average O(1), the whole scan is
+  O(n). You return as soon as a repeat is found, so you never need a second
+  pass. If instead the question were "which value repeats the *most*", a set
+  is not enough. There you would build a counting dictionary and then pick
+  the key with the largest value:
+
+  ```python
+  def most_common(values):
+      counts = {}
+      for value in values:
+          counts[value] = counts.get(value, 0) + 1
+      return max(counts, key=counts.get)
+  ```
+
+  Reach for a set when a yes/no "have I seen this?" answers the question, and
+  a counting dictionary when the *number* of occurrences decides the outcome.
+checkpoints:
+  - question: In first_repeat, why is a set the right structure for seen instead of a list?
+    answer: Membership tests on a set are average O(1), so the whole scan stays O(n) instead of O(n squared) with a list.
+    explanation: A list would rescan its elements on every "in" check, making the loop quadratic.
+  - question: What does first_repeat([3, 1, 4, 1, 5]) return, and why?
+    answer: "1"
+    explanation: 3, 4 are added to seen; when the second 1 is reached it is already in seen, so 1 is returned immediately.
+  - question: Why does finding the most frequent value need a counting dictionary rather than a set?
+    answer: A set only records whether a value appeared, but the most frequent value depends on how many times each appeared, which the dictionary counts track.
+    explanation: Frequencies drive the answer, so you need stored counts, then pick the key with the maximum count.

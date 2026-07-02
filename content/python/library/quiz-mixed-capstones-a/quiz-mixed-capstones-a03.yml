@@ -1,0 +1,119 @@
+id: quiz.library.mixed_capstones.a03
+kind: quiz
+version: 1
+language: python
+title: Reading Code, Naming the Technique
+slug: quiz-mixed-capstones-a03
+difficulty: medium
+concepts:
+  - patterns.two_pointers
+  - patterns.hash_map_counting
+  - patterns.prefix_sums
+  - patterns.sliding_window
+prerequisites:
+  - python.lists
+  - python.dictionaries
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.mixed_capstones.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original short snippets written for this batch; each asks the learner to identify which pattern the code implements.
+quiz_type: mixed_review
+questions:
+  - id: q1
+    prompt: |
+      Which technique does this loop implement?
+
+      ```python
+      lo, hi = 0, len(a) - 1
+      while lo < hi:
+          if a[lo] + a[hi] == target:
+              return True
+          elif a[lo] + a[hi] < target:
+              lo += 1
+          else:
+              hi -= 1
+      ```
+    choices:
+      - Two pointers converging from both ends
+      - Hash-map counting of values
+      - A fixed-size sliding window
+      - Binary search for the target
+    correct_choice: Two pointers converging from both ends
+    explanation: |
+      Indices start at opposite ends and step inward based on whether the current sum
+      is too small or too large. That converging low/high movement is the two-pointer
+      pattern, which assumes the list is sorted.
+    concepts:
+      - patterns.two_pointers
+  - id: q2
+    prompt: |
+      Which technique does this loop implement?
+
+      ```python
+      seen = {}
+      for x in values:
+          seen[x] = seen.get(x, 0) + 1
+      ```
+    choices:
+      - Hash-map counting of how often each value occurs
+      - Prefix sums over the values
+      - Two pointers from both ends
+      - Binary search over a sorted list
+    correct_choice: Hash-map counting of how often each value occurs
+    explanation: |
+      Each value becomes a dictionary key whose count is incremented with
+      get(x, 0) + 1. Building a tally of occurrences per key is the hash-map counting
+      pattern.
+    concepts:
+      - patterns.hash_map_counting
+      - python.dictionaries
+  - id: q3
+    prompt: |
+      Which technique is this code preparing to use?
+
+      ```python
+      prefix = [0]
+      for x in nums:
+          prefix.append(prefix[-1] + x)
+      ```
+    choices:
+      - Prefix sums for fast range-total queries
+      - A sliding window of fixed size
+      - Two pointers meeting in the middle
+      - Counting distinct values with a set
+    correct_choice: Prefix sums for fast range-total queries
+    explanation: |
+      Each entry stores the running total of everything seen so far, starting from 0.
+      That cumulative array is a prefix-sum table, later used to answer any range sum
+      with a single subtraction.
+    concepts:
+      - patterns.prefix_sums
+      - python.lists
+  - id: q4
+    prompt: |
+      Which technique does this loop implement?
+
+      ```python
+      window = sum(a[:k])
+      best = window
+      for r in range(k, len(a)):
+          window += a[r] - a[r - k]
+          best = max(best, window)
+      ```
+    choices:
+      - A fixed-size sliding window with a running sum
+      - Binary search on the array
+      - Hash-map counting of the values
+      - Two pointers starting at opposite ends
+    correct_choice: A fixed-size sliding window with a running sum
+    explanation: |
+      The window starts as the sum of the first k items, then each step adds the
+      entering element a[r] and removes the leaving element a[r-k]. Maintaining that
+      running total for a fixed span is the sliding-window pattern.
+    concepts:
+      - patterns.sliding_window

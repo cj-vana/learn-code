@@ -1,0 +1,64 @@
+id: lesson.library.brute_force_bigo.a02
+kind: lesson
+version: 1
+language: python
+title: Counting Steps With Big-O
+slug: lesson-brute-force-bigo-a02
+difficulty: easy
+concepts:
+  - concepts.big_o
+prerequisites:
+  - python.loops
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.brute_force_bigo.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original step-counting framing with a single-loop versus nested-loop comparison written from scratch.
+body_markdown: |
+  Big-O is a rough way to describe how the work a function does grows as its
+  input gets bigger. We do not count seconds; we count how many times the busy
+  part of the code runs as the input size `n` changes.
+
+  A single loop over `n` items runs its body about `n` times:
+
+  ```python
+  def total_length(words):
+      count = 0
+      for word in words:      # runs n times
+          count += len(word)
+      return count
+  ```
+
+  Double the list and the loop body runs twice as often. That steady, linear
+  growth is written `O(n)`.
+
+  Now put a loop inside a loop. For each of the `n` outer steps, the inner loop
+  also runs `n` times:
+
+  ```python
+  def count_pairs(values):
+      pairs = 0
+      for a in values:        # runs n times
+          for b in values:    # runs n times for each a
+              pairs += 1
+      return pairs
+  ```
+
+  The body now runs about `n * n` times, which we write `O(n^2)`. When `n`
+  goes from 10 to 100, a linear function does roughly 10 times more work, but
+  the nested one does about 100 times more. Big-O keeps only the term that
+  dominates as `n` grows, so constants and smaller terms are dropped.
+checkpoints:
+  - question: What does Big-O actually measure?
+    answer: How the amount of work grows as the input size n increases.
+    explanation: It describes growth of step counts, not exact runtime in seconds, which depends on the machine.
+  - question: A function has one loop that runs n times, then a separate second loop that also runs n times. What is its Big-O?
+    answer: "O(n)"
+    explanation: Two sequential loops do about n + n = 2n steps, and Big-O drops the constant factor, leaving O(n).
+  - question: Why is a loop nested inside another loop over the same n items described as O(n^2)?
+    answer: The inner loop runs n times for each of the n outer steps, giving about n times n total steps.
+    explanation: Multiplying the two loop counts gives n squared, which is why nested passes grow much faster than a single pass.

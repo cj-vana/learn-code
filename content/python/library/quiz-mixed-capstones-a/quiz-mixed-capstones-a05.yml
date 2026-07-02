@@ -1,0 +1,91 @@
+id: quiz.library.mixed_capstones.a05
+kind: quiz
+version: 1
+language: python
+title: Working With Sorted Data
+slug: quiz-mixed-capstones-a05
+difficulty: medium
+concepts:
+  - patterns.binary_search
+  - patterns.two_pointers
+  - concepts.big_o
+prerequisites:
+  - python.lists
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.mixed_capstones.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original questions on when sorted order unlocks binary search versus two pointers, plus the cost of sorting first.
+quiz_type: mixed_review
+questions:
+  - id: q1
+    prompt: |
+      What property must a list have before binary search will give correct
+      results?
+    choices:
+      - It must be sorted in a consistent order
+      - It must contain only unique values
+      - Its length must be a power of two
+      - It must contain only positive numbers
+    correct_choice: It must be sorted in a consistent order
+    explanation: |
+      Binary search decides which half to discard by comparing the target to the
+      middle element. That decision is only valid when the data is ordered.
+      Duplicates, list length, and sign do not affect correctness.
+    concepts:
+      - patterns.binary_search
+  - id: q2
+    prompt: |
+      You are given an UNSORTED list and must find whether two values sum to a
+      target. A classmate suggests sorting it first and then using two pointers.
+      What is the total time complexity of that plan?
+    choices:
+      - "O(n log n), dominated by the sort; the two-pointer scan is only O(n)"
+      - "O(n), because two pointers are always linear"
+      - "O(n^2), because sorting is quadratic"
+      - "O(log n), because two pointers use halving"
+    correct_choice: "O(n log n), dominated by the sort; the two-pointer scan is only O(n)"
+    explanation: |
+      Sorting costs O(n log n) and the converging two-pointer pass adds O(n). The
+      larger term wins, so the combined approach is O(n log n). A hash set could solve
+      it in O(n) without sorting, but the described plan is bounded by the sort.
+    concepts:
+      - patterns.two_pointers
+      - concepts.big_o
+  - id: q3
+    prompt: |
+      In a correct binary search, after checking the middle element and finding the
+      target is larger, what happens next?
+    choices:
+      - The lower bound moves just past the middle, discarding the left half
+      - The upper bound moves to the middle, discarding the right half
+      - The search restarts from index 0
+      - The whole list is reversed
+    correct_choice: The lower bound moves just past the middle, discarding the left half
+    explanation: |
+      If the target is greater than the middle value, it can only be to the right in
+      sorted data, so you set low = mid + 1 and ignore the left half. This halving is
+      what gives binary search its O(log n) speed.
+    concepts:
+      - patterns.binary_search
+  - id: q4
+    prompt: |
+      Both binary search and the converging two-pointer scan rely on sorted input.
+      What is the key difference in what they are typically used for?
+    choices:
+      - Binary search locates a single target value; two pointers examine relationships between pairs of elements
+      - Binary search only works on strings while two pointers only work on numbers
+      - Binary search needs duplicates while two pointers forbid them
+      - There is no difference; they are interchangeable
+    correct_choice: Binary search locates a single target value; two pointers examine relationships between pairs of elements
+    explanation: |
+      Binary search zeroes in on one value by halving the range. Two pointers compare
+      elements from different positions, which suits pair-sum, merging, and
+      palindrome-style tasks. Both use order, but for different goals.
+    concepts:
+      - patterns.binary_search
+      - patterns.two_pointers

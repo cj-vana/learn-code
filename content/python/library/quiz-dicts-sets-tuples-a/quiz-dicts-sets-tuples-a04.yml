@@ -1,0 +1,95 @@
+id: quiz.library.dicts_sets_tuples.a04
+kind: quiz
+version: 1
+language: python
+title: Reasoning About Dicts, Sets, and Order
+slug: quiz-dicts-sets-tuples-a04
+difficulty: medium
+concepts:
+  - python.dictionaries
+  - python.sets
+  - python.sorting
+prerequisites:
+  - python.loops
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original questions on accumulating totals, set algebra, stable sorts, and membership.
+quiz_type: mixed_review
+questions:
+  - id: q1
+    prompt: |
+      You loop over a list of transactions and want the total amount spent per
+      customer id, stored in a dict named totals. Which line is the right core
+      step inside the loop?
+    choices:
+      - "totals[cid] = totals.get(cid, 0) + amount"
+      - "totals[cid] = amount"
+      - "totals.add(cid + amount)"
+      - "totals[cid].append(amount)"
+    correct_choice: "totals[cid] = totals.get(cid, 0) + amount"
+    explanation: |
+      totals.get(cid, 0) starts a new customer at 0 and otherwise reads the
+      running total, so adding amount accumulates correctly. Plain assignment
+      overwrites, .add() is a set method, and indexing a missing key before
+      .append() raises KeyError.
+    concepts:
+      - python.dictionaries
+      - patterns.hash_map_counting
+  - id: q2
+    prompt: |
+      You have two lists of names, a and b. Which expression gives the people who
+      appear in both lists, with no duplicates?
+    choices:
+      - "set(a) & set(b)"
+      - "set(a) | set(b)"
+      - "set(a) - set(b)"
+      - "set(a) ^ set(b)"
+    correct_choice: "set(a) & set(b)"
+    explanation: |
+      The & operator is set intersection: elements present in both. The | operator
+      is union, - is difference (in a but not b), and ^ is symmetric difference
+      (in exactly one of them).
+    concepts:
+      - python.sets
+      - patterns.set_membership
+  - id: q3
+    prompt: |
+      records = [("Ann", 30), ("Bob", 25), ("Cy", 30)]. You run
+      sorted(records, key=lambda r: r[1]). Because Python's sort is stable, what
+      is the result?
+    choices:
+      - "[('Bob', 25), ('Ann', 30), ('Cy', 30)]"
+      - "[('Bob', 25), ('Cy', 30), ('Ann', 30)]"
+      - "[('Ann', 30), ('Cy', 30), ('Bob', 25)]"
+      - "[('Ann', 30), ('Bob', 25), ('Cy', 30)]"
+    correct_choice: "[('Bob', 25), ('Ann', 30), ('Cy', 30)]"
+    explanation: |
+      Sorting by age puts 25 first, then the two 30s. A stable sort keeps records
+      with equal keys in their original relative order, so Ann (which came before
+      Cy) stays ahead of Cy.
+    concepts:
+      - python.sorting
+      - python.tuples
+  - id: q4
+    prompt: |
+      You built a set named seen specifically for fast membership tests. Which
+      check is the idiomatic, fast way to ask whether target is present?
+    choices:
+      - "target in seen"
+      - "for x in seen: check if x == target"
+      - "seen.index(target) != -1"
+      - "seen.contains(target)"
+    correct_choice: "target in seen"
+    explanation: |
+      The in operator on a set is an average O(1) hash lookup. Looping is O(n),
+      .index() is a list method (and raises when the value is absent), and there
+      is no .contains() method; the in operator is backed by __contains__.
+    concepts:
+      - python.sets
+      - patterns.set_membership

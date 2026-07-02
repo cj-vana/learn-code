@@ -1,0 +1,98 @@
+id: quiz.library.dicts_sets_tuples.a01
+kind: quiz
+version: 1
+language: python
+title: Choosing the Right Collection for the Job
+slug: quiz-dicts-sets-tuples-a01
+difficulty: easy
+concepts:
+  - python.dictionaries
+  - python.sets
+  - python.tuples
+  - python.sorting
+prerequisites:
+  - python.loops
+estimated_time_minutes: 5
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original scenarios written to test when each built-in collection fits.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      You are scanning a long article and need to know how many times each
+      distinct word appears. Which structure fits this task best?
+    choices:
+      - A dictionary mapping each word to its running count
+      - A set holding the words that appear
+      - A tuple listing every word in reading order
+      - A single integer that you keep incrementing
+    correct_choice: A dictionary mapping each word to its running count
+    explanation: |
+      Counting needs a key-to-number association, which is exactly what a dict
+      gives you. A set records only which words appear (not how often), a tuple
+      preserves order but not counts, and one integer cannot separate the tallies
+      per word.
+    concepts:
+      - python.dictionaries
+      - patterns.hash_map_counting
+  - id: q2
+    prompt: |
+      You want to remember which user IDs you have already emailed so you never
+      email one twice, and you only need fast "have I seen this ID?" checks.
+      Which structure is the best fit?
+    choices:
+      - A set of the IDs you have emailed
+      - A list you append to and scan from the start for each check
+      - A tuple you rebuild from scratch after every email
+      - A single boolean flag that becomes True once you have emailed anyone
+    correct_choice: A set of the IDs you have emailed
+    explanation: |
+      A set gives average O(1) membership tests and drops duplicates for free.
+      Scanning a list is O(n) per check, rebuilding an immutable tuple every time
+      is wasteful, and one boolean cannot record which specific IDs were emailed.
+    concepts:
+      - python.sets
+      - patterns.set_membership
+  - id: q3
+    prompt: |
+      You are storing a fixed (latitude, longitude) pair that must never change
+      and that you also want to use directly as a dictionary key. Which type fits
+      best?
+    choices:
+      - A tuple like (lat, lon)
+      - A list like [lat, lon]
+      - A set like {lat, lon}
+      - 'A dictionary like {"lat": lat, "lon": lon}'
+    correct_choice: A tuple like (lat, lon)
+    explanation: |
+      Tuples are immutable and hashable, so they can serve as dictionary keys and
+      signal a fixed pair. Lists, sets, and dicts are mutable and unhashable, so
+      Python refuses to use them as keys.
+    concepts:
+      - python.tuples
+      - python.dictionaries
+  - id: q4
+    prompt: |
+      You have a dict named scores mapping each player to their points, and you
+      must print the players from highest score to lowest. Which approach is most
+      appropriate?
+    choices:
+      - "Sort the items with sorted(scores.items(), key=lambda kv: kv[1], reverse=True)"
+      - Call scores.sort() to order the dictionary in place
+      - Convert scores to a set, which stores its items already sorted
+      - Rely on the dict staying ordered by value on its own
+    correct_choice: "Sort the items with sorted(scores.items(), key=lambda kv: kv[1], reverse=True)"
+    explanation: |
+      Dicts have no .sort() method, so you sort the (player, score) pairs from
+      .items() using a key that pulls out the score and reverse=True for
+      descending order. Sets are unordered, and a dict keeps insertion order, not
+      value order.
+    concepts:
+      - python.sorting
+      - python.dictionaries

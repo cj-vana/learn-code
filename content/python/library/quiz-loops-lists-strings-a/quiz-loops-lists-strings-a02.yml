@@ -1,0 +1,98 @@
+id: quiz.library.loops_lists_strings.a02
+kind: quiz
+version: 1
+language: python
+title: Slice and String Method Syntax
+slug: quiz-loops-lists-strings-a02
+difficulty: easy
+concepts:
+  - python.slicing
+  - python.strings
+  - python.lists
+prerequisites: []
+estimated_time_minutes: 5
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax questions and hand-picked distractors.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: |
+      Given `nums = [10, 20, 30, 40, 50]`, what does `nums[1:4]` evaluate to?
+    choices:
+      - '[20, 30, 40]'
+      - '[10, 20, 30, 40]'
+      - '[20, 30, 40, 50]'
+      - '[10, 20, 30]'
+    correct_choice: '[20, 30, 40]'
+    explanation: |
+      A slice `[start:stop]` includes `start` (index 1, the value 20) and stops
+      before `stop` (index 4), so indexes 1, 2, and 3 are returned.
+    concepts:
+      - python.slicing
+      - python.lists
+  - id: q2
+    prompt: |
+      Given `s = "python"`, what is `s[2:]`?
+    choices:
+      - thon
+      - py
+      - pyt
+      - hon
+    correct_choice: thon
+    explanation: |
+      Omitting the stop index means "to the end". Index 2 is `t`, so the slice is
+      the characters from position 2 onward: `thon`.
+    concepts:
+      - python.slicing
+      - python.strings
+  - id: q3
+    prompt: |
+      Which call returns a new string with every letter converted to uppercase?
+    choices:
+      - s.upper()
+      - s.capitalize()
+      - s.uppercase()
+      - s.toUpper()
+    correct_choice: s.upper()
+    explanation: |
+      `str.upper()` uppercases all characters. `capitalize()` only uppercases the
+      first letter, while `uppercase()` and `toUpper()` are not real string
+      methods and raise AttributeError.
+    concepts:
+      - python.strings
+  - id: q4
+    prompt: |
+      Starting from `nums = [1, 2, 3]`, what is `nums` after `nums.append([4, 5])`?
+    choices:
+      - '[1, 2, 3, [4, 5]]'
+      - '[1, 2, 3, 4, 5]'
+      - '[1, 2, 3, 4]'
+      - '[[1, 2, 3], 4, 5]'
+    correct_choice: '[1, 2, 3, [4, 5]]'
+    explanation: |
+      `append` adds its single argument as one element, so the list `[4, 5]`
+      becomes a nested item. Use `extend` if you want the two values merged in
+      flat.
+    concepts:
+      - python.lists
+  - id: q5
+    prompt: |
+      What does `"a,b,c".split(",")` return?
+    choices:
+      - "['a', 'b', 'c']"
+      - abc
+      - "['a,b,c']"
+      - "['a', ',', 'b', ',', 'c']"
+    correct_choice: "['a', 'b', 'c']"
+    explanation: |
+      `split(",")` breaks the string at each comma and returns a list of the
+      pieces between them. The separators themselves are removed.
+    concepts:
+      - python.strings
+      - python.lists

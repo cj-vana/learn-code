@@ -1,0 +1,95 @@
+id: quiz.library.recursion_backtracking.a01
+kind: quiz
+version: 1
+language: python
+title: Recognizing When Recursion Fits
+slug: quiz-recursion-backtracking-a01
+difficulty: easy
+concepts:
+  - patterns.recursion
+prerequisites:
+  - python.functions
+estimated_time_minutes: 5
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.recursion_backtracking.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original scenarios (nested folders, string-length recursion) and hand-written distractors; nothing adapted from any external problem set.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      You must add up the sizes of every file inside a folder, where any folder may
+      contain more folders nested to an unknown depth. Which plan fits most naturally?
+    choices:
+      - For each item, add its size if it is a file, and if it is a folder, recurse into it and add whatever total that call returns
+      - Loop once over only the top-level items and stop there
+      - Sort every item by size and return the largest one
+      - Use binary search to jump straight to the folder's total
+    correct_choice: For each item, add its size if it is a file, and if it is a folder, recurse into it and add whatever total that call returns
+    explanation: |
+      A folder that can contain folders is a self-similar, arbitrarily deep structure.
+      Recursion handles that cleanly: each folder solves its own level and trusts a
+      recursive call to total each subfolder. A single flat loop cannot reach the
+      nested levels, and sorting or binary search does not apply here.
+    concepts:
+      - patterns.recursion
+  - id: q2
+    prompt: |
+      A recursive function calls itself but its argument never moves toward a stopping
+      condition, so no base case is ever reached. What happens when you run it?
+    choices:
+      - Python keeps stacking calls until it exceeds the recursion limit and raises a RecursionError
+      - The function quietly returns None on the first call
+      - Python detects the mistake and inserts a base case automatically
+      - It runs faster because there is no stopping check to slow it down
+    correct_choice: Python keeps stacking calls until it exceeds the recursion limit and raises a RecursionError
+    explanation: |
+      Every call waits on the next one, so unfinished calls pile up on the call stack.
+      Without a base case that pile never shrinks, and once it passes Python's recursion
+      limit the interpreter raises a RecursionError instead of looping forever silently.
+    concepts:
+      - patterns.recursion
+  - id: q3
+    prompt: |
+      Consider this function that counts the characters in a string:
+
+      ```python
+      def length(s):
+          if s == "":
+              return 0
+          return 1 + length(s[1:])
+      ```
+
+      Which part is the base case?
+    choices:
+      - The line that returns 0 when s is the empty string
+      - The line that returns 1 plus length of the rest of the string
+      - The recursive call on the shorter string
+      - The parameter s itself
+    correct_choice: The line that returns 0 when s is the empty string
+    explanation: |
+      The base case is the smallest input with an obvious answer and no further calls.
+      An empty string has length 0, so returning 0 there stops the recursion. The other
+      line is the recursive case, which keeps the process going rather than ending it.
+    concepts:
+      - patterns.recursion
+  - id: q4
+    prompt: |
+      In that same 'length' function, how does each recursive call move the problem
+      toward the base case?
+    choices:
+      - It passes s[1:], a string one character shorter, so it steadily approaches the empty string
+      - It passes the same string s unchanged on every call
+      - It doubles the length of s before recursing
+      - It converts s into an integer and recurses on that
+    correct_choice: It passes s[1:], a string one character shorter, so it steadily approaches the empty string
+    explanation: |
+      Slicing off the first character with s[1:] shrinks the input by one each time.
+      Because the string gets steadily shorter, it must eventually become empty, which
+      is exactly the base case. Passing s unchanged would never reach the stop condition.
+    concepts:
+      - patterns.recursion

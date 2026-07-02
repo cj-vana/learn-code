@@ -1,0 +1,61 @@
+id: lesson.library.dicts_sets_tuples.a03
+kind: lesson
+version: 1
+language: python
+title: Tuples as Fixed Records
+slug: lesson-dicts-sets-tuples-a03
+difficulty: easy
+concepts:
+  - python.tuples
+prerequisites:
+  - python.functions
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original map-coordinate example authored to teach tuple immutability, unpacking, and hashability.
+body_markdown: |
+  A *tuple* is an ordered group of values that cannot change after it is
+  built. That makes tuples a natural fit for a fixed record, such as a
+  point on a grid:
+
+  ```python
+  spot = (3, 5)
+  print(spot[0], spot[1])  # 3 5
+  ```
+
+  Trying to overwrite one slot fails, because tuples are immutable:
+
+  ```python
+  spot[0] = 9  # TypeError: 'tuple' object does not support item assignment
+  ```
+
+  A tidy way to pull the pieces out is *unpacking*, which names each
+  position in one line:
+
+  ```python
+  x, y = spot
+  print(y)  # 5
+  ```
+
+  Because a tuple's contents are frozen, Python can hash it, so tuples can
+  serve as dictionary keys where a list cannot:
+
+  ```python
+  terrain = {(3, 5): "hill", (0, 0): "start"}
+  print(terrain[(3, 5)])  # hill
+  ```
+checkpoints:
+  - question: What happens when you run `spot[0] = 9` on the tuple `spot = (3, 5)`?
+    answer: It raises a TypeError because tuples are immutable.
+    explanation: Tuples do not support item assignment, so you cannot change a slot after creation.
+  - question: After `x, y = (3, 5)`, what value does y hold?
+    answer: "5"
+    explanation: Unpacking assigns left to right by position, so x becomes 3 and y becomes 5.
+  - question: Why can a tuple be used as a dictionary key when a list cannot?
+    answer: A tuple is immutable and therefore hashable, while a list can change and is unhashable.
+    explanation: Dictionary keys must be hashable; a frozen tuple qualifies but a mutable list does not.

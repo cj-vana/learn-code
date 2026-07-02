@@ -1,0 +1,60 @@
+id: lesson.library.dicts_sets_tuples.a02
+kind: lesson
+version: 1
+language: python
+title: Sets for Uniqueness and Fast Membership
+slug: lesson-dicts-sets-tuples-a02
+difficulty: easy
+concepts:
+  - python.sets
+  - patterns.set_membership
+prerequisites:
+  - python.loops
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original guest-list example created to teach set dedup, membership, and set algebra.
+body_markdown: |
+  A *set* is an unordered bag of items where each value appears at most
+  once. Building a set from a list is the quickest way to drop duplicates:
+
+  ```python
+  scans = ["A7", "A7", "B2", "C9", "B2"]
+  unique = set(scans)
+  print(len(unique))  # 3
+  ```
+
+  Sets shine at the question "is this one already here?" Because they use
+  hashing, checking membership is roughly O(1) on average, while scanning a
+  list is O(n):
+
+  ```python
+  seen = {"A7", "B2"}
+  print("C9" in seen)  # False
+  ```
+
+  You can also combine sets like circles in a Venn diagram. Intersection
+  `&` keeps shared items, union `|` merges both, and difference `-` keeps
+  what only the first set has:
+
+  ```python
+  monday = {"A7", "B2", "C9"}
+  tuesday = {"B2", "C9", "D4"}
+  print(monday & tuesday)  # {'B2', 'C9'}
+  print(monday - tuesday)  # {'A7'}
+  ```
+checkpoints:
+  - question: What is len(set(["x", "x", "y", "y", "y"]))?
+    answer: "2"
+    explanation: A set keeps only distinct values, so the five items collapse to just x and y.
+  - question: Which operator returns only the items found in both set a and set b?
+    answer: The intersection operator, &.
+    explanation: a & b keeps values present in both sets; union | merges them and difference - subtracts.
+  - question: Why is `item in my_set` usually faster than `item in my_list` for large collections?
+    answer: A set uses hashing for average O(1) lookups, while a list must scan items one by one (O(n)).
+    explanation: Hash-based membership jumps near the value directly instead of comparing against every element.

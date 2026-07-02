@@ -1,0 +1,50 @@
+id: lesson.library.python_refresh.a05
+kind: lesson
+version: 1
+language: python
+title: Choosing a Branch with if, elif, else
+slug: lesson-python-refresh-a05
+difficulty: easy
+concepts:
+  - python.conditionals
+prerequisites: []
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original explanation of if/elif/else ordering and mutual exclusivity.
+body_markdown: |
+  An `if` statement runs a block only when its condition is True. Add `elif`
+  ("else if") branches for more cases, and a final `else` for everything left
+  over. Python checks the conditions top to bottom and stops at the *first* one
+  that is True; the rest are skipped entirely.
+
+  ```python
+  temp = 68
+  if temp < 60:
+      label = "cold"
+  elif temp < 75:
+      label = "comfortable"
+  else:
+      label = "hot"
+  print(label)   # comfortable
+  ```
+
+  Because the checks run in order, each `elif` gets to assume the earlier ones
+  already failed. That is why `elif temp < 75` does not also need `temp >= 60`:
+  if we reached it at all, we already know `temp` was not below 60. Ordering the
+  branches carefully keeps exactly one of them from running.
+checkpoints:
+  - question: With `temp = 68`, which branch of the example runs?
+    answer: "The elif branch, setting label to \"comfortable\""
+    explanation: The first check `68 < 60` is False, so Python moves on and finds `68 < 75` is True, then skips the else.
+  - question: When is the `else` block reached?
+    answer: "Only when every preceding if and elif condition is False"
+    explanation: "The `else` block is the catch-all that runs precisely when no earlier condition matched."
+  - question: If the first `if` condition is True, are the later `elif` conditions still checked?
+    answer: "No"
+    explanation: Once a branch matches, Python runs its block and skips the remaining elif and else conditions entirely.

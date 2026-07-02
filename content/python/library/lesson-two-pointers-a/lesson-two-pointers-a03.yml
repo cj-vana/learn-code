@@ -1,0 +1,58 @@
+id: lesson.library.two_pointers.a03
+kind: lesson
+version: 1
+language: python
+title: Walking Two Sorted Lists Side by Side
+slug: lesson-two-pointers-a03
+difficulty: medium
+concepts:
+  - patterns.two_pointers
+prerequisites:
+  - python.lists
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.two_pointers.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original dual-list pointer walkthrough for finding shared values across two sorted lists.
+body_markdown: |
+  Two pointers do not have to share one list. Give each of two sorted lists its
+  own index, then repeatedly advance whichever index points at the smaller
+  value. When both indices land on equal values you have found a shared element.
+
+  ```python
+  def sorted_intersection(a, b):
+      i = 0
+      j = 0
+      shared = []
+      while i < len(a) and j < len(b):
+          if a[i] == b[j]:
+              shared.append(a[i])
+              i += 1
+              j += 1
+          elif a[i] < b[j]:
+              i += 1      # a's value is too small to ever match, skip it
+          else:
+              j += 1      # b's value is too small to ever match, skip it
+      return shared
+  ```
+
+  The key insight is that sorted order makes skipping safe. When `a[i]` is
+  smaller than `b[j]`, it is smaller than every value still ahead in `b` too, so
+  it can never find a partner and is discarded. The loop stops the moment either
+  list is exhausted. For lists of length `n` and `m` this runs in O(n + m) time,
+  far better than the O(n times m) cost of comparing every pair. (This version
+  assumes the two lists hold distinct sorted values.)
+checkpoints:
+  - question: When a[i] is less than b[j], which pointer advances and why?
+    answer: The i pointer advances, because a[i] is smaller than every remaining value in b and so can never be matched.
+    explanation: Sorted order means b[j] is the smallest value left in b, so nothing ahead can equal the even-smaller a[i].
+  - question: What condition causes the while loop to stop?
+    answer: The loop stops as soon as i reaches the end of a or j reaches the end of b, meaning one list has been fully consumed.
+    explanation: Once either list runs out there can be no further shared values, so continuing would be wasted work.
+  - question: For lists of length n and m, what is the running time, and how does it compare with checking every pair?
+    answer: O(n + m), versus O(n times m) for the brute-force nested-loop approach.
+    explanation: Each iteration advances at least one pointer forward, and neither pointer moves more than the length of its own list, so the coordinated walk is linear in the combined size.

@@ -1,0 +1,110 @@
+id: quiz.library.mixed_capstones.a01
+kind: quiz
+version: 1
+language: python
+title: Matching the Problem to the Pattern
+slug: quiz-mixed-capstones-a01
+difficulty: medium
+concepts:
+  - patterns.hash_map_counting
+  - patterns.two_pointers
+  - patterns.sliding_window
+  - patterns.prefix_sums
+  - patterns.binary_search
+prerequisites:
+  - python.lists
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.mixed_capstones.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original mixed-review scenarios that ask the learner to pick one pattern per task; distractors are other patterns from the same toolkit.
+quiz_type: mixed_review
+questions:
+  - id: q1
+    prompt: |
+      A warehouse scanner produces a long list of item SKUs. You must report how
+      many times each distinct SKU was scanned. Which pattern fits best?
+    choices:
+      - Tally each SKU in a dictionary as you make one pass over the list
+      - Sort the SKUs and binary search for each one
+      - Slide a fixed-size window across the list
+      - Keep two pointers moving inward from both ends
+    correct_choice: Tally each SKU in a dictionary as you make one pass over the list
+    explanation: |
+      "How many of each" is a counting job. A dictionary keyed by SKU gives you an
+      average O(1) update per scan, so a single pass builds every count. The other
+      patterns solve ordering, window, or pairing problems, not tallies.
+    concepts:
+      - patterns.hash_map_counting
+      - python.dictionaries
+  - id: q2
+    prompt: |
+      Given a list of daily temperatures, you must find the highest total across
+      any 7 consecutive days. Which pattern computes this most efficiently?
+    choices:
+      - Slide a fixed-size window of 7, adding the new day and dropping the oldest
+      - Recompute the sum of all 7 days from scratch at every position
+      - Binary search for the largest total
+      - Count how often each temperature appears
+    correct_choice: Slide a fixed-size window of 7, adding the new day and dropping the oldest
+    explanation: |
+      A fixed-length window keeps a running total: when it advances one step you add
+      the entering value and subtract the leaving value, so each step is O(1) and the
+      whole scan is O(n). Recomputing all 7 values each time repeats work needlessly.
+    concepts:
+      - patterns.sliding_window
+  - id: q3
+    prompt: |
+      You are handed a fixed list of scores and must answer hundreds of queries of
+      the form "what is the sum of scores from index i to index j?" Which pattern
+      makes each query O(1) after some setup?
+    choices:
+      - Precompute a running-total (prefix sum) array once, then subtract two entries per query
+      - Loop from i to j adding values for every single query
+      - Sort the scores before each query
+      - Use two pointers converging from the ends for each query
+    correct_choice: Precompute a running-total (prefix sum) array once, then subtract two entries per query
+    explanation: |
+      A prefix-sum array stores the total of everything up to each index. The sum of
+      a range i..j is then prefix[j+1] - prefix[i], one subtraction per query. Building
+      the prefix array is O(n) once; every later query is O(1).
+    concepts:
+      - patterns.prefix_sums
+  - id: q4
+    prompt: |
+      A phone book is already sorted by name. You must check whether a specific
+      name is present as fast as possible. Which pattern applies?
+    choices:
+      - Binary search, halving the remaining range each comparison
+      - Scan every entry from the top until you find it or run out
+      - Count how many entries start with each letter
+      - Slide a window of fixed size across the names
+    correct_choice: Binary search, halving the remaining range each comparison
+    explanation: |
+      Sorted data is exactly what binary search needs. Comparing against the middle
+      lets you discard half the remaining names each step, giving O(log n) lookups.
+      A linear scan would be O(n) and ignores the sorted order you already have.
+    concepts:
+      - patterns.binary_search
+      - concepts.big_o
+  - id: q5
+    prompt: |
+      A list of numbers is sorted ascending. You must decide whether any two of
+      them add up to exactly 50. Which pattern is the natural fit?
+    choices:
+      - Two pointers, one at each end, moving inward based on the current sum
+      - A prefix-sum array of the values
+      - A fixed-size sliding window
+      - Binary search for the value 50 itself
+    correct_choice: Two pointers, one at each end, moving inward based on the current sum
+    explanation: |
+      On a sorted list, a low pointer and a high pointer let you steer the sum: too
+      small means advance the low pointer, too large means retreat the high pointer.
+      This converges in O(n). Prefix sums and windows target contiguous ranges, not
+      arbitrary pairs.
+    concepts:
+      - patterns.two_pointers

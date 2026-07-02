@@ -1,0 +1,60 @@
+id: lesson.library.recursion_backtracking.a02
+kind: lesson
+version: 1
+language: python
+title: Following a Result Back Up the Call Stack
+slug: lesson-recursion-backtracking-a02
+difficulty: medium
+concepts:
+  - patterns.recursion
+prerequisites:
+  - python.functions
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.recursion_backtracking.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original explanation of call-stack unwinding traced through a cell-doubling example.
+body_markdown: |
+  When a recursive function runs, Python stacks up the unfinished calls and only
+  finishes them in reverse order once the base case is reached. Watching a value
+  travel *back up* that stack is the clearest way to understand recursion.
+
+  Suppose one cell splits into two every round. After `n` rounds you have twice
+  as many cells as after `n - 1` rounds:
+
+  ```python
+  def cells_after(n):
+      if n == 0:                     # base case: start with a single cell
+          return 1
+      return 2 * cells_after(n - 1)  # each round doubles the round below
+
+  print(cells_after(3))   # 8
+  ```
+
+  The calls go *down* first without returning anything final:
+
+  ```text
+  cells_after(3) = 2 * cells_after(2)
+  cells_after(2) = 2 * cells_after(1)
+  cells_after(1) = 2 * cells_after(0)
+  cells_after(0) = 1          <- base case reached, now results flow back up
+  ```
+
+  Then each waiting call finishes with the value handed back to it: `0` returns
+  `1`, so `1` returns `2`, so `2` returns `4`, so `3` returns `8`. Nothing is
+  multiplied until the base case is hit; the real arithmetic happens on the way
+  back up.
+checkpoints:
+  - question: In what order do the recursive calls actually finish and return their values?
+    answer: In reverse - the deepest call (the base case) returns first, then each waiting call finishes outward from cells_after(0) back to cells_after(3).
+    explanation: Python pauses each call at the multiplication until the call it is waiting on returns, so results unwind from the base case upward.
+  - question: What does cells_after(0) return, and why must it be defined?
+    answer: It returns 1, and it is the base case that stops the recursion and seeds the value that flows back up.
+    explanation: Without a base case the calls would keep going below 0 forever; returning 1 gives every waiting multiplication a concrete number to work with.
+  - question: When is the multiplication by 2 actually performed for cells_after(2)?
+    answer: Only after cells_after(1) has returned its value, on the way back up the stack.
+    explanation: The expression 2 * cells_after(1) cannot compute until the inner call returns, so the doubling happens as the stack unwinds, not on the way down.

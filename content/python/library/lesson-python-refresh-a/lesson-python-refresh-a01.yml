@@ -1,0 +1,51 @@
+id: lesson.library.python_refresh.a01
+kind: lesson
+version: 1
+language: python
+title: Names That Point at Values
+slug: lesson-python-refresh-a01
+difficulty: easy
+concepts:
+  - python.variables
+prerequisites: []
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original explanation of assignment and rebinding written from scratch.
+body_markdown: |
+  In Python a *variable* is just a name that points at a value. The `=` sign
+  does not mean "equals" the way it does in math; it means "make this name
+  refer to that value." You can point the same name at a new value later, and
+  the old one is simply forgotten.
+
+  ```python
+  score = 10          # score now refers to 10
+  score = score + 5   # evaluate 10 + 5, then re-point score at 15
+  ```
+
+  Reading the right side first is the key habit: Python fully computes the
+  value on the right, then binds the name on the left to it.
+
+  You can also assign several names at once, which makes swapping two values a
+  one-liner with no temporary variable:
+
+  ```python
+  x, y = 1, 2
+  x, y = y, x   # the right side (2, 1) is built first, then unpacked
+  # now x is 2 and y is 1
+  ```
+checkpoints:
+  - question: After `score = 10` then `score = score + 5`, what does `score` refer to?
+    answer: "15"
+    explanation: Python computes the right side (10 + 5) first, then re-points the name `score` at the result 15.
+  - question: Is `=` the same thing as `==`?
+    answer: "No: = binds a name to a value, while == compares two values and produces True or False."
+    explanation: Assignment stores a value under a name; the comparison operator asks whether two values are equal.
+  - question: After `x, y = 1, 2` and then `x, y = y, x`, what are `x` and `y`?
+    answer: "x is 2 and y is 1"
+    explanation: The right-hand tuple (y, x) is evaluated to (2, 1) before anything is reassigned, so the two names swap cleanly.

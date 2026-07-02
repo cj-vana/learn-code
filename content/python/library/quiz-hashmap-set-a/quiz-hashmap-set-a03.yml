@@ -1,0 +1,110 @@
+id: quiz.library.hashmap_set.a03
+kind: quiz
+version: 1
+language: python
+title: Reading Counting and Set Code
+slug: quiz-hashmap-set-a03
+difficulty: medium
+concepts:
+  - patterns.hash_map_counting
+  - patterns.set_membership
+prerequisites:
+  - python.dictionaries
+  - python.sets
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.hashmap_set.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original code tracing questions and distractors created for this batch.
+quiz_type: mixed_review
+questions:
+  - id: q1
+    prompt: |
+      Trace this code:
+
+      ```python
+      counts = {}
+      for ch in "banana":
+          counts[ch] = counts.get(ch, 0) + 1
+      print(counts["a"])
+      ```
+
+      What does it print?
+    choices:
+      - "3"
+      - "2"
+      - "6"
+      - It raises a KeyError
+    correct_choice: "3"
+    explanation: |
+      The letter "a" appears at indices 1, 3, and 5 of "banana", so its running
+      count reaches 3. The get(ch, 0) default keeps the very first increment of
+      each character from failing.
+    concepts:
+      - patterns.hash_map_counting
+      - python.strings
+  - id: q2
+    prompt: |
+      A task asks you to report, for each product id, how many orders included it.
+      A teammate proposes storing the ids in a set. Why is a plain set the wrong
+      tool on its own here?
+    choices:
+      - A set discards duplicates, so it cannot report how many times each id occurred
+      - A set cannot store strings, only numbers
+      - Membership tests on a set are slower than scanning a list
+      - A set automatically sorts its members, corrupting the order of ids
+    correct_choice: A set discards duplicates, so it cannot report how many times each id occurred
+    explanation: |
+      Counting needs a value per key, which is a hash map (dict) job. A set only
+      records presence, collapsing repeats, so it answers "which ids appeared"
+      but never "how many times". Sets can hold strings and offer fast O(1)
+      membership; they simply are not order-preserving stores of counts.
+    concepts:
+      - patterns.hash_map_counting
+      - patterns.set_membership
+  - id: q3
+    prompt: |
+      Trace this code:
+
+      ```python
+      ids = [10, 20, 10, 30, 20, 10]
+      unique = set(ids)
+      print(len(unique))
+      ```
+
+      What does it print?
+    choices:
+      - "3"
+      - "6"
+      - "1"
+      - It prints the list [10, 20, 30]
+    correct_choice: "3"
+    explanation: |
+      Passing the list to set() removes duplicates, leaving the distinct values
+      10, 20, and 30. len() of that set is 3. This is the standard way to count
+      how many distinct items a collection holds.
+    concepts:
+      - patterns.set_membership
+      - python.sets
+  - id: q4
+    prompt: |
+      You must repeatedly test whether values belong to a fixed collection of n
+      allowed keys, doing the check many times inside a loop. Compared with using
+      a list for the collection, converting it to a set first mainly improves:
+    choices:
+      - Each membership test, from O(n) to average O(1)
+      - The memory used, which drops to zero
+      - The sort order, which becomes guaranteed ascending
+      - Nothing; list and set membership cost the same
+    correct_choice: Each membership test, from O(n) to average O(1)
+    explanation: |
+      A list scans element by element, so `x in my_list` is O(n); a set uses a
+      hash table and tests membership in average O(1). Across many lookups this
+      is a large win. Sets do not guarantee sort order and still consume memory.
+    concepts:
+      - patterns.set_membership
+      - concepts.big_o

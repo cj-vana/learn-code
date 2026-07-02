@@ -1,0 +1,56 @@
+id: lesson.library.recursion_backtracking.a01
+kind: lesson
+version: 1
+language: python
+title: The Two Questions Every Recursive Function Answers
+slug: lesson-recursion-backtracking-a01
+difficulty: easy
+concepts:
+  - patterns.recursion
+prerequisites:
+  - python.functions
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.recursion_backtracking.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original base-case/recursive-case framing built around a countdown-and-sum example.
+body_markdown: |
+  A *recursive* function is one that calls itself on a smaller version of the
+  same problem. To write one safely you only have to answer two questions:
+
+  1. **When do I stop?** This is the *base case* - the smallest input where the
+     answer is obvious and no more calls are needed.
+  2. **How do I shrink the problem?** This is the *recursive case* - you hand a
+     smaller input to the same function and combine its result with a little
+     work of your own.
+
+  Here is a function that adds up every whole number from `n` down to `1`:
+
+  ```python
+  def sum_to(n):
+      if n == 0:                 # base case: nothing left to add
+          return 0
+      return n + sum_to(n - 1)   # recursive case: solve a smaller n
+
+  print(sum_to(4))   # 4 + 3 + 2 + 1 + 0 = 10
+  ```
+
+  Each call peels off one number (`n`) and trusts `sum_to(n - 1)` to handle the
+  rest. Because every call moves `n` one step closer to `0`, the base case is
+  always reached. Forgetting the base case, or shrinking toward something you
+  never hit, causes the calls to stack up forever until Python raises a
+  `RecursionError`.
+checkpoints:
+  - question: In sum_to, which line is the base case and what value does it return?
+    answer: 'The line "if n == 0: return 0" - it returns 0.'
+    explanation: When n reaches 0 there is nothing left to add, so the function returns 0 without calling itself again.
+  - question: Why is it important that each recursive call uses n - 1 rather than n?
+    answer: Subtracting one moves the input closer to the base case of 0, so the recursion is guaranteed to stop.
+    explanation: If the argument never shrank toward the base case, the function would call itself endlessly and Python would raise a RecursionError.
+  - question: What does the recursive case add together to build the final answer?
+    answer: The current number n plus the result of sum_to(n - 1).
+    explanation: Each level contributes its own n and relies on the smaller call to total everything below it, so the sums combine as the calls return.

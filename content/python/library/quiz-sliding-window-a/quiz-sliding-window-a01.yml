@@ -1,0 +1,86 @@
+id: quiz.library.sliding_window.a01
+kind: quiz
+version: 1
+language: python
+title: When Does a Sliding Window Fit?
+slug: quiz-sliding-window-a01
+difficulty: easy
+concepts:
+  - patterns.sliding_window
+prerequisites:
+  - python.lists
+estimated_time_minutes: 4
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sliding_window.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original scenarios and distractors written to test recognition of contiguous-run problems.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      A weather app stores one temperature reading per hour. You must report the
+      largest total across any 6 consecutive hourly readings. Which technique is
+      the most natural fit?
+    choices:
+      - A sliding window that keeps a running sum of the current 6 hours
+      - Sorting the readings and taking the last six
+      - A hash map counting how often each temperature appears
+      - Binary search over the sorted readings
+    correct_choice: A sliding window that keeps a running sum of the current 6 hours
+    explanation: |
+      The quantity you care about is a total over a contiguous run of a fixed
+      length. That is exactly the shape a sliding window handles: keep a running
+      sum and slide it one hour at a time. Sorting destroys the order that
+      "consecutive hours" depends on.
+    concepts:
+      - patterns.sliding_window
+  - id: q2
+    prompt: |
+      You need the length of the LONGEST run of consecutive readings whose sum
+      stays at or below a given limit. What kind of window does this call for?
+    choices:
+      - A variable-size window that grows while valid and shrinks when the sum exceeds the limit
+      - A fixed-size window of a predetermined length k
+      - No window at all; just sort the readings first
+      - A window that always spans the entire list
+    correct_choice: A variable-size window that grows while valid and shrinks when the sum exceeds the limit
+    explanation: |
+      The winning length is not known ahead of time, so a fixed k does not apply.
+      You expand the right edge while the constraint holds and pull in the left
+      edge once the running sum breaks the limit.
+    concepts:
+      - patterns.sliding_window
+  - id: q3
+    prompt: |
+      Each element enters the window exactly once and leaves it exactly once as
+      the window sweeps a list of n items. What is the overall time complexity?
+    choices: ["O(n)", "O(n^2)", "O(n log n)", "O(1)"]
+    correct_choice: "O(n)"
+    explanation: |
+      Because every element is added a single time and removed a single time,
+      the total number of pointer moves is bounded by 2n, which is linear.
+    concepts:
+      - patterns.sliding_window
+      - concepts.big_o
+  - id: q4
+    prompt: |
+      Re-summing `sum(arr[i:i+k])` from scratch for every start index i is the
+      brute-force approach. How does a sliding window improve on it?
+    choices:
+      - Brute force is O(n*k); the window reuses the previous sum to reach O(n)
+      - Brute force is O(n); the window slows it down to O(n^2)
+      - Both approaches are O(1) regardless of input size
+      - Brute force is O(log n); the window is O(n log n)
+    correct_choice: Brute force is O(n*k); the window reuses the previous sum to reach O(n)
+    explanation: |
+      Recomputing each window costs up to k additions for each of the n start
+      positions, giving O(n*k). The window instead adjusts the previous total by
+      one addition and one subtraction per step, collapsing the work to O(n).
+    concepts:
+      - patterns.brute_force
+      - patterns.sliding_window
+      - concepts.big_o

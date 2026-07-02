@@ -1,0 +1,128 @@
+id: quiz.library.debugging.a01
+kind: quiz
+version: 1
+language: python
+title: Reading the Symptom, Naming the Bug
+slug: quiz-debugging-a01
+difficulty: easy
+concepts:
+  - python.debugging
+prerequisites:
+  - python.functions
+  - python.loops
+estimated_time_minutes: 5
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.debugging.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original scenarios describing observed behavior; learner matches each symptom to its root cause.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      A helper is supposed to hand back a running total, and when you run it
+      the correct number appears on the screen. Yet the caller keeps receiving
+      `None`:
+
+      ```python
+      def total_price(prices):
+          running = 0
+          for p in prices:
+              running += p
+          print(running)
+      ```
+
+      What is the root cause?
+    choices:
+      - The function prints the total but never returns it, so the caller gets None
+      - Python cannot add integers inside a for loop
+      - The variable name `running` shadows a built-in and is wiped out
+      - The loop runs one iteration too few and drops the last price
+    correct_choice: The function prints the total but never returns it, so the caller gets None
+    explanation: |
+      `print` only sends text to the console; it does not hand a value back.
+      A function with no `return` statement evaluates to `None`. Adding
+      `return running` fixes it.
+    concepts:
+      - python.debugging
+      - python.functions
+  - id: q2
+    prompt: |
+      This loop is meant to compare each item with the one after it, but it
+      crashes with `IndexError` on the very last pass:
+
+      ```python
+      for i in range(len(items)):
+          if items[i] > items[i + 1]:
+              ...
+      ```
+
+      Which description best names the bug?
+    choices:
+      - On the final index, `items[i + 1]` reaches one slot past the end of the list
+      - "`range(len(items))` is inclusive, so it counts one number too far"
+      - A list cannot be indexed with a loop variable
+      - The list must be empty for this code to run
+    correct_choice: On the final index, `items[i + 1]` reaches one slot past the end of the list
+    explanation: |
+      The last valid index is `len(items) - 1`. When `i` equals that, `i + 1`
+      is out of range. Stopping at `range(len(items) - 1)` (or pairing with
+      `zip(items, items[1:])`) avoids the overshoot.
+    concepts:
+      - python.debugging
+      - python.loops
+  - id: q3
+    prompt: |
+      A function should return the largest value in a list, but it returns
+      `0` for the input `[-5, -3, -8]`:
+
+      ```python
+      def largest(nums):
+          best = 0
+          for n in nums:
+              if n > best:
+                  best = n
+          return best
+      ```
+
+      What is the flaw?
+    choices:
+      - Seeding `best` with 0 assumes a positive result, so all-negative inputs never beat it
+      - Negative numbers cannot be compared with `>`
+      - The loop needs to run twice to catch the maximum
+      - The list has to be sorted before the maximum can be found
+    correct_choice: Seeding `best` with 0 assumes a positive result, so all-negative inputs never beat it
+    explanation: |
+      Because every element is below the starting value of 0, the `if` never
+      fires. Initialize `best` with `nums[0]` (and guard the empty case) so the
+      seed is a real candidate.
+    concepts:
+      - python.debugging
+  - id: q4
+    prompt: |
+      While filtering a list in place, some items that should be removed
+      survive:
+
+      ```python
+      for x in data:
+          if x < 0:
+              data.remove(x)
+      ```
+
+      Why do certain negatives slip through?
+    choices:
+      - Removing an item shifts later elements left, so the iterator skips the next one
+      - "`remove` deletes two elements at a time"
+      - A list cannot shrink while a program is running
+      - The loop variable silently turns into a string
+    correct_choice: Removing an item shifts later elements left, so the iterator skips the next one
+    explanation: |
+      Mutating a list while iterating over it moves the remaining items under
+      the loop's internal index. Build a new list with a comprehension
+      (`data = [x for x in data if x >= 0]`) instead.
+    concepts:
+      - python.debugging
+      - python.loops

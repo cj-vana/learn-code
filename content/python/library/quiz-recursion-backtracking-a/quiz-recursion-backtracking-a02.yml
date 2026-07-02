@@ -1,0 +1,114 @@
+id: quiz.library.recursion_backtracking.a02
+kind: quiz
+version: 1
+language: python
+title: Reading a Backtracking Search
+slug: quiz-recursion-backtracking-a02
+difficulty: medium
+concepts:
+  - patterns.backtracking
+  - patterns.recursion
+prerequisites:
+  - python.functions
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.recursion_backtracking.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original permutation-builder snippet and hand-written distractors about the choose/explore/undo rhythm; nothing copied from external material.
+quiz_type: mixed_review
+questions:
+  - id: q1
+    prompt: |
+      A backtracking routine appends a choice to a shared list, recurses to decide the
+      rest, and then removes that choice before the next iteration. What does that final
+      "undo" step accomplish?
+    choices:
+      - It restores the shared state so the next branch explores from exactly the same point as before this choice was made
+      - It permanently deletes every result collected so far
+      - It skips the base case to make the search finish sooner
+      - It converts the recursion into an ordinary loop
+    correct_choice: It restores the shared state so the next branch explores from exactly the same point as before this choice was made
+    explanation: |
+      Backtracking reuses one mutable structure across branches. Undoing the last choice
+      returns that structure to how it looked before the choice, so sibling branches are
+      not polluted by decisions made in a branch that already finished.
+    concepts:
+      - patterns.backtracking
+  - id: q2
+    prompt: |
+      Backtracking solutions usually store a copy of the current path, such as
+      results.append(path[:]), instead of appending the path list directly. Why?
+    choices:
+      - The one path list keeps mutating, so storing a reference would leave every saved result pointing at its final state
+      - Copying the list makes the whole search run in constant time
+      - Python does not allow one list to be appended inside another list
+      - The results list is only permitted to hold strings, never lists
+    correct_choice: The one path list keeps mutating, so storing a reference would leave every saved result pointing at its final state
+    explanation: |
+      There is a single path object that changes as choices are made and undone. Appending
+      it by reference would store the same object many times, and every entry would show
+      its last value. A copy freezes a snapshot of the path at the moment it was recorded.
+    concepts:
+      - patterns.backtracking
+  - id: q3
+    prompt: |
+      Consider this permutation builder:
+
+      ```python
+      def build(path, remaining, results):
+          if not remaining:
+              results.append(path[:])
+              return
+          for i in range(len(remaining)):
+              path.append(remaining[i])
+              build(path, remaining[:i] + remaining[i+1:], results)
+              path.pop()
+      ```
+
+      Which line is the base case that records one finished arrangement?
+    choices:
+      - "if not remaining: results.append(path[:])"
+      - "for i in range(len(remaining)):"
+      - "path.append(remaining[i])"
+      - "build(path, remaining[:i] + remaining[i+1:], results)"
+    correct_choice: "if not remaining: results.append(path[:])"
+    explanation: |
+      When nothing is left to place, a complete permutation has been built, so the code
+      records a copy and returns. That guard is the base case; the loop and the recursive
+      call below it are the exploring part of the search, not the stopping condition.
+    concepts:
+      - patterns.backtracking
+      - patterns.recursion
+  - id: q4
+    prompt: |
+      In that same builder, what is the effect of the path.pop() call at the end of each
+      loop iteration?
+    choices:
+      - It removes the item just appended, so the next iteration can try a different item in that position
+      - It deletes an entry from the results list
+      - It stops the recursion immediately once one permutation is found
+      - It sorts the path before the next recursive call
+    correct_choice: It removes the item just appended, so the next iteration can try a different item in that position
+    explanation: |
+      path.append then path.pop bracket each recursive call. The pop undoes the append so
+      that when the loop advances to the next index, path is back to its earlier length and
+      a fresh candidate can occupy that slot. This is the "undo" of choose, explore, undo.
+    concepts:
+      - patterns.backtracking
+  - id: q5
+    prompt: |
+      A backtracking search decides, for each of n distinct items, whether to include it
+      or leave it out, generating every subset. How many subsets does it produce?
+    choices: ["2 ** n", "n ** 2", "n", "n!"]
+    correct_choice: "2 ** n"
+    explanation: |
+      Each item carries two independent decisions, in or out, and there are n items, so the
+      choices multiply to 2 * 2 * ... * 2 = 2 ** n total subsets. That exponential count is
+      why exhaustive backtracking over subsets grows quickly as n rises.
+    concepts:
+      - patterns.backtracking
+      - concepts.big_o

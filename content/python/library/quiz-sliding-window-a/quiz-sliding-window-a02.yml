@@ -1,0 +1,112 @@
+id: quiz.library.sliding_window.a02
+kind: quiz
+version: 1
+language: python
+title: Moving the Window Correctly
+slug: quiz-sliding-window-a02
+difficulty: medium
+concepts:
+  - patterns.sliding_window
+prerequisites:
+  - python.lists
+estimated_time_minutes: 5
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sliding_window.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original mechanics questions covering running-sum updates, shrink logic, and initialization pitfalls.
+quiz_type: mixed_review
+questions:
+  - id: q1
+    prompt: |
+      A fixed window of size k currently covers indices i-k .. i-1 with running
+      total `window`. You slide it one step right so it covers i-k+1 .. i. Which
+      update keeps `window` correct in O(1)?
+    choices:
+      - "window += arr[i] - arr[i - k]"
+      - "window += arr[i] + arr[i - k]"
+      - "window = arr[i] - arr[i - k]"
+      - "window -= arr[i] - arr[i - k]"
+    correct_choice: "window += arr[i] - arr[i - k]"
+    explanation: |
+      Sliding right brings in the new element arr[i] and drops the element that
+      just fell off the left, arr[i - k]. Adding the difference of those two
+      values updates the total without rescanning the window.
+    concepts:
+      - patterns.sliding_window
+      - patterns.running_total
+  - id: q2
+    prompt: |
+      In a "longest subarray with sum at most limit" loop, you just added
+      arr[right] and now `total` exceeds `limit`. What is the correct way to
+      restore a valid window?
+    choices:
+      - Subtract arr[left] from total and advance left until total <= limit
+      - Reset total to 0 and keep moving right
+      - Subtract arr[right] and stop the loop
+      - Advance right again without touching total
+    correct_choice: Subtract arr[left] from total and advance left until total <= limit
+    explanation: |
+      Shrinking from the left removes the oldest elements one at a time,
+      subtracting each from the running total, until the window satisfies the
+      constraint again. Resetting to 0 would discard valid elements still inside.
+    concepts:
+      - patterns.sliding_window
+      - patterns.running_total
+  - id: q3
+    prompt: |
+      You want the maximum sum over any fixed window of size k in a list that may
+      contain negative numbers. How should you initialize `best` before the slide
+      loop?
+    choices:
+      - "best = sum(arr[:k])"
+      - "best = 0"
+      - "best = arr[0]"
+      - "best = float('inf')"
+    correct_choice: "best = sum(arr[:k])"
+    explanation: |
+      Seeding with the first full window is always a legitimate candidate answer.
+      Starting at 0 wrongly beats every window when all values are negative,
+      arr[0] is not a full window, and +inf can never be exceeded by a max.
+    concepts:
+      - patterns.sliding_window
+  - id: q4
+    prompt: |
+      After summing the first window into `window`, which loop header slides a
+      fixed window of size k across a list `arr` of length n exactly once?
+    choices:
+      - "for i in range(k, len(arr)):"
+      - "for i in range(0, len(arr)):"
+      - "for i in range(k, len(arr) - k):"
+      - "for i in range(len(arr) + 1):"
+    correct_choice: "for i in range(k, len(arr)):"
+    explanation: |
+      The first window already covers indices 0 .. k-1, so the slide should start
+      at index k and continue to the last index. Starting at 0 would double-count
+      the first window, and stopping at len(arr) - k skips the final positions.
+    concepts:
+      - patterns.sliding_window
+      - python.loops
+  - id: q5
+    prompt: |
+      In a "longest substring without repeating characters" window, you keep a
+      dict `counts` mapping each character to how many times it appears inside the
+      window. After adding the new right-hand character, which condition signals a
+      duplicate that must be removed by shrinking from the left?
+    choices:
+      - "counts[ch] > 1"
+      - "counts[ch] == 0"
+      - "len(counts) == 1"
+      - "ch not in counts"
+    correct_choice: "counts[ch] > 1"
+    explanation: |
+      A count above 1 means the character now appears twice inside the window, so
+      the window holds a repeat. You advance the left edge (decrementing counts)
+      until that character's count drops back to 1.
+    concepts:
+      - patterns.sliding_window
+      - patterns.hash_map_counting
+      - python.strings

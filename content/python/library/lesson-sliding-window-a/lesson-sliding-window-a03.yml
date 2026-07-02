@@ -1,0 +1,62 @@
+id: lesson.library.sliding_window.a03
+kind: lesson
+version: 1
+language: python
+title: From Recomputing to Sliding
+slug: lesson-sliding-window-a03
+difficulty: easy
+concepts:
+  - patterns.sliding_window
+prerequisites:
+  - python.lists
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sliding_window.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original before-and-after comparison motivating the sliding window as a speedup over repeated recomputation.
+body_markdown: |
+  The sliding window is really an optimisation you reach for after a slower first
+  idea. Suppose you want the highest average of any `k` consecutive scores. The
+  obvious approach recomputes each window from scratch:
+
+  ```python
+  def best_average_slow(scores, k):
+      best = None
+      for start in range(len(scores) - k + 1):
+          block = sum(scores[start:start + k])   # re-adds k items every time
+          if best is None or block > best:
+              best = block
+      return best / k
+  ```
+
+  That `sum(...)` walks `k` items for every start position, giving `O(n*k)` work.
+  Neighbouring blocks share all but two items, so the fix is to carry the total
+  forward instead of rebuilding it:
+
+  ```python
+  def best_average_fast(scores, k):
+      current = sum(scores[:k])
+      best = current
+      for i in range(k, len(scores)):
+          current += scores[i] - scores[i - k]
+          best = max(best, current)
+      return best / k
+  ```
+
+  Same answer, but now each step is constant work and the whole pass is `O(n)`.
+  Spotting overlapping repeated work is the signal that a window can replace a
+  nested recomputation.
+checkpoints:
+  - question: What is the time complexity of the slow version that calls sum on each window?
+    answer: "O(n*k)"
+    explanation: There are about n window starts and each sum walks k items, so the work multiplies.
+  - question: What repeated work does the fast version avoid?
+    answer: Re-adding the k items of each window from scratch; it reuses the previous total instead.
+    explanation: Consecutive windows overlap in k-2 items, so only the entering and leaving values need adjusting.
+  - question: Both functions divide by k at the end. Why track the window total rather than the average while scanning?
+    answer: The total updates with a single add and subtract, and dividing once at the end gives the same best average.
+    explanation: Comparing totals is enough to find the max because every window has the same width k.

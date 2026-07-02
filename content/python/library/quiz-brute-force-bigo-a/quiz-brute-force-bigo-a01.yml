@@ -1,0 +1,84 @@
+id: quiz.library.brute_force_bigo.a01
+kind: quiz
+version: 1
+language: python
+title: Spotting the Check-Everything Approach
+slug: quiz-brute-force-bigo-a01
+difficulty: easy
+concepts:
+  - patterns.brute_force
+  - concepts.big_o
+prerequisites:
+  - python.loops
+  - python.lists
+estimated_time_minutes: 4
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.brute_force_bigo.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original scenarios (exam scores, warehouse shelves, keypad codes) and hand-written distractors; nothing adapted from any external problem set.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      You are handed an unsorted list of exam scores and must report the single
+      highest score. Which plan is the plain brute-force approach?
+    choices:
+      - Walk through every score once, keeping track of the largest value seen so far
+      - Assume the final element is always the maximum and return it
+      - Return the score at the middle index without looking at the rest
+      - Pick five scores at random and return the biggest of those
+    correct_choice: Walk through every score once, keeping track of the largest value seen so far
+    explanation: |
+      Brute force means examining every candidate rather than using a shortcut.
+      Scanning all n scores and remembering the running maximum is guaranteed to
+      find the true highest value. The other options skip elements and can miss it.
+    concepts:
+      - patterns.brute_force
+  - id: q2
+    prompt: |
+      To decide whether any two products on a shelf share the same weight, you
+      compare every product against every other product using two nested loops.
+      What is the time complexity of that comparison for n products?
+    choices: ["O(n^2)", "O(n)", "O(log n)", "O(1)"]
+    correct_choice: "O(n^2)"
+    explanation: |
+      Each of the n products is paired against roughly n others, so the number of
+      comparisons grows with n times n. That quadratic growth is the signature of
+      a nested-loop, all-pairs brute-force scan.
+    concepts:
+      - patterns.brute_force
+      - concepts.big_o
+  - id: q3
+    prompt: |
+      A brute-force routine tries every possible 4-digit keypad code, one after
+      another, until the lock opens. If there are N possible codes, how many does
+      it examine in the worst case?
+    choices: ["N", "1", "log N", "N^2"]
+    correct_choice: "N"
+    explanation: |
+      In the worst case the correct code is the last one tried (or none matches
+      until the final attempt), so the routine works through all N candidates.
+      Exhaustively trying every option is exactly what brute force does.
+    concepts:
+      - patterns.brute_force
+      - concepts.big_o
+  - id: q4
+    prompt: |
+      Even when you suspect a cleverer method exists, why is it still worth
+      writing the brute-force version first?
+    choices:
+      - It is simple and obviously correct, giving a trustworthy baseline to compare against
+      - It is guaranteed to run faster than every other possible approach
+      - It always uses the smallest amount of memory in every situation
+      - Python requires a brute-force pass before you may use a list
+    correct_choice: It is simple and obviously correct, giving a trustworthy baseline to compare against
+    explanation: |
+      A brute-force solution trades speed for certainty. Because it is easy to
+      reason about, you can trust its answers and later check a faster method
+      against it. It is not automatically the fastest or most memory-efficient.
+    concepts:
+      - patterns.brute_force

@@ -1,0 +1,84 @@
+id: quiz.library.two_pointers.a01
+kind: quiz
+version: 1
+language: python
+title: When Does Two Pointers Fit?
+slug: quiz-two-pointers-a01
+difficulty: easy
+concepts:
+  - patterns.two_pointers
+prerequisites:
+  - python.lists
+estimated_time_minutes: 5
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.two_pointers.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pattern-recognition prompts and distractors about choosing a two-pointer approach.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      You are asked to reverse a list in place, using no extra list.
+      Which pointer setup fits this task best?
+    choices:
+      - Put one pointer at the front and one at the back, swap them, then step both toward the middle
+      - Put both pointers at the front and advance only the faster one
+      - Compare every pair of positions with two nested loops
+      - Copy the values into a brand new list built back to front
+    correct_choice: Put one pointer at the front and one at the back, swap them, then step both toward the middle
+    explanation: |
+      Reversing in place means exchanging the first item with the last, the second with
+      the second-to-last, and so on. Two pointers converging from the ends do exactly that
+      in a single O(n) pass with no additional list.
+    concepts:
+      - patterns.two_pointers
+  - id: q2
+    prompt: |
+      A converging two-pointer scan looks for two values that add up to a target.
+      Why does this technique require the list to be sorted first?
+    choices:
+      - Because the sorted order tells you which pointer to move when the current sum is too small or too large
+      - Because unsorted lists cannot be indexed by position
+      - Because two pointers only work on lists of numbers
+      - Because Python refuses to slice a list that is not sorted
+    correct_choice: Because the sorted order tells you which pointer to move when the current sum is too small or too large
+    explanation: |
+      On a sorted list, if the sum is below the target you move the left pointer right to
+      grow it, and if the sum is above the target you move the right pointer left to shrink
+      it. That decision rule only works because the values increase from left to right.
+    concepts:
+      - patterns.two_pointers
+  - id: q3
+    prompt: Which of these tasks is the WORST fit for a two-pointer technique?
+    choices:
+      - Counting how many times each distinct word appears in a paragraph
+      - Checking whether a word reads the same forward and backward
+      - Merging two already-sorted lists into one sorted list
+      - Removing adjacent duplicates from a sorted list in place
+    correct_choice: Counting how many times each distinct word appears in a paragraph
+    explanation: |
+      Tallying occurrences of each word is a counting job best handled by a dictionary,
+      not by two positional pointers. The other three tasks all rely on scanning from one
+      or both ends, which is exactly where two pointers shine.
+    concepts:
+      - patterns.two_pointers
+  - id: q4
+    prompt: |
+      You must shift every zero in a list to the end while keeping the non-zero
+      values in their original order. Which arrangement matches the job?
+    choices:
+      - A slow write pointer marking the next non-zero slot and a fast read pointer scanning ahead, both moving forward
+      - Two pointers starting at opposite ends and moving inward
+      - One pointer that loops over the list twice from the start
+      - Binary search jumps that halve the search range each step
+    correct_choice: A slow write pointer marking the next non-zero slot and a fast read pointer scanning ahead, both moving forward
+    explanation: |
+      This is the same-direction (read/write) variant. The read pointer visits every value,
+      and whenever it finds a non-zero it copies that value down to the write slot and
+      advances write. Order is preserved and no extra list is needed.
+    concepts:
+      - patterns.two_pointers

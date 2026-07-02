@@ -1,0 +1,86 @@
+id: quiz.library.python_refresh.a04
+kind: quiz
+version: 1
+language: python
+title: Defining and Calling Functions
+slug: quiz-python-refresh-a04
+difficulty: medium
+concepts:
+  - python.functions
+  - python.variables
+prerequisites: []
+estimated_time_minutes: 5
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original questions on return values, default arguments, and scope.
+quiz_type: mixed_review
+questions:
+  - id: q1
+    prompt: |
+      If a function finishes without ever reaching a `return` statement, what does
+      calling it produce?
+    choices: ["None", "0", "an empty string", "a TypeError"]
+    correct_choice: "None"
+    explanation: |
+      A function with no executed return implicitly returns None.
+    concepts:
+      - python.functions
+  - id: q2
+    prompt: |
+      Given this definition, which call runs correctly AND uses the default greeting?
+
+      ```python
+      def greet(name, greeting="Hi"):
+          return greeting + ", " + name
+      ```
+    choices:
+      - greet("Sam")
+      - greet()
+      - greet("Sam", "Yo")
+      - greet("Sam", "Hi", "extra")
+    correct_choice: greet("Sam")
+    explanation: |
+      name is required and greeting defaults to "Hi", so greet("Sam") supplies name
+      and keeps the default. greet() omits name, greet("Sam", "Yo") overrides the
+      default, and the last call passes too many arguments.
+    concepts:
+      - python.functions
+  - id: q3
+    prompt: |
+      What does this print?
+
+      ```python
+      def add(a, b):
+          return a + b
+
+      result = add(2, 3)
+      print(result * 2)
+      ```
+    choices: ["10", "5", "23", "6"]
+    correct_choice: "10"
+    explanation: |
+      add(2, 3) returns 5, and the print evaluates 5 * 2, which is 10.
+    concepts:
+      - python.functions
+      - python.operators
+  - id: q4
+    prompt: |
+      A variable that is assigned for the first time inside a function body is, by
+      default, what?
+    choices:
+      - Local to that function and gone once it returns
+      - Global to the whole module
+      - Shared back to the caller automatically
+      - Automatically returned when the function ends
+    correct_choice: Local to that function and gone once it returns
+    explanation: |
+      Names assigned inside a function are local unless declared global. They live
+      only while the function runs and disappear when it returns.
+    concepts:
+      - python.functions
+      - python.variables

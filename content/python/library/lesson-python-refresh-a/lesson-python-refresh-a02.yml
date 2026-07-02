@@ -1,0 +1,52 @@
+id: lesson.library.python_refresh.a02
+kind: lesson
+version: 1
+language: python
+title: Knowing a Value's Type
+slug: lesson-python-refresh-a02
+difficulty: easy
+concepts:
+  - python.types
+  - python.variables
+prerequisites: []
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original walkthrough of Python's core built-in types and type().
+body_markdown: |
+  Every value in Python has a *type* that decides what you can do with it.
+  You do not declare types up front; each value simply knows its own. The four
+  types you meet first are whole numbers (`int`), decimals (`float`), text
+  (`str`), and truth values (`bool`).
+
+  ```python
+  count = 7          # int
+  price = 4.5        # float
+  name = "Ada"       # str
+  is_open = True     # bool
+  ```
+
+  When you are unsure, ask with the built-in `type()`:
+
+  ```python
+  print(type(price))   # <class 'float'>
+  print(type(name))    # <class 'str'>
+  ```
+
+  One surprise worth memorizing: the `/` operator always hands back a `float`,
+  even when the numbers divide evenly. So `10 / 2` is `5.0`, not `5`.
+checkpoints:
+  - question: What type does `type(4.5)` report?
+    answer: "float (it prints <class 'float'>)"
+    explanation: A literal written with a decimal point is a floating-point number, so its type is float.
+  - question: What is the value and type of `10 / 2`?
+    answer: "5.0, which is a float"
+    explanation: The `/` operator performs true division and always produces a float, so an even division still yields 5.0 rather than the int 5.
+  - question: Which built-in type holds only the two values True and False?
+    answer: bool
+    explanation: The boolean type `bool` represents truth values and has exactly two of them, True and False.

@@ -1,0 +1,100 @@
+id: quiz.library.debugging.a02
+kind: quiz
+version: 1
+language: python
+title: Which Error, and Why
+slug: quiz-debugging-a02
+difficulty: easy
+concepts:
+  - python.debugging
+prerequisites:
+  - python.functions
+estimated_time_minutes: 5
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.debugging.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original snippets, each engineered to trigger one specific exception the learner must identify.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: |
+      What happens when Python reads this line?
+
+      ```python
+      if score = 10:
+          print("perfect")
+      ```
+    choices:
+      - SyntaxError, because `=` assigns and a condition needs `==` to compare
+      - NameError, because `score` has not been defined yet
+      - TypeError, because you cannot compare an integer
+      - Nothing; it quietly sets `score` to 10 and continues
+    correct_choice: SyntaxError, because `=` assigns and a condition needs `==` to compare
+    explanation: |
+      A single `=` is assignment, which is not allowed inside an `if`
+      condition, so Python refuses to run the file at all. Use `==` for
+      equality checks.
+    concepts:
+      - python.debugging
+  - id: q2
+    prompt: |
+      `letters` holds `['a', 'b', 'c']`. What does this line do?
+
+      ```python
+      print(letters[len(letters)])
+      ```
+    choices:
+      - Raises IndexError, because valid indices run from 0 to len - 1
+      - Prints `c`, the final element
+      - Raises KeyError, because lists are looked up by key
+      - Raises TypeError, because `len` returns text
+    correct_choice: Raises IndexError, because valid indices run from 0 to len - 1
+    explanation: |
+      For a 3-item list the indices are 0, 1, and 2, so `letters[3]` is out of
+      bounds. The last element is `letters[len(letters) - 1]` or simply
+      `letters[-1]`.
+    concepts:
+      - python.debugging
+  - id: q3
+    prompt: |
+      What is the result of running this expression?
+
+      ```python
+      message = "Score: " + 100
+      ```
+    choices:
+      - TypeError, because a string and an integer cannot be joined with `+`
+      - 'It builds the string `"Score: 100"`'
+      - ValueError, because 100 is not a valid string
+      - SyntaxError, because `+` is not allowed on strings
+    correct_choice: TypeError, because a string and an integer cannot be joined with `+`
+    explanation: |
+      `+` needs both operands to be the same kind. Convert the number first
+      with `str(100)`, or use an f-string like `f"Score: {100}"`.
+    concepts:
+      - python.debugging
+  - id: q4
+    prompt: |
+      A beginner writes this loop. What stops it from running?
+
+      ```python
+      for i in range(3)
+          print(i)
+      ```
+    choices:
+      - SyntaxError, because the `for` header is missing its trailing colon
+      - IndentationError, because the print is indented
+      - NameError, because `range` is undefined
+      - It runs and prints 0, 1, 2
+    correct_choice: SyntaxError, because the `for` header is missing its trailing colon
+    explanation: |
+      Compound statements such as `for`, `if`, `while`, and `def` must end
+      their header line with a colon before the indented body. Add `:` after
+      `range(3)`.
+    concepts:
+      - python.debugging
+      - python.loops

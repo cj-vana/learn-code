@@ -1,0 +1,50 @@
+id: lesson.library.python_refresh.a03
+kind: lesson
+version: 1
+language: python
+title: Two Ways to Divide
+slug: lesson-python-refresh-a03
+difficulty: easy
+concepts:
+  - python.operators
+  - python.types
+prerequisites: []
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original explanation contrasting true division, floor division, and modulo.
+body_markdown: |
+  Python gives you two different division operators, and mixing them up is a
+  common source of bugs. Plain `/` is *true division* and returns a float.
+  Double-slash `//` is *floor division*: it throws away the fractional part and
+  keeps the whole-number quotient. The partner of `//` is `%`, the *modulo*
+  operator, which gives you what is left over.
+
+  ```python
+  17 / 5    # 3.4   true division, a float
+  17 // 5   # 3     floor division, how many whole 5s fit
+  17 % 5    # 2     modulo, the remainder
+  ```
+
+  Floor division and modulo always agree: `(17 // 5) * 5 + (17 % 5)` rebuilds
+  the original `17`. A handy use of `%` is testing evenness, since a number is
+  even exactly when `n % 2` is `0`.
+
+  ```python
+  2 ** 3    # 8, exponentiation (2 raised to the 3rd power)
+  ```
+checkpoints:
+  - question: What does `17 // 5` evaluate to?
+    answer: "3"
+    explanation: Floor division keeps only the whole-number quotient, and five goes into seventeen three whole times.
+  - question: What does `17 % 5` evaluate to?
+    answer: "2"
+    explanation: Modulo returns the remainder after removing the three whole fives (15) from 17, leaving 2.
+  - question: How can you check whether an integer `n` is even?
+    answer: "Check that n % 2 == 0"
+    explanation: An even number divides by two with no remainder, so `n % 2` is 0 exactly when n is even.

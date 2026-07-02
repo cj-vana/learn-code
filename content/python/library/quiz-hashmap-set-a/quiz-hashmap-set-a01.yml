@@ -1,0 +1,86 @@
+id: quiz.library.hashmap_set.a01
+kind: quiz
+version: 1
+language: python
+title: Reaching for a Counter or a Set
+slug: quiz-hashmap-set-a01
+difficulty: easy
+concepts:
+  - patterns.hash_map_counting
+  - patterns.set_membership
+prerequisites:
+  - python.dictionaries
+  - python.sets
+estimated_time_minutes: 5
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.hashmap_set.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original scenarios and distractors written for this batch; no external problem text reused.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      You are scanning a stream of scanned ticket codes one time, in order, and
+      must report the first code that you have already seen earlier in the stream.
+      Which data structure fits this "have I met this before?" check best?
+    choices:
+      - A set of codes seen so far, testing membership as you go
+      - A sorted list that you re-sort after every code
+      - A second copy of the list you scan fully for each code
+      - A single integer counter of how many codes you have read
+    correct_choice: A set of codes seen so far, testing membership as you go
+    explanation: |
+      A set answers "has this exact value appeared yet?" in average O(1) time.
+      You add each code after checking it, so the first code already present in
+      the set is your answer. Re-sorting or re-scanning would push the work to
+      O(n log n) or O(n^2) for no benefit.
+    concepts:
+      - patterns.set_membership
+  - id: q2
+    prompt: |
+      A log lists the country code of every visitor to a site. You need to know
+      how many visits came from each country. Which approach captures that?
+    choices:
+      - Build a dict mapping each country code to its running visit count
+      - Store the country codes in a set and report its length
+      - Sort the codes and return only the middle one
+      - Keep two pointers moving inward from both ends of the log
+    correct_choice: Build a dict mapping each country code to its running visit count
+    explanation: |
+      Counts per key call for a hash map (dict). A set would collapse duplicates
+      and throw away the very counts you need, so it can only tell you how many
+      distinct countries appeared, not how often each one did.
+    concepts:
+      - patterns.hash_map_counting
+  - id: q3
+    prompt: |
+      Given two guest lists, you must find the names that appear on both. Which
+      plan is the most direct and efficient?
+    choices:
+      - Convert both lists to sets and take their intersection
+      - Concatenate the lists and count total length
+      - Loop over one list and, for each name, scan the whole other list
+      - Sort both lists and return the last element of each
+    correct_choice: Convert both lists to sets and take their intersection
+    explanation: |
+      Set intersection (set_a & set_b) reports shared members in about O(n)
+      total. The nested-scan option also works but is O(n*m); it is not the most
+      efficient choice here.
+    concepts:
+      - patterns.set_membership
+  - id: q4
+    prompt: |
+      What is the overall time complexity of building a frequency dict by looping
+      once over a list of n items and updating a count for each?
+    choices: ["O(n)", "O(n log n)", "O(n^2)", "O(1)"]
+    correct_choice: "O(n)"
+    explanation: |
+      Each of the n items triggers one average-O(1) dict update, so the total
+      work grows linearly with n.
+    concepts:
+      - patterns.hash_map_counting
+      - concepts.big_o

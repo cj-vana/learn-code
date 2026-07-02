@@ -1,0 +1,53 @@
+id: lesson.library.hashmap_set.a02
+kind: lesson
+version: 1
+language: python
+title: Fast Membership Tests With Sets
+slug: lesson-hashmap-set-a02
+difficulty: easy
+concepts:
+  - patterns.set_membership
+prerequisites:
+  - python.sets
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.hashmap_set.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original explanation and worked examples written from scratch.
+body_markdown: |
+  Sometimes you only care whether a value is present, not how many times
+  it appears. A `set` answers that question quickly. Checking `x in a_list`
+  scans element by element and costs O(n), but checking `x in a_set` uses
+  hashing and is O(1) on average no matter how big the set is.
+
+  A common pattern is to load the values you want to recognize into a set
+  once, then test many candidates against it:
+
+  ```python
+  def keep_known(words, vocabulary):
+      allowed = set(vocabulary)      # build once
+      return [w for w in words if w in allowed]
+
+  vocab = ["cat", "dog", "fish"]
+  print(keep_known(["dog", "ant", "cat"], vocab))
+  # ['dog', 'cat']
+  ```
+
+  Building the set is O(m) for `m` allowed words, and every later lookup is
+  average O(1). Sets also drop duplicates automatically, so `set(vocabulary)`
+  doubles as a way to deduplicate. The main trade-off is that a set does not
+  remember order or how often an item occurred, only whether it is there.
+checkpoints:
+  - question: What is the average time to evaluate x in a_set compared with x in a_list?
+    answer: "Set membership is average O(1), while list membership is O(n)."
+    explanation: A set hashes the value to find it directly, whereas a list may have to scan every element.
+  - question: Besides fast lookups, what does calling set(vocabulary) do to duplicate entries?
+    answer: It removes them, keeping only one copy of each distinct value.
+    explanation: A set stores each value at most once, so building a set from a list deduplicates it.
+  - question: What information does a set discard that a counting dictionary would keep?
+    answer: How many times each value occurred (and any ordering); a set only records presence.
+    explanation: Membership answers yes or no, so use a dictionary tally when you also need frequencies.

@@ -1,0 +1,57 @@
+id: lesson.library.stack_queue_bfs.a02
+kind: lesson
+version: 1
+language: python
+title: Queues - First In, First Out
+slug: lesson-stack-queue-bfs-a02
+difficulty: easy
+concepts:
+  - patterns.queue_bfs
+prerequisites:
+  - python.lists
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.stack_queue_bfs.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original explanation contrasting a queue with a stack and motivating collections.deque with a ticket-line framing.
+body_markdown: |
+  A *queue* is a line, like people waiting for a ticket window. Whoever arrives
+  first gets served first, so a queue is **FIFO**: first in, first out. This is
+  the opposite of a stack, where the *newest* item leaves first.
+
+  You add to the back of the line and remove from the front. A Python list can
+  add to the back cheaply with `append`, but removing from the front with
+  `pop(0)` forces every remaining item to shift left one spot, which is slow,
+  `"O(n)"`. Instead, reach for `collections.deque`, which removes from the front
+  in constant time with `popleft`.
+
+  ```python
+  from collections import deque
+
+  line = deque()
+  line.append("Ada")    # joins the back
+  line.append("Grace")  # joins the back
+  line.append("Linus")  # joins the back
+
+  first = line.popleft()  # leaves the front -> "Ada"
+  print(first)            # served first because they arrived first
+  print(line)             # deque(['Grace', 'Linus'])
+  ```
+
+  With a `deque`, both `append` (add to back) and `popleft` (remove from front)
+  run in `"O(1)"`. That efficiency matters a lot in the next idea, breadth-first
+  search, which processes items strictly in the order they were discovered.
+checkpoints:
+  - question: A queue is FIFO. If you enqueue "Ada", then "Grace", then "Linus", who is dequeued first?
+    answer: '"Ada"'
+    explanation: First in, first out means the earliest arrival, "Ada", is served before the others.
+  - question: Why is collections.deque preferred over a plain list when you need a queue?
+    answer: deque.popleft() removes from the front in O(1), while list.pop(0) is O(n) because it shifts every other element.
+    explanation: Removing from the front of a list forces all remaining items to slide left, so a deque avoids that repeated shifting.
+  - question: How does a queue's removal order differ from a stack's?
+    answer: A queue removes the oldest item first (FIFO); a stack removes the newest item first (LIFO).
+    explanation: They serve opposite ends over time, so choosing the right one depends on whether you want oldest-first or newest-first order.

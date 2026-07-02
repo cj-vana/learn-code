@@ -1,0 +1,58 @@
+id: lesson.library.dicts_sets_tuples.a05
+kind: lesson
+version: 1
+language: python
+title: Building Dicts and Sets with Comprehensions
+slug: lesson-dicts-sets-tuples-a05
+difficulty: medium
+concepts:
+  - python.comprehensions
+  - python.dictionaries
+prerequisites:
+  - python.loops
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original inventory example authored to teach dict and set comprehensions with filtering.
+body_markdown: |
+  A comprehension builds a collection in one expression. Swap the square
+  brackets of a list comprehension for curly braces with a `key: value`
+  pair and you get a *dict comprehension*:
+
+  ```python
+  squares = {n: n * n for n in range(4)}
+  print(squares)  # {0: 0, 1: 1, 2: 4, 3: 9}
+  ```
+
+  Use curly braces with a single expression (no colon) and you build a
+  *set*, which quietly discards duplicates:
+
+  ```python
+  letters = {c for c in "banana"}
+  print(letters)  # {'b', 'a', 'n'}
+  ```
+
+  Add an `if` clause to keep only the items you want. Here we map each
+  in-stock product to its price and skip anything with zero quantity:
+
+  ```python
+  stock = {"pen": 3, "eraser": 0, "ruler": 5}
+  price = {"pen": 2, "eraser": 1, "ruler": 4}
+  available = {name: price[name] for name, qty in stock.items() if qty > 0}
+  print(available)  # {'pen': 2, 'ruler': 4}
+  ```
+checkpoints:
+  - question: 'What does `{n: n * n for n in range(3)}` produce?'
+    answer: "{0: 0, 1: 1, 2: 4}"
+    explanation: Each number becomes a key mapped to its square for n equal to 0, 1, and 2.
+  - question: What kind of object does `{c for c in "aab"}` create, and what does it contain?
+    answer: A set containing the unique characters, so {'a', 'b'}.
+    explanation: Curly braces with a single expression build a set, and sets drop the duplicate 'a'.
+  - question: How do you keep only entries whose value is even in a dict comprehension over pairs of (k, v)?
+    answer: Add an `if v % 2 == 0` clause at the end of the comprehension.
+    explanation: The trailing if filters each pair so only even-valued entries are placed in the result.

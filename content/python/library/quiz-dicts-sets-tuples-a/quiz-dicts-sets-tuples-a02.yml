@@ -1,0 +1,95 @@
+id: quiz.library.dicts_sets_tuples.a02
+kind: quiz
+version: 1
+language: python
+title: Collection Syntax and Methods
+slug: quiz-dicts-sets-tuples-a02
+difficulty: easy
+concepts:
+  - python.dictionaries
+  - python.sets
+  - python.tuples
+prerequisites:
+  - python.functions
+estimated_time_minutes: 5
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax-recall questions about dict, set, and tuple literals and methods.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: Which expression creates an empty set?
+    choices:
+      - "set()"
+      - "{}"
+      - "()"
+      - "[]"
+    correct_choice: "set()"
+    explanation: |
+      An empty pair of braces {} builds an empty dict, () builds an empty tuple,
+      and [] builds an empty list. Only the set() constructor gives you an empty
+      set, because there is no braces-only literal for it.
+    concepts:
+      - python.sets
+  - id: q2
+    prompt: |
+      Given prices = {"apple": 3}, which call returns 0 when a key is missing
+      instead of raising KeyError?
+    choices:
+      - "prices.get(\"banana\", 0)"
+      - "prices[\"banana\"]"
+      - "prices.fetch(\"banana\", 0)"
+      - "prices.value(\"banana\")"
+    correct_choice: "prices.get(\"banana\", 0)"
+    explanation: |
+      dict.get(key, default) returns the default when the key is absent, while
+      square-bracket indexing raises KeyError. There are no .fetch or .value
+      methods on a dict.
+    concepts:
+      - python.dictionaries
+  - id: q3
+    prompt: "What does the trailing comma do in the expression x = (5,) ?"
+    choices:
+      - It makes x a one-element tuple containing 5
+      - It makes x the plain integer 5 wrapped in parentheses
+      - It raises a SyntaxError
+      - It makes x a set containing 5
+    correct_choice: It makes x a one-element tuple containing 5
+    explanation: |
+      Parentheses alone do not create a tuple; the comma does. So (5) is just the
+      integer 5, but (5,) is a tuple of length one. Braces would be needed for a
+      set.
+    concepts:
+      - python.tuples
+  - id: q4
+    prompt: Which line adds the value 7 to an existing set named seen?
+    choices:
+      - "seen.add(7)"
+      - "seen.append(7)"
+      - "seen.push(7)"
+      - "seen.insert(7)"
+    correct_choice: "seen.add(7)"
+    explanation: |
+      Sets grow with .add(). The .append() and .insert() methods belong to lists,
+      and .push() is not a Python method at all.
+    concepts:
+      - python.sets
+  - id: q5
+    prompt: "Given d = {\"a\": 1, \"b\": 2}, what does list(d) produce?"
+    choices:
+      - "['a', 'b']"
+      - "[1, 2]"
+      - "[('a', 1), ('b', 2)]"
+      - "[{'a': 1}, {'b': 2}]"
+    correct_choice: "['a', 'b']"
+    explanation: |
+      Iterating a dict (which is what list() does here) yields its keys, so you
+      get ['a', 'b']. Use d.values() for the values and d.items() for the
+      key/value pairs.
+    concepts:
+      - python.dictionaries

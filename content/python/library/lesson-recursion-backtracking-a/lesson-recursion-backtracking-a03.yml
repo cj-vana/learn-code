@@ -1,0 +1,69 @@
+id: lesson.library.recursion_backtracking.a03
+kind: lesson
+version: 1
+language: python
+title: Choose, Explore, Undo - The Backtracking Loop
+slug: lesson-recursion-backtracking-a03
+difficulty: medium
+concepts:
+  - patterns.backtracking
+  - patterns.recursion
+prerequisites:
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.recursion_backtracking.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original choose/explore/undo explanation illustrated by listing every include-or-skip combination of add-ons.
+body_markdown: |
+  *Backtracking* explores every combination of choices by making one decision at
+  a time, recursing to decide the rest, and then **undoing** the decision so the
+  next branch starts clean. The rhythm is always the same: choose, explore, undo.
+
+  Imagine a sandwich with a short list of optional add-ons. For each add-on you
+  make one of two decisions - skip it or take it - and you want every possible
+  combination:
+
+  ```python
+  def all_combos(options):
+      results = []
+      picked = []
+
+      def decide(i):
+          if i == len(options):        # every add-on has been decided
+              results.append(picked.copy())
+              return
+          decide(i + 1)                # branch 1: skip options[i]
+          picked.append(options[i])    # choose options[i]
+          decide(i + 1)                # branch 2: explore with it taken
+          picked.pop()                 # undo, so the next branch is clean
+
+      decide(0)
+      return results
+
+  print(all_combos(["cheese", "onion"]))
+  # [[], ['onion'], ['cheese'], ['cheese', 'onion']]
+  ```
+
+  The `picked.pop()` is the heart of backtracking: it removes the add-on you just
+  tried so the shared `picked` list returns to exactly how it looked before this
+  call. Copying `picked` when you record a result matters too - without `.copy()`
+  every stored combination would point at the same list, which keeps changing.
+  With `n` add-ons there are `2` decisions each, giving `2 ** n` combinations.
+checkpoints:
+  - question: What is the purpose of the picked.pop() call after the second recursive branch?
+    answer: It undoes the most recent choice so the shared picked list is restored before the function returns to its caller.
+    explanation: This is the backtracking step - removing the last add-on lets the next branch explore from a clean state instead of inheriting stale choices.
+  - question: Why is picked.copy() used when appending to results instead of appending picked directly?
+    answer: Because picked is one shared list that keeps changing; a copy snapshots the current combination so later edits do not alter the stored result.
+    explanation: Appending picked itself would store a reference, so every saved combination would end up showing the final state of picked rather than the moment it was recorded.
+  - question: For a list of 3 add-ons, how many combinations will all_combos produce?
+    answer: "8"
+    explanation: Each add-on has 2 independent decisions (skip or take), so the total is 2 ** 3, which is 8.
+  - question: What condition acts as the base case that stops the recursion?
+    answer: The check "if i == len(options)", meaning every add-on has been decided.
+    explanation: Once the index reaches the end of the list there are no more choices to make, so the current combination is recorded and that branch returns.

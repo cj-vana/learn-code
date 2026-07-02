@@ -1,0 +1,90 @@
+id: quiz.library.stack_queue_bfs.a01
+kind: quiz
+version: 1
+language: python
+title: Stack, Queue, or BFS - Picking the Right Tool
+slug: quiz-stack-queue-bfs-a01
+difficulty: easy
+concepts:
+  - patterns.stack
+  - patterns.queue_bfs
+prerequisites:
+  - python.lists
+estimated_time_minutes: 5
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.stack_queue_bfs.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original scenario prompts and distractors written for this batch; no external problem text reused.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      You are reading a line of code full of round, square, and curly brackets and
+      must confirm that every closing bracket matches the MOST RECENTLY opened one
+      of the same kind. Which structure naturally tracks "the most recent still-open
+      bracket"?
+    choices:
+      - A stack, pushing each opener and popping when a matching closer appears
+      - A queue that serves the oldest opener first
+      - A single integer counter of how many brackets you have seen
+      - A sorted list of every bracket in the line
+    correct_choice: A stack, pushing each opener and popping when a matching closer appears
+    explanation: |
+      Matching the most recent unmatched opener is a last-in, first-out job, which
+      is exactly what a stack does. A lone counter cannot tell a "]" from a ")",
+      and a queue would hand back the oldest opener rather than the newest.
+    concepts:
+      - patterns.stack
+  - id: q2
+    prompt: |
+      On an unweighted grid you must find the FEWEST steps from a start cell to a
+      goal cell, moving one square at a time. Which approach gives the shortest
+      count directly?
+    choices:
+      - Breadth-first search from the start using a queue
+      - Depth-first search that dives down one path with a stack
+      - Sorting all the cells by their coordinates
+      - Sweeping two pointers inward from opposite corners
+    correct_choice: Breadth-first search from the start using a queue
+    explanation: |
+      BFS expands outward one ring of equal distance at a time, so the first time it
+      reaches the goal it has used the minimum number of steps. A depth-first dive
+      can reach the goal by a long, winding route and does not guarantee the shortest
+      path in an unweighted graph.
+    concepts:
+      - patterns.queue_bfs
+  - id: q3
+    prompt: |
+      Which task is the BEST fit for a queue (first in, first out)?
+    choices:
+      - Serving print jobs strictly in the order they were submitted
+      - Reversing the characters of a word
+      - Undoing the most recent edit in a text editor
+      - Matching each closing bracket with the latest opener
+    correct_choice: Serving print jobs strictly in the order they were submitted
+    explanation: |
+      A queue preserves arrival order, so the earliest submitted job prints first.
+      The other three tasks all want the newest item first, which is last-in,
+      first-out behavior handled by a stack, not a queue.
+    concepts:
+      - patterns.queue_bfs
+  - id: q4
+    prompt: |
+      You have items arriving in some order and want to produce them again in the
+      exact REVERSE order. Which single structure gets you there most directly?
+    choices:
+      - Push every item onto a stack, then pop them all off
+      - Enqueue every item, then dequeue them all from the front
+      - Store them in a set and read it back
+      - Binary search for each item one at a time
+    correct_choice: Push every item onto a stack, then pop them all off
+    explanation: |
+      Because a stack returns items in last-in, first-out order, pushing everything
+      and then popping everything yields the reverse of the input. A queue would give
+      the items back in their original order, and a set does not preserve order at all.
+    concepts:
+      - patterns.stack

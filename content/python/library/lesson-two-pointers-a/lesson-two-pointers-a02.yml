@@ -1,0 +1,54 @@
+id: lesson.library.two_pointers.a02
+kind: lesson
+version: 1
+language: python
+title: The Write Pointer That Compacts a List in Place
+slug: lesson-two-pointers-a02
+difficulty: medium
+concepts:
+  - patterns.two_pointers
+prerequisites:
+  - python.lists
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.two_pointers.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original same-direction read/write pointer walkthrough for in-place list compaction.
+body_markdown: |
+  Not every two-pointer problem walks in from the ends. A common variation keeps
+  both pointers moving the same direction: a fast *read* pointer that visits
+  every position, and a slow *write* pointer that marks where the next item we
+  want to keep should go. This lets you rewrite a list in place instead of
+  building a fresh copy.
+
+  ```python
+  def drop_value(nums, unwanted):
+      write = 0
+      for read in range(len(nums)):
+          if nums[read] != unwanted:
+              nums[write] = nums[read]
+              write += 1
+      del nums[write:]
+      return nums
+  ```
+
+  The read pointer looks at each element once. Whenever it finds a value worth
+  keeping, that value is copied down to the `write` slot and `write` advances.
+  Because `write` only moves on a keeper, it always trails `read`, so it can
+  never overwrite a value that has not been read yet. When the scan finishes,
+  everything from `write` onward is a stale leftover, so a single slice deletion
+  trims the tail. The whole routine is one O(n) pass with O(1) extra space.
+checkpoints:
+  - question: After the for-loop finishes but before del nums[write:] runs, what does the value of write represent?
+    answer: The number of kept elements, which is also the index where the leftover tail begins.
+    explanation: write advances exactly once per kept item, so it both counts the survivors and points at the first stale slot to trim.
+  - question: Why is it safe for the write pointer to overwrite nums[write] while the read pointer is still scanning?
+    answer: Because write never gets ahead of read, so any slot being written to has already been examined.
+    explanation: write advances at most once per read step, so it always trails read and cannot clobber a value that has not been seen.
+  - question: What is the running time of drop_value on a list of length n, and why?
+    answer: O(n), because the read pointer examines each element exactly once in a single pass with no nested loop.
+    explanation: Both pointers only ever move forward, so the total work grows linearly with the list length.

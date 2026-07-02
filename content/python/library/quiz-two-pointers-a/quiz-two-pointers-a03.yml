@@ -1,0 +1,99 @@
+id: quiz.library.two_pointers.a03
+kind: quiz
+version: 1
+language: python
+title: The Syntax Behind Two Pointers
+slug: quiz-two-pointers-a03
+difficulty: easy
+concepts:
+  - patterns.two_pointers
+prerequisites:
+  - python.lists
+estimated_time_minutes: 5
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.two_pointers.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax-focused questions on the Python constructs two-pointer loops rely on.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: |
+      Which single line swaps the items at indices i and j of a list called nums,
+      without using a temporary variable?
+    choices:
+      - "nums[i], nums[j] = nums[j], nums[i]"
+      - "nums[i] = nums[j]; nums[j] = nums[i]"
+      - "swap(nums[i], nums[j])"
+      - "nums[i] <-> nums[j]"
+    correct_choice: "nums[i], nums[j] = nums[j], nums[i]"
+    explanation: |
+      Python builds the right-hand tuple (nums[j], nums[i]) first, then unpacks it into the
+      left-hand targets, so both slots update at once. The second option loses the original
+      nums[i] before it is used, and the last two are not valid Python.
+    concepts:
+      - patterns.two_pointers
+  - id: q2
+    prompt: |
+      A right pointer should start at the last valid index of a list named nums.
+      Which expression gives that index?
+    choices:
+      - "len(nums) - 1"
+      - "len(nums)"
+      - "len(nums) + 1"
+      - "nums[-0]"
+    correct_choice: "len(nums) - 1"
+    explanation: |
+      Indices run from 0 to len(nums) - 1, so the last valid index is len(nums) - 1. Using
+      len(nums) itself would step one past the end and raise an IndexError, and nums[-0] is
+      just nums[0].
+    concepts:
+      - patterns.two_pointers
+  - id: q3
+    prompt: |
+      You want a loop that keeps running while the left pointer is still before the
+      right pointer. Which header does that?
+    choices:
+      - "while left < right:"
+      - "for left in range(right):"
+      - "while left == right:"
+      - "while left > right:"
+    correct_choice: "while left < right:"
+    explanation: |
+      The loop should continue only as long as the pointers have not crossed or met, which
+      is exactly left < right. The == and > versions stop too early or never start, and the
+      for-range form does not move a separate right pointer.
+    concepts:
+      - patterns.two_pointers
+  - id: q4
+    prompt: |
+      Inside the loop you want to move the left pointer one step forward and the
+      right pointer one step back. Which statement pair is correct Python?
+    choices:
+      - "left += 1; right -= 1"
+      - "left =+ 1; right =- 1"
+      - "left++; right--"
+      - "increment(left); decrement(right)"
+    correct_choice: "left += 1; right -= 1"
+    explanation: |
+      += and -= adjust a variable in place by the given amount. The `=+ 1` form is a subtle
+      bug that assigns +1 (positive one) instead of adding, Python has no ++ or -- operators,
+      and increment/decrement are not built-in functions.
+    concepts:
+      - patterns.two_pointers
+  - id: q5
+    prompt: "What does the expression nums[-1] evaluate to for a non-empty list nums?"
+    choices:
+      - The last element of the list
+      - The first element of the list
+      - Always an IndexError
+      - The length of the list minus one
+    correct_choice: The last element of the list
+    explanation: |
+      Negative indices count from the end, so nums[-1] is the final element. This is a handy
+      way for a right pointer to peek at the tail without computing len(nums) - 1 by hand.
+    concepts:
+      - patterns.two_pointers

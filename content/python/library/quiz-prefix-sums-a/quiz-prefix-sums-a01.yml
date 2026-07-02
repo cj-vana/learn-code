@@ -1,0 +1,80 @@
+id: quiz.library.prefix_sums.a01
+kind: quiz
+version: 1
+language: python
+title: When to Reach for Prefix Sums
+slug: quiz-prefix-sums-a01
+difficulty: easy
+concepts:
+  - patterns.prefix_sums
+prerequisites:
+  - python.lists
+estimated_time_minutes: 4
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.prefix_sums.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original rainfall and shipping scenarios with hand-written distractors; nothing adapted from any external problem set.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      A weather dashboard keeps one fixed list of daily rainfall totals and must
+      answer hundreds of "how much rain fell from day i through day j?" questions.
+      Which strategy fits best?
+    choices:
+      - Build a prefix-sum array once, then answer each query with a single subtraction
+      - Re-add every value from day i to day j each time a question is asked
+      - Sort the rainfall list again before answering each question
+      - Store the totals in a set and test membership for each day
+    correct_choice: Build a prefix-sum array once, then answer each query with a single subtraction
+    explanation: |
+      When the data does not change but many range-sum questions arrive, you pay
+      once to build the prefix array and then answer every query in constant time.
+      Re-adding the slice repeats work, and sorting or set membership do not
+      preserve the totals you need.
+    concepts:
+      - patterns.prefix_sums
+  - id: q2
+    prompt: |
+      Building a running-total prefix array over a list of n numbers with one
+      left-to-right pass costs how much time?
+    choices: ["O(n)", "O(1)", "O(n^2)", "O(log n)"]
+    correct_choice: "O(n)"
+    explanation: |
+      Each element is visited exactly once and added to a single running total,
+      so the build scales linearly with the number of elements.
+    concepts:
+      - patterns.prefix_sums
+      - concepts.big_o
+  - id: q3
+    prompt: |
+      After a padded prefix array has been built, how much work does answering
+      one range-sum query take?
+    choices: ["O(1)", "O(n)", "O(n^2)", "O(log n)"]
+    correct_choice: "O(1)"
+    explanation: |
+      A range sum is a single subtraction of two stored totals, so the cost does
+      not depend on how wide the requested range is.
+    concepts:
+      - patterns.prefix_sums
+      - concepts.big_o
+  - id: q4
+    prompt: |
+      You build a padded prefix array by starting with a leading 0 and then adding
+      each value in turn. For the list [5, 2, 8], which padded prefix array is
+      correct?
+    choices:
+      - "[0, 5, 7, 15]"
+      - "[5, 7, 15]"
+      - "[0, 5, 2, 8]"
+      - "[5, 2, 8, 15]"
+    correct_choice: "[0, 5, 7, 15]"
+    explanation: |
+      Start at 0, then accumulate: 0 + 5 = 5, 5 + 2 = 7, 7 + 8 = 15. The padded
+      array has length n + 1 because of the leading 0.
+    concepts:
+      - patterns.prefix_sums

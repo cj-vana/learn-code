@@ -1,0 +1,90 @@
+id: quiz.library.mixed_capstones.a04
+kind: quiz
+version: 1
+language: python
+title: Window or Prefix for Subarray Problems
+slug: quiz-mixed-capstones-a04
+difficulty: medium
+concepts:
+  - patterns.sliding_window
+  - patterns.prefix_sums
+prerequisites:
+  - python.lists
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.mixed_capstones.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original questions contrasting sliding windows with prefix sums for contiguous-subarray tasks; distractors mix up the two related tools.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      You need the average of every contiguous block of exactly 30 days across a
+      long series of readings. Which tool is the most direct fit?
+    choices:
+      - A sliding window of size 30 that keeps a running sum
+      - A prefix-sum array rebuilt from scratch at each position
+      - Binary search over the readings
+      - A set of all distinct readings
+    correct_choice: A sliding window of size 30 that keeps a running sum
+    explanation: |
+      A fixed window of 30 slides one day at a time, adding the new reading and
+      dropping the oldest, so each block's sum (and average) is O(1) to update. This
+      is the classic fixed-window use case.
+    concepts:
+      - patterns.sliding_window
+  - id: q2
+    prompt: |
+      The array never changes, but you must answer 10,000 different "sum from i to
+      j" queries with varying i and j. Which approach scales best?
+    choices:
+      - Build one prefix-sum array, then answer each query with a single subtraction
+      - Slide a new window for every query
+      - Re-add the elements from i to j for each query
+      - Sort the array once, then binary search each query
+    correct_choice: Build one prefix-sum array, then answer each query with a single subtraction
+    explanation: |
+      When ranges differ per query, a sliding window does not help because its size
+      is not fixed. A prefix-sum array is built once in O(n) and turns each arbitrary
+      range sum into prefix[j+1] - prefix[i], an O(1) lookup.
+    concepts:
+      - patterns.prefix_sums
+  - id: q3
+    prompt: |
+      Which statement best captures the relationship between a running total and a
+      prefix-sum array?
+    choices:
+      - A prefix-sum array simply stores the running total at every index so past totals stay available
+      - They are unrelated; prefix sums never involve addition
+      - A running total can only be kept with two pointers
+      - A prefix-sum array must be sorted before use
+    correct_choice: A prefix-sum array simply stores the running total at every index so past totals stay available
+    explanation: |
+      A running total is a single accumulating number. A prefix-sum array is that
+      same idea recorded at each step, so any earlier cumulative value can be reused
+      later, for example to compute a range sum by subtraction.
+    concepts:
+      - patterns.prefix_sums
+      - patterns.running_total
+  - id: q4
+    prompt: |
+      For a fixed window of size k over n elements, what is the benefit of updating
+      the sum with "add the entering value, subtract the leaving value" instead of
+      re-summing the whole window?
+    choices:
+      - It cuts each step from O(k) work down to O(1), making the scan O(n) overall
+      - It changes the answer to be more accurate
+      - It removes the need for the list to fit in memory
+      - It lets the window grow and shrink automatically
+    correct_choice: It cuts each step from O(k) work down to O(1), making the scan O(n) overall
+    explanation: |
+      Re-summing k values costs O(k) per position for O(n*k) total. Adjusting the
+      running total by one addition and one subtraction is O(1) per step, so the full
+      pass is O(n). It is a speed improvement, not a change in the result.
+    concepts:
+      - patterns.sliding_window
+      - concepts.big_o

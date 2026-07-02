@@ -1,0 +1,55 @@
+id: lesson.library.sliding_window.a01
+kind: lesson
+version: 1
+language: python
+title: Sliding a Fixed-Size Window
+slug: lesson-sliding-window-a01
+difficulty: easy
+concepts:
+  - patterns.sliding_window
+prerequisites:
+  - python.lists
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sliding_window.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original explanation using a temperature-reading example with a fixed-width window.
+body_markdown: |
+  A *fixed-size sliding window* looks at exactly `k` neighbouring items at a
+  time and then shifts one step to the right. The trick is that neighbouring
+  windows overlap almost completely, so you should reuse work instead of adding
+  everything up again.
+
+  Imagine daily temperature readings and you want the total of every 3 in a row.
+  Compute the first window once, then for each step drop the value that leaves on
+  the left and add the value that enters on the right:
+
+  ```python
+  def window_sums(readings, k):
+      current = sum(readings[:k])   # first window, computed once
+      totals = [current]
+      for i in range(k, len(readings)):
+          current += readings[i] - readings[i - k]  # add new, drop old
+          totals.append(current)
+      return totals
+
+  print(window_sums([10, 12, 11, 9, 14], 3))  # [33, 32, 34]
+  ```
+
+  Because each step does one addition and one subtraction, the whole scan is
+  `O(n)` no matter how large `k` is. The value leaving the window is always the
+  one at index `i - k`, exactly `k` positions behind the value entering at `i`.
+checkpoints:
+  - question: When the window moves one step right, which element must you subtract from the running total?
+    answer: The element at index i - k, the one that just left the window on the left.
+    explanation: A width-k window entering index i drops the value k positions back, so you subtract readings[i - k].
+  - question: Why is sliding the window O(n) instead of O(n*k)?
+    answer: Each shift does a single add and subtract, so total work grows with n, not with n times k.
+    explanation: The first window costs k, but every later window reuses the previous sum with constant extra work.
+  - question: What does sum(readings[:k]) compute in the example?
+    answer: The total of the very first window, the first k readings.
+    explanation: It seeds the running total once so later steps only adjust it incrementally.

@@ -1,0 +1,56 @@
+id: lesson.library.brute_force_bigo.a01
+kind: lesson
+version: 1
+language: python
+title: The "Try Every Option" Mindset
+slug: lesson-brute-force-bigo-a01
+difficulty: easy
+concepts:
+  - patterns.brute_force
+prerequisites:
+  - python.loops
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.brute_force_bigo.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original ticket-stub scenario and hand-written linear scan; explanation and questions written from scratch.
+body_markdown: |
+  A *brute-force* solution is the most direct one you can imagine: list every
+  possible answer, check each one, and keep whatever passes. You are not being
+  clever, and that is the point. Before you optimize anything, you want a
+  version that is obviously correct.
+
+  Suppose a raffle drum holds ticket numbers and you want the first ticket that
+  is worth more than some prize threshold. The brute-force plan is simply to
+  walk the tickets in order and stop at the first one that qualifies:
+
+  ```python
+  def first_winner(tickets, threshold):
+      for ticket in tickets:
+          if ticket > threshold:
+              return ticket
+      return None
+  ```
+
+  There is no trick here. We consider each candidate exactly once and return
+  the first that satisfies the rule. If none qualifies, we fall out of the loop
+  and return `None`. Because the work is "look at every item until you find a
+  match," the loop is the entire strategy.
+
+  Brute force is valuable precisely because it is boring. It gives you a
+  baseline you can trust, which you can later compare against a faster idea to
+  make sure the faster idea still returns the same answers.
+checkpoints:
+  - question: What is the defining idea of a brute-force solution?
+    answer: Consider every candidate and check each one against the rule.
+    explanation: Brute force trades cleverness for certainty by exhaustively examining the options instead of using a shortcut.
+  - question: In first_winner, what is returned when no ticket exceeds the threshold?
+    answer: "None"
+    explanation: The loop finishes without hitting the return inside it, so control reaches the final `return None`.
+  - question: Why is it useful to write a brute-force version even when you suspect a faster approach exists?
+    answer: It gives a simple, obviously correct baseline you can trust and compare a faster version against.
+    explanation: A correct-but-slow reference lets you verify that any later optimization produces the same results.

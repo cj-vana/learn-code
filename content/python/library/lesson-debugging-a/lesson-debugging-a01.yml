@@ -1,0 +1,61 @@
+id: lesson.library.debugging.a01
+kind: lesson
+version: 1
+language: python
+title: Reading a Python Traceback From the Bottom Up
+slug: lesson-debugging-a01
+difficulty: easy
+concepts:
+  - python.debugging
+prerequisites:
+  - python.functions
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.debugging.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original walkthrough of traceback structure using a fresh average-of-empty-list example.
+body_markdown: |
+  When your program crashes, Python prints a *traceback*. It looks scary, but it
+  is just a map of what the code was doing when things went wrong. The trick is
+  to read it **from the bottom up**.
+
+  The very last line names the error type and gives a short message. That is
+  almost always the most useful piece of information. The lines above it show the
+  chain of calls that led there, most recent last.
+
+  ```python
+  def average(numbers):
+      return sum(numbers) / len(numbers)
+
+  print(average([]))
+  ```
+
+  Running this prints:
+
+  ```text
+  Traceback (most recent call last):
+    File "app.py", line 4, in <module>
+      print(average([]))
+    File "app.py", line 2, in average
+      return sum(numbers) / len(numbers)
+  ZeroDivisionError: division by zero
+  ```
+
+  Start at the bottom: `ZeroDivisionError: division by zero`. That tells you the
+  *what*. The line just above shows *where* it happened, inside `average` at the
+  division. An empty list has length "0", so `sum / len` divides by zero. The fix
+  is to guard the empty case before dividing.
+checkpoints:
+  - question: Which line of a traceback tells you the error type and message?
+    answer: The last (bottom) line
+    explanation: Python puts the error name and message on the final line, so read a traceback from the bottom up.
+  - question: What error does dividing by the length of an empty list produce?
+    answer: ZeroDivisionError
+    explanation: An empty list has length 0, and dividing any number by 0 raises ZeroDivisionError.
+  - question: In the traceback above, which function was running when the crash happened?
+    answer: average
+    explanation: The bottom frame points inside average at the division line, which is where the error was raised.

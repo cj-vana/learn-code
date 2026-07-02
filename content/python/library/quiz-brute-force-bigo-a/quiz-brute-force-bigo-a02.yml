@@ -1,0 +1,101 @@
+id: quiz.library.brute_force_bigo.a02
+kind: quiz
+version: 1
+language: python
+title: Counting Steps and Reading Growth
+slug: quiz-brute-force-bigo-a02
+difficulty: medium
+concepts:
+  - patterns.brute_force
+  - concepts.big_o
+prerequisites:
+  - python.loops
+  - python.lists
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.brute_force_bigo.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original code snippets and reasoning prompts written from scratch; distractors chosen to match common misconceptions about Big-O growth.
+quiz_type: mixed_review
+questions:
+  - id: q1
+    prompt: |
+      How many times does the counter increment when this runs?
+
+      ```python
+      count = 0
+      for i in range(n):
+          for j in range(n):
+              count += 1
+      ```
+    choices: ["n * n", "n + n", "2 * n", "n"]
+    correct_choice: "n * n"
+    explanation: |
+      The inner loop runs n times for each of the n outer iterations, so the body
+      executes n times n. That product is why two equal nested loops give
+      quadratic, O(n^2), behavior.
+    concepts:
+      - concepts.big_o
+  - id: q2
+    prompt: |
+      A function loops through a list of n items looking for a target and returns
+      early the moment it finds a match. What is its worst-case time complexity?
+    choices: ["O(n)", "O(1)", "O(n^2)", "O(log n)"]
+    correct_choice: "O(n)"
+    explanation: |
+      The best case is an early match, but Big-O usually describes the worst case:
+      the target is last or missing, so the loop touches all n items. A single
+      pass over n elements is O(n).
+    concepts:
+      - patterns.brute_force
+      - concepts.big_o
+  - id: q3
+    prompt: |
+      You have an O(n) algorithm that is one loop over n items. Which change would
+      most likely turn it into an O(n^2) algorithm?
+    choices:
+      - Nesting a second loop inside that also runs n times
+      - Adding one constant-time line after the loop finishes
+      - Replacing the loop with a single index lookup
+      - Printing the final result once at the end
+    correct_choice: Nesting a second loop inside that also runs n times
+    explanation: |
+      Nesting an n-step loop inside an n-step loop makes the work grow with n
+      times n. The other edits add only a constant amount of work, which does not
+      change the O(n) classification.
+    concepts:
+      - concepts.big_o
+  - id: q4
+    prompt: |
+      In Big-O analysis we simplify a step count of 3n + 5 down to O(n). Why is
+      dropping the constant factor and the "+ 5" the right thing to do?
+    choices:
+      - Big-O describes growth as the input gets large, where the fastest-growing term dominates
+      - Constant factors in Python are always exactly equal to one
+      - The lower-order terms make the algorithm produce wrong answers
+      - Big-O notation can only be applied to sorting algorithms
+    correct_choice: Big-O describes growth as the input gets large, where the fastest-growing term dominates
+    explanation: |
+      Big-O captures how runtime scales as n grows. For large n the n term
+      overwhelms any constant, so 3n + 5 and n grow at the same rate and both are
+      written O(n). The simplification is about growth, not correctness.
+    concepts:
+      - concepts.big_o
+  - id: q5
+    prompt: |
+      A brute-force solution to "find the pair of numbers with the largest
+      product" checks every possible pair in a list of n numbers. In Big-O terms,
+      how many pairs does it examine?
+    choices: ["O(n^2)", "O(n)", "O(n log n)", "O(1)"]
+    correct_choice: "O(n^2)"
+    explanation: |
+      Every element can be paired with every other element, giving on the order of
+      n times n pairs. Checking all pairs by brute force is a classic O(n^2)
+      workload.
+    concepts:
+      - patterns.brute_force
+      - concepts.big_o

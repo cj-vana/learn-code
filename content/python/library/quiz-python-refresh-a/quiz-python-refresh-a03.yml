@@ -1,0 +1,88 @@
+id: quiz.library.python_refresh.a03
+kind: quiz
+version: 1
+language: python
+title: Reading Branching Logic
+slug: quiz-python-refresh-a03
+difficulty: medium
+concepts:
+  - python.conditionals
+  - python.operators
+prerequisites: []
+estimated_time_minutes: 5
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original if/elif/else tracing and structure questions.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      You want to label a number as "negative", "zero", or "positive" with no
+      overlap between the labels. Which structure fits best?
+    choices:
+      - Use if n < 0, then elif n == 0, then else for the remaining case
+      - Compare n to the string "zero" to detect the middle case
+      - Square n first and inspect the result to decide the label
+      - Sort the three labels alphabetically and return the first
+    correct_choice: Use if n < 0, then elif n == 0, then else for the remaining case
+    explanation: |
+      if / elif / else tests mutually exclusive conditions in order, and the else
+      captures the only remaining case (positive) without an extra comparison.
+    concepts:
+      - python.conditionals
+  - id: q2
+    prompt: |
+      What does this print?
+
+      ```python
+      x = 4
+      if x > 10:
+          print("big")
+      elif x > 2:
+          print("medium")
+      else:
+          print("small")
+      ```
+    choices: ["medium", "big", "small", "nothing"]
+    correct_choice: "medium"
+    explanation: |
+      x > 10 is false, so Python checks the elif. x > 2 is true, so "medium" prints
+      and the else is skipped. Only the first true branch runs.
+    concepts:
+      - python.conditionals
+      - python.operators
+  - id: q3
+    prompt: |
+      In a single if / elif / elif chain (with no else), how many of the branch
+      bodies can run for one execution?
+    choices:
+      - At most one
+      - Every branch whose condition is true
+      - Always exactly two
+      - Always zero
+    correct_choice: At most one
+    explanation: |
+      As soon as one condition is true, its body runs and the rest are skipped.
+      Without an else the count can be zero, but it is never more than one.
+    concepts:
+      - python.conditionals
+  - id: q4
+    prompt: |
+      Which condition is True exactly when `age` is between 13 and 19 inclusive?
+    choices:
+      - 13 <= age <= 19
+      - 13 < age > 19
+      - 13 <= age or age <= 19
+      - age >= 13 and age > 19
+    correct_choice: 13 <= age <= 19
+    explanation: |
+      Python allows chained comparisons, so 13 <= age <= 19 is true only when both
+      bounds hold. The "or" version is always true, and the others use wrong logic.
+    concepts:
+      - python.conditionals
+      - python.operators

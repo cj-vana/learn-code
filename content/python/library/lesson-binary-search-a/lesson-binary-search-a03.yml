@@ -1,0 +1,63 @@
+id: lesson.library.binary_search.a03
+kind: lesson
+version: 1
+language: python
+title: Searching for the First Yes
+slug: lesson-binary-search-a03
+difficulty: medium
+concepts:
+  - patterns.binary_search
+prerequisites:
+  - python.lists
+  - python.sorting
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.binary_search.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original treatment of predicate boundary search using a stadium-brightness monotonic-condition framing, written from scratch.
+body_markdown: |
+  Binary search is really about more than finding an exact value. Any time a
+  yes/no test flips from "no" to "yes" exactly once as you move right, you can
+  binary-search for that boundary. The list does not even have to hold the
+  answer directly, as long as the pattern of answers looks like:
+
+  `no, no, no, YES, yes, yes`
+
+  That "flips once" property is called *monotonic*. Suppose a row of stadium
+  lamps is sorted by brightness and you want the first lamp bright enough to
+  read by. "Bright enough?" answers no for the dim ones and yes from some point
+  on, so the answers are monotonic and you can find the boundary in log time.
+
+  ```python
+  def first_true(values, is_ok):
+      lo, hi = 0, len(values)      # hi is one past the end
+      while lo < hi:
+          mid = (lo + hi) // 2
+          if is_ok(values[mid]):
+              hi = mid             # keep mid; a yes could be the first yes
+          else:
+              lo = mid + 1         # mid is a no, so the answer is to its right
+      return lo                    # index of the first yes, or len(values)
+
+  lamps = [10, 25, 40, 55, 70, 90]
+  print(first_true(lamps, lambda b: b >= 50))  # 3  (first lamp >= 50 is 55)
+  ```
+
+  Two details differ from exact-match search. The window is *half open*: `hi`
+  starts at `len(values)` so the answer "no lamp qualifies" can be represented
+  by returning that index. And on a yes you keep `mid` with `hi = mid`, because
+  that yes might itself be the very first one.
+checkpoints:
+  - question: What property must the yes/no answers have for this boundary search to work?
+    answer: They must be monotonic, flipping from no to yes exactly once.
+    explanation: Binary search needs the answers ordered as a block of no followed by a block of yes so that one comparison tells you which side the boundary is on.
+  - question: On a "yes" result, why set hi = mid instead of hi = mid - 1?
+    answer: Because that mid might be the first yes, so it must stay in the window.
+    explanation: You are hunting for the earliest yes; discarding mid could throw away the very boundary you are looking for, so you keep it by moving hi only down to mid.
+  - question: What does first_true return when no element satisfies is_ok?
+    answer: len(values).
+    explanation: The half-open window lets lo climb all the way to len(values), which signals that the yes block is empty and no element passed the test.

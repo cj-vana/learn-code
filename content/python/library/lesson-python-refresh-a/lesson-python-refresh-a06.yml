@@ -1,0 +1,55 @@
+id: lesson.library.python_refresh.a06
+kind: lesson
+version: 1
+language: python
+title: Functions That Take Input and Return Output
+slug: lesson-python-refresh-a06
+difficulty: medium
+concepts:
+  - python.functions
+prerequisites: []
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh.a06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original explanation of def, parameters, return versus print, and default arguments.
+body_markdown: |
+  A *function* packages a piece of work under a name so you can reuse it. You
+  define it with `def`, list the inputs it expects (the *parameters*) in
+  parentheses, and use `return` to hand a value back to whoever called it.
+
+  ```python
+  def rectangle_area(width, height):
+      return width * height
+
+  area = rectangle_area(3, 4)   # area is 12
+  ```
+
+  `return` is not the same as `print`. `return` gives a value back so the
+  caller can store or reuse it; `print` only shows text on screen and the
+  function still returns `None`. If you need the answer later, you want
+  `return`.
+
+  A parameter can have a *default*, used when the caller leaves it out:
+
+  ```python
+  def greet(name, greeting="Hello"):
+      return greeting + ", " + name
+
+  greet("Ada")          # "Hello, Ada"  (default used)
+  greet("Ada", "Hi")    # "Hi, Ada"     (default overridden)
+  ```
+checkpoints:
+  - question: What does `rectangle_area(3, 4)` return?
+    answer: "12"
+    explanation: The arguments bind width to 3 and height to 4, and the function returns their product, 12.
+  - question: What is the difference between `return` and `print` inside a function?
+    answer: "return hands a value back to the caller; print only displays text and the function still returns None."
+    explanation: Only a returned value can be captured in a variable and reused, whereas print produces output but no reusable result.
+  - question: Given `def greet(name, greeting="Hello")`, what does `greet("Ada")` return?
+    answer: "Hello, Ada"
+    explanation: Because the second argument is omitted, `greeting` falls back to its default "Hello", producing "Hello, Ada".

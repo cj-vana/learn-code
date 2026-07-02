@@ -1,0 +1,86 @@
+id: quiz.library.python_refresh.a01
+kind: quiz
+version: 1
+language: python
+title: Names, Values, and Types
+slug: quiz-python-refresh-a01
+difficulty: easy
+concepts:
+  - python.variables
+  - python.types
+prerequisites: []
+estimated_time_minutes: 4
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original questions and distractors about variable binding and built-in types.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: |
+      You run these two lines in order:
+
+      ```python
+      x = 5
+      x = "five"
+      ```
+
+      What is the state of `x` afterward?
+    choices:
+      - The name x is rebound to the string "five"; Python does not fix a variable's type
+      - Python raises a TypeError because x was already an integer
+      - x keeps the value 5 and the second line is ignored
+      - x becomes the pair (5, "five")
+    correct_choice: The name x is rebound to the string "five"; Python does not fix a variable's type
+    explanation: |
+      A Python variable is just a name bound to an object. Assigning again rebinds
+      the same name to a new object, which may be any type.
+    concepts:
+      - python.variables
+      - python.types
+  - id: q2
+    prompt: Which expression evaluates to the string "7"?
+    choices:
+      - str(7)
+      - int("7")
+      - '"3" + "4"'
+      - float(7)
+    correct_choice: str(7)
+    explanation: |
+      str(7) converts the integer into its text form "7". int("7") gives the number 7,
+      float(7) gives 7.0, and "3" + "4" concatenates to "34".
+    concepts:
+      - python.types
+  - id: q3
+    prompt: What does `type(3 == 3)` report?
+    choices:
+      - "<class 'bool'>"
+      - "<class 'int'>"
+      - "<class 'str'>"
+      - "<class 'NoneType'>"
+    correct_choice: "<class 'bool'>"
+    explanation: |
+      A comparison produces a boolean value, so type() reports bool. (bool is a
+      subclass of int, but type() still names it bool.)
+    concepts:
+      - python.types
+      - python.operators
+  - id: q4
+    prompt: |
+      Given `price = 10`, which single statement changes `price` to 13?
+    choices:
+      - price += 3
+      - price =+ 3
+      - price = += 3
+      - price ++ 3
+    correct_choice: price += 3
+    explanation: |
+      += adds to the current value and rebinds the name, so price becomes 13.
+      price =+ 3 is read as price = +3 (giving 3), and the other two are syntax errors.
+    concepts:
+      - python.operators
+      - python.variables
