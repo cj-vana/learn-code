@@ -54,6 +54,36 @@ LIBRARY_KNOWN_CONCEPTS = SEED_PROFILE_KNOWN_CONCEPTS | {
     "patterns.binary_search",
     "patterns.recursion",
     "patterns.backtracking",
+    # Wave-3 expansion: professional Python
+    "python.classes",
+    "python.dataclasses_dunder",
+    "python.iterators_generators",
+    "python.closures_decorators",
+    "python.exceptions",
+    "python.collections_module",
+    "python.itertools_module",
+    "python.regex",
+    "python.string_formatting",
+    "python.heapq_bisect",
+    "python.trees_as_data",
+    # Wave-3 expansion: advanced interview pattern families
+    "patterns.linked_list",
+    "patterns.tree_traversal",
+    "patterns.graph_traversal",
+    "patterns.dfs",
+    "patterns.heap_topk",
+    "patterns.intervals",
+    "patterns.greedy",
+    "patterns.dynamic_programming",
+    "patterns.grid_traversal",
+    "patterns.simulation",
+    "patterns.state_machine",
+    "patterns.bit_manipulation",
+    # Wave-3 expansion: cross-cutting concepts
+    "concepts.memoization",
+    "concepts.grouping_aggregation",
+    "concepts.number_theory",
+    "concepts.space_complexity",
 }
 
 _PROFILE_CONCEPTS = {
