@@ -141,6 +141,7 @@ export interface ExerciseSubmissionRequest {
   source: string;
   predicted_pattern?: string | null;
   confidence?: number | null;
+  hints_used?: number;
 }
 
 export interface ProgressDelta {

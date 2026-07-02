@@ -134,6 +134,7 @@ class ExerciseSubmissionRequest(BaseModel):
     source: str
     predicted_pattern: str | None = None
     confidence: int | None = None
+    hints_used: int = Field(default=0, ge=0)
 
 
 class ProgressDelta(BaseModel):

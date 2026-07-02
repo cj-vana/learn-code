@@ -246,6 +246,37 @@ def test_submit_records_progress(tmp_path):
         assert recorded.get(concept, 0) > 0
 
 
+def test_submit_hints_used_reduces_mastery_gain(tmp_path):
+    # Revealing hints before passing costs mastery (spec: -2 per hint, capped
+    # at -6). This guards the end-to-end wiring: the score input is inert unless
+    # the request carries hints_used all the way to record_exercise_submission.
+    (tmp_path / "a").mkdir()
+    (tmp_path / "b").mkdir()
+    body = {
+        "exercise_id": COUNT_TAGS_ID,
+        "content_version": 1,
+        "language": "python",
+        "source": "def count_tags(tags): ...",
+        "predicted_pattern": "patterns.hash_map_counting",
+        "confidence": 4,
+    }
+    unhinted_client, _, _ = make_client(tmp_path / "a")
+    unhinted = unhinted_client.post(
+        "/api/v1/exercises/submit", json={**body, "hints_used": 0}
+    ).json()
+
+    hinted_client, _, _ = make_client(tmp_path / "b")
+    hinted = hinted_client.post(
+        "/api/v1/exercises/submit", json={**body, "hints_used": 3}
+    ).json()
+
+    unhinted_after = unhinted["progress_delta"]["mastery_after"]
+    hinted_after = hinted["progress_delta"]["mastery_after"]
+    assert hinted_after < unhinted_after
+    # 3 hints -> min(3*2, 6) == 6 penalty applied to the same passing solution.
+    assert unhinted_after - hinted_after == 6
+
+
 def test_submit_runner_unavailable_does_not_record(tmp_path):
     client, _, _ = make_client(tmp_path, runner=UnavailableRunner())
     resp = client.post(
@@ -428,6 +459,26 @@ def test_ollama_available_parses_compliant_model_reply():
     assert review.summary == "Clean single-pass counter."
     assert review.correctness_notes == ["Handles the empty list."]
     assert review.big_o_notes == "O(n) time."
+
+
+def test_runner_client_maps_nonjson_body_to_unavailable():
+    # A 200 with an empty/non-JSON body must surface as runner_unavailable, not
+    # a bare 500: response.json() raises a ValueError we must translate.
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, content=b"", headers={"content-type": "text/plain"})
+
+    client = HttpRunnerBrokerClient(
+        base_url="http://runner-broker:8080", transport=httpx.MockTransport(handler)
+    )
+    request = RunnerRequest(
+        correlation_id="c1",
+        mode=RunMode.PLAYGROUND,
+        language="python",
+        source="print('hi')",
+        test_profile=TestProfile.PLAYGROUND,
+    )
+    with pytest.raises(RunnerUnavailableError):
+        client.run(request)
 
 
 def test_runner_client_maps_unknown_status_to_unavailable():

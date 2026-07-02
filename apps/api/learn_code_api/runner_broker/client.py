@@ -130,6 +130,13 @@ class HttpRunnerBrokerClient:
             ) from exc
         except httpx.RequestError as exc:
             raise RunnerUnavailableError(f"runner-broker is unreachable: {exc}") from exc
+        except ValueError as exc:
+            # response.json() raises json.JSONDecodeError (a ValueError) when the
+            # broker returns a 200 with an empty or non-JSON body: an unusable
+            # response, not a valid run.
+            raise RunnerUnavailableError(
+                "runner-broker returned a non-JSON response"
+            ) from exc
 
         # A 200 whose body does not fit this contract (e.g. a broker status the
         # API enum does not model) is an unusable response, not a valid run.

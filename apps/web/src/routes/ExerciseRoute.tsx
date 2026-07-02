@@ -16,7 +16,7 @@ import { CommandButton } from '../components/CommandButton';
 import { TestReceipt } from '../components/TestReceipt';
 import { HintLadder } from '../components/HintLadder';
 import { MasteryMeter } from '../components/MasteryMeter';
-import { describeError, formatMinutes, humanizeConcept } from '../lib/format';
+import { describeError, formatMinutes, humanizeConcept, masteryLabel } from '../lib/format';
 
 const CONFIDENCE_LEVELS = [1, 2, 3, 4, 5];
 
@@ -76,6 +76,7 @@ export function ExerciseRoute() {
       source,
       predicted_pattern: predictedPattern,
       confidence,
+      hints_used: revealedHints,
     });
   };
 
@@ -229,7 +230,7 @@ export function ExerciseRoute() {
                         detail.id
                       }
                       mastery={submit.data.progress_delta.mastery_after}
-                      label="practicing"
+                      label={masteryLabel(submit.data.progress_delta.mastery_after)}
                     />
                     <p className="muted" style={{ marginTop: 'var(--space-2)' }}>
                       Mastery {submit.data.progress_delta.mastery_before} →{' '}

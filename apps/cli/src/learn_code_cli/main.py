@@ -37,6 +37,9 @@ def _read_source(path: Path) -> str:
     except OSError as exc:
         _fail(f"Can't read {path}: {exc}")
         raise  # unreachable; keeps type checkers happy
+    except UnicodeDecodeError:
+        _fail(f"Can't read {path}: not a UTF-8 text file")
+        raise  # unreachable; keeps type checkers happy
 
 
 def _handle(action):
@@ -99,6 +102,7 @@ def submit(
             source,
             predicted_pattern=predicted_pattern,
             confidence=confidence,
+            hints_used=hints_used,
         )
     )
     typer.echo(render.render_submission(response))
@@ -123,8 +127,6 @@ def quiz(
     question_id: str = typer.Option("quiz-adhoc", "--question-id"),
     correct: bool = typer.Option(True, "--correct/--incorrect"),
     explanation: str = typer.Option("", "--explanation"),
-    mixed: bool = typer.Option(False, "--mixed", help="Interface parity; V1 ships no quiz bank."),
-    count: int = typer.Option(1, "--count", help="Interface parity; V1 ships no quiz bank."),
 ) -> None:
     """Record a quiz answer. V1 has no quiz bank, so the answer is supplied here."""
     response = _handle(

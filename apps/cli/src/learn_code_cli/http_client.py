@@ -77,6 +77,7 @@ class ApiClient:
         *,
         predicted_pattern: str | None = None,
         confidence: int | None = None,
+        hints_used: int = 0,
     ) -> dict[str, Any]:
         return self._request(
             "POST",
@@ -88,6 +89,7 @@ class ApiClient:
                 "source": source,
                 "predicted_pattern": predicted_pattern,
                 "confidence": confidence,
+                "hints_used": hints_used,
             },
         )
 

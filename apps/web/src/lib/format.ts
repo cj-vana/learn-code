@@ -1,4 +1,16 @@
 import { ApiConnectionError, ApiError } from '../api/client';
+import type { MasteryLabel } from '../contracts';
+
+/** Mastery band for a 0-100 score. Mirrors the server-side thresholds
+ *  (new 0-19, learning 20-49, practicing 50-74, review_ready 75-89,
+ *  interview_ready 90-100) so a derived stamp matches the number beside it. */
+export function masteryLabel(mastery: number): MasteryLabel {
+  if (mastery >= 90) return 'interview_ready';
+  if (mastery >= 75) return 'review_ready';
+  if (mastery >= 50) return 'practicing';
+  if (mastery >= 20) return 'learning';
+  return 'new';
+}
 
 /** Human-readable message for anything thrown by the API client or fetch. */
 export function describeError(error: unknown): string {

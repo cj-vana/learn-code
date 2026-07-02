@@ -66,6 +66,7 @@ def submit_exercise(
         now=now,
         confidence=request.confidence,
         predicted_pattern=request.predicted_pattern,
+        hints_used=request.hints_used,
     )
     after = repo.concept_mastery_map()
     review_due = repo.review_due_map()

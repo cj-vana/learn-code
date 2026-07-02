@@ -108,6 +108,8 @@ def test_submit_fetches_version_then_submits(runner, api_base, tmp_path):
             "patterns.hash_map_counting",
             "--confidence",
             "4",
+            "--hints-used",
+            "2",
         ],
     )
     assert result.exit_code == 0
@@ -116,6 +118,18 @@ def test_submit_fetches_version_then_submits(runner, api_base, tmp_path):
     body = submit_route.calls.last.request.content
     assert b'"content_version":4' in body.replace(b" ", b"")
     assert b"patterns.hash_map_counting" in body
+    # Hints revealed before submitting must reach the API (they cost mastery).
+    assert b'"hints_used":2' in body.replace(b" ", b"")
+
+
+def test_run_rejects_non_utf8_file(runner, tmp_path):
+    # A binary/non-UTF-8 solution file must fail with a friendly message, not a
+    # raw UnicodeDecodeError traceback.
+    bad = tmp_path / "bad.py"
+    bad.write_bytes(b"\xff\xfe\x00 def solve(): pass")
+    result = runner.invoke(app, ["run", "exercise.seed.count-tags-001", str(bad)])
+    assert result.exit_code == 1
+    assert "Can't read" in result.stdout
 
 
 @respx.mock
