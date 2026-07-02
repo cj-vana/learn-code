@@ -234,6 +234,89 @@ def _apply_concept_outcome(
     )
 
 
+def apply_quiz_answered(conn: sqlite3.Connection, event: ProgressEvent) -> None:
+    """Fold one QuizAnswered event into the rollup tables.
+
+    Payload contract: ``{"correct": bool, "concepts": [<concept_id>, ...]}``.
+
+    A correct answer grants ``CORRECT_QUIZ_ANSWER`` (+4) to each listed
+    concept and is treated as a "successful completion" outcome for review
+    cadence purposes (spec: Review cadence), reusing the same pass/fail
+    branching as an exercise submission via ``_apply_concept_outcome``. An
+    incorrect answer grants no mastery and reschedules the review earlier
+    (spec: "Review due later the same day or next session").
+    """
+    payload = event.payload
+    correct = bool(payload.get("correct", False))
+    concepts: list[str] = payload.get("concepts", [])
+    delta = CORRECT_QUIZ_ANSWER if correct else 0
+    now = event.created_at
+
+    for concept_id in concepts:
+        _apply_concept_outcome(conn, concept_id=concept_id, delta=delta, passed=correct, now=now)
+
+
+def apply_pattern_predicted(conn: sqlite3.Connection, event: ProgressEvent) -> None:
+    """Fold one standalone PatternPredicted event into the rollup tables.
+
+    Payload contract: ``{"correct": bool, "concept_id": <concept_id>}``.
+
+    A correct prediction grants ``CORRECT_PATTERN_PREDICTION`` (+8) to the
+    predicted concept's mastery only -- a prediction alone is not a
+    "successful completion" outcome, so it does not touch `review_queue`
+    scheduling (unlike `ExerciseSubmitted`/`QuizAnswered`). An incorrect
+    prediction grants nothing.
+
+    Note: this is a distinct scoring path from the bundled
+    `predicted_pattern` field read inside `apply_exercise_submission`. Both
+    paths are individually correct; the API layer is responsible for firing
+    exactly one of them per user action (standalone event vs. bundled
+    field) so the same correct prediction is never scored twice.
+    """
+    payload = event.payload
+    correct = bool(payload.get("correct", False))
+    concept_id = payload.get("concept_id")
+    if not correct or not concept_id:
+        return
+    _apply_mastery_only(
+        conn, concept_id=concept_id, delta=CORRECT_PATTERN_PREDICTION, now=event.created_at
+    )
+
+
+def _apply_mastery_only(
+    conn: sqlite3.Connection, *, concept_id: str, delta: int, now: datetime
+) -> None:
+    """Apply a mastery delta without touching review-queue scheduling.
+
+    Used for score inputs that are not a review-cadence "outcome" (spec:
+    standalone `PatternPredicted` events) -- only `concept_mastery` is
+    written; any existing `review_queue` row is left untouched.
+    """
+    mastery_row = conn.execute(
+        "SELECT mastery FROM concept_mastery WHERE concept_id = ?", (concept_id,)
+    ).fetchone()
+    current_score = mastery_row[0] if mastery_row is not None else 0
+    new_score = clamp_mastery(current_score + delta)
+
+    queue_row = conn.execute(
+        "SELECT spacing_stage FROM review_queue WHERE concept_id = ?", (concept_id,)
+    ).fetchone()
+    spacing_stage = queue_row[0] if queue_row is not None else 0
+    label = effective_mastery_label(new_score, spacing_stage)
+
+    conn.execute(
+        """
+        INSERT INTO concept_mastery (concept_id, mastery, label, updated_at)
+        VALUES (?, ?, ?, ?)
+        ON CONFLICT(concept_id) DO UPDATE SET
+            mastery = excluded.mastery,
+            label = excluded.label,
+            updated_at = excluded.updated_at
+        """,
+        (concept_id, new_score, label.value, now.isoformat()),
+    )
+
+
 def _update_exercise_summary(
     conn: sqlite3.Connection, *, exercise_id: str, status: str, now: datetime
 ) -> None:
@@ -295,8 +378,12 @@ def recompute_rollups(conn: sqlite3.Connection) -> None:
     for event in fetch_events_ordered(conn):
         if event.type == EventType.EXERCISE_SUBMITTED:
             apply_exercise_submission(conn, event)
-        # Other required event types (LessonCompleted, HintViewed, PatternPredicted,
-        # QuizAnswered, PlaygroundRunCompleted, ReviewCompleted, PlanItemSkipped,
+        elif event.type == EventType.QUIZ_ANSWERED:
+            apply_quiz_answered(conn, event)
+        elif event.type == EventType.PATTERN_PREDICTED:
+            apply_pattern_predicted(conn, event)
+        # Other required event types (LessonCompleted, HintViewed,
+        # PlaygroundRunCompleted, ReviewCompleted, PlanItemSkipped,
         # OllamaReviewRequested) are stored for audit today; V1 content only ships
         # exercises, so there is no rollup behavior to implement for them yet.
 

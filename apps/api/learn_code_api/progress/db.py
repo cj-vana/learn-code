@@ -27,13 +27,33 @@ class ProgressRepository:
         self._conn.close()
 
     def append_event(self, event: ProgressEvent) -> ProgressEvent:
-        """Store an event and fold it into the rollups it affects."""
+        """Store an event and fold it into the rollups it affects.
+
+        `recompute_rollups` replays events ordered by `created_at ASC,
+        sequence ASC` (spec rule), but this incremental fold applies each
+        newly-appended event in insertion order. If the new event's
+        `created_at` is earlier than the max `created_at` already stored,
+        incremental folding would apply events out of chronological order
+        and silently diverge from a full replay -- so fall back to a full
+        `recompute_rollups()` in that case instead of the incremental fold.
+        """
+        max_created_at_before = events_mod.max_created_at(self._conn)
+        out_of_order = max_created_at_before is not None and event.created_at < max_created_at_before
+
         sequence = events_mod.next_sequence(self._conn)
         events_mod.insert_event(self._conn, event, sequence)
         self._conn.commit()
 
-        if event.type == EventType.EXERCISE_SUBMITTED:
+        if out_of_order:
+            rollups_mod.recompute_rollups(self._conn)
+        elif event.type == EventType.EXERCISE_SUBMITTED:
             rollups_mod.apply_exercise_submission(self._conn, event)
+            self._conn.commit()
+        elif event.type == EventType.QUIZ_ANSWERED:
+            rollups_mod.apply_quiz_answered(self._conn, event)
+            self._conn.commit()
+        elif event.type == EventType.PATTERN_PREDICTED:
+            rollups_mod.apply_pattern_predicted(self._conn, event)
             self._conn.commit()
 
         return event

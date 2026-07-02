@@ -475,3 +475,246 @@ def test_summary_streak_breaks_on_missing_day(tmp_path: Path):
     repo.close()
 
     assert summary.streak_days == 0
+
+
+def _append_quiz_answered(
+    repo: ProgressRepository,
+    *,
+    correct: bool,
+    concepts: list[str],
+    now: datetime,
+    event_id: str = "quiz-1",
+) -> ProgressEvent:
+    return repo.append_event(
+        ProgressEvent(
+            id=event_id,
+            type=EventType.QUIZ_ANSWERED,
+            created_at=now,
+            content_id="quiz.seed.dictionaries-001",
+            content_version=1,
+            language="python",
+            session_id="session-1",
+            payload={"correct": correct, "concepts": concepts},
+        )
+    )
+
+
+def _append_pattern_predicted(
+    repo: ProgressRepository,
+    *,
+    correct: bool,
+    concept_id: str,
+    now: datetime,
+    event_id: str = "prediction-1",
+) -> ProgressEvent:
+    return repo.append_event(
+        ProgressEvent(
+            id=event_id,
+            type=EventType.PATTERN_PREDICTED,
+            created_at=now,
+            content_id="exercise.seed.count-tags-001",
+            content_version=1,
+            language="python",
+            session_id="session-1",
+            payload={"correct": correct, "concept_id": concept_id},
+        )
+    )
+
+
+def test_quiz_answered_correct_grants_score_and_changes_label(tmp_path: Path):
+    repo = make_repo(tmp_path)
+
+    # +4 per correct quiz answer; five correct answers to the same concept
+    # cross the "learning" floor (20) from a starting mastery of 0.
+    for hour in range(5):
+        _append_quiz_answered(
+            repo,
+            correct=True,
+            concepts=["python.dictionaries"],
+            now=NOW + timedelta(hours=hour),
+            event_id=f"quiz-{hour}",
+        )
+    repo.close()
+
+    conn = raw_connection(tmp_path)
+    row = conn.execute(
+        "SELECT mastery, label FROM concept_mastery WHERE concept_id = ?",
+        ("python.dictionaries",),
+    ).fetchone()
+    assert row["mastery"] == 20
+    assert row["label"] == MasteryLabel.LEARNING.value
+
+
+def test_quiz_answered_incorrect_grants_nothing_and_schedules_earlier_review(tmp_path: Path):
+    repo = make_repo(tmp_path)
+
+    # Establish a passing review schedule (due in 1 day) first.
+    repo.record_exercise_submission(
+        exercise_id="exercise.seed.count-tags-001",
+        content_version=1,
+        concepts=["python.dictionaries"],
+        status="passed",
+        session_id="session-1",
+        now=NOW,
+    )
+    conn = raw_connection(tmp_path)
+    before_mastery = conn.execute(
+        "SELECT mastery FROM concept_mastery WHERE concept_id = ?",
+        ("python.dictionaries",),
+    ).fetchone()["mastery"]
+    conn.close()
+    assert before_mastery == 10
+
+    later = NOW + timedelta(hours=1)
+    _append_quiz_answered(repo, correct=False, concepts=["python.dictionaries"], now=later)
+    repo.close()
+
+    conn = raw_connection(tmp_path)
+    mastery_row = conn.execute(
+        "SELECT mastery FROM concept_mastery WHERE concept_id = ?",
+        ("python.dictionaries",),
+    ).fetchone()
+    # An incorrect quiz answer grants no mastery.
+    assert mastery_row["mastery"] == before_mastery
+
+    review_row = conn.execute(
+        "SELECT review_due_at, spacing_stage FROM review_queue WHERE concept_id = ?",
+        ("python.dictionaries",),
+    ).fetchone()
+    # Review is rescheduled earlier than the original NOW + 1 day due date.
+    assert review_row["spacing_stage"] == 0
+    assert datetime.fromisoformat(review_row["review_due_at"]) == later
+    assert datetime.fromisoformat(review_row["review_due_at"]) < NOW + timedelta(days=1)
+
+
+def test_standalone_pattern_predicted_correct_grants_eight(tmp_path: Path):
+    repo = make_repo(tmp_path)
+
+    _append_pattern_predicted(repo, correct=True, concept_id="python.dictionaries", now=NOW)
+    repo.close()
+
+    conn = raw_connection(tmp_path)
+    row = conn.execute(
+        "SELECT mastery FROM concept_mastery WHERE concept_id = ?",
+        ("python.dictionaries",),
+    ).fetchone()
+    assert row["mastery"] == 8
+
+
+def test_standalone_pattern_predicted_incorrect_grants_nothing(tmp_path: Path):
+    repo = make_repo(tmp_path)
+
+    _append_pattern_predicted(repo, correct=False, concept_id="python.dictionaries", now=NOW)
+    repo.close()
+
+    conn = raw_connection(tmp_path)
+    row = conn.execute(
+        "SELECT mastery FROM concept_mastery WHERE concept_id = ?",
+        ("python.dictionaries",),
+    ).fetchone()
+    assert row is None
+
+
+def test_quiz_and_prediction_score_inputs_survive_recompute_rollups(tmp_path: Path):
+    repo = make_repo(tmp_path)
+
+    repo.record_exercise_submission(
+        exercise_id="exercise.seed.count-tags-001",
+        content_version=1,
+        concepts=["python.dictionaries"],
+        status="passed",
+        session_id="session-1",
+        now=NOW,
+    )
+    _append_quiz_answered(
+        repo, correct=True, concepts=["python.dictionaries"], now=NOW + timedelta(hours=1)
+    )
+    _append_pattern_predicted(
+        repo, correct=True, concept_id="python.loops", now=NOW + timedelta(hours=2)
+    )
+
+    before = raw_connection(tmp_path)
+    before_mastery = sorted(
+        (dict(row) for row in before.execute("SELECT * FROM concept_mastery").fetchall()),
+        key=lambda row: row["concept_id"],
+    )
+    before_queue = sorted(
+        (dict(row) for row in before.execute("SELECT * FROM review_queue").fetchall()),
+        key=lambda row: row["concept_id"],
+    )
+    before.close()
+
+    repo.recompute_rollups()
+    repo.close()
+
+    after = raw_connection(tmp_path)
+    after_mastery = sorted(
+        (dict(row) for row in after.execute("SELECT * FROM concept_mastery").fetchall()),
+        key=lambda row: row["concept_id"],
+    )
+    after_queue = sorted(
+        (dict(row) for row in after.execute("SELECT * FROM review_queue").fetchall()),
+        key=lambda row: row["concept_id"],
+    )
+    assert before_mastery == after_mastery
+    assert before_queue == after_queue
+    assert len(after_mastery) == 2
+
+
+def test_append_event_out_of_order_created_at_matches_recompute_replay(tmp_path: Path):
+    repo = make_repo(tmp_path)
+
+    # First append: a passing submission "now" schedules a review 1 day out.
+    repo.record_exercise_submission(
+        exercise_id="exercise.seed.count-tags-001",
+        content_version=1,
+        concepts=["python.dictionaries"],
+        status="passed",
+        session_id="session-1",
+        now=NOW,
+    )
+    # Second append arrives with a created_at *earlier* than the max already
+    # stored -- live incremental folding in insertion order would diverge
+    # from a created_at-ordered replay.
+    earlier = NOW - timedelta(hours=1)
+    repo.record_exercise_submission(
+        exercise_id="exercise.seed.count-tags-001",
+        content_version=1,
+        concepts=["python.dictionaries"],
+        status="passed",
+        session_id="session-1",
+        now=earlier,
+    )
+
+    live = raw_connection(tmp_path)
+    live_mastery = sorted(
+        (dict(row) for row in live.execute("SELECT * FROM concept_mastery").fetchall()),
+        key=lambda row: row["concept_id"],
+    )
+    live_queue = sorted(
+        (dict(row) for row in live.execute("SELECT * FROM review_queue").fetchall()),
+        key=lambda row: row["concept_id"],
+    )
+    live.close()
+
+    repo.recompute_rollups()
+    repo.close()
+
+    replayed = raw_connection(tmp_path)
+    replayed_mastery = sorted(
+        (dict(row) for row in replayed.execute("SELECT * FROM concept_mastery").fetchall()),
+        key=lambda row: row["concept_id"],
+    )
+    replayed_queue = sorted(
+        (dict(row) for row in replayed.execute("SELECT * FROM review_queue").fetchall()),
+        key=lambda row: row["concept_id"],
+    )
+
+    assert live_mastery == replayed_mastery
+    assert live_queue == replayed_queue
+    # Concretely: created_at-order processes `earlier` (T-1h) first, so the
+    # `NOW` submission is a same-day repeat and must not double-advance the
+    # spacing stage past 1, with the due date anchored to the *earlier*
+    # event's timestamp.
+    assert live_queue[0]["spacing_stage"] == 1
+    assert datetime.fromisoformat(live_queue[0]["review_due_at"]) == earlier + timedelta(days=1)

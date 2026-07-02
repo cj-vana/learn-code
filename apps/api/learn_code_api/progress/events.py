@@ -72,6 +72,14 @@ def insert_event(conn: sqlite3.Connection, event: ProgressEvent, sequence: int) 
     )
 
 
+def max_created_at(conn: sqlite3.Connection) -> datetime | None:
+    """Latest `created_at` among stored events, or ``None`` if the log is
+    empty. Used to detect out-of-order arrivals (spec rule: "Events are
+    ordered by created_at and insertion sequence")."""
+    row = conn.execute("SELECT MAX(created_at) FROM progress_events").fetchone()
+    return datetime.fromisoformat(row[0]) if row[0] is not None else None
+
+
 def fetch_events_ordered(conn: sqlite3.Connection) -> list[ProgressEvent]:
     """All events ordered by created_at then insertion sequence (spec rule)."""
     rows = conn.execute(
