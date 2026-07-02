@@ -1,0 +1,78 @@
+id: exercise.library.loops_lists_strings_w2.a05
+kind: exercise
+version: 1
+language: python
+title: Capitalized Words in a Caption
+slug: loops-lists-strings-w2-a05
+difficulty: easy
+concepts:
+  - python.strings
+  - python.lists
+  - python.loops
+prerequisites:
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings_w2.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original photo-caption capitalization-count scenario, prompt, tests, and explanation.
+prompt_markdown: |
+  A photo caption is a string of words separated by whitespace. Write
+  `count_capitalized(caption)` that returns how many words begin with an uppercase
+  letter (`A` through `Z`). Words may be separated by any amount of whitespace, and
+  extra spaces at the ends should be ignored. An empty caption returns 0.
+starter_code: |
+  def count_capitalized(caption):
+      return 0
+function_name: count_capitalized
+input_mode: function
+solution_sketch: Split into words on whitespace, then count the words whose first character is uppercase.
+sample_solution: |
+  def count_capitalized(caption):
+      total = 0
+      for word in caption.split():
+          if word[0].isupper():
+              total += 1
+      return total
+hints:
+  - level: 1
+    text: str.split() with no argument breaks on runs of whitespace and drops empties.
+  - level: 2
+    text: The first character of a word is `word[0]`.
+  - level: 3
+    text: str.isupper() on that first character tells you whether the word starts capitalized.
+tests:
+  public:
+    - name: empty
+      input: ""
+      expected: 0
+    - name: one_capital
+      input: "Hello there"
+      expected: 1
+    - name: all_capitalized
+      input: "Big Blue Sky"
+      expected: 3
+  validation:
+    - name: none
+      input: "quiet little pond"
+      expected: 0
+    - name: mixed
+      input: "The quick Brown fox"
+      expected: 2
+    - name: extra_spaces
+      input: "  Sunny   Day  "
+      expected: 2
+explanation_markdown: |
+  Using `caption.split()` with no argument splits on any run of whitespace and
+  discards empty pieces, so leading, trailing, and doubled spaces are handled for
+  free. Because `split()` never yields an empty word, `word[0]` is always safe, and
+  `word[0].isupper()` is `True` only for an initial `A`-`Z`, ignoring digits and
+  punctuation.
+common_mistakes:
+  - Calling `split(" ")`, which keeps empty strings when spaces are doubled.
+  - Checking `isupper()` on the whole word instead of just the first character.
+  - Assuming every word is non-empty without letting `split()` filter the blanks.

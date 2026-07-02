@@ -1,0 +1,105 @@
+id: exercise.library.sliding_window_w2.b04
+kind: exercise
+version: 1
+language: python
+title: Longest Playlist Stretch Under a Genre Cap
+slug: sliding-window-w2-b04
+difficulty: medium
+concepts:
+  - patterns.sliding_window
+  - patterns.hash_map_counting
+  - patterns.two_pointers
+prerequisites:
+  - python.lists
+estimated_time_minutes: 20
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sliding_window_w2.b04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original radio-playlist scenario asking for the longest run using at most a set number of distinct genres.
+prompt_markdown: |
+  A radio host queues songs as a list of genre labels in play order. To keep a
+  segment feeling cohesive, they want the longest continuous run of songs that
+  uses at most a set number of distinct genres.
+
+  Write `longest_varied_stretch(data)` where `data` is a dict with two keys:
+  `genres` (a list of genre-label strings in play order) and `limit` (the maximum
+  number of distinct genres allowed in the run). Return the length of the longest
+  continuous stretch containing at most `limit` distinct genres. If `limit` is 0
+  the answer is 0, and an empty list returns 0.
+starter_code: |
+  def longest_varied_stretch(data):
+      return 0
+function_name: longest_varied_stretch
+input_mode: function
+solution_sketch: Grow a window on the right and shrink it from the left whenever it holds more than limit distinct genres.
+sample_solution: |
+  def longest_varied_stretch(data):
+      genres = data["genres"]
+      limit = data["limit"]
+      if limit <= 0:
+          return 0
+      counts = {}
+      left = 0
+      best = 0
+      for right in range(len(genres)):
+          g = genres[right]
+          counts[g] = counts.get(g, 0) + 1
+          while len(counts) > limit:
+              leaving = genres[left]
+              counts[leaving] -= 1
+              if counts[leaving] == 0:
+                  del counts[leaving]
+              left += 1
+          if right - left + 1 > best:
+              best = right - left + 1
+      return best
+hints:
+  - level: 1
+    text: Keep a window and count how many distinct genres it currently contains.
+  - level: 2
+    text: A dict of genre counts tells you the number of distinct genres via its length.
+  - level: 3
+    text: While the window holds more than limit distinct genres, drop the leftmost song and delete its genre when its count hits 0.
+tests:
+  public:
+    - name: empty
+      input: { genres: [], limit: 2 }
+      expected: 0
+    - name: all_same
+      input: { genres: [jazz, jazz, jazz], limit: 1 }
+      expected: 3
+    - name: two_allowed
+      input: { genres: [rock, pop, rock, jazz], limit: 2 }
+      expected: 3
+  validation:
+    - name: limit_zero
+      input: { genres: [rock, pop], limit: 0 }
+      expected: 0
+    - name: high_limit
+      input: { genres: [rock, pop, jazz], limit: 5 }
+      expected: 3
+    - name: shrink_middle
+      input: { genres: [folk, folk, rock, soul, soul], limit: 2 }
+      expected: 3
+    - name: big_stretch
+      input: { genres: [rock, pop, rock, pop, jazz], limit: 2 }
+      expected: 4
+    - name: cap_one
+      input: { genres: [pop, funk, rock, soul, soul, soul], limit: 1 }
+      expected: 3
+explanation_markdown: |
+  This is a variable-length window. The right edge always advances, adding the
+  new song's genre to a count dictionary whose length is the number of distinct
+  genres in view. Whenever that length exceeds `limit`, the left edge advances,
+  removing songs until the window is valid again; a genre is deleted from the
+  dict when its count falls to 0. Because each song enters and leaves the window
+  at most once, the scan runs in O(n), and the largest valid width seen is the
+  answer.
+common_mistakes:
+  - Forgetting to delete a genre from the dict when its count reaches 0, so the distinct count stays too high.
+  - Only shrinking the window once instead of using a while loop until it is valid.
+  - Not handling limit 0, which should always yield 0.

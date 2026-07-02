@@ -1,0 +1,91 @@
+id: exercise.library.mixed_capstones_w2.b03
+kind: exercise
+version: 1
+language: python
+title: Warehouse Row Weight Queries
+slug: mixed-capstones-w2-b03
+difficulty: medium
+concepts:
+  - patterns.prefix_sums
+  - python.lists
+prerequisites:
+  - python.lists
+estimated_time_minutes: 16
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.mixed_capstones_w2.b03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original warehouse-row scenario answering many inclusive weight-range totals with a prefix-sum table.
+prompt_markdown: |
+  A warehouse row holds pallets, each with a known weight, listed left to right
+  in a `weights` list. A picking system fires off several range questions, each
+  asking for the total weight of the pallets between two shelf indices,
+  inclusive of both ends.
+
+  Write `range_totals(data)` where `data` is a dict with keys `weights` (a list
+  of integers) and `queries` (a list of `[start, end]` pairs, each a valid range
+  with `0 <= start <= end < len(weights)`). Return a list holding the total
+  weight for each query, in the same order the queries were asked. No queries
+  returns an empty list.
+starter_code: |
+  def range_totals(data):
+      return []
+function_name: range_totals
+input_mode: function
+solution_sketch: Build a prefix-sum table once, then answer each range with prefix[end + 1] - prefix[start].
+sample_solution: |
+  def range_totals(data):
+      weights = data["weights"]
+      queries = data["queries"]
+      prefix = [0]
+      for weight in weights:
+          prefix.append(prefix[-1] + weight)
+      totals = []
+      for start, end in queries:
+          totals.append(prefix[end + 1] - prefix[start])
+      return totals
+hints:
+  - level: 1
+    text: Recomputing each range from scratch repeats work; precompute running totals instead.
+  - level: 2
+    text: Build prefix where prefix[k] is the sum of the first k weights, with prefix[0] = 0.
+  - level: 3
+    text: An inclusive range [start, end] sums to prefix[end + 1] - prefix[start].
+tests:
+  public:
+    - name: whole_row
+      input: {weights: [4, 2, 7, 1], queries: [[0, 3]]}
+      expected: [14]
+    - name: single_pallet
+      input: {weights: [4, 2, 7, 1], queries: [[2, 2]]}
+      expected: [7]
+    - name: two_ranges
+      input: {weights: [5, 5, 5], queries: [[0, 1], [1, 2]]}
+      expected: [10, 10]
+  validation:
+    - name: no_queries
+      input: {weights: [3, 6, 9], queries: []}
+      expected: []
+    - name: overlapping_ranges
+      input: {weights: [1, 2, 3, 4, 5], queries: [[0, 2], [2, 4], [1, 3]]}
+      expected: [6, 12, 9]
+    - name: full_then_point
+      input: {weights: [10, 20, 30], queries: [[0, 2], [1, 1]]}
+      expected: [60, 20]
+    - name: single_element_row
+      input: {weights: [42], queries: [[0, 0], [0, 0]]}
+      expected: [42, 42]
+explanation_markdown: |
+  A prefix-sum table turns each range question into a single subtraction. Here
+  `prefix[k]` stores the sum of the first `k` weights, so the pallets from
+  `start` through `end` inclusive total `prefix[end + 1] - prefix[start]`.
+  Building the table is O(n) once, after which every one of the q queries is
+  answered in O(1), giving O(n + q) overall instead of the O(n * q) you get from
+  re-summing each range by hand.
+common_mistakes:
+  - Being off by one, e.g. using prefix[end] instead of prefix[end + 1] for an inclusive range.
+  - Rebuilding the prefix table inside the query loop.
+  - Forgetting the leading prefix[0] = 0, which breaks ranges that start at index 0.

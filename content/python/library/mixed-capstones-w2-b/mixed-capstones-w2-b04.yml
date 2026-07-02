@@ -1,0 +1,91 @@
+id: exercise.library.mixed_capstones_w2.b04
+kind: exercise
+version: 1
+language: python
+title: First Shelf Slot at or Above a Call Number
+slug: mixed-capstones-w2-b04
+difficulty: easy
+concepts:
+  - patterns.binary_search
+  - python.lists
+prerequisites:
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.mixed_capstones_w2.b04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original library-shelving scenario locating the first ordered call number at or above a wanted value.
+prompt_markdown: |
+  A library shelf holds books ordered left to right by call number, given as a
+  `calls` list sorted in non-decreasing order. A page reshelving a returned book
+  needs the slot index where it belongs: the position of the first book whose
+  call number is at least `wanted`.
+
+  Write `first_at_least(data)` where `data` is a dict with keys `calls` (the
+  sorted list) and `wanted` (an integer). Return the index of the first call
+  number greater than or equal to `wanted`. If every book on the shelf has a
+  smaller call number, return `len(calls)` (the slot just past the end).
+starter_code: |
+  def first_at_least(data):
+      return 0
+function_name: first_at_least
+input_mode: function
+solution_sketch: Binary search for the leftmost position whose value is not below wanted.
+sample_solution: |
+  def first_at_least(data):
+      calls = data["calls"]
+      wanted = data["wanted"]
+      lo, hi = 0, len(calls)
+      while lo < hi:
+          mid = (lo + hi) // 2
+          if calls[mid] < wanted:
+              lo = mid + 1
+          else:
+              hi = mid
+      return lo
+hints:
+  - level: 1
+    text: Because the shelf is sorted you can halve the search range each step instead of scanning.
+  - level: 2
+    text: Keep a lo/hi window; when the middle value is too small, the answer must be to its right.
+  - level: 3
+    text: When calls[mid] >= wanted, keep mid as a candidate by setting hi = mid; the loop ends with lo pointing at the answer.
+tests:
+  public:
+    - name: exact_match
+      input: {calls: [10, 20, 30, 40], wanted: 30}
+      expected: 2
+    - name: between_values
+      input: {calls: [10, 20, 30, 40], wanted: 25}
+      expected: 2
+    - name: all_smaller
+      input: {calls: [1, 2, 3], wanted: 9}
+      expected: 3
+  validation:
+    - name: empty_shelf
+      input: {calls: [], wanted: 5}
+      expected: 0
+    - name: before_first
+      input: {calls: [5, 8, 12], wanted: 1}
+      expected: 0
+    - name: duplicate_target
+      input: {calls: [4, 7, 7, 7, 9], wanted: 7}
+      expected: 1
+    - name: last_exact
+      input: {calls: [2, 4, 6, 8], wanted: 8}
+      expected: 3
+explanation_markdown: |
+  This is a lower-bound search: find the leftmost index whose value is not below
+  `wanted`. The half-open window `[lo, hi)` shrinks each step. When the middle
+  book is too small the answer lies strictly to its right (`lo = mid + 1`);
+  otherwise the middle is still a candidate, so we keep it by moving `hi` down to
+  `mid`. The loop runs in O(log n) and naturally returns `len(calls)` when no
+  book qualifies, which is exactly the insertion slot at the end.
+common_mistakes:
+  - Discarding the middle on a match with hi = mid - 1, which can skip the true first position.
+  - Starting hi at len(calls) - 1, making the "past the end" answer unreachable.
+  - Assuming a match exists and not handling the all-smaller or empty cases.

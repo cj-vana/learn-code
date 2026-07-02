@@ -1,0 +1,79 @@
+id: exercise.library.brute_force_bigo_w2.a02
+kind: exercise
+version: 1
+language: python
+title: Spice-Jar Taste Test Count
+slug: brute-force-bigo-w2-a02
+difficulty: easy
+concepts:
+  - concepts.big_o
+prerequisites: []
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.brute_force_bigo_w2.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original spice-shop taste-test scenario that turns a pairwise brute-force scan into a closed-form count.
+prompt_markdown: |
+  A spice shop runs a tasting where every jar is compared against every other jar
+  exactly once. Write `count_taste_tests(jar_count)` that returns how many
+  comparisons happen when there are `jar_count` jars.
+
+  This is exactly the number of unordered pairs a brute-force "compare every jar
+  with every other jar" scan would examine, so you can compute it directly
+  instead of looping. With zero or one jar there are no comparisons.
+starter_code: |
+  def count_taste_tests(jar_count):
+      return 0
+function_name: count_taste_tests
+input_mode: function
+solution_sketch: Each unordered pair is tasted once, so the answer is jar_count * (jar_count - 1) // 2.
+sample_solution: |
+  def count_taste_tests(jar_count):
+      if jar_count < 2:
+          return 0
+      return jar_count * (jar_count - 1) // 2
+hints:
+  - level: 1
+    text: Think about how many distinct pairs you can form from the jars.
+  - level: 2
+    text: A nested loop where the inner index starts one past the outer index runs once per unordered pair.
+  - level: 3
+    text: The count of those pairs is jar_count * (jar_count - 1) // 2, and it is 0 when there are fewer than two jars.
+tests:
+  public:
+    - name: none
+      input: 0
+      expected: 0
+    - name: one
+      input: 1
+      expected: 0
+    - name: three
+      input: 3
+      expected: 3
+  validation:
+    - name: two
+      input: 2
+      expected: 1
+    - name: five
+      input: 5
+      expected: 10
+    - name: ten
+      input: 10
+      expected: 45
+    - name: hundred
+      input: 100
+      expected: 4950
+explanation_markdown: |
+  A brute-force pairwise scan uses an outer loop over each jar and an inner loop
+  over every later jar, so the innermost step runs once for each of the
+  `n * (n - 1) / 2` unordered pairs. That count grows like O(n^2). Because the
+  total is a simple triangular number, you can return the closed form directly in
+  O(1) time instead of actually running the loops.
+common_mistakes:
+  - Using jar_count * jar_count, which counts ordered pairs and self-comparisons.
+  - Forgetting integer division, which can leave a trailing .0 in the result.
+  - Not handling zero or one jar, where no comparison is possible.

@@ -1,0 +1,86 @@
+id: exercise.library.binary_search_w2.a04
+kind: exercise
+version: 1
+language: python
+title: Complete Rows in the Can Display
+slug: binary-search-w2-a04
+difficulty: medium
+concepts:
+  - patterns.binary_search
+  - concepts.big_o
+prerequisites: []
+estimated_time_minutes: 16
+review_status: published
+source_status: original
+input_mode: function
+provenance:
+  brief_id: library.binary_search_w2.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original grocery can-stacking scenario that binary searches over the answer for the tallest complete triangle.
+prompt_markdown: |
+  A grocery crew builds a triangular display of soup cans: row 1 holds 1 can,
+  row 2 holds 2 cans, and row k holds k cans. Write `complete_rows(total)` where
+  `total` is the whole number of cans available.
+
+  Return the greatest number of **complete** rows they can build. A row of k cans
+  needs `k * (k + 1) / 2` cans in total up to and including it, so binary search
+  the answer instead of adding rows one at a time.
+starter_code: |
+  def complete_rows(total):
+      return 0
+function_name: complete_rows
+solution_sketch: Binary search the row count r, keeping the largest r whose triangular number stays within total.
+sample_solution: |
+  def complete_rows(total):
+      lo, hi = 0, total
+      best = 0
+      while lo <= hi:
+          mid = (lo + hi) // 2
+          if mid * (mid + 1) // 2 <= total:
+              best = mid
+              lo = mid + 1
+          else:
+              hi = mid - 1
+      return best
+hints:
+  - level: 1
+    text: The cans needed to finish r rows is the triangular number r * (r + 1) / 2, which only grows as r grows.
+  - level: 2
+    text: That monotonic growth means you can binary search the largest r that still fits within total.
+  - level: 3
+    text: When a candidate r fits, record it and search higher; otherwise search lower.
+tests:
+  public:
+    - name: none
+      input: 0
+      expected: 0
+    - name: exact_triangle
+      input: 6
+      expected: 3
+    - name: partial
+      input: 8
+      expected: 3
+  validation:
+    - name: one
+      input: 1
+      expected: 1
+    - name: two_rows
+      input: 5
+      expected: 2
+    - name: perfect_five
+      input: 15
+      expected: 5
+    - name: big
+      input: 100
+      expected: 13
+explanation_markdown: |
+  Finishing r rows always costs the triangular number `r * (r + 1) / 2`, and that
+  cost strictly increases with r. Because the "does r fit?" test flips from true
+  to false exactly once, binary search over r lands on the largest complete count
+  in O(log total) checks rather than looping row by row.
+common_mistakes:
+  - Looping row by row, which is slower and misses the point of the exercise.
+  - Comparing against total with `<` and rejecting a triangle that fits exactly.
+  - Returning the triangular number instead of the row count r.

@@ -1,0 +1,73 @@
+id: exercise.library.dicts_sets_tuples_w2.b01
+kind: exercise
+version: 1
+language: python
+title: Sort Trails by Length then Name
+slug: dicts-sets-tuples-w2-b01
+difficulty: easy
+concepts:
+  - python.sorting
+  - python.tuples
+prerequisites:
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples_w2.b01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original state-park trail listing sorted by length with an alphabetical tie-break.
+prompt_markdown: |
+  A state park publishes its trails as `[name, length_km]` pairs. Write
+  `sort_trails(trails)` that returns just the trail names ordered from shortest
+  to longest. When two trails are the same length, the one whose name comes
+  first alphabetically should appear first. An empty list returns an empty list.
+starter_code: |
+  def sort_trails(trails):
+      return []
+function_name: sort_trails
+input_mode: function
+solution_sketch: Sort by a (length, name) tuple key, then pull out the names.
+sample_solution: |
+  def sort_trails(trails):
+      ordered = sorted(trails, key=lambda t: (t[1], t[0]))
+      return [name for name, km in ordered]
+hints:
+  - level: 1
+    text: You need two sort priorities, length first and name second.
+  - level: 2
+    text: A tuple key like (length, name) sorts by length, breaking ties by name.
+  - level: 3
+    text: "Use sorted(trails, key=lambda t: (t[1], t[0])) and then keep only t[0]."
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: single
+      input: [[oak, 4]]
+      expected: [oak]
+    - name: tie_break
+      input: [[oak, 3], [birch, 3], [pine, 5], [elm, 1]]
+      expected: [elm, birch, oak, pine]
+  validation:
+    - name: already_ascending
+      input: [[c, 1], [b, 2], [a, 3]]
+      expected: [c, b, a]
+    - name: all_same_length
+      input: [[delta, 2], [alpha, 2], [charlie, 2]]
+      expected: [alpha, charlie, delta]
+    - name: mixed
+      input: [[ridge, 8], [creek, 3], [summit, 8], [vale, 3]]
+      expected: [creek, vale, ridge, summit]
+explanation_markdown: |
+  Python compares tuples element by element, so a key of `(length, name)` sorts
+  primarily by length and uses the name only to break exact ties. Building the
+  key inside `sorted` keeps the original pairs intact, and a final comprehension
+  extracts the names in the finished order. The sort runs in O(n log n).
+common_mistakes:
+  - Sorting by name first, which reverses the two priorities.
+  - Forgetting the alphabetical tie-break when lengths are equal.
+  - Returning the full pairs instead of only the trail names.

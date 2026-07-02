@@ -1,0 +1,87 @@
+id: exercise.library.prefix_sums_w2.a02
+kind: exercise
+version: 1
+language: python
+title: Display Beam Balance Point
+slug: prefix-sums-w2-a02
+difficulty: easy
+concepts:
+  - patterns.prefix_sums
+  - patterns.running_total
+prerequisites:
+  - python.lists
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.prefix_sums_w2.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original museum display-beam balancing scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A museum mounts a row of artefacts along a straight display beam, each with a
+  known weight. A conservator wants to find a support post position so that the
+  total weight strictly to the left of that post equals the total weight strictly
+  to the right of it. The artefact sitting at the post position is carried by the
+  post itself and counts for neither side.
+
+  Write `balance_point(weights)` that returns the smallest 0-based index where the
+  left and right totals are equal, or `-1` if no such position exists. For
+  `[3, 1, 5, 2, 2]` the answer is `2`, because `3 + 1` equals `2 + 2`.
+starter_code: |
+  def balance_point(weights):
+      return -1
+function_name: balance_point
+input_mode: function
+solution_sketch: Track the left prefix sum and derive the right side from the total minus left minus the current weight.
+sample_solution: |
+  def balance_point(weights):
+      total = sum(weights)
+      left = 0
+      for i, weight in enumerate(weights):
+          right = total - left - weight
+          if left == right:
+              return i
+          left += weight
+      return -1
+hints:
+  - level: 1
+    text: The right side equals the whole total minus the left side minus the weight at the current index.
+  - level: 2
+    text: Sum everything once, then sweep left to right growing a running left total.
+  - level: 3
+    text: At index i compare left with total - left - weights[i]; add weights[i] to left only after the check.
+tests:
+  public:
+    - name: middle
+      input: [3, 1, 5, 2, 2]
+      expected: 2
+    - name: leading
+      input: [5, 0, 0]
+      expected: 0
+    - name: none
+      input: [1, 2, 3]
+      expected: -1
+  validation:
+    - name: single
+      input: [7]
+      expected: 0
+    - name: empty
+      input: []
+      expected: -1
+    - name: trailing
+      input: [0, 0, 9]
+      expected: 2
+    - name: interior
+      input: [1, 2, 3, 3]
+      expected: 2
+explanation_markdown: |
+  Precomputing the grand total lets each index test its balance in O(1): the right
+  side is `total - left - weights[i]`. Growing `left` as you pass each artefact
+  keeps the whole sweep O(n). A lone artefact balances at index 0 because both
+  empty sides sum to 0, and an empty beam has no position, so it returns `-1`.
+common_mistakes:
+  - Including the current index's weight in the left or right side instead of excluding it.
+  - Adding weights[i] to the left total before comparing, which shifts every check.
+  - Recomputing the right sum with a fresh loop at each index, making it O(n^2).

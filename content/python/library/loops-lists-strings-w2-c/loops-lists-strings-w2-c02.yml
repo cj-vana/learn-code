@@ -1,0 +1,87 @@
+id: exercise.library.loops_lists_strings_w2.c02
+kind: exercise
+version: 1
+language: python
+title: Chunk Warehouse Barcodes
+slug: loops-lists-strings-w2-c02
+difficulty: easy
+concepts:
+  - python.strings
+  - python.slicing
+  - python.loops
+prerequisites:
+  - python.functions
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings_w2.c02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original warehouse-barcode scenario that groups a code string into fixed-size segments for readable labels, with fresh prompt, tests, and explanation.
+prompt_markdown: |
+  A warehouse prints shelf labels from long barcode strings. To make them easy
+  to read, the printer breaks each barcode into fixed-size groups of
+  characters, left to right. The final group may be shorter if the characters
+  do not divide evenly.
+
+  Write `split_barcode(data)` where `data` is a dict with keys `code` (the
+  barcode string) and `size` (a positive integer group length). Return a list
+  of the groups in order. An empty code returns an empty list.
+starter_code: |
+  def split_barcode(data):
+      return []
+function_name: split_barcode
+input_mode: function
+solution_sketch: Step through the string in jumps of size, slicing out each group until the end.
+sample_solution: |
+  def split_barcode(data):
+      code = data["code"]
+      size = data["size"]
+      groups = []
+      for start in range(0, len(code), size):
+          groups.append(code[start:start + size])
+      return groups
+hints:
+  - level: 1
+    text: Move through the string in steps equal to the group size instead of one character at a time.
+  - level: 2
+    text: range(0, len(code), size) gives the starting index of each group.
+  - level: 3
+    text: Slicing with code[start:start + size] safely returns a shorter piece when fewer characters remain.
+tests:
+  public:
+    - name: empty_code
+      input: {code: "", size: 3}
+      expected: []
+    - name: even_split
+      input: {code: "ABCDEF", size: 2}
+      expected: ["AB", "CD", "EF"]
+    - name: uneven_last
+      input: {code: "ABCDE", size: 2}
+      expected: ["AB", "CD", "E"]
+  validation:
+    - name: size_larger_than_code
+      input: {code: "XYZ", size: 5}
+      expected: ["XYZ"]
+    - name: threes_with_remainder
+      input: {code: "1234567", size: 3}
+      expected: ["123", "456", "7"]
+    - name: size_one
+      input: {code: "AB", size: 1}
+      expected: ["A", "B"]
+    - name: exact_single_group
+      input: {code: "PACK", size: 4}
+      expected: ["PACK"]
+explanation_markdown: |
+  Rather than copying characters one at a time, jump through the string in
+  strides of `size`. `range(0, len(code), size)` yields the index where each
+  group begins. Slicing `code[start:start + size]` grabs up to `size`
+  characters and automatically returns a shorter slice when the string ends,
+  so the final partial group needs no special case. The scan is O(n) in the
+  length of the barcode.
+common_mistakes:
+  - Looping one character at a time and losing track of group boundaries.
+  - Assuming the length always divides evenly and dropping the final short group.
+  - Using an index beyond the string length instead of relying on slicing to clamp it.

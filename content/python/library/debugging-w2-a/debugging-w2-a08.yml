@@ -1,0 +1,78 @@
+id: exercise.library.debugging_w2.a08
+kind: exercise
+version: 1
+language: python
+title: Flip the Desk Directory
+slug: debugging-w2-a08
+difficulty: easy
+concepts:
+  - python.debugging
+  - python.dictionaries
+prerequisites:
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.debugging_w2.a08
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original office-directory scenario built around the classic bug of copying a dict unchanged instead of swapping its keys and values.
+prompt_markdown: |
+  An office keeps a directory mapping each employee id to their desk code, and
+  every desk code is unique. Write `invert_directory(pairs)` returning a new dict
+  that maps each desk code back to its employee id.
+
+  A common beginner bug is to loop over the dict and write `result[key] = value`,
+  which just rebuilds the original. To invert it you must place the value as the
+  new key and the key as the new value. An empty directory returns an empty dict.
+starter_code: |
+  def invert_directory(pairs):
+      return {}
+function_name: invert_directory
+input_mode: function
+solution_sketch: Loop over items() and assign result[value] = key to swap keys and values.
+sample_solution: |
+  def invert_directory(pairs):
+      result = {}
+      for employee, desk in pairs.items():
+          result[desk] = employee
+      return result
+hints:
+  - level: 1
+    text: Inverting means the old value becomes the new key.
+  - level: 2
+    text: Iterate with pairs.items() so you have both the key and the value.
+  - level: 3
+    text: Assign result[value] = key, not result[key] = value.
+tests:
+  public:
+    - name: empty
+      input: {}
+      expected: {}
+    - name: single
+      input: {e1: d1}
+      expected: {d1: e1}
+    - name: two
+      input: {e1: d1, e2: d2}
+      expected: {d1: e1, d2: e2}
+  validation:
+    - name: three
+      input: {ana: north, ben: south, cid: east}
+      expected: {north: ana, south: ben, east: cid}
+    - name: one_pair
+      input: {sol: bay}
+      expected: {bay: sol}
+    - name: numbered
+      input: {r1: g1, r2: g2, r3: g3}
+      expected: {g1: r1, g2: r2, g3: r3}
+explanation_markdown: |
+  Inverting a dict swaps the roles of keys and values, so you iterate over
+  `pairs.items()` and assign `result[value] = key`. Writing `result[key] = value`
+  only copies the directory. Because every desk code is unique, no two employees
+  collide on the same new key, so the inverse is a clean one-to-one mapping.
+common_mistakes:
+  - Assigning result[key] = value and rebuilding the original dict.
+  - Looping over keys only and losing easy access to the values.
+  - Assuming desk codes could repeat and overwrite each other.

@@ -1,0 +1,85 @@
+id: exercise.library.two_pointers_w2.a01
+kind: exercise
+version: 1
+language: python
+title: Reverse the Relay Baton Order
+slug: two-pointers-w2-a01
+difficulty: easy
+concepts:
+  - patterns.two_pointers
+  - python.lists
+prerequisites:
+  - python.lists
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.two_pointers_w2.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original relay-team scenario teaching in-place reversal by swapping from both ends.
+prompt_markdown: |
+  A relay coach records the running order of a team as a list of runner names.
+  For the next heat the coach wants the exact reverse order, and the drill is to
+  build it by swapping the two ends inward rather than calling a reverse helper.
+
+  Write `reverse_baton_order(runners)` that returns a new list holding the same
+  names in reversed order. An empty list returns an empty list.
+starter_code: |
+  def reverse_baton_order(runners):
+      return []
+function_name: reverse_baton_order
+input_mode: function
+solution_sketch: Copy the list, then swap the values at a left and a right pointer while walking them toward the middle.
+sample_solution: |
+  def reverse_baton_order(runners):
+      result = list(runners)
+      left = 0
+      right = len(result) - 1
+      while left < right:
+          result[left], result[right] = result[right], result[left]
+          left += 1
+          right -= 1
+      return result
+hints:
+  - level: 1
+    text: Start one pointer at the first runner and one at the last runner.
+  - level: 2
+    text: Swap the values under the two pointers, then step the left pointer forward and the right pointer backward.
+  - level: 3
+    text: Stop once the pointers meet or cross so you do not swap the list back to its original order.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: single
+      input: [maya]
+      expected: [maya]
+    - name: four_runners
+      input: [ana, ben, cy, dot]
+      expected: [dot, cy, ben, ana]
+  validation:
+    - name: odd_length
+      input: [red, green, blue]
+      expected: [blue, green, red]
+    - name: numbers
+      input: [1, 2, 3, 4, 5]
+      expected: [5, 4, 3, 2, 1]
+    - name: duplicates
+      input: [1, 1, 2]
+      expected: [2, 1, 1]
+    - name: two_items
+      input: [8, 9]
+      expected: [9, 8]
+explanation_markdown: |
+  Reversing a sequence is a textbook two-pointer sweep. One pointer starts at the
+  front and one at the back; swapping the pair and stepping both inward moves every
+  value to its mirrored spot. The loop stops when the pointers meet, so each pair is
+  swapped exactly once and the whole pass is O(n) with no extra list beyond the copy
+  that keeps the input untouched.
+common_mistakes:
+  - Letting the loop run past the middle, which swaps every pair twice and restores the original order.
+  - Mutating the caller's list instead of returning a reversed copy.
+  - Moving only one pointer, so most positions never get swapped.

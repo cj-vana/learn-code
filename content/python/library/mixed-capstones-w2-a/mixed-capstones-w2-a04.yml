@@ -1,0 +1,83 @@
+id: exercise.library.mixed_capstones_w2.a04
+kind: exercise
+version: 1
+language: python
+title: Rainfall Range Totals
+slug: mixed-capstones-w2-a04
+difficulty: easy
+concepts:
+  - patterns.prefix_sums
+  - patterns.running_total
+prerequisites:
+  - python.lists
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.mixed_capstones_w2.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original seasonal-rainfall scenario answering inclusive range-sum queries with a prefix-sum array and its own tests.
+prompt_markdown: |
+  A weather station records daily rainfall in millimetres across a season. Write
+  `rainfall_totals(data)` where `data` is a dict with `rainfall` (a list of
+  non-negative integers, day 0 first) and `queries` (a list of `[start, end]`
+  pairs of 0-based day indices). For each query return the total rainfall from
+  day `start` through day `end`, inclusive. Return the list of totals in the same
+  order as the queries. No queries returns an empty list.
+starter_code: |
+  def rainfall_totals(data):
+      return []
+function_name: rainfall_totals
+input_mode: function
+solution_sketch: Build a prefix-sum array once, then answer each inclusive range in O(1) as prefix[end + 1] - prefix[start].
+sample_solution: |
+  def rainfall_totals(data):
+      rainfall = data["rainfall"]
+      queries = data["queries"]
+      prefix = [0]
+      for value in rainfall:
+          prefix.append(prefix[-1] + value)
+      totals = []
+      for start, end in queries:
+          totals.append(prefix[end + 1] - prefix[start])
+      return totals
+hints:
+  - level: 1
+    text: Many queries can share one pass of precomputation over the rainfall list.
+  - level: 2
+    text: A prefix-sum array stores the running total up to each day.
+  - level: 3
+    text: An inclusive range start..end is prefix[end + 1] - prefix[start].
+tests:
+  public:
+    - name: single_query
+      input: {rainfall: [2, 0, 4, 1], queries: [[0, 3]]}
+      expected: [7]
+    - name: two_queries
+      input: {rainfall: [2, 0, 4, 1], queries: [[0, 1], [2, 3]]}
+      expected: [2, 5]
+    - name: point
+      input: {rainfall: [5, 3, 8], queries: [[1, 1]]}
+      expected: [3]
+  validation:
+    - name: no_queries
+      input: {rainfall: [1, 2, 3], queries: []}
+      expected: []
+    - name: overlap
+      input: {rainfall: [1, 2, 3, 4, 5], queries: [[0, 2], [1, 3], [0, 4]]}
+      expected: [6, 9, 15]
+    - name: repeated_zero
+      input: {rainfall: [0, 0, 0], queries: [[0, 2], [0, 0]]}
+      expected: [0, 0]
+explanation_markdown: |
+  Building a prefix-sum array where `prefix[i]` holds the total of the first `i`
+  days costs one O(n) pass. After that, any inclusive range `start..end` is
+  answered in O(1) as `prefix[end + 1] - prefix[start]`, so q queries cost
+  O(n + q) overall instead of O(n * q). The leading zero in the prefix array
+  makes the day-0 case fall out without a special branch.
+common_mistakes:
+  - Using prefix[end] - prefix[start], which drops the last day of an inclusive range.
+  - Recomputing each range with a fresh loop, giving O(n * q) work.
+  - Forgetting the leading 0 that lets ranges starting at day 0 work cleanly.

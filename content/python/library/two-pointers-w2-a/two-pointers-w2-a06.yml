@@ -1,0 +1,98 @@
+id: exercise.library.two_pointers_w2.a06
+kind: exercise
+version: 1
+language: python
+title: Alternate the DJ Setlists
+slug: two-pointers-w2-a06
+difficulty: easy
+concepts:
+  - patterns.two_pointers
+  - python.lists
+prerequisites:
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.two_pointers_w2.a06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original DJ scenario interleaving two track lists and appending the longer list's leftovers.
+prompt_markdown: |
+  Two DJs each bring an ordered list of track titles for a back-to-back set. The
+  host wants the combined set to alternate, starting with a track from the first
+  DJ, then one from the second, and so on. When one list runs out, the remaining
+  tracks from the other list play in order at the end.
+
+  Write `alternate_setlists(data)` where `data` is a dict with keys `deck_a` and
+  `deck_b` (both lists). Return the interleaved list described above.
+starter_code: |
+  def alternate_setlists(data):
+      return []
+function_name: alternate_setlists
+input_mode: function
+solution_sketch: Advance a pointer in each list together, appending one from each; then drain whichever list still has tracks.
+sample_solution: |
+  def alternate_setlists(data):
+      a = data["deck_a"]
+      b = data["deck_b"]
+      i = 0
+      j = 0
+      result = []
+      while i < len(a) and j < len(b):
+          result.append(a[i])
+          result.append(b[j])
+          i += 1
+          j += 1
+      while i < len(a):
+          result.append(a[i])
+          i += 1
+      while j < len(b):
+          result.append(b[j])
+          j += 1
+      return result
+hints:
+  - level: 1
+    text: Use one pointer per deck and take a track from each on every round.
+  - level: 2
+    text: While both decks still have tracks, append deck_a's current track then deck_b's, and step both pointers.
+  - level: 3
+    text: Once the shorter deck is empty, append whatever remains in the other deck in order.
+tests:
+  public:
+    - name: equal_length
+      input: { deck_a: [x, y], deck_b: [p, q] }
+      expected: [x, p, y, q]
+    - name: a_longer
+      input: { deck_a: [1, 3, 5, 7], deck_b: [2, 4] }
+      expected: [1, 2, 3, 4, 5, 7]
+    - name: b_longer
+      input: { deck_a: [a], deck_b: [b, c, d] }
+      expected: [a, b, c, d]
+  validation:
+    - name: a_empty
+      input: { deck_a: [], deck_b: [9, 8] }
+      expected: [9, 8]
+    - name: b_empty
+      input: { deck_a: [4, 5], deck_b: [] }
+      expected: [4, 5]
+    - name: both_empty
+      input: { deck_a: [], deck_b: [] }
+      expected: []
+    - name: single_each
+      input: { deck_a: [0], deck_b: [1] }
+      expected: [0, 1]
+    - name: a_much_longer
+      input: { deck_a: [1, 2, 3, 4, 5], deck_b: [9] }
+      expected: [1, 9, 2, 3, 4, 5]
+explanation_markdown: |
+  Interleaving is a two-pointer walk where both pointers advance together. While
+  each deck still has a track, you emit one from each and step both indices. The
+  moment the shorter deck empties, the paired loop ends and a follow-up loop drains
+  the remaining tracks of the longer deck in order. Every track is appended exactly
+  once, so the routine is O(len(a) + len(b)).
+common_mistakes:
+  - Stopping at the shorter deck's length and dropping the longer deck's leftover tracks.
+  - Appending the two decks' tracks in the wrong order within a round.
+  - Advancing only one pointer inside the paired loop, which desynchronizes the alternation.

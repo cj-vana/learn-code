@@ -1,0 +1,76 @@
+id: exercise.library.loops_lists_strings_w2.b05
+kind: exercise
+version: 1
+language: python
+title: Passphrase Vowel Count
+slug: loops-lists-strings-w2-b05
+difficulty: easy
+concepts:
+  - python.strings
+  - python.loops
+prerequisites:
+  - python.functions
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings_w2.b05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original sign-in-kiosk passphrase scenario, prompt, tests, and explanation.
+prompt_markdown: |
+  A sign-in kiosk scores each passphrase by how many vowels it contains. Write
+  `count_vowels(phrase)` returning the number of characters that are vowels
+  (`a`, `e`, `i`, `o`, `u`), counting both uppercase and lowercase letters. Any
+  other character, including spaces, is ignored. An empty string returns 0.
+starter_code: |
+  def count_vowels(phrase):
+      return 0
+function_name: count_vowels
+input_mode: function
+solution_sketch: Lowercase the phrase and count characters that appear in "aeiou".
+sample_solution: |
+  def count_vowels(phrase):
+      vowels = "aeiou"
+      total = 0
+      for char in phrase.lower():
+          if char in vowels:
+              total += 1
+      return total
+hints:
+  - level: 1
+    text: Check one character at a time as you loop over the phrase.
+  - level: 2
+    text: Lowercasing first lets you handle upper and lower case together.
+  - level: 3
+    text: Membership test char in "aeiou" tells you if it is a vowel.
+tests:
+  public:
+    - name: empty
+      input: ""
+      expected: 0
+    - name: no_vowels
+      input: "rhythm"
+      expected: 0
+    - name: simple_word
+      input: "banana"
+      expected: 3
+  validation:
+    - name: all_uppercase_vowels
+      input: "AEIOU"
+      expected: 5
+    - name: with_space
+      input: "open road"
+      expected: 4
+    - name: mixed_case
+      input: "Hello World"
+      expected: 3
+explanation_markdown: |
+  Lowercasing the phrase means one membership check handles both cases. Looping
+  character by character and testing `char in "aeiou"` counts every vowel while
+  skipping consonants, spaces, and punctuation.
+common_mistakes:
+  - Only checking lowercase vowels and missing uppercase ones.
+  - Counting the letter y as a vowel.
+  - Returning after the first vowel instead of counting them all.

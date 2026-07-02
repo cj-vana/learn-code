@@ -1,0 +1,79 @@
+id: exercise.library.dicts_sets_tuples_w2.a07
+kind: exercise
+version: 1
+language: python
+title: Trivia Night Leaderboard
+slug: dicts-sets-tuples-w2-a07
+difficulty: easy
+concepts:
+  - python.tuples
+  - python.sorting
+prerequisites:
+  - python.functions
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples_w2.a07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original trivia-night scenario zipping two parallel lists into a score-ranked leaderboard.
+prompt_markdown: |
+  After a trivia night you have two equal-length lists inside `data`: `players`
+  (names) and `points` (their scores).
+
+  Write `leaderboard(data)` returning a list of `[name, score]` pairs ordered
+  from highest score to lowest. If two players share a score, order them
+  alphabetically by name. Empty lists return an empty list.
+starter_code: |
+  def leaderboard(data):
+      return []
+function_name: leaderboard
+input_mode: function
+solution_sketch: Zip names with points, sort by (-score, name), and return name/score pairs.
+sample_solution: |
+  def leaderboard(data):
+      players = data["players"]
+      points = data["points"]
+      pairs = list(zip(players, points))
+      pairs.sort(key=lambda pair: (-pair[1], pair[0]))
+      return [[name, score] for name, score in pairs]
+hints:
+  - level: 1
+    text: Pair each player with their score before ranking.
+  - level: 2
+    text: zip(players, points) lines up the two lists into name/score pairs.
+  - level: 3
+    text: Sort by (-score, name) so high scores lead and ties go alphabetically.
+tests:
+  public:
+    - name: empty
+      input: {players: [], points: []}
+      expected: []
+    - name: two_players
+      input: {players: [ana, ben], points: [10, 30]}
+      expected: [[ben, 30], [ana, 10]]
+    - name: tie_alpha
+      input: {players: [cara, ana], points: [20, 20]}
+      expected: [[ana, 20], [cara, 20]]
+  validation:
+    - name: three_players
+      input: {players: [xan, yui, zed], points: [5, 9, 7]}
+      expected: [[yui, 9], [zed, 7], [xan, 5]]
+    - name: all_tied
+      input: {players: [bee, ally, cee], points: [8, 8, 8]}
+      expected: [[ally, 8], [bee, 8], [cee, 8]]
+    - name: mixed
+      input: {players: [mo, al, zo], points: [15, 15, 20]}
+      expected: [[zo, 20], [al, 15], [mo, 15]]
+explanation_markdown: |
+  `zip` walks two parallel lists together, producing `(name, score)` pairs. A
+  sort key of `(-score, name)` puts the highest scores first because negating a
+  number flips the order, while the plain name breaks ties alphabetically.
+  Rebuilding each pair as a `[name, score]` list gives the leaderboard rows the
+  caller asked for.
+common_mistakes:
+  - Sorting scores ascending and forgetting to reverse for a leaderboard.
+  - Losing the name/score pairing by sorting the two lists separately.
+  - Ignoring the alphabetical tie-break when scores are equal.

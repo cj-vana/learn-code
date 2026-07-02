@@ -1,0 +1,83 @@
+id: exercise.library.debugging_w2.a01
+kind: exercise
+version: 1
+language: python
+title: Prune the Wilted Plants
+slug: debugging-w2-a01
+difficulty: easy
+concepts:
+  - python.debugging
+  - python.lists
+  - python.loops
+prerequisites:
+  - python.functions
+  - python.loops
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.debugging_w2.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original greenhouse-row scenario built around the classic bug of removing items from a list while looping over it.
+prompt_markdown: |
+  A greenhouse worker walks a row of potted plants and wants to keep only the
+  ones that are still alive. Write `keep_healthy(plants)` returning a new list
+  containing every plant label except those equal to `"wilted"`, in their
+  original order.
+
+  A common beginner bug is to delete items from the same list you are looping
+  over. When two `"wilted"` plants sit next to each other, removing the first
+  shifts the second into the slot the loop just left, so it never gets checked.
+  Build a fresh list instead. An empty row returns an empty list.
+starter_code: |
+  def keep_healthy(plants):
+      return []
+function_name: keep_healthy
+input_mode: function
+solution_sketch: Iterate over the plants and append each non-wilted label to a new list.
+sample_solution: |
+  def keep_healthy(plants):
+      healthy = []
+      for plant in plants:
+          if plant != "wilted":
+              healthy.append(plant)
+      return healthy
+hints:
+  - level: 1
+    text: Do not remove items from the list you are iterating over.
+  - level: 2
+    text: Two wilted plants in a row are the case that exposes the skipping bug.
+  - level: 3
+    text: Start with an empty list and append only the plants that are not wilted.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: none_wilted
+      input: [fern, ivy]
+      expected: [fern, ivy]
+    - name: consecutive_wilted
+      input: [wilted, wilted, rose]
+      expected: [rose]
+  validation:
+    - name: mixed
+      input: [aloe, wilted, basil, wilted, mint]
+      expected: [aloe, basil, mint]
+    - name: all_wilted
+      input: [wilted, wilted, wilted]
+      expected: []
+    - name: trailing
+      input: [oak, wilted, wilted]
+      expected: [oak]
+explanation_markdown: |
+  Mutating a list while iterating over it changes the indices the loop relies on,
+  so items get skipped. The safe fix is to leave the input untouched and build a
+  separate result list, appending only the labels that are not `"wilted"`. This
+  runs in a single O(n) pass and preserves the original order.
+common_mistakes:
+  - Calling plants.remove(...) or del inside the loop and skipping neighbours.
+  - Mutating the input list instead of returning a new one.
+  - Returning None instead of an empty list for an empty row.

@@ -1,0 +1,89 @@
+id: exercise.library.two_pointers_w2.a02
+kind: exercise
+version: 1
+language: python
+title: Recipe Steps In Order
+slug: two-pointers-w2-a02
+difficulty: easy
+concepts:
+  - patterns.two_pointers
+  - python.lists
+prerequisites:
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.two_pointers_w2.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original kitchen-prep scenario checking whether required steps appear in order as a subsequence.
+prompt_markdown: |
+  A cooking instructor has a short list of key `steps` a student must perform in
+  order, and a longer `prep` log of everything the student actually did. The key
+  steps may be spread out with other actions in between, but they must appear in
+  the same relative order to count.
+
+  Write `steps_in_order(data)` where `data` is a dict with keys `steps` and
+  `prep` (both lists). Return `True` if every step appears in `prep` in order (as
+  a subsequence), otherwise `False`. An empty `steps` list is always satisfied.
+starter_code: |
+  def steps_in_order(data):
+      return False
+function_name: steps_in_order
+input_mode: function
+solution_sketch: Walk a pointer through prep and advance a steps pointer only when the current prep action matches the next required step.
+sample_solution: |
+  def steps_in_order(data):
+      steps = data["steps"]
+      prep = data["prep"]
+      i = 0
+      for action in prep:
+          if i < len(steps) and action == steps[i]:
+              i += 1
+      return i == len(steps)
+hints:
+  - level: 1
+    text: Keep one pointer on the next required step and scan the prep log from left to right.
+  - level: 2
+    text: Advance the step pointer only when the current prep action equals the step it points to.
+  - level: 3
+    text: The steps are all matched when the step pointer reaches the end of the steps list.
+tests:
+  public:
+    - name: empty_steps
+      input: { steps: [], prep: [chop, mix] }
+      expected: true
+    - name: in_order_with_gaps
+      input: { steps: [mix, bake], prep: [chop, mix, rest, bake] }
+      expected: true
+    - name: wrong_order
+      input: { steps: [bake, mix], prep: [mix, bake] }
+      expected: false
+  validation:
+    - name: missing_step
+      input: { steps: [mix, chill], prep: [mix, bake] }
+      expected: false
+    - name: exact_match
+      input: { steps: [a, b, c], prep: [a, b, c] }
+      expected: true
+    - name: empty_prep
+      input: { steps: [x], prep: [] }
+      expected: false
+    - name: spread_out
+      input: { steps: [knead, proof, bake], prep: [weigh, knead, rest, proof, shape, bake] }
+      expected: true
+    - name: repeated_step
+      input: { steps: [stir, stir], prep: [stir, pour, stir] }
+      expected: true
+explanation_markdown: |
+  Checking for a subsequence is a two-pointer walk over two lists. One pointer
+  scans every action in the prep log; a second pointer tracks the next required
+  step. Whenever the scanned action matches the awaited step, the step pointer
+  advances. If it reaches the end, every step was found in order. Because each
+  prep action is examined once, the scan is O(len(prep)).
+common_mistakes:
+  - Requiring the steps to be contiguous instead of allowing other actions in between.
+  - Advancing the step pointer on every prep action instead of only on a match.
+  - Forgetting that an empty steps list is trivially in order.

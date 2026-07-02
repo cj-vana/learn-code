@@ -1,0 +1,80 @@
+id: exercise.library.dicts_sets_tuples_w2.a04
+kind: exercise
+version: 1
+language: python
+title: Best-Selling Cinema Genre
+slug: dicts-sets-tuples-w2-a04
+difficulty: easy
+concepts:
+  - python.dictionaries
+  - python.sorting
+  - patterns.hash_map_counting
+prerequisites:
+  - python.loops
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples_w2.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original cinema ticket-log scenario picking the top genre with an alphabetical tie-break.
+prompt_markdown: |
+  A small cinema logs the genre of every ticket sold as a list of strings.
+
+  Write `top_genre(tickets)` returning the genre with the most tickets sold. If
+  several genres tie for the most, return the one that comes first
+  alphabetically. An empty list returns an empty string `""`.
+starter_code: |
+  def top_genre(tickets):
+      return ""
+function_name: top_genre
+input_mode: function
+solution_sketch: Count genres in a dict, then pick the key with the highest count, ties by name.
+sample_solution: |
+  def top_genre(tickets):
+      counts = {}
+      for genre in tickets:
+          counts[genre] = counts.get(genre, 0) + 1
+      if not counts:
+          return ""
+      return min(counts, key=lambda g: (-counts[g], g))
+hints:
+  - level: 1
+    text: First tally how many tickets each genre sold.
+  - level: 2
+    text: The winner has the largest count; ties are settled alphabetically.
+  - level: 3
+    text: Use a key of (-counts[g], g) so the biggest count and earliest name win.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: ""
+    - name: clear_winner
+      input: [drama, drama, comedy]
+      expected: drama
+    - name: tie_alpha
+      input: [comedy, drama]
+      expected: comedy
+  validation:
+    - name: single
+      input: [horror]
+      expected: horror
+    - name: tie_three
+      input: [beta, alpha, gamma]
+      expected: alpha
+    - name: winner_over_tie
+      input: [sci, sci, doc, doc, sci]
+      expected: sci
+explanation_markdown: |
+  A dictionary makes counting easy: `counts.get(genre, 0) + 1` starts a new
+  genre at zero and bumps a known one. To choose the winner, sort each candidate
+  by the tuple `(-count, name)`. The negative count puts the biggest tally first,
+  and the plain name breaks ties alphabetically, so a single `min` call finds the
+  answer.
+common_mistakes:
+  - Forgetting the empty-input case and crashing on an empty dict.
+  - Breaking ties by insertion order instead of alphabetically.
+  - Returning the count instead of the genre name.

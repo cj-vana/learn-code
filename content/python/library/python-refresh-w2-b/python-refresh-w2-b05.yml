@@ -1,0 +1,71 @@
+id: exercise.library.python_refresh_w2.b05
+kind: exercise
+version: 1
+language: python
+title: League Table Points
+slug: python-refresh-w2-b05
+difficulty: easy
+concepts:
+  - python.operators
+  - python.variables
+  - python.functions
+prerequisites: []
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh_w2.b05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original amateur-league points scenario with its own three-points-for-a-win scoring and tests.
+prompt_markdown: |
+  A weekend soccer league awards 3 points for each win and 1 point for each
+  draw; losses are worth nothing.
+  Write `standings_points(record)` where `record` is a dict with keys `wins`,
+  `draws`, and `losses` (all non-negative integers). Return the team's total
+  points as an integer.
+starter_code: |
+  def standings_points(record):
+      return 0
+function_name: standings_points
+input_mode: function
+solution_sketch: Multiply wins by three, add the draws, and ignore the losses.
+sample_solution: |
+  def standings_points(record):
+      return record["wins"] * 3 + record["draws"]
+hints:
+  - level: 1
+    text: Only wins and draws add to the total; losses contribute nothing.
+  - level: 2
+    text: Each win is worth three points, so scale the win count before adding.
+  - level: 3
+    text: Return record["wins"] * 3 + record["draws"].
+tests:
+  public:
+    - name: mixed_season
+      input: {wins: 3, draws: 2, losses: 1}
+      expected: 11
+    - name: all_losses
+      input: {wins: 0, draws: 0, losses: 5}
+      expected: 0
+    - name: perfect_run
+      input: {wins: 10, draws: 0, losses: 0}
+      expected: 30
+  validation:
+    - name: some_draws
+      input: {wins: 2, draws: 3, losses: 2}
+      expected: 9
+    - name: one_each
+      input: {wins: 1, draws: 1, losses: 1}
+      expected: 4
+    - name: draw_heavy
+      input: {wins: 5, draws: 4, losses: 0}
+      expected: 19
+explanation_markdown: |
+  The scoring rule maps directly to arithmetic: wins are weighted by three,
+  draws by one, and losses drop out because they add nothing. Reading the three
+  values from the dict and combining them gives the total in one expression.
+common_mistakes:
+  - Adding the losses into the total instead of ignoring them.
+  - Forgetting to multiply the wins by three.

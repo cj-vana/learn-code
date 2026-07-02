@@ -1,0 +1,92 @@
+id: exercise.library.binary_search_w2.a07
+kind: exercise
+version: 1
+language: python
+title: Visitors in the Age Band
+slug: binary-search-w2-a07
+difficulty: easy
+concepts:
+  - patterns.binary_search
+  - python.lists
+prerequisites:
+  - python.lists
+  - python.sorting
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+input_mode: function
+provenance:
+  brief_id: library.binary_search_w2.a07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original museum visitor-age scenario counting entries inside an inclusive band with two boundary searches.
+prompt_markdown: |
+  A science museum logs every visitor's age for the day in a list sorted in
+  ascending order. Write `count_in_band(data)` where `data` has keys `ages` (the
+  sorted list), `low`, and `high` (both whole-year ages).
+
+  Return how many logged ages fall within the inclusive range `low` to `high`.
+  Use binary search to find the two boundaries instead of counting each visitor.
+starter_code: |
+  def count_in_band(data):
+      return 0
+function_name: count_in_band
+solution_sketch: Binary search the first index at or above low and the first index above high, then subtract.
+sample_solution: |
+  def count_in_band(data):
+      ages = data["ages"]
+      low = data["low"]
+      high = data["high"]
+
+      def bound(x):
+          lo, hi = 0, len(ages)
+          while lo < hi:
+              mid = (lo + hi) // 2
+              if ages[mid] < x:
+                  lo = mid + 1
+              else:
+                  hi = mid
+          return lo
+
+      return bound(high + 1) - bound(low)
+hints:
+  - level: 1
+    text: Ages inside the band form one contiguous stretch because the list is sorted.
+  - level: 2
+    text: Find where ages reach low and where they first pass high using boundary searches.
+  - level: 3
+    text: Searching for high + 1 gives the first index past the band; subtract the low boundary from it.
+tests:
+  public:
+    - name: middle_band
+      input: {ages: [5, 8, 8, 12, 15, 20], low: 8, high: 15}
+      expected: 4
+    - name: none
+      input: {ages: [5, 8, 12], low: 9, high: 11}
+      expected: 0
+    - name: all
+      input: {ages: [5, 8, 12], low: 0, high: 100}
+      expected: 3
+  validation:
+    - name: empty
+      input: {ages: [], low: 5, high: 10}
+      expected: 0
+    - name: boundaries
+      input: {ages: [10, 10, 10], low: 10, high: 10}
+      expected: 3
+    - name: below_all
+      input: {ages: [30, 40, 50], low: 5, high: 20}
+      expected: 0
+    - name: upper_edge
+      input: {ages: [3, 7, 9, 9, 14], low: 9, high: 9}
+      expected: 2
+explanation_markdown: |
+  In a sorted list, every age within `[low, high]` sits in one contiguous block.
+  A lower-bound search finds the first age at least `low`, and a lower-bound search
+  for `high + 1` finds the first age past `high`. The gap between those indices is
+  the count, found in two O(log n) searches.
+common_mistakes:
+  - Searching for high instead of high + 1 and dropping ages equal to high.
+  - Returning one of the boundary indices rather than their difference.
+  - Adding an off-by-one fudge instead of using a clean upper boundary.

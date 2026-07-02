@@ -1,0 +1,80 @@
+id: exercise.library.dicts_sets_tuples_w2.a01
+kind: exercise
+version: 1
+language: python
+title: Sort Students Onto Lab Benches
+slug: dicts-sets-tuples-w2-a01
+difficulty: easy
+concepts:
+  - python.dictionaries
+  - python.sorting
+prerequisites:
+  - python.loops
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples_w2.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original science-class lab-bench grouping scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A science teacher assigns each student to a numbered lab bench. You are given
+  a dict `assignments` mapping each student's name to their bench number.
+
+  Write `group_by_bench(assignments)` returning a dict that maps each bench
+  number to the list of students at that bench, sorted alphabetically. An empty
+  assignment dict returns an empty dict.
+starter_code: |
+  def group_by_bench(assignments):
+      return {}
+function_name: group_by_bench
+input_mode: function
+solution_sketch: Build a list per bench with setdefault, then sort each bench's names.
+sample_solution: |
+  def group_by_bench(assignments):
+      benches = {}
+      for student, bench in assignments.items():
+          benches.setdefault(bench, []).append(student)
+      for bench in benches:
+          benches[bench].sort()
+      return benches
+hints:
+  - level: 1
+    text: The bench number is the key you want to group students under.
+  - level: 2
+    text: Use setdefault(bench, []) so a new bench starts with an empty list.
+  - level: 3
+    text: After collecting every student, sort each bench's list before returning.
+tests:
+  public:
+    - name: empty
+      input: {}
+      expected: {}
+    - name: two_benches
+      input: {ana: 1, ben: 2, cara: 1}
+      expected: {1: [ana, cara], 2: [ben]}
+    - name: single
+      input: {zoe: 3}
+      expected: {3: [zoe]}
+  validation:
+    - name: three_at_one
+      input: {mona: 5, ally: 5, cara: 5}
+      expected: {5: [ally, cara, mona]}
+    - name: spread
+      input: {tom: 2, sam: 1, ray: 2, ned: 1}
+      expected: {2: [ray, tom], 1: [ned, sam]}
+    - name: needs_sort
+      input: {beth: 4, alan: 4, dana: 4}
+      expected: {4: [alan, beth, dana]}
+explanation_markdown: |
+  Grouping means turning a name-to-bench mapping inside out into a
+  bench-to-names mapping. `setdefault(bench, [])` returns the existing list for a
+  bench or installs a fresh empty list the first time you see that bench, so you
+  can append in one pass. Sorting each list at the end keeps the output tidy
+  regardless of the order students arrived in.
+common_mistakes:
+  - Overwriting a bench's list instead of appending to it.
+  - Forgetting to sort each bench, so names come out in arrival order.
+  - Assuming every bench number appears, rather than only those actually used.

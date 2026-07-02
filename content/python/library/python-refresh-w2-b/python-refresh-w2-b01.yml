@@ -1,0 +1,73 @@
+id: exercise.library.python_refresh_w2.b01
+kind: exercise
+version: 1
+language: python
+title: Format a Playlist Runtime
+slug: python-refresh-w2-b01
+difficulty: easy
+concepts:
+  - python.types
+  - python.operators
+  - python.functions
+prerequisites:
+  - python.variables
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh_w2.b01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original playlist-runtime formatting scenario with its own seconds-to-clock rules and tests.
+prompt_markdown: |
+  A music app shows the length of a playlist as minutes and seconds.
+  Write `playlist_runtime(total_seconds)` that takes a whole number of
+  seconds and returns a string in the form `"M:SS"`, where the seconds are
+  always shown with two digits. For example, 65 seconds becomes `"1:05"`.
+  The minutes part is never zero-padded, so 9 seconds becomes `"0:09"`.
+starter_code: |
+  def playlist_runtime(total_seconds):
+      return ""
+function_name: playlist_runtime
+input_mode: function
+solution_sketch: Split the seconds into minutes and remainder, then format the seconds with two digits.
+sample_solution: |
+  def playlist_runtime(total_seconds):
+      minutes, seconds = divmod(total_seconds, 60)
+      return f"{minutes}:{seconds:02d}"
+hints:
+  - level: 1
+    text: Sixty seconds make one minute, so you need both the whole minutes and the leftover seconds.
+  - level: 2
+    text: divmod(total_seconds, 60) gives the minutes and the remaining seconds at once.
+  - level: 3
+    text: An f-string like f"{minutes}:{seconds:02d}" pads the seconds to two digits.
+tests:
+  public:
+    - name: zero
+      input: 0
+      expected: "0:00"
+    - name: one_minute_five
+      input: 65
+      expected: "1:05"
+    - name: ten_minutes
+      input: 600
+      expected: "10:00"
+  validation:
+    - name: single_digit_seconds
+      input: 9
+      expected: "0:09"
+    - name: almost_an_hour
+      input: 3599
+      expected: "59:59"
+    - name: two_minutes_five
+      input: 125
+      expected: "2:05"
+explanation_markdown: |
+  divmod does the integer division and the remainder in one step, giving the
+  whole minutes and the seconds that are left over. The format spec `:02d`
+  turns a number like 5 into the string `05`, so the clock reads correctly.
+common_mistakes:
+  - Forgetting to zero-pad the seconds, so 65 shows as "1:5".
+  - Zero-padding the minutes too, which changes "1:05" into "01:05".

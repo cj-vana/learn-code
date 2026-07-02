@@ -1,0 +1,77 @@
+id: exercise.library.debugging_w2.a02
+kind: exercise
+version: 1
+language: python
+title: Order the Finish Times
+slug: debugging-w2-a02
+difficulty: easy
+concepts:
+  - python.debugging
+  - python.sorting
+  - python.lists
+prerequisites:
+  - python.functions
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.debugging_w2.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original charity fun-run scenario built around the classic bug of returning the result of list.sort(), which is None.
+prompt_markdown: |
+  Timekeepers at a charity fun run collect each runner's finish time in seconds.
+  Write `sorted_finish_times(times)` returning a new list of the times in
+  ascending order.
+
+  A common beginner bug is to write `return times.sort()`. The `list.sort()`
+  method sorts the list in place and returns `None`, so the caller receives
+  nothing useful. Return an actual sorted list instead. An empty list returns an
+  empty list.
+starter_code: |
+  def sorted_finish_times(times):
+      return []
+function_name: sorted_finish_times
+input_mode: function
+solution_sketch: Use sorted(times) to get a new ascending list without relying on the return value of .sort().
+sample_solution: |
+  def sorted_finish_times(times):
+      return sorted(times)
+hints:
+  - level: 1
+    text: list.sort() rearranges the list but hands back None.
+  - level: 2
+    text: You need a value to return, not just a side effect.
+  - level: 3
+    text: sorted(times) returns a brand-new list already in ascending order.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: already_sorted
+      input: [1, 2, 3]
+      expected: [1, 2, 3]
+    - name: reversed
+      input: [3, 1, 2]
+      expected: [1, 2, 3]
+  validation:
+    - name: duplicates
+      input: [5, 5, 2, 9]
+      expected: [2, 5, 5, 9]
+    - name: single
+      input: [42]
+      expected: [42]
+    - name: scrambled
+      input: [30, 12, 45, 7, 22]
+      expected: [7, 12, 22, 30, 45]
+explanation_markdown: |
+  `list.sort()` mutates the list in place and returns `None`; only `sorted(...)`
+  returns a new sorted list. Reaching for the return value of `.sort()` is one of
+  the most common beginner mistakes. Using `sorted(times)` keeps the original
+  untouched and yields the ascending order the caller expects.
+common_mistakes:
+  - Writing return times.sort(), which returns None.
+  - Confusing the in-place .sort() method with the sorted() function.
+  - Assuming the input already arrives in order.

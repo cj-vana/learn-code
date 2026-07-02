@@ -1,0 +1,87 @@
+id: exercise.library.sliding_window_w2.a02
+kind: exercise
+version: 1
+language: python
+title: Longest Distinct Farmers-Market Run
+slug: sliding-window-w2-a02
+difficulty: medium
+concepts:
+  - patterns.sliding_window
+  - patterns.set_membership
+  - python.sets
+prerequisites:
+  - python.lists
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sliding_window_w2.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original farmers-market stall scenario finding the longest consecutive run of stalls with all different headline produce.
+prompt_markdown: |
+  Stalls along a farmers-market aisle are listed in order, each labeled by its
+  headline produce. A "fresh run" is a stretch of consecutive stalls in which no
+  produce repeats. Write `longest_fresh_run(stalls)` returning the length of the
+  longest fresh run. An empty aisle returns `0`.
+
+  `stalls` is a list of strings, one per stall in aisle order.
+starter_code: |
+  def longest_fresh_run(stalls):
+      return 0
+function_name: longest_fresh_run
+input_mode: function
+solution_sketch: Grow a window to the right, and when a produce repeats, shrink from the left until it is unique again, tracking the longest span.
+sample_solution: |
+  def longest_fresh_run(stalls):
+      seen = set()
+      left = 0
+      best = 0
+      for right in range(len(stalls)):
+          while stalls[right] in seen:
+              seen.remove(stalls[left])
+              left += 1
+          seen.add(stalls[right])
+          span = right - left + 1
+          if span > best:
+              best = span
+      return best
+hints:
+  - level: 1
+    text: Track the current run with two indices and a set of the produce inside it.
+  - level: 2
+    text: When the new stall's produce is already in the set, drop stalls from the left until it is gone.
+  - level: 3
+    text: After each step the run length is right - left + 1; keep the largest you see.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: 0
+    - name: all_distinct
+      input: [apple, pear, plum]
+      expected: 3
+    - name: one_repeat
+      input: [apple, pear, apple, plum]
+      expected: 3
+  validation:
+    - name: all_same
+      input: [fig, fig, fig]
+      expected: 1
+    - name: distinct_at_end
+      input: [kale, kale, beet, corn, kale]
+      expected: 3
+    - name: growing_end
+      input: [beet, beet, corn, kale, plum]
+      expected: 4
+explanation_markdown: |
+  A variable-size sliding window tracks the current all-distinct run. The right
+  edge advances through every stall; whenever the incoming produce already sits in
+  the window, the left edge advances (removing produce from the set) until the
+  duplicate is cleared. Each stall enters and leaves the window at most once, so
+  the scan is O(n), and the best span seen is the answer.
+common_mistakes:
+  - Restarting the run from scratch on a repeat instead of shrinking only from the left.
+  - Forgetting to remove stalls[left] from the set as the left edge moves.
+  - Measuring the run as right - left instead of right - left + 1.

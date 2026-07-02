@@ -1,0 +1,82 @@
+id: exercise.library.dicts_sets_tuples_w2.b07
+kind: exercise
+version: 1
+language: python
+title: Top Podcast Episodes by Downloads
+slug: dicts-sets-tuples-w2-b07
+difficulty: medium
+concepts:
+  - python.sorting
+  - python.tuples
+prerequisites:
+  - python.functions
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples_w2.b07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original podcast-analytics scenario ranking episodes by downloads with an alphabetical tie-break and a top-n cut.
+prompt_markdown: |
+  A podcast dashboard ranks episodes by download count. You are given a dict with
+  `episodes` (a list of `[title, downloads]` pairs) and `n` (how many top titles
+  to show). Write `top_episodes(data)` that returns the titles of the `n` most
+  downloaded episodes, highest first. Break ties alphabetically by title. If `n`
+  is larger than the number of episodes, return them all; if `n` is `0` or less,
+  return an empty list.
+starter_code: |
+  def top_episodes(data):
+      return []
+function_name: top_episodes
+input_mode: function
+solution_sketch: Sort by descending downloads then ascending title, slice the top n, keep titles.
+sample_solution: |
+  def top_episodes(data):
+      episodes = data["episodes"]
+      n = data["n"]
+      ordered = sorted(episodes, key=lambda e: (-e[1], e[0]))
+      top = ordered[:max(n, 0)]
+      return [title for title, downloads in top]
+hints:
+  - level: 1
+    text: You need one sort that handles both the count and the tie-break.
+  - level: 2
+    text: A key of (-downloads, title) sorts by most downloads, then by name.
+  - level: 3
+    text: Slice the sorted list with [:max(n, 0)], then keep only the titles.
+tests:
+  public:
+    - name: top_two
+      input: {episodes: [[alpha, 100], [beta, 250], [gamma, 175]], n: 2}
+      expected: [beta, gamma]
+    - name: tie_break
+      input: {episodes: [[zed, 50], [amy, 50], [bob, 90]], n: 2}
+      expected: [bob, amy]
+    - name: n_zero
+      input: {episodes: [[solo, 5]], n: 0}
+      expected: []
+  validation:
+    - name: n_exceeds
+      input: {episodes: [[a, 1], [b, 2]], n: 5}
+      expected: [b, a]
+    - name: all_ties
+      input: {episodes: [[c, 10], [a, 10], [b, 10]], n: 2}
+      expected: [a, b]
+    - name: single
+      input: {episodes: [[solo, 42]], n: 1}
+      expected: [solo]
+    - name: empty_list
+      input: {episodes: [], n: 3}
+      expected: []
+explanation_markdown: |
+  Negating the download count inside the sort key turns Python's ascending sort
+  into a descending one for popularity, while the title stays ascending so ties
+  read alphabetically. Slicing with `max(n, 0)` safely handles both a zero/negative
+  `n` and an `n` larger than the list, since a slice past the end just stops. A
+  final comprehension keeps only the titles in ranked order.
+common_mistakes:
+  - Sorting ascending and forgetting to reverse for "most downloaded first".
+  - Ignoring the alphabetical tie-break, giving unstable ordering for equal counts.
+  - Slicing with a raw negative n, which grabs items from the end of the list.

@@ -1,0 +1,98 @@
+id: exercise.library.stack_queue_bfs_w2.a06
+kind: exercise
+version: 1
+language: python
+title: Garden Crop Patch Size
+slug: stack-queue-bfs-w2-a06
+difficulty: easy
+concepts:
+  - patterns.queue_bfs
+  - python.lists
+prerequisites:
+  - python.lists
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.stack_queue_bfs_w2.a06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original community-garden connected-plot scenario using grid BFS, with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A community garden is a grid of plots, where each cell holds a one-letter crop
+  code. Two plots belong to the same patch if they share the same crop and touch
+  edge-to-edge (up, down, left, or right; not diagonally).
+
+  You are given a dict `data` with keys `"grid"` (a list of equal-length rows of
+  crop codes) and `"start"` (a `[row, col]` pair). Write `patch_size(data)`
+  returning the number of plots in the connected patch that contains the starting
+  plot, counting the starting plot itself.
+starter_code: |
+  def patch_size(data):
+      return 0
+function_name: patch_size
+input_mode: function
+solution_sketch: Flood-fill from the start with a queue, visiting same-crop neighbors once each.
+sample_solution: |
+  def patch_size(data):
+      grid = data["grid"]
+      r0, c0 = data["start"]
+      if not grid or not grid[0]:
+          return 0
+      rows, cols = len(grid), len(grid[0])
+      crop = grid[r0][c0]
+      seen = {(r0, c0)}
+      queue = [(r0, c0)]
+      count = 0
+      while queue:
+          r, c = queue.pop(0)
+          count += 1
+          for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+              nr, nc = r + dr, c + dc
+              if 0 <= nr < rows and 0 <= nc < cols and (nr, nc) not in seen and grid[nr][nc] == crop:
+                  seen.add((nr, nc))
+                  queue.append((nr, nc))
+      return count
+hints:
+  - level: 1
+    text: Start from the given plot and fan out to touching plots of the same crop.
+  - level: 2
+    text: A queue lets you explore neighbors layer by layer; mark each plot as seen when you enqueue it.
+  - level: 3
+    text: Only step to the four orthogonal neighbors that are in bounds, unseen, and match the starting crop.
+tests:
+  public:
+    - name: single_cell
+      input: {grid: [["a"]], start: [0, 0]}
+      expected: 1
+    - name: small_patch
+      input: {grid: [["a", "a", "b"], ["a", "b", "b"]], start: [0, 0]}
+      expected: 3
+    - name: isolated
+      input: {grid: [["a", "b"], ["b", "a"]], start: [0, 0]}
+      expected: 1
+  validation:
+    - name: whole_grid
+      input: {grid: [["g", "g", "g"], ["g", "g", "g"]], start: [1, 1]}
+      expected: 6
+    - name: winding_shape
+      input: {grid: [["r", "r", "s"], ["s", "r", "s"], ["s", "r", "r"]], start: [0, 0]}
+      expected: 5
+    - name: full_square
+      input: {grid: [["b", "b"], ["b", "b"]], start: [0, 1]}
+      expected: 4
+    - name: lone_middle
+      input: {grid: [["x", "y", "x"]], start: [0, 1]}
+      expected: 1
+explanation_markdown: |
+  Measuring one connected patch is a flood fill. Beginning at the start plot, a
+  queue explores outward, and each newly discovered same-crop neighbor is marked
+  seen the moment it is enqueued so it is never counted twice. Diagonal plots are
+  excluded because only the four orthogonal offsets are followed. When the queue
+  drains, every plot reachable through matching neighbors has been counted. Each
+  cell enters the queue at most once, so the search is O(rows * cols).
+common_mistakes:
+  - Counting diagonal neighbors, which are not part of the same patch.
+  - Marking cells seen only when dequeued, letting duplicates pile up in the queue.
+  - Comparing against a neighbor's own crop instead of the starting crop.

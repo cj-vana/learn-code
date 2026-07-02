@@ -1,0 +1,80 @@
+id: exercise.library.hashmap_set_w2.b04
+kind: exercise
+version: 1
+language: python
+title: Missing Workshop Supplies
+slug: hashmap-set-w2-b04
+difficulty: easy
+concepts:
+  - patterns.set_membership
+  - python.sets
+prerequisites:
+  - python.sets
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.hashmap_set_w2.b04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original repair-workshop scenario about listing required supplies that are missing from the stock shelf.
+prompt_markdown: |
+  A community repair workshop has a list of supplies each session requires and a
+  separate list of what is currently on the stock shelf. Either list may contain
+  duplicates. Write `missing_supplies(data)` where `data` is a dict with keys
+  `required` and `in_stock`, each a list of supply names. Return a sorted list of
+  the distinct required supplies that are not on the shelf. If nothing is missing,
+  return an empty list.
+starter_code: |
+  def missing_supplies(data):
+      return []
+function_name: missing_supplies
+input_mode: function
+solution_sketch: Turn both lists into sets and return the sorted difference of required minus in_stock.
+sample_solution: |
+  def missing_supplies(data):
+      required = set(data["required"])
+      in_stock = set(data["in_stock"])
+      return sorted(required - in_stock)
+hints:
+  - level: 1
+    text: You need the required supplies that never appear on the stock shelf.
+  - level: 2
+    text: Sets make "is this item in stock?" an O(1) check and drop duplicates for free.
+  - level: 3
+    text: The set difference required - in_stock is exactly the missing items; sort it before returning.
+tests:
+  public:
+    - name: empty
+      input: {required: [], in_stock: []}
+      expected: []
+    - name: all_present
+      input: {required: [bolts, nuts], in_stock: [nuts, bolts, washers]}
+      expected: []
+    - name: some_missing
+      input: {required: [bolts, nuts, screws], in_stock: [nuts]}
+      expected: [bolts, screws]
+  validation:
+    - name: all_missing
+      input: {required: [tape, glue], in_stock: []}
+      expected: [glue, tape]
+    - name: dup_required
+      input: {required: [pipe, pipe, valve], in_stock: [valve]}
+      expected: [pipe]
+    - name: stock_surplus
+      input: {required: [wire], in_stock: [wire, cable, fuse]}
+      expected: []
+    - name: partial
+      input: {required: [anchor, brace, clamp, dowel], in_stock: [brace, dowel]}
+      expected: [anchor, clamp]
+explanation_markdown: |
+  Membership questions like "which required items are not stocked?" are what set
+  difference is built for. Converting both lists to sets collapses duplicates and
+  makes every lookup O(1); `required - in_stock` keeps only the items present in
+  the first set but absent from the second. Sorting the result gives a stable,
+  predictable order to hand back to the workshop.
+common_mistakes:
+  - Returning in_stock - required, which lists surplus stock instead of gaps.
+  - Forgetting to sort, leaving the result in unpredictable set order.
+  - Looping with `in` over the raw lists, which is slower and keeps duplicates.

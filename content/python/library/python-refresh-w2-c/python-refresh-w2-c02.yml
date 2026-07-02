@@ -1,0 +1,107 @@
+id: exercise.library.python_refresh_w2.c02
+kind: exercise
+version: 1
+language: python
+title: Greenhouse Thermostat Command
+slug: python-refresh-w2-c02
+difficulty: easy
+concepts:
+  - python.conditionals
+  - python.operators
+  - python.types
+prerequisites:
+  - python.functions
+  - python.variables
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+input_mode: function
+provenance:
+  brief_id: library.python_refresh_w2.c02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original greenhouse thermostat with heat, cool, and auto modes plus a one-degree deadband, invented here.
+prompt_markdown: |
+  A greenhouse thermostat decides what to do from the current temperature, the
+  target temperature, and its operating mode. The function receives a single
+  dictionary `reading` with three keys:
+
+  - `"current"`: the measured temperature (a number),
+  - `"target"`: the desired temperature (a number),
+  - `"mode"`: one of the strings `"heat"`, `"cool"`, or `"auto"`.
+
+  Write `thermostat_command(reading)` returning the command string:
+
+  - In `"heat"` mode, return `"on"` when the current temperature is below the
+    target, otherwise `"off"`.
+  - In `"cool"` mode, return `"on"` when the current temperature is above the
+    target, otherwise `"off"`.
+  - In `"auto"` mode, return `"heat"` when the current temperature is more than one
+    degree below the target, `"cool"` when it is more than one degree above the
+    target, and `"idle"` when it is within one degree either way.
+starter_code: |
+  def thermostat_command(reading):
+      return ""
+function_name: thermostat_command
+solution_sketch: Branch on the mode string, then compare current against target with the right operator per mode.
+sample_solution: |
+  def thermostat_command(reading):
+      current = reading["current"]
+      target = reading["target"]
+      mode = reading["mode"]
+      if mode == "heat":
+          return "on" if current < target else "off"
+      if mode == "cool":
+          return "on" if current > target else "off"
+      if current < target - 1:
+          return "heat"
+      if current > target + 1:
+          return "cool"
+      return "idle"
+hints:
+  - level: 1
+    text: First pull the three values out of the dictionary, then decide based on the mode.
+  - level: 2
+    text: Heat and cool modes each need a single comparison between current and target.
+  - level: 3
+    text: For auto mode, the idle band is everything within one degree, so compare against target - 1 and target + 1.
+tests:
+  public:
+    - name: heat_below_target
+      input: {current: 18, target: 21, mode: heat}
+      expected: "on"
+    - name: cool_below_target
+      input: {current: 22, target: 24, mode: cool}
+      expected: "off"
+    - name: auto_within_band
+      input: {current: 21, target: 21, mode: auto}
+      expected: idle
+  validation:
+    - name: heat_at_or_above
+      input: {current: 22, target: 21, mode: heat}
+      expected: "off"
+    - name: cool_above_target
+      input: {current: 26, target: 24, mode: cool}
+      expected: "on"
+    - name: auto_needs_heat
+      input: {current: 18, target: 21, mode: auto}
+      expected: heat
+    - name: auto_needs_cool
+      input: {current: 24, target: 21, mode: auto}
+      expected: cool
+    - name: auto_edge_of_band
+      input: {current: 20, target: 21, mode: auto}
+      expected: idle
+explanation_markdown: |
+  The mode string selects which comparison matters, so the function branches on it
+  first. Heat and cool are mirror images: heating turns on only when the room is
+  colder than the target, cooling only when it is warmer. Auto mode adds a one
+  degree deadband so the system does not flip on for tiny swings; comparing against
+  `target - 1` and `target + 1` leaves a quiet zone where the answer is `"idle"`.
+  Returning as soon as a branch matches keeps the auto logic readable and means the
+  final `return "idle"` handles everything that stayed inside the band.
+common_mistakes:
+  - Using >= or <= for the auto band and losing the one-degree deadband.
+  - Swapping the heat and cool comparisons so the system runs the wrong way.
+  - Forgetting the idle case, so an in-band auto reading returns None.

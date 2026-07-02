@@ -1,0 +1,85 @@
+id: exercise.library.mixed_capstones_w2.a05
+kind: exercise
+version: 1
+language: python
+title: First Day the Goal Is Reached
+slug: mixed-capstones-w2-a05
+difficulty: easy
+concepts:
+  - patterns.binary_search
+prerequisites:
+  - python.lists
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.mixed_capstones_w2.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original newsletter-signup scenario finding the first day a non-decreasing cumulative count meets a goal via binary search, with its own tests.
+prompt_markdown: |
+  A newsletter tracks its total subscriber count at the end of each day. Because
+  counts only grow, `counts` is a non-decreasing list of integers (day 0 first).
+  Write `first_day_reaching_goal(data)` where `data` is a dict with `counts` and
+  an integer `goal`. Return the 0-based index of the first day whose count is at
+  least `goal`. If no day reaches the goal, return -1.
+starter_code: |
+  def first_day_reaching_goal(data):
+      return -1
+function_name: first_day_reaching_goal
+input_mode: function
+solution_sketch: Binary search for the leftmost index whose count is at least the goal, returning -1 if the search runs past the end.
+sample_solution: |
+  def first_day_reaching_goal(data):
+      counts = data["counts"]
+      goal = data["goal"]
+      lo = 0
+      hi = len(counts)
+      while lo < hi:
+          mid = (lo + hi) // 2
+          if counts[mid] >= goal:
+              hi = mid
+          else:
+              lo = mid + 1
+      return lo if lo < len(counts) else -1
+hints:
+  - level: 1
+    text: The counts never decrease, so once the goal is met it stays met.
+  - level: 2
+    text: That sorted structure means you can binary search instead of scanning every day.
+  - level: 3
+    text: Search for the leftmost index where count is at least goal; if it lands past the last day, return -1.
+tests:
+  public:
+    - name: middle
+      input: {counts: [0, 2, 5, 9, 12], goal: 5}
+      expected: 2
+    - name: first_day
+      input: {counts: [3, 6, 9], goal: 1}
+      expected: 0
+    - name: never
+      input: {counts: [1, 2, 3], goal: 10}
+      expected: -1
+  validation:
+    - name: exact_last
+      input: {counts: [1, 4, 4, 8], goal: 8}
+      expected: 3
+    - name: duplicates
+      input: {counts: [2, 2, 2, 5, 5], goal: 5}
+      expected: 3
+    - name: zero_goal
+      input: {counts: [0, 1, 2], goal: 0}
+      expected: 0
+    - name: plateau
+      input: {counts: [1, 1, 1, 1], goal: 2}
+      expected: -1
+explanation_markdown: |
+  A non-decreasing list splits cleanly into a "below goal" prefix and an
+  "at or above goal" suffix, so binary search finds the boundary in O(log n).
+  The loop narrows `[lo, hi)` toward the leftmost qualifying index; if that index
+  equals the list length, no day ever reached the goal and the answer is -1.
+common_mistakes:
+  - Returning any qualifying index instead of the first (leftmost) one.
+  - Scanning linearly and losing the O(log n) benefit of the sorted counts.
+  - Forgetting the -1 case when the final count still falls short of the goal.

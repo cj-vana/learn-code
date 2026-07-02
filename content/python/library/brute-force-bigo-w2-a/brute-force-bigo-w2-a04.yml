@@ -1,0 +1,89 @@
+id: exercise.library.brute_force_bigo_w2.a04
+kind: exercise
+version: 1
+language: python
+title: Count Pastry Pairs by Calories
+slug: brute-force-bigo-w2-a04
+difficulty: easy
+concepts:
+  - patterns.brute_force
+prerequisites:
+  - python.loops
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.brute_force_bigo_w2.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original bakery scenario counting unordered pastry pairs whose calories hit an exact target.
+prompt_markdown: |
+  A bakery lists the calorie count of every pastry in the case. A dietician wants
+  to know how many ways two pastries can be paired so their calories add up to an
+  exact `target`.
+
+  Write `count_calorie_pairs(data)` where `data` is a dict with keys `calories` (a
+  list of integers) and `target` (an integer). Return the number of unordered
+  pairs of two different positions whose calories sum to exactly `target`. Two
+  pastries with the same calorie count still form a valid pair. An empty list
+  returns 0.
+starter_code: |
+  def count_calorie_pairs(data):
+      return 0
+function_name: count_calorie_pairs
+input_mode: function
+solution_sketch: Count every unordered pair whose two calorie values sum to target with a nested loop.
+sample_solution: |
+  def count_calorie_pairs(data):
+      calories = data["calories"]
+      target = data["target"]
+      n = len(calories)
+      count = 0
+      for i in range(n):
+          for j in range(i + 1, n):
+              if calories[i] + calories[j] == target:
+                  count += 1
+      return count
+hints:
+  - level: 1
+    text: Look at every possible pairing of two different pastries.
+  - level: 2
+    text: A nested loop with the inner index starting at i + 1 visits each unordered pair once.
+  - level: 3
+    text: Add 1 to a running counter each time calories[i] + calories[j] equals target.
+tests:
+  public:
+    - name: empty
+      input: {calories: [], target: 100}
+      expected: 0
+    - name: one_pair
+      input: {calories: [50, 50, 30], target: 100}
+      expected: 1
+    - name: none
+      input: {calories: [10, 20, 35], target: 200}
+      expected: 0
+  validation:
+    - name: multiple
+      input: {calories: [40, 60, 60, 40], target: 100}
+      expected: 4
+    - name: zeros
+      input: {calories: [0, 0, 0], target: 0}
+      expected: 3
+    - name: single
+      input: {calories: [70], target: 70}
+      expected: 0
+    - name: mixed
+      input: {calories: [25, 75, 25, 75], target: 100}
+      expected: 4
+explanation_markdown: |
+  The brute-force count checks every unordered pair once: the outer loop fixes the
+  first pastry and the inner loop, starting at i + 1, tries each later pastry. Every
+  time the two calorie counts sum to `target`, you bump a counter. Because you touch
+  each of the `n * (n - 1) / 2` pairs, the running time grows like O(n^2). Unlike a
+  membership check, you keep scanning after a match so all valid pairs are counted.
+common_mistakes:
+  - Returning early on the first matching pair instead of counting all of them.
+  - Starting the inner loop at 0, which double-counts pairs and pairs a pastry with itself.
+  - Assuming the two pastries must have different calorie values.

@@ -1,0 +1,88 @@
+id: exercise.library.mixed_capstones_w2.a02
+kind: exercise
+version: 1
+language: python
+title: Merge Two Turnstile Logs
+slug: mixed-capstones-w2-a02
+difficulty: easy
+concepts:
+  - patterns.two_pointers
+  - python.lists
+prerequisites:
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.mixed_capstones_w2.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original stadium turnstile scenario merging two already-sorted timestamp logs with a two-pointer walk and its own tests.
+prompt_markdown: |
+  A stadium has a north and a south turnstile. Each one records entry times (as
+  minute counts) in non-decreasing order. Write `merge_entry_times(data)` where
+  `data` is a dict with keys `north` and `south`, each a sorted list of integer
+  times. Return one combined list of all entry times in non-decreasing order.
+  Duplicate times may appear and must all be kept.
+starter_code: |
+  def merge_entry_times(data):
+      return []
+function_name: merge_entry_times
+input_mode: function
+solution_sketch: Walk both sorted lists with two indices, always taking the smaller front value, then append any remaining tail.
+sample_solution: |
+  def merge_entry_times(data):
+      north = data["north"]
+      south = data["south"]
+      i = 0
+      j = 0
+      merged = []
+      while i < len(north) and j < len(south):
+          if north[i] <= south[j]:
+              merged.append(north[i])
+              i += 1
+          else:
+              merged.append(south[j])
+              j += 1
+      merged.extend(north[i:])
+      merged.extend(south[j:])
+      return merged
+hints:
+  - level: 1
+    text: Both lists are already sorted, so you never need to sort from scratch.
+  - level: 2
+    text: Keep one index into each list and compare the two front values.
+  - level: 3
+    text: Take the smaller front value each step, then append whatever remains once one list runs out.
+tests:
+  public:
+    - name: both_empty
+      input: {north: [], south: []}
+      expected: []
+    - name: one_empty
+      input: {north: [1, 4, 7], south: []}
+      expected: [1, 4, 7]
+    - name: simple
+      input: {north: [2, 5], south: [1, 3, 4]}
+      expected: [1, 2, 3, 4, 5]
+  validation:
+    - name: duplicates
+      input: {north: [3, 3], south: [3]}
+      expected: [3, 3, 3]
+    - name: interleaved
+      input: {north: [10, 20, 30], south: [5, 25, 35]}
+      expected: [5, 10, 20, 25, 30, 35]
+    - name: south_only
+      input: {north: [], south: [8, 9]}
+      expected: [8, 9]
+explanation_markdown: |
+  Because each log is already sorted, a two-pointer merge runs in O(n + m): each
+  step compares the two front values and appends the smaller one. Using `<=`
+  keeps equal times in a stable, non-decreasing order. Once one list is
+  exhausted, the remaining tail of the other is already sorted and can be
+  appended as-is.
+common_mistakes:
+  - Concatenating both lists and re-sorting, which throws away the sorted structure.
+  - Forgetting to append the leftover tail after one list is exhausted.
+  - Dropping duplicate times instead of keeping every entry.

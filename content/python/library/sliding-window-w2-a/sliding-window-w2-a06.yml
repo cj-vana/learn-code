@@ -1,0 +1,86 @@
+id: exercise.library.sliding_window_w2.a06
+kind: exercise
+version: 1
+language: python
+title: Best Weekend for the Ticket Booth
+slug: sliding-window-w2-a06
+difficulty: easy
+concepts:
+  - patterns.sliding_window
+  - patterns.running_total
+prerequisites:
+  - python.lists
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sliding_window_w2.a06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original festival ticket-booth scenario returning the start index of the highest-selling fixed-size window, earliest on a tie.
+prompt_markdown: |
+  A festival ticket booth records daily sales for a whole season. Organizers want
+  to reprint the banner for the best `k`-day stretch. Write
+  `best_booth_window(data)` returning the starting day index (0-based) of the
+  `k` consecutive days with the highest total sales. If several stretches tie,
+  return the earliest starting index.
+
+  `data` is a dict: `{"sales": [...], "k": k}`. `k` is at least 1 and no larger
+  than the number of days.
+starter_code: |
+  def best_booth_window(data):
+      return 0
+function_name: best_booth_window
+input_mode: function
+solution_sketch: Slide a running k-day sum and remember the start index whenever a strictly larger total appears.
+sample_solution: |
+  def best_booth_window(data):
+      sales = data["sales"]
+      k = data["k"]
+      window = sum(sales[:k])
+      best = window
+      best_start = 0
+      for i in range(k, len(sales)):
+          window += sales[i] - sales[i - k]
+          if window > best:
+              best = window
+              best_start = i - k + 1
+      return best_start
+hints:
+  - level: 1
+    text: Keep a running total for the current k-day window instead of re-summing.
+  - level: 2
+    text: A window ending at index i started at index i - k + 1.
+  - level: 3
+    text: Update the remembered start only when the total is strictly greater, so ties keep the earliest.
+tests:
+  public:
+    - name: first_best
+      input: {sales: [9, 1, 1], k: 2}
+      expected: 0
+    - name: last_best
+      input: {sales: [1, 1, 9], k: 2}
+      expected: 1
+    - name: k_one_tie
+      input: {sales: [3, 8, 8, 2], k: 1}
+      expected: 1
+  validation:
+    - name: middle_best
+      input: {sales: [1, 2, 9, 2, 1], k: 2}
+      expected: 1
+    - name: tie_earliest
+      input: {sales: [5, 5, 5, 5], k: 2}
+      expected: 0
+    - name: whole_is_window
+      input: {sales: [2, 7, 1], k: 3}
+      expected: 0
+explanation_markdown: |
+  A fixed-size running sum lets every window be compared in constant time. The
+  start index of a window ending at `i` is `i - k + 1`, so the code records that
+  index whenever it finds a strictly larger total. Because the update uses `>`
+  and not `>=`, the first of several equal-best stretches wins the tie.
+common_mistakes:
+  - Returning the ending index instead of the starting index i - k + 1.
+  - Using >= so a later tie overwrites the earliest best start.
+  - Rebuilding the window sum from scratch each step instead of adjusting it.

@@ -1,0 +1,98 @@
+id: exercise.library.stack_queue_bfs_w2.a07
+kind: exercise
+version: 1
+language: python
+title: Fewest Freight Elevator Presses
+slug: stack-queue-bfs-w2-a07
+difficulty: easy
+concepts:
+  - patterns.queue_bfs
+  - python.dictionaries
+prerequisites:
+  - python.lists
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.stack_queue_bfs_w2.a07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original freight-elevator button scenario solved as shortest-path BFS over floors, with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A freight elevator serves floors `0` through `top`. It has just two buttons:
+  one moves it up by exactly `up` floors, the other moves it down by exactly
+  `down` floors. A press that would leave the range `0..top` is refused and does
+  nothing, so it never counts. The elevator starts on floor `0`.
+
+  You are given a dict `data` with keys `"top"`, `"up"`, `"down"`, and
+  `"target"`. Write `fewest_presses(data)` returning the fewest button presses
+  needed to reach `target`, or `-1` if it cannot be reached.
+starter_code: |
+  def fewest_presses(data):
+      return -1
+function_name: fewest_presses
+input_mode: function
+solution_sketch: BFS over floor numbers, treating each in-range button press as an edge to a neighboring floor.
+sample_solution: |
+  def fewest_presses(data):
+      top = data["top"]
+      up = data["up"]
+      down = data["down"]
+      target = data["target"]
+      if target == 0:
+          return 0
+      seen = {0}
+      queue = [(0, 0)]
+      while queue:
+          floor, presses = queue.pop(0)
+          for nxt in (floor + up, floor - down):
+              if 0 <= nxt <= top and nxt not in seen:
+                  if nxt == target:
+                      return presses + 1
+                  seen.add(nxt)
+                  queue.append((nxt, presses + 1))
+      return -1
+hints:
+  - level: 1
+    text: Each floor is a node; a legal button press is an edge to another floor.
+  - level: 2
+    text: BFS from floor 0 finds the fewest presses because it explores floors in press-count order.
+  - level: 3
+    text: Only enqueue a next floor that stays within 0..top and has not been visited yet.
+tests:
+  public:
+    - name: straight_up
+      input: {top: 5, up: 1, down: 1, target: 3}
+      expected: 3
+    - name: mix_up_down
+      input: {top: 6, up: 2, down: 1, target: 5}
+      expected: 4
+    - name: unreachable_parity
+      input: {top: 10, up: 2, down: 2, target: 3}
+      expected: -1
+  validation:
+    - name: needs_backtrack
+      input: {top: 8, up: 3, down: 2, target: 2}
+      expected: 4
+    - name: already_there
+      input: {top: 4, up: 1, down: 1, target: 0}
+      expected: 0
+    - name: larger_steps
+      input: {top: 12, up: 4, down: 3, target: 9}
+      expected: 4
+    - name: reach_top
+      input: {top: 10, up: 5, down: 3, target: 10}
+      expected: 2
+explanation_markdown: |
+  Because every press costs the same, the fewest presses is a shortest-path
+  problem, and breadth-first search solves it. Each floor is a node with up to two
+  outgoing edges: `floor + up` and `floor - down`, kept only when they land in
+  `0..top`. BFS explores floors in order of press count, so the first time it
+  reaches `target` it has used the minimum number of presses. Marking floors seen
+  prevents revisiting. Since there are at most `top + 1` floors, the search runs
+  in O(top) time.
+common_mistakes:
+  - Using a depth-first search, which can report a longer path than the minimum.
+  - Allowing moves outside 0..top instead of refusing them.
+  - Forgetting the target == 0 case, which needs zero presses.

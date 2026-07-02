@@ -1,0 +1,85 @@
+id: exercise.library.dicts_sets_tuples_w2.c01
+kind: exercise
+version: 1
+language: python
+title: Most Popular Pastries
+slug: dicts-sets-tuples-w2-c01
+difficulty: easy
+concepts:
+  - patterns.hash_map_counting
+  - python.dictionaries
+  - python.sorting
+prerequisites:
+  - python.functions
+  - python.loops
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples_w2.c01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original corner-bakery sales scenario ranking pastry names by how often they sold, with fresh prompt, tests, and explanation.
+prompt_markdown: |
+  A corner bakery scans the name of every pastry as it is sold. Write
+  `popular_pastries(sales)` where `sales` is a list of pastry-name strings in
+  the order they were sold.
+
+  Return a list of the distinct pastry names ordered from most sold to least
+  sold. When two pastries sold the same number of times, order those names
+  alphabetically. An empty list of sales returns an empty list.
+starter_code: |
+  def popular_pastries(sales):
+      return []
+function_name: popular_pastries
+input_mode: function
+solution_sketch: Count each name in a dict, then sort the names by a (negative count, name) tuple key.
+sample_solution: |
+  def popular_pastries(sales):
+      counts = {}
+      for name in sales:
+          counts[name] = counts.get(name, 0) + 1
+      return sorted(counts, key=lambda name: (-counts[name], name))
+hints:
+  - level: 1
+    text: First build a dict mapping each pastry name to how many times it sold.
+  - level: 2
+    text: Sorting by count needs the largest counts first, but ties should break alphabetically by name.
+  - level: 3
+    text: 'Use sorted(counts, key=lambda name: (-counts[name], name)) so higher counts come first and names break ties.'
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: single
+      input: [croissant]
+      expected: [croissant]
+    - name: tie_by_name
+      input: [scone, tart, scone, tart]
+      expected: [scone, tart]
+    - name: count_wins
+      input: [muffin, muffin, bagel]
+      expected: [muffin, bagel]
+  validation:
+    - name: clear_ranking
+      input: [a, b, a, c, a, b]
+      expected: [a, b, c]
+    - name: all_tied_alphabetical
+      input: [plum, apple, cherry]
+      expected: [apple, cherry, plum]
+    - name: counts_then_names
+      input: [pie, pie, pie, cake, cake, tart]
+      expected: [pie, cake, tart]
+explanation_markdown: |
+  A dictionary gives O(1) lookups, so one pass over the sales builds a count for
+  every distinct name. Passing those names to `sorted` with a tuple key does the
+  ranking in a single step: `-counts[name]` sorts the busiest pastries first
+  (negating flips ascending order into descending), and the trailing `name`
+  breaks ties alphabetically. Because the name is part of the key, the result is
+  fully deterministic no matter what order the sales arrived in.
+common_mistakes:
+  - Sorting by count ascending and forgetting to negate it for a most-sold-first order.
+  - Leaving out the name tie-breaker, so equal counts come back in an unpredictable order.
+  - Returning the counts dict instead of just the ranked list of names.

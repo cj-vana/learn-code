@@ -1,0 +1,94 @@
+id: exercise.library.python_refresh_w2.a07
+kind: exercise
+version: 1
+language: python
+title: Classify a Triangle From Dowels
+slug: python-refresh-w2-a07
+difficulty: medium
+concepts:
+  - python.conditionals
+  - python.operators
+prerequisites:
+  - python.functions
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh_w2.a07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original woodworking scenario that validates and classifies a triangle from three cut dowel lengths.
+prompt_markdown: |
+  A woodworking class cuts three dowels and asks what triangle they would form.
+  The input is a list `[a, b, c]` of three positive numbers.
+
+  Write `triangle_kind(sides)` that returns:
+
+  - `"not a triangle"` if the three lengths cannot form a triangle (the two
+    shorter lengths together are not strictly longer than the longest)
+  - `"equilateral"` if all three lengths are equal
+  - `"isosceles"` if exactly two lengths are equal
+  - `"scalene"` if all three lengths differ
+
+  Check that the lengths form a valid triangle before classifying it.
+starter_code: |
+  def triangle_kind(sides):
+      return ""
+function_name: triangle_kind
+input_mode: function
+solution_sketch: Sort the sides, reject when the two shortest do not exceed the longest, then compare equalities.
+sample_solution: |
+  def triangle_kind(sides):
+      a, b, c = sorted(sides)
+      if a + b <= c:
+          return "not a triangle"
+      if a == b == c:
+          return "equilateral"
+      if a == b or b == c or a == c:
+          return "isosceles"
+      return "scalene"
+hints:
+  - level: 1
+    text: First decide whether the three lengths can form a triangle at all.
+  - level: 2
+    text: If you sort the sides, the triangle test simplifies to comparing the two smallest against the largest.
+  - level: 3
+    text: After validating, check all-equal, then any-two-equal, and otherwise it is scalene.
+tests:
+  public:
+    - name: equal_sides
+      input: [3, 3, 3]
+      expected: equilateral
+    - name: two_equal
+      input: [5, 5, 8]
+      expected: isosceles
+    - name: all_different
+      input: [4, 5, 6]
+      expected: scalene
+  validation:
+    - name: degenerate
+      input: [1, 2, 3]
+      expected: not a triangle
+    - name: clearly_invalid
+      input: [1, 2, 10]
+      expected: not a triangle
+    - name: larger_equilateral
+      input: [7, 7, 7]
+      expected: equilateral
+    - name: isosceles_unsorted
+      input: [10, 6, 6]
+      expected: isosceles
+    - name: pythagorean_scalene
+      input: [8, 15, 17]
+      expected: scalene
+explanation_markdown: |
+  Sorting the sides means `a <= b <= c`, so the triangle inequality reduces to a
+  single check: the two shorter sides `a + b` must be strictly greater than the
+  longest side `c`. Equal lengths at the boundary (`a + b == c`) form a flat,
+  degenerate shape, so `<=` correctly rejects them. Once validity is confirmed,
+  the equality tests run from most specific (all three equal) to least.
+common_mistakes:
+  - Skipping the validity check and classifying impossible side lengths.
+  - Using a + b < c instead of <=, which accepts flat degenerate triangles.
+  - Testing for isosceles before equilateral, so equilateral is never reported.

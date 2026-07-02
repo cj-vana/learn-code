@@ -1,0 +1,76 @@
+id: exercise.library.loops_lists_strings_w2.b04
+kind: exercise
+version: 1
+language: python
+title: Playlist Preview Window
+slug: loops-lists-strings-w2-b04
+difficulty: easy
+concepts:
+  - python.slicing
+  - python.lists
+prerequisites:
+  - python.functions
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings_w2.b04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original music-app preview-window scenario, prompt, tests, and explanation.
+prompt_markdown: |
+  A music app shows a small preview window into a playlist. Write
+  `preview_window(data)` where `data` is a dict with keys `tracks` (a list of
+  song titles), `start` (a starting index), and `count` (how many titles to
+  show). Return the list of up to `count` titles beginning at `start`. If
+  `start` is past the end of the playlist, return an empty list.
+starter_code: |
+  def preview_window(data):
+      return []
+function_name: preview_window
+input_mode: function
+solution_sketch: Slice the tracks from start for count items; slicing clamps out-of-range bounds.
+sample_solution: |
+  def preview_window(data):
+      tracks = data["tracks"]
+      start = data["start"]
+      count = data["count"]
+      return tracks[start:start + count]
+hints:
+  - level: 1
+    text: Unpack the three values from the dict before slicing.
+  - level: 2
+    text: A slice needs a start index and a stop index.
+  - level: 3
+    text: The stop index is start + count, and Python clamps it for you.
+tests:
+  public:
+    - name: middle_window
+      input: { tracks: ["intro", "verse", "chorus", "bridge"], start: 1, count: 2 }
+      expected: ["verse", "chorus"]
+    - name: from_beginning
+      input: { tracks: ["intro", "verse", "chorus"], start: 0, count: 2 }
+      expected: ["intro", "verse"]
+    - name: start_past_end
+      input: { tracks: ["intro", "verse"], start: 5, count: 3 }
+      expected: []
+  validation:
+    - name: count_overshoots
+      input: { tracks: ["a", "b", "c"], start: 2, count: 10 }
+      expected: ["c"]
+    - name: whole_playlist
+      input: { tracks: ["x", "y", "z"], start: 0, count: 3 }
+      expected: ["x", "y", "z"]
+    - name: zero_count
+      input: { tracks: ["a", "b"], start: 0, count: 0 }
+      expected: []
+explanation_markdown: |
+  Slicing with `tracks[start:start + count]` grabs at most `count` items starting
+  at `start`. Python quietly clamps a stop index that runs past the end and
+  returns an empty list when `start` is beyond the list, so no bounds checks are
+  needed.
+common_mistakes:
+  - Using start + count as the length instead of the stop index.
+  - Adding manual bounds checks that slicing already handles.
+  - Forgetting to read the three fields out of the dict.

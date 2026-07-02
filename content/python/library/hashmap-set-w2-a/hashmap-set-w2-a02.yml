@@ -1,0 +1,83 @@
+id: exercise.library.hashmap_set_w2.a02
+kind: exercise
+version: 1
+language: python
+title: First Juice to Sell Out
+slug: hashmap-set-w2-a02
+difficulty: medium
+concepts:
+  - patterns.hash_map_counting
+prerequisites:
+  - python.dictionaries
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.hashmap_set_w2.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original juice-bar scenario about the first flavor whose running order count reaches a threshold.
+prompt_markdown: |
+  A juice bar records each drink flavor in the exact order it is ordered. Once a
+  flavor has been ordered `k` times it is declared sold out. Write
+  `first_sold_out(data)` that returns the flavor that reaches `k` orders first.
+  If no flavor is ordered `k` times, return the empty string `""`.
+
+  `data` is a dict with keys `orders` (a list of flavor strings) and `k` (an int).
+starter_code: |
+  def first_sold_out(data):
+      return ""
+function_name: first_sold_out
+input_mode: function
+solution_sketch: Count orders as you scan and return the first flavor whose running count hits k.
+sample_solution: |
+  def first_sold_out(data):
+      orders = data["orders"]
+      k = data["k"]
+      counts = {}
+      for flavor in orders:
+          counts[flavor] = counts.get(flavor, 0) + 1
+          if counts[flavor] == k:
+              return flavor
+      return ""
+hints:
+  - level: 1
+    text: Track how many times each flavor has been ordered so far.
+  - level: 2
+    text: Update the running count before you check whether it has reached k.
+  - level: 3
+    text: Return the moment a flavor's count first equals k, so order of arrival decides ties.
+tests:
+  public:
+    - name: none_reach
+      input: {orders: [mango, lime], k: 2}
+      expected: ""
+    - name: immediate
+      input: {orders: [mango, mango], k: 2}
+      expected: mango
+    - name: threshold_one
+      input: {orders: [kiwi], k: 1}
+      expected: kiwi
+  validation:
+    - name: reaches_three
+      input: {orders: [berry, cocoa, berry, cocoa, berry], k: 3}
+      expected: berry
+    - name: later_flavor_wins
+      input: {orders: [pear, plum, plum, pear, plum], k: 3}
+      expected: plum
+    - name: empty_orders
+      input: {orders: [], k: 1}
+      expected: ""
+    - name: never_hits_k
+      input: {orders: [fig, fig, date], k: 3}
+      expected: ""
+explanation_markdown: |
+  Because you increment a flavor's count and immediately test it against `k`, the
+  first flavor to cross the threshold is the one you return, which correctly
+  breaks ties by order of arrival. The single pass is O(n) with O(1) dict updates,
+  and an early `return` stops the scan as soon as a winner appears.
+common_mistakes:
+  - Checking the count before incrementing it, so the threshold is reached one order late.
+  - Using `>= k` and continuing the loop, which can return a later flavor than the true first.
+  - Forgetting to return "" when no flavor ever reaches k orders.

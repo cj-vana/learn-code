@@ -1,0 +1,84 @@
+id: exercise.library.prefix_sums_w2.a05
+kind: exercise
+version: 1
+language: python
+title: Service Elevator Returns
+slug: prefix-sums-w2-a05
+difficulty: easy
+concepts:
+  - patterns.prefix_sums
+  - patterns.running_total
+prerequisites:
+  - python.lists
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.prefix_sums_w2.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original service-elevator movement scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A service elevator begins the shift parked at ground level, floor 0. It then
+  performs a sequence of moves: a positive number lifts it up that many floors and
+  a negative number lowers it that many floors.
+
+  Write `times_at_ground(moves)` that returns how many moves finish with the
+  elevator back exactly at floor 0. For `[2, -2, 3, -3]` the elevator visits floors
+  `2, 0, 3, 0`, returning to the ground twice.
+starter_code: |
+  def times_at_ground(moves):
+      return 0
+function_name: times_at_ground
+input_mode: function
+solution_sketch: Accumulate the current floor as a running sum and count each time it lands on zero.
+sample_solution: |
+  def times_at_ground(moves):
+      floor = 0
+      count = 0
+      for move in moves:
+          floor += move
+          if floor == 0:
+              count += 1
+      return count
+hints:
+  - level: 1
+    text: The current floor after each move is a running prefix sum of the moves.
+  - level: 2
+    text: Add each move to the running floor, then check whether it equals 0.
+  - level: 3
+    text: Increment a counter every time the running floor returns to 0 after a move.
+tests:
+  public:
+    - name: two_returns
+      input: [2, -2, 3, -3]
+      expected: 2
+    - name: never_back
+      input: [1, 1, 1]
+      expected: 0
+    - name: empty_shift
+      input: []
+      expected: 0
+  validation:
+    - name: single_round_trip
+      input: [3, -3]
+      expected: 1
+    - name: many_returns
+      input: [1, -1, 2, -2, 5, -5]
+      expected: 3
+    - name: ends_above_ground
+      input: [4, -1, -3, 2]
+      expected: 1
+    - name: dips_below_first
+      input: [-2, 2, -5, 5]
+      expected: 2
+explanation_markdown: |
+  Tracking the elevator's floor is a running prefix sum of the moves, so one O(n)
+  pass reveals every moment it is back on the ground. Counting the steps where that
+  prefix equals 0 gives the answer. The elevator may dip below ground and still
+  return, so both upward and downward trips are handled the same way.
+common_mistakes:
+  - Counting moves of 0 net effect instead of the running floor being 0.
+  - Only checking the final floor rather than every intermediate stop.
+  - Assuming the elevator only ever moves upward, missing returns from below ground.

@@ -1,0 +1,80 @@
+id: exercise.library.debugging_w2.a04
+kind: exercise
+version: 1
+language: python
+title: Add Up the Ticket Prices
+slug: debugging-w2-a04
+difficulty: easy
+concepts:
+  - python.debugging
+  - python.types
+  - python.strings
+prerequisites:
+  - python.functions
+  - python.loops
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.debugging_w2.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original theatre box-office scenario built around the classic bug of adding numbers that are still stored as strings.
+prompt_markdown: |
+  A small theatre box office stores each ticket price as text, such as `"12"`,
+  because the values came straight from a form. Write
+  `total_ticket_cost(prices)` returning the sum of the prices as an integer.
+
+  A common beginner bug is to add the strings directly. `"12" + "5"` produces the
+  joined text `"125"`, not `17`, because `+` concatenates strings. Convert each
+  price to an integer before adding it. An empty list totals 0.
+starter_code: |
+  def total_ticket_cost(prices):
+      return 0
+function_name: total_ticket_cost
+input_mode: function
+solution_sketch: Convert each string price with int() and add it to a running total.
+sample_solution: |
+  def total_ticket_cost(prices):
+      total = 0
+      for price in prices:
+          total += int(price)
+      return total
+hints:
+  - level: 1
+    text: The prices arrive as text, not numbers.
+  - level: 2
+    text: Adding strings with + joins them instead of summing them.
+  - level: 3
+    text: Call int(price) on each entry before adding it to the total.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: 0
+    - name: single
+      input: ['12']
+      expected: 12
+    - name: three
+      input: ['5', '8', '2']
+      expected: 15
+  validation:
+    - name: larger
+      input: ['100', '250', '50']
+      expected: 400
+    - name: with_zero
+      input: ['0', '0', '7']
+      expected: 7
+    - name: repeated
+      input: ['3', '3', '3', '3']
+      expected: 12
+explanation_markdown: |
+  The `+` operator means different things for different types: numeric addition
+  for integers, concatenation for strings. Because the prices are strings, adding
+  them joins the digits into longer text. Converting each value with `int()` first
+  restores real arithmetic, so the running total ends up as the correct number.
+common_mistakes:
+  - Adding the strings directly, which concatenates them.
+  - Converting the whole list to int() instead of each element.
+  - Returning the total as a string instead of an integer.

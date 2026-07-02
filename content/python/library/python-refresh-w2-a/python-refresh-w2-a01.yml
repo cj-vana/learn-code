@@ -1,0 +1,91 @@
+id: exercise.library.python_refresh_w2.a01
+kind: exercise
+version: 1
+language: python
+title: Label a Sensor Reading's Type
+slug: python-refresh-w2-a01
+difficulty: easy
+concepts:
+  - python.types
+  - python.conditionals
+prerequisites:
+  - python.functions
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh_w2.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original field-sensor scenario for classifying a Python value's data type, including the boolean-before-integer subtlety.
+prompt_markdown: |
+  A field research kit stores each sensor reading as a plain Python value.
+  Write `reading_type(value)` that returns a lowercase label describing the
+  value's data type, using exactly one of:
+
+  - `"boolean"` for `True` or `False`
+  - `"integer"` for a whole number
+  - `"decimal"` for a floating-point number
+  - `"text"` for a string
+  - `"list"` for a list
+
+  Note that in Python `True` and `False` are also whole numbers, so check for a
+  boolean before you check for an integer.
+starter_code: |
+  def reading_type(value):
+      return ""
+function_name: reading_type
+input_mode: function
+solution_sketch: Test isinstance against bool first, then int, float, str, otherwise list.
+sample_solution: |
+  def reading_type(value):
+      if isinstance(value, bool):
+          return "boolean"
+      if isinstance(value, int):
+          return "integer"
+      if isinstance(value, float):
+          return "decimal"
+      if isinstance(value, str):
+          return "text"
+      return "list"
+hints:
+  - level: 1
+    text: Python has a built-in that reports whether a value is of a given type.
+  - level: 2
+    text: isinstance(value, int) is True even for booleans, so the order of your checks matters.
+  - level: 3
+    text: Check isinstance(value, bool) before isinstance(value, int), then fall through the remaining types.
+tests:
+  public:
+    - name: whole_number
+      input: 7
+      expected: integer
+    - name: flag
+      input: true
+      expected: boolean
+    - name: words
+      input: warm
+      expected: text
+  validation:
+    - name: floating
+      input: 2.5
+      expected: decimal
+    - name: empty_list
+      input: []
+      expected: list
+    - name: false_is_boolean
+      input: false
+      expected: boolean
+    - name: zero_is_integer
+      input: 0
+      expected: integer
+explanation_markdown: |
+  `isinstance` checks an object's type, but because `bool` is a subclass of
+  `int`, every boolean also passes an `int` check. Ordering the boolean test
+  first keeps `True` and `False` from being mislabeled as integers, and the
+  remaining checks run from most to least specific.
+common_mistakes:
+  - Checking isinstance(value, int) before the boolean case, so True is labeled "integer".
+  - Using type(value) == int, which also treats booleans as integers.
+  - Forgetting a return for the final list case.

@@ -1,0 +1,87 @@
+id: exercise.library.python_refresh_w2.a05
+kind: exercise
+version: 1
+language: python
+title: Clamp a Thermostat Setting
+slug: python-refresh-w2-a05
+difficulty: easy
+concepts:
+  - python.conditionals
+  - python.variables
+prerequisites:
+  - python.functions
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh_w2.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original thermostat scenario that clamps a requested temperature into an allowed range.
+prompt_markdown: |
+  A smart thermostat refuses to leave its safe range. The request arrives as a
+  dict with keys `"requested"`, `"low"`, and `"high"`, where `low <= high`.
+
+  Write `apply_setting(request)` that returns the temperature the thermostat
+  actually uses:
+
+  - if the requested value is below `low`, return `low`
+  - if it is above `high`, return `high`
+  - otherwise return the requested value unchanged
+starter_code: |
+  def apply_setting(request):
+      return 0
+function_name: apply_setting
+input_mode: function
+solution_sketch: Return low or high when the request falls outside the range, otherwise return the request itself.
+sample_solution: |
+  def apply_setting(request):
+      requested = request["requested"]
+      low = request["low"]
+      high = request["high"]
+      if requested < low:
+          return low
+      if requested > high:
+          return high
+      return requested
+hints:
+  - level: 1
+    text: There are three outcomes, namely pinned to the low end, pinned to the high end, or left alone.
+  - level: 2
+    text: Handle the two out-of-range cases first, each with its own if.
+  - level: 3
+    text: If neither the below-low nor the above-high check fires, the request is already inside the range.
+tests:
+  public:
+    - name: in_range
+      input: {requested: 22, low: 16, high: 26}
+      expected: 22
+    - name: above_high
+      input: {requested: 30, low: 16, high: 26}
+      expected: 26
+    - name: below_low
+      input: {requested: 10, low: 16, high: 26}
+      expected: 16
+  validation:
+    - name: at_low_boundary
+      input: {requested: 16, low: 16, high: 26}
+      expected: 16
+    - name: at_high_boundary
+      input: {requested: 26, low: 16, high: 26}
+      expected: 26
+    - name: narrow_range
+      input: {requested: 16, low: 18, high: 24}
+      expected: 18
+    - name: far_above
+      input: {requested: 100, low: 0, high: 40}
+      expected: 40
+explanation_markdown: |
+  Clamping means squeezing a value into a range. Copying the three dict fields
+  into named variables keeps the comparisons readable. Checking `requested < low`
+  and then `requested > high` covers both ways a value can fall outside the
+  range; if neither fires, the value is already valid and is returned as is.
+common_mistakes:
+  - Returning the requested value even when it is out of range.
+  - Using strict comparisons that wrongly clamp a value sitting exactly on a boundary.
+  - Swapping low and high so requests are clamped to the wrong end.

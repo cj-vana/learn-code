@@ -1,0 +1,84 @@
+id: exercise.library.python_refresh_w2.a06
+kind: exercise
+version: 1
+language: python
+title: Better Unit Price
+slug: python-refresh-w2-a06
+difficulty: easy
+concepts:
+  - python.operators
+  - python.conditionals
+prerequisites:
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh_w2.a06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original grocery unit-price comparison that reports which package is cheaper per unit.
+prompt_markdown: |
+  A shopper compares two packages of the same item. The input is a dict with
+  keys `"price_a"`, `"size_a"`, `"price_b"`, and `"size_b"`, where each size is
+  a positive number of units.
+
+  Write `better_deal(data)` that compares the price per unit of each package and
+  returns:
+
+  - `"A"` if package A is cheaper per unit
+  - `"B"` if package B is cheaper per unit
+  - `"tie"` if they cost the same per unit
+starter_code: |
+  def better_deal(data):
+      return ""
+function_name: better_deal
+input_mode: function
+solution_sketch: Divide each price by its size and compare the two per-unit prices.
+sample_solution: |
+  def better_deal(data):
+      unit_a = data["price_a"] / data["size_a"]
+      unit_b = data["price_b"] / data["size_b"]
+      if unit_a < unit_b:
+          return "A"
+      if unit_b < unit_a:
+          return "B"
+      return "tie"
+hints:
+  - level: 1
+    text: The fair comparison is price divided by size, not price alone.
+  - level: 2
+    text: Compute the per-unit price for each package before comparing them.
+  - level: 3
+    text: Compare unit_a and unit_b; if neither is strictly smaller, it is a tie.
+tests:
+  public:
+    - name: equal_rate
+      input: {price_a: 6, size_a: 2, price_b: 9, size_b: 3}
+      expected: tie
+    - name: a_cheaper
+      input: {price_a: 4, size_a: 2, price_b: 9, size_b: 3}
+      expected: A
+    - name: b_cheaper
+      input: {price_a: 10, size_a: 2, price_b: 9, size_b: 3}
+      expected: B
+  validation:
+    - name: single_unit_a
+      input: {price_a: 5, size_a: 1, price_b: 12, size_b: 4}
+      expected: B
+    - name: bulk_a_wins
+      input: {price_a: 3, size_a: 3, price_b: 2, size_b: 1}
+      expected: A
+    - name: another_tie
+      input: {price_a: 8, size_a: 4, price_b: 6, size_b: 3}
+      expected: tie
+explanation_markdown: |
+  A bigger package can still be the better buy, so the packages must be compared
+  on price per unit. Dividing each price by its size normalizes them onto the
+  same scale. Two comparisons cover every case: A cheaper, B cheaper, and the
+  remaining possibility, an exact tie.
+common_mistakes:
+  - Comparing the raw prices and ignoring the package sizes.
+  - Forgetting the tie case and always returning "A" or "B".
+  - Dividing size by price, which inverts which package looks cheaper.

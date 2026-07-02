@@ -1,0 +1,88 @@
+id: exercise.library.brute_force_bigo_w2.a01
+kind: exercise
+version: 1
+language: python
+title: Greenhouse Pots With a Height Gap
+slug: brute-force-bigo-w2-a01
+difficulty: easy
+concepts:
+  - patterns.brute_force
+  - python.lists
+prerequisites:
+  - python.loops
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.brute_force_bigo_w2.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original greenhouse-pot scenario about spotting a fixed height gap via a hand-built pair scan.
+prompt_markdown: |
+  A greenhouse arranges potted plants in a row and measures each pot's height in
+  centimeters. A gardener wants to know whether any two pots in *different*
+  positions differ in height by exactly `gap` centimeters.
+
+  Write `has_height_gap(data)` where `data` is a dict with keys `heights` (a list
+  of integer heights) and `gap` (a non-negative integer). Return `True` if some
+  pair of two different pots has an absolute height difference equal to `gap`,
+  otherwise `False`. When `gap` is 0 this means two pots of equal height. An
+  empty list returns `False`.
+starter_code: |
+  def has_height_gap(data):
+      return False
+function_name: has_height_gap
+input_mode: function
+solution_sketch: Check every unordered pair of positions with a nested loop and compare the absolute difference to gap.
+sample_solution: |
+  def has_height_gap(data):
+      heights = data["heights"]
+      gap = data["gap"]
+      n = len(heights)
+      for i in range(n):
+          for j in range(i + 1, n):
+              if abs(heights[i] - heights[j]) == gap:
+                  return True
+      return False
+hints:
+  - level: 1
+    text: Compare each pot with every other pot and look at how far apart their heights are.
+  - level: 2
+    text: An outer loop picks the first pot; an inner loop starting at i + 1 picks a later pot so no pair repeats.
+  - level: 3
+    text: Use abs(heights[i] - heights[j]) == gap, and remember gap can be 0 when two pots match.
+tests:
+  public:
+    - name: empty
+      input: {heights: [], gap: 5}
+      expected: false
+    - name: simple_hit
+      input: {heights: [10, 14, 12], gap: 4}
+      expected: true
+    - name: no_hit
+      input: {heights: [3, 5, 8], gap: 10}
+      expected: false
+  validation:
+    - name: zero_gap_equal
+      input: {heights: [7, 7, 2], gap: 0}
+      expected: true
+    - name: zero_gap_none
+      input: {heights: [1, 2, 3], gap: 0}
+      expected: false
+    - name: last_pair
+      input: {heights: [4, 8, 2, 7], gap: 5}
+      expected: true
+    - name: single_pot
+      input: {heights: [12], gap: 0}
+      expected: false
+explanation_markdown: |
+  The brute-force idea is to try every unordered pair of positions. The outer
+  loop fixes the first pot; the inner loop starts one step later so each pair is
+  examined once and a pot is never compared with itself. With `n` pots there are
+  `n * (n - 1) / 2` pairs, so this runs in O(n^2) time. Returning early on the
+  first match keeps the best case fast without changing the worst case.
+common_mistakes:
+  - Starting the inner loop at 0, which compares a pot with itself and always matches when gap is 0.
+  - Forgetting the absolute value, so a valid pair in the other order is missed.
+  - Returning False inside the loop before every pair has been checked.

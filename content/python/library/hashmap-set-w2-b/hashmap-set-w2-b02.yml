@@ -1,0 +1,77 @@
+id: exercise.library.hashmap_set_w2.b02
+kind: exercise
+version: 1
+language: python
+title: Distinct Podcast Guests
+slug: hashmap-set-w2-b02
+difficulty: easy
+concepts:
+  - patterns.set_membership
+  - python.sets
+prerequisites: []
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.hashmap_set_w2.b02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original podcast-guest scenario about counting how many different people appeared across episodes.
+prompt_markdown: |
+  A weekly podcast lists the guest featured on every episode of a season. Popular
+  guests come back for several episodes, so the same name can appear many times.
+  Write `count_distinct_guests(guests)` that returns how many different people
+  appeared at least once. An empty season returns 0.
+starter_code: |
+  def count_distinct_guests(guests):
+      return 0
+function_name: count_distinct_guests
+input_mode: function
+solution_sketch: Collect the names in a set so duplicates collapse, then return its size.
+sample_solution: |
+  def count_distinct_guests(guests):
+      seen = set()
+      for guest in guests:
+          seen.add(guest)
+      return len(seen)
+hints:
+  - level: 1
+    text: Repeated names should only be counted once.
+  - level: 2
+    text: A set automatically discards duplicates as you add each name.
+  - level: 3
+    text: Build a set from the list and return how many elements it holds.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: 0
+    - name: all_distinct
+      input: [ren, mira, obi]
+      expected: 3
+    - name: with_repeats
+      input: [ren, ren, mira]
+      expected: 2
+  validation:
+    - name: single
+      input: [zephyr]
+      expected: 1
+    - name: all_same
+      input: [june, june, june]
+      expected: 1
+    - name: mixed
+      input: [ada, bex, ada, cyd, bex]
+      expected: 3
+    - name: interleaved
+      input: [pax, quin, pax, quin, rue]
+      expected: 3
+explanation_markdown: |
+  A set is the natural tool when you care about "which distinct values appeared"
+  rather than how often. Adding an element that is already present is a no-op, so
+  after one pass the set holds exactly the unique guest names. Its length is the
+  answer, and each add and membership check is O(1), making the scan O(n) overall.
+common_mistakes:
+  - Returning the length of the original list, which double-counts repeat guests.
+  - Trying to track seen names in a list, which makes each check O(n).
+  - Forgetting that an empty season should return 0.

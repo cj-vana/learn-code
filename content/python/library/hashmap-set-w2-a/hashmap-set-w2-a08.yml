@@ -1,0 +1,80 @@
+id: exercise.library.hashmap_set_w2.a08
+kind: exercise
+version: 1
+language: python
+title: Frequently Used Kit Components
+slug: hashmap-set-w2-a08
+difficulty: easy
+concepts:
+  - patterns.hash_map_counting
+  - python.sorting
+prerequisites:
+  - python.dictionaries
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.hashmap_set_w2.a08
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original maker-space scenario returning components used in at least k kits, sorted alphabetically.
+prompt_markdown: |
+  A maker space records one component name per line for every kit it assembles, so
+  a component can appear many times. Write `frequent_components(data)` that returns
+  the component names used in at least `k` kits, sorted alphabetically.
+
+  `data` is a dict with keys `components` (a list of name strings) and `k` (an int).
+starter_code: |
+  def frequent_components(data):
+      return []
+function_name: frequent_components
+input_mode: function
+solution_sketch: Count each component, then return the sorted names whose count is at least k.
+sample_solution: |
+  def frequent_components(data):
+      counts = {}
+      for name in data["components"]:
+          counts[name] = counts.get(name, 0) + 1
+      k = data["k"]
+      return sorted(name for name, total in counts.items() if total >= k)
+hints:
+  - level: 1
+    text: First count how many kits used each component.
+  - level: 2
+    text: Keep only the components whose count is greater than or equal to k.
+  - level: 3
+    text: Pass the qualifying names through sorted() to get alphabetical order.
+tests:
+  public:
+    - name: empty
+      input: {components: [], k: 1}
+      expected: []
+    - name: all_meet
+      input: {components: [gear, bolt], k: 1}
+      expected: [bolt, gear]
+    - name: threshold_two
+      input: {components: [gear, gear, bolt], k: 2}
+      expected: [gear]
+  validation:
+    - name: none_meet
+      input: {components: [nut, washer], k: 2}
+      expected: []
+    - name: sorted_output
+      input: {components: [wire, axle, wire, axle, cam], k: 2}
+      expected: [axle, wire]
+    - name: high_threshold
+      input: {components: [rod, rod, rod, pin], k: 3}
+      expected: [rod]
+    - name: all_repeat
+      input: {components: [tab, tab, tab], k: 1}
+      expected: [tab]
+explanation_markdown: |
+  Counting the components is O(n), then filtering the dict keeps only names meeting
+  the `k` threshold. Because dict iteration order is not meaningful for this task,
+  passing the survivors through `sorted()` guarantees a stable alphabetical result
+  no matter what order the components were recorded in.
+common_mistakes:
+  - Using `> k` instead of `>= k`, dropping components that hit the threshold exactly.
+  - Returning the names in dict order and forgetting to sort them.
+  - Filtering the raw list instead of the counts, so frequent names appear many times.

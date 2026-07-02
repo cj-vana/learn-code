@@ -1,0 +1,82 @@
+id: exercise.library.debugging_w2.a06
+kind: exercise
+version: 1
+language: python
+title: Workshop Admission Rule
+slug: debugging-w2-a06
+difficulty: medium
+concepts:
+  - python.debugging
+  - python.conditionals
+  - python.operators
+prerequisites:
+  - python.functions
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.debugging_w2.a06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original craft-workshop scenario built around the classic operator-precedence bug where and binds tighter than or.
+prompt_markdown: |
+  A craft workshop admits a person only if they registered (either `online` or as
+  a `walkin`) AND they signed the `waiver`. Write `admitted(person)` where
+  `person` is a dict with boolean keys `online`, `walkin`, and `waiver`. Return
+  `True` if the person may enter, otherwise `False`.
+
+  A common beginner bug is to write `online or walkin and waiver`. Because `and`
+  binds tighter than `or`, Python reads that as `online or (walkin and waiver)`,
+  which wrongly admits an online registrant who never signed the waiver. Add
+  parentheses so the registration check is grouped before the waiver check.
+starter_code: |
+  def admitted(person):
+      return False
+function_name: admitted
+input_mode: function
+solution_sketch: Return (online or walkin) and waiver, using parentheses to group the registration check.
+sample_solution: |
+  def admitted(person):
+      online = person["online"]
+      walkin = person["walkin"]
+      waiver = person["waiver"]
+      return (online or walkin) and waiver
+hints:
+  - level: 1
+    text: In Python, and is evaluated before or.
+  - level: 2
+    text: Without parentheses, online or walkin and waiver becomes online or (walkin and waiver).
+  - level: 3
+    text: Group the registration check with parentheses, (online or walkin) and waiver.
+tests:
+  public:
+    - name: online_and_signed
+      input: {online: true, walkin: false, waiver: true}
+      expected: true
+    - name: online_no_waiver
+      input: {online: true, walkin: false, waiver: false}
+      expected: false
+    - name: walkin_and_signed
+      input: {online: false, walkin: true, waiver: true}
+      expected: true
+  validation:
+    - name: not_registered
+      input: {online: false, walkin: false, waiver: true}
+      expected: false
+    - name: both_registered_no_waiver
+      input: {online: true, walkin: true, waiver: false}
+      expected: false
+    - name: nothing
+      input: {online: false, walkin: false, waiver: false}
+      expected: false
+explanation_markdown: |
+  Operator precedence decides how an unparenthesised boolean expression is read.
+  Since `and` binds tighter than `or`, `online or walkin and waiver` means
+  `online or (walkin and waiver)`, so an online registrant is admitted even
+  without a signed waiver. The intended rule is `(online or walkin) and waiver`:
+  first confirm they registered somehow, then require the waiver in every case.
+common_mistakes:
+  - Omitting the parentheses and letting and bind before or.
+  - Requiring both online and walkin instead of either one.
+  - Ignoring the waiver for online registrants.

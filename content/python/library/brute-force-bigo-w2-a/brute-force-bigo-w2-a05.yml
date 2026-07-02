@@ -1,0 +1,80 @@
+id: exercise.library.brute_force_bigo_w2.a05
+kind: exercise
+version: 1
+language: python
+title: Volunteer and Shift Pairings
+slug: brute-force-bigo-w2-a05
+difficulty: easy
+concepts:
+  - concepts.big_o
+prerequisites: []
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.brute_force_bigo_w2.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original volunteer-scheduling scenario framing a rectangular nested loop as a product-sized step count.
+prompt_markdown: |
+  A festival coordinator wants to consider every possible way to assign one
+  volunteer to one shift. To do that with a brute-force approach she loops over
+  every volunteer and, for each one, loops over every shift.
+
+  Write `count_pairings(data)` where `data` is a dict with keys `volunteers` and
+  `shifts`, both non-negative integers. Return how many (volunteer, shift)
+  combinations that pair of nested loops would examine. If either count is 0,
+  there are no combinations.
+starter_code: |
+  def count_pairings(data):
+      return 0
+function_name: count_pairings
+input_mode: function
+solution_sketch: A rectangular nested loop runs its inner body volunteers times shifts, so return the product.
+sample_solution: |
+  def count_pairings(data):
+      volunteers = data["volunteers"]
+      shifts = data["shifts"]
+      return volunteers * shifts
+hints:
+  - level: 1
+    text: For each volunteer the inner loop runs once per shift.
+  - level: 2
+    text: Two independent lists of length a and b give a times b combinations, not a plus b.
+  - level: 3
+    text: Return volunteers * shifts, which is 0 whenever either side is 0.
+tests:
+  public:
+    - name: basic
+      input: {volunteers: 3, shifts: 4}
+      expected: 12
+    - name: zero_shifts
+      input: {volunteers: 5, shifts: 0}
+      expected: 0
+    - name: one_each
+      input: {volunteers: 1, shifts: 1}
+      expected: 1
+  validation:
+    - name: zero_volunteers
+      input: {volunteers: 0, shifts: 9}
+      expected: 0
+    - name: large
+      input: {volunteers: 12, shifts: 7}
+      expected: 84
+    - name: square
+      input: {volunteers: 6, shifts: 6}
+      expected: 36
+    - name: both_zero
+      input: {volunteers: 0, shifts: 0}
+      expected: 0
+explanation_markdown: |
+  A rectangular nested loop over two independent groups runs its inner body once
+  for every combination, so the total is the product of the two sizes. If there are
+  `a` volunteers and `b` shifts, the work grows like O(a * b); when the two groups
+  are the same size `n`, that is O(n^2). This is different from scanning the two
+  lists separately, which would only be O(a + b).
+common_mistakes:
+  - Adding the two counts instead of multiplying them.
+  - Forgetting that a product with any zero factor is 0.
+  - Confusing this rectangular loop with an unordered-pair scan, which would halve the count.

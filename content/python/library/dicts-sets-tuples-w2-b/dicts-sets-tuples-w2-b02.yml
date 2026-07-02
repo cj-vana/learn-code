@@ -1,0 +1,72 @@
+id: exercise.library.dicts_sets_tuples_w2.b02
+kind: exercise
+version: 1
+language: python
+title: Count Distinct Drone Stops
+slug: dicts-sets-tuples-w2-b02
+difficulty: easy
+concepts:
+  - python.sets
+  - python.tuples
+prerequisites:
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples_w2.b02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original delivery-drone grid-log scenario counting unique coordinate stops.
+prompt_markdown: |
+  A delivery drone records every grid cell it lands on as a `[row, col]` pair,
+  and it often revisits the same cell. Write `count_distinct_stops(stops)` that
+  returns how many distinct cells the drone visited. Note that `[1, 2]` and
+  `[2, 1]` are different cells. An empty log returns 0.
+starter_code: |
+  def count_distinct_stops(stops):
+      return 0
+function_name: count_distinct_stops
+input_mode: function
+solution_sketch: Convert each pair to a tuple, drop it into a set, and return its size.
+sample_solution: |
+  def count_distinct_stops(stops):
+      return len({tuple(stop) for stop in stops})
+hints:
+  - level: 1
+    text: A set automatically discards repeated cells.
+  - level: 2
+    text: Lists cannot go in a set, but tuples can, so convert each pair first.
+  - level: 3
+    text: Build {tuple(stop) for stop in stops} and return its length.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: 0
+    - name: no_repeat
+      input: [[0, 0], [1, 1], [2, 2]]
+      expected: 3
+    - name: with_repeat
+      input: [[0, 0], [1, 2], [0, 0], [3, 1]]
+      expected: 3
+  validation:
+    - name: all_same
+      input: [[5, 5], [5, 5], [5, 5]]
+      expected: 1
+    - name: some_dupes
+      input: [[1, 0], [0, 1], [1, 0], [0, 1], [2, 2]]
+      expected: 3
+    - name: order_matters
+      input: [[1, 2], [2, 1]]
+      expected: 2
+explanation_markdown: |
+  A set stores each element once, so adding every coordinate and reading the
+  length counts the distinct cells directly. Because a list is not hashable, we
+  turn each `[row, col]` into a tuple, which is hashable and compares by both
+  values. That is why `(1, 2)` and `(2, 1)` count as two separate stops.
+common_mistakes:
+  - Trying to put the raw lists in a set, which raises a TypeError.
+  - Counting the total number of entries instead of the distinct ones.
+  - Assuming [1, 2] and [2, 1] are the same cell.

@@ -1,0 +1,90 @@
+id: exercise.library.stack_queue_bfs_w2.a01
+kind: exercise
+version: 1
+language: python
+title: Photo Gallery Back Button
+slug: stack-queue-bfs-w2-a01
+difficulty: easy
+concepts:
+  - patterns.stack
+  - python.lists
+prerequisites:
+  - python.lists
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.stack_queue_bfs_w2.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original photo-viewer navigation-history scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A photo viewer keeps a history of the pictures you have opened. You are given a
+  list of `actions`. Each action is either a photo id string (open that photo and
+  put it on top of the history), or the token `"back"` which returns you to the
+  previously opened photo.
+
+  Pressing `"back"` when you are already on the earliest opened photo does
+  nothing, and pressing `"back"` before any photo has been opened also does
+  nothing.
+
+  Write `current_photo(actions)` returning the id of the photo currently on
+  screen, or the empty string `""` if no photo has been opened.
+starter_code: |
+  def current_photo(actions):
+      return ""
+function_name: current_photo
+input_mode: function
+solution_sketch: Treat the view history as a stack; open pushes, back pops when more than one photo remains.
+sample_solution: |
+  def current_photo(actions):
+      history = []
+      for action in actions:
+          if action == "back":
+              if len(history) > 1:
+                  history.pop()
+          else:
+              history.append(action)
+      return history[-1] if history else ""
+hints:
+  - level: 1
+    text: The photo on screen is always the most recently opened one still in the history.
+  - level: 2
+    text: Opening a photo pushes it onto a stack; pressing back removes the top item.
+  - level: 3
+    text: Only pop on back when the history has more than one photo, so you never leave the earliest one.
+tests:
+  public:
+    - name: nothing_opened
+      input: []
+      expected: ""
+    - name: single_open
+      input: ["home"]
+      expected: "home"
+    - name: back_once
+      input: ["home", "gallery", "back"]
+      expected: "home"
+  validation:
+    - name: two_backs
+      input: ["a", "b", "c", "back", "back"]
+      expected: "a"
+    - name: back_on_empty
+      input: ["back"]
+      expected: ""
+    - name: back_past_first
+      input: ["p1", "back", "back"]
+      expected: "p1"
+    - name: reopen_after_back
+      input: ["x", "y", "back", "z"]
+      expected: "z"
+explanation_markdown: |
+  Navigation history is a natural stack: the last photo you opened is the first
+  one you return from. Opening pushes an id, and `"back"` pops the top. Guarding
+  the pop with `len(history) > 1` keeps the earliest photo pinned so extra back
+  presses have no effect, and an empty history returns `""`. Each action is
+  handled once, so the walk is O(n).
+common_mistakes:
+  - Popping the last photo on back and losing the earliest one.
+  - Crashing on back when the history is empty instead of ignoring it.
+  - Returning the whole history instead of just the top photo.

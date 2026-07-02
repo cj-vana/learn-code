@@ -1,0 +1,79 @@
+id: exercise.library.hashmap_set_w2.a05
+kind: exercise
+version: 1
+language: python
+title: First Reused Locker Code
+slug: hashmap-set-w2-a05
+difficulty: easy
+concepts:
+  - patterns.set_membership
+prerequisites:
+  - python.sets
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.hashmap_set_w2.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original gym-locker scenario returning the first code that is handed out a second time.
+prompt_markdown: |
+  A gym hands out locker codes to visitors through the day, in order. Write
+  `first_reused(codes)` that returns the first code handed to a second visitor,
+  that is, the first code you encounter that was already given out earlier. If
+  every code is unique, return the empty string `""`.
+starter_code: |
+  def first_reused(codes):
+      return ""
+function_name: first_reused
+input_mode: function
+solution_sketch: Track codes already seen in a set and return the first one that reappears.
+sample_solution: |
+  def first_reused(codes):
+      seen = set()
+      for code in codes:
+          if code in seen:
+              return code
+          seen.add(code)
+      return ""
+hints:
+  - level: 1
+    text: Remember every code you have already handed out.
+  - level: 2
+    text: A set gives O(1) checks for whether a code has appeared before.
+  - level: 3
+    text: Return as soon as a code is already in the set; add it otherwise.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: ""
+    - name: no_repeat
+      input: [alpha, bravo, charlie]
+      expected: ""
+    - name: one_repeat
+      input: [alpha, bravo, alpha]
+      expected: alpha
+  validation:
+    - name: first_of_two
+      input: [north, south, south, north]
+      expected: south
+    - name: immediate
+      input: [mist, mist, moss]
+      expected: mist
+    - name: last_pair
+      input: [pearl, quartz, ruby, pearl]
+      expected: pearl
+    - name: all_unique
+      input: [dawn, echo, frost, glow]
+      expected: ""
+explanation_markdown: |
+  A set of already-seen codes lets each lookup run in O(1), so the whole scan is
+  O(n). Because you check membership before adding the current code, the first
+  code that appears twice is returned the instant its second copy is reached, which
+  is exactly the earliest reuse.
+common_mistakes:
+  - Adding the code to the set before checking membership, so nothing ever looks reused.
+  - Returning the second-earliest duplicate by scanning for repeats after the loop.
+  - Forgetting the "" result when all codes are distinct.

@@ -1,0 +1,75 @@
+id: exercise.library.python_refresh_w2.b07
+kind: exercise
+version: 1
+language: python
+title: Photo Gallery Rows
+slug: python-refresh-w2-b07
+difficulty: easy
+concepts:
+  - python.operators
+  - python.functions
+prerequisites:
+  - python.variables
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh_w2.b07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original photo-gallery grid scenario that rounds up to full rows with its own tests.
+prompt_markdown: |
+  A photo gallery lays out pictures in a grid with a fixed number of columns.
+  The last row may be only partly filled, but it still counts as a full row.
+  Write `gallery_rows(data)` where `data` is a dict with keys `photos`
+  (a non-negative integer) and `columns` (a positive integer). Return how many
+  rows are needed. With no photos at all, the answer is 0.
+starter_code: |
+  def gallery_rows(data):
+      return 0
+function_name: gallery_rows
+input_mode: function
+solution_sketch: Round the division up so a partial final row still counts as one whole row.
+sample_solution: |
+  def gallery_rows(data):
+      photos = data["photos"]
+      columns = data["columns"]
+      if photos == 0:
+          return 0
+      return (photos + columns - 1) // columns
+hints:
+  - level: 1
+    text: A partly filled last row still needs a whole row, so plain division is not enough.
+  - level: 2
+    text: Adding columns - 1 before floor-dividing rounds the count upward.
+  - level: 3
+    text: Use (photos + columns - 1) // columns, and return 0 when there are no photos.
+tests:
+  public:
+    - name: no_photos
+      input: {photos: 0, columns: 4}
+      expected: 0
+    - name: exactly_two_rows
+      input: {photos: 8, columns: 4}
+      expected: 2
+    - name: partial_last_row
+      input: {photos: 9, columns: 4}
+      expected: 3
+  validation:
+    - name: single_full_row
+      input: {photos: 4, columns: 4}
+      expected: 1
+    - name: one_photo
+      input: {photos: 1, columns: 3}
+      expected: 1
+    - name: three_full_rows
+      input: {photos: 7, columns: 3}
+      expected: 3
+explanation_markdown: |
+  Rounding a division up is a common need. Adding `columns - 1` before the
+  floor division pushes any leftover photos into an extra row, while an exact
+  multiple stays unchanged. The zero case is handled separately for clarity.
+common_mistakes:
+  - Using plain floor division, which drops the partly filled last row.
+  - Reporting a row for an empty gallery instead of zero.

@@ -1,0 +1,79 @@
+id: exercise.library.prefix_sums_w2.a01
+kind: exercise
+version: 1
+language: python
+title: Bakery Loaf Running Totals
+slug: prefix-sums-w2-a01
+difficulty: easy
+concepts:
+  - patterns.prefix_sums
+  - patterns.running_total
+prerequisites:
+  - python.lists
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.prefix_sums_w2.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original bakery loaf-baking scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A neighbourhood bakery records how many loaves it pulls from the oven each hour
+  of the morning. Write `cumulative_loaves(counts)` that returns a new list where
+  position `i` holds the total number of loaves baked from the first hour up to
+  and including hour `i`.
+
+  For example, `[2, 5, 3]` gives `[2, 7, 10]`. An empty morning returns an empty
+  list.
+starter_code: |
+  def cumulative_loaves(counts):
+      return []
+function_name: cumulative_loaves
+input_mode: function
+solution_sketch: Carry one running total and append it after adding each hour's count.
+sample_solution: |
+  def cumulative_loaves(counts):
+      totals = []
+      running = 0
+      for count in counts:
+          running += count
+          totals.append(running)
+      return totals
+hints:
+  - level: 1
+    text: Each answer is the previous total plus this hour's loaf count.
+  - level: 2
+    text: Keep a single running sum and walk the list from left to right.
+  - level: 3
+    text: After adding each count to the running total, append that total to the result.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: single
+      input: [6]
+      expected: [6]
+    - name: three_hours
+      input: [2, 5, 3]
+      expected: [2, 7, 10]
+  validation:
+    - name: zeros_between
+      input: [0, 4, 0, 1]
+      expected: [0, 4, 4, 5]
+    - name: steady
+      input: [1, 1, 1, 1]
+      expected: [1, 2, 3, 4]
+    - name: bigger_batches
+      input: [10, 20, 30]
+      expected: [10, 30, 60]
+explanation_markdown: |
+  A prefix-sum list answers "how many so far" in a single left-to-right pass. By
+  carrying one `running` total and appending it after each hour, the work is O(n)
+  instead of re-summing every earlier hour at each position.
+common_mistakes:
+  - Resetting the running total inside the loop, which discards earlier hours.
+  - Re-summing counts[:i+1] at each hour, which is O(n^2) instead of O(n).
+  - Appending the current count instead of the accumulated total.

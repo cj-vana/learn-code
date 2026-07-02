@@ -1,0 +1,112 @@
+id: exercise.library.two_pointers_w2.a07
+kind: exercise
+version: 1
+language: python
+title: Domino Pip Matches
+slug: two-pointers-w2-a07
+difficulty: medium
+concepts:
+  - patterns.two_pointers
+  - python.lists
+prerequisites:
+  - python.lists
+estimated_time_minutes: 18
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.two_pointers_w2.a07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original domino scenario counting how many sorted pip pairs add up to a target total, duplicates included.
+prompt_markdown: |
+  At a game night the pip counts of a pile of domino halves are recorded in a list,
+  sorted from fewest pips to most. Players want to know how many ways two different
+  halves can be paired so their pips add up to a `target`. Two halves with equal
+  pip counts still count as separate halves.
+
+  Write `count_pip_pairs(data)` where `data` is a dict with keys `pips` (a list of
+  ints in non-decreasing order) and `target` (an int). Return the number of
+  unordered pairs of positions whose pip counts sum to exactly `target`.
+starter_code: |
+  def count_pip_pairs(data):
+      return 0
+function_name: count_pip_pairs
+input_mode: function
+solution_sketch: Converge two pointers from the ends; on a match, count how many equal values sit on each side and multiply, handling an all-equal block separately.
+sample_solution: |
+  def count_pip_pairs(data):
+      pips = data["pips"]
+      target = data["target"]
+      left = 0
+      right = len(pips) - 1
+      count = 0
+      while left < right:
+          total = pips[left] + pips[right]
+          if total == target:
+              if pips[left] == pips[right]:
+                  span = right - left + 1
+                  count += span * (span - 1) // 2
+                  break
+              lc = 1
+              while left + 1 < right and pips[left + 1] == pips[left]:
+                  left += 1
+                  lc += 1
+              rc = 1
+              while right - 1 > left and pips[right - 1] == pips[right]:
+                  right -= 1
+                  rc += 1
+              count += lc * rc
+              left += 1
+              right -= 1
+          elif total < target:
+              left += 1
+          else:
+              right -= 1
+      return count
+hints:
+  - level: 1
+    text: Because the pips are sorted, start one pointer at the smallest half and one at the largest.
+  - level: 2
+    text: If the two ends sum below the target, raise the left pointer; if above, lower the right pointer.
+  - level: 3
+    text: On a match with different values, count the equal values on each side and multiply; if the whole remaining window is one repeated value, use n*(n-1)/2.
+tests:
+  public:
+    - name: simple_two
+      input: { pips: [1, 2, 3, 4, 5], target: 6 }
+      expected: 2
+    - name: all_equal_target
+      input: { pips: [3, 3, 3], target: 6 }
+      expected: 3
+    - name: none
+      input: { pips: [1, 2, 3], target: 100 }
+      expected: 0
+  validation:
+    - name: duplicate_blocks
+      input: { pips: [1, 1, 2, 2, 3, 3], target: 4 }
+      expected: 5
+    - name: span_pairs
+      input: { pips: [0, 1, 2, 3, 4, 5, 6], target: 6 }
+      expected: 3
+    - name: all_same_four
+      input: { pips: [2, 2, 2, 2], target: 4 }
+      expected: 6
+    - name: empty
+      input: { pips: [], target: 4 }
+      expected: 0
+    - name: single_half
+      input: { pips: [5], target: 5 }
+      expected: 0
+explanation_markdown: |
+  Counting pairs with a fixed sum on a sorted list is a two-pointer sweep with a
+  twist for duplicates. When the two ends sum too low the left pointer rises, and
+  when too high the right pointer falls. On an exact match with different values,
+  every equal value clustered on the left can pair with every equal value clustered
+  on the right, so you count each run and multiply. If the remaining window is a
+  single repeated value, all pairs inside it match, giving n*(n-1)/2. The scan stays
+  O(n) even with heavy duplication.
+common_mistakes:
+  - Counting a matched pair as one instead of multiplying the equal-value runs on each side.
+  - Mishandling a block of identical values, either double counting or missing pairs.
+  - Forgetting to move both pointers inward after counting a matched pair.

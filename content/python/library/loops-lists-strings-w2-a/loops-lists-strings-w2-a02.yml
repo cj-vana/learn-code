@@ -1,0 +1,80 @@
+id: exercise.library.loops_lists_strings_w2.a02
+kind: exercise
+version: 1
+language: python
+title: Tidy the Recipe Card
+slug: loops-lists-strings-w2-a02
+difficulty: easy
+concepts:
+  - python.strings
+  - python.lists
+  - python.loops
+prerequisites:
+  - python.functions
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings_w2.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original hand-typed recipe-card cleanup scenario, prompt, tests, and explanation.
+prompt_markdown: |
+  A recipe card lists its ingredients on one line, separated by commas, but the
+  cook typed it in a hurry with stray spaces and empty slots. Write
+  `clean_ingredients(line)` that splits the line on commas, strips the surrounding
+  whitespace from each piece, and drops any piece that is empty after stripping.
+  Return the list of cleaned ingredient names in order. An empty string returns `[]`.
+  Spaces *inside* an ingredient name (like `"olive oil"`) must be kept.
+starter_code: |
+  def clean_ingredients(line):
+      return []
+function_name: clean_ingredients
+input_mode: function
+solution_sketch: Split on commas, strip each piece, and keep only the non-empty results.
+sample_solution: |
+  def clean_ingredients(line):
+      result = []
+      for piece in line.split(","):
+          cleaned = piece.strip()
+          if cleaned:
+              result.append(cleaned)
+      return result
+hints:
+  - level: 1
+    text: str.split(",") breaks the line into pieces at each comma.
+  - level: 2
+    text: str.strip() removes the leading and trailing spaces from one piece.
+  - level: 3
+    text: Only append a piece to the result when it is still non-empty after stripping.
+tests:
+  public:
+    - name: empty
+      input: ""
+      expected: []
+    - name: simple
+      input: "flour,sugar,eggs"
+      expected: [flour, sugar, eggs]
+    - name: messy
+      input: "flour, , sugar ,eggs"
+      expected: [flour, sugar, eggs]
+  validation:
+    - name: spaces_only
+      input: "   "
+      expected: []
+    - name: trailing_comma
+      input: "milk,honey,"
+      expected: [milk, honey]
+    - name: inner_space_kept
+      input: " olive oil , salt "
+      expected: ["olive oil", salt]
+explanation_markdown: |
+  Splitting on the comma gives the raw pieces, including empty ones created by
+  doubled or trailing commas. Calling `strip()` on each piece removes only the
+  *surrounding* whitespace, so an internal space in `"olive oil"` survives. An
+  empty result after stripping is skipped, which quietly discards the blank slots.
+common_mistakes:
+  - Using `strip()` on the whole line and losing the internal spaces of names.
+  - Keeping empty pieces produced by stray or trailing commas.
+  - Calling `split()` with no argument, which splits on every space instead of commas.

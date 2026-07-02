@@ -1,0 +1,88 @@
+id: exercise.library.brute_force_bigo_w2.a08
+kind: exercise
+version: 1
+language: python
+title: Closest Gallery Frame Widths
+slug: brute-force-bigo-w2-a08
+difficulty: medium
+concepts:
+  - patterns.brute_force
+  - concepts.big_o
+prerequisites:
+  - python.loops
+  - python.lists
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.brute_force_bigo_w2.a08
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original art-gallery scenario finding the smallest width gap between any two frames via an all-pairs scan.
+prompt_markdown: |
+  An art gallery measures the width of every picture frame in millimeters. A
+  curator wants the two frames whose widths are closest, measured as the smallest
+  absolute difference between any two *different* frames.
+
+  Write `closest_width_gap(widths)` that takes a list of integer widths and returns
+  the smallest absolute difference between any two frames at different positions.
+  Two frames of equal width give a gap of 0. If there are fewer than two frames,
+  return -1.
+starter_code: |
+  def closest_width_gap(widths):
+      return -1
+function_name: closest_width_gap
+input_mode: function
+solution_sketch: Scan every unordered pair with a nested loop and keep the smallest absolute difference.
+sample_solution: |
+  def closest_width_gap(widths):
+      n = len(widths)
+      best = -1
+      for i in range(n):
+          for j in range(i + 1, n):
+              gap = abs(widths[i] - widths[j])
+              if best == -1 or gap < best:
+                  best = gap
+      return best
+hints:
+  - level: 1
+    text: The answer is the difference of some pair of frames, so look at every pair.
+  - level: 2
+    text: A nested loop with the inner index starting at i + 1 covers each unordered pair once.
+  - level: 3
+    text: Track the smallest abs(widths[i] - widths[j]) seen, starting from a sentinel like -1 for "nothing yet".
+tests:
+  public:
+    - name: basic
+      input: [10, 14, 11]
+      expected: 1
+    - name: two_frames
+      input: [5, 20]
+      expected: 15
+    - name: with_duplicate
+      input: [8, 3, 8]
+      expected: 0
+  validation:
+    - name: too_few
+      input: [7]
+      expected: -1
+    - name: empty
+      input: []
+      expected: -1
+    - name: far_then_close
+      input: [1, 100, 2, 100]
+      expected: 0
+    - name: distinct
+      input: [40, 10, 25, 5]
+      expected: 5
+explanation_markdown: |
+  The brute-force method compares every unordered pair of frames: the outer loop
+  fixes one frame and the inner loop, starting at i + 1, measures the gap to each
+  later frame. You keep the smallest gap found. Because there are about `n^2 / 2`
+  pairs, the running time grows like O(n^2). The `-1` sentinel distinguishes "no
+  pair exists" from a real gap of 0, which happens when two frames are equal.
+common_mistakes:
+  - Starting best at 0, so the function can never report the true minimum.
+  - Comparing only neighboring frames instead of all pairs.
+  - Forgetting the absolute value, which lets a negative difference look smallest.

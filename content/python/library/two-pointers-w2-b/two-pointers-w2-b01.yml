@@ -1,0 +1,95 @@
+id: exercise.library.two_pointers_w2.b01
+kind: exercise
+version: 1
+language: python
+title: Merge Two Ferry Boards
+slug: two-pointers-w2-b01
+difficulty: easy
+concepts:
+  - patterns.two_pointers
+  - python.lists
+prerequisites:
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.two_pointers_w2.b01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original ferry-terminal scenario merging two already-sorted departure boards, with its own prompt and tests.
+prompt_markdown: |
+  A ferry terminal keeps two separate departure boards, one for the north dock
+  and one for the south dock. Each board already lists its departure minutes in
+  non-decreasing order. The terminal wants a single combined board that is still
+  sorted, keeping every departure (duplicates included).
+
+  Write `merge_boards(data)` where `data` is a dict with keys `north` and
+  `south`, each a list of ints sorted in non-decreasing order. Return one merged
+  list holding every value from both boards in non-decreasing order. If both
+  boards are empty, return an empty list.
+starter_code: |
+  def merge_boards(data):
+      return []
+function_name: merge_boards
+input_mode: function
+solution_sketch: Advance one pointer through each sorted board, always copying the smaller front value into the result.
+sample_solution: |
+  def merge_boards(data):
+      north = data["north"]
+      south = data["south"]
+      i = 0
+      j = 0
+      merged = []
+      while i < len(north) and j < len(south):
+          if north[i] <= south[j]:
+              merged.append(north[i])
+              i += 1
+          else:
+              merged.append(south[j])
+              j += 1
+      merged.extend(north[i:])
+      merged.extend(south[j:])
+      return merged
+hints:
+  - level: 1
+    text: Keep one index for the north board and one for the south board, each pointing at the earliest departure not yet copied.
+  - level: 2
+    text: Compare the two front values and copy the smaller one, advancing only that board's pointer.
+  - level: 3
+    text: Once one board is exhausted, append whatever remains on the other board, since it is already sorted.
+tests:
+  public:
+    - name: both_empty
+      input: { north: [], south: [] }
+      expected: []
+    - name: one_empty
+      input: { north: [5, 9], south: [] }
+      expected: [5, 9]
+    - name: interleaved
+      input: { north: [1, 4, 7], south: [2, 3, 8] }
+      expected: [1, 2, 3, 4, 7, 8]
+  validation:
+    - name: other_empty
+      input: { north: [], south: [2, 6] }
+      expected: [2, 6]
+    - name: duplicates_across
+      input: { north: [3, 3, 5], south: [3, 4] }
+      expected: [3, 3, 3, 4, 5]
+    - name: south_runs_out
+      input: { north: [10, 20, 30], south: [15] }
+      expected: [10, 15, 20, 30]
+    - name: single_each
+      input: { north: [7], south: [2] }
+      expected: [2, 7]
+explanation_markdown: |
+  Because each board is already sorted, the smallest departure not yet placed is
+  always at the front of one board or the other. Two pointers track those fronts:
+  compare them, copy the smaller, and advance only that pointer. When one board
+  empties, the remainder of the other is already in order and can be appended
+  wholesale. The whole merge visits each value once, so it runs in O(n + m) time.
+common_mistakes:
+  - Advancing both pointers after a single comparison, which drops values.
+  - Forgetting to append the leftover tail once one board is exhausted.
+  - Using a strict less-than that silently loses equal departures.

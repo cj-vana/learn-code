@@ -1,0 +1,88 @@
+id: exercise.library.sliding_window_w2.a08
+kind: exercise
+version: 1
+language: python
+title: Biggest Attendance Drop Between Weeks
+slug: sliding-window-w2-a08
+difficulty: easy
+concepts:
+  - patterns.sliding_window
+  - patterns.running_total
+prerequisites:
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sliding_window_w2.a08
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original museum attendance scenario tracking the largest fall in total between one fixed-size window and the next.
+prompt_markdown: |
+  A museum records daily attendance. To flag a slump, staff compare each `k`-day
+  window's total with the very next `k`-day window (shifted one day later) and
+  look for the sharpest fall. Write `biggest_attendance_drop(data)` returning the
+  largest drop, meaning the previous window's total minus the next window's total,
+  taken over all neighboring window pairs. If totals never fall, return `0`.
+
+  `data` is a dict: `{"counts": [...], "k": k}`. `k` is at least 1 and no larger
+  than the number of days.
+starter_code: |
+  def biggest_attendance_drop(data):
+      return 0
+function_name: biggest_attendance_drop
+input_mode: function
+solution_sketch: Slide a running k-day sum and track the largest decrease between each window total and the previous one.
+sample_solution: |
+  def biggest_attendance_drop(data):
+      counts = data["counts"]
+      k = data["k"]
+      window = sum(counts[:k])
+      prev = window
+      biggest = 0
+      for i in range(k, len(counts)):
+          window += counts[i] - counts[i - k]
+          drop = prev - window
+          if drop > biggest:
+              biggest = drop
+          prev = window
+      return biggest
+hints:
+  - level: 1
+    text: Each step to the right gives the next window's total; compare it with the one before.
+  - level: 2
+    text: A drop is previous total minus current total, so a rise makes the drop negative.
+  - level: 3
+    text: Keep the largest positive drop; if none occurs the answer stays 0.
+tests:
+  public:
+    - name: one_drop
+      input: {counts: [5, 1], k: 1}
+      expected: 4
+    - name: no_drop
+      input: {counts: [1, 2, 3], k: 1}
+      expected: 0
+    - name: single_window
+      input: {counts: [4, 4], k: 2}
+      expected: 0
+  validation:
+    - name: steady_fall
+      input: {counts: [6, 6, 1, 1], k: 2}
+      expected: 5
+    - name: rise_then_fall
+      input: {counts: [1, 2, 9, 0], k: 1}
+      expected: 9
+    - name: flat
+      input: {counts: [3, 3, 3, 3], k: 2}
+      expected: 0
+explanation_markdown: |
+  Sliding a fixed-size running sum yields each window total in order. Comparing a
+  window with the one just before it (`prev - window`) measures the change; a
+  positive value is a drop and a negative one is a rise. Tracking the largest drop
+  finds the sharpest slump, and starting the answer at `0` means a season that
+  only grows reports no drop at all.
+common_mistakes:
+  - Forgetting to update prev to the current total after each comparison.
+  - Reporting the change as an absolute value, which turns rises into fake drops.
+  - Returning a negative number instead of 0 when totals never fall.

@@ -1,0 +1,87 @@
+id: exercise.library.binary_search_w2.a05
+kind: exercise
+version: 1
+language: python
+title: First Ripe Pear on the Belt
+slug: binary-search-w2-a05
+difficulty: easy
+concepts:
+  - patterns.binary_search
+  - python.lists
+prerequisites:
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+input_mode: function
+provenance:
+  brief_id: library.binary_search_w2.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original conveyor-belt ripeness scenario that binary searches a run of False values followed by True.
+prompt_markdown: |
+  A ripeness scanner walks a conveyor belt of pears ordered from greenest to
+  ripest. Because they are sorted, the readings are a run of `False` (unripe)
+  followed by a run of `True` (ripe). Write `first_ripe(readings)` where
+  `readings` is that list of booleans.
+
+  Return the index of the first ripe pear, or `-1` if none are ripe. Use binary
+  search rather than scanning from the front.
+starter_code: |
+  def first_ripe(readings):
+      return -1
+function_name: first_ripe
+solution_sketch: Binary search for the leftmost index whose reading is True, then confirm one exists.
+sample_solution: |
+  def first_ripe(readings):
+      lo, hi = 0, len(readings)
+      while lo < hi:
+          mid = (lo + hi) // 2
+          if readings[mid]:
+              hi = mid
+          else:
+              lo = mid + 1
+      if lo < len(readings):
+          return lo
+      return -1
+hints:
+  - level: 1
+    text: All the False readings come before all the True ones, so there is a single crossover point.
+  - level: 2
+    text: When the middle reading is True, the first True is at mid or to its left; otherwise it is to the right.
+  - level: 3
+    text: If the search settles past the last index, no pear is ripe, so return -1.
+tests:
+  public:
+    - name: middle
+      input: [false, false, true, true]
+      expected: 2
+    - name: all_ripe
+      input: [true, true, true]
+      expected: 0
+    - name: none
+      input: [false, false]
+      expected: -1
+  validation:
+    - name: empty
+      input: []
+      expected: -1
+    - name: last_only
+      input: [false, false, false, true]
+      expected: 3
+    - name: single_true
+      input: [true]
+      expected: 0
+    - name: single_false
+      input: [false]
+      expected: -1
+explanation_markdown: |
+  A sorted run of `False` then `True` is exactly the setup binary search needs:
+  the reading flips from unripe to ripe once. A lower-bound search finds that
+  boundary in O(log n). If it lands past the end of the belt, every pear was
+  still unripe, so the answer is -1.
+common_mistakes:
+  - Scanning from the front, which is O(n) and ignores the sorted structure.
+  - Moving lo to mid instead of mid + 1 when the middle reading is False, causing an infinite loop.
+  - Forgetting to check whether the boundary actually points at a True reading.

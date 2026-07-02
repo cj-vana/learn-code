@@ -1,0 +1,72 @@
+id: exercise.library.dicts_sets_tuples_w2.b05
+kind: exercise
+version: 1
+language: python
+title: Team Skill Roster
+slug: dicts-sets-tuples-w2-b05
+difficulty: easy
+concepts:
+  - python.sets
+  - python.comprehensions
+prerequisites:
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples_w2.b05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original project-team scenario collecting every distinct skill across all members.
+prompt_markdown: |
+  A project team is documented as a dict mapping each member's name to a list of
+  their skills. Write `all_skills(team)` that returns a sorted list of every
+  distinct skill anyone on the team has. A member may list the same skill twice,
+  and an empty team returns an empty list.
+starter_code: |
+  def all_skills(team):
+      return []
+function_name: all_skills
+input_mode: function
+solution_sketch: Flatten every member's skills into one set, then sort it.
+sample_solution: |
+  def all_skills(team):
+      return sorted({skill for skills in team.values() for skill in skills})
+hints:
+  - level: 1
+    text: You want the union of every member's skill list, with no repeats.
+  - level: 2
+    text: A set gathers distinct skills as you iterate over all the lists.
+  - level: 3
+    text: A nested set comprehension over team.values() collects them, then sort.
+tests:
+  public:
+    - name: empty_team
+      input: {}
+      expected: []
+    - name: one_member
+      input: {ana: [python, sql]}
+      expected: [python, sql]
+    - name: overlap
+      input: {ana: [python, sql], ben: [sql, go], cy: [python]}
+      expected: [go, python, sql]
+  validation:
+    - name: member_no_skills
+      input: {ana: [], ben: [rust]}
+      expected: [rust]
+    - name: duplicates_within
+      input: {ana: [css, css, html], ben: [html]}
+      expected: [css, html]
+    - name: many
+      input: {a: [c, b], b: [a], c: [d, b]}
+      expected: [a, b, c, d]
+explanation_markdown: |
+  The nested comprehension walks every member's list and pours each skill into a
+  set, so duplicates across members and within a single list both collapse to one
+  entry. Sorting the finished set turns it into the predictable list the caller
+  expects. The whole thing is one pass over the total number of skills listed.
+common_mistakes:
+  - Concatenating the lists without deduplicating, leaving repeated skills.
+  - Returning the set directly instead of a sorted list.
+  - Looping over team keys (names) instead of team.values() (skill lists).

@@ -1,0 +1,72 @@
+id: exercise.library.loops_lists_strings_w2.b02
+kind: exercise
+version: 1
+language: python
+title: Reshelving Order
+slug: loops-lists-strings-w2-b02
+difficulty: easy
+concepts:
+  - python.lists
+  - python.sorting
+  - python.sets
+prerequisites:
+  - python.functions
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings_w2.b02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original library reshelving scenario, prompt, tests, and explanation.
+prompt_markdown: |
+  A librarian scans the shelf codes of every returned book into a list, and the
+  same code can appear several times. Write `reshelving_order(codes)` returning
+  a sorted list of the distinct codes so the shelver walks each aisle once. An
+  empty list returns an empty list.
+starter_code: |
+  def reshelving_order(codes):
+      return []
+function_name: reshelving_order
+input_mode: function
+solution_sketch: Drop duplicates with a set, then sort the remaining codes.
+sample_solution: |
+  def reshelving_order(codes):
+      return sorted(set(codes))
+hints:
+  - level: 1
+    text: You need each code only once, so think about removing duplicates.
+  - level: 2
+    text: A set keeps just the distinct values from a list.
+  - level: 3
+    text: Wrap the set in sorted() to get an ordered list back.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: already_unique
+      input: ["ref", "art", "sci"]
+      expected: ["art", "ref", "sci"]
+    - name: has_duplicates
+      input: ["map", "art", "map", "bio"]
+      expected: ["art", "bio", "map"]
+  validation:
+    - name: all_same
+      input: ["law", "law", "law"]
+      expected: ["law"]
+    - name: five_codes
+      input: ["poe", "cook", "art", "cook", "bio"]
+      expected: ["art", "bio", "cook", "poe"]
+    - name: reverse_order
+      input: ["sci", "ref", "art"]
+      expected: ["art", "ref", "sci"]
+explanation_markdown: |
+  Building a set from the list discards repeats in one pass, and `sorted` returns
+  a new list in alphabetical order. Combining them means the shelver sees every
+  aisle exactly once, in a predictable order.
+common_mistakes:
+  - Sorting first and assuming that removes duplicates.
+  - Returning the set itself, which has no guaranteed order.
+  - Mutating the input list instead of building a fresh result.

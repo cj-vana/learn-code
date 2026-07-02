@@ -1,0 +1,83 @@
+id: exercise.library.hashmap_set_w2.b03
+kind: exercise
+version: 1
+language: python
+title: Busiest Charging Station
+slug: hashmap-set-w2-b03
+difficulty: medium
+concepts:
+  - patterns.hash_map_counting
+prerequisites:
+  - python.dictionaries
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.hashmap_set_w2.b03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original EV-network scenario about finding the most-used charging station with an alphabetical tie-break.
+prompt_markdown: |
+  An electric-vehicle network logs the station name used for every charging
+  session in a day. Write `busiest_station(sessions)` that returns the station
+  that handled the most sessions. If two or more stations tie for the most, return
+  the one whose name comes first alphabetically. An empty log returns an empty
+  string.
+starter_code: |
+  def busiest_station(sessions):
+      return ""
+function_name: busiest_station
+input_mode: function
+solution_sketch: Tally sessions per station, find the highest total, then return the alphabetically first station reaching it.
+sample_solution: |
+  def busiest_station(sessions):
+      counts = {}
+      for station in sessions:
+          counts[station] = counts.get(station, 0) + 1
+      if not counts:
+          return ""
+      top = max(counts.values())
+      leaders = [station for station, total in counts.items() if total == top]
+      return min(leaders)
+hints:
+  - level: 1
+    text: Start by counting how many sessions each station handled.
+  - level: 2
+    text: The largest value in your counts dict is the winning session total.
+  - level: 3
+    text: Gather every station tied at that top total, then return the smallest name with min().
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: ""
+    - name: single
+      input: [north]
+      expected: north
+    - name: clear_winner
+      input: [alpha, bravo, alpha]
+      expected: alpha
+  validation:
+    - name: tie_alpha
+      input: [bravo, alpha, bravo, alpha]
+      expected: alpha
+    - name: three_singletons
+      input: [xray, yankee, zulu]
+      expected: xray
+    - name: winner_beats_tie
+      input: [mike, november, november, mike, november]
+      expected: november
+    - name: late_surge
+      input: [papa, quebec, quebec, romeo, quebec]
+      expected: quebec
+explanation_markdown: |
+  Counting the sessions per station is the O(n) first step. The tricky part is the
+  tie-break: `max(counts.values())` gives the winning total, but several stations
+  can share it. Collect all of those leaders and take `min(...)` to pick the
+  alphabetically first name. Guarding the empty case up front keeps `max()` from
+  raising on an empty sequence.
+common_mistakes:
+  - Returning the first station that reaches the top count instead of the alphabetically first.
+  - Calling max() on the counts before handling the empty-log case.
+  - Comparing counts by station name rather than by session total.

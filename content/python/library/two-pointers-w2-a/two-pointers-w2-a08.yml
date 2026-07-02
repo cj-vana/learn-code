@@ -1,0 +1,90 @@
+id: exercise.library.two_pointers_w2.a08
+kind: exercise
+version: 1
+language: python
+title: Collapse Repeated Animation Frames
+slug: two-pointers-w2-a08
+difficulty: easy
+concepts:
+  - patterns.two_pointers
+  - python.lists
+prerequisites:
+  - python.lists
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.two_pointers_w2.a08
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original animation scenario collapsing runs of identical consecutive frames using a read and write pointer.
+prompt_markdown: |
+  An animator exports a sequence of frame colors as a list. To shrink the file, any
+  run of identical consecutive frames should be squashed down to a single frame,
+  while frames that differ from their neighbor are kept. Only consecutive repeats
+  are collapsed, so a color that reappears later after a different color stays.
+
+  Write `collapse_frames(frames)` that returns a new list where each run of equal
+  consecutive values is replaced by one copy of that value. An empty list returns
+  an empty list.
+starter_code: |
+  def collapse_frames(frames):
+      return []
+function_name: collapse_frames
+input_mode: function
+solution_sketch: Use a read pointer scanning every frame and a write pointer that only records a frame when it differs from the last one kept.
+sample_solution: |
+  def collapse_frames(frames):
+      result = list(frames)
+      write = 0
+      for read in range(len(result)):
+          if write == 0 or result[read] != result[write - 1]:
+              result[write] = result[read]
+              write += 1
+      return result[:write]
+hints:
+  - level: 1
+    text: Keep a write pointer marking how many distinct-in-a-row frames you have kept so far.
+  - level: 2
+    text: Scan every frame with a read pointer and only keep it when it differs from the last frame you wrote.
+  - level: 3
+    text: The value just before the write pointer is the last kept frame to compare against.
+tests:
+  public:
+    - name: runs
+      input: [3, 3, 5, 5, 5, 2]
+      expected: [3, 5, 2]
+    - name: no_repeats
+      input: [1, 2, 3]
+      expected: [1, 2, 3]
+    - name: all_same
+      input: [7, 7, 7]
+      expected: [7]
+  validation:
+    - name: empty
+      input: []
+      expected: []
+    - name: single
+      input: [4]
+      expected: [4]
+    - name: trailing_run
+      input: [1, 2, 2]
+      expected: [1, 2]
+    - name: reappearing_value
+      input: [1, 2, 1, 2]
+      expected: [1, 2, 1, 2]
+    - name: strings
+      input: [red, red, blue, blue, red]
+      expected: [red, blue, red]
+explanation_markdown: |
+  Collapsing consecutive duplicates is a same-direction two-pointer compaction. The
+  read pointer visits every frame, while the write pointer counts how many frames
+  have been kept. A frame is kept only when it differs from the last written value,
+  so runs of equal frames shrink to one. Because the write pointer never passes the
+  read pointer, the compaction happens in place and the pass is O(n). Slicing at the
+  write pointer trims the leftover tail.
+common_mistakes:
+  - Removing all later occurrences of a value instead of only consecutive repeats.
+  - Comparing against the raw previous index rather than the last kept value.
+  - Returning the whole list instead of trimming it to the write pointer.

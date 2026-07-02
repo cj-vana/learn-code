@@ -1,0 +1,91 @@
+id: exercise.library.binary_search_w2.a02
+kind: exercise
+version: 1
+language: python
+title: Loaves at One Weight
+slug: binary-search-w2-a02
+difficulty: easy
+concepts:
+  - patterns.binary_search
+  - python.lists
+prerequisites:
+  - python.lists
+  - python.sorting
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+input_mode: function
+provenance:
+  brief_id: library.binary_search_w2.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original bakery loaf-weight tally scenario solved with two boundary searches, with its own prompt and tests.
+prompt_markdown: |
+  A bakery weighs every loaf at closing and records the grams in a list sorted
+  in ascending order. Write `count_at_weight(data)` where `data` has keys
+  `weights` (the sorted list) and `target` (a weight in grams).
+
+  Return how many loaves weigh exactly `target`. Use binary search to find the
+  first and just-past-last positions of `target` instead of counting one by one.
+starter_code: |
+  def count_at_weight(data):
+      return 0
+function_name: count_at_weight
+solution_sketch: Binary search the first index at or above target and the first index above target, then subtract.
+sample_solution: |
+  def count_at_weight(data):
+      weights = data["weights"]
+      target = data["target"]
+
+      def bound(x):
+          lo, hi = 0, len(weights)
+          while lo < hi:
+              mid = (lo + hi) // 2
+              if weights[mid] < x:
+                  lo = mid + 1
+              else:
+                  hi = mid
+          return lo
+
+      return bound(target + 1) - bound(target)
+hints:
+  - level: 1
+    text: The equal values sit together in one contiguous run because the list is sorted.
+  - level: 2
+    text: Find the first index whose weight is at least target, then the first index whose weight is above target.
+  - level: 3
+    text: The count is the distance between those two boundary indices.
+tests:
+  public:
+    - name: none
+      input: {weights: [200, 220, 240], target: 210}
+      expected: 0
+    - name: one
+      input: {weights: [200, 220, 240], target: 220}
+      expected: 1
+    - name: several
+      input: {weights: [200, 220, 220, 220, 240], target: 220}
+      expected: 3
+  validation:
+    - name: empty
+      input: {weights: [], target: 220}
+      expected: 0
+    - name: all_same
+      input: {weights: [250, 250, 250, 250], target: 250}
+      expected: 4
+    - name: first_run
+      input: {weights: [180, 180, 210, 260], target: 180}
+      expected: 2
+    - name: last_run
+      input: {weights: [180, 210, 260, 260], target: 260}
+      expected: 2
+explanation_markdown: |
+  Equal weights form one contiguous block in a sorted list. A lower-bound search
+  finds where that block starts and an upper-bound search finds where it ends, so
+  the count is the gap between the two indices. Two O(log n) searches beat a full
+  O(n) scan on a large batch.
+common_mistakes:
+  - Returning a boundary index instead of the difference between the two.
+  - Using `<=` in the lower-bound comparison and skipping the first equal weight.
+  - Assuming the weights might be unsorted and re-sorting unnecessarily.

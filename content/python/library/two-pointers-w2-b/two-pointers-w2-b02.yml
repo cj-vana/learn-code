@@ -1,0 +1,92 @@
+id: exercise.library.two_pointers_w2.b02
+kind: exercise
+version: 1
+language: python
+title: Delivery Checkpoint Order
+slug: two-pointers-w2-b02
+difficulty: easy
+concepts:
+  - patterns.two_pointers
+prerequisites:
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.two_pointers_w2.b02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original courier scan-log scenario checking whether required checkpoints appear as an in-order subsequence.
+prompt_markdown: |
+  A courier must pass a fixed sequence of required checkpoints in order, but the
+  route's scanner logs every station it passes, including many extra ones. The
+  required checkpoints do not need to be adjacent in the log; they only need to
+  appear in the correct relative order.
+
+  Write `follows_route(data)` where `data` is a dict with keys `required` (a list
+  of checkpoint codes that must be hit in order) and `scanned` (the full list of
+  station codes actually recorded). Return `True` if every required checkpoint
+  appears in `scanned` in the same order, otherwise `False`. An empty `required`
+  list is always satisfied.
+starter_code: |
+  def follows_route(data):
+      return False
+function_name: follows_route
+input_mode: function
+solution_sketch: Walk a pointer through the scan log and advance a second pointer over the required list each time the current required code is matched.
+sample_solution: |
+  def follows_route(data):
+      required = data["required"]
+      scanned = data["scanned"]
+      i = 0
+      j = 0
+      while i < len(required) and j < len(scanned):
+          if required[i] == scanned[j]:
+              i += 1
+          j += 1
+      return i == len(required)
+hints:
+  - level: 1
+    text: Keep one pointer on the next required checkpoint and one that scans forward through the log.
+  - level: 2
+    text: Advance the log pointer every step, but only advance the required pointer when the codes match.
+  - level: 3
+    text: The route is followed exactly when the required pointer reaches the end of the required list.
+tests:
+  public:
+    - name: empty_required
+      input: { required: [], scanned: [dock, hub] }
+      expected: true
+    - name: in_order
+      input: { required: [dock, gate], scanned: [dock, hub, gate, pier] }
+      expected: true
+    - name: out_of_order
+      input: { required: [gate, dock], scanned: [dock, hub, gate] }
+      expected: false
+  validation:
+    - name: exact_match
+      input: { required: [dock, hub, gate], scanned: [dock, hub, gate] }
+      expected: true
+    - name: missing_middle
+      input: { required: [dock, hub, gate], scanned: [dock, gate] }
+      expected: false
+    - name: repeated_stop
+      input: { required: [dock, dock], scanned: [dock, hub, dock] }
+      expected: true
+    - name: nothing_scanned
+      input: { required: [dock], scanned: [] }
+      expected: false
+    - name: extras_between
+      input: { required: [pier, ramp], scanned: [bay, pier, bay, ramp, bay] }
+      expected: true
+explanation_markdown: |
+  This is a subsequence check driven by two pointers moving the same direction.
+  The log pointer always steps forward; the required pointer only steps when it
+  finds a match, locking in that checkpoint. Because both pointers advance and
+  never reset, the scan is a single O(n) pass. The route is valid exactly when
+  the required pointer has consumed every required checkpoint before the log ends.
+common_mistakes:
+  - Requiring the checkpoints to be adjacent instead of merely in order.
+  - Advancing the required pointer even when the codes do not match.
+  - Returning True whenever any checkpoint is seen rather than all of them in order.

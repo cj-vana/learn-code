@@ -1,0 +1,77 @@
+id: exercise.library.hashmap_set_w2.a03
+kind: exercise
+version: 1
+language: python
+title: Books Borrowed Exactly Once
+slug: hashmap-set-w2-a03
+difficulty: easy
+concepts:
+  - patterns.hash_map_counting
+prerequisites:
+  - python.dictionaries
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.hashmap_set_w2.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original library scenario returning titles borrowed exactly once in first-seen order.
+prompt_markdown: |
+  A library logs the catalog title of every book borrowed during the week, in the
+  order the loans happened. Write `borrowed_once(titles)` that returns the titles
+  borrowed exactly once, listed in the order they first appear. An empty list
+  returns an empty list.
+starter_code: |
+  def borrowed_once(titles):
+      return []
+function_name: borrowed_once
+input_mode: function
+solution_sketch: Count every title, then collect the titles whose count is one while walking the list in order.
+sample_solution: |
+  def borrowed_once(titles):
+      counts = {}
+      for title in titles:
+          counts[title] = counts.get(title, 0) + 1
+      return [title for title in titles if counts[title] == 1]
+hints:
+  - level: 1
+    text: First find out how many times each title was borrowed.
+  - level: 2
+    text: A dict of counts lets you tell one-time loans from repeated ones.
+  - level: 3
+    text: Walk the original list again and keep only titles whose count is exactly one.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: all_once
+      input: [atlas, brook, cliff]
+      expected: [atlas, brook, cliff]
+    - name: some_repeat
+      input: [atlas, brook, atlas, cliff]
+      expected: [brook, cliff]
+  validation:
+    - name: none_once
+      input: [delta, delta, echo, echo]
+      expected: []
+    - name: mixed
+      input: [maple, nettle, maple, oak, nettle, pine]
+      expected: [oak, pine]
+    - name: single
+      input: [zephyr]
+      expected: [zephyr]
+    - name: order_preserved
+      input: [kite, jade, kite, iris, jade]
+      expected: [iris]
+explanation_markdown: |
+  Counting first is O(n), and because a title borrowed exactly once appears in the
+  list exactly once, a second pass over the original order naturally lists those
+  titles in the order they were first borrowed. Filtering the original list rather
+  than the dict keeps that order intact.
+common_mistakes:
+  - Iterating the dict instead of the original list, which can scramble the order.
+  - Treating titles with a count of two or more as if they belonged in the result.
+  - Building the result before the counts are complete.

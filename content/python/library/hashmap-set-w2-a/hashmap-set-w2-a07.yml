@@ -1,0 +1,72 @@
+id: exercise.library.hashmap_set_w2.a07
+kind: exercise
+version: 1
+language: python
+title: Count Distinct Museum Members
+slug: hashmap-set-w2-a07
+difficulty: easy
+concepts:
+  - patterns.set_membership
+prerequisites:
+  - python.sets
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.hashmap_set_w2.a07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original museum turnstile scenario counting distinct member ids that may repeat.
+prompt_markdown: |
+  A museum scans a membership id each time someone enters; the same member may
+  enter several times in a day. Write `distinct_members(ids)` that returns the
+  number of distinct members who visited. An empty list returns 0.
+starter_code: |
+  def distinct_members(ids):
+      return 0
+function_name: distinct_members
+input_mode: function
+solution_sketch: Drop the ids into a set and return how many unique values remain.
+sample_solution: |
+  def distinct_members(ids):
+      return len(set(ids))
+hints:
+  - level: 1
+    text: Repeated entries by the same member should be counted only once.
+  - level: 2
+    text: A set automatically discards duplicate ids as you add them.
+  - level: 3
+    text: The number of distinct members is the size of the set of ids.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: 0
+    - name: all_unique
+      input: [ada, ben, cleo]
+      expected: 3
+    - name: some_repeat
+      input: [ada, ben, ada]
+      expected: 2
+  validation:
+    - name: all_same
+      input: [zed, zed, zed]
+      expected: 1
+    - name: mixed
+      input: [mara, nolan, mara, omar, nolan]
+      expected: 3
+    - name: single
+      input: [quinn]
+      expected: 1
+    - name: many_repeats
+      input: [rose, rose, blue, green, blue, rose]
+      expected: 3
+explanation_markdown: |
+  Building a set from the ids removes duplicates in O(n) because each insertion is
+  an O(1) hash operation, and the length of that set is exactly the count of
+  distinct members. No manual bookkeeping of which ids were seen is needed.
+common_mistakes:
+  - Returning len(ids), which counts every entry rather than distinct members.
+  - Building the set but forgetting to return its length.
+  - Trying to sort and scan for duplicates when a set does the work directly.

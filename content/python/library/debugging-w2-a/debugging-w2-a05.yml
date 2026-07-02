@@ -1,0 +1,82 @@
+id: exercise.library.debugging_w2.a05
+kind: exercise
+version: 1
+language: python
+title: Recent Announcements
+slug: debugging-w2-a05
+difficulty: easy
+concepts:
+  - python.debugging
+  - python.slicing
+  - python.lists
+prerequisites:
+  - python.functions
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.debugging_w2.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original community-noticeboard scenario built around the classic negative-index slicing bug where a count of zero accidentally returns everything.
+prompt_markdown: |
+  A community noticeboard keeps a log of posted announcements in order, oldest
+  first. Write `recent_announcements(data)` where `data` is a dict with a `log`
+  list and an integer `count`. Return a list of the last `count` announcements,
+  keeping their original order.
+
+  A common beginner bug is to write `log[-count:]` and forget that when `count`
+  is 0, `-0` equals `0`, so `log[0:]` returns the entire log instead of nothing.
+  Guard the zero case. If `count` is larger than the log, return the whole log.
+starter_code: |
+  def recent_announcements(data):
+      return []
+function_name: recent_announcements
+input_mode: function
+solution_sketch: Return an empty list when count is not positive, otherwise slice the last count items.
+sample_solution: |
+  def recent_announcements(data):
+      log = data["log"]
+      count = data["count"]
+      if count <= 0:
+          return []
+      return log[-count:]
+hints:
+  - level: 1
+    text: Think about what log[-count:] does when count is 0.
+  - level: 2
+    text: Because -0 is 0, log[0:] returns everything, which is not what count 0 means.
+  - level: 3
+    text: Handle count <= 0 by returning an empty list before slicing.
+tests:
+  public:
+    - name: fewer_than_log
+      input: {log: [alpha, beta, gamma, delta], count: 2}
+      expected: [gamma, delta]
+    - name: count_zero
+      input: {log: [alpha, beta, gamma], count: 0}
+      expected: []
+    - name: count_exceeds_log
+      input: {log: [north, south], count: 5}
+      expected: [north, south]
+  validation:
+    - name: count_equals_log
+      input: {log: [one, two, three], count: 3}
+      expected: [one, two, three]
+    - name: just_last
+      input: {log: [p, q, r, s], count: 1}
+      expected: [s]
+    - name: empty_log
+      input: {log: [], count: 3}
+      expected: []
+explanation_markdown: |
+  Negative indices count from the end, but `-0` is just `0`, so `log[-count:]`
+  silently returns the whole list when `count` is 0. Adding an explicit
+  `count <= 0` guard makes the empty-request case correct. When `count` exceeds
+  the log length, `log[-count:]` already returns the entire list, so no extra
+  clamping is needed.
+common_mistakes:
+  - Writing log[-count:] without handling count == 0.
+  - Assuming a slice will raise an error when count is larger than the log.
+  - Reversing the order instead of keeping oldest-to-newest.

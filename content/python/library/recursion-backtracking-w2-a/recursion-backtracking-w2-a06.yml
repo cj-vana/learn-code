@@ -1,0 +1,90 @@
+id: exercise.library.recursion_backtracking_w2.a06
+kind: exercise
+version: 1
+language: python
+title: Vending Machine Exact Change
+slug: recursion-backtracking-w2-a06
+difficulty: easy
+concepts:
+  - patterns.recursion
+  - python.lists
+prerequisites:
+  - python.functions
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.recursion_backtracking_w2.a06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original vending-machine scenario counting distinct coin combinations for an amount by recursing over a denomination index.
+prompt_markdown: |
+  A vending machine accepts a fixed set of coin values and has an unlimited
+  supply of each. Write `count_exact_change(data)` where `data` has keys `coins`
+  (a list of distinct positive coin values) and `amount` (a non-negative
+  integer). Return how many distinct combinations of coins add up to exactly
+  `amount`. Combinations are unordered, so using a `1` then a `2` is the same
+  combination as a `2` then a `1`. An amount of 0 has exactly one combination:
+  using no coins.
+starter_code: |
+  def count_exact_change(data):
+      return 0
+function_name: count_exact_change
+input_mode: function
+solution_sketch: Recurse over an index; at each coin either use it again (stay) or skip to the next coin, counting a hit when the remainder reaches 0.
+sample_solution: |
+  def count_exact_change(data):
+      coins = data["coins"]
+      amount = data["amount"]
+
+      def ways(i, remaining):
+          if remaining == 0:
+              return 1
+          if remaining < 0 or i >= len(coins):
+              return 0
+          return ways(i, remaining - coins[i]) + ways(i + 1, remaining)
+
+      return ways(0, amount)
+hints:
+  - level: 1
+    text: Reaching an amount of exactly 0 is one valid combination; going negative or running out of coin types is none.
+  - level: 2
+    text: To keep combinations unordered, decide per coin whether to use it (possibly again) or move past it forever.
+  - level: 3
+    text: Add ways(i, remaining - coins[i]) for using coin i again to ways(i + 1, remaining) for skipping it.
+tests:
+  public:
+    - name: ones_and_twos
+      input: {coins: [1, 2], amount: 3}
+      expected: 2
+    - name: too_big
+      input: {coins: [2], amount: 3}
+      expected: 0
+    - name: three_coins
+      input: {coins: [1, 2, 5], amount: 5}
+      expected: 4
+  validation:
+    - name: zero_amount
+      input: {coins: [1, 2, 5], amount: 0}
+      expected: 1
+    - name: two_and_three
+      input: {coins: [2, 3], amount: 7}
+      expected: 1
+    - name: only_ones
+      input: {coins: [1], amount: 4}
+      expected: 1
+    - name: mixed_small
+      input: {coins: [1, 2, 3], amount: 4}
+      expected: 4
+explanation_markdown: |
+  The recursion makes one decision per step: either use the current coin `coins[i]`
+  again -- staying at index `i` so it can be reused -- or skip it for good by
+  moving to index `i + 1`. Because a coin is only revisited while the index does
+  not advance, and skipped coins are never revisited, each unordered combination
+  is counted once. The base cases are a remainder of exactly 0 (one valid way) and
+  either a negative remainder or running out of coin types (no way).
+common_mistakes:
+  - Recursing on i + 1 after using a coin, which forbids reusing that coin.
+  - Recursing on i (not i + 1) when skipping, causing an infinite loop.
+  - Counting ordered sequences, which overcounts by treating 1 then 2 as different from 2 then 1.

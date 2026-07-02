@@ -1,0 +1,77 @@
+id: exercise.library.python_refresh_w2.b04
+kind: exercise
+version: 1
+language: python
+title: Read a Package Weight Label
+slug: python-refresh-w2-b04
+difficulty: medium
+concepts:
+  - python.types
+  - python.strings
+  - python.functions
+prerequisites:
+  - python.variables
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh_w2.b04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original shipping-label parsing scenario that separates a numeric amount from its unit with its own tests.
+prompt_markdown: |
+  A shipping label writes a measurement as a whole number followed directly by
+  a unit, with no space, such as `"12kg"` or `"250ml"`.
+  Write `parse_measurement(label)` that splits the label into its number and
+  its unit. Return a dict with `value` (the number as an integer) and `unit`
+  (the trailing letters as a string). Every label starts with at least one
+  digit and ends with at least one letter.
+starter_code: |
+  def parse_measurement(label):
+      return {"value": 0, "unit": ""}
+function_name: parse_measurement
+input_mode: function
+solution_sketch: Walk past the leading digits, then split the string into the number part and the unit part.
+sample_solution: |
+  def parse_measurement(label):
+      i = 0
+      while i < len(label) and label[i].isdigit():
+          i += 1
+      return {"value": int(label[:i]), "unit": label[i:]}
+hints:
+  - level: 1
+    text: The number and the unit are joined, so you must find where the digits stop.
+  - level: 2
+    text: Scan from the start while each character is a digit to locate the split point.
+  - level: 3
+    text: Slice the string at that point, then convert the digit part with int().
+tests:
+  public:
+    - name: kilograms
+      input: "12kg"
+      expected: {value: 12, unit: "kg"}
+    - name: single_letter_unit
+      input: "5m"
+      expected: {value: 5, unit: "m"}
+    - name: three_digits
+      input: "100cm"
+      expected: {value: 100, unit: "cm"}
+  validation:
+    - name: zero_value
+      input: "0kg"
+      expected: {value: 0, unit: "kg"}
+    - name: pounds
+      input: "7lb"
+      expected: {value: 7, unit: "lb"}
+    - name: milliliters
+      input: "250ml"
+      expected: {value: 250, unit: "ml"}
+explanation_markdown: |
+  Strings are just sequences of characters, so you can inspect them one at a
+  time. Advancing an index while `isdigit()` holds finds the boundary, and
+  slicing gives the two pieces. `int()` then turns the digit substring into a
+  real number you can compute with.
+common_mistakes:
+  - Leaving the value as a string instead of converting it with int().
+  - Assuming the unit is always two letters, so a label like "5m" breaks.

@@ -1,0 +1,85 @@
+id: exercise.library.debugging_w2.b02
+kind: exercise
+version: 1
+language: python
+title: Theater Row Labels
+slug: debugging-w2-b02
+difficulty: easy
+concepts:
+  - python.debugging
+  - python.loops
+prerequisites:
+  - python.functions
+  - python.loops
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.debugging_w2.b02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original theater-seating scenario built around the classic off-by-one bug where range stops one short of an inclusive end.
+prompt_markdown: |
+  A theater's ticketing screen needs the list of row numbers a block of seats
+  spans, from a `start` row up to and including an `end` row. The input is a dict
+  with keys `start` and `end`. Write `label_rows(data)` returning the list of row
+  numbers from `start` through `end`, inclusive.
+
+  A classic beginner bug is `range(start, end)`, which stops one short and drops
+  the final row: for a block from row 1 to row 3 it yields `[1, 2]` instead of
+  `[1, 2, 3]`. Remember that `range` excludes its stop value. If `start` is greater
+  than `end` the block is empty, so return an empty list.
+starter_code: |
+  def label_rows(data):
+      return []
+function_name: label_rows
+input_mode: function
+solution_sketch: Build a list from start up to end + 1 so the inclusive end row is included.
+sample_solution: |
+  def label_rows(data):
+      start = data["start"]
+      end = data["end"]
+      return list(range(start, end + 1))
+hints:
+  - level: 1
+    text: range(start, end) never produces the stop value, so the end row is missing.
+  - level: 2
+    text: To make the end inclusive, the stop passed to range must be one past end.
+  - level: 3
+    text: Use range(start, end + 1); when start exceeds end this yields an empty list automatically.
+tests:
+  public:
+    - name: simple
+      input: {start: 1, end: 3}
+      expected: [1, 2, 3]
+    - name: single
+      input: {start: 5, end: 5}
+      expected: [5]
+    - name: empty_range
+      input: {start: 4, end: 2}
+      expected: []
+  validation:
+    - name: longer
+      input: {start: 10, end: 14}
+      expected: [10, 11, 12, 13, 14]
+    - name: crosses_zero
+      input: {start: -2, end: 1}
+      expected: [-2, -1, 0, 1]
+    - name: adjacent
+      input: {start: 7, end: 8}
+      expected: [7, 8]
+    - name: from_zero
+      input: {start: 0, end: 2}
+      expected: [0, 1, 2]
+explanation_markdown: |
+  Python's `range(start, stop)` yields values up to but not including `stop`, so an
+  inclusive upper bound needs `stop = end + 1`. Forgetting the `+ 1` is the most
+  common off-by-one error beginners hit, and it silently drops the last row rather
+  than raising an error. Passing `end + 1` also handles the empty case for free:
+  when `start` is greater than `end`, `range(start, end + 1)` produces nothing, so
+  the function returns `[]` in a single O(n) pass over the row numbers.
+common_mistakes:
+  - Using range(start, end), which omits the inclusive end row.
+  - Adding 1 to start instead of end, shifting the whole block.
+  - Failing to return an empty list when start is greater than end.

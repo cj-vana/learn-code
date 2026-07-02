@@ -1,0 +1,89 @@
+id: exercise.library.sliding_window_w2.a07
+kind: exercise
+version: 1
+language: python
+title: Busiest Platform in a Departure Window
+slug: sliding-window-w2-a07
+difficulty: easy
+concepts:
+  - patterns.sliding_window
+  - patterns.hash_map_counting
+  - python.dictionaries
+prerequisites:
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sliding_window_w2.a07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original train-station scenario finding the most departures from a single platform inside any fixed-size run of departures.
+prompt_markdown: |
+  A station logs which platform each train leaves from, in departure order. To
+  spot crowding, dispatch wants the busiest single platform inside any `k`
+  consecutive departures. Write `busiest_platform_window(data)` returning the
+  largest number of departures that share one platform within a window of `k`
+  departures.
+
+  `data` is a dict: `{"departures": [...], "k": k}`. Each entry is a platform
+  label, and `k` is at least 1 and no larger than the number of departures.
+starter_code: |
+  def busiest_platform_window(data):
+      return 0
+function_name: busiest_platform_window
+input_mode: function
+solution_sketch: For each fixed-size window count departures per platform and keep the largest single-platform count.
+sample_solution: |
+  def busiest_platform_window(data):
+      departures = data["departures"]
+      k = data["k"]
+      best = 0
+      for start in range(len(departures) - k + 1):
+          counts = {}
+          for label in departures[start:start + k]:
+              counts[label] = counts.get(label, 0) + 1
+          top = max(counts.values())
+          if top > best:
+              best = top
+      return best
+hints:
+  - level: 1
+    text: Within one window, count how many departures each platform has using a dict.
+  - level: 2
+    text: The busiest platform in a window is the largest value in that count dict.
+  - level: 3
+    text: Slide the window across all departures and keep the biggest single count you find.
+tests:
+  public:
+    - name: single_window
+      input: {departures: [A, A, B], k: 3}
+      expected: 2
+    - name: all_same
+      input: {departures: [A, A, A], k: 2}
+      expected: 2
+    - name: k_one
+      input: {departures: [A, B, C], k: 1}
+      expected: 1
+  validation:
+    - name: shifting_peak
+      input: {departures: [A, B, B, C], k: 2}
+      expected: 2
+    - name: no_repeat
+      input: {departures: [A, B, C, D], k: 2}
+      expected: 1
+    - name: triple_run
+      input: {departures: [C, C, C, A, A], k: 3}
+      expected: 3
+explanation_markdown: |
+  Each fixed-size window is summarized by a small count dictionary mapping every
+  platform to how often it appears; the busiest platform is the largest value in
+  that dict. Sliding the window across the log and keeping the biggest single
+  count answers the question. Rebuilding the dict per window is easy to read; a
+  running dict that adds the entering label and drops the leaving one would make
+  it O(n) if the logs grew large.
+common_mistakes:
+  - Counting distinct platforms in the window instead of the top single-platform count.
+  - Taking max over the labels rather than over the count values.
+  - Sliding the start index past len(departures) - k and reading a short window.

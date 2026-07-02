@@ -1,0 +1,79 @@
+id: exercise.library.hashmap_set_w2.b01
+kind: exercise
+version: 1
+language: python
+title: Count Repeat Blood Donors
+slug: hashmap-set-w2-b01
+difficulty: easy
+concepts:
+  - patterns.hash_map_counting
+  - python.dictionaries
+prerequisites: []
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.hashmap_set_w2.b01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original blood-drive donor scenario about counting how many donors gave more than once.
+prompt_markdown: |
+  A mobile blood drive records the first name of every donor each time they give
+  blood across the whole season. Some people donate several times, so a name can
+  appear more than once in the log.
+  Write `count_repeat_donors(names)` that returns how many distinct donors gave
+  blood at least twice. An empty log returns 0.
+starter_code: |
+  def count_repeat_donors(names):
+      return 0
+function_name: count_repeat_donors
+input_mode: function
+solution_sketch: Tally each name in a dict, then count how many names reached a total of two or more.
+sample_solution: |
+  def count_repeat_donors(names):
+      counts = {}
+      for name in names:
+          counts[name] = counts.get(name, 0) + 1
+      return sum(1 for total in counts.values() if total >= 2)
+hints:
+  - level: 1
+    text: First figure out how many times each name shows up in the log.
+  - level: 2
+    text: A dict mapping name to running total lets you build every count in one pass.
+  - level: 3
+    text: After counting, count the entries whose total is at least 2.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: 0
+    - name: all_once
+      input: [mara, ivo, sana]
+      expected: 0
+    - name: one_repeat
+      input: [mara, ivo, mara]
+      expected: 1
+  validation:
+    - name: two_repeaters
+      input: [leo, tao, leo, nia, tao]
+      expected: 2
+    - name: triple_same
+      input: [pia, pia, pia]
+      expected: 1
+    - name: all_repeat_pairs
+      input: [ada, ada, bo, bo]
+      expected: 2
+    - name: one_heavy
+      input: [sol, sol, sol, rue]
+      expected: 1
+explanation_markdown: |
+  Counting is a two-part job. First walk the log once, using a dict to hold a
+  running total for each name; `counts.get(name, 0) + 1` handles both the first
+  sighting and every repeat in O(1). Once the totals are built, the number of
+  repeat donors is simply how many totals are 2 or more, which a generator
+  expression sums up cleanly. The whole thing is O(n) over the log.
+common_mistakes:
+  - Counting total donations instead of how many donors reached two or more.
+  - Using >= 1 or > 2 for the threshold instead of >= 2.
+  - Assuming a donor appears at most twice, so a triple gets miscounted.

@@ -1,0 +1,95 @@
+id: exercise.library.stack_queue_bfs_w2.a04
+kind: exercise
+version: 1
+language: python
+title: Rail Yard Shunting Order
+slug: stack-queue-bfs-w2-a04
+difficulty: medium
+concepts:
+  - patterns.stack
+  - python.lists
+prerequisites:
+  - python.lists
+estimated_time_minutes: 16
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.stack_queue_bfs_w2.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original rail-yard shunting-siding scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A rail yard has one dead-end siding used to reorder train cars. Cars roll in on
+  the arrival track in a fixed order. Each car may be pushed onto the siding, and
+  the car at the mouth of the siding (the most recently pushed) may be pulled off
+  onto the departure track at any time. A pushed car can never jump ahead of a
+  later-pushed one still on the siding.
+
+  You are given a dict `data` with keys `"arrival"` (the order cars enter) and
+  `"departure"` (the wanted order onto the departure track). Both list the same
+  cars.
+
+  Write `can_shunt(data)` returning `True` if the departure order can be produced
+  using the single siding, and `False` otherwise.
+starter_code: |
+  def can_shunt(data):
+      return False
+function_name: can_shunt
+input_mode: function
+solution_sketch: Push arrivals onto a stack and greedily pop whenever the top matches the next wanted departure.
+sample_solution: |
+  def can_shunt(data):
+      arrival = data["arrival"]
+      departure = data["departure"]
+      siding = []
+      i = 0
+      for car in arrival:
+          siding.append(car)
+          while siding and i < len(departure) and siding[-1] == departure[i]:
+              siding.pop()
+              i += 1
+      return not siding
+hints:
+  - level: 1
+    text: The siding behaves exactly like a stack, last car in is the first car out.
+  - level: 2
+    text: Push each arriving car, then pop while the top equals the next departure you still need.
+  - level: 3
+    text: The order works only if the siding is empty once every car has arrived and been placed.
+tests:
+  public:
+    - name: same_order
+      input: {arrival: [1, 2, 3], departure: [1, 2, 3]}
+      expected: true
+    - name: full_reverse
+      input: {arrival: [1, 2, 3], departure: [3, 2, 1]}
+      expected: true
+    - name: impossible
+      input: {arrival: [1, 2, 3], departure: [3, 1, 2]}
+      expected: false
+  validation:
+    - name: interleaved
+      input: {arrival: [1, 2, 3, 4], departure: [2, 1, 4, 3]}
+      expected: true
+    - name: named_cars
+      input: {arrival: ["a", "b", "c"], departure: ["a", "c", "b"]}
+      expected: true
+    - name: blocked
+      input: {arrival: [1, 2, 3, 4], departure: [3, 1, 2, 4]}
+      expected: false
+    - name: swap_pair
+      input: {arrival: [1, 2], departure: [2, 1]}
+      expected: true
+explanation_markdown: |
+  The siding is a stack, so producing the departure order is the classic
+  stack-sortability check. Feed arrivals in one by one; whenever the top of the
+  siding is the very next car you want out, pop it. Greedy popping is safe
+  because if the needed car is on top you must take it now, since anything pushed
+  later would block it. If every car has arrived and the siding ends empty, the
+  order was achievable; a leftover car means it was impossible. Each car is
+  pushed and popped at most once, so the check is O(n).
+common_mistakes:
+  - Treating the siding as a queue (first in first out) instead of a stack.
+  - Stopping at the first mismatch instead of continuing to push more arrivals.
+  - Forgetting to confirm the siding is empty at the end.

@@ -1,0 +1,85 @@
+id: exercise.library.stack_queue_bfs_w2.a02
+kind: exercise
+version: 1
+language: python
+title: Stacking Crushable Pancakes
+slug: stack-queue-bfs-w2-a02
+difficulty: easy
+concepts:
+  - patterns.stack
+  - python.lists
+prerequisites:
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.stack_queue_bfs_w2.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pancake-stacking scenario built around a monotonic stack with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A cook builds a stack of pancakes one at a time from a list of `widths`. Before
+  placing the next pancake, any pancakes currently on top of the stack that are
+  **strictly narrower** than the new one are crushed and removed (a wider pancake
+  flattens the thin ones beneath it). The new pancake is then placed on top.
+
+  Write `crush_pancakes(widths)` returning the final stack as a list from bottom
+  to top. An empty input returns an empty list.
+starter_code: |
+  def crush_pancakes(widths):
+      return []
+function_name: crush_pancakes
+input_mode: function
+solution_sketch: Keep a stack and pop every strictly narrower pancake before pushing the new width.
+sample_solution: |
+  def crush_pancakes(widths):
+      stack = []
+      for width in widths:
+          while stack and stack[-1] < width:
+              stack.pop()
+          stack.append(width)
+      return stack
+hints:
+  - level: 1
+    text: Only the pancakes near the top can be crushed by a new one.
+  - level: 2
+    text: Before pushing a width, repeatedly pop while the top of the stack is smaller than it.
+  - level: 3
+    text: Use strict less-than so equal widths are kept, then append the new width.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: single
+      input: [5]
+      expected: [5]
+    - name: crush_two
+      input: [3, 1, 4]
+      expected: [4]
+  validation:
+    - name: equal_kept
+      input: [2, 2]
+      expected: [2, 2]
+    - name: partial_crush
+      input: [5, 3, 4, 2]
+      expected: [5, 4, 2]
+    - name: all_crushed
+      input: [1, 2, 3, 4]
+      expected: [4]
+    - name: mixed
+      input: [4, 1, 1, 3]
+      expected: [4, 3]
+explanation_markdown: |
+  This is a monotonic stack. Because only the top pancakes can be crushed, a
+  single stack that stays non-increasing from bottom to top captures the rule:
+  each new width pops everything strictly smaller before it lands. Equal widths
+  survive because the comparison is strict. Although the inner loop can pop many
+  items, every pancake is pushed and popped at most once, so the total work is
+  O(n).
+common_mistakes:
+  - Using <= and wrongly crushing pancakes of equal width.
+  - Forgetting to push the new width after crushing.
+  - Comparing against the bottom of the stack instead of the top.

@@ -1,0 +1,85 @@
+id: exercise.library.sliding_window_w2.a04
+kind: exercise
+version: 1
+language: python
+title: Greenest Stretch of the Bike Commute
+slug: sliding-window-w2-a04
+difficulty: easy
+concepts:
+  - patterns.sliding_window
+  - patterns.running_total
+  - python.lists
+prerequisites:
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sliding_window_w2.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original bike-commute traffic-light scenario counting the most green lights in any fixed-size stretch of intersections.
+prompt_markdown: |
+  A cyclist maps the traffic lights along a commute in order; each intersection is
+  either `"green"` or `"red"` at the moment they usually arrive. Write
+  `greenest_stretch(data)` returning the greatest number of green lights found in
+  any `k` consecutive intersections.
+
+  `data` is a dict: `{"lights": [...], "k": k}`. Each entry is `"green"` or
+  `"red"`, and `k` is at least 1 and no larger than the number of intersections.
+starter_code: |
+  def greenest_stretch(data):
+      return 0
+function_name: greenest_stretch
+input_mode: function
+solution_sketch: Convert lights to 1 or 0, then slide a fixed-size running count and keep the largest window total.
+sample_solution: |
+  def greenest_stretch(data):
+      lights = data["lights"]
+      k = data["k"]
+      flags = [1 if light == "green" else 0 for light in lights]
+      window = sum(flags[:k])
+      best = window
+      for i in range(k, len(flags)):
+          window += flags[i] - flags[i - k]
+          if window > best:
+              best = window
+      return best
+hints:
+  - level: 1
+    text: Treat each green light as 1 and each red light as 0 so counting becomes summing.
+  - level: 2
+    text: Sum the first k intersections, then slide one intersection at a time.
+  - level: 3
+    text: When the window moves, add flags[i] and subtract flags[i - k], tracking the max.
+tests:
+  public:
+    - name: all_green
+      input: {lights: [green, green], k: 2}
+      expected: 2
+    - name: mixed
+      input: {lights: [green, red, green, green], k: 2}
+      expected: 2
+    - name: k_one
+      input: {lights: [red, green, red], k: 1}
+      expected: 1
+  validation:
+    - name: none_green
+      input: {lights: [red, red, red], k: 2}
+      expected: 0
+    - name: front_block
+      input: {lights: [green, green, green, red, red], k: 3}
+      expected: 3
+    - name: back_block
+      input: {lights: [red, red, green, green, green], k: 3}
+      expected: 3
+explanation_markdown: |
+  Mapping greens to 1 and reds to 0 turns "count the greens" into "sum the
+  window." Summing the first `k` flags seeds the count, and each slide adds the
+  entering intersection while removing the one that left, so the whole commute is
+  scanned in O(n). Keeping the largest window total gives the greenest stretch.
+common_mistakes:
+  - Recounting greens in each window instead of adjusting the running total.
+  - Comparing the strings directly and forgetting to convert them to 0 and 1.
+  - Starting best at 0 works here, but only because counts are never negative.

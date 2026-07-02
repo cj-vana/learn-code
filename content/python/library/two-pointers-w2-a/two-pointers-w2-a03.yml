@@ -1,0 +1,99 @@
+id: exercise.library.two_pointers_w2.a03
+kind: exercise
+version: 1
+language: python
+title: Twin Frequency Radios
+slug: two-pointers-w2-a03
+difficulty: easy
+concepts:
+  - patterns.two_pointers
+  - python.lists
+prerequisites:
+  - python.lists
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.two_pointers_w2.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original radio-channel scenario finding two sorted values that differ by an exact gap.
+prompt_markdown: |
+  A radio club keeps its assigned channel frequencies as a list of integers,
+  already sorted from lowest to highest. Two handsets cause interference when
+  their frequencies differ by exactly `gap` kilohertz, so the club wants to know
+  whether any such pair exists.
+
+  Write `has_frequency_gap(data)` where `data` is a dict with keys `freqs` (a
+  list of ints in non-decreasing order) and `gap` (a non-negative int). Return
+  `True` if two different entries differ by exactly `gap`, otherwise `False`.
+starter_code: |
+  def has_frequency_gap(data):
+      return False
+function_name: has_frequency_gap
+input_mode: function
+solution_sketch: Slide a low and a high pointer forward; widen when the difference is too small and advance the low pointer when it is too large.
+sample_solution: |
+  def has_frequency_gap(data):
+      freqs = data["freqs"]
+      gap = data["gap"]
+      n = len(freqs)
+      lo = 0
+      hi = 1
+      while hi < n:
+          diff = freqs[hi] - freqs[lo]
+          if diff == gap and lo != hi:
+              return True
+          if diff < gap:
+              hi += 1
+          else:
+              lo += 1
+              if lo == hi:
+                  hi += 1
+      return False
+hints:
+  - level: 1
+    text: Because the list is sorted, use two pointers that both move forward instead of nested loops.
+  - level: 2
+    text: If the current difference is smaller than the gap, move the high pointer up; if it is larger, move the low pointer up.
+  - level: 3
+    text: Keep the two pointers on different positions so a value is never compared with itself, and never let the low pointer pass the high one.
+tests:
+  public:
+    - name: pair_exists
+      input: { freqs: [2, 5, 9, 14], gap: 4 }
+      expected: true
+    - name: no_pair
+      input: { freqs: [2, 5, 9, 14], gap: 1 }
+      expected: false
+    - name: empty
+      input: { freqs: [], gap: 3 }
+      expected: false
+  validation:
+    - name: span_ends
+      input: { freqs: [2, 5, 9, 14], gap: 12 }
+      expected: true
+    - name: duplicates_zero_gap
+      input: { freqs: [3, 3, 8], gap: 0 }
+      expected: true
+    - name: single_channel
+      input: { freqs: [5], gap: 0 }
+      expected: false
+    - name: large_gap_found
+      input: { freqs: [1, 4, 10, 10, 20], gap: 19 }
+      expected: true
+    - name: adjacent_pair
+      input: { freqs: [10, 11, 13, 16], gap: 1 }
+      expected: true
+explanation_markdown: |
+  On a sorted list, a target difference is found with two forward-moving pointers.
+  The low and high pointers bound a window; the difference of their values grows as
+  the high pointer advances and shrinks as the low pointer advances. When the
+  difference is too small you widen the window, and when it is too large you slide
+  the low end up. Requiring the pointers to sit on different positions rules out
+  pairing a value with itself, and the whole scan runs in one O(n) pass.
+common_mistakes:
+  - Comparing an entry with itself when the pointers land on the same index.
+  - Moving the wrong pointer so the window can never reach the target difference.
+  - Assuming the list is unsorted and reaching for a slower nested-loop search.

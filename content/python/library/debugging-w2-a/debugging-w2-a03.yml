@@ -1,0 +1,83 @@
+id: exercise.library.debugging_w2.a03
+kind: exercise
+version: 1
+language: python
+title: Grand Total Across Baskets
+slug: debugging-w2-a03
+difficulty: easy
+concepts:
+  - python.debugging
+  - patterns.running_total
+  - python.loops
+prerequisites:
+  - python.functions
+  - python.loops
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.debugging_w2.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original farmers-market scenario built around the classic bug of resetting the accumulator inside the outer loop of a nested loop.
+prompt_markdown: |
+  A farmers market stall packs produce into several baskets, and each basket
+  holds a list of item weights in grams. Write `grand_total(baskets)` returning
+  the combined weight of every item across all baskets.
+
+  A common beginner bug is to reset the running total back to 0 at the top of the
+  outer loop, which throws away everything counted so far and leaves you with only
+  the last basket. Declare the total once, before both loops. With no baskets the
+  total is 0.
+starter_code: |
+  def grand_total(baskets):
+      return 0
+function_name: grand_total
+input_mode: function
+solution_sketch: Initialise one total before the loops and add every item weight from every basket.
+sample_solution: |
+  def grand_total(baskets):
+      total = 0
+      for basket in baskets:
+          for weight in basket:
+              total += weight
+      return total
+hints:
+  - level: 1
+    text: The total must survive across all baskets, so it cannot restart each time.
+  - level: 2
+    text: Initialise total = 0 once, above the outer loop, not inside it.
+  - level: 3
+    text: Use a nested loop and add every item weight to the single running total.
+tests:
+  public:
+    - name: no_baskets
+      input: []
+      expected: 0
+    - name: one_basket
+      input: [[2, 3]]
+      expected: 5
+    - name: two_baskets
+      input: [[1, 2], [3, 4]]
+      expected: 10
+  validation:
+    - name: with_empty_basket
+      input: [[5], [], [5]]
+      expected: 10
+    - name: single_items
+      input: [[7], [8], [9]]
+      expected: 24
+    - name: varied
+      input: [[1, 1, 1], [10], [2, 3]]
+      expected: 18
+explanation_markdown: |
+  With a nested loop, the accumulator belongs outside both loops. If you reset
+  `total = 0` at the start of the outer loop, each basket wipes the previous
+  count, so the answer collapses to the sum of the final basket alone. Declaring
+  the total once and adding every inner item keeps the full sum in one O(n) pass
+  over all items.
+common_mistakes:
+  - Resetting total to 0 at the top of the outer loop.
+  - Summing only the baskets list instead of the items inside each basket.
+  - Forgetting that an empty basket contributes nothing but should not crash.

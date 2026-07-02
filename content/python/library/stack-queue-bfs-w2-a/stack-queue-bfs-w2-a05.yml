@@ -1,0 +1,92 @@
+id: exercise.library.stack_queue_bfs_w2.a05
+kind: exercise
+version: 1
+language: python
+title: Relay Baton Circle
+slug: stack-queue-bfs-w2-a05
+difficulty: medium
+concepts:
+  - patterns.queue_bfs
+  - python.lists
+prerequisites:
+  - python.lists
+estimated_time_minutes: 16
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.stack_queue_bfs_w2.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original relay-baton elimination-game scenario simulated with a queue, with its own prompt, tests, and explanation.
+prompt_markdown: |
+  Players stand in a circle for a warm-up game. The baton starts with the first
+  player in the list. Each round the baton is passed `k` times around the circle
+  (each pass hands it to the next player still standing), and whoever holds it
+  after those `k` passes steps out of the circle. Play continues until everyone
+  has stepped out.
+
+  You are given a dict `data` with keys `"players"` (their names in starting
+  order) and `"k"` (a non-negative number of passes per round).
+
+  Write `elimination_order(data)` returning the list of players in the order they
+  step out.
+starter_code: |
+  def elimination_order(data):
+      return []
+function_name: elimination_order
+input_mode: function
+solution_sketch: Use a queue; rotate k players from front to back, then dequeue the holder as eliminated.
+sample_solution: |
+  def elimination_order(data):
+      queue = list(data["players"])
+      k = data["k"]
+      out = []
+      while queue:
+          for _ in range(k):
+              queue.append(queue.pop(0))
+          out.append(queue.pop(0))
+      return out
+hints:
+  - level: 1
+    text: A circle where the front passes to the back is a rotating queue.
+  - level: 2
+    text: One pass moves the front player to the back of the queue.
+  - level: 3
+    text: After k passes, the new front player is eliminated, so remove and record them.
+tests:
+  public:
+    - name: single_pass
+      input: {players: ["a", "b", "c"], k: 1}
+      expected: ["b", "a", "c"]
+    - name: two_passes
+      input: {players: ["a", "b", "c", "d"], k: 2}
+      expected: ["c", "b", "d", "a"]
+    - name: lone_player
+      input: {players: ["x"], k: 5}
+      expected: ["x"]
+  validation:
+    - name: five_players
+      input: {players: ["a", "b", "c", "d", "e"], k: 3}
+      expected: ["d", "c", "e", "b", "a"]
+    - name: pair
+      input: {players: ["p", "q"], k: 1}
+      expected: ["q", "p"]
+    - name: zero_passes
+      input: {players: ["a", "b", "c", "d"], k: 0}
+      expected: ["a", "b", "c", "d"]
+    - name: numbered
+      input: {players: [1, 2, 3, 4, 5], k: 2}
+      expected: [3, 1, 5, 2, 4]
+explanation_markdown: |
+  Passing the baton around a circle is a queue rotation: moving the front player
+  to the back models one pass without changing anyone's relative order. After `k`
+  such moves, the player now at the front is the holder, so we dequeue and record
+  them. Repeating until the queue empties yields the full elimination order. With
+  `k` zero, no one moves and players simply leave in their starting order. Each
+  round does a constant number of pops per pass, so the simulation is
+  straightforward to reason about.
+common_mistakes:
+  - Eliminating the front player before performing the k passes.
+  - Passing k-1 or k+1 times because of an off-by-one in the loop.
+  - Stopping when one player remains instead of eliminating everyone.

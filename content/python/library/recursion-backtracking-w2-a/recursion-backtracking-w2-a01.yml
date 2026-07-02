@@ -1,0 +1,77 @@
+id: exercise.library.recursion_backtracking_w2.a01
+kind: exercise
+version: 1
+language: python
+title: Chant the Rocket Countdown
+slug: recursion-backtracking-w2-a01
+difficulty: easy
+concepts:
+  - patterns.recursion
+  - python.strings
+prerequisites:
+  - python.functions
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.recursion_backtracking_w2.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original launch-control scenario that builds a countdown chant string through a single recursive call chain.
+prompt_markdown: |
+  A launch controller reads a countdown out loud, one number at a time, ending
+  with the call `liftoff`. Write `countdown_chant(n)` that returns the whole
+  chant as a single string, with each part joined by a hyphen. For example,
+  `countdown_chant(3)` returns `"3-2-1-liftoff"`. When `n` is 0 (or any value at
+  or below 0) the chant is just `"liftoff"`.
+starter_code: |
+  def countdown_chant(n):
+      return ""
+function_name: countdown_chant
+input_mode: function
+solution_sketch: If n is at or below 0 return the base word, otherwise glue n to a hyphen and the chant for n - 1.
+sample_solution: |
+  def countdown_chant(n):
+      if n <= 0:
+          return "liftoff"
+      return str(n) + "-" + countdown_chant(n - 1)
+hints:
+  - level: 1
+    text: The chant for n is the number n followed by the chant for n - 1.
+  - level: 2
+    text: Stop the recursion at the base case where n has reached 0 and only the word liftoff remains.
+  - level: 3
+    text: Return str(n) + "-" + countdown_chant(n - 1), and return "liftoff" when n <= 0.
+tests:
+  public:
+    - name: zero
+      input: 0
+      expected: "liftoff"
+    - name: one
+      input: 1
+      expected: "1-liftoff"
+    - name: three
+      input: 3
+      expected: "3-2-1-liftoff"
+  validation:
+    - name: two
+      input: 2
+      expected: "2-1-liftoff"
+    - name: five
+      input: 5
+      expected: "5-4-3-2-1-liftoff"
+    - name: negative_guard
+      input: -2
+      expected: "liftoff"
+explanation_markdown: |
+  Each recursive call handles one number and defers the rest of the chant to a
+  smaller call. The base case (`n <= 0`) returns `"liftoff"` and stops the chain.
+  Every other call prepends its own number and a hyphen to whatever the smaller
+  call returns, so the string is assembled from the innermost call outward. The
+  guard on `n <= 0` also protects against negative inputs, which would otherwise
+  recurse forever.
+common_mistakes:
+  - Forgetting a base case so the recursion never stops.
+  - Converting n with str only in some branches, causing a type error when concatenating.
+  - Placing the hyphen so the result ends with a trailing dash before liftoff.

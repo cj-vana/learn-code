@@ -1,0 +1,85 @@
+id: exercise.library.debugging_w2.a07
+kind: exercise
+version: 1
+language: python
+title: First Badge Scan Wins
+slug: debugging-w2-a07
+difficulty: easy
+concepts:
+  - python.debugging
+  - python.sets
+  - python.lists
+prerequisites:
+  - python.functions
+  - python.loops
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.debugging_w2.a07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original conference-entrance scenario built around the classic bug of using set() to deduplicate and losing the original order.
+prompt_markdown: |
+  A conference entrance logs every badge id that beeps at the scanner, in order.
+  Write `first_seen(scans)` returning a list of the badge ids with duplicates
+  removed, keeping each id at the position where it first appeared.
+
+  A common beginner bug is to write `list(set(scans))`. A set removes duplicates
+  but has no defined order, so the first-appearance order is lost. Track which ids
+  you have already seen with a set, but build the result list in order. An empty
+  log returns an empty list.
+starter_code: |
+  def first_seen(scans):
+      return []
+function_name: first_seen
+input_mode: function
+solution_sketch: Use a set to remember seen ids while appending each new id to an ordered result list.
+sample_solution: |
+  def first_seen(scans):
+      seen = set()
+      result = []
+      for scan in scans:
+          if scan not in seen:
+              seen.add(scan)
+              result.append(scan)
+      return result
+hints:
+  - level: 1
+    text: A set is great for membership checks but does not preserve order.
+  - level: 2
+    text: Keep a separate ordered list for the output.
+  - level: 3
+    text: For each scan, append it only if it is not already in the seen set.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: no_duplicates
+      input: [a, b, c]
+      expected: [a, b, c]
+    - name: with_duplicates
+      input: [a, b, a, c, b]
+      expected: [a, b, c]
+  validation:
+    - name: all_same
+      input: [x, x, x]
+      expected: [x]
+    - name: trailing_repeat
+      input: [p, q, q, p]
+      expected: [p, q]
+    - name: interleaved
+      input: [m, n, m, o, n, p]
+      expected: [m, n, o, p]
+explanation_markdown: |
+  Sets answer "have I seen this before?" in O(1), which is exactly what
+  deduplication needs, but they do not remember insertion order. Using the set
+  only for the membership test while appending first occurrences to a separate
+  list keeps the output in first-appearance order. The scan runs in a single O(n)
+  pass.
+common_mistakes:
+  - Returning list(set(scans)) and losing the original order.
+  - Using a list for the seen check, which is slower and unnecessary.
+  - Appending an id that was already recorded.

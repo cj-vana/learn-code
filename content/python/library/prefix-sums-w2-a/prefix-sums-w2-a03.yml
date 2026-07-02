@@ -1,0 +1,86 @@
+id: exercise.library.prefix_sums_w2.a03
+kind: exercise
+version: 1
+language: python
+title: Crowdfunding Goal Moment
+slug: prefix-sums-w2-a03
+difficulty: easy
+concepts:
+  - patterns.prefix_sums
+  - patterns.running_total
+prerequisites:
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.prefix_sums_w2.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original crowdfunding pledge-tracking scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A crowdfunding campaign receives pledges one at a time in the order they arrive.
+  Organisers want to know exactly which pledge pushes the running total to the
+  funding goal.
+
+  Write `funding_reached(data)` where `data` is a dict with keys `pledges` (a list
+  of pledge amounts) and `goal` (a number). Return the 0-based index of the pledge
+  at which the running total first reaches or exceeds `goal`, or `-1` if the
+  campaign never gets there.
+starter_code: |
+  def funding_reached(data):
+      return -1
+function_name: funding_reached
+input_mode: function
+solution_sketch: Accumulate a running total and return the first index where it meets the goal.
+sample_solution: |
+  def funding_reached(data):
+      pledges = data["pledges"]
+      goal = data["goal"]
+      running = 0
+      for i, pledge in enumerate(pledges):
+          running += pledge
+          if running >= goal:
+              return i
+      return -1
+hints:
+  - level: 1
+    text: Keep a running sum of pledges as you scan left to right.
+  - level: 2
+    text: After adding each pledge, check whether the running total has reached the goal.
+  - level: 3
+    text: Return the index the moment running >= goal; if the loop finishes, return -1.
+tests:
+  public:
+    - name: reached_middle
+      input: {pledges: [10, 20, 30, 40], goal: 50}
+      expected: 2
+    - name: reached_first
+      input: {pledges: [100], goal: 50}
+      expected: 0
+    - name: never
+      input: {pledges: [1, 2, 3], goal: 100}
+      expected: -1
+  validation:
+    - name: exact_at_last
+      input: {pledges: [5, 5, 5], goal: 15}
+      expected: 2
+    - name: big_first_pledge
+      input: {pledges: [80, 5, 5], goal: 70}
+      expected: 0
+    - name: empty_campaign
+      input: {pledges: [], goal: 10}
+      expected: -1
+    - name: reached_with_zeros
+      input: {pledges: [0, 0, 7, 1], goal: 7}
+      expected: 2
+explanation_markdown: |
+  The running total is a prefix sum, and the answer is the first prefix that clears
+  the goal. One left-to-right pass finds it in O(n) without ever re-adding earlier
+  pledges. Because the check is `>=`, a pledge that lands exactly on the goal still
+  counts, and an empty campaign never triggers it, so it reports `-1`.
+common_mistakes:
+  - Using a strict `>` so a pledge that hits the goal exactly is missed.
+  - Returning the running total or the pledge value instead of the index.
+  - Forgetting the -1 result when the goal is never reached.

@@ -1,0 +1,92 @@
+id: exercise.library.sliding_window_w2.b03
+kind: exercise
+version: 1
+language: python
+title: Best Wind Turbine Window Start
+slug: sliding-window-w2-b03
+difficulty: easy
+concepts:
+  - patterns.sliding_window
+  - patterns.running_total
+prerequisites:
+  - python.lists
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sliding_window_w2.b03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original wind-turbine output scenario returning the earliest start index of the strongest fixed window.
+prompt_markdown: |
+  A wind turbine logs how many kilowatt-hours it produces each hour of the day.
+  A technician wants to schedule a demonstration during the strongest continuous
+  stretch, and asks for exactly where that stretch begins.
+
+  Write `best_window_start(data)` where `data` is a dict with two keys: `output`
+  (a list of hourly kilowatt-hour readings) and `span` (the number of consecutive
+  hours to consider). Return the 0-based starting index of the window of `span`
+  consecutive hours with the greatest total output. If more than one window ties
+  for the greatest total, return the earliest starting index. You may assume
+  `1 <= span <= len(output)`.
+starter_code: |
+  def best_window_start(data):
+      return 0
+function_name: best_window_start
+input_mode: function
+solution_sketch: Slide a running-sum window and remember the start index whenever a strictly larger total appears.
+sample_solution: |
+  def best_window_start(data):
+      output = data["output"]
+      span = data["span"]
+      window = sum(output[:span])
+      best = window
+      best_start = 0
+      for i in range(span, len(output)):
+          window += output[i] - output[i - span]
+          if window > best:
+              best = window
+              best_start = i - span + 1
+      return best_start
+hints:
+  - level: 1
+    text: Track both the best total seen so far and the index where that best window started.
+  - level: 2
+    text: The start index of the window ending at position i is i - span + 1.
+  - level: 3
+    text: Only update the remembered start when the new total is strictly greater, so earlier ties win.
+tests:
+  public:
+    - name: first_best
+      input: { output: [9, 1, 1], span: 2 }
+      expected: 0
+    - name: later_best
+      input: { output: [1, 2, 9, 3], span: 2 }
+      expected: 2
+    - name: span_all
+      input: { output: [4, 5, 6], span: 3 }
+      expected: 0
+  validation:
+    - name: tie_earliest
+      input: { output: [5, 5, 5, 5], span: 2 }
+      expected: 0
+    - name: middle_best
+      input: { output: [1, 8, 9, 1, 1], span: 2 }
+      expected: 1
+    - name: span_one
+      input: { output: [3, 7, 7, 2], span: 1 }
+      expected: 1
+    - name: end_best
+      input: { output: [2, 2, 2, 9, 9], span: 2 }
+      expected: 3
+explanation_markdown: |
+  Sliding a fixed window keeps the running total in O(n), and finding *where* the
+  best window sits only needs one extra variable. Start with the sum of the first
+  `span` hours, then update it as the window advances, recording the start index
+  `i - span + 1` whenever the total is strictly larger than the best so far. Using
+  a strict comparison means the earliest window wins any tie.
+common_mistakes:
+  - Returning the best total instead of the index where it starts.
+  - Using >= so a later equal window overwrites the earliest one.
+  - Computing the start index as i instead of i - span + 1.

@@ -1,0 +1,90 @@
+id: exercise.library.brute_force_bigo_w2.a07
+kind: exercise
+version: 1
+language: python
+title: Food-Truck Three-Item Combo
+slug: brute-force-bigo-w2-a07
+difficulty: medium
+concepts:
+  - patterns.brute_force
+  - concepts.big_o
+prerequisites:
+  - python.loops
+  - python.lists
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.brute_force_bigo_w2.a07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original food-truck scenario checking whether three distinct menu prices hit an exact budget via a triple loop.
+prompt_markdown: |
+  A food truck lets you build a combo from three *different* menu items. A customer
+  has an exact `budget` in whole dollars and wants to know if any three items add
+  up to it precisely.
+
+  Write `combo_hits_budget(data)` where `data` is a dict with keys `prices` (a list
+  of integer prices) and `budget` (an integer). Return `True` if some three items
+  at three different positions have prices summing to exactly `budget`, otherwise
+  `False`. Fewer than three items always returns `False`.
+starter_code: |
+  def combo_hits_budget(data):
+      return False
+function_name: combo_hits_budget
+input_mode: function
+solution_sketch: Try every unordered triple of positions with three nested loops and stop when one sums to budget.
+sample_solution: |
+  def combo_hits_budget(data):
+      prices = data["prices"]
+      budget = data["budget"]
+      n = len(prices)
+      for i in range(n):
+          for j in range(i + 1, n):
+              for k in range(j + 1, n):
+                  if prices[i] + prices[j] + prices[k] == budget:
+                      return True
+      return False
+hints:
+  - level: 1
+    text: A combo is any choice of three items at three different positions.
+  - level: 2
+    text: Three nested loops with indices i < j < k visit each unordered triple exactly once.
+  - level: 3
+    text: Sum prices[i] + prices[j] + prices[k] and return True as soon as it equals budget.
+tests:
+  public:
+    - name: empty
+      input: {prices: [], budget: 10}
+      expected: false
+    - name: simple_hit
+      input: {prices: [3, 5, 2, 8], budget: 10}
+      expected: true
+    - name: too_few
+      input: {prices: [4, 6], budget: 10}
+      expected: false
+  validation:
+    - name: no_triple
+      input: {prices: [1, 2, 4, 8], budget: 100}
+      expected: false
+    - name: equal_items
+      input: {prices: [7, 7, 7], budget: 21}
+      expected: true
+    - name: last_triple
+      input: {prices: [1, 2, 9, 3, 4], budget: 16}
+      expected: true
+    - name: never_enough
+      input: {prices: [2, 2, 2, 2], budget: 100}
+      expected: false
+explanation_markdown: |
+  The brute-force search tries every unordered triple of positions using three
+  nested loops whose indices satisfy i < j < k, so no item is reused and no triple
+  is repeated. It returns `True` the moment a triple sums to `budget`. There are
+  about `n^3 / 6` triples, so the worst-case running time grows like O(n^3), a step
+  up from the O(n^2) pair scans. Returning early keeps lucky inputs fast without
+  changing that worst case.
+common_mistakes:
+  - Reusing an item by starting an inner loop at the same index as the outer one.
+  - Returning False inside the loops before all triples have been tried.
+  - Assuming the three prices must be distinct values rather than distinct positions.

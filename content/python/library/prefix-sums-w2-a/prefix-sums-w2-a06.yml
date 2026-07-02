@@ -1,0 +1,81 @@
+id: exercise.library.prefix_sums_w2.a06
+kind: exercise
+version: 1
+language: python
+title: Relay Race Distance Markers
+slug: prefix-sums-w2-a06
+difficulty: easy
+concepts:
+  - patterns.prefix_sums
+prerequisites:
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.prefix_sums_w2.a06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original relay-race distance-marker scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A relay race is split into legs of given lengths in kilometres. The organisers
+  place a distance marker at the start line and at the end of every leg, so each
+  marker shows the total distance covered so far.
+
+  Write `distance_markers(legs)` that returns the list of marker values. It starts
+  with `0` for the start line, so the result has one more entry than the number of
+  legs. For `[5, 3, 2]` the markers are `[0, 5, 8, 10]`. No legs still gives the
+  start marker, `[0]`.
+starter_code: |
+  def distance_markers(legs):
+      return [0]
+function_name: distance_markers
+input_mode: function
+solution_sketch: Seed the result with a leading 0 and append each cumulative distance as you add legs.
+sample_solution: |
+  def distance_markers(legs):
+      markers = [0]
+      for leg in legs:
+          markers.append(markers[-1] + leg)
+      return markers
+hints:
+  - level: 1
+    text: Start the result with a single 0 for the start line before any leg.
+  - level: 2
+    text: Each new marker is the last marker plus the current leg's length.
+  - level: 3
+    text: Append markers[-1] + leg for every leg so the list grows by one each time.
+tests:
+  public:
+    - name: three_legs
+      input: [5, 3, 2]
+      expected: [0, 5, 8, 10]
+    - name: no_legs
+      input: []
+      expected: [0]
+    - name: single_leg
+      input: [7]
+      expected: [0, 7]
+  validation:
+    - name: zero_length_legs
+      input: [0, 0, 4]
+      expected: [0, 0, 0, 4]
+    - name: steady_legs
+      input: [2, 2, 2, 2]
+      expected: [0, 2, 4, 6, 8]
+    - name: varied_legs
+      input: [10, 1, 6, 3]
+      expected: [0, 10, 11, 17, 20]
+    - name: one_zero_leg
+      input: [0]
+      expected: [0, 0]
+explanation_markdown: |
+  This is the classic prefix-sum array: `markers[k]` is the sum of the first `k`
+  legs, and the leading `0` represents the start line before any distance is run.
+  Building it costs O(n), and its real value shows later, because the distance of
+  any single leg or stretch becomes a subtraction of two markers.
+common_mistakes:
+  - Forgetting the leading 0, so the markers are misaligned by one leg.
+  - Returning only the final total instead of every marker.
+  - Recomputing each marker by re-summing all earlier legs, which is O(n^2).

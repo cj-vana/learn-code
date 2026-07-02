@@ -1,0 +1,85 @@
+id: exercise.library.mixed_capstones_w2.a08
+kind: exercise
+version: 1
+language: python
+title: Balance Point on the Conveyor
+slug: mixed-capstones-w2-a08
+difficulty: medium
+concepts:
+  - patterns.prefix_sums
+  - patterns.running_total
+prerequisites:
+  - python.lists
+estimated_time_minutes: 17
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.mixed_capstones_w2.a08
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original conveyor-crate scenario locating the leftmost index whose left-side weight equals its right-side weight using running totals, with its own tests.
+prompt_markdown: |
+  Crates sit in a row on a conveyor, each with a non-negative integer weight in
+  the list `weights`. Write `balance_point(weights)` returning the leftmost index
+  where the total weight of all crates strictly to its left equals the total
+  weight of all crates strictly to its right. The crate at the index itself
+  counts toward neither side. If no such index exists, return -1. An empty list
+  returns -1.
+starter_code: |
+  def balance_point(weights):
+      return -1
+function_name: balance_point
+input_mode: function
+solution_sketch: Track the running left-side total; the right side is the grand total minus the left total minus the current weight.
+sample_solution: |
+  def balance_point(weights):
+      total = sum(weights)
+      left = 0
+      for i, weight in enumerate(weights):
+          right = total - left - weight
+          if left == right:
+              return i
+          left += weight
+      return -1
+hints:
+  - level: 1
+    text: For each index you need the sum of everything before it and the sum of everything after it.
+  - level: 2
+    text: Once you know the grand total, the right side is total minus the left side minus the current crate.
+  - level: 3
+    text: Sweep left to right keeping a running left total, and return the first index where left equals right.
+tests:
+  public:
+    - name: balanced_middle
+      input: [1, 3, 5, 2, 2]
+      expected: 2
+    - name: single_crate
+      input: [42]
+      expected: 0
+    - name: no_balance
+      input: [1, 2, 3]
+      expected: -1
+  validation:
+    - name: long_balanced
+      input: [1, 2, 3, 4, 3, 2, 1]
+      expected: 3
+    - name: two_zeros
+      input: [0, 0]
+      expected: 0
+    - name: all_zero
+      input: [0, 0, 0]
+      expected: 0
+    - name: none
+      input: [5, 1, 1, 1]
+      expected: -1
+explanation_markdown: |
+  Computing the grand total once lets each index's right-side sum be derived in
+  O(1) as `total - left - weights[i]`, while a running `left` accumulates as the
+  sweep moves right. The whole scan is O(n) with O(1) extra state. Returning on
+  the first match yields the leftmost balance point, and a single crate balances
+  at index 0 because both sides are empty.
+common_mistakes:
+  - Recomputing the left and right sums from scratch at every index, giving O(n^2) work.
+  - Including the current crate's weight in one of the two sides.
+  - Returning a later balance point instead of the leftmost one.

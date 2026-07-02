@@ -1,0 +1,72 @@
+id: exercise.library.hashmap_set_w2.a01
+kind: exercise
+version: 1
+language: python
+title: Warehouse Bin Scan Counts
+slug: hashmap-set-w2-a01
+difficulty: easy
+concepts:
+  - patterns.hash_map_counting
+prerequisites:
+  - python.dictionaries
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.hashmap_set_w2.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original warehouse bin-scanning scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A warehouse worker scans the part code of every item dropped into the bins.
+  Write `count_scans(codes)` that returns a dict mapping each part code to the
+  number of times it was scanned. An empty list returns an empty dict.
+starter_code: |
+  def count_scans(codes):
+      return {}
+function_name: count_scans
+input_mode: function
+solution_sketch: Walk the codes once, incrementing a per-code counter in a dict.
+sample_solution: |
+  def count_scans(codes):
+      counts = {}
+      for code in codes:
+          counts[code] = counts.get(code, 0) + 1
+      return counts
+hints:
+  - level: 1
+    text: Keep one running count for each distinct part code.
+  - level: 2
+    text: A dict maps each code to how many times you have seen it so far.
+  - level: 3
+    text: Use counts.get(code, 0) + 1 as you iterate over the scans.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: {}
+    - name: single
+      input: [bolt]
+      expected: {bolt: 1}
+    - name: repeat
+      input: [bolt, nut, bolt]
+      expected: {bolt: 2, nut: 1}
+  validation:
+    - name: many
+      input: [rod, pin, rod, cap, rod, pin]
+      expected: {rod: 3, pin: 2, cap: 1}
+    - name: all_distinct
+      input: [screw, clip, tab]
+      expected: {screw: 1, clip: 1, tab: 1}
+    - name: one_repeated
+      input: [gear, gear, gear, gear]
+      expected: {gear: 4}
+explanation_markdown: |
+  A dictionary gives O(1) lookups, so a single pass builds every count in O(n).
+  Starting each new code at zero with `counts.get(code, 0)` avoids a missing-key
+  error the first time a code appears.
+common_mistakes:
+  - Resetting the count inside the loop instead of accumulating it.
+  - Indexing counts[code] before the key exists, causing a KeyError.
+  - Assuming the codes arrive sorted or already unique.

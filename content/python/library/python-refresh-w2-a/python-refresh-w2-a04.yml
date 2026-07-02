@@ -1,0 +1,80 @@
+id: exercise.library.python_refresh_w2.a04
+kind: exercise
+version: 1
+language: python
+title: Download Progress Bar
+slug: python-refresh-w2-a04
+difficulty: easy
+concepts:
+  - python.operators
+  - python.strings
+prerequisites:
+  - python.functions
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh_w2.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original text progress-bar renderer built with string repetition and concatenation.
+prompt_markdown: |
+  A file-sync tool draws a simple text progress bar. The input is a dict with
+  keys `"done"` and `"total"`, where `0 <= done <= total` and `total >= 1`.
+
+  Write `progress_bar(data)` that returns a string of length `total`: one `#`
+  for each completed unit followed by one `-` for each remaining unit.
+
+  For example, `done` 3 out of `total` 5 becomes `"###--"`.
+starter_code: |
+  def progress_bar(data):
+      return ""
+function_name: progress_bar
+input_mode: function
+solution_sketch: Repeat "#" by the done count and "-" by the remaining count, then concatenate.
+sample_solution: |
+  def progress_bar(data):
+      done = data["done"]
+      total = data["total"]
+      return "#" * done + "-" * (total - done)
+hints:
+  - level: 1
+    text: Multiplying a string by an integer repeats it that many times.
+  - level: 2
+    text: The number of remaining units is total minus done.
+  - level: 3
+    text: Concatenate "#" * done with "-" * (total - done) to build the full bar.
+tests:
+  public:
+    - name: none_done
+      input: {done: 0, total: 5}
+      expected: "-----"
+    - name: partway
+      input: {done: 3, total: 5}
+      expected: "###--"
+    - name: complete
+      input: {done: 5, total: 5}
+      expected: "#####"
+  validation:
+    - name: one_of_four
+      input: {done: 1, total: 4}
+      expected: "#---"
+    - name: full_short
+      input: {done: 2, total: 2}
+      expected: "##"
+    - name: long_bar
+      input: {done: 4, total: 10}
+      expected: "####------"
+    - name: single_slot
+      input: {done: 0, total: 1}
+      expected: "-"
+explanation_markdown: |
+  String repetition with `*` and concatenation with `+` make the bar without any
+  loop: `"#" * done` renders the finished portion and `"-" * (total - done)`
+  fills the rest. Because the two counts always add up to `total`, the result is
+  guaranteed to be exactly `total` characters long.
+common_mistakes:
+  - Repeating "-" by total instead of by the remaining count, making the bar too long.
+  - Subtracting in the wrong order and passing a negative repeat count.
+  - Building the bar with a loop and an off-by-one error instead of using repetition.

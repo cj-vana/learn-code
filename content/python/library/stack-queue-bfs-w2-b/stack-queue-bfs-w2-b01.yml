@@ -1,0 +1,117 @@
+id: exercise.library.stack_queue_bfs_w2.b01
+kind: exercise
+version: 1
+language: python
+title: Round-Robin Print Shop Finishes
+slug: stack-queue-bfs-w2-b01
+difficulty: easy
+concepts:
+  - patterns.queue_bfs
+  - python.dictionaries
+prerequisites:
+  - python.lists
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.stack_queue_bfs_w2.b01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original round-robin print-shop scenario in which each cycle advances every waiting job by one pass, with its own job data and completion-order tests.
+prompt_markdown: |
+  A small print shop runs its jobs **round-robin**: it takes the job at the front
+  of the queue, runs exactly one printing pass on it, and then, if that job still
+  needs more passes, sends it to the **back** of the queue. It repeats until every
+  job is done.
+
+  Write `finish_order(jobs)` where `jobs` is a list of dicts, each shaped like
+  `{"id": <name>, "passes": <count>}`. The list is the starting queue order (front
+  first) and every `passes` count is at least `1`. Return the list of job ids in
+  the order the jobs **finish** their last pass. An empty queue returns an empty
+  list.
+starter_code: |
+  def finish_order(jobs):
+      return []
+function_name: finish_order
+input_mode: function
+solution_sketch: Load the jobs into a queue and repeatedly serve the front for one pass, re-enqueueing it at the back until its passes reach zero, recording ids as they finish.
+sample_solution: |
+  from collections import deque
+
+  def finish_order(jobs):
+      queue = deque((job["id"], job["passes"]) for job in jobs)
+      finished = []
+      while queue:
+          job_id, passes = queue.popleft()
+          passes -= 1
+          if passes > 0:
+              queue.append((job_id, passes))
+          else:
+              finished.append(job_id)
+      return finished
+hints:
+  - level: 1
+    text: Serve jobs strictly from the front and send unfinished ones to the back, so every job waits its turn before getting another pass.
+  - level: 2
+    text: A queue (collections.deque with popleft and append) models the round-robin order; carry each job's remaining passes alongside its id.
+  - level: 3
+    text: Pop the front job, subtract one pass, re-append it if passes are still above zero, and record its id only when passes reach zero.
+tests:
+  public:
+    - name: empty_queue
+      input: []
+      expected: []
+    - name: single_job
+      input:
+        - id: brochure
+          passes: 1
+      expected: [brochure]
+    - name: two_equal
+      input:
+        - id: flyer
+          passes: 2
+        - id: poster
+          passes: 2
+      expected: [flyer, poster]
+  validation:
+    - name: shortest_finishes_first
+      input:
+        - id: banner
+          passes: 3
+        - id: card
+          passes: 1
+        - id: label
+          passes: 2
+      expected: [card, label, banner]
+    - name: tie_keeps_start_order
+      input:
+        - id: menu
+          passes: 2
+        - id: ticket
+          passes: 1
+        - id: map
+          passes: 2
+      expected: [ticket, menu, map]
+    - name: all_same_passes
+      input:
+        - id: form
+          passes: 2
+        - id: badge
+          passes: 2
+        - id: sign
+          passes: 2
+      expected: [form, badge, sign]
+explanation_markdown: |
+  Round-robin scheduling is a queue in action: the front job is always served
+  next, and an unfinished job goes to the very back so it waits behind everyone
+  else before its next pass. Because each cycle through the queue gives every
+  remaining job exactly one pass, a job needing fewer passes finishes in an
+  earlier cycle, and jobs that need the same number of passes finish in their
+  original relative order (the queue never reorders equals). Carrying the
+  remaining pass count with each id lets one FIFO loop produce the finishing
+  order directly.
+common_mistakes:
+  - Serving from the back or re-inserting at the front, which breaks the fair round-robin order.
+  - Recording a job as finished on every pass instead of only when its remaining passes hit zero.
+  - Mutating the input dicts' passes in place instead of tracking the count in the queue.

@@ -1,0 +1,79 @@
+id: exercise.library.dicts_sets_tuples_w2.a08
+kind: exercise
+version: 1
+language: python
+title: Perfect Gym Attendance
+slug: dicts-sets-tuples-w2-a08
+difficulty: medium
+concepts:
+  - python.sets
+  - patterns.set_membership
+prerequisites:
+  - python.loops
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples_w2.a08
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original gym check-in scenario intersecting each day's member set to find perfect attendance.
+prompt_markdown: |
+  A gym records the member IDs who checked in each day. You are given `days`, a
+  list where each element is a list of member IDs (ints) for one day.
+
+  Write `perfect_attendance(days)` returning a sorted list of the IDs that
+  appear on every single day. If `days` is empty, return an empty list.
+starter_code: |
+  def perfect_attendance(days):
+      return []
+function_name: perfect_attendance
+input_mode: function
+solution_sketch: Start from the first day's set and intersect it with each following day.
+sample_solution: |
+  def perfect_attendance(days):
+      if not days:
+          return []
+      present = set(days[0])
+      for day in days[1:]:
+          present &= set(day)
+      return sorted(present)
+hints:
+  - level: 1
+    text: A member with perfect attendance is in the overlap of every day's set.
+  - level: 2
+    text: Set intersection keeps only IDs shared by both sides.
+  - level: 3
+    text: Begin with the first day's set and &= each later day into it.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: one_day
+      input: [[1, 2, 3]]
+      expected: [1, 2, 3]
+    - name: common_two
+      input: [[1, 2, 3], [2, 3, 4], [3, 2, 5]]
+      expected: [2, 3]
+  validation:
+    - name: none_common
+      input: [[1, 2], [3, 4]]
+      expected: []
+    - name: all_same
+      input: [[7, 8], [8, 7], [7, 8]]
+      expected: [7, 8]
+    - name: shrinking
+      input: [[1, 2, 3, 4], [2, 3, 4], [4, 3]]
+      expected: [3, 4]
+explanation_markdown: |
+  Perfect attendance means an ID is present in the intersection of every day.
+  Seeding `present` with the first day and applying `&=` for each later day
+  keeps only IDs that survive in all of them. Handling the empty input up front
+  avoids indexing `days[0]` when there are no days at all. Sorting the surviving
+  set gives a stable, ordered result.
+common_mistakes:
+  - Starting from an empty set, which intersects down to nothing.
+  - Using union instead of intersection and collecting everyone.
+  - Indexing days[0] before checking that days is non-empty.

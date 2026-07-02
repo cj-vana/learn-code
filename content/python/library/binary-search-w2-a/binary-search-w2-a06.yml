@@ -1,0 +1,85 @@
+id: exercise.library.binary_search_w2.a06
+kind: exercise
+version: 1
+language: python
+title: Lowest Point of the Trail
+slug: binary-search-w2-a06
+difficulty: medium
+concepts:
+  - patterns.binary_search
+  - python.lists
+prerequisites:
+  - python.lists
+estimated_time_minutes: 16
+review_status: published
+source_status: original
+input_mode: function
+provenance:
+  brief_id: library.binary_search_w2.a06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original valley-shaped trail scenario that binary searches for the single lowest elevation.
+prompt_markdown: |
+  A hiking trail's elevation samples strictly descend to a single lowest point
+  and then strictly ascend. Write `lowest_point(elevations)` where `elevations`
+  is that non-empty list of readings (a purely descending or purely ascending
+  trail is allowed, with the valley at an end).
+
+  Return the lowest elevation value. Use binary search by comparing each middle
+  sample with its right neighbor rather than scanning the whole trail.
+starter_code: |
+  def lowest_point(elevations):
+      return 0
+function_name: lowest_point
+solution_sketch: Binary search toward the descending side by comparing each midpoint with its right neighbor.
+sample_solution: |
+  def lowest_point(elevations):
+      lo, hi = 0, len(elevations) - 1
+      while lo < hi:
+          mid = (lo + hi) // 2
+          if elevations[mid] > elevations[mid + 1]:
+              lo = mid + 1
+          else:
+              hi = mid
+      return elevations[lo]
+hints:
+  - level: 1
+    text: If the middle sample is higher than the one just after it, the trail is still going down, so the valley is to the right.
+  - level: 2
+    text: Otherwise the trail is already climbing at mid, so the valley is at mid or to its left.
+  - level: 3
+    text: Shrink the window until lo meets hi; that index holds the lowest elevation.
+tests:
+  public:
+    - name: v_shape
+      input: [8, 5, 2, 6, 9]
+      expected: 2
+    - name: down_then_up
+      input: [12, 7, 3, 10]
+      expected: 3
+    - name: only_up
+      input: [4, 9, 15]
+      expected: 4
+  validation:
+    - name: only_down
+      input: [20, 14, 6]
+      expected: 6
+    - name: single
+      input: [7]
+      expected: 7
+    - name: two_up
+      input: [3, 8]
+      expected: 3
+    - name: deeper_valley
+      input: [30, 25, 18, 9, 4, 11, 22]
+      expected: 4
+explanation_markdown: |
+  Comparing a sample with its right neighbor reveals which way the trail slopes at
+  that point: a downhill step means the valley lies to the right, while a level or
+  uphill step means the valley is at that sample or to its left. Following the
+  downhill direction narrows the window to the single lowest point in O(log n).
+common_mistakes:
+  - Comparing with the left neighbor and indexing out of range at mid - 1.
+  - Returning the index instead of the elevation value there.
+  - Using `while lo <= hi`, which can read elevations[mid + 1] past the end.

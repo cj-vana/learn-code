@@ -1,0 +1,88 @@
+id: exercise.library.binary_search_w2.a08
+kind: exercise
+version: 1
+language: python
+title: Filing the New Document
+slug: binary-search-w2-a08
+difficulty: easy
+concepts:
+  - patterns.binary_search
+  - python.lists
+prerequisites:
+  - python.lists
+  - python.sorting
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+input_mode: function
+provenance:
+  brief_id: library.binary_search_w2.a08
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original document-filing scenario returning the rightmost insertion index so ties file after existing entries.
+prompt_markdown: |
+  A digital filing cabinet keeps document timestamps in a list sorted in
+  ascending order. A new document must be filed **after** any existing documents
+  that share its timestamp. Write `file_position(data)` where `data` has keys
+  `stamps` (the sorted list) and `new_stamp` (the incoming timestamp).
+
+  Return the index at which `new_stamp` should be inserted to keep the list sorted
+  while placing ties last. Use binary search.
+starter_code: |
+  def file_position(data):
+      return 0
+function_name: file_position
+solution_sketch: Binary search for the first index whose stamp is strictly greater than new_stamp.
+sample_solution: |
+  def file_position(data):
+      stamps = data["stamps"]
+      new_stamp = data["new_stamp"]
+      lo, hi = 0, len(stamps)
+      while lo < hi:
+          mid = (lo + hi) // 2
+          if stamps[mid] <= new_stamp:
+              lo = mid + 1
+          else:
+              hi = mid
+      return lo
+hints:
+  - level: 1
+    text: To file ties last, you need the position just after the final equal timestamp.
+  - level: 2
+    text: That is the first index whose stamp is strictly greater than new_stamp.
+  - level: 3
+    text: Treat stamps equal to new_stamp as belonging to the left half so the search moves past them.
+tests:
+  public:
+    - name: after_dupes
+      input: {stamps: [10, 20, 20, 30], new_stamp: 20}
+      expected: 3
+    - name: into_gap
+      input: {stamps: [10, 20, 30], new_stamp: 25}
+      expected: 2
+    - name: at_end
+      input: {stamps: [10, 20, 30], new_stamp: 40}
+      expected: 3
+  validation:
+    - name: empty
+      input: {stamps: [], new_stamp: 5}
+      expected: 0
+    - name: at_start
+      input: {stamps: [10, 20, 30], new_stamp: 5}
+      expected: 0
+    - name: all_equal
+      input: {stamps: [10, 10, 10], new_stamp: 10}
+      expected: 3
+    - name: exact_middle
+      input: {stamps: [10, 20, 30, 40], new_stamp: 30}
+      expected: 3
+explanation_markdown: |
+  Filing ties last is an upper-bound search: the target index is the first spot
+  whose stamp is strictly greater than `new_stamp`. Counting stamps less than or
+  equal to `new_stamp` as belonging to the left half slides the window past every
+  equal timestamp, landing on the correct insertion point in O(log n).
+common_mistakes:
+  - Using `<` instead of `<=` and filing the new document before existing ties.
+  - Setting the initial high to len(stamps) - 1 and never allowing an append at the end.
+  - Returning a found value instead of the insertion index.

@@ -1,0 +1,74 @@
+id: exercise.library.loops_lists_strings_w2.b01
+kind: exercise
+version: 1
+language: python
+title: Committee Acronym
+slug: loops-lists-strings-w2-b01
+difficulty: easy
+concepts:
+  - python.strings
+  - python.loops
+prerequisites:
+  - python.functions
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings_w2.b01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original civic-committee acronym scenario, prompt, tests, and explanation.
+prompt_markdown: |
+  A town council keeps forming committees with long names. Write
+  `committee_acronym(name)` that takes a committee name whose words are
+  separated by single spaces and returns the uppercase acronym built from the
+  first letter of each word. An empty string returns an empty string.
+starter_code: |
+  def committee_acronym(name):
+      return ""
+function_name: committee_acronym
+input_mode: function
+solution_sketch: Split into words, take each first letter, join, and uppercase.
+sample_solution: |
+  def committee_acronym(name):
+      words = name.split()
+      letters = [word[0] for word in words]
+      return "".join(letters).upper()
+hints:
+  - level: 1
+    text: Break the name into a list of words before looking at letters.
+  - level: 2
+    text: The first character of a word is word[0].
+  - level: 3
+    text: Join the collected first letters and call .upper() on the result.
+tests:
+  public:
+    - name: empty
+      input: ""
+      expected: ""
+    - name: single_word
+      input: "finance"
+      expected: "F"
+    - name: two_words
+      input: "world health"
+      expected: "WH"
+  validation:
+    - name: three_words
+      input: "national park service"
+      expected: "NPS"
+    - name: already_capitalized
+      input: "Green Energy Board"
+      expected: "GEB"
+    - name: four_words
+      input: "youth arts and music"
+      expected: "YAAM"
+explanation_markdown: |
+  Splitting on whitespace gives the individual words. Taking `word[0]` from each
+  grabs the leading letter, joining stitches them into one string, and `.upper()`
+  normalizes the case so the acronym reads consistently regardless of how the
+  name was typed.
+common_mistakes:
+  - Forgetting to uppercase, so lowercase names produce lowercase acronyms.
+  - Indexing an empty word and crashing when the name has trailing spaces.
+  - Returning a list of letters instead of a joined string.

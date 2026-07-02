@@ -1,0 +1,89 @@
+id: exercise.library.stack_queue_bfs_w2.a03
+kind: exercise
+version: 1
+language: python
+title: Deepest Nested Gift Box
+slug: stack-queue-bfs-w2-a03
+difficulty: easy
+concepts:
+  - patterns.stack
+  - python.strings
+prerequisites:
+  - python.lists
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.stack_queue_bfs_w2.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original nested gift-box depth scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A prank gift is a box inside a box inside a box. A packing record is a string
+  where `(` marks opening a new inner box and `)` marks closing the current box.
+  Any other character is decorative wrapping and is ignored.
+
+  Write `deepest_nesting(record)` returning the greatest number of boxes that are
+  open at the same time (the deepest nesting reached). A `)` with no open box is
+  ignored. An empty string returns `0`.
+starter_code: |
+  def deepest_nesting(record):
+      return 0
+function_name: deepest_nesting
+input_mode: function
+solution_sketch: Push on each open box, pop on each close, and track the largest stack height seen.
+sample_solution: |
+  def deepest_nesting(record):
+      stack = []
+      best = 0
+      for ch in record:
+          if ch == "(":
+              stack.append(ch)
+              if len(stack) > best:
+                  best = len(stack)
+          elif ch == ")":
+              if stack:
+                  stack.pop()
+      return best
+hints:
+  - level: 1
+    text: The answer is the most boxes open at once, not the total number of boxes.
+  - level: 2
+    text: Push onto a stack for every open box and pop for every valid close.
+  - level: 3
+    text: After each push, compare the current stack height to the best seen so far.
+tests:
+  public:
+    - name: empty
+      input: ""
+      expected: 0
+    - name: one_box
+      input: "()"
+      expected: 1
+    - name: two_deep
+      input: "(())"
+      expected: 2
+  validation:
+    - name: branching
+      input: "(()(()))"
+      expected: 3
+    - name: flat_sequence
+      input: "()()()"
+      expected: 1
+    - name: unclosed
+      input: "((()"
+      expected: 3
+    - name: with_wrapping
+      input: "a(b(c)d)e"
+      expected: 2
+explanation_markdown: |
+  Tracking "how deep are we right now" is exactly the height of a stack of open
+  boxes. Each `(` pushes and each valid `)` pops, so the running height is the
+  current nesting depth. Recording the maximum height after every push gives the
+  deepest nesting, even when boxes are left unclosed. Ignored characters never
+  touch the stack. One pass over the string makes this O(n).
+common_mistakes:
+  - Returning the count of boxes instead of the maximum simultaneous depth.
+  - Popping on a close when no box is open and hitting an error.
+  - Checking the height only at the end instead of after each open.

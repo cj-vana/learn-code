@@ -1,0 +1,98 @@
+id: exercise.library.python_refresh_w2.a08
+kind: exercise
+version: 1
+language: python
+title: Transit Fare Calculator
+slug: python-refresh-w2-a08
+difficulty: medium
+concepts:
+  - python.conditionals
+  - python.operators
+prerequisites:
+  - python.functions
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh_w2.a08
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original transit-fare rule that layers a distance surcharge, a peak surcharge, and a rider discount in order.
+prompt_markdown: |
+  A city tram computes each fare in whole dollars. The trip arrives as a dict
+  with keys `"distance_km"` (a non-negative integer), `"peak"` (a boolean), and
+  `"rider"` (one of `"adult"`, `"child"`, or `"senior"`).
+
+  Write `transit_fare(trip)` that builds the fare in this order:
+
+  1. start from a base fare of 3
+  2. add 1 for every full 10 km of distance
+  3. add 2 more if the trip is during peak hours
+  4. then apply the rider adjustment: a child pays half the fare so far using
+     integer (floor) division, a senior pays 1 less, and an adult pays the fare
+     unchanged
+
+  Return the final whole-dollar fare.
+starter_code: |
+  def transit_fare(trip):
+      return 0
+function_name: transit_fare
+input_mode: function
+solution_sketch: Accumulate base, distance, and peak surcharges, then adjust once for the rider category.
+sample_solution: |
+  def transit_fare(trip):
+      fare = 3
+      fare += trip["distance_km"] // 10
+      if trip["peak"]:
+          fare += 2
+      rider = trip["rider"]
+      if rider == "child":
+          fare = fare // 2
+      elif rider == "senior":
+          fare = fare - 1
+      return fare
+hints:
+  - level: 1
+    text: Build the fare step by step, following the four rules in the order given.
+  - level: 2
+    text: Floor division distance_km // 10 counts how many full 10 km blocks the trip covers.
+  - level: 3
+    text: Apply the rider adjustment last, after the distance and peak surcharges are already added.
+tests:
+  public:
+    - name: short_adult_offpeak
+      input: {distance_km: 4, peak: false, rider: adult}
+      expected: 3
+    - name: long_adult_peak
+      input: {distance_km: 25, peak: true, rider: adult}
+      expected: 7
+    - name: child_offpeak
+      input: {distance_km: 12, peak: false, rider: child}
+      expected: 2
+  validation:
+    - name: senior_long_peak
+      input: {distance_km: 30, peak: true, rider: senior}
+      expected: 7
+    - name: child_zero_distance
+      input: {distance_km: 0, peak: false, rider: child}
+      expected: 1
+    - name: adult_under_ten_peak
+      input: {distance_km: 9, peak: true, rider: adult}
+      expected: 5
+    - name: senior_far_offpeak
+      input: {distance_km: 50, peak: false, rider: senior}
+      expected: 7
+    - name: child_peak_block
+      input: {distance_km: 10, peak: true, rider: child}
+      expected: 3
+explanation_markdown: |
+  The fare is assembled by accumulation: start at 3, then `distance_km // 10`
+  adds one dollar per full 10 km block, and peak hours add a fixed 2. The rider
+  adjustment must come last because a child's half-price and a senior's discount
+  apply to the fully surcharged fare. Using floor division for the child keeps
+  every fare a whole number.
+common_mistakes:
+  - Applying the rider discount before the peak or distance surcharges.
+  - Using regular division for the child fare and returning a float.
+  - Charging 1 per kilometer instead of 1 per full 10 km block.

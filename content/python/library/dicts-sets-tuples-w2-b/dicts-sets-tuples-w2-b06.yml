@@ -1,0 +1,76 @@
+id: exercise.library.dicts_sets_tuples_w2.b06
+kind: exercise
+version: 1
+language: python
+title: Group Spelling Words by Length
+slug: dicts-sets-tuples-w2-b06
+difficulty: easy
+concepts:
+  - python.dictionaries
+  - python.sorting
+prerequisites:
+  - python.loops
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples_w2.b06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original spelling-bee scenario bucketing distinct words by their character length.
+prompt_markdown: |
+  A spelling coach wants the practice words grouped by how many letters they have.
+  Write `group_by_length(words)` that returns a dict mapping each word length to a
+  sorted list of the distinct words with that length. Repeated words appear only
+  once in their bucket, and an empty input returns an empty dict.
+starter_code: |
+  def group_by_length(words):
+      return {}
+function_name: group_by_length
+input_mode: function
+solution_sketch: Bucket words into a set per length, then sort each bucket into a list.
+sample_solution: |
+  def group_by_length(words):
+      groups = {}
+      for word in words:
+          groups.setdefault(len(word), set()).add(word)
+      return {length: sorted(members) for length, members in groups.items()}
+hints:
+  - level: 1
+    text: The dictionary key is the word length; the value is a collection of words.
+  - level: 2
+    text: Use a set per length so a repeated word only lands in the bucket once.
+  - level: 3
+    text: setdefault(len(word), set()).add(word), then sort each bucket at the end.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: {}
+    - name: distinct_lengths
+      input: [hi, cat, bird]
+      expected: {2: [hi], 3: [cat], 4: [bird]}
+    - name: same_length
+      input: [cat, dog, ant]
+      expected: {3: [ant, cat, dog]}
+  validation:
+    - name: with_dupes
+      input: [go, go, up]
+      expected: {2: [go, up]}
+    - name: mixed
+      input: [a, bb, cc, ddd]
+      expected: {1: [a], 2: [bb, cc], 3: [ddd]}
+    - name: unsorted_input
+      input: [pear, fig, kiwi, plum]
+      expected: {4: [kiwi, pear, plum], 3: [fig]}
+explanation_markdown: |
+  `setdefault(len(word), set())` creates an empty set the first time a length is
+  seen and reuses it afterward, so every word drops into the bucket for its
+  length while duplicates are absorbed by the set. A final comprehension sorts
+  each bucket into a list. Dict equality ignores key order, so the buckets match
+  regardless of the order the lengths were first encountered.
+common_mistakes:
+  - Appending to a list per length, which keeps duplicate words.
+  - Forgetting to sort each bucket before returning it.
+  - Using the word itself as the key instead of its length.

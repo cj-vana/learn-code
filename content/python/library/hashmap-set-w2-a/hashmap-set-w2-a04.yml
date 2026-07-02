@@ -1,0 +1,82 @@
+id: exercise.library.hashmap_set_w2.a04
+kind: exercise
+version: 1
+language: python
+title: Badges Both Hikers Earned
+slug: hashmap-set-w2-a04
+difficulty: easy
+concepts:
+  - patterns.set_membership
+prerequisites:
+  - python.sets
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.hashmap_set_w2.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original hiking-badge scenario returning shared badges deduplicated in the first hiker's order.
+prompt_markdown: |
+  Two hikers each list the trail badges they have earned. Write
+  `shared_badges(data)` that returns the badges both hikers earned, listed once
+  each, in the order they appear in the first hiker's list.
+
+  `data` is a dict with keys `first` and `second`, each a list of badge strings.
+starter_code: |
+  def shared_badges(data):
+      return []
+function_name: shared_badges
+input_mode: function
+solution_sketch: Put the second hiker's badges in a set, then keep first-hiker badges found there, skipping repeats.
+sample_solution: |
+  def shared_badges(data):
+      second = set(data["second"])
+      seen = set()
+      result = []
+      for badge in data["first"]:
+          if badge in second and badge not in seen:
+              result.append(badge)
+              seen.add(badge)
+      return result
+hints:
+  - level: 1
+    text: Membership tests against the second hiker's badges decide what is shared.
+  - level: 2
+    text: Convert the second list to a set so each lookup is O(1).
+  - level: 3
+    text: Track badges you have already added so a repeat in the first list is not listed twice.
+tests:
+  public:
+    - name: both_empty
+      input: {first: [], second: []}
+      expected: []
+    - name: no_overlap
+      input: {first: [peak], second: [ridge]}
+      expected: []
+    - name: one_shared
+      input: {first: [peak, ridge], second: [ridge, vale]}
+      expected: [ridge]
+  validation:
+    - name: dedup_first
+      input: {first: [alp, alp, bog], second: [alp, bog]}
+      expected: [alp, bog]
+    - name: order_of_first
+      input: {first: [cove, dune, fen], second: [fen, cove]}
+      expected: [cove, fen]
+    - name: all_shared
+      input: {first: [gale, haze], second: [haze, gale]}
+      expected: [gale, haze]
+    - name: none_shared
+      input: {first: [ibex], second: [jay, kite]}
+      expected: []
+explanation_markdown: |
+  Storing the second hiker's badges in a set turns each shared-or-not check into an
+  O(1) lookup, so one pass over the first list is O(n). A second set of badges you
+  have already recorded keeps the result free of duplicates while preserving the
+  first hiker's ordering, since you append a badge the first time you meet it.
+common_mistakes:
+  - Scanning the second list with `in` on every badge, making the work O(n*m).
+  - Returning a set, which loses the first hiker's ordering.
+  - Listing a shared badge twice when it repeats in the first hiker's list.

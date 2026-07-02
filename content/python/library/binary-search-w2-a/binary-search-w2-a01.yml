@@ -1,0 +1,88 @@
+id: exercise.library.binary_search_w2.a01
+kind: exercise
+version: 1
+language: python
+title: Is the Episode Archived?
+slug: binary-search-w2-a01
+difficulty: easy
+concepts:
+  - patterns.binary_search
+  - python.lists
+prerequisites:
+  - python.lists
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+input_mode: function
+provenance:
+  brief_id: library.binary_search_w2.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original podcast-archive membership-check scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A podcast archive stores its released episode numbers in strictly ascending
+  order. Write `has_episode(data)` where `data` is a dict with keys `episodes`
+  (the sorted list of numbers) and `wanted` (the episode number to look up).
+
+  Return `True` if `wanted` appears in `episodes`, otherwise `False`. Use binary
+  search so the check stays fast even for a long-running show.
+starter_code: |
+  def has_episode(data):
+      return False
+function_name: has_episode
+solution_sketch: Halve the search window each step and report whether the middle value ever equals the target.
+sample_solution: |
+  def has_episode(data):
+      episodes = data["episodes"]
+      wanted = data["wanted"]
+      lo, hi = 0, len(episodes) - 1
+      while lo <= hi:
+          mid = (lo + hi) // 2
+          if episodes[mid] == wanted:
+              return True
+          if episodes[mid] < wanted:
+              lo = mid + 1
+          else:
+              hi = mid - 1
+      return False
+hints:
+  - level: 1
+    text: Because the list is sorted you can discard half of it after each comparison.
+  - level: 2
+    text: Keep a low and high index and inspect the middle episode number between them.
+  - level: 3
+    text: Return True on an exact match; if the window empties without one, return False.
+tests:
+  public:
+    - name: empty
+      input: {episodes: [], wanted: 4}
+      expected: false
+    - name: present
+      input: {episodes: [2, 5, 9, 14, 20], wanted: 9}
+      expected: true
+    - name: absent
+      input: {episodes: [2, 5, 9, 14, 20], wanted: 10}
+      expected: false
+  validation:
+    - name: first
+      input: {episodes: [2, 5, 9, 14, 20], wanted: 2}
+      expected: true
+    - name: last
+      input: {episodes: [2, 5, 9, 14, 20], wanted: 20}
+      expected: true
+    - name: single_hit
+      input: {episodes: [7], wanted: 7}
+      expected: true
+    - name: single_miss
+      input: {episodes: [7], wanted: 3}
+      expected: false
+explanation_markdown: |
+  Binary search maintains a window `[lo, hi]` that must contain the target if it
+  is present. Each step checks the middle number and throws away the half that
+  cannot hold `wanted`, so membership is decided in O(log n) instead of scanning
+  every episode.
+common_mistakes:
+  - Returning the index instead of a boolean.
+  - Using `while lo < hi` and missing a match when the window shrinks to one element.
+  - Moving lo or hi to mid instead of mid + 1 / mid - 1, causing an infinite loop.

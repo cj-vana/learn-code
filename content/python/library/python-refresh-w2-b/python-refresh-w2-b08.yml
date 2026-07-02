@@ -1,0 +1,73 @@
+id: exercise.library.python_refresh_w2.b08
+kind: exercise
+version: 1
+language: python
+title: Weather Sign Temperature
+slug: python-refresh-w2-b08
+difficulty: easy
+concepts:
+  - python.types
+  - python.operators
+  - python.functions
+prerequisites:
+  - python.variables
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh_w2.b08
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original digital-signboard temperature conversion scenario rounding Celsius to whole Fahrenheit with its own tests.
+prompt_markdown: |
+  A digital signboard shows the outdoor temperature in whole degrees
+  Fahrenheit, but the sensor reports whole degrees Celsius.
+  Write `celsius_to_fahrenheit(celsius)` that converts a Celsius reading to
+  Fahrenheit using `F = C * 9 / 5 + 32` and returns the result rounded to the
+  nearest whole number (an integer).
+starter_code: |
+  def celsius_to_fahrenheit(celsius):
+      return 0
+function_name: celsius_to_fahrenheit
+input_mode: function
+solution_sketch: Apply the conversion formula and round the result to a whole number.
+sample_solution: |
+  def celsius_to_fahrenheit(celsius):
+      return round(celsius * 9 / 5 + 32)
+hints:
+  - level: 1
+    text: Translate the formula directly, then deal with the fractional part.
+  - level: 2
+    text: The board only shows whole degrees, so the result must be rounded.
+  - level: 3
+    text: round() with no second argument returns the nearest whole number as an int.
+tests:
+  public:
+    - name: freezing_point
+      input: 0
+      expected: 32
+    - name: boiling_point
+      input: 100
+      expected: 212
+    - name: body_temperature
+      input: 37
+      expected: 99
+  validation:
+    - name: matching_scales
+      input: -40
+      expected: -40
+    - name: mild_day
+      input: 20
+      expected: 68
+    - name: warm_day
+      input: 25
+      expected: 77
+explanation_markdown: |
+  The formula produces a float, so 37 degrees Celsius gives 98.6 before
+  rounding. Passing that to `round()` snaps it to the nearest whole number and
+  returns an int, which is what the signboard needs. At -40 both scales meet,
+  so the answer is -40 either way.
+common_mistakes:
+  - Using integer division, which drops the fractional part before rounding.
+  - Returning the raw float instead of a rounded whole number.

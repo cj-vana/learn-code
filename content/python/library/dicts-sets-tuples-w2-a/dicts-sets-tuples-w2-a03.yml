@@ -1,0 +1,77 @@
+id: exercise.library.dicts_sets_tuples_w2.a03
+kind: exercise
+version: 1
+language: python
+title: Every Tag On The Blog
+slug: dicts-sets-tuples-w2-a03
+difficulty: easy
+concepts:
+  - python.sets
+  - python.comprehensions
+  - python.sorting
+prerequisites:
+  - python.loops
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples_w2.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original blog-tagging scenario collecting distinct tags across posts into a sorted list.
+prompt_markdown: |
+  A blog stores the tag list for each post. You are given `posts`, a list where
+  each element is a list of tag strings for one post.
+
+  Write `all_tags(posts)` returning a sorted list of every distinct tag used
+  across all posts. Duplicates within or across posts should appear once. An
+  empty list returns an empty list.
+starter_code: |
+  def all_tags(posts):
+      return []
+function_name: all_tags
+input_mode: function
+solution_sketch: Flatten every tag into a set with a comprehension, then sort it.
+sample_solution: |
+  def all_tags(posts):
+      tags = {tag for post in posts for tag in post}
+      return sorted(tags)
+hints:
+  - level: 1
+    text: A set naturally drops repeated tags for you.
+  - level: 2
+    text: A nested set comprehension can walk every post and every tag inside it.
+  - level: 3
+    text: Build {tag for post in posts for tag in post}, then return sorted(...).
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: no_overlap
+      input: [[travel], [food, city]]
+      expected: [city, food, travel]
+    - name: overlap
+      input: [[recipe, quick], [quick, snack]]
+      expected: [quick, recipe, snack]
+  validation:
+    - name: single_post_dupe
+      input: [[news, news, tips]]
+      expected: [news, tips]
+    - name: chain
+      input: [[apple], [berry, apple], [cherry, berry]]
+      expected: [apple, berry, cherry]
+    - name: empty_posts
+      input: [[], []]
+      expected: []
+explanation_markdown: |
+  A set stores each value at most once, so adding tags to a set removes
+  duplicates automatically. The nested comprehension `{tag for post in posts for
+  tag in post}` reads left to right like two nested loops, collecting every tag
+  from every post. Sorting the set turns it into the ordered list the caller
+  expects.
+common_mistakes:
+  - Returning the set directly instead of a sorted list.
+  - Only looking at the first post rather than flattening all of them.
+  - Building a list and leaving duplicate tags in the result.

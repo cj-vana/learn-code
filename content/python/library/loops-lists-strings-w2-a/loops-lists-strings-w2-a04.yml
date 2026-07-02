@@ -1,0 +1,73 @@
+id: exercise.library.loops_lists_strings_w2.a04
+kind: exercise
+version: 1
+language: python
+title: Every Other Car on the Ferry
+slug: loops-lists-strings-w2-a04
+difficulty: easy
+concepts:
+  - python.slicing
+  - python.lists
+prerequisites:
+  - python.functions
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings_w2.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original ferry-line spot-inspection scenario, prompt, tests, and explanation.
+prompt_markdown: |
+  Cars drive onto a ferry in a single line. To keep things moving, an inspector
+  only spot-checks every other car, starting with the very first one. Write
+  `cars_to_inspect(lineup)` that returns a new list holding the first car, the
+  third car, the fifth car, and so on. The original list must not be changed. An
+  empty line returns `[]`.
+starter_code: |
+  def cars_to_inspect(lineup):
+      return []
+function_name: cars_to_inspect
+input_mode: function
+solution_sketch: Return a slice that starts at the first element and steps by two.
+sample_solution: |
+  def cars_to_inspect(lineup):
+      return lineup[::2]
+hints:
+  - level: 1
+    text: A slice can skip elements using a step value.
+  - level: 2
+    text: The step in `lineup[start:stop:step]` controls how many you jump each time.
+  - level: 3
+    text: A step of 2 with no start or stop keeps positions 0, 2, 4, and so on.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: one_car
+      input: [red]
+      expected: [red]
+    - name: four_cars
+      input: [red, blue, green, black]
+      expected: [red, green]
+  validation:
+    - name: odd_length
+      input: [a, b, c, d, e]
+      expected: [a, c, e]
+    - name: two_cars
+      input: [van, truck]
+      expected: [van]
+    - name: numbered
+      input: [1, 2, 3, 4, 5, 6]
+      expected: [1, 3, 5]
+explanation_markdown: |
+  The slice `lineup[::2]` leaves the start and stop empty (so it spans the whole
+  list) and sets the step to 2, which keeps positions 0, 2, 4, and onward. Slicing
+  builds a brand-new list, so the original lineup is untouched. This is both shorter
+  and less error-prone than manually looping with an index counter.
+common_mistakes:
+  - Starting the slice at index 1 and inspecting the wrong cars.
+  - Building the result with a loop but skipping the wrong positions.
+  - Mutating the input list instead of returning a fresh slice.

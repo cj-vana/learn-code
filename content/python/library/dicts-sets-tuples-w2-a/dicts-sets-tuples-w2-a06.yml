@@ -1,0 +1,79 @@
+id: exercise.library.dicts_sets_tuples_w2.a06
+kind: exercise
+version: 1
+language: python
+title: Products Within Budget
+slug: dicts-sets-tuples-w2-a06
+difficulty: easy
+concepts:
+  - python.dictionaries
+  - python.comprehensions
+  - python.sorting
+  - patterns.filtering
+prerequisites:
+  - python.functions
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples_w2.a06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original online-shop scenario filtering a price dict by a budget and returning sorted names.
+prompt_markdown: |
+  An online shop stores a dict mapping product names to their price in whole
+  dollars. You are given `data` with keys `prices` (that dict) and `budget` (an
+  int).
+
+  Write `affordable(data)` returning a sorted list of the product names whose
+  price is less than or equal to the budget. If none qualify, return an empty
+  list.
+starter_code: |
+  def affordable(data):
+      return []
+function_name: affordable
+input_mode: function
+solution_sketch: Filter the price items by budget in a comprehension, then sort the names.
+sample_solution: |
+  def affordable(data):
+      prices = data["prices"]
+      budget = data["budget"]
+      return sorted(name for name, price in prices.items() if price <= budget)
+hints:
+  - level: 1
+    text: Walk the price dict and keep only names you can afford.
+  - level: 2
+    text: A generator with an if filter keeps names where price <= budget.
+  - level: 3
+    text: Wrap the filtered names in sorted(...) so the output is ordered.
+tests:
+  public:
+    - name: none_affordable
+      input: {prices: {mug: 10}, budget: 5}
+      expected: []
+    - name: some_affordable
+      input: {prices: {pen: 2, book: 8, mug: 5}, budget: 5}
+      expected: [mug, pen]
+    - name: all_affordable
+      input: {prices: {clip: 1, tape: 2}, budget: 5}
+      expected: [clip, tape]
+  validation:
+    - name: exact_boundary
+      input: {prices: {hat: 5, scarf: 6}, budget: 5}
+      expected: [hat]
+    - name: empty_prices
+      input: {prices: {}, budget: 10}
+      expected: []
+    - name: mixed
+      input: {prices: {lamp: 20, cord: 4, bulb: 3, shade: 21}, budget: 10}
+      expected: [bulb, cord]
+explanation_markdown: |
+  Filtering keeps only the items that pass a test, here `price <= budget`. Using
+  `<=` includes products priced exactly at the budget. Iterating `prices.items()`
+  gives both the name and the price together, and wrapping the kept names in
+  `sorted` returns them in alphabetical order no matter how the dict was built.
+common_mistakes:
+  - Using < instead of <= and dropping products priced right at the budget.
+  - Returning prices instead of the product names.
+  - Forgetting to sort, so names come out in dict order.

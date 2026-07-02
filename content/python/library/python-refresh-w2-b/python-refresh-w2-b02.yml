@@ -1,0 +1,80 @@
+id: exercise.library.python_refresh_w2.b02
+kind: exercise
+version: 1
+language: python
+title: Bookstore Restock Signal
+slug: python-refresh-w2-b02
+difficulty: easy
+concepts:
+  - python.conditionals
+  - python.operators
+  - python.functions
+prerequisites:
+  - python.variables
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh_w2.b02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original bookstore shelf-restock scenario with three-way status thresholds and tests.
+prompt_markdown: |
+  A bookstore checks each title against a minimum shelf level.
+  Write `restock_status(data)` where `data` is a dict with keys
+  `on_shelf` and `min_stock` (both non-negative integers). Return:
+
+  - `"urgent"` when there are zero copies on the shelf,
+  - `"restock"` when there is at least one copy but fewer than `min_stock`,
+  - `"ok"` when the shelf meets or exceeds `min_stock`.
+starter_code: |
+  def restock_status(data):
+      return "ok"
+function_name: restock_status
+input_mode: function
+solution_sketch: Check the empty-shelf case first, then the below-minimum case, otherwise it is fine.
+sample_solution: |
+  def restock_status(data):
+      on_shelf = data["on_shelf"]
+      min_stock = data["min_stock"]
+      if on_shelf == 0:
+          return "urgent"
+      if on_shelf < min_stock:
+          return "restock"
+      return "ok"
+hints:
+  - level: 1
+    text: There are three outcomes, so you need to decide which one applies.
+  - level: 2
+    text: Handle the zero-copies case before comparing against the minimum.
+  - level: 3
+    text: Once you have ruled out zero, an on_shelf below min_stock means restock, else ok.
+tests:
+  public:
+    - name: empty_shelf
+      input: {on_shelf: 0, min_stock: 5}
+      expected: "urgent"
+    - name: below_minimum
+      input: {on_shelf: 3, min_stock: 5}
+      expected: "restock"
+    - name: exactly_minimum
+      input: {on_shelf: 5, min_stock: 5}
+      expected: "ok"
+  validation:
+    - name: well_stocked
+      input: {on_shelf: 10, min_stock: 5}
+      expected: "ok"
+    - name: minimum_of_one
+      input: {on_shelf: 1, min_stock: 1}
+      expected: "ok"
+    - name: empty_with_low_min
+      input: {on_shelf: 0, min_stock: 1}
+      expected: "urgent"
+explanation_markdown: |
+  Order matters when conditions overlap. Checking `on_shelf == 0` first means
+  the later comparison only runs when at least one copy is present, so the
+  three branches never disagree.
+common_mistakes:
+  - Comparing against min_stock before ruling out an empty shelf.
+  - Using `<=` instead of `<`, which flags a full shelf as needing a restock.

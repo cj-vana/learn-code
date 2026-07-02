@@ -1,0 +1,77 @@
+id: exercise.library.loops_lists_strings_w2.b07
+kind: exercise
+version: 1
+language: python
+title: Longest Word on the Trail Sign
+slug: loops-lists-strings-w2-b07
+difficulty: easy
+concepts:
+  - python.strings
+  - python.loops
+prerequisites:
+  - python.functions
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings_w2.b07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original park trail-sign scenario, prompt, tests, and explanation.
+prompt_markdown: |
+  A park ranger wants the longest word on a trail sign printed in bold. Write
+  `longest_word(text)` returning the longest word in `text`, where words are
+  separated by single spaces. If several words tie for the longest length,
+  return the first one that reaches that length. An empty string returns an
+  empty string.
+starter_code: |
+  def longest_word(text):
+      return ""
+function_name: longest_word
+input_mode: function
+solution_sketch: Scan the words, keeping the first one whose length beats the best so far.
+sample_solution: |
+  def longest_word(text):
+      words = text.split()
+      best = ""
+      for word in words:
+          if len(word) > len(best):
+              best = word
+      return best
+hints:
+  - level: 1
+    text: Split the sign into a list of words first.
+  - level: 2
+    text: Track the longest word you have seen while looping.
+  - level: 3
+    text: Only replace it when a word is strictly longer, so ties keep the first.
+tests:
+  public:
+    - name: empty
+      input: ""
+      expected: ""
+    - name: single_word
+      input: "caution"
+      expected: "caution"
+    - name: clear_winner
+      input: "watch the ice"
+      expected: "watch"
+  validation:
+    - name: all_same_length
+      input: "big red fox"
+      expected: "big"
+    - name: last_is_longest
+      input: "a bb ccc"
+      expected: "ccc"
+    - name: tie_keeps_first
+      input: "keep left at fork"
+      expected: "keep"
+explanation_markdown: |
+  Splitting yields the words, and a running `best` holds the longest seen so far.
+  Using a strict greater-than means a later word must beat the current length to
+  win, so among equal-length words the earliest one is kept.
+common_mistakes:
+  - Using >= and returning the last longest word instead of the first.
+  - Comparing the words themselves instead of their lengths.
+  - Forgetting the empty-string case where there are no words.

@@ -1,0 +1,82 @@
+id: exercise.library.recursion_backtracking_w2.a03
+kind: exercise
+version: 1
+language: python
+title: Count Everyone Under a Team Lead
+slug: recursion-backtracking-w2-a03
+difficulty: easy
+concepts:
+  - patterns.recursion
+  - python.dictionaries
+prerequisites:
+  - python.functions
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.recursion_backtracking_w2.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original org-chart scenario that recurses through a dict of direct reports to count all descendants of a lead.
+prompt_markdown: |
+  A company stores its reporting structure as a dict called `chart` that maps
+  each person's name to a list of the people who report *directly* to them. A
+  person with no direct reports maps to an empty list. Write
+  `count_subordinates(data)` where `data` has keys `chart` (the reporting dict)
+  and `top` (a name). Return how many people sit anywhere below `top` in the
+  structure -- direct reports plus their reports, and so on, all the way down.
+  The person named in `top` is not counted.
+starter_code: |
+  def count_subordinates(data):
+      return 0
+function_name: count_subordinates
+input_mode: function
+solution_sketch: For each direct report, count that person (1) plus everyone below them via a recursive call.
+sample_solution: |
+  def count_subordinates(data):
+      chart = data["chart"]
+      name = data["top"]
+      total = 0
+      for report in chart.get(name, []):
+          total += 1 + count_subordinates({"chart": chart, "top": report})
+      return total
+hints:
+  - level: 1
+    text: The people under someone are their direct reports plus everyone under each of those reports.
+  - level: 2
+    text: Loop over the direct reports; each report counts as 1 and drags in its own subtree.
+  - level: 3
+    text: For each direct report, add 1 plus a recursive count that uses the same chart but sets top to that report.
+tests:
+  public:
+    - name: leaf
+      input: {chart: {ana: [bo, cy], bo: [di], cy: [], di: []}, top: cy}
+      expected: 0
+    - name: one_level
+      input: {chart: {ana: [bo, cy], bo: [di], cy: [], di: []}, top: bo}
+      expected: 1
+    - name: whole_branch
+      input: {chart: {ana: [bo, cy], bo: [di], cy: [], di: []}, top: ana}
+      expected: 3
+  validation:
+    - name: mid_branch
+      input: {chart: {root: [m1, m2], m1: [w1, w2, w3], m2: [m3], m3: [w4], w1: [], w2: [], w3: [], w4: []}, top: m1}
+      expected: 3
+    - name: deep_branch
+      input: {chart: {root: [m1, m2], m1: [w1, w2, w3], m2: [m3], m3: [w4], w1: [], w2: [], w3: [], w4: []}, top: m2}
+      expected: 2
+    - name: whole_org
+      input: {chart: {root: [m1, m2], m1: [w1, w2, w3], m2: [m3], m3: [w4], w1: [], w2: [], w3: [], w4: []}, top: root}
+      expected: 7
+explanation_markdown: |
+  This is tree recursion over a dict. Each direct report contributes itself
+  (the `1`) plus the size of its own subtree, which the same function computes by
+  looking `report` up as the new `top`. A leaf has an empty report list, so the
+  loop runs zero times and returns 0 -- the base case. Summing over the direct
+  reports adds up all the descendants exactly once, because each person is
+  reached through their single manager.
+common_mistakes:
+  - Counting the top person as well, returning one too many.
+  - Adding only the direct reports and forgetting to recurse into their subtrees.
+  - Assuming every name is a key; leaves still map to an empty list here.

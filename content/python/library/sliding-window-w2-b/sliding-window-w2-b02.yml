@@ -1,0 +1,94 @@
+id: exercise.library.sliding_window_w2.b02
+kind: exercise
+version: 1
+language: python
+title: Peak Crop Days in a Garden Log
+slug: sliding-window-w2-b02
+difficulty: easy
+concepts:
+  - patterns.sliding_window
+  - python.strings
+prerequisites:
+  - python.strings
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sliding_window_w2.b02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original community-garden planting log counting one crop letter across a fixed span.
+prompt_markdown: |
+  A community garden records what it planted each day as a single uppercase
+  letter, one letter per day, joined into a string (for example `T` for tomato,
+  `C` for carrot, `P` for pepper). A volunteer wants to find the busiest stretch
+  for one particular crop.
+
+  Write `peak_crop_days(data)` where `data` is a dict with three keys: `log`
+  (the planting string), `span` (the number of consecutive days to consider),
+  and `crop` (the single letter to count). Return the greatest number of days
+  matching `crop` found in any block of `span` consecutive days. You may assume
+  `1 <= span <= len(log)`.
+starter_code: |
+  def peak_crop_days(data):
+      return 0
+function_name: peak_crop_days
+input_mode: function
+solution_sketch: Count matches in the first span days, then slide adjusting only the entering and leaving letters.
+sample_solution: |
+  def peak_crop_days(data):
+      log = data["log"]
+      span = data["span"]
+      crop = data["crop"]
+      count = sum(1 for c in log[:span] if c == crop)
+      best = count
+      for i in range(span, len(log)):
+          if log[i] == crop:
+              count += 1
+          if log[i - span] == crop:
+              count -= 1
+          if count > best:
+              best = count
+      return best
+hints:
+  - level: 1
+    text: Count how many matching letters sit inside the first window before you start sliding.
+  - level: 2
+    text: When the window advances, only the entering letter and the leaving letter can change the count.
+  - level: 3
+    text: Add 1 if log[i] matches, subtract 1 if log[i - span] matches, then track the largest count.
+tests:
+  public:
+    - name: single_window
+      input: { log: "TCT", span: 3, crop: "T" }
+      expected: 2
+    - name: span_two
+      input: { log: "TTCT", span: 2, crop: "T" }
+      expected: 2
+    - name: no_target
+      input: { log: "CCPC", span: 2, crop: "T" }
+      expected: 0
+  validation:
+    - name: other_crop
+      input: { log: "PCPCP", span: 3, crop: "P" }
+      expected: 2
+    - name: end_best
+      input: { log: "CCTTT", span: 2, crop: "T" }
+      expected: 2
+    - name: span_one
+      input: { log: "TCT", span: 1, crop: "T" }
+      expected: 1
+    - name: longer
+      input: { log: "TTCTTTC", span: 3, crop: "T" }
+      expected: 3
+explanation_markdown: |
+  Counting matches in every window from scratch would cost O(n*span), but the
+  count barely changes as the window slides. Tally the matches in the first
+  `span` days, then for each step add 1 when the entering letter matches and
+  subtract 1 when the leaving letter matches. Keeping the maximum of these
+  running counts finds the busiest crop stretch in a single O(n) pass.
+common_mistakes:
+  - Recounting the whole window each step instead of adjusting only the edges.
+  - Subtracting for the entering letter or adding for the leaving letter by mixing up the two ends.
+  - Assuming the crop is always the letter T rather than reading it from the data.

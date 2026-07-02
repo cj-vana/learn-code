@@ -1,0 +1,80 @@
+id: exercise.library.hashmap_set_w2.a06
+kind: exercise
+version: 1
+language: python
+title: Do Two Shipments Match
+slug: hashmap-set-w2-a06
+difficulty: medium
+concepts:
+  - patterns.hash_map_counting
+prerequisites:
+  - python.dictionaries
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.hashmap_set_w2.a06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original depot scenario comparing two shipments as multisets of part codes.
+prompt_markdown: |
+  A depot receives two shipments of parts, each a list of part codes. Write
+  `shipments_match(data)` that returns `True` if both shipments contain exactly the
+  same parts in the same quantities, ignoring order, and `False` otherwise.
+
+  `data` is a dict with keys `left` and `right`, each a list of part-code strings.
+starter_code: |
+  def shipments_match(data):
+      return False
+function_name: shipments_match
+input_mode: function
+solution_sketch: Tally each shipment into a count dict and compare the two dicts for equality.
+sample_solution: |
+  def shipments_match(data):
+      def tally(items):
+          counts = {}
+          for item in items:
+              counts[item] = counts.get(item, 0) + 1
+          return counts
+      return tally(data["left"]) == tally(data["right"])
+hints:
+  - level: 1
+    text: Two shipments match only if every part appears the same number of times in each.
+  - level: 2
+    text: Build a count dict for each shipment mapping part code to quantity.
+  - level: 3
+    text: Two dicts compare equal only when they hold the same keys and values, so compare them directly.
+tests:
+  public:
+    - name: both_empty
+      input: {left: [], right: []}
+      expected: true
+    - name: same_order
+      input: {left: [axle, bolt], right: [axle, bolt]}
+      expected: true
+    - name: different_part
+      input: {left: [axle, bolt], right: [axle, cam]}
+      expected: false
+  validation:
+    - name: reordered
+      input: {left: [axle, bolt, axle], right: [axle, axle, bolt]}
+      expected: true
+    - name: different_counts
+      input: {left: [axle, axle], right: [axle]}
+      expected: false
+    - name: extra_item
+      input: {left: [axle, bolt], right: [axle, bolt, bolt]}
+      expected: false
+    - name: same_multiset
+      input: {left: [rod, pin, pin, cap], right: [cap, pin, rod, pin]}
+      expected: true
+explanation_markdown: |
+  Counting each shipment into a dict is O(n), and comparing the two dicts is a
+  single equality check that succeeds only when every part code maps to the same
+  quantity in both. This treats the shipments as multisets, so order never matters
+  but repeated parts still count.
+common_mistakes:
+  - Comparing `set(left) == set(right)`, which ignores how many of each part there are.
+  - Only checking that the lists are the same length, missing swapped part codes.
+  - Comparing the lists directly, which wrongly fails when the parts are merely reordered.

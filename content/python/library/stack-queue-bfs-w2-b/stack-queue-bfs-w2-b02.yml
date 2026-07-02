@@ -1,0 +1,88 @@
+id: exercise.library.stack_queue_bfs_w2.b02
+kind: exercise
+version: 1
+language: python
+title: Nearest Shorter Book Pile to the Left
+slug: stack-queue-bfs-w2-b02
+difficulty: medium
+concepts:
+  - patterns.stack
+  - python.lists
+prerequisites:
+  - python.lists
+estimated_time_minutes: 16
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.stack_queue_bfs_w2.b02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original shelf-of-book-piles scenario asking for each pile's nearest strictly shorter pile to its left, solved with a monotonic stack over its own height data.
+prompt_markdown: |
+  A long shelf holds a row of book piles, given left to right as a list of
+  integer heights. For each pile you want to know the height of the **nearest
+  pile to its left that is strictly shorter** than it.
+
+  Write `nearest_shorter_left(heights)` returning a list the same length as
+  `heights`, where position `i` holds the height of the closest strictly-shorter
+  pile somewhere to the left of pile `i`. If no pile to the left is shorter (or
+  there is nothing to the left at all), use `0` for that position. An empty shelf
+  returns an empty list.
+starter_code: |
+  def nearest_shorter_left(heights):
+      return []
+function_name: nearest_shorter_left
+input_mode: function
+solution_sketch: Sweep left to right keeping a stack of candidate heights that is increasing from bottom to top, popping any that are not shorter than the current pile before reading the answer.
+sample_solution: |
+  def nearest_shorter_left(heights):
+      result = []
+      stack = []
+      for height in heights:
+          while stack and stack[-1] >= height:
+              stack.pop()
+          result.append(stack[-1] if stack else 0)
+          stack.append(height)
+      return result
+hints:
+  - level: 1
+    text: The answer for a pile can only be a shorter pile that appears earlier, so scan left to right and keep the earlier piles that might still matter.
+  - level: 2
+    text: Maintain a stack whose heights increase from bottom to top; before handling a new pile, discard tops that are not strictly shorter than it.
+  - level: 3
+    text: After popping every stack top that is greater than or equal to the current height, the remaining top (if any) is the nearest shorter pile; then push the current height for later piles.
+tests:
+  public:
+    - name: empty_shelf
+      input: []
+      expected: []
+    - name: single_pile
+      input: [5]
+      expected: [0]
+    - name: strictly_increasing
+      input: [1, 2, 3, 4]
+      expected: [0, 1, 2, 3]
+  validation:
+    - name: strictly_decreasing
+      input: [4, 3, 2, 1]
+      expected: [0, 0, 0, 0]
+    - name: mixed_heights
+      input: [6, 3, 7, 3, 8, 5]
+      expected: [0, 0, 3, 0, 3, 3]
+    - name: equal_neighbors_dont_count
+      input: [2, 2, 2]
+      expected: [0, 0, 0]
+explanation_markdown: |
+  This is the classic "previous smaller element" pattern solved with a monotonic
+  stack. The stack holds heights of earlier piles that are still candidates,
+  arranged so they strictly increase from bottom to top. When a new pile arrives,
+  any stack top that is greater than or equal to it can never be the nearest
+  shorter pile for this pile or for any later one, so those tops are popped. The
+  height left on top is exactly the nearest strictly-shorter pile to the left, or
+  the stack is empty and the answer is `0`. Each height is pushed and popped at
+  most once, so the whole sweep runs in O(n) time.
+common_mistakes:
+  - Popping while the top is strictly greater rather than greater-or-equal, which lets an equal-height pile count as shorter.
+  - Rescanning all earlier piles for each position, giving O(n^2) work instead of one monotonic-stack pass.
+  - Recording the index of the shorter pile instead of its height, or forgetting the 0 default when the stack is empty.

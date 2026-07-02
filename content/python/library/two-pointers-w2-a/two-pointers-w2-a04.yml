@@ -1,0 +1,102 @@
+id: exercise.library.two_pointers_w2.a04
+kind: exercise
+version: 1
+language: python
+title: Carpool Weight Match
+slug: two-pointers-w2-a04
+difficulty: medium
+concepts:
+  - patterns.two_pointers
+  - python.lists
+prerequisites:
+  - python.lists
+estimated_time_minutes: 17
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.two_pointers_w2.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original carpool scenario finding the pair whose summed weight lands closest to a target load.
+prompt_markdown: |
+  A carpool app has each rider's luggage weight in a list, sorted from lightest to
+  heaviest, and wants to seat exactly two riders in a shared cab. The dispatcher
+  aims for a combined luggage weight as close as possible to a `target` the cab is
+  balanced for.
+
+  Write `closest_pair_weight(data)` where `data` is a dict with keys `weights` (a
+  list of at least two ints in non-decreasing order) and `target` (an int).
+  Return the combined weight of the pair whose sum is closest to `target`. If two
+  different pairs are equally close, return the smaller of the two sums.
+starter_code: |
+  def closest_pair_weight(data):
+      return 0
+function_name: closest_pair_weight
+input_mode: function
+solution_sketch: Start pointers at the two ends and move inward, tracking the sum whose distance to the target is smallest.
+sample_solution: |
+  def closest_pair_weight(data):
+      weights = data["weights"]
+      target = data["target"]
+      left = 0
+      right = len(weights) - 1
+      best = weights[left] + weights[right]
+      while left < right:
+          total = weights[left] + weights[right]
+          gap = abs(total - target)
+          best_gap = abs(best - target)
+          if gap < best_gap or (gap == best_gap and total < best):
+              best = total
+          if total == target:
+              return total
+          if total < target:
+              left += 1
+          else:
+              right -= 1
+      return best
+hints:
+  - level: 1
+    text: With the weights sorted, begin one pointer at the lightest bag and one at the heaviest.
+  - level: 2
+    text: If the current pair sum is below the target, only a heavier light-end value can help, so move the left pointer up; otherwise move the right pointer down.
+  - level: 3
+    text: Track the best sum seen so far by comparing each pair's distance to the target, breaking ties toward the smaller sum.
+tests:
+  public:
+    - name: exact_match
+      input: { weights: [10, 20, 35, 50], target: 60 }
+      expected: 60
+    - name: just_below
+      input: { weights: [5, 12, 18, 27], target: 40 }
+      expected: 39
+    - name: target_out_of_reach
+      input: { weights: [1, 2, 3, 4], target: 100 }
+      expected: 7
+  validation:
+    - name: target_below_all
+      input: { weights: [4, 6, 9, 15], target: 3 }
+      expected: 10
+    - name: exact_pair
+      input: { weights: [2, 7, 11, 15], target: 9 }
+      expected: 9
+    - name: tie_prefers_smaller
+      input: { weights: [3, 5, 8, 10], target: 12 }
+      expected: 11
+    - name: two_items_only
+      input: { weights: [8, 20], target: 5 }
+      expected: 28
+    - name: larger_list
+      input: { weights: [2, 4, 4, 9, 13, 20], target: 17 }
+      expected: 17
+explanation_markdown: |
+  Because the weights are sorted, two pointers converging from the ends explore the
+  pair sums in a disciplined way. When a pair sums below the target, the only way to
+  climb is to move the left pointer to a heavier value; when it sums above, the right
+  pointer must drop to a lighter value. Along the way you remember the sum whose gap
+  to the target is smallest, using the smaller sum to settle ties. Each step retires
+  one pointer, so the search is O(n) instead of checking every pair.
+common_mistakes:
+  - Returning the difference from the target instead of the pair's actual combined weight.
+  - Only recording sums that are below the target and ignoring closer sums above it.
+  - Forgetting a deterministic tie rule when two pairs are equally close.

@@ -1,0 +1,92 @@
+id: exercise.library.sliding_window_w2.a03
+kind: exercise
+version: 1
+language: python
+title: Fewest Crates to Fill the Pallet
+slug: sliding-window-w2-a03
+difficulty: medium
+concepts:
+  - patterns.sliding_window
+  - patterns.two_pointers
+  - patterns.running_total
+prerequisites:
+  - python.lists
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sliding_window_w2.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original loading-dock scenario finding the shortest run of consecutive crates whose weight reaches a target.
+prompt_markdown: |
+  Crates wait in a single line on a loading dock, each with a positive weight. A
+  forklift can only lift a block of consecutive crates. Write
+  `fewest_crates(data)` returning the smallest number of consecutive crates whose
+  weights add up to at least `target`, or `0` if no run of crates reaches the
+  target.
+
+  `data` is a dict: `{"weights": [...], "target": target}`. All weights are
+  positive integers.
+starter_code: |
+  def fewest_crates(data):
+      return 0
+function_name: fewest_crates
+input_mode: function
+solution_sketch: Extend a running-sum window to the right, and while it meets the target shrink from the left, recording the shortest qualifying length.
+sample_solution: |
+  def fewest_crates(data):
+      weights = data["weights"]
+      target = data["target"]
+      left = 0
+      total = 0
+      best = 0
+      for right in range(len(weights)):
+          total += weights[right]
+          while total >= target:
+              length = right - left + 1
+              if best == 0 or length < best:
+                  best = length
+              total -= weights[left]
+              left += 1
+      return best
+hints:
+  - level: 1
+    text: Keep a running total of the crates currently in the window instead of re-adding them.
+  - level: 2
+    text: Once the total reaches the target, try removing crates from the left to find a shorter run.
+  - level: 3
+    text: Record right - left + 1 each time the window qualifies, then subtract weights[left] and advance left.
+tests:
+  public:
+    - name: whole_list
+      input: {weights: [2, 3], target: 5}
+      expected: 2
+    - name: single_enough
+      input: {weights: [1, 9, 1], target: 8}
+      expected: 1
+    - name: impossible
+      input: {weights: [1, 1, 1], target: 10}
+      expected: 0
+  validation:
+    - name: exact_long
+      input: {weights: [3, 1, 1, 3], target: 8}
+      expected: 4
+    - name: middle_pair
+      input: {weights: [1, 4, 5, 1], target: 9}
+      expected: 2
+    - name: last_single
+      input: {weights: [1, 2, 3, 9], target: 9}
+      expected: 1
+explanation_markdown: |
+  A variable-size window keeps a running sum of the crates it holds. The right
+  edge adds crates until the target is met; then the left edge removes crates as
+  long as the window still qualifies, which finds the shortest run ending at each
+  position. Because weights are positive, shrinking always lowers the total, so
+  the window logic is sound. Each crate is added and removed once, giving an O(n)
+  scan; `0` signals that no run ever reaches the target.
+common_mistakes:
+  - Seeding best to a real length so an impossible case cannot return 0.
+  - Using > instead of >= and missing a run that exactly meets the target.
+  - Forgetting to subtract weights[left] before advancing the left edge.

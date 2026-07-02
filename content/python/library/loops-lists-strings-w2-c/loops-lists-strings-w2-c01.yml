@@ -1,0 +1,91 @@
+id: exercise.library.loops_lists_strings_w2.c01
+kind: exercise
+version: 1
+language: python
+title: Longest Mood Streak in a Playlist
+slug: loops-lists-strings-w2-c01
+difficulty: easy
+concepts:
+  - python.loops
+  - python.lists
+  - patterns.running_total
+prerequisites:
+  - python.functions
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings_w2.c01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original playlist-mood scenario asking for the longest run of identical consecutive moods, with fresh prompt, tests, and explanation.
+prompt_markdown: |
+  A music app tags every track in a playlist with a single mood label, and the
+  tracks are stored in the order they play. The app wants to highlight the
+  longest uninterrupted stretch where the mood never changes.
+
+  Write `longest_streak(moods)` that takes a list of mood strings and returns
+  the length of the longest run of consecutive identical moods. An empty
+  playlist returns 0.
+starter_code: |
+  def longest_streak(moods):
+      return 0
+function_name: longest_streak
+input_mode: function
+solution_sketch: Walk the list tracking the current run length, resetting when the mood changes, and remember the best run seen.
+sample_solution: |
+  def longest_streak(moods):
+      best = 0
+      run = 0
+      prev = None
+      for mood in moods:
+          if mood == prev:
+              run += 1
+          else:
+              run = 1
+              prev = mood
+          if run > best:
+              best = run
+      return best
+hints:
+  - level: 1
+    text: Keep a running count of how many identical moods you have seen in a row.
+  - level: 2
+    text: When the current mood differs from the previous one, restart the run at 1.
+  - level: 3
+    text: After updating the current run, compare it against the best run found so far and keep the larger.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: 0
+    - name: single
+      input: [calm]
+      expected: 1
+    - name: pair_then_change
+      input: [calm, calm, upbeat]
+      expected: 2
+  validation:
+    - name: streak_in_middle
+      input: [mellow, mellow, hype, hype, hype, mellow]
+      expected: 3
+    - name: all_distinct
+      input: [dreamy, driving, dark]
+      expected: 1
+    - name: all_same
+      input: [pulse, pulse, pulse, pulse]
+      expected: 4
+    - name: tie_takes_length
+      input: [a, a, b, b]
+      expected: 2
+explanation_markdown: |
+  A single left-to-right pass is enough. Track the length of the run you are
+  currently inside and the previous mood. Each time the mood repeats, the run
+  grows by one; when it changes, the run restarts at 1. Compare the run to the
+  best value after every step so the answer reflects the longest stretch. This
+  runs in O(n) time and uses O(1) extra space.
+common_mistakes:
+  - Forgetting to reset the running count to 1 when the mood changes.
+  - Returning the final run length instead of the maximum run seen.
+  - Not handling the empty playlist, which should return 0.

@@ -1,0 +1,79 @@
+id: exercise.library.recursion_backtracking_w2.a05
+kind: exercise
+version: 1
+language: python
+title: Garage Elevator Down to the Ground
+slug: recursion-backtracking-w2-a05
+difficulty: easy
+concepts:
+  - patterns.recursion
+  - python.conditionals
+prerequisites:
+  - python.functions
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.recursion_backtracking_w2.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original parking-garage elevator scenario counting recursive moves under an even-express, odd-step rule.
+prompt_markdown: |
+  A parking-garage elevator descends from floor `n` to the ground (floor 0) by a
+  fixed rule. On an even floor it makes one express move that halves the floor
+  number. On an odd floor it makes one move down to the next lower floor. Write
+  `steps_to_ground(n)` that returns how many moves it takes to reach floor 0 from
+  floor `n`, where `n` is 0 or greater. Floor 0 needs no moves.
+starter_code: |
+  def steps_to_ground(n):
+      return 0
+function_name: steps_to_ground
+input_mode: function
+solution_sketch: Base case n at 0 needs no moves; otherwise add one move and recurse on n // 2 if even or n - 1 if odd.
+sample_solution: |
+  def steps_to_ground(n):
+      if n <= 0:
+          return 0
+      if n % 2 == 0:
+          return 1 + steps_to_ground(n // 2)
+      return 1 + steps_to_ground(n - 1)
+hints:
+  - level: 1
+    text: Every move counts as one, and after it the elevator is on a smaller floor.
+  - level: 2
+    text: An even floor recurses on n // 2; an odd floor recurses on n - 1.
+  - level: 3
+    text: Return 0 at floor 0, otherwise 1 + steps_to_ground(next floor).
+tests:
+  public:
+    - name: ground
+      input: 0
+      expected: 0
+    - name: one_step
+      input: 1
+      expected: 1
+    - name: even_start
+      input: 6
+      expected: 4
+  validation:
+    - name: odd_start
+      input: 7
+      expected: 5
+    - name: ten
+      input: 10
+      expected: 5
+    - name: fifteen
+      input: 15
+      expected: 7
+explanation_markdown: |
+  Each move reduces the floor and adds 1 to the count, so the answer is `1` plus
+  the moves needed from the next floor. The parity of the floor decides which
+  smaller floor comes next: `n // 2` when even, `n - 1` when odd. The recursion
+  is guaranteed to shrink toward the base case at floor 0, because halving and
+  subtracting one both strictly reduce a positive floor. Tracing floor 6 gives
+  6 -> 3 -> 2 -> 1 -> 0, which is four moves.
+common_mistakes:
+  - Halving an odd floor with integer division and skipping the step-down move.
+  - Forgetting the base case at floor 0 so the count is off by one or never stops.
+  - Returning the next floor number instead of adding 1 for the move taken.

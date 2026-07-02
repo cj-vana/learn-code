@@ -1,0 +1,91 @@
+id: exercise.library.python_refresh_w2.a02
+kind: exercise
+version: 1
+language: python
+title: Warehouse Shipping Cost
+slug: python-refresh-w2-a02
+difficulty: easy
+concepts:
+  - python.conditionals
+  - python.operators
+prerequisites:
+  - python.functions
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh_w2.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original parcel-shipping pricing with weight bands plus a flat member discount.
+prompt_markdown: |
+  A warehouse charges shipping from a parcel's weight in kilograms and whether
+  the customer is a member. The order arrives as a dict with keys
+  `"weight_kg"` (a number) and `"is_member"` (a boolean).
+
+  Write `shipping_cost(order)` that returns the cost in dollars:
+
+  - weight of 1 kg or less: base cost 5
+  - more than 1 kg up to and including 5 kg: base cost 12
+  - more than 5 kg: base cost 20
+
+  If the customer is a member, subtract a flat 3 from the base cost.
+starter_code: |
+  def shipping_cost(order):
+      return 0
+function_name: shipping_cost
+input_mode: function
+solution_sketch: Pick the base cost from the weight band, then subtract 3 when the order is from a member.
+sample_solution: |
+  def shipping_cost(order):
+      weight = order["weight_kg"]
+      if weight <= 1:
+          base = 5
+      elif weight <= 5:
+          base = 12
+      else:
+          base = 20
+      if order["is_member"]:
+          base -= 3
+      return base
+hints:
+  - level: 1
+    text: First decide which weight band the parcel falls into.
+  - level: 2
+    text: Check the boundaries from lightest to heaviest so each branch assumes the earlier ones failed.
+  - level: 3
+    text: After you set the base cost, apply the member discount with a single if on order["is_member"].
+tests:
+  public:
+    - name: light_nonmember
+      input: {weight_kg: 0.5, is_member: false}
+      expected: 5
+    - name: medium_nonmember
+      input: {weight_kg: 3, is_member: false}
+      expected: 12
+    - name: heavy_member
+      input: {weight_kg: 8, is_member: true}
+      expected: 17
+  validation:
+    - name: boundary_one_member
+      input: {weight_kg: 1, is_member: true}
+      expected: 2
+    - name: boundary_five_nonmember
+      input: {weight_kg: 5, is_member: false}
+      expected: 12
+    - name: just_over_five_member
+      input: {weight_kg: 5.5, is_member: true}
+      expected: 17
+    - name: just_over_one
+      input: {weight_kg: 1.01, is_member: false}
+      expected: 12
+explanation_markdown: |
+  Choosing the base cost is a classic ordered band check: once `weight <= 1`
+  fails, the `elif weight <= 5` branch already knows the weight is above 1. The
+  member discount is independent of the band, so it is cleanest to compute the
+  base first and then adjust it once.
+common_mistakes:
+  - Writing overlapping ranges that let two bands both apply.
+  - Applying the discount inside every band instead of once at the end.
+  - Treating the 5 kg boundary as "more than 5" and overcharging exactly-5 kg parcels.

@@ -1,0 +1,85 @@
+id: exercise.library.prefix_sums_w2.a04
+kind: exercise
+version: 1
+language: python
+title: Market Till In The Red
+slug: prefix-sums-w2-a04
+difficulty: easy
+concepts:
+  - patterns.prefix_sums
+  - patterns.running_total
+prerequisites:
+  - python.lists
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.prefix_sums_w2.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original market-stall till-tracking scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A market stall starts the day with an empty till holding 0 dollars. Throughout
+  the day cash moves in and out in order: a positive number is money added and a
+  negative number is money taken out. The till is "in the red" whenever its
+  running balance drops below 0.
+
+  Write `count_red_moments(movements)` that returns how many movements leave the
+  running balance below 0. For `[-2, 1, -3, 5]` the balance passes through
+  `-2, -1, -4, 1`, so three movements end in the red.
+starter_code: |
+  def count_red_moments(movements):
+      return 0
+function_name: count_red_moments
+input_mode: function
+solution_sketch: Track the running balance and count each step where it falls below zero.
+sample_solution: |
+  def count_red_moments(movements):
+      running = 0
+      red = 0
+      for movement in movements:
+          running += movement
+          if running < 0:
+              red += 1
+      return red
+hints:
+  - level: 1
+    text: The till's balance after each movement is a running prefix sum.
+  - level: 2
+    text: Update the running balance, then check whether it is below zero.
+  - level: 3
+    text: Increment a counter every time the running balance is negative after a movement.
+tests:
+  public:
+    - name: dips_three_times
+      input: [-2, 1, -3, 5]
+      expected: 3
+    - name: never_red
+      input: [5, -2, -1]
+      expected: 0
+    - name: empty_day
+      input: []
+      expected: 0
+  validation:
+    - name: all_red
+      input: [-1, -1, -1]
+      expected: 3
+    - name: recovers_to_zero
+      input: [-4, 4, -1, 1]
+      expected: 2
+    - name: starts_up_then_red
+      input: [3, -5, 1]
+      expected: 2
+    - name: single_withdrawal
+      input: [-7]
+      expected: 1
+explanation_markdown: |
+  Each balance is a prefix sum of the movements, so one pass tracks it in O(n).
+  Counting the steps where that prefix is strictly negative answers the question
+  directly. Note that a balance of exactly 0 is not in the red, so a movement that
+  returns the till to 0 is not counted.
+common_mistakes:
+  - Counting balances of exactly 0 as red by using `<=` instead of `<`.
+  - Counting negative movements rather than negative running balances.
+  - Resetting the running balance during the loop and losing earlier movements.

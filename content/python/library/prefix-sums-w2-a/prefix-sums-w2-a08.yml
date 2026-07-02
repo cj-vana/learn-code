@@ -1,0 +1,96 @@
+id: exercise.library.prefix_sums_w2.a08
+kind: exercise
+version: 1
+language: python
+title: Longest Commute Playlist
+slug: prefix-sums-w2-a08
+difficulty: medium
+concepts:
+  - patterns.prefix_sums
+  - python.dictionaries
+prerequisites:
+  - python.lists
+estimated_time_minutes: 18
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.prefix_sums_w2.a08
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original podcast-commute contiguous-run scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A podcast feed lists its episodes in order, each with a length in minutes. A
+  listener has a commute of exactly `target` minutes and wants to fill it with the
+  longest possible run of consecutive episodes that adds up to exactly that many
+  minutes.
+
+  Write `longest_exact_run(data)` where `data` is a dict with keys `episodes` (a
+  list of episode lengths) and `target` (a number). Return the number of episodes
+  in the longest contiguous block whose lengths sum to exactly `target`, or `0` if
+  no block matches.
+starter_code: |
+  def longest_exact_run(data):
+      return 0
+function_name: longest_exact_run
+input_mode: function
+solution_sketch: Scan prefix sums, storing the first index each prefix appears, and measure the widest gap to a prefix that is target smaller.
+sample_solution: |
+  def longest_exact_run(data):
+      episodes = data["episodes"]
+      target = data["target"]
+      first_seen = {0: -1}
+      running = 0
+      best = 0
+      for i, length in enumerate(episodes):
+          running += length
+          needed = running - target
+          if needed in first_seen:
+              span = i - first_seen[needed]
+              if span > best:
+                  best = span
+          if running not in first_seen:
+              first_seen[running] = i
+      return best
+hints:
+  - level: 1
+    text: A block from index a+1 to i sums to prefix[i] minus prefix[a], so an exact-target block needs an earlier prefix that is target smaller.
+  - level: 2
+    text: As you build the running prefix sum, look for the value running - target among prefixes you have already seen.
+  - level: 3
+    text: "Store only the first index where each prefix value appears (seed with {0: -1}) so the span you measure is as long as possible."
+tests:
+  public:
+    - name: front_run
+      input: {episodes: [1, 2, 3, 4], target: 6}
+      expected: 3
+    - name: whole_feed
+      input: {episodes: [2, 2, 2], target: 6}
+      expected: 3
+    - name: no_match
+      input: {episodes: [1, 2, 3], target: 100}
+      expected: 0
+  validation:
+    - name: picks_longer_block
+      input: {episodes: [3, 1, 2, 3], target: 3}
+      expected: 2
+    - name: zeros_extend_run
+      input: {episodes: [0, 0, 5, 0], target: 5}
+      expected: 4
+    - name: exact_full_feed
+      input: {episodes: [4, 1, 1, 4], target: 10}
+      expected: 4
+    - name: close_but_none
+      input: {episodes: [2, 2, 2], target: 5}
+      expected: 0
+explanation_markdown: |
+  Every contiguous block is the difference of two prefix sums, so a block totals
+  `target` exactly when an earlier prefix equals the current prefix minus `target`.
+  Recording only the first index where each prefix value appears lets each match
+  measure the widest possible span, and the whole scan stays O(n). Seeding the map
+  with `{0: -1}` handles blocks that start at the very first episode, and repeated
+  prefixes from zero-length episodes correctly stretch a matching run.
+common_mistakes:
+  - Overwriting a prefix's stored index on later occurrences, which shortens the measured span.
+  - "Forgetting to seed the map with {0: -1}, missing blocks that begin at episode 0."
+  - Falling back to checking every start and end pair, which is O(n^2) instead of O(n).

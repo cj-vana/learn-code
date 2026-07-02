@@ -1,0 +1,80 @@
+id: exercise.library.recursion_backtracking_w2.a02
+kind: exercise
+version: 1
+language: python
+title: Flatten a Nested Setlist
+slug: recursion-backtracking-w2-a02
+difficulty: easy
+concepts:
+  - patterns.recursion
+  - python.lists
+prerequisites:
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.recursion_backtracking_w2.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original concert setlist scenario where nested groupings of song labels are flattened in order via recursion.
+prompt_markdown: |
+  A band organizes a concert setlist into groups, and any group may itself hold
+  smaller groups nested to any depth. Each plain entry is a song label (a
+  string). Write `flatten_setlist(groups)` that returns a flat list of every
+  song label in left-to-right order, with all the nesting removed. An empty list
+  returns an empty list.
+starter_code: |
+  def flatten_setlist(groups):
+      return []
+function_name: flatten_setlist
+input_mode: function
+solution_sketch: Walk the list; append plain labels and recurse into any nested list, extending the flat result.
+sample_solution: |
+  def flatten_setlist(groups):
+      flat = []
+      for item in groups:
+          if isinstance(item, list):
+              flat.extend(flatten_setlist(item))
+          else:
+              flat.append(item)
+      return flat
+hints:
+  - level: 1
+    text: Each entry is either a song label to keep or a nested group to look inside.
+  - level: 2
+    text: When an entry is itself a list, call the same function on it and add every label it returns.
+  - level: 3
+    text: Use isinstance(item, list) to decide between flat.extend(flatten_setlist(item)) and flat.append(item).
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: flat
+      input: [intro, outro]
+      expected: [intro, outro]
+    - name: one_nest
+      input: [intro, [verse, chorus]]
+      expected: [intro, verse, chorus]
+  validation:
+    - name: deep_single
+      input: [[[solo]]]
+      expected: [solo]
+    - name: mixed_depths
+      input: [intro, [verse, [chorus, bridge]], outro]
+      expected: [intro, verse, chorus, bridge, outro]
+    - name: empty_groups
+      input: [intro, [], [verse, []], outro]
+      expected: [intro, verse, outro]
+explanation_markdown: |
+  A nested list is a tree: plain labels are leaves and inner lists are branches.
+  The loop appends leaves directly and, for each branch, recurses to flatten that
+  branch before extending the running result. Because `extend` preserves order,
+  the labels come out in the same left-to-right order they appear in the nested
+  structure. The base case is implicit: iterating an empty list adds nothing.
+common_mistakes:
+  - Using append instead of extend on the recursive result, producing nested lists.
+  - Trying to add a nested group directly rather than recursing into it.
+  - Building a new list inside the loop and losing earlier labels.

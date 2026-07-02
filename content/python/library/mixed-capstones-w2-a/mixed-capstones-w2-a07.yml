@@ -1,0 +1,91 @@
+id: exercise.library.mixed_capstones_w2.a07
+kind: exercise
+version: 1
+language: python
+title: Shortest Busy Stretch
+slug: mixed-capstones-w2-a07
+difficulty: medium
+concepts:
+  - patterns.sliding_window
+  - patterns.two_pointers
+prerequisites:
+  - python.lists
+estimated_time_minutes: 18
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.mixed_capstones_w2.a07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original cafe hourly-sales scenario finding the shortest contiguous run reaching a target with a variable-size sliding window, and its own tests.
+prompt_markdown: |
+  A cafe logs how many cups it sells each hour of a shift as a list `sales` of
+  non-negative integers. Write `shortest_busy_stretch(data)` where `data` is a
+  dict with `sales` and an integer `target`. Return the length of the shortest
+  contiguous run of hours whose combined sales reach `target` or more. If no run
+  reaches the target, return 0.
+starter_code: |
+  def shortest_busy_stretch(data):
+      return 0
+function_name: shortest_busy_stretch
+input_mode: function
+solution_sketch: Grow a window on the right adding sales, and while the total meets the target, record the length and shrink from the left.
+sample_solution: |
+  def shortest_busy_stretch(data):
+      sales = data["sales"]
+      target = data["target"]
+      n = len(sales)
+      best = n + 1
+      total = 0
+      left = 0
+      for right in range(n):
+          total += sales[right]
+          while total >= target:
+              length = right - left + 1
+              if length < best:
+                  best = length
+              total -= sales[left]
+              left += 1
+      return best if best <= n else 0
+hints:
+  - level: 1
+    text: You are looking for the smallest number of consecutive hours whose sales sum reaches the target.
+  - level: 2
+    text: Because sales are non-negative, a window can expand on the right and contract on the left without missing shorter answers.
+  - level: 3
+    text: While the window's total meets the target, record its length and drop the leftmost hour to try to shrink it further.
+tests:
+  public:
+    - name: basic
+      input: {sales: [2, 1, 5, 2, 3, 2], target: 7}
+      expected: 2
+    - name: whole_needed
+      input: {sales: [1, 1, 1, 1], target: 4}
+      expected: 4
+    - name: impossible
+      input: {sales: [1, 2, 1], target: 100}
+      expected: 0
+  validation:
+    - name: single_hit
+      input: {sales: [3, 8, 2], target: 8}
+      expected: 1
+    - name: tie_shortest
+      input: {sales: [4, 2, 4, 1, 4], target: 6}
+      expected: 2
+    - name: exact_prefix
+      input: {sales: [5, 1, 1, 1], target: 7}
+      expected: 3
+    - name: zeros
+      input: {sales: [0, 0, 5, 0], target: 5}
+      expected: 1
+explanation_markdown: |
+  With non-negative values, extending the window on the right only raises the
+  total and shrinking from the left only lowers it, so a variable-size sliding
+  window finds every shortest qualifying run in O(n). Each hour enters once and
+  leaves at most once. Starting `best` above the maximum possible length lets the
+  "no run reaches the target" case return 0 cleanly.
+common_mistakes:
+  - Only shrinking once per step instead of while the total still meets the target.
+  - Assuming a fixed window size when the answer's length varies.
+  - Returning a large sentinel instead of 0 when the target is never reached.

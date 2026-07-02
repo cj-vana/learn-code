@@ -1,0 +1,87 @@
+id: exercise.library.brute_force_bigo_w2.a03
+kind: exercise
+version: 1
+language: python
+title: Busiest Two Transit Stops
+slug: brute-force-bigo-w2-a03
+difficulty: easy
+concepts:
+  - patterns.brute_force
+  - python.lists
+prerequisites:
+  - python.loops
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.brute_force_bigo_w2.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original transit scenario about the largest combined ridership of any two distinct stops via a pair scan.
+prompt_markdown: |
+  A bus line records how many riders board at each stop along a route. A planner
+  wants the largest combined ridership of any two *different* stops.
+
+  Write `max_pair_riders(riders)` that takes a list of non-negative integer rider
+  counts and returns the greatest sum you can make by adding the counts of two
+  stops at different positions. If there are fewer than two stops, return 0.
+starter_code: |
+  def max_pair_riders(riders):
+      return 0
+function_name: max_pair_riders
+input_mode: function
+solution_sketch: Try every unordered pair with a nested loop and track the largest sum seen.
+sample_solution: |
+  def max_pair_riders(riders):
+      n = len(riders)
+      best = 0
+      found = False
+      for i in range(n):
+          for j in range(i + 1, n):
+              total = riders[i] + riders[j]
+              if not found or total > best:
+                  best = total
+                  found = True
+      return best if found else 0
+hints:
+  - level: 1
+    text: Every candidate answer is the sum of two stops at different positions.
+  - level: 2
+    text: Use a nested loop so the inner index starts at i + 1 and each pair is summed once.
+  - level: 3
+    text: Keep a running best sum, updating it whenever a pair beats it; return 0 if no pair exists.
+tests:
+  public:
+    - name: basic
+      input: [3, 8, 2]
+      expected: 11
+    - name: two_stops
+      input: [5, 9]
+      expected: 14
+    - name: with_zero
+      input: [0, 4, 7, 1]
+      expected: 11
+  validation:
+    - name: too_few
+      input: [10]
+      expected: 0
+    - name: empty
+      input: []
+      expected: 0
+    - name: all_same
+      input: [6, 6, 6]
+      expected: 12
+    - name: descending
+      input: [20, 15, 9, 2]
+      expected: 35
+explanation_markdown: |
+  A brute-force scan considers every unordered pair of stops: the outer loop fixes
+  the first stop and the inner loop, starting at i + 1, adds each later stop. Among
+  all those sums you keep the largest. With `n` stops there are about `n^2 / 2`
+  pairs, so the work grows like O(n^2). The `found` flag makes the "fewer than two
+  stops" case return 0 cleanly instead of a made-up number.
+common_mistakes:
+  - Adding a stop to itself by starting the inner loop at i instead of i + 1.
+  - Initializing best to 0 and returning it even when counts could all be 0 but a pair exists.
+  - Assuming the two busiest stops are adjacent, so only neighbors get compared.

@@ -1,0 +1,86 @@
+id: exercise.library.prefix_sums_w2.a07
+kind: exercise
+version: 1
+language: python
+title: Museum Visitor Range Totals
+slug: prefix-sums-w2-a07
+difficulty: medium
+concepts:
+  - patterns.prefix_sums
+prerequisites:
+  - python.lists
+estimated_time_minutes: 16
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.prefix_sums_w2.a07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original museum visitor range-query scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A museum logs how many visitors pass through the doors on each day of a season.
+  The press office keeps asking for total attendance across different date ranges,
+  so you precompute once and answer each request instantly.
+
+  Write `range_visitor_totals(data)` where `data` is a dict with keys `visitors`
+  (a list of daily visitor counts) and `queries` (a list of `[start, end]` pairs
+  of 0-based day indices, both ends inclusive). Return a list with the total
+  attendance for each query, in the order the queries are given.
+starter_code: |
+  def range_visitor_totals(data):
+      return []
+function_name: range_visitor_totals
+input_mode: function
+solution_sketch: Build a prefix-sum array once, then answer each inclusive range as a subtraction of two prefixes.
+sample_solution: |
+  def range_visitor_totals(data):
+      visitors = data["visitors"]
+      queries = data["queries"]
+      prefix = [0]
+      for count in visitors:
+          prefix.append(prefix[-1] + count)
+      result = []
+      for start, end in queries:
+          result.append(prefix[end + 1] - prefix[start])
+      return result
+hints:
+  - level: 1
+    text: Precompute cumulative attendance so any range total is a single subtraction.
+  - level: 2
+    text: Let prefix[k] be the total of the first k days, with prefix[0] equal to 0.
+  - level: 3
+    text: An inclusive range [start, end] totals prefix[end + 1] - prefix[start].
+tests:
+  public:
+    - name: three_queries
+      input: {visitors: [6, 3, 9, 2, 5], queries: [[0, 2], [1, 4], [3, 3]]}
+      expected: [18, 19, 2]
+    - name: whole_season
+      input: {visitors: [6, 3, 9, 2, 5], queries: [[0, 4]]}
+      expected: [25]
+    - name: no_queries
+      input: {visitors: [6, 3, 9, 2, 5], queries: []}
+      expected: []
+  validation:
+    - name: single_day
+      input: {visitors: [11], queries: [[0, 0]]}
+      expected: [11]
+    - name: mixed_ranges
+      input: {visitors: [2, 4, 6, 8], queries: [[0, 3], [1, 2], [3, 3]]}
+      expected: [20, 10, 8]
+    - name: repeated_query
+      input: {visitors: [5, 5, 5], queries: [[0, 1], [0, 1]]}
+      expected: [10, 10]
+    - name: quiet_days_inside
+      input: {visitors: [3, 0, 0, 7], queries: [[0, 3], [1, 3]]}
+      expected: [10, 7]
+explanation_markdown: |
+  Building the prefix array costs O(n) once, after which every range query is an
+  O(1) subtraction, so `q` queries take O(n + q) instead of O(n * q). The extra
+  leading `0` lets a range that starts on day 0 work without a special case, since
+  `prefix[start]` is then `prefix[0]`, which is 0.
+common_mistakes:
+  - Using `prefix[end] - prefix[start]` and dropping the final day of the range.
+  - Omitting the leading 0, which breaks any query that begins at day 0.
+  - Re-summing the slice for each query, which defeats the purpose of prefix sums.

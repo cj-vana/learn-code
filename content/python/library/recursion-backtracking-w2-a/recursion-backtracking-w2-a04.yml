@@ -1,0 +1,83 @@
+id: exercise.library.recursion_backtracking_w2.a04
+kind: exercise
+version: 1
+language: python
+title: Mirror-Valid Turnstile Badge
+slug: recursion-backtracking-w2-a04
+difficulty: easy
+concepts:
+  - patterns.recursion
+  - python.strings
+  - python.slicing
+prerequisites:
+  - python.functions
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.recursion_backtracking_w2.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original transit-badge scenario checking a code reads the same both ways by recursively peeling the outer characters.
+prompt_markdown: |
+  A transit turnstile accepts a badge code only if it reads the same forwards and
+  backwards. Write `is_mirror_badge(code)` that returns `True` when the string
+  `code` is a mirror (its reverse equals itself) and `False` otherwise. Solve it
+  recursively: compare the outer pair of characters, then check what remains
+  inside. An empty string or a single character counts as a mirror.
+starter_code: |
+  def is_mirror_badge(code):
+      return False
+function_name: is_mirror_badge
+input_mode: function
+solution_sketch: If the first and last characters differ, fail; otherwise recurse on the slice with both ends removed.
+sample_solution: |
+  def is_mirror_badge(code):
+      if len(code) <= 1:
+          return True
+      if code[0] != code[-1]:
+          return False
+      return is_mirror_badge(code[1:-1])
+hints:
+  - level: 1
+    text: A mirror string has matching characters at its two ends, and the inside must also be a mirror.
+  - level: 2
+    text: The base case is a string of length 0 or 1, which is always a mirror.
+  - level: 3
+    text: Compare code[0] with code[-1]; if they match, recurse on code[1:-1].
+tests:
+  public:
+    - name: empty
+      input: ""
+      expected: true
+    - name: palindrome
+      input: "level"
+      expected: true
+    - name: not_mirror
+      input: "ramp"
+      expected: false
+  validation:
+    - name: single
+      input: "a"
+      expected: true
+    - name: odd_length
+      input: "kayak"
+      expected: true
+    - name: near_miss
+      input: "abca"
+      expected: false
+    - name: even_length
+      input: "noon"
+      expected: true
+explanation_markdown: |
+  Each call inspects only the outer pair of characters and hands the shrinking
+  middle to the next call. If the ends ever disagree, the whole string fails
+  immediately. Otherwise the string keeps shrinking by two characters until it
+  reaches length 0 or 1 -- the base case -- and returns `True`. Slicing with
+  `code[1:-1]` produces the inside, which is why an even-length mirror collapses
+  to the empty string and an odd-length mirror collapses to its middle character.
+common_mistakes:
+  - Forgetting the base case, so the recursion runs past an empty slice.
+  - Comparing only the first and last characters and never checking the middle.
+  - Using code[1:len(code)] instead of code[1:-1] and leaving the last character in.

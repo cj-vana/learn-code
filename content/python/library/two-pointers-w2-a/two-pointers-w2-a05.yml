@@ -1,0 +1,110 @@
+id: exercise.library.two_pointers_w2.a05
+kind: exercise
+version: 1
+language: python
+title: Combined Guest List
+slug: two-pointers-w2-a05
+difficulty: easy
+concepts:
+  - patterns.two_pointers
+  - python.lists
+prerequisites:
+  - python.lists
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.two_pointers_w2.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original event scenario merging two sorted guest-id lists into a single sorted list of distinct ids.
+prompt_markdown: |
+  Two co-hosts each keep a sorted list of member id numbers they invited to a
+  party. Some members were invited by both hosts. The planner wants one master
+  list of every distinct id, still in sorted order, with no id repeated even if it
+  appeared twice within a single host's list.
+
+  Write `combined_guest_list(data)` where `data` is a dict with keys `list_a` and
+  `list_b` (both lists of ints in non-decreasing order). Return a sorted list of
+  every distinct id that appears in either list.
+starter_code: |
+  def combined_guest_list(data):
+      return []
+function_name: combined_guest_list
+input_mode: function
+solution_sketch: Merge with two pointers, always taking the smaller front value and skipping any id equal to the one just appended.
+sample_solution: |
+  def combined_guest_list(data):
+      a = data["list_a"]
+      b = data["list_b"]
+      i = 0
+      j = 0
+      result = []
+      while i < len(a) and j < len(b):
+          if a[i] < b[j]:
+              value = a[i]
+              i += 1
+          elif b[j] < a[i]:
+              value = b[j]
+              j += 1
+          else:
+              value = a[i]
+              i += 1
+              j += 1
+          if not result or result[-1] != value:
+              result.append(value)
+      while i < len(a):
+          if not result or result[-1] != a[i]:
+              result.append(a[i])
+          i += 1
+      while j < len(b):
+          if not result or result[-1] != b[j]:
+              result.append(b[j])
+          j += 1
+      return result
+hints:
+  - level: 1
+    text: Keep one pointer in each sorted list and always look at their two front values.
+  - level: 2
+    text: Append the smaller front value and advance that pointer; when both fronts are equal, take the value once and advance both.
+  - level: 3
+    text: Before appending, skip a value that equals the last id already in the result so duplicates never sneak in.
+tests:
+  public:
+    - name: disjoint
+      input: { list_a: [1, 3, 5], list_b: [2, 4, 6] }
+      expected: [1, 2, 3, 4, 5, 6]
+    - name: some_overlap
+      input: { list_a: [1, 2, 4], list_b: [2, 4, 7] }
+      expected: [1, 2, 4, 7]
+    - name: one_empty
+      input: { list_a: [], list_b: [3, 8] }
+      expected: [3, 8]
+  validation:
+    - name: both_empty
+      input: { list_a: [], list_b: [] }
+      expected: []
+    - name: identical
+      input: { list_a: [5, 9], list_b: [5, 9] }
+      expected: [5, 9]
+    - name: duplicates_within
+      input: { list_a: [1, 1, 2], list_b: [2, 2, 3] }
+      expected: [1, 2, 3]
+    - name: prefix_subset
+      input: { list_a: [10, 20, 30, 40], list_b: [20, 40] }
+      expected: [10, 20, 30, 40]
+    - name: interleaved
+      input: { list_a: [1, 4, 6, 9], list_b: [2, 4, 5, 9, 11] }
+      expected: [1, 2, 4, 5, 6, 9, 11]
+explanation_markdown: |
+  Merging two sorted lists is the classic two-pointer march: compare the two front
+  values, emit the smaller, and advance that pointer, taking a shared value only
+  once. Distinctness is handled by comparing each candidate with the last value
+  already appended, which also collapses duplicates inside a single input list.
+  After one list is exhausted, the leftovers of the other are drained with the same
+  guard, giving an O(len(a) + len(b)) merge.
+common_mistakes:
+  - Emitting a shared id twice by advancing only one pointer when the fronts are equal.
+  - Forgetting that duplicates can occur within a single input list, not just across both.
+  - Re-sorting the merged list instead of relying on the already-sorted inputs.

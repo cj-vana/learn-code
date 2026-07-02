@@ -1,0 +1,93 @@
+id: exercise.library.dicts_sets_tuples_w2.c02
+kind: exercise
+version: 1
+language: python
+title: Merge Two Reading Lists
+slug: dicts-sets-tuples-w2-c02
+difficulty: medium
+concepts:
+  - python.sets
+  - python.tuples
+  - python.sorting
+prerequisites:
+  - python.functions
+  - python.loops
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples_w2.c02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original book-club scenario merging two members' reading lists, deduping by a (title, author) tuple and sorting by author then title.
+prompt_markdown: |
+  Two members of a book club want to combine their reading lists. Write
+  `merge_reading_lists(data)` where `data` is a dict with keys `list_a` and
+  `list_b`. Each value is a list of books, and each book is a dict with a
+  `title` and an `author`.
+
+  Combine both lists into one, removing any book that appears more than once
+  (two books are the same only when BOTH the title and the author match). Return
+  a list of formatted strings `"<title> by <author>"`, sorted by author name and
+  then by title, both alphabetically. Two empty lists return an empty list.
+starter_code: |
+  def merge_reading_lists(data):
+      return []
+function_name: merge_reading_lists
+input_mode: function
+solution_sketch: Walk both lists, skip books whose (title, author) tuple was already seen in a set, then sort by an (author, title) key and format.
+sample_solution: |
+  def merge_reading_lists(data):
+      seen = set()
+      unique = []
+      for book in data["list_a"] + data["list_b"]:
+          key = (book["title"], book["author"])
+          if key not in seen:
+              seen.add(key)
+              unique.append(book)
+      unique.sort(key=lambda book: (book["author"], book["title"]))
+      return [f'{book["title"]} by {book["author"]}' for book in unique]
+hints:
+  - level: 1
+    text: A book is uniquely identified by both its title and author together, not either one alone.
+  - level: 2
+    text: Track the (title, author) pairs you have already kept in a set so repeats are easy to skip.
+  - level: 3
+    text: 'Sort the kept books with key=lambda book: (book["author"], book["title"]) before formatting each into a string.'
+tests:
+  public:
+    - name: both_empty
+      input: {list_a: [], list_b: []}
+      expected: []
+    - name: no_duplicates
+      input: {list_a: [{title: Dune, author: Herbert}], list_b: [{title: Sula, author: Morrison}]}
+      expected: [Dune by Herbert, Sula by Morrison]
+    - name: shared_book_deduped
+      input: {list_a: [{title: Kindred, author: Butler}], list_b: [{title: Kindred, author: Butler}]}
+      expected: [Kindred by Butler]
+    - name: sorted_by_author
+      input: {list_a: [{title: Circe, author: Miller}], list_b: [{title: Beloved, author: Morrison}, {title: Emma, author: Austen}]}
+      expected: [Emma by Austen, Circe by Miller, Beloved by Morrison]
+  validation:
+    - name: same_author_sorts_by_title
+      input: {list_a: [{title: Persuasion, author: Austen}, {title: Emma, author: Austen}], list_b: []}
+      expected: [Emma by Austen, Persuasion by Austen]
+    - name: duplicate_across_lists
+      input: {list_a: [{title: Dune, author: Herbert}, {title: Sula, author: Morrison}], list_b: [{title: Dune, author: Herbert}]}
+      expected: [Dune by Herbert, Sula by Morrison]
+    - name: same_title_different_author_kept
+      input: {list_a: [{title: Ariel, author: Plath}], list_b: [{title: Ariel, author: Rhodes}]}
+      expected: [Ariel by Plath, Ariel by Rhodes]
+explanation_markdown: |
+  The pair `(title, author)` is a natural composite key, and because tuples are
+  hashable they drop straight into a set. Iterating the concatenated lists once
+  and skipping any pair already in `seen` keeps the first copy of each distinct
+  book while discarding repeats, whether they came from the same list or across
+  the two. Sorting the survivors with the tuple key `(author, title)` orders by
+  author first and falls back to title, and a final comprehension formats each
+  book into its display string.
+common_mistakes:
+  - Deduping on title alone, which wrongly merges two different books that share a title.
+  - Using a list instead of a set to track seen books, turning each membership check into a slow scan.
+  - Sorting by title first, or forgetting the title tie-breaker when two books share an author.

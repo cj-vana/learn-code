@@ -1,0 +1,93 @@
+id: exercise.library.mixed_capstones_w2.b02
+kind: exercise
+version: 1
+language: python
+title: Pair Two Garden Plots to a Sunlight Goal
+slug: mixed-capstones-w2-b02
+difficulty: easy
+concepts:
+  - patterns.two_pointers
+  - python.sorting
+prerequisites:
+  - python.lists
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.mixed_capstones_w2.b02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original community-garden scenario pairing two plots whose daylight needs meet a shared target.
+prompt_markdown: |
+  A community garden has plots, each needing a whole number of daylight hours.
+  A gardener wants to co-plant exactly two different plots under one lamp whose
+  combined need equals a `target` number of hours.
+
+  Write `can_pair(data)` where `data` is a dict with keys `needs` (a list of
+  hour requirements, in any order) and `target` (an integer). Return `True` if
+  two plots at different positions add up to `target`, otherwise `False`. Two
+  plots with the same requirement count as a valid pair as long as they are
+  different plots.
+starter_code: |
+  def can_pair(data):
+      return False
+function_name: can_pair
+input_mode: function
+solution_sketch: Sort the needs, then move two pointers inward, shrinking or growing the sum toward the target.
+sample_solution: |
+  def can_pair(data):
+      needs = sorted(data["needs"])
+      target = data["target"]
+      i, j = 0, len(needs) - 1
+      while i < j:
+          total = needs[i] + needs[j]
+          if total == target:
+              return True
+          if total < target:
+              i += 1
+          else:
+              j -= 1
+      return False
+hints:
+  - level: 1
+    text: Sorting the requirements lets you reason about the smallest and largest remaining plot.
+  - level: 2
+    text: Start one pointer at each end; the pair's sum tells you which pointer to move.
+  - level: 3
+    text: If the sum is too small move the left pointer right; if too big move the right pointer left; stop when they cross.
+tests:
+  public:
+    - name: empty
+      input: {needs: [], target: 5}
+      expected: false
+    - name: simple_pair
+      input: {needs: [2, 4, 6], target: 10}
+      expected: true
+    - name: no_pair
+      input: {needs: [1, 2, 3], target: 100}
+      expected: false
+  validation:
+    - name: exact_ends
+      input: {needs: [1, 3, 5, 8], target: 9}
+      expected: true
+    - name: single_plot_cannot_pair
+      input: {needs: [7], target: 14}
+      expected: false
+    - name: equal_values_pair
+      input: {needs: [5, 5, 1], target: 10}
+      expected: true
+    - name: unsorted_input
+      input: {needs: [10, 2, 7, 4], target: 11}
+      expected: true
+explanation_markdown: |
+  On a sorted list the smallest and largest values bracket every possible sum.
+  If their total is too small, the only way to grow it is to advance the left
+  pointer; if it is too big, retreat the right pointer. Each step discards one
+  value that can no longer help, so the whole scan is O(n) after the O(n log n)
+  sort. The `i < j` guard keeps the two plots distinct, so a lone plot can never
+  pair with itself.
+common_mistakes:
+  - Forgetting to sort, so the two-pointer sum logic no longer holds.
+  - Allowing a single element to pair with itself by using i <= j.
+  - Moving the wrong pointer when the current sum overshoots the target.

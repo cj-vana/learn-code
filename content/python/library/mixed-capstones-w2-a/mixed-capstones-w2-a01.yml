@@ -1,0 +1,78 @@
+id: exercise.library.mixed_capstones_w2.a01
+kind: exercise
+version: 1
+language: python
+title: Barcodes Scanned More Than Once
+slug: mixed-capstones-w2-a01
+difficulty: easy
+concepts:
+  - patterns.hash_map_counting
+  - patterns.filtering
+  - python.dictionaries
+  - python.sorting
+prerequisites:
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.mixed_capstones_w2.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original warehouse barcode-scan scenario with its own prompt, counting-then-filtering solution, and tests.
+prompt_markdown: |
+  A warehouse scanner records the barcode of every crate that passes the belt.
+  Write `scanned_twice(barcodes)` where `barcodes` is a list of barcode strings.
+  Return a sorted list of the distinct barcodes that were scanned two or more
+  times. Barcodes scanned exactly once are left out. An empty list returns an
+  empty list.
+starter_code: |
+  def scanned_twice(barcodes):
+      return []
+function_name: scanned_twice
+input_mode: function
+solution_sketch: Count each barcode in a dict, then return the sorted keys whose count is at least two.
+sample_solution: |
+  def scanned_twice(barcodes):
+      counts = {}
+      for code in barcodes:
+          counts[code] = counts.get(code, 0) + 1
+      return sorted(code for code, total in counts.items() if total >= 2)
+hints:
+  - level: 1
+    text: First find out how many times each barcode appears.
+  - level: 2
+    text: A dictionary mapping barcode to count lets you check repeats in one pass.
+  - level: 3
+    text: Keep only the keys whose count is 2 or more, then wrap them in sorted().
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: no_repeats
+      input: [A100, B200, C300]
+      expected: []
+    - name: one_repeat
+      input: [A100, B200, A100]
+      expected: [A100]
+  validation:
+    - name: several
+      input: [X1, Y2, X1, Z3, Y2, Y2]
+      expected: [X1, Y2]
+    - name: all_same
+      input: [K9, K9, K9]
+      expected: [K9]
+    - name: unsorted_input
+      input: [M3, A1, M3, A1, Z9]
+      expected: [A1, M3]
+explanation_markdown: |
+  Counting with a dictionary gives O(1) updates, so a single pass builds the
+  tally in O(n). Filtering the items to those with a count of at least two, then
+  sorting, gives the repeated barcodes in a predictable order regardless of the
+  order they were scanned.
+common_mistakes:
+  - Returning barcodes with a count of exactly one instead of two or more.
+  - Forgetting to sort, so the result order depends on scan order.
+  - Listing a repeated barcode more than once instead of a single distinct entry.

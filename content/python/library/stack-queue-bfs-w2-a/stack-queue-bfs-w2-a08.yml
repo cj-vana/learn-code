@@ -1,0 +1,111 @@
+id: exercise.library.stack_queue_bfs_w2.a08
+kind: exercise
+version: 1
+language: python
+title: Gossip Across the Seating Grid
+slug: stack-queue-bfs-w2-a08
+difficulty: medium
+concepts:
+  - patterns.queue_bfs
+  - python.lists
+prerequisites:
+  - python.lists
+estimated_time_minutes: 17
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.stack_queue_bfs_w2.a08
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original classroom-gossip spread scenario using multi-source grid BFS, with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A classroom seating chart is a grid where each seat is one of three letters:
+  `"T"` for someone who already knows the gossip, `"L"` for a listener who does
+  not yet know it, and `"X"` for an empty seat that blocks the chatter.
+
+  Each round, everyone who knows the gossip tells their edge-adjacent neighbors
+  (up, down, left, right), turning any adjacent `"L"` into a `"T"`. Write
+  `gossip_rounds(grid)` returning the number of rounds until no listener is left.
+  Return `0` if there are no listeners to begin with, and `-1` if some listener
+  can never hear the gossip.
+starter_code: |
+  def gossip_rounds(grid):
+      return 0
+function_name: gossip_rounds
+input_mode: function
+solution_sketch: Multi-source BFS from every knower at once, counting layers until all listeners are reached.
+sample_solution: |
+  def gossip_rounds(grid):
+      grid = [row[:] for row in grid]
+      if not grid or not grid[0]:
+          return 0
+      rows, cols = len(grid), len(grid[0])
+      queue = []
+      listeners = 0
+      for r in range(rows):
+          for c in range(cols):
+              if grid[r][c] == "T":
+                  queue.append((r, c))
+              elif grid[r][c] == "L":
+                  listeners += 1
+      if listeners == 0:
+          return 0
+      rounds = 0
+      while queue and listeners > 0:
+          nxt = []
+          for r, c in queue:
+              for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                  nr, nc = r + dr, c + dc
+                  if 0 <= nr < rows and 0 <= nc < cols and grid[nr][nc] == "L":
+                      grid[nr][nc] = "T"
+                      listeners -= 1
+                      nxt.append((nr, nc))
+          if nxt:
+              rounds += 1
+          queue = nxt
+      return rounds if listeners == 0 else -1
+hints:
+  - level: 1
+    text: Every current knower spreads at the same time, so start BFS from all of them together.
+  - level: 2
+    text: Process the queue one full round at a time, collecting the seats newly told this round.
+  - level: 3
+    text: Count listeners at the start and stop when it hits zero; if the spread stalls with listeners left, return -1.
+tests:
+  public:
+    - name: short_row
+      input: [["T", "L", "L"]]
+      expected: 2
+    - name: no_listeners
+      input: [["T"]]
+      expected: 0
+    - name: no_knower
+      input: [["L"]]
+      expected: -1
+  validation:
+    - name: corner_spread
+      input: [["T", "L"], ["L", "L"]]
+      expected: 2
+    - name: blocked_seat
+      input: [["T", "X", "L"]]
+      expected: -1
+    - name: two_sources
+      input: [["L", "T", "L"]]
+      expected: 1
+    - name: long_chain
+      input: [["T", "L", "L", "L"]]
+      expected: 3
+explanation_markdown: |
+  Because every knower spreads at once, this is a multi-source breadth-first
+  search: all `"T"` seats begin in the queue and each BFS layer is one round of
+  gossip. Processing the queue layer by layer, every adjacent `"L"` is flipped to
+  `"T"`, decremented from the listener count, and queued for the next round. When
+  the listener count reaches zero we return the number of rounds; if the queue
+  empties while listeners remain (blocked or unreachable seats), the answer is
+  `-1`. A grid with no listeners needs zero rounds. Each seat is enqueued at most
+  once, so the work is O(rows * cols).
+common_mistakes:
+  - Spreading from one source fully before the others, instead of all sources per round.
+  - Counting an extra round when the final layer converts no new listeners.
+  - Forgetting to return -1 when some listener is walled off by empty seats.

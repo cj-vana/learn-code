@@ -1,0 +1,84 @@
+id: exercise.library.sliding_window_w2.a05
+kind: exercise
+version: 1
+language: python
+title: Steadiest Greenhouse Window
+slug: sliding-window-w2-a05
+difficulty: easy
+concepts:
+  - patterns.sliding_window
+  - python.lists
+prerequisites:
+  - python.functions
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sliding_window_w2.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original greenhouse temperature scenario finding the fixed-size window with the smallest spread between its hottest and coldest reading.
+prompt_markdown: |
+  A greenhouse logs its temperature once an hour. Seedlings do best during the
+  most stable stretch, meaning the `k` consecutive hours whose warmest and coolest
+  readings are closest together. Write `steadiest_window(data)` returning the
+  smallest spread (hottest minus coolest) across any window of `k` hours.
+
+  `data` is a dict: `{"temps": [...], "k": k}`. `k` is at least 1 and no larger
+  than the number of readings.
+starter_code: |
+  def steadiest_window(data):
+      return 0
+function_name: steadiest_window
+input_mode: function
+solution_sketch: For each fixed-size window compute max minus min and keep the smallest spread seen.
+sample_solution: |
+  def steadiest_window(data):
+      temps = data["temps"]
+      k = data["k"]
+      best = None
+      for start in range(len(temps) - k + 1):
+          window = temps[start:start + k]
+          spread = max(window) - min(window)
+          if best is None or spread < best:
+              best = spread
+      return best
+hints:
+  - level: 1
+    text: The spread of a window is its maximum reading minus its minimum reading.
+  - level: 2
+    text: Slide a window of k hours across the log and compute each spread.
+  - level: 3
+    text: Track the smallest spread; a window of size 1 always has a spread of 0.
+tests:
+  public:
+    - name: single_window
+      input: {temps: [5, 9, 4], k: 3}
+      expected: 5
+    - name: two_windows
+      input: {temps: [3, 4, 9], k: 2}
+      expected: 1
+    - name: k_one
+      input: {temps: [7, 2, 9], k: 1}
+      expected: 0
+  validation:
+    - name: flat_block
+      input: {temps: [8, 8, 1, 9], k: 2}
+      expected: 0
+    - name: steady_end
+      input: {temps: [1, 9, 5, 6, 7], k: 3}
+      expected: 2
+    - name: front_steady
+      input: {temps: [3, 4, 5, 20], k: 2}
+      expected: 1
+explanation_markdown: |
+  Stability is measured by how far apart the hottest and coolest readings sit, so
+  each window's spread is `max(window) - min(window)`. Scanning every fixed-size
+  window and keeping the smallest spread finds the calmest stretch. Seeding the
+  best value with `None` lets the first real window set the baseline, which is
+  cleaner than guessing a large starting number.
+common_mistakes:
+  - Comparing individual readings instead of each window's max-minus-min spread.
+  - Seeding best with 0, which is wrong whenever no window is perfectly flat.
+  - Letting the start index run past len(temps) - k and slicing a short window.

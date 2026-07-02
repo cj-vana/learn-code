@@ -1,0 +1,78 @@
+id: exercise.library.loops_lists_strings_w2.b03
+kind: exercise
+version: 1
+language: python
+title: Shuttle Occupancy Log
+slug: loops-lists-strings-w2-b03
+difficulty: easy
+concepts:
+  - python.lists
+  - python.loops
+  - patterns.running_total
+prerequisites:
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings_w2.b03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original campus-shuttle occupancy scenario, prompt, tests, and explanation.
+prompt_markdown: |
+  A campus shuttle starts each route empty. At every stop it records the net
+  passenger change: a positive number when more board than leave, negative when
+  more leave than board. Write `occupancy_log(changes)` returning a list where
+  entry `i` is the number of passengers aboard right after stop `i`. An empty
+  list returns an empty list.
+starter_code: |
+  def occupancy_log(changes):
+      return []
+function_name: occupancy_log
+input_mode: function
+solution_sketch: Keep a running total and append it after applying each change.
+sample_solution: |
+  def occupancy_log(changes):
+      total = 0
+      result = []
+      for change in changes:
+          total += change
+          result.append(total)
+      return result
+hints:
+  - level: 1
+    text: Track how many passengers are aboard as you move stop to stop.
+  - level: 2
+    text: Add each change to a running total before recording it.
+  - level: 3
+    text: Append the updated total to the result inside the loop.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: single_stop
+      input: [3]
+      expected: [3]
+    - name: board_then_leave
+      input: [5, -2, 4]
+      expected: [5, 3, 7]
+  validation:
+    - name: only_boarding
+      input: [1, 1, 1]
+      expected: [1, 2, 3]
+    - name: empties_out
+      input: [4, -4, 2]
+      expected: [4, 0, 2]
+    - name: busy_route
+      input: [10, -3, -3, 6]
+      expected: [10, 7, 4, 10]
+explanation_markdown: |
+  A running total carries the passenger count forward across stops. Each stop
+  updates the total, and appending it captures a snapshot of occupancy at that
+  moment. The result has one entry per stop, in order.
+common_mistakes:
+  - Appending the change instead of the cumulative total.
+  - Resetting the total to zero inside the loop.
+  - Recording the total before applying the current change.

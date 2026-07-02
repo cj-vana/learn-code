@@ -1,0 +1,87 @@
+id: exercise.library.python_refresh_w2.c01
+kind: exercise
+version: 1
+language: python
+title: Bike Share Ride Fee
+slug: python-refresh-w2-c01
+difficulty: easy
+concepts:
+  - python.conditionals
+  - python.operators
+prerequisites:
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+input_mode: function
+provenance:
+  brief_id: library.python_refresh_w2.c01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original city bike-share pricing with a free grace window and a daily cap, all invented here.
+prompt_markdown: |
+  A city bike-share charges riders by how long they keep a bike out. Write
+  `ride_fee(minutes)` that takes the ride length in whole minutes and returns the
+  fee in whole cents as an int, using these rules:
+
+  - The first 30 minutes are free, so a ride of 30 minutes or less costs `0`.
+  - Every minute beyond the first 30 costs 15 cents.
+  - No matter how long the ride is, the fee is capped at 900 cents for the day.
+
+  A 30-minute ride returns `0`, and a very long ride never returns more than `900`.
+starter_code: |
+  def ride_fee(minutes):
+      return 0
+function_name: ride_fee
+solution_sketch: Return 0 within the free window, otherwise charge per extra minute but never exceed the cap.
+sample_solution: |
+  def ride_fee(minutes):
+      if minutes <= 30:
+          return 0
+      fee = (minutes - 30) * 15
+      if fee > 900:
+          return 900
+      return fee
+hints:
+  - level: 1
+    text: Handle the free window first, then worry about the charged minutes.
+  - level: 2
+    text: Only the minutes past 30 are billed, so subtract 30 before multiplying by 15.
+  - level: 3
+    text: After computing the fee, compare it to 900 and return 900 whenever it would be larger.
+tests:
+  public:
+    - name: free_window_edge
+      input: 30
+      expected: 0
+    - name: one_billed_minute
+      input: 31
+      expected: 15
+    - name: typical_ride
+      input: 50
+      expected: 300
+  validation:
+    - name: zero_minutes
+      input: 0
+      expected: 0
+    - name: mid_length
+      input: 45
+      expected: 225
+    - name: exactly_at_cap
+      input: 90
+      expected: 900
+    - name: past_the_cap
+      input: 200
+      expected: 900
+explanation_markdown: |
+  The problem is a small decision with two guards. The first `if` returns early for
+  the free window so the rest of the code only runs for charged rides. Because just
+  the minutes beyond 30 are billed, subtracting 30 before multiplying by 15 keeps
+  the free time out of the total. The final check enforces the daily cap: any fee
+  above 900 is clamped down to 900, so unusually long rides still return a sensible
+  number. Returning early keeps each branch simple and avoids nested conditions.
+common_mistakes:
+  - Multiplying the full minutes by 15 instead of only the minutes past 30.
+  - Forgetting the cap, so long rides return more than 900.
+  - Using minutes < 30 instead of <= 30 and charging for a ride of exactly 30 minutes.

@@ -1,0 +1,81 @@
+id: exercise.library.dicts_sets_tuples_w2.a05
+kind: exercise
+version: 1
+language: python
+title: Best Available Part Stock
+slug: dicts-sets-tuples-w2-a05
+difficulty: easy
+concepts:
+  - python.dictionaries
+  - python.sets
+prerequisites:
+  - python.functions
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples_w2.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original two-storeroom scenario merging part counts by taking the larger of each pair.
+prompt_markdown: |
+  Two storerooms each track how many of each part they hold. You are given
+  `data`, a dict with keys `room_a` and `room_b`, each a dict mapping part names
+  to counts.
+
+  Write `best_stock(data)` returning a dict mapping every part that appears in
+  either room to the larger of its two counts. A part missing from a room counts
+  as 0 there. Two empty rooms return an empty dict.
+starter_code: |
+  def best_stock(data):
+      return {}
+function_name: best_stock
+input_mode: function
+solution_sketch: Union the two key sets, then take the max count per part with get defaults.
+sample_solution: |
+  def best_stock(data):
+      room_a = data["room_a"]
+      room_b = data["room_b"]
+      result = {}
+      for part in set(room_a) | set(room_b):
+          result[part] = max(room_a.get(part, 0), room_b.get(part, 0))
+      return result
+hints:
+  - level: 1
+    text: You need to consider every part named in either room, not just one.
+  - level: 2
+    text: The union of the two dicts' key sets gives you all the part names.
+  - level: 3
+    text: For each part use max(room_a.get(p, 0), room_b.get(p, 0)).
+tests:
+  public:
+    - name: both_empty
+      input: {room_a: {}, room_b: {}}
+      expected: {}
+    - name: only_a
+      input: {room_a: {bolt: 5}, room_b: {}}
+      expected: {bolt: 5}
+    - name: overlap
+      input: {room_a: {bolt: 5, nut: 2}, room_b: {bolt: 3, screw: 9}}
+      expected: {bolt: 5, nut: 2, screw: 9}
+  validation:
+    - name: only_b
+      input: {room_a: {}, room_b: {washer: 4}}
+      expected: {washer: 4}
+    - name: b_is_bigger
+      input: {room_a: {pin: 1}, room_b: {pin: 7}}
+      expected: {pin: 7}
+    - name: mixed
+      input: {room_a: {gear: 2, cog: 8}, room_b: {cog: 3, axle: 6}}
+      expected: {gear: 2, cog: 8, axle: 6}
+explanation_markdown: |
+  Taking the union of `set(room_a) | set(room_b)` gives every part named in
+  either room exactly once. For each part, `dict.get(part, 0)` supplies a 0 when
+  a room lacks it, so `max` compares a real count against 0 or against the other
+  room's real count. The result is a single dict holding the best available
+  quantity per part.
+common_mistakes:
+  - Only iterating one room's keys and dropping parts unique to the other.
+  - Summing the two counts instead of taking the larger one.
+  - Assuming every part exists in both rooms and hitting a KeyError.

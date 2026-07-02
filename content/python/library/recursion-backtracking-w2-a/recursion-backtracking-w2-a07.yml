@@ -1,0 +1,90 @@
+id: exercise.library.recursion_backtracking_w2.a07
+kind: exercise
+version: 1
+language: python
+title: Split the Relay Legs Fairly
+slug: recursion-backtracking-w2-a07
+difficulty: medium
+concepts:
+  - patterns.backtracking
+  - patterns.recursion
+  - python.lists
+prerequisites:
+  - python.functions
+estimated_time_minutes: 16
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.recursion_backtracking_w2.a07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original relay-race scenario asking whether leg distances can be partitioned into two equal-distance teams via include-or-exclude backtracking.
+prompt_markdown: |
+  A relay race is built from legs of given distances, and the organizer wants two
+  teams that each run the same total distance using every leg exactly once. Write
+  `can_split_fairly(distances)` where `distances` is a list of positive integers.
+  Return `True` if the legs can be divided into two groups with equal totals, and
+  `False` otherwise. An empty list splits into two empty groups, so it returns
+  `True`.
+starter_code: |
+  def can_split_fairly(distances):
+      return False
+function_name: can_split_fairly
+input_mode: function
+solution_sketch: If the total is odd it is impossible; otherwise backtrack to find any subset that sums to half the total.
+sample_solution: |
+  def can_split_fairly(distances):
+      total = sum(distances)
+      if total % 2 != 0:
+          return False
+      target = total // 2
+
+      def reach(i, remaining):
+          if remaining == 0:
+              return True
+          if remaining < 0 or i >= len(distances):
+              return False
+          return reach(i + 1, remaining - distances[i]) or reach(i + 1, remaining)
+
+      return reach(0, target)
+hints:
+  - level: 1
+    text: Two equal groups are only possible when the whole distance is an even number.
+  - level: 2
+    text: Finding one group that sums to half the total leaves the rest forming the other group.
+  - level: 3
+    text: For each leg, try including it or excluding it, and stop when the remaining target hits 0.
+tests:
+  public:
+    - name: simple_split
+      input: [3, 1, 2]
+      expected: true
+    - name: odd_total
+      input: [1, 1, 1]
+      expected: false
+    - name: equal_pair
+      input: [5, 5]
+      expected: true
+  validation:
+    - name: empty
+      input: []
+      expected: true
+    - name: even_split
+      input: [2, 4, 6]
+      expected: true
+    - name: even_total_no_split
+      input: [10, 3, 7, 4]
+      expected: false
+explanation_markdown: |
+  Two equal groups means each group must total half of the whole. If the whole
+  total is odd, no split can work, so the function fails fast. Otherwise it
+  backtracks: for each leg it either places the leg in the target group
+  (subtracting its distance) or leaves it out (moving on). Reaching a remaining
+  target of exactly 0 means the target group is complete and the rest form the
+  matching group. `[10, 3, 7, 4]` sums to 24, but no subset totals 12, so even an
+  even total can still fail.
+common_mistakes:
+  - Assuming an even total guarantees a split without searching for the subset.
+  - Forgetting the exclude branch and only ever adding legs to one group.
+  - Missing the negative-remainder cutoff, wasting work after overshooting the target.

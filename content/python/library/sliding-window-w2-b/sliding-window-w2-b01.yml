@@ -1,0 +1,88 @@
+id: exercise.library.sliding_window_w2.b01
+kind: exercise
+version: 1
+language: python
+title: Quietest Greenhouse Watering Stretch
+slug: sliding-window-w2-b01
+difficulty: easy
+concepts:
+  - patterns.sliding_window
+  - patterns.running_total
+prerequisites:
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sliding_window_w2.b01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original greenhouse water-log scenario asking for the least-thirsty fixed-length stretch.
+prompt_markdown: |
+  A rooftop greenhouse logs how many litres of water its plants drink each day.
+  During a drought the caretaker wants to find the most water-efficient stretch
+  so they can plan a maintenance visit around it.
+
+  Write `quietest_stretch(data)` where `data` is a dict with two keys: `usage`
+  (a list of non-negative daily litre counts) and `span` (the number of
+  consecutive days to consider). Return the smallest total litres used across any
+  block of `span` consecutive days. You may assume `1 <= span <= len(usage)`.
+starter_code: |
+  def quietest_stretch(data):
+      return 0
+function_name: quietest_stretch
+input_mode: function
+solution_sketch: Sum the first span days, then slide the window forward tracking the smallest running total.
+sample_solution: |
+  def quietest_stretch(data):
+      usage = data["usage"]
+      span = data["span"]
+      window = sum(usage[:span])
+      best = window
+      for i in range(span, len(usage)):
+          window += usage[i] - usage[i - span]
+          if window < best:
+              best = window
+      return best
+hints:
+  - level: 1
+    text: Only the two days at the edges of the window change when the window slides.
+  - level: 2
+    text: Sum the first span days once, then update that total as you move one day at a time.
+  - level: 3
+    text: When the window moves right, add usage[i] and subtract usage[i - span], then keep the minimum.
+tests:
+  public:
+    - name: single_window
+      input: { usage: [4, 2, 7], span: 3 }
+      expected: 13
+    - name: pick_end
+      input: { usage: [8, 1, 2, 1], span: 2 }
+      expected: 3
+    - name: span_one
+      input: { usage: [5, 9, 2], span: 1 }
+      expected: 2
+  validation:
+    - name: start_best
+      input: { usage: [1, 2, 9, 9], span: 2 }
+      expected: 3
+    - name: middle_best
+      input: { usage: [7, 2, 1, 8], span: 2 }
+      expected: 3
+    - name: all_equal
+      input: { usage: [4, 4, 4, 4], span: 3 }
+      expected: 12
+    - name: longer
+      input: { usage: [5, 1, 3, 2, 4, 1], span: 3 }
+      expected: 6
+explanation_markdown: |
+  A fixed-length sliding window turns an O(n*span) rescan into one O(n) pass.
+  Compute the sum of the first `span` days once, then move the window forward a
+  day at a time: each step adds the newly included day and subtracts the day that
+  just fell off the left edge. Tracking the minimum of these running sums finds
+  the least-thirsty stretch without ever re-summing a whole window.
+common_mistakes:
+  - Re-summing every window from scratch instead of updating the running total.
+  - Forgetting to subtract the day that leaves the window when sliding.
+  - Initialising the best value to 0, which is wrong when every window totals more than 0.

@@ -1,0 +1,92 @@
+id: exercise.library.two_pointers_w2.b04
+kind: exercise
+version: 1
+language: python
+title: Compress the Badge Log
+slug: two-pointers-w2-b04
+difficulty: easy
+concepts:
+  - patterns.two_pointers
+  - python.lists
+prerequisites:
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.two_pointers_w2.b04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original conference badge-scan scenario collapsing consecutive duplicate scans in a sorted log with a read/write pointer pair.
+prompt_markdown: |
+  A conference turnstile records the badge number of each attendee as they scan
+  in. Because people sometimes swipe several times in a row, the log holds
+  repeated adjacent entries. The badges arrive already sorted in non-decreasing
+  order, so identical scans are always next to each other.
+
+  Write `compress_badges(badges)` that returns a new list containing each badge
+  number exactly once, keeping the sorted order. An empty log returns an empty
+  list.
+starter_code: |
+  def compress_badges(badges):
+      return []
+function_name: compress_badges
+input_mode: function
+solution_sketch: Keep a slow write pointer at the last unique badge and a fast read pointer that copies forward only when it finds a new value.
+sample_solution: |
+  def compress_badges(badges):
+      result = list(badges)
+      if not result:
+          return []
+      write = 0
+      for read in range(1, len(result)):
+          if result[read] != result[write]:
+              write += 1
+              result[write] = result[read]
+      return result[:write + 1]
+hints:
+  - level: 1
+    text: Because duplicates are adjacent, you only need to compare each badge with the last unique one you kept.
+  - level: 2
+    text: Use a slow write pointer marking the last unique badge and a fast read pointer scanning ahead.
+  - level: 3
+    text: When the read value differs from the badge at the write pointer, advance write and store the new value there.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: no_duplicates
+      input: [1, 2, 3]
+      expected: [1, 2, 3]
+    - name: adjacent_duplicates
+      input: [1, 1, 2, 3, 3]
+      expected: [1, 2, 3]
+  validation:
+    - name: all_same
+      input: [5, 5, 5, 5]
+      expected: [5]
+    - name: single
+      input: [9]
+      expected: [9]
+    - name: pairs
+      input: [2, 2, 4, 4, 6, 6]
+      expected: [2, 4, 6]
+    - name: trailing_duplicates
+      input: [1, 2, 2]
+      expected: [1, 2]
+    - name: long_run
+      input: [0, 0, 0, 1, 2, 2, 5]
+      expected: [0, 1, 2, 5]
+explanation_markdown: |
+  Sorted input guarantees every duplicate sits next to its twin, so a single pass
+  with two same-direction pointers is enough. The write pointer marks the last
+  badge already kept, and the read pointer scans ahead; only when read finds a
+  value different from the badge at write do we advance write and record it. Every
+  badge is compared once, giving O(n) time, and slicing to `write + 1` returns the
+  unique prefix.
+common_mistakes:
+  - Comparing against the previous read value instead of the last kept value.
+  - Forgetting the empty-log case before touching the first element.
+  - Returning the whole scratch list rather than slicing to the unique prefix.

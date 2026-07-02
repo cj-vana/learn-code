@@ -1,0 +1,74 @@
+id: exercise.library.python_refresh_w2.b03
+kind: exercise
+version: 1
+language: python
+title: Split Trivia Prize Points
+slug: python-refresh-w2-b03
+difficulty: easy
+concepts:
+  - python.operators
+  - python.functions
+prerequisites:
+  - python.variables
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh_w2.b03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original trivia-night prize split scenario using floor division and remainder with its own tests.
+prompt_markdown: |
+  At a trivia night the winning team's points are shared equally among its
+  players, and any points that do not divide evenly are held over.
+  Write `split_prize(data)` where `data` is a dict with keys `points`
+  (a non-negative integer) and `players` (a positive integer). Return a dict
+  with `per_player` (whole points each player gets) and `leftover` (points
+  that could not be split evenly).
+starter_code: |
+  def split_prize(data):
+      return {"per_player": 0, "leftover": 0}
+function_name: split_prize
+input_mode: function
+solution_sketch: Use floor division for the even share and the modulo for what is left over.
+sample_solution: |
+  def split_prize(data):
+      points = data["points"]
+      players = data["players"]
+      return {"per_player": points // players, "leftover": points % players}
+hints:
+  - level: 1
+    text: You need both the even share and the amount that does not divide cleanly.
+  - level: 2
+    text: Floor division `//` gives the whole share each player receives.
+  - level: 3
+    text: The modulo operator `%` gives the points left over after the even split.
+tests:
+  public:
+    - name: uneven_split
+      input: {points: 10, players: 3}
+      expected: {per_player: 3, leftover: 1}
+    - name: exact_split
+      input: {points: 12, players: 4}
+      expected: {per_player: 3, leftover: 0}
+    - name: no_points
+      input: {points: 0, players: 5}
+      expected: {per_player: 0, leftover: 0}
+  validation:
+    - name: solo_team
+      input: {points: 7, players: 1}
+      expected: {per_player: 7, leftover: 0}
+    - name: more_players_than_points
+      input: {points: 5, players: 10}
+      expected: {per_player: 0, leftover: 5}
+    - name: two_players
+      input: {points: 9, players: 2}
+      expected: {per_player: 4, leftover: 1}
+explanation_markdown: |
+  Floor division and modulo are a matched pair: `points // players` is how many
+  whole points each player gets, and `points % players` is exactly what remains.
+  Together they always account for every point.
+common_mistakes:
+  - Using regular division `/`, which returns a float instead of a whole share.
+  - Swapping the two results so the leftover and the per-player share are reversed.

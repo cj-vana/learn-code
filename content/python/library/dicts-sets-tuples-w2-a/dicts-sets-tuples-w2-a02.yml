@@ -1,0 +1,75 @@
+id: exercise.library.dicts_sets_tuples_w2.a02
+kind: exercise
+version: 1
+language: python
+title: Track Meet Finish Order
+slug: dicts-sets-tuples-w2-a02
+difficulty: medium
+concepts:
+  - python.sorting
+  - python.tuples
+prerequisites:
+  - python.functions
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples_w2.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original track-meet timing scenario resolving ties with an alphabetical secondary key.
+prompt_markdown: |
+  At a school track meet, each finisher is recorded as a two-item list
+  `[name, seconds]`. Write `finish_order(results)` returning the list of names
+  ordered from fastest to slowest (smallest `seconds` first).
+
+  If two runners share the same time, order them alphabetically by name. An
+  empty list returns an empty list.
+starter_code: |
+  def finish_order(results):
+      return []
+function_name: finish_order
+input_mode: function
+solution_sketch: Sort by a (seconds, name) tuple key, then pull out the names.
+sample_solution: |
+  def finish_order(results):
+      ordered = sorted(results, key=lambda r: (r[1], r[0]))
+      return [name for name, seconds in ordered]
+hints:
+  - level: 1
+    text: The primary ordering is by time, smallest first.
+  - level: 2
+    text: A tuple key like (seconds, name) sorts by time and breaks ties by name.
+  - level: 3
+    text: 'Sort with key=lambda r: (r[1], r[0]), then return just the names.'
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: two_runners
+      input: [[ana, 30], [ben, 25]]
+      expected: [ben, ana]
+    - name: tie_breaks_alpha
+      input: [[cara, 30], [ana, 30], [ben, 25]]
+      expected: [ben, ana, cara]
+  validation:
+    - name: three_times
+      input: [[xan, 12], [yara, 9], [zeb, 15]]
+      expected: [yara, xan, zeb]
+    - name: all_tied
+      input: [[cee, 10], [bee, 10], [dee, 10]]
+      expected: [bee, cee, dee]
+    - name: mixed
+      input: [[mo, 20], [al, 20], [zo, 18]]
+      expected: [zo, al, mo]
+explanation_markdown: |
+  Python's `sorted` is stable and can sort by a tuple key. Returning
+  `(seconds, name)` means it compares times first and only looks at the name
+  when two times are equal, giving the alphabetical tie-break for free. Once the
+  rows are ordered, a comprehension unpacks each pair and keeps only the name.
+common_mistakes:
+  - Sorting by name first, which loses the primary time ordering.
+  - Forgetting the tie-break and leaving equal-time runners in arrival order.
+  - Returning the full [name, seconds] rows instead of just the names.

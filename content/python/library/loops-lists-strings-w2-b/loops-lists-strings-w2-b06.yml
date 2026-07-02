@@ -1,0 +1,83 @@
+id: exercise.library.loops_lists_strings_w2.b06
+kind: exercise
+version: 1
+language: python
+title: Interleave Relay Runners
+slug: loops-lists-strings-w2-b06
+difficulty: medium
+concepts:
+  - python.lists
+  - python.loops
+prerequisites:
+  - python.functions
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings_w2.b06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original two-team relay interleaving scenario, prompt, tests, and explanation.
+prompt_markdown: |
+  Two relay teams take turns sending runners onto the track. Write
+  `interleave_relay(data)` where `data` is a dict with lists `team_a` and
+  `team_b`. Return one list that alternates runners, starting with `team_a`'s
+  first runner, then `team_b`'s first, then `team_a`'s second, and so on. When
+  one team has more runners, append its leftover runners, in order, at the end.
+starter_code: |
+  def interleave_relay(data):
+      return []
+function_name: interleave_relay
+input_mode: function
+solution_sketch: Walk a shared index, appending each team's runner when that index exists.
+sample_solution: |
+  def interleave_relay(data):
+      a = data["team_a"]
+      b = data["team_b"]
+      result = []
+      index = 0
+      while index < len(a) or index < len(b):
+          if index < len(a):
+              result.append(a[index])
+          if index < len(b):
+              result.append(b[index])
+          index += 1
+      return result
+hints:
+  - level: 1
+    text: Step through both lists using the same position counter.
+  - level: 2
+    text: Keep going while either list still has an item at that position.
+  - level: 3
+    text: Guard each append with a length check so extra runners fall through at the end.
+tests:
+  public:
+    - name: equal_length
+      input: { team_a: ["a1", "a2"], team_b: ["b1", "b2"] }
+      expected: ["a1", "b1", "a2", "b2"]
+    - name: team_a_longer
+      input: { team_a: ["a1", "a2", "a3"], team_b: ["b1"] }
+      expected: ["a1", "b1", "a2", "a3"]
+    - name: team_a_empty
+      input: { team_a: [], team_b: ["b1", "b2"] }
+      expected: ["b1", "b2"]
+  validation:
+    - name: both_empty
+      input: { team_a: [], team_b: [] }
+      expected: []
+    - name: team_b_longer
+      input: { team_a: ["a1"], team_b: ["b1", "b2", "b3"] }
+      expected: ["a1", "b1", "b2", "b3"]
+    - name: single_each
+      input: { team_a: ["x"], team_b: ["y"] }
+      expected: ["x", "y"]
+explanation_markdown: |
+  A single index walks both lists at once. At each position the code adds
+  `team_a`'s runner then `team_b`'s runner when they exist, and the loop keeps
+  running while either list still has entries. The length guards let a longer
+  team's remaining runners append naturally once the shorter team runs out.
+common_mistakes:
+  - Stopping at the length of the shorter list and dropping leftover runners.
+  - Appending team_b before team_a and reversing the intended order.
+  - Using one length check for both appends so a size mismatch crashes.

@@ -1,0 +1,79 @@
+id: exercise.library.loops_lists_strings_w2.b08
+kind: exercise
+version: 1
+language: python
+title: Compress the Status Log
+slug: loops-lists-strings-w2-b08
+difficulty: medium
+concepts:
+  - python.strings
+  - python.lists
+  - python.loops
+prerequisites:
+  - python.functions
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings_w2.b08
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original sensor status run-length scenario, prompt, tests, and explanation.
+prompt_markdown: |
+  A greenhouse sensor writes one status character every minute, producing a
+  string like `"wwwd"`. Write `compress_log(log)` that returns a run-length
+  summary: a list of `[status, count]` pairs, one per maximal run of identical
+  characters, in the order they appear. An empty string returns an empty list.
+starter_code: |
+  def compress_log(log):
+      return []
+function_name: compress_log
+input_mode: function
+solution_sketch: Extend the last pair when the character repeats, otherwise start a new pair.
+sample_solution: |
+  def compress_log(log):
+      result = []
+      for char in log:
+          if result and result[-1][0] == char:
+              result[-1][1] += 1
+          else:
+              result.append([char, 1])
+      return result
+hints:
+  - level: 1
+    text: Walk the log one character at a time and compare it to the current run.
+  - level: 2
+    text: The last pair in the result tracks the run you are currently counting.
+  - level: 3
+    text: If the character matches result[-1][0], bump its count; otherwise start a new pair.
+tests:
+  public:
+    - name: empty
+      input: ""
+      expected: []
+    - name: single_char
+      input: "a"
+      expected: [["a", 1]]
+    - name: one_run_then_one
+      input: "aaab"
+      expected: [["a", 3], ["b", 1]]
+  validation:
+    - name: alternating
+      input: "abab"
+      expected: [["a", 1], ["b", 1], ["a", 1], ["b", 1]]
+    - name: several_runs
+      input: "wwxxxy"
+      expected: [["w", 2], ["x", 3], ["y", 1]]
+    - name: all_identical
+      input: "zzzz"
+      expected: [["z", 4]]
+explanation_markdown: |
+  The result list ends with the run currently being counted. When the next
+  character matches that run's status, its count is incremented in place;
+  otherwise a fresh `[status, 1]` pair begins. One pass produces the compressed
+  summary in order.
+common_mistakes:
+  - Comparing against the first character instead of the current run's status.
+  - Storing tuples that cannot be updated in place, forcing awkward rebuilds.
+  - Forgetting to append the final run when it differs from the previous one.

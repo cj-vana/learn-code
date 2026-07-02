@@ -1,0 +1,75 @@
+id: exercise.library.python_refresh_w2.b06
+kind: exercise
+version: 1
+language: python
+title: Greenhouse Vent Check
+slug: python-refresh-w2-b06
+difficulty: easy
+concepts:
+  - python.conditionals
+  - python.operators
+  - python.functions
+prerequisites:
+  - python.types
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh_w2.b06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original greenhouse vent-safety scenario combining a temperature band and humidity limit with its own tests.
+prompt_markdown: |
+  A greenhouse controller may open the roof vents only when conditions are mild
+  and not too damp.
+  Write `vents_safe(reading)` where `reading` is a dict with keys `temp`
+  (degrees Celsius) and `humidity` (percent). Return `True` when the
+  temperature is between 18 and 27 inclusive AND the humidity is below 70;
+  otherwise return `False`.
+starter_code: |
+  def vents_safe(reading):
+      return False
+function_name: vents_safe
+input_mode: function
+solution_sketch: Combine the inclusive temperature range and the humidity limit with and.
+sample_solution: |
+  def vents_safe(reading):
+      temp = reading["temp"]
+      humidity = reading["humidity"]
+      return 18 <= temp <= 27 and humidity < 70
+hints:
+  - level: 1
+    text: Both conditions must hold at the same time for the vents to open.
+  - level: 2
+    text: A chained comparison like 18 <= temp <= 27 checks the whole range at once.
+  - level: 3
+    text: Combine the range check and humidity < 70 with the `and` operator.
+tests:
+  public:
+    - name: mild_and_dry
+      input: {temp: 22, humidity: 50}
+      expected: true
+    - name: too_hot
+      input: {temp: 30, humidity: 40}
+      expected: false
+    - name: too_humid
+      input: {temp: 20, humidity: 80}
+      expected: false
+  validation:
+    - name: low_edge
+      input: {temp: 18, humidity: 69}
+      expected: true
+    - name: high_edge
+      input: {temp: 27, humidity: 69}
+      expected: true
+    - name: humidity_boundary
+      input: {temp: 27, humidity: 70}
+      expected: false
+explanation_markdown: |
+  A chained comparison expresses the inclusive band cleanly, and `and` requires
+  both parts to be true. Because the humidity test uses a strict `<`, exactly
+  70 percent is treated as too damp and the vents stay closed.
+common_mistakes:
+  - Using `or` instead of `and`, which opens the vents when only one test passes.
+  - Using `<=` on the humidity, which wrongly allows exactly 70 percent.

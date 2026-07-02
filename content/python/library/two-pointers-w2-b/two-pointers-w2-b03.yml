@@ -1,0 +1,95 @@
+id: exercise.library.two_pointers_w2.b03
+kind: exercise
+version: 1
+language: python
+title: Nearby Festival Stalls
+slug: two-pointers-w2-b03
+difficulty: medium
+concepts:
+  - patterns.two_pointers
+  - patterns.sliding_window
+  - python.lists
+prerequisites:
+  - python.lists
+estimated_time_minutes: 18
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.two_pointers_w2.b03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original street-festival scenario counting pairs of stalls within a walking distance using a sliding two-pointer window.
+prompt_markdown: |
+  A street festival lines its stalls along one avenue. Each stall sits at a
+  position given in metres, and the list of positions is sorted in non-decreasing
+  order. Organizers want to know how many pairs of stalls are close enough that a
+  visitor could stroll between them, meaning the distance between the two stalls
+  is at most `limit` metres.
+
+  Write `count_close_pairs(data)` where `data` is a dict with keys `positions`
+  (a list of ints sorted in non-decreasing order) and `limit` (a non-negative
+  int). Return the number of unordered pairs of stalls whose positions differ by
+  at most `limit`. An empty or single-stall list has zero pairs.
+starter_code: |
+  def count_close_pairs(data):
+      return 0
+function_name: count_close_pairs
+input_mode: function
+solution_sketch: Slide a left pointer to keep the window within limit of each right pointer, adding the window size to the count.
+sample_solution: |
+  def count_close_pairs(data):
+      positions = data["positions"]
+      limit = data["limit"]
+      left = 0
+      count = 0
+      for right in range(len(positions)):
+          while positions[right] - positions[left] > limit:
+              left += 1
+          count += right - left
+      return count
+hints:
+  - level: 1
+    text: Since the positions are sorted, every stall between left and right is within limit of the right stall.
+  - level: 2
+    text: For each right pointer, slide left forward until the gap positions[right] - positions[left] fits inside the limit.
+  - level: 3
+    text: Once the window is valid, every index from left up to right-1 pairs with right, so add right - left to the count.
+tests:
+  public:
+    - name: no_pairs
+      input: { positions: [0, 10, 20], limit: 5 }
+      expected: 0
+    - name: all_pairs
+      input: { positions: [1, 2, 3], limit: 5 }
+      expected: 3
+    - name: some_pairs
+      input: { positions: [0, 3, 6, 9], limit: 3 }
+      expected: 3
+  validation:
+    - name: empty
+      input: { positions: [], limit: 4 }
+      expected: 0
+    - name: single
+      input: { positions: [7], limit: 4 }
+      expected: 0
+    - name: duplicates_zero_limit
+      input: { positions: [2, 2, 2], limit: 0 }
+      expected: 3
+    - name: distinct_zero_limit
+      input: { positions: [1, 2, 3], limit: 0 }
+      expected: 0
+    - name: staggered
+      input: { positions: [1, 3, 5, 7, 9], limit: 4 }
+      expected: 7
+explanation_markdown: |
+  With positions sorted, a two-pointer window turns an O(n^2) pair check into a
+  single O(n) sweep. The right pointer visits each stall once; the left pointer
+  only ever moves forward, trimming stalls that are now too far behind. When the
+  window `[left, right]` is valid, every earlier stall inside it forms a close
+  pair with `right`, so the count grows by `right - left`. Because neither
+  pointer moves backward, the total work is linear even though it counts pairs.
+common_mistakes:
+  - Using a nested loop over every pair instead of sliding a single window.
+  - Adding one per valid right instead of the whole window size right - left.
+  - Resetting the left pointer for each right, which reintroduces quadratic work.

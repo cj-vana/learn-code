@@ -1,0 +1,87 @@
+id: exercise.library.python_refresh_w2.a03
+kind: exercise
+version: 1
+language: python
+title: Zipline Rider Eligibility
+slug: python-refresh-w2-a03
+difficulty: easy
+concepts:
+  - python.conditionals
+  - python.operators
+prerequisites:
+  - python.functions
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh_w2.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original zipline-course eligibility check combining a height range, minimum age, and a signed waiver.
+prompt_markdown: |
+  An adventure park lets a guest ride the zipline only when every safety rule
+  is met. The rider arrives as a dict with keys `"height_cm"`, `"age"`, and
+  `"has_waiver"` (a boolean).
+
+  Write `can_ride(rider)` that returns `True` only when all of these hold:
+
+  - height is between 120 and 200 cm, inclusive
+  - age is at least 8
+  - the waiver has been signed
+
+  Otherwise return `False`.
+starter_code: |
+  def can_ride(rider):
+      return False
+function_name: can_ride
+input_mode: function
+solution_sketch: Combine the height range, age minimum, and waiver flag with and, returning the boolean result.
+sample_solution: |
+  def can_ride(rider):
+      return (
+          120 <= rider["height_cm"] <= 200
+          and rider["age"] >= 8
+          and rider["has_waiver"]
+      )
+hints:
+  - level: 1
+    text: Every rule must pass at once, which points to combining them with and.
+  - level: 2
+    text: Python lets you write a range check as 120 <= height <= 200 in one expression.
+  - level: 3
+    text: Return the combined boolean directly instead of using if/else to return True or False.
+tests:
+  public:
+    - name: all_good
+      input: {height_cm: 150, age: 30, has_waiver: true}
+      expected: true
+    - name: too_short
+      input: {height_cm: 110, age: 30, has_waiver: true}
+      expected: false
+    - name: too_young
+      input: {height_cm: 150, age: 6, has_waiver: true}
+      expected: false
+  validation:
+    - name: no_waiver
+      input: {height_cm: 150, age: 30, has_waiver: false}
+      expected: false
+    - name: lower_bounds_ok
+      input: {height_cm: 120, age: 8, has_waiver: true}
+      expected: true
+    - name: upper_height_ok
+      input: {height_cm: 200, age: 8, has_waiver: true}
+      expected: true
+    - name: too_tall
+      input: {height_cm: 201, age: 40, has_waiver: true}
+      expected: false
+explanation_markdown: |
+  Because every condition must be satisfied, `and` is the right connector: the
+  whole expression is `True` only when each part is `True`. The chained
+  comparison `120 <= height <= 200` reads like the original rule and already
+  covers both ends of the range, so the function can return the combined
+  boolean without any explicit `if`.
+common_mistakes:
+  - Using or somewhere, which lets a single passing rule wrongly approve the ride.
+  - Writing height > 120 and height < 200, which rejects the valid boundary values.
+  - Comparing has_waiver to True with extra code instead of using it directly.

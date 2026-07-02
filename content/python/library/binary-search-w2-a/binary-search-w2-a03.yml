@@ -1,0 +1,89 @@
+id: exercise.library.binary_search_w2.a03
+kind: exercise
+version: 1
+language: python
+title: Last Bus You Can Catch
+slug: binary-search-w2-a03
+difficulty: easy
+concepts:
+  - patterns.binary_search
+  - python.lists
+prerequisites:
+  - python.lists
+  - python.sorting
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+input_mode: function
+provenance:
+  brief_id: library.binary_search_w2.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original bus-stop floor-search scenario returning the latest departure at or before an arrival time.
+prompt_markdown: |
+  A bus stop posts its departure times as minutes past midnight, sorted in
+  ascending order. Write `last_departure(data)` where `data` has keys `times`
+  (the sorted list) and `arrival` (the minute you reach the stop).
+
+  Return the latest departure time that is **at or before** `arrival`, or `-1` if
+  every bus has already left. Use binary search.
+starter_code: |
+  def last_departure(data):
+      return -1
+function_name: last_departure
+solution_sketch: Binary search for the rightmost time that does not exceed arrival, remembering the best candidate.
+sample_solution: |
+  def last_departure(data):
+      times = data["times"]
+      arrival = data["arrival"]
+      lo, hi = 0, len(times) - 1
+      best = -1
+      while lo <= hi:
+          mid = (lo + hi) // 2
+          if times[mid] <= arrival:
+              best = times[mid]
+              lo = mid + 1
+          else:
+              hi = mid - 1
+      return best
+hints:
+  - level: 1
+    text: You want the largest departure value that is still not after your arrival minute.
+  - level: 2
+    text: When the middle time fits, record it and keep searching to its right for an even later one.
+  - level: 3
+    text: If no time ever fits, the best you can report is -1.
+tests:
+  public:
+    - name: exact
+      input: {times: [360, 420, 480, 540], arrival: 480}
+      expected: 480
+    - name: between
+      input: {times: [360, 420, 480, 540], arrival: 500}
+      expected: 480
+    - name: too_early
+      input: {times: [360, 420], arrival: 300}
+      expected: -1
+  validation:
+    - name: first
+      input: {times: [360, 420, 480], arrival: 360}
+      expected: 360
+    - name: after_all
+      input: {times: [360, 420, 480], arrival: 999}
+      expected: 480
+    - name: empty
+      input: {times: [], arrival: 400}
+      expected: -1
+    - name: single
+      input: {times: [415], arrival: 415}
+      expected: 415
+explanation_markdown: |
+  This is a "floor" search: the answer is the largest time less than or equal to
+  `arrival`. Each time the middle value fits, it becomes the best candidate and
+  the search moves right to look for a later one; otherwise the search moves left.
+  The whole thing runs in O(log n).
+common_mistakes:
+  - Returning an index rather than the departure time itself.
+  - Overwriting the best candidate when the middle time is already too late.
+  - Forgetting the -1 case when every bus departs before you arrive.
