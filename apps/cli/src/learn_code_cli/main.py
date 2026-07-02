@@ -155,6 +155,33 @@ def quiz(quiz_id: str) -> None:
 
 
 @app.command()
+def timed(
+    count: int = typer.Option(3, "--count", min=1, max=10),
+    minutes: int = typer.Option(15, "--minutes", min=1, max=60),
+    concept: Optional[str] = typer.Option(None, "--concept"),
+) -> None:
+    """Start a timed practice set: eligible problems plus a per-problem budget."""
+    session = _handle(
+        lambda: _client().timed_session(count, minutes, concept)
+    )
+    exercises = session["exercises"]
+    if not exercises:
+        typer.echo(
+            "Nothing is timed-ready yet - get a few concepts to practicing mastery first."
+        )
+        return
+    typer.echo(
+        f"Timed set ({len(exercises)} problems, {session['minutes_per_problem']} min each):"
+    )
+    for number, exercise in enumerate(exercises, start=1):
+        typer.echo(f"  {number}. {exercise['title']}  ({exercise['id']})")
+    typer.echo("")
+    typer.echo(
+        "Set a timer per problem, then grade each with: learn-code submit <id> <file>"
+    )
+
+
+@app.command()
 def paths() -> None:
     """List learning paths with enrollment and progress."""
     items = _handle(lambda: _client().paths())

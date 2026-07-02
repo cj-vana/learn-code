@@ -100,6 +100,22 @@ class ApiClient:
             json={"language": "python", "source": source, "stdin": stdin},
         )
 
+    def timed_session(
+        self,
+        count: int = 3,
+        minutes_per_problem: int = 15,
+        concept: str | None = None,
+    ) -> dict[str, Any]:
+        return self._request(
+            "POST",
+            "/sessions/timed",
+            json={
+                "count": count,
+                "minutes_per_problem": minutes_per_problem,
+                "concept_filter": concept,
+            },
+        )
+
     def paths(self) -> list[dict[str, Any]]:
         return self._request("GET", "/paths")
 

@@ -438,3 +438,45 @@ def test_enroll_and_unenroll(runner, api_base):
     result = runner.invoke(app, ["unenroll", "path.skill.python_foundations"])
     assert result.exit_code == 0
     assert "Unenrolled" in result.stdout
+
+
+@respx.mock
+def test_timed_lists_selected_problems(runner, api_base):
+    route = respx.post(f"{api_base}/sessions/timed").mock(
+        return_value=httpx.Response(
+            200,
+            json={
+                "session_id": "timed-1",
+                "minutes_per_problem": 10,
+                "exercises": [
+                    {
+                        "id": "exercise.library.two_pointers.a01",
+                        "title": "Meet in the middle",
+                        "concepts": ["patterns.two_pointers"],
+                        "estimated_time_minutes": 12,
+                    }
+                ],
+            },
+        )
+    )
+    result = runner.invoke(app, ["timed", "--count", "1", "--minutes", "10"])
+    assert result.exit_code == 0
+    assert "Meet in the middle" in result.stdout
+    assert "10 min" in result.stdout
+    assert "learn-code submit" in result.stdout
+    body = route.calls.last.request.content.replace(b" ", b"")
+    assert b'"count":1' in body
+    assert b'"minutes_per_problem":10' in body
+
+
+@respx.mock
+def test_timed_empty_prints_hint(runner, api_base):
+    respx.post(f"{api_base}/sessions/timed").mock(
+        return_value=httpx.Response(
+            200,
+            json={"session_id": "timed-1", "minutes_per_problem": 15, "exercises": []},
+        )
+    )
+    result = runner.invoke(app, ["timed"])
+    assert result.exit_code == 0
+    assert "practicing" in result.stdout
