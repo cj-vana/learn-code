@@ -1,0 +1,92 @@
+id: exercise.library.two_pointers.a06
+kind: exercise
+version: 1
+language: python
+title: Count Light Kayak Pairs
+slug: two-pointers-a06
+difficulty: medium
+concepts:
+  - patterns.two_pointers
+  - python.lists
+  - concepts.big_o
+prerequisites:
+  - python.functions
+estimated_time_minutes: 16
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.two_pointers.a06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original kayak-pairing weight-limit counting scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A rental dock pairs paddlers two to a kayak, and each kayak has a combined
+  weight limit. Given every paddler's weight sorted in ascending order, count how
+  many distinct pairs could share a kayak without exceeding the limit.
+
+  Write `count_light_pairs(data)` where `data` is a dict with keys `weights`
+  (a list of integers sorted ascending) and `limit` (an integer). Return the
+  number of unordered pairs `(i, j)` with `i < j` whose weights sum to at most
+  `limit`.
+starter_code: |
+  def count_light_pairs(data):
+      return 0
+function_name: count_light_pairs
+input_mode: function
+solution_sketch: With pointers at both ends, when the outer pair fits, every paddler between them also pairs with the left one.
+sample_solution: |
+  def count_light_pairs(data):
+      weights = data["weights"]
+      limit = data["limit"]
+      left = 0
+      right = len(weights) - 1
+      count = 0
+      while left < right:
+          if weights[left] + weights[right] <= limit:
+              count += right - left
+              left += 1
+          else:
+              right -= 1
+      return count
+hints:
+  - level: 1
+    text: Sorting lets you reason about the lightest and heaviest remaining paddlers at once.
+  - level: 2
+    text: If the lightest and heaviest fit together, the lightest fits with everyone in between too.
+  - level: 3
+    text: When a pair fits, add right - left to the count and move left inward; otherwise move right inward.
+tests:
+  public:
+    - name: basic
+      input: {weights: [1, 2, 3, 4], limit: 5}
+      expected: 4
+    - name: none_fit
+      input: {weights: [5, 6, 7], limit: 4}
+      expected: 0
+    - name: all_light
+      input: {weights: [1, 1, 1], limit: 5}
+      expected: 3
+  validation:
+    - name: empty
+      input: {weights: [], limit: 5}
+      expected: 0
+    - name: single
+      input: {weights: [3], limit: 10}
+      expected: 0
+    - name: exact_limit
+      input: {weights: [2, 2, 2, 2], limit: 4}
+      expected: 6
+    - name: spread_out
+      input: {weights: [1, 3, 5, 7, 9], limit: 10}
+      expected: 6
+explanation_markdown: |
+  The two-pointer trick turns an O(n^2) pair scan into O(n). When the lightest and
+  heaviest remaining paddlers fit together, so does the lightest with every
+  paddler between them, which is exactly `right - left` pairs, so you can add them
+  all at once and advance the left pointer. If they do not fit, the heaviest cannot
+  pair with anyone lighter that is still unpaired, so retreat the right pointer.
+common_mistakes:
+  - Counting only a single pair instead of the right - left pairs the left paddler forms.
+  - Using a strict less-than when the limit itself should be allowed.
+  - Falling back to nested loops and losing the linear-time benefit.

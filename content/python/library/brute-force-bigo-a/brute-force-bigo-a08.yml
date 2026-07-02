@@ -1,0 +1,87 @@
+id: exercise.library.brute_force_bigo.a08
+kind: exercise
+version: 1
+language: python
+title: Best Two Souvenirs Under Budget
+slug: brute-force-bigo-a08
+difficulty: medium
+concepts:
+  - patterns.brute_force
+  - python.lists
+prerequisites:
+  - python.loops
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.brute_force_bigo.a08
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original museum gift-shop scenario picking the priciest affordable pair by scanning all pairs.
+prompt_markdown: |
+  A museum gift shop lets a visitor buy exactly two different souvenirs. Given a
+  list of `prices` (all positive) and a `budget`, write `best_pair_spend(data)`
+  where `data` is a dict with keys `prices` and `budget`. Return the largest
+  combined price of any two souvenirs at different positions that does not exceed
+  `budget`. If no pair of two souvenirs fits the budget, return 0.
+starter_code: |
+  def best_pair_spend(data):
+      return 0
+function_name: best_pair_spend
+input_mode: function
+solution_sketch: Scan every pair; among pairs whose total fits the budget, keep the largest total seen.
+sample_solution: |
+  def best_pair_spend(data):
+      prices = data["prices"]
+      budget = data["budget"]
+      n = len(prices)
+      best = 0
+      for i in range(n):
+          for j in range(i + 1, n):
+              total = prices[i] + prices[j]
+              if total <= budget and total > best:
+                  best = total
+      return best
+hints:
+  - level: 1
+    text: Consider every pair of two different souvenirs and add their prices.
+  - level: 2
+    text: Keep a running best that only updates when a pair both fits the budget and beats the current best.
+  - level: 3
+    text: Start best at 0; since prices are positive, any pair that fits will push best above 0, and 0 remains when nothing fits.
+tests:
+  public:
+    - name: empty
+      input: {prices: [], budget: 50}
+      expected: 0
+    - name: one_pair_fits
+      input: {prices: [20, 15, 30], budget: 40}
+      expected: 35
+    - name: none_fit
+      input: {prices: [30, 40], budget: 50}
+      expected: 0
+  validation:
+    - name: exact_budget
+      input: {prices: [10, 40, 25], budget: 50}
+      expected: 50
+    - name: single_item
+      input: {prices: [10], budget: 100}
+      expected: 0
+    - name: picks_max_affordable
+      input: {prices: [5, 8, 12, 20], budget: 25}
+      expected: 25
+    - name: equal_prices
+      input: {prices: [10, 10, 10], budget: 25}
+      expected: 20
+explanation_markdown: |
+  The brute-force plan tries every unordered pair of positions, computes the pair
+  total, and remembers the best total that still fits the budget. With `n`
+  souvenirs there are `n * (n - 1) / 2` pairs, so this is O(n^2). Because all
+  prices are positive, any affordable pair raises `best` above its starting value
+  of 0, so a returned 0 unambiguously means no pair fit. Comparing against
+  `budget` with `<=` lets a pair that hits the budget exactly count as affordable.
+common_mistakes:
+  - Returning the first affordable pair instead of the most expensive affordable pair.
+  - Using < instead of <= and rejecting a pair that exactly equals the budget.
+  - Updating best before confirming the pair fits the budget.

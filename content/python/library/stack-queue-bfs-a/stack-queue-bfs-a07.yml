@@ -1,0 +1,98 @@
+id: exercise.library.stack_queue_bfs.a07
+kind: exercise
+version: 1
+language: python
+title: Warehouse Robot Shortest Route
+slug: stack-queue-bfs-a07
+difficulty: medium
+concepts:
+  - patterns.queue_bfs
+  - python.lists
+prerequisites:
+  - python.lists
+estimated_time_minutes: 20
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.stack_queue_bfs.a07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original warehouse-grid shortest-route scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A warehouse floor is a grid of cells: `0` is an open aisle and `1` is blocked
+  shelving. A robot starts at the top-left cell `(0, 0)` and wants to reach the
+  bottom-right cell. It moves one cell at a time up, down, left, or right, and
+  only through open cells.
+
+  Write `shortest_route(grid)` returning the fewest moves to reach the
+  bottom-right cell, or `-1` if it cannot be reached. Reaching a 1x1 open grid
+  takes `0` moves. If the start or the goal cell is blocked, return `-1`.
+starter_code: |
+  def shortest_route(grid):
+      return -1
+function_name: shortest_route
+input_mode: function
+solution_sketch: Run BFS from the top-left over open cells, expanding in four directions and returning the distance at the goal.
+sample_solution: |
+  from collections import deque
+
+  def shortest_route(grid):
+      if not grid or not grid[0]:
+          return -1
+      rows = len(grid)
+      cols = len(grid[0])
+      goal = (rows - 1, cols - 1)
+      if grid[0][0] == 1 or grid[goal[0]][goal[1]] == 1:
+          return -1
+      visited = {(0, 0)}
+      queue = deque([((0, 0), 0)])
+      while queue:
+          (r, c), steps = queue.popleft()
+          if (r, c) == goal:
+              return steps
+          for dr, dc in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+              nr, nc = r + dr, c + dc
+              if 0 <= nr < rows and 0 <= nc < cols and grid[nr][nc] == 0 and (nr, nc) not in visited:
+                  visited.add((nr, nc))
+                  queue.append(((nr, nc), steps + 1))
+      return -1
+hints:
+  - level: 1
+    text: Each move costs the same, so breadth-first search finds the fewest moves.
+  - level: 2
+    text: Store each cell with its move count; from each cell try the four orthogonal neighbours that are open and in bounds.
+  - level: 3
+    text: Mark cells visited as you enqueue them and return the step count the moment you pop the goal; return -1 if the queue empties first.
+tests:
+  public:
+    - name: single_open_cell
+      input: [[0]]
+      expected: 0
+    - name: straight_row
+      input: [[0, 0, 0]]
+      expected: 2
+    - name: boxed_in
+      input: [[0, 1], [1, 0]]
+      expected: -1
+  validation:
+    - name: two_by_two_open
+      input: [[0, 0], [0, 0]]
+      expected: 2
+    - name: forced_detour
+      input: [[0, 0, 0], [1, 1, 0], [0, 0, 0]]
+      expected: 4
+    - name: goal_blocked
+      input: [[0, 0], [0, 1]]
+      expected: -1
+explanation_markdown: |
+  On an unweighted grid every step costs one, so breadth-first search reaches
+  each cell by a shortest path and the goal's distance is the answer. Marking
+  cells visited when they are enqueued keeps the search from looping and bounds
+  the work to O(rows * cols). Checking the start and goal up front handles the
+  blocked-endpoint cases cleanly, and the 1x1 grid returns 0 because start and
+  goal coincide.
+common_mistakes:
+  - Counting cells visited instead of moves made, which is off by one.
+  - Marking a cell visited only when popped, letting it be enqueued many times.
+  - Forgetting bounds checks or the case where the start or goal itself is blocked.

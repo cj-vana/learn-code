@@ -1,0 +1,83 @@
+id: exercise.library.two_pointers.a05
+kind: exercise
+version: 1
+language: python
+title: Dedupe Scanned Badges
+slug: two-pointers-a05
+difficulty: easy
+concepts:
+  - patterns.two_pointers
+  - python.lists
+prerequisites:
+  - python.functions
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.two_pointers.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original conference badge-scan dedup scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A conference gate scanner records badge numbers in the order they beep, and the
+  numbers already arrive sorted in non-decreasing order. Because attendees
+  sometimes swipe twice, the same number can appear back to back.
+
+  Write `unique_badges(badges)` where `badges` is a list of integers sorted in
+  non-decreasing order. Return a new list with each badge number kept only once,
+  still in ascending order.
+starter_code: |
+  def unique_badges(badges):
+      return []
+function_name: unique_badges
+input_mode: function
+solution_sketch: Keep a write pointer for the last kept value and copy a new value only when the read pointer differs.
+sample_solution: |
+  def unique_badges(badges):
+      if not badges:
+          return []
+      result = badges[:]
+      write = 0
+      for read in range(1, len(result)):
+          if result[read] != result[write]:
+              write += 1
+              result[write] = result[read]
+      return result[:write + 1]
+hints:
+  - level: 1
+    text: Equal values in a sorted list always sit next to each other.
+  - level: 2
+    text: Keep a write pointer at the last unique value while a read pointer scans ahead.
+  - level: 3
+    text: Only advance and overwrite at write when the read value differs from the last kept one.
+tests:
+  public:
+    - name: some_dups
+      input: [1, 1, 2, 3, 3, 3]
+      expected: [1, 2, 3]
+    - name: no_dups
+      input: [1, 2, 3]
+      expected: [1, 2, 3]
+    - name: empty
+      input: []
+      expected: []
+  validation:
+    - name: single
+      input: [7]
+      expected: [7]
+    - name: all_same
+      input: [4, 4, 4, 4]
+      expected: [4]
+    - name: paired
+      input: [1, 1, 2, 2, 5, 5]
+      expected: [1, 2, 5]
+explanation_markdown: |
+  Sorting guarantees duplicates are adjacent, so a single pass suffices. The write
+  pointer marks the end of the unique region while the read pointer scans forward;
+  each genuinely new value is copied just past the write pointer. Slicing up to
+  `write + 1` returns exactly the distinct prefix in O(n) time.
+common_mistakes:
+  - Reaching for a set, which loses the guaranteed ascending order.
+  - Comparing against the original element instead of the last kept value.
+  - Returning the whole buffer instead of slicing to the unique prefix.

@@ -1,0 +1,146 @@
+id: exercise.library.stack_queue_bfs.b02
+kind: exercise
+version: 1
+language: python
+title: Fewest Trail Segments to the Lookout
+slug: stack-queue-bfs-b02
+difficulty: medium
+concepts:
+  - patterns.queue_bfs
+  - python.dictionaries
+prerequisites:
+  - python.lists
+estimated_time_minutes: 18
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.stack_queue_bfs.b02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original park-trail-network scenario asking for the fewest trail segments between two junctions, with its own map data and tests.
+prompt_markdown: |
+  A nature park is a network of junctions joined by two-way trail segments. The
+  map is given as a dictionary where each key is a junction name and its value is
+  the list of junctions reachable by one trail segment.
+
+  Write `fewest_segments(data)` where `data` is a dict with keys:
+
+  - `"trails"`: the junction-to-neighbors map described above
+  - `"start"`: the junction where the hike begins
+  - `"target"`: the junction to reach
+
+  Return the fewest number of trail **segments** needed to walk from `start` to
+  `target`. If `start` equals `target`, the answer is `0`. If no route exists,
+  return `-1`.
+starter_code: |
+  def fewest_segments(data):
+      return 0
+function_name: fewest_segments
+input_mode: function
+solution_sketch: Breadth-first search from the start with a queue, returning the level at which the target is first dequeued.
+sample_solution: |
+  from collections import deque
+
+  def fewest_segments(data):
+      trails = data["trails"]
+      start = data["start"]
+      target = data["target"]
+      seen = {start}
+      queue = deque([(start, 0)])
+      while queue:
+          junction, segments = queue.popleft()
+          if junction == target:
+              return segments
+          for neighbor in trails.get(junction, []):
+              if neighbor not in seen:
+                  seen.add(neighbor)
+                  queue.append((neighbor, segments + 1))
+      return -1
+hints:
+  - level: 1
+    text: Explore the map outward from the start one ring of junctions at a time, so the first time you reach the target you have used the fewest segments.
+  - level: 2
+    text: A queue processes junctions in first-in, first-out order; store each junction together with how many segments it took to get there.
+  - level: 3
+    text: Track visited junctions in a set so you never re-add one, and return the stored segment count when you dequeue the target; return -1 if the queue empties first.
+tests:
+  public:
+    - name: same_spot
+      input:
+        trails:
+          gate: [meadow, ridge]
+          meadow: [gate, falls]
+          ridge: [gate, falls, summit]
+          falls: [meadow, ridge]
+          summit: [ridge]
+        start: gate
+        target: gate
+      expected: 0
+    - name: one_segment
+      input:
+        trails:
+          gate: [meadow, ridge]
+          meadow: [gate, falls]
+          ridge: [gate, falls, summit]
+          falls: [meadow, ridge]
+          summit: [ridge]
+        start: gate
+        target: ridge
+      expected: 1
+    - name: two_segments
+      input:
+        trails:
+          gate: [meadow, ridge]
+          meadow: [gate, falls]
+          ridge: [gate, falls, summit]
+          falls: [meadow, ridge]
+          summit: [ridge]
+        start: gate
+        target: summit
+      expected: 2
+  validation:
+    - name: three_segments
+      input:
+        trails:
+          gate: [meadow, ridge]
+          meadow: [gate, falls]
+          ridge: [gate, falls, summit]
+          falls: [meadow, ridge]
+          summit: [ridge]
+        start: meadow
+        target: summit
+      expected: 3
+    - name: no_route
+      input:
+        trails:
+          depot: [north, south]
+          north: [depot]
+          south: [depot]
+          island: [reef]
+          reef: [island]
+        start: depot
+        target: island
+      expected: -1
+    - name: shortcut_beats_detour
+      input:
+        trails:
+          home: [plaza, cafe]
+          plaza: [home, alley]
+          alley: [plaza, cafe]
+          cafe: [home, alley]
+        start: home
+        target: cafe
+      expected: 1
+explanation_markdown: |
+  Every trail segment counts the same, so the shortest walk is the one that uses
+  the fewest edges. Breadth-first search visits junctions in order of distance
+  from the start: the queue holds a whole "ring" of junctions before moving to the
+  next ring out. Pairing each junction with its segment count and marking junctions
+  as seen when they enter the queue means the first time the target is dequeued it
+  is guaranteed to be by a shortest route. If the queue drains without reaching the
+  target, the two junctions are in separate parts of the park, so the answer is -1.
+common_mistakes:
+  - Using a stack (depth-first search) instead of a queue, which can report a longer route than the shortest one.
+  - Marking a junction as seen only after dequeuing it, allowing the same junction into the queue many times.
+  - Forgetting the start-equals-target case or the disconnected case that must return -1.

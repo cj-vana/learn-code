@@ -1,0 +1,87 @@
+id: exercise.library.debugging.b02
+kind: exercise
+version: 1
+language: python
+title: Clear the Sold-Out Slots
+slug: debugging-b02
+difficulty: easy
+concepts:
+  - python.debugging
+  - patterns.filtering
+prerequisites:
+  - python.functions
+  - python.loops
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.debugging.b02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original vending-machine scenario built around the classic bug of deleting items from a list while looping over it.
+prompt_markdown: |
+  A vending machine stores the remaining stock count for each slot in order. When
+  the operator refreshes the display, every sold-out slot (a count of `0`) should
+  disappear while the other counts keep their original order. Write
+  `clear_sold_out(counts)` returning a new list with all the zero counts removed.
+
+  A classic beginner bug is to remove entries from the list while looping over that
+  same list: deleting an item shifts everything after it, so the loop skips the next
+  value and some zeros survive. Build the answer in a fresh list instead. For
+  `[2, 0, 3]` the result is `[2, 3]`. An empty machine returns an empty list.
+starter_code: |
+  def clear_sold_out(counts):
+      return []
+function_name: clear_sold_out
+input_mode: function
+solution_sketch: Iterate once and append only the non-zero counts to a new list, leaving the input untouched.
+sample_solution: |
+  def clear_sold_out(counts):
+      remaining = []
+      for count in counts:
+          if count != 0:
+              remaining.append(count)
+      return remaining
+hints:
+  - level: 1
+    text: Deleting from a list while you loop over it makes the loop skip the item right after each deletion.
+  - level: 2
+    text: Leave the input list alone and collect the answer somewhere else.
+  - level: 3
+    text: Append a count to a new list only when it is not zero.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: all_sold_out
+      input: [0, 0]
+      expected: []
+    - name: one_zero
+      input: [2, 0, 3]
+      expected: [2, 3]
+  validation:
+    - name: adjacent_zeros
+      input: [0, 1, 0, 1]
+      expected: [1, 1]
+    - name: no_zeros
+      input: [5]
+      expected: [5]
+    - name: single_zero
+      input: [0]
+      expected: []
+    - name: nothing_removed
+      input: [1, 2, 3]
+      expected: [1, 2, 3]
+explanation_markdown: |
+  Mutating a list while iterating over it is unsafe because the loop tracks
+  positions by index: when you remove an item, every later item slides one place
+  to the left, so the loop's next step jumps past the value that moved into the
+  gap. With back-to-back zeros like `[0, 0]`, the second zero is exactly the one
+  that gets skipped. Building a separate `remaining` list sidesteps the problem and
+  keeps the surviving counts in their original order in a single O(n) pass.
+common_mistakes:
+  - Calling counts.remove(0) or del inside a loop over the same list, skipping adjacent zeros.
+  - Filtering with a truthiness check that also drops legitimate values if the data later included them.
+  - Returning None or mutating the caller's list instead of returning a new list.

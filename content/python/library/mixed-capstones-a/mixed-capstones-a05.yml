@@ -1,0 +1,88 @@
+id: exercise.library.mixed_capstones.a05
+kind: exercise
+version: 1
+language: python
+title: First Sold-Out Show
+slug: mixed-capstones-a05
+difficulty: easy
+concepts:
+  - patterns.binary_search
+  - python.lists
+prerequisites:
+  - python.dictionaries
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.mixed_capstones.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original theatre-attendance scenario locating the first day above a threshold via leftmost binary search, with its own tests.
+prompt_markdown: |
+  A theatre's daily attendance only ever grows through a festival, so the
+  `attendance` list is sorted in non-decreasing order. Write `first_full_day(data)`
+  where `data` is a dict with key `attendance` (the sorted list of integers) and
+  key `limit` (an integer). Return the index of the earliest day whose attendance
+  is greater than or equal to `limit`. If no day reaches `limit`, return `-1`.
+starter_code: |
+  def first_full_day(data):
+      return -1
+function_name: first_full_day
+input_mode: function
+solution_sketch: Binary search for the leftmost position where attendance is at least limit, returning -1 when that position is past the end.
+sample_solution: |
+  def first_full_day(data):
+      attendance = data["attendance"]
+      limit = data["limit"]
+      lo = 0
+      hi = len(attendance)
+      while lo < hi:
+          mid = (lo + hi) // 2
+          if attendance[mid] >= limit:
+              hi = mid
+          else:
+              lo = mid + 1
+      if lo < len(attendance):
+          return lo
+      return -1
+hints:
+  - level: 1
+    text: Because attendance is sorted, once a day reaches the limit every later day does too.
+  - level: 2
+    text: Binary search for the boundary between days below the limit and days at or above it.
+  - level: 3
+    text: Keep a half-open range [lo, hi); move hi to mid when attendance[mid] >= limit, else lo to mid + 1, and check lo against the length at the end.
+tests:
+  public:
+    - name: found_middle
+      input: {attendance: [10, 20, 30, 40], limit: 25}
+      expected: 2
+    - name: found_first
+      input: {attendance: [5, 6, 7], limit: 1}
+      expected: 0
+    - name: never_reached
+      input: {attendance: [1, 2, 3], limit: 10}
+      expected: -1
+  validation:
+    - name: exact_match
+      input: {attendance: [10, 20, 30], limit: 20}
+      expected: 1
+    - name: empty
+      input: {attendance: [], limit: 5}
+      expected: -1
+    - name: last_only
+      input: {attendance: [2, 4, 6, 8], limit: 8}
+      expected: 3
+    - name: duplicates
+      input: {attendance: [3, 3, 5, 5, 5], limit: 5}
+      expected: 2
+explanation_markdown: |
+  Sorted data lets binary search find the boundary in O(log n) instead of scanning
+  every day. Using a half-open range and moving `hi` down whenever the midpoint
+  already meets the limit converges on the leftmost qualifying index. If that index
+  equals the length, no day qualified, so the function returns -1.
+common_mistakes:
+  - Returning the first index found rather than the leftmost, which fails when equal values repeat.
+  - Using inclusive bounds and stepping incorrectly, causing an infinite loop or skipping the boundary.
+  - Forgetting the empty list and never-reached cases, which must both return -1.

@@ -1,0 +1,82 @@
+id: exercise.library.dicts_sets_tuples.c02
+kind: exercise
+version: 1
+language: python
+title: Chess Ladder Ranking
+slug: dicts-sets-tuples-c02
+difficulty: easy
+concepts:
+  - python.sorting
+  - python.tuples
+prerequisites:
+  - python.functions
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples.c02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original community chess-ladder standings scenario using a tuple sort key, with fresh prompt, tests, and explanation.
+prompt_markdown: |
+  A neighborhood chess club keeps a ladder of players. Each player is a dict
+  with a `name`, a `wins` count, and a `losses` count.
+
+  Write `rank_players(players)` that returns a list of player names ordered by
+  standing: most wins first, then fewer losses, then name alphabetically as the
+  final tie-breaker. An empty list returns an empty list.
+starter_code: |
+  def rank_players(players):
+      return []
+function_name: rank_players
+input_mode: function
+solution_sketch: Sort the players with a tuple key of (-wins, losses, name) and pull out the names.
+sample_solution: |
+  def rank_players(players):
+      ordered = sorted(
+          players,
+          key=lambda player: (-player["wins"], player["losses"], player["name"]),
+      )
+      return [player["name"] for player in ordered]
+hints:
+  - level: 1
+    text: Python can sort by several fields at once when the sort key is a tuple.
+  - level: 2
+    text: Ascending order on losses and name is what you want, but wins should come out largest-first.
+  - level: 3
+    text: 'Use key=lambda p: (-p["wins"], p["losses"], p["name"]) so higher wins sort earlier.'
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: single
+      input: [{name: ana, wins: 3, losses: 1}]
+      expected: [ana]
+    - name: by_wins
+      input: [{name: ben, wins: 1, losses: 0}, {name: ana, wins: 4, losses: 2}]
+      expected: [ana, ben]
+    - name: break_by_losses
+      input: [{name: cid, wins: 2, losses: 5}, {name: dot, wins: 2, losses: 1}]
+      expected: [dot, cid]
+  validation:
+    - name: break_by_name
+      input: [{name: zoe, wins: 2, losses: 2}, {name: amy, wins: 2, losses: 2}]
+      expected: [amy, zoe]
+    - name: wins_then_losses
+      input: [{name: ana, wins: 3, losses: 1}, {name: ben, wins: 3, losses: 0}, {name: cid, wins: 5, losses: 4}]
+      expected: [cid, ben, ana]
+    - name: mixed_field
+      input: [{name: liu, wins: 0, losses: 0}, {name: mae, wins: 1, losses: 9}, {name: kai, wins: 1, losses: 3}]
+      expected: [kai, mae, liu]
+explanation_markdown: |
+  A tuple sort key sorts by its first element, breaking ties with the next, and
+  so on. Here `(-wins, losses, name)` puts the most wins first (negating flips
+  the ascending order), then favors fewer losses, then falls back to
+  alphabetical name. `sorted` is stable, but the name tie-breaker makes the
+  order fully deterministic regardless of input order.
+common_mistakes:
+  - Sorting by wins ascending and forgetting to reverse or negate it.
+  - Returning the whole player dicts instead of just the names.
+  - Handling only wins and ignoring the losses and name tie-breakers.

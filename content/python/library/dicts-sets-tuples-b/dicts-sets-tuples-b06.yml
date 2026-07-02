@@ -1,0 +1,73 @@
+id: exercise.library.dicts_sets_tuples.b06
+kind: exercise
+version: 1
+language: python
+title: Bulk Discount for Big Orders
+slug: dicts-sets-tuples-b06
+difficulty: easy
+concepts:
+  - python.comprehensions
+  - python.lists
+prerequisites:
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples.b06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original warehouse pricing scenario applying a flat discount only to prices over a threshold via a comprehension.
+prompt_markdown: |
+  A warehouse gives a flat bulk discount to expensive line items. Write
+  `apply_bulk_discount(prices)` that takes a list of integer prices and returns a
+  new list where every price STRICTLY GREATER THAN 100 is reduced by 25, and
+  every other price is left unchanged. The order of the list must stay the same.
+  An empty list returns an empty list.
+starter_code: |
+  def apply_bulk_discount(prices):
+      return []
+function_name: apply_bulk_discount
+input_mode: function
+solution_sketch: Use a list comprehension with a conditional expression per price.
+sample_solution: |
+  def apply_bulk_discount(prices):
+      return [price - 25 if price > 100 else price for price in prices]
+hints:
+  - level: 1
+    text: Build a brand-new list rather than editing the input in place.
+  - level: 2
+    text: A conditional expression (a if cond else b) picks the value for each price.
+  - level: 3
+    text: Use [price - 25 if price > 100 else price for price in prices].
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: none_qualify
+      input: [50, 100]
+      expected: [50, 100]
+    - name: some_qualify
+      input: [120, 80, 200]
+      expected: [95, 80, 175]
+  validation:
+    - name: boundary
+      input: [101, 100, 99]
+      expected: [76, 100, 99]
+    - name: all_qualify
+      input: [500, 300]
+      expected: [475, 275]
+    - name: mixed
+      input: [10, 150, 100, 101]
+      expected: [10, 125, 100, 76]
+explanation_markdown: |
+  The conditional expression inside the comprehension decides, per element,
+  whether to subtract 25 or keep the price as is. Using `>` (not `>=`) means a
+  price of exactly 100 is untouched, which matches "strictly greater than 100."
+  Building a new list keeps the original untouched and preserves order.
+common_mistakes:
+  - Using >= 100 and discounting a price that should stay the same.
+  - Mutating the input list instead of returning a new one.
+  - Placing the condition after the loop (a filter) so unqualified prices vanish.

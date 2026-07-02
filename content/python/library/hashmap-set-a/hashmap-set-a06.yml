@@ -1,0 +1,81 @@
+id: exercise.library.hashmap_set.a06
+kind: exercise
+version: 1
+language: python
+title: Popular Bakery Pastries
+slug: hashmap-set-a06
+difficulty: easy
+concepts:
+  - patterns.hash_map_counting
+  - patterns.filtering
+  - python.sorting
+prerequisites:
+  - python.dictionaries
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.hashmap_set.a06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original bakery morning-orders threshold scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A bakery records every pastry customers order during the morning. Write
+  `popular_items(data)` where `data` is a dict with keys:
+
+  - `orders`: a list of pastry names
+  - `min_count`: an integer threshold
+
+  Return a sorted list of the pastry names ordered at least `min_count` times.
+  If none qualify, return an empty list.
+starter_code: |
+  def popular_items(data):
+      return []
+function_name: popular_items
+input_mode: function
+solution_sketch: Count orders per pastry, then keep and sort names meeting the threshold.
+sample_solution: |
+  def popular_items(data):
+      orders = data["orders"]
+      min_count = data["min_count"]
+      counts = {}
+      for item in orders:
+          counts[item] = counts.get(item, 0) + 1
+      return sorted(item for item, count in counts.items() if count >= min_count)
+hints:
+  - level: 1
+    text: First tally how many times each pastry was ordered.
+  - level: 2
+    text: A dict maps each pastry name to its order count.
+  - level: 3
+    text: Keep the names whose count is `>= min_count`, then sort them.
+tests:
+  public:
+    - name: none_qualify
+      input: { orders: [scone], min_count: 2 }
+      expected: []
+    - name: all_qualify
+      input: { orders: [tart, tart, bun, bun], min_count: 2 }
+      expected: [bun, tart]
+    - name: threshold_one
+      input: { orders: [pie, cake], min_count: 1 }
+      expected: [cake, pie]
+  validation:
+    - name: mixed_counts
+      input: { orders: [eclair, eclair, eclair, danish, danish, muffin], min_count: 2 }
+      expected: [danish, eclair]
+    - name: empty_orders
+      input: { orders: [], min_count: 1 }
+      expected: []
+    - name: threshold_too_high
+      input: { orders: [roll, roll, roll], min_count: 4 }
+      expected: []
+explanation_markdown: |
+  One pass builds the per-pastry counts in O(n). Filtering the dict items by the
+  threshold and sorting the survivors gives a clean, alphabetized list of the
+  popular pastries.
+common_mistakes:
+  - Using `>` instead of `>=`, which drops items ordered exactly `min_count` times.
+  - Sorting by count instead of by name when the prompt asks for a sorted list of names.
+  - Forgetting the empty-result case when nothing meets the threshold.

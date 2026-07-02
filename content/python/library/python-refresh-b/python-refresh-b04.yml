@@ -1,0 +1,85 @@
+id: exercise.library.python_refresh.b04
+kind: exercise
+version: 1
+language: python
+title: Diner Tip Total
+slug: python-refresh-b04
+difficulty: easy
+concepts:
+  - python.operators
+  - python.variables
+prerequisites:
+  - python.functions
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh.b04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original diner-check tip calculator working entirely in integer cents to avoid rounding drift.
+prompt_markdown: |
+  A diner adds a tip to each check. To avoid rounding errors, all money is
+  tracked in whole cents.
+
+  Write `check_total(order)` where `order` is a dict with two keys:
+
+  - `"bill_cents"`: the pre-tip bill, an integer number of cents
+  - `"tip_percent"`: a whole-number tip percentage (for example, 15)
+
+  Return the total in cents: the bill plus the tip. The tip is
+  `bill_cents * tip_percent`, divided by 100 and rounded **down** to a whole
+  number of cents.
+starter_code: |
+  def check_total(order):
+      return 0
+function_name: check_total
+input_mode: function
+solution_sketch: Unpack the dict, compute the floored tip in cents, and add it to the bill.
+sample_solution: |
+  def check_total(order):
+      bill_cents = order["bill_cents"]
+      tip_percent = order["tip_percent"]
+      tip_cents = bill_cents * tip_percent // 100
+      return bill_cents + tip_cents
+hints:
+  - level: 1
+    text: Read the two values out of the dict into their own variables first.
+  - level: 2
+    text: The tip in cents is bill_cents times tip_percent, then divided by 100.
+  - level: 3
+    text: Use // 100 so the tip is floored to a whole number of cents before adding.
+tests:
+  public:
+    - name: fifteen_percent
+      input: {bill_cents: 2000, tip_percent: 15}
+      expected: 2300
+    - name: twenty_percent
+      input: {bill_cents: 5000, tip_percent: 20}
+      expected: 6000
+    - name: no_tip
+      input: {bill_cents: 1250, tip_percent: 0}
+      expected: 1250
+  validation:
+    - name: rounds_down_small
+      input: {bill_cents: 999, tip_percent: 10}
+      expected: 1098
+    - name: rounds_down_fraction
+      input: {bill_cents: 1005, tip_percent: 18}
+      expected: 1185
+    - name: large_check
+      input: {bill_cents: 12345, tip_percent: 25}
+      expected: 15431
+    - name: full_double
+      input: {bill_cents: 800, tip_percent: 100}
+      expected: 1600
+explanation_markdown: |
+  Working in integer cents keeps the arithmetic exact. Multiplying before the
+  `// 100` division means the percentage is applied to the full bill, and the
+  floor division drops any fractional cent. Pulling the two fields into named
+  variables keeps the final expression easy to read.
+common_mistakes:
+  - Dividing before multiplying, which loses precision on small bills.
+  - Returning only the tip instead of the bill plus the tip.
+  - Using / and returning a float number of cents.

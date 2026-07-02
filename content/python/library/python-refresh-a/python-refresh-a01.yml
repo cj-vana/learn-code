@@ -1,0 +1,84 @@
+id: exercise.library.python_refresh.a01
+kind: exercise
+version: 1
+language: python
+title: Museum Admission Tiers
+slug: python-refresh-a01
+difficulty: easy
+concepts:
+  - python.conditionals
+  - python.operators
+prerequisites:
+  - python.functions
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original museum ticket-pricing scenario, prompt, tests, and explanation.
+prompt_markdown: |
+  A small maritime museum sets its admission price from a visitor's age in whole
+  years. Write `admission_price(age)` returning the ticket price in dollars:
+
+  - under 5 years old: free (0)
+  - 5 up to but not including 18: 8
+  - 18 up to but not including 65: 15
+  - 65 and older: 10
+starter_code: |
+  def admission_price(age):
+      return 0
+function_name: admission_price
+input_mode: function
+solution_sketch: Compare age against each boundary from lowest to highest and return the matching price.
+sample_solution: |
+  def admission_price(age):
+      if age < 5:
+          return 0
+      if age < 18:
+          return 8
+      if age < 65:
+          return 15
+      return 10
+hints:
+  - level: 1
+    text: There are four price bands, so you need to decide which band the age falls in.
+  - level: 2
+    text: Check the boundaries in order, from the youngest band to the oldest.
+  - level: 3
+    text: Once you check age < 5, then age < 18, then age < 65, anything left is a senior.
+tests:
+  public:
+    - name: toddler
+      input: 3
+      expected: 0
+    - name: teen
+      input: 12
+      expected: 8
+    - name: adult
+      input: 40
+      expected: 15
+  validation:
+    - name: senior
+      input: 70
+      expected: 10
+    - name: boundary_five
+      input: 5
+      expected: 8
+    - name: boundary_eighteen
+      input: 18
+      expected: 15
+    - name: boundary_sixtyfive
+      input: 65
+      expected: 10
+explanation_markdown: |
+  Ordering the comparisons from smallest to largest lets each `if` assume the
+  earlier bands were already ruled out. After `age < 5`, `age < 18`, and
+  `age < 65` all fail, the only remaining possibility is a senior, so the final
+  price needs no extra check.
+common_mistakes:
+  - Using overlapping ranges that let two bands both match.
+  - Getting the boundaries wrong so that an 18-year-old is charged the youth price.
+  - Forgetting to return a value for the oldest band.

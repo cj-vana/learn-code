@@ -1,0 +1,82 @@
+id: exercise.library.loops_lists_strings.b08
+kind: exercise
+version: 1
+language: python
+title: Interleave Two Playlists
+slug: loops-lists-strings-b08
+difficulty: medium
+concepts:
+  - python.lists
+  - python.loops
+prerequisites:
+  - python.functions
+estimated_time_minutes: 16
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings.b08
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original DJ playlist interleaving scenario, prompt, tests, and explanation.
+prompt_markdown: |
+  A DJ blends two playlists by alternating tracks: one from the first list, then
+  one from the second, and so on. Write `interleave(data)` where `data` is a dict
+  with keys `first` and `second`, each a list of track names. Return a single list
+  that alternates elements starting with `first`. When one list runs out, append
+  the remaining tracks from the longer list in order.
+starter_code: |
+  def interleave(data):
+      return []
+function_name: interleave
+input_mode: function
+solution_sketch: Loop over the length of the longer list, adding an element from each list when the index is still in range.
+sample_solution: |
+  def interleave(data):
+      first = data["first"]
+      second = data["second"]
+      result = []
+      length = max(len(first), len(second))
+      for i in range(length):
+          if i < len(first):
+              result.append(first[i])
+          if i < len(second):
+              result.append(second[i])
+      return result
+hints:
+  - level: 1
+    text: Step through positions up to the length of the longer list.
+  - level: 2
+    text: At each position, only add an element if that index exists in the list.
+  - level: 3
+    text: Append first[i] then second[i], each guarded by an index-in-range check.
+tests:
+  public:
+    - name: equal_length
+      input: {first: [a, c], second: [b, d]}
+      expected: [a, b, c, d]
+    - name: empty_second
+      input: {first: [a, b], second: []}
+      expected: [a, b]
+    - name: both_empty
+      input: {first: [], second: []}
+      expected: []
+  validation:
+    - name: first_longer
+      input: {first: [a, b, c, d], second: [x, y]}
+      expected: [a, x, b, y, c, d]
+    - name: second_longer
+      input: {first: [m], second: [p, q, r]}
+      expected: [m, p, q, r]
+    - name: single_each
+      input: {first: [one], second: [two]}
+      expected: [one, two]
+explanation_markdown: |
+  Looping over the length of the longer list lets you visit every position. At
+  each index you append from the first list and then the second, but only when
+  that index actually exists, so the leftover tail of the longer list is added in
+  order once the shorter list is exhausted.
+common_mistakes:
+  - Stopping at the shorter list's length and dropping leftover tracks.
+  - Appending from the second list before the first at each position.
+  - Indexing out of range instead of checking the length first.

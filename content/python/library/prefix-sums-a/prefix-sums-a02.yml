@@ -1,0 +1,76 @@
+id: exercise.library.prefix_sums.a02
+kind: exercise
+version: 1
+language: python
+title: Water Meter Daily Usage
+slug: prefix-sums-a02
+difficulty: easy
+concepts:
+  - patterns.prefix_sums
+prerequisites:
+  - python.lists
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.prefix_sums.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original cumulative water-meter reading scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A caretaker photographs the cumulative reading on a building's water meter each
+  morning. Because the meter only ever counts up, each day's usage is the
+  difference between that morning's reading and the previous morning's reading.
+
+  Write `daily_usage(readings)` that returns the list of consumption between
+  consecutive readings. For example, `[100, 130, 175]` returns `[30, 45]`. Fewer
+  than two readings means no full day was measured, so return an empty list.
+starter_code: |
+  def daily_usage(readings):
+      return []
+function_name: daily_usage
+input_mode: function
+solution_sketch: Subtract each reading from the one before it to invert the cumulative meter.
+sample_solution: |
+  def daily_usage(readings):
+      usage = []
+      for i in range(1, len(readings)):
+          usage.append(readings[i] - readings[i - 1])
+      return usage
+hints:
+  - level: 1
+    text: A cumulative meter hides each day's usage inside the jump between two readings.
+  - level: 2
+    text: Walk the list starting at index 1 and compare each reading with the one before it.
+  - level: 3
+    text: The result has one fewer entry than the readings, so guard the empty and single-reading cases.
+tests:
+  public:
+    - name: two_readings
+      input: [100, 130]
+      expected: [30]
+    - name: three_readings
+      input: [100, 130, 175]
+      expected: [30, 45]
+    - name: single_reading
+      input: [50]
+      expected: []
+  validation:
+    - name: no_readings
+      input: []
+      expected: []
+    - name: flat_usage
+      input: [10, 10, 10]
+      expected: [0, 0]
+    - name: mixed_days
+      input: [0, 5, 5, 12]
+      expected: [5, 0, 7]
+explanation_markdown: |
+  Differencing consecutive values is the inverse of building a prefix-sum array:
+  running the prefix sum over the returned usage list would rebuild the original
+  meter readings. One pass from index 1 gives every day's consumption in O(n).
+common_mistakes:
+  - Starting the loop at index 0 and reading `readings[i - 1]` out of bounds.
+  - Returning a list the same length as the readings instead of one shorter.
+  - Subtracting in the wrong order and producing negative usage.

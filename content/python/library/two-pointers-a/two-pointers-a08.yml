@@ -1,0 +1,95 @@
+id: exercise.library.two_pointers.a08
+kind: exercise
+version: 1
+language: python
+title: Sorted Squared Deviations
+slug: two-pointers-a08
+difficulty: medium
+concepts:
+  - patterns.two_pointers
+  - python.lists
+  - python.sorting
+prerequisites:
+  - python.functions
+estimated_time_minutes: 16
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.two_pointers.a08
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original temperature-deviation squared-and-sorted scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A greenhouse logs each day's temperature deviation from its target, and the
+  readings are already sorted in ascending order (so cold days are negative and
+  warm days positive). An analyst needs the squared deviations, sorted ascending.
+
+  Write `sorted_squared(values)` where `values` is a list of integers sorted in
+  ascending order. Return a new list of their squares in ascending order. Do this
+  in a single pass rather than squaring and re-sorting.
+starter_code: |
+  def sorted_squared(values):
+      return []
+function_name: sorted_squared
+input_mode: function
+solution_sketch: The largest square is at one of the two ends; fill the result from the back while pointers close in.
+sample_solution: |
+  def sorted_squared(values):
+      n = len(values)
+      result = [0] * n
+      left = 0
+      right = n - 1
+      pos = n - 1
+      while left <= right:
+          low = values[left] ** 2
+          high = values[right] ** 2
+          if low > high:
+              result[pos] = low
+              left += 1
+          else:
+              result[pos] = high
+              right -= 1
+          pos -= 1
+      return result
+hints:
+  - level: 1
+    text: After squaring, the biggest value comes from whichever end has the larger magnitude.
+  - level: 2
+    text: Compare the squares at the two ends and place the larger one at the back of the result.
+  - level: 3
+    text: Fill the result from the last index toward the front, moving whichever pointer supplied the bigger square.
+tests:
+  public:
+    - name: with_negatives
+      input: [-4, -1, 0, 3, 10]
+      expected: [0, 1, 9, 16, 100]
+    - name: all_positive
+      input: [1, 2, 3]
+      expected: [1, 4, 9]
+    - name: all_negative
+      input: [-5, -3, -1]
+      expected: [1, 9, 25]
+  validation:
+    - name: empty
+      input: []
+      expected: []
+    - name: single
+      input: [-7]
+      expected: [49]
+    - name: symmetric
+      input: [-2, 2]
+      expected: [4, 4]
+    - name: mixed
+      input: [-3, -2, 4]
+      expected: [4, 9, 16]
+explanation_markdown: |
+  Squaring flips the ordering for negatives, but the extremes of the sorted input
+  still hold the largest magnitudes. Two pointers at the ends compare the squared
+  candidates and drop the larger into the next open slot from the back, so the
+  result is built in descending-position order in O(n) time, beating a
+  square-then-sort at O(n log n).
+common_mistakes:
+  - Squaring first and calling sort, which ignores the pattern and is slower.
+  - Filling the result from the front, where the largest square does not belong.
+  - Forgetting that a large-magnitude negative can outweigh a positive at the other end.

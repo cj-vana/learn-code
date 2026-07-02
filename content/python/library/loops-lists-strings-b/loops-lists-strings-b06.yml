@@ -1,0 +1,75 @@
+id: exercise.library.loops_lists_strings.b06
+kind: exercise
+version: 1
+language: python
+title: Balanced Relay Halves
+slug: loops-lists-strings-b06
+difficulty: easy
+concepts:
+  - python.slicing
+  - python.lists
+prerequisites:
+  - python.functions
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings.b06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original relay-team lap-time scenario, prompt, tests, and explanation.
+prompt_markdown: |
+  A two-runner relay records lap times in one list: the first half of the entries
+  belong to runner A and the second half to runner B (the list always has an even
+  length). Write `halves_balanced(times)` returning True if the two halves have
+  equal total time, otherwise False. An empty list is considered balanced.
+starter_code: |
+  def halves_balanced(times):
+      return False
+function_name: halves_balanced
+input_mode: function
+solution_sketch: Slice the list at its midpoint and compare the sums of the two halves.
+sample_solution: |
+  def halves_balanced(times):
+      mid = len(times) // 2
+      return sum(times[:mid]) == sum(times[mid:])
+hints:
+  - level: 1
+    text: The midpoint index is half the list length.
+  - level: 2
+    text: Slicing gives you the two halves without a manual loop.
+  - level: 3
+    text: Compare sum(times[:mid]) with sum(times[mid:]).
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: true
+    - name: balanced
+      input: [3, 1, 2, 2]
+      expected: true
+    - name: unbalanced
+      input: [5, 0, 1, 1]
+      expected: false
+  validation:
+    - name: equal_pair
+      input: [7, 7]
+      expected: true
+    - name: unequal_pair
+      input: [4, 9]
+      expected: false
+    - name: longer_balanced
+      input: [1, 2, 3, 2, 2, 2]
+      expected: true
+    - name: longer_unbalanced
+      input: [8, 1, 2, 3]
+      expected: false
+explanation_markdown: |
+  The midpoint is `len(times) // 2`. Slicing before and after that index produces
+  the two runners' laps, and comparing their sums answers the question in one
+  line. An empty list splits into two empty halves whose sums are both zero.
+common_mistakes:
+  - Using the wrong midpoint and overlapping the two halves.
+  - Comparing lengths instead of the sums of the halves.
+  - Assuming the list length is odd and dropping a middle element.

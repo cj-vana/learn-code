@@ -1,0 +1,75 @@
+id: exercise.library.dicts_sets_tuples.b02
+kind: exercise
+version: 1
+language: python
+title: Two-Day Returning Visitors
+slug: dicts-sets-tuples-b02
+difficulty: easy
+concepts:
+  - python.sets
+  - patterns.set_membership
+prerequisites:
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples.b02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original museum-badge scenario finding visitor ids scanned on both of two days.
+prompt_markdown: |
+  A museum scans a numeric badge id every time a visitor enters. You are given a
+  dict with keys `day1` and `day2`, each a list of badge ids seen that day (a
+  visitor may be scanned more than once). Write `returning_visitors(data)` that
+  returns a sorted list of the badge ids that appear on BOTH days. If no id is
+  shared, return an empty list.
+starter_code: |
+  def returning_visitors(data):
+      return []
+function_name: returning_visitors
+input_mode: function
+solution_sketch: Turn each day's list into a set and return the sorted intersection.
+sample_solution: |
+  def returning_visitors(data):
+      day1 = set(data["day1"])
+      day2 = set(data["day2"])
+      return sorted(day1 & day2)
+hints:
+  - level: 1
+    text: Duplicates within a day do not matter, so collapse each day into a set.
+  - level: 2
+    text: The ids seen on both days are the intersection of the two sets.
+  - level: 3
+    text: Use set(day1) & set(day2) and wrap the result in sorted().
+tests:
+  public:
+    - name: none_shared
+      input: {day1: [1, 2, 3], day2: [4, 5]}
+      expected: []
+    - name: some_shared
+      input: {day1: [1, 2, 3], day2: [2, 3, 4]}
+      expected: [2, 3]
+    - name: all_shared
+      input: {day1: [7, 8], day2: [8, 7]}
+      expected: [7, 8]
+  validation:
+    - name: duplicates_within_day
+      input: {day1: [5, 5, 6], day2: [6, 6, 9]}
+      expected: [6]
+    - name: empty_first_day
+      input: {day1: [], day2: [1, 2]}
+      expected: []
+    - name: larger
+      input: {day1: [10, 20, 30, 40], day2: [40, 30, 99]}
+      expected: [30, 40]
+explanation_markdown: |
+  Converting each day to a set removes within-day duplicates and gives O(1)
+  membership checks. The `&` operator keeps only ids present in both sets, and
+  `sorted` returns them in ascending order as a plain list. The whole thing is
+  linear in the number of scans.
+common_mistakes:
+  - Returning the set directly instead of a sorted list.
+  - Using union (|) or difference (-) instead of intersection (&).
+  - Counting a repeated same-day scan as if the visitor returned.

@@ -1,0 +1,82 @@
+id: exercise.library.hashmap_set.b02
+kind: exercise
+version: 1
+language: python
+title: Campus Radio Top Request
+slug: hashmap-set-b02
+difficulty: easy
+concepts:
+  - patterns.hash_map_counting
+  - python.dictionaries
+prerequisites:
+  - python.loops
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.hashmap_set.b02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original campus-radio scenario picking the most requested song with an earliest-request tie-break.
+prompt_markdown: |
+  A campus radio show collects song titles as listeners phone in requests during
+  the broadcast. Write `top_request(requests)` that returns the title requested
+  the most times. If two or more titles tie for the most requests, return the one
+  whose first request arrived earliest in the list. An empty list of requests
+  returns an empty string.
+starter_code: |
+  def top_request(requests):
+      return ""
+function_name: top_request
+input_mode: function
+solution_sketch: Count each title in a dict, then take the max count breaking ties by first appearance.
+sample_solution: |
+  def top_request(requests):
+      if not requests:
+          return ""
+      counts = {}
+      for title in requests:
+          counts[title] = counts.get(title, 0) + 1
+      return max(counts, key=counts.get)
+hints:
+  - level: 1
+    text: Build a running count of how often each title is requested.
+  - level: 2
+    text: A dict preserves insertion order, so the first-seen title stays first.
+  - level: 3
+    text: max(counts, key=counts.get) returns the earliest-inserted key on a tie.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: ""
+    - name: single
+      input: [aurora]
+      expected: aurora
+    - name: clear_winner
+      input: [aurora, breeze, aurora]
+      expected: aurora
+  validation:
+    - name: strong_lead
+      input: [dune, echo, echo, dune, dune]
+      expected: dune
+    - name: later_climbs
+      input: [fable, glow, glow]
+      expected: glow
+    - name: tie_first_wins
+      input: [rust, sway, rust, sway]
+      expected: rust
+    - name: three_way_tie
+      input: [one, two, three]
+      expected: one
+explanation_markdown: |
+  Counting each title in a dictionary is a single O(n) pass, and dictionaries
+  remember the order keys were first inserted. Because `max` returns the first
+  item that reaches the highest value during iteration, and iteration follows
+  insertion order, ties naturally resolve to the title whose first request came
+  earliest. The empty-list guard keeps `max` from being called on an empty dict.
+common_mistakes:
+  - Calling max on an empty dict instead of guarding the empty input.
+  - Sorting titles alphabetically instead of breaking ties by first request.
+  - Recomputing counts inside the loop instead of accumulating once.

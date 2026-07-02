@@ -1,0 +1,79 @@
+id: exercise.library.loops_lists_strings.a02
+kind: exercise
+version: 1
+language: python
+title: Ripe Grape Batches
+slug: loops-lists-strings-a02
+difficulty: easy
+concepts:
+  - python.lists
+  - python.loops
+  - patterns.filtering
+prerequisites:
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original vineyard sugar-level filtering scenario, prompt, and tests.
+prompt_markdown: |
+  A vineyard measures the sugar level of each grape batch. Write
+  `ripe_batches(data)` where `data` is a dict with keys `levels` (a list of
+  numbers) and `minimum` (a number). Return a new list containing only the
+  levels that are at least `minimum`, keeping their original order.
+starter_code: |
+  def ripe_batches(data):
+      return []
+function_name: ripe_batches
+input_mode: function
+solution_sketch: Unpack the dict, then collect levels that meet the minimum in order.
+sample_solution: |
+  def ripe_batches(data):
+      levels = data["levels"]
+      minimum = data["minimum"]
+      result = []
+      for level in levels:
+          if level >= minimum:
+              result.append(level)
+      return result
+hints:
+  - level: 1
+    text: Read the two values out of the dict before looping.
+  - level: 2
+    text: Build a fresh result list and append qualifying levels.
+  - level: 3
+    text: Keep a level when level >= minimum so the boundary value is included.
+tests:
+  public:
+    - name: none_ripe
+      input: {levels: [10, 12], minimum: 20}
+      expected: []
+    - name: some_ripe
+      input: {levels: [18, 22, 19, 25], minimum: 20}
+      expected: [22, 25]
+    - name: boundary_included
+      input: {levels: [20, 21, 15], minimum: 20}
+      expected: [20, 21]
+  validation:
+    - name: all_ripe
+      input: {levels: [30, 40, 50], minimum: 10}
+      expected: [30, 40, 50]
+    - name: empty_levels
+      input: {levels: [], minimum: 5}
+      expected: []
+    - name: keeps_order
+      input: {levels: [25, 5, 30, 8, 22], minimum: 22}
+      expected: [25, 30, 22]
+explanation_markdown: |
+  The single argument is a dict, so unpack `levels` and `minimum` first. A loop
+  that appends each level meeting `level >= minimum` preserves the original order
+  and includes values exactly equal to the threshold. Building a new list leaves
+  the input untouched.
+common_mistakes:
+  - Using > instead of >= and dropping batches equal to the minimum.
+  - Mutating the input list while iterating over it.
+  - Forgetting to unpack the dict and comparing against the whole dict.

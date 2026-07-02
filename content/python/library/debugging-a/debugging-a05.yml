@@ -1,0 +1,76 @@
+id: exercise.library.debugging.a05
+kind: exercise
+version: 1
+language: python
+title: Average Rainfall Without Crashing
+slug: debugging-a05
+difficulty: easy
+concepts:
+  - python.debugging
+  - patterns.running_total
+prerequisites:
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.debugging.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original weather-station averaging scenario centered on guarding against a divide-by-zero on empty input.
+prompt_markdown: |
+  A weather station wants the average of its daily rainfall readings. Write
+  `average_rainfall(readings)` returning the mean of the numbers as a float.
+
+  The bug to avoid: on a day with no readings, `len(readings)` is 0 and dividing
+  by it raises `ZeroDivisionError`. Guard that case and return `0.0` when the
+  list is empty.
+starter_code: |
+  def average_rainfall(readings):
+      return 0.0
+function_name: average_rainfall
+input_mode: function
+solution_sketch: Return 0.0 for an empty list, otherwise sum divided by count.
+sample_solution: |
+  def average_rainfall(readings):
+      if not readings:
+          return 0.0
+      return sum(readings) / len(readings)
+hints:
+  - level: 1
+    text: An empty list has no average to compute.
+  - level: 2
+    text: Check for the empty case before you divide.
+  - level: 3
+    text: Return 0.0 when the list is empty, else sum(readings) / len(readings).
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: 0.0
+    - name: single
+      input: [4]
+      expected: 4.0
+    - name: even_spread
+      input: [2, 4, 6]
+      expected: 4.0
+  validation:
+    - name: two_values
+      input: [10, 20]
+      expected: 15.0
+    - name: same_value
+      input: [3, 3, 3]
+      expected: 3.0
+    - name: fractional_mean
+      input: [1, 2, 3, 4]
+      expected: 2.5
+explanation_markdown: |
+  The average is the total divided by the count, but that formula breaks when the
+  count is zero. Checking `if not readings` first lets you return a safe `0.0`
+  and only run the division when there is at least one reading. In Python, `/`
+  always produces a float, which is why the mean of whole numbers can be 2.5.
+common_mistakes:
+  - Dividing by len(readings) without handling the empty list.
+  - Using // and losing the fractional part of the mean.
+  - Returning an int instead of a float for the average.

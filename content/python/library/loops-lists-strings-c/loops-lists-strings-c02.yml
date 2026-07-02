@@ -1,0 +1,99 @@
+id: exercise.library.loops_lists_strings.c02
+kind: exercise
+version: 1
+language: python
+title: Longest Well-Stocked Streak
+slug: loops-lists-strings-c02
+difficulty: easy
+concepts:
+  - python.loops
+  - python.lists
+  - patterns.running_total
+prerequisites:
+  - python.functions
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings.c02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original warehouse restock scenario asking for the longest run of days meeting a stock threshold.
+prompt_markdown: |
+  A neighborhood grocery warehouse records how many crates of oat milk it has on
+  the shelf at the end of each day. The manager wants to know the longest run of
+  consecutive days during which stock stayed at or above a target level, so she
+  can judge how reliable supply has been.
+
+  Write `longest_stocked_streak(data)` where `data` is a dict with two keys:
+
+  - `counts`: a list of integers, one crate count per day, in day order.
+  - `threshold`: an integer target level.
+
+  Return the length of the longest streak of consecutive days whose count is
+  greater than or equal to `threshold`. If no day reaches the threshold, return
+  `0`. An empty `counts` list returns `0`.
+starter_code: |
+  def longest_stocked_streak(data):
+      return 0
+function_name: longest_stocked_streak
+input_mode: function
+solution_sketch: Sweep the days once, growing a current-streak counter when the threshold is met and tracking the best streak seen.
+sample_solution: |
+  def longest_stocked_streak(data):
+      counts = data["counts"]
+      threshold = data["threshold"]
+      best = 0
+      current = 0
+      for count in counts:
+          if count >= threshold:
+              current += 1
+              if current > best:
+                  best = current
+          else:
+              current = 0
+      return best
+hints:
+  - level: 1
+    text: Walk through the days one at a time while remembering how long the current streak is.
+  - level: 2
+    text: When a day meets the threshold, extend the current streak; when it fails, the current streak resets to zero.
+  - level: 3
+    text: Keep a separate best value and update it whenever the current streak grows past it.
+tests:
+  public:
+    - name: empty
+      input: {counts: [], threshold: 5}
+      expected: 0
+    - name: none_reach
+      input: {counts: [1, 2, 3], threshold: 5}
+      expected: 0
+    - name: streak_of_three
+      input: {counts: [5, 6, 2, 7, 8, 9], threshold: 5}
+      expected: 3
+  validation:
+    - name: streak_at_end
+      input: {counts: [10, 1, 10, 10, 10], threshold: 10}
+      expected: 3
+    - name: all_above
+      input: {counts: [7, 7, 7, 7], threshold: 3}
+      expected: 4
+    - name: single_dip
+      input: {counts: [4, 5, 5, 4, 5], threshold: 5}
+      expected: 2
+    - name: single_day_equal
+      input: {counts: [5], threshold: 5}
+      expected: 1
+explanation_markdown: |
+  This is a running-total pattern applied to a streak. Scan the daily counts once
+  while keeping two numbers: `current`, the length of the streak ending on the
+  day you are looking at, and `best`, the longest streak seen so far. Each day
+  that meets the threshold adds one to `current`; each day that fails clears
+  `current` back to zero because the run is broken. Whenever `current` climbs
+  above `best`, record the new maximum. A single pass makes this O(n) in the
+  number of days, and an empty list simply leaves both counters at zero.
+common_mistakes:
+  - Using a strict greater-than instead of greater-than-or-equal, so days exactly at the threshold are missed.
+  - Forgetting to reset the current streak to zero on a day that falls below the threshold.
+  - Returning the final current streak instead of the best streak seen anywhere in the list.

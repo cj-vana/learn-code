@@ -1,0 +1,81 @@
+id: exercise.library.dicts_sets_tuples.a07
+kind: exercise
+version: 1
+language: python
+title: Attended Every Session
+slug: dicts-sets-tuples-a07
+difficulty: medium
+concepts:
+  - python.sets
+  - python.sorting
+prerequisites:
+  - python.functions
+  - python.loops
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples.a07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original multi-session pottery-workshop attendance scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A pottery studio runs a workshop across several sessions and records who
+  showed up to each one. Write `attended_all(sessions)` where `sessions` is a
+  list of attendance lists, one per session.
+
+  Return a sorted list of the people who attended every session. If there are no
+  sessions at all, return an empty list. Duplicates within a single session's
+  list should be ignored.
+starter_code: |
+  def attended_all(sessions):
+      return []
+function_name: attended_all
+input_mode: function
+solution_sketch: Intersect all the session sets, starting from the first, then sort.
+sample_solution: |
+  def attended_all(sessions):
+      if not sessions:
+          return []
+      common = set(sessions[0])
+      for session in sessions[1:]:
+          common &= set(session)
+      return sorted(common)
+hints:
+  - level: 1
+    text: Someone qualifies only if they appear in all of the lists.
+  - level: 2
+    text: The set intersection of every session leaves only the people common to all.
+  - level: 3
+    text: Start with set(sessions[0]) and keep intersecting with each remaining session.
+tests:
+  public:
+    - name: no_sessions
+      input: []
+      expected: []
+    - name: single_session
+      input: [[ana, ben]]
+      expected: [ana, ben]
+    - name: two_sessions
+      input: [[ana, ben, cara], [ben, cara, dan]]
+      expected: [ben, cara]
+  validation:
+    - name: none_common
+      input: [[ana], [ben], [cara]]
+      expected: []
+    - name: three_sessions
+      input: [[ana, ben, cara], [ana, cara], [cara, ana, eve]]
+      expected: [ana, cara]
+    - name: repeated_names
+      input: [[sam, sam, tia], [tia, sam]]
+      expected: [sam, tia]
+explanation_markdown: |
+  Intersecting sets keeps only elements common to all of them. Seeding `common`
+  with the first session and applying `&=` for each remaining session narrows it
+  down to the people present every time. Guarding the empty case avoids indexing
+  `sessions[0]` when there are no sessions.
+common_mistakes:
+  - Using union instead of intersection and including everyone.
+  - Crashing on an empty list by reading sessions[0] without a guard.
+  - Returning the set rather than a sorted list.

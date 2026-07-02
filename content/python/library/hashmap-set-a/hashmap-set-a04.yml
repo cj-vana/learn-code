@@ -1,0 +1,74 @@
+id: exercise.library.hashmap_set.a04
+kind: exercise
+version: 1
+language: python
+title: Duplicate Book Barcode Alert
+slug: hashmap-set-a04
+difficulty: easy
+concepts:
+  - patterns.set_membership
+prerequisites:
+  - python.sets
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.hashmap_set.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original library returns-desk barcode-scanning scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A library returns desk scans the barcode of each book dropped off. Write
+  `has_duplicate(barcodes)` returning `True` if any barcode is scanned more
+  than once, and `False` otherwise. An empty list returns `False`.
+starter_code: |
+  def has_duplicate(barcodes):
+      return False
+function_name: has_duplicate
+input_mode: function
+solution_sketch: Track seen barcodes in a set and stop as soon as one reappears.
+sample_solution: |
+  def has_duplicate(barcodes):
+      seen = set()
+      for code in barcodes:
+          if code in seen:
+              return True
+          seen.add(code)
+      return False
+hints:
+  - level: 1
+    text: Remember which barcodes you have already scanned.
+  - level: 2
+    text: A set of seen barcodes lets you check for a repeat in constant time.
+  - level: 3
+    text: Return True the moment a code is already in the set; otherwise add it.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: false
+    - name: all_unique
+      input: [a1, b2, c3]
+      expected: false
+    - name: one_repeat
+      input: [a1, b2, a1]
+      expected: true
+  validation:
+    - name: adjacent_repeat
+      input: [xx, xx]
+      expected: true
+    - name: late_repeat
+      input: [mm, nn, oo, pp, mm]
+      expected: true
+    - name: long_unique
+      input: [qq, rr, ss, tt, uu]
+      expected: false
+explanation_markdown: |
+  Building a set of already-seen barcodes turns each duplicate check into an
+  O(1) lookup, so the whole scan is O(n). Returning early on the first repeat
+  avoids scanning the rest of the list once the answer is known.
+common_mistakes:
+  - Comparing every pair of barcodes, which is unnecessary O(n^2) work.
+  - Adding to the set before checking, so the same element looks like a duplicate of itself.
+  - Returning True or False as a string instead of a boolean.

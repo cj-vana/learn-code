@@ -1,0 +1,84 @@
+id: exercise.library.mixed_capstones.a04
+kind: exercise
+version: 1
+language: python
+title: Toll Zone Totals
+slug: mixed-capstones-a04
+difficulty: easy
+concepts:
+  - patterns.prefix_sums
+  - python.lists
+prerequisites:
+  - python.dictionaries
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.mixed_capstones.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original highway-toll range-query scenario answered with a single prefix-sum array and its own tests.
+prompt_markdown: |
+  A highway charges a toll at each numbered gate. Write `zone_total(data)` where
+  `data` is a dict with key `tolls` (a list of integer charges, one per gate) and
+  key `queries` (a list of `[left, right]` index pairs). For each query return the
+  total toll from gate `left` through gate `right` inclusive. Return a list of the
+  totals in the same order as the queries. You may assume every query has
+  `0 <= left <= right < len(tolls)`.
+starter_code: |
+  def zone_total(data):
+      return []
+function_name: zone_total
+input_mode: function
+solution_sketch: Build a prefix-sum array once, then answer each inclusive range in O(1) as prefix[right + 1] - prefix[left].
+sample_solution: |
+  def zone_total(data):
+      tolls = data["tolls"]
+      queries = data["queries"]
+      prefix = [0]
+      for value in tolls:
+          prefix.append(prefix[-1] + value)
+      result = []
+      for pair in queries:
+          left = pair[0]
+          right = pair[1]
+          result.append(prefix[right + 1] - prefix[left])
+      return result
+hints:
+  - level: 1
+    text: Re-adding a range for every query is wasteful when many queries hit overlapping gates.
+  - level: 2
+    text: Precompute cumulative totals so any range sum becomes a single subtraction.
+  - level: 3
+    text: With prefix[0] = 0 and prefix[i+1] = prefix[i] + tolls[i], the answer for [left, right] is prefix[right + 1] - prefix[left].
+tests:
+  public:
+    - name: single_query
+      input: {tolls: [5, 2, 7, 1, 4], queries: [[0, 4]]}
+      expected: [19]
+    - name: no_queries
+      input: {tolls: [5, 2, 7, 1, 4], queries: []}
+      expected: []
+    - name: point
+      input: {tolls: [5, 2, 7, 1, 4], queries: [[2, 2]]}
+      expected: [7]
+  validation:
+    - name: multiple
+      input: {tolls: [5, 2, 7, 1, 4], queries: [[0, 1], [1, 3], [3, 4]]}
+      expected: [7, 10, 5]
+    - name: overlap
+      input: {tolls: [1, 1, 1, 1], queries: [[0, 3], [0, 0], [2, 3]]}
+      expected: [4, 1, 2]
+    - name: negatives
+      input: {tolls: [3, -2, 5, -1], queries: [[0, 3], [1, 2]]}
+      expected: [5, 3]
+explanation_markdown: |
+  A prefix-sum array stores the running total up to each gate, built in one O(n)
+  pass. With `prefix[0] = 0`, the sum of any inclusive range `[left, right]` is
+  `prefix[right + 1] - prefix[left]`, so every query is answered in O(1) no matter
+  how wide the range is. That turns q range queries from O(n*q) into O(n + q).
+common_mistakes:
+  - Off-by-one errors from forgetting the leading 0 or using prefix[right] instead of prefix[right + 1].
+  - Recomputing each range with an inner loop, which is slow when queries overlap.
+  - Mutating the tolls list in place instead of building a separate prefix array.

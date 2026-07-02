@@ -1,0 +1,87 @@
+id: exercise.library.dicts_sets_tuples.a03
+kind: exercise
+version: 1
+language: python
+title: Rank Playlist By Plays
+slug: dicts-sets-tuples-a03
+difficulty: easy
+concepts:
+  - python.sorting
+  - python.tuples
+prerequisites:
+  - python.functions
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original community-radio playlist ranking scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A community radio station ranks the songs on a playlist. Write
+  `rank_songs(songs)` where `songs` is a list of dicts, each with a `title`
+  string and a `plays` integer.
+
+  Return a list of titles ordered by play count from highest to lowest. When two
+  songs have the same play count, order those titles alphabetically. An empty
+  playlist returns an empty list.
+starter_code: |
+  def rank_songs(songs):
+      return []
+function_name: rank_songs
+input_mode: function
+solution_sketch: Sort by a tuple key of negative plays then title, and pull out the titles.
+sample_solution: |
+  def rank_songs(songs):
+      ordered = sorted(songs, key=lambda song: (-song["plays"], song["title"]))
+      return [song["title"] for song in ordered]
+hints:
+  - level: 1
+    text: You need two sort rules at once, applied in priority order.
+  - level: 2
+    text: A tuple key lets Python compare by plays first, then by title.
+  - level: 3
+    text: 'Use key=lambda s: (-s["plays"], s["title"]) so higher plays come first and ties sort alphabetically.'
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: single
+      input:
+        - { title: solstice, plays: 4 }
+      expected: [solstice]
+    - name: by_plays
+      input:
+        - { title: amber, plays: 2 }
+        - { title: birch, plays: 5 }
+      expected: [birch, amber]
+  validation:
+    - name: tie_alphabetical
+      input:
+        - { title: zephyr, plays: 3 }
+        - { title: aurora, plays: 3 }
+      expected: [aurora, zephyr]
+    - name: three_songs
+      input:
+        - { title: first, plays: 1 }
+        - { title: second, plays: 3 }
+        - { title: third, plays: 2 }
+      expected: [second, third, first]
+    - name: mixed_tie
+      input:
+        - { title: delta, plays: 5 }
+        - { title: alpha, plays: 5 }
+        - { title: charlie, plays: 2 }
+      expected: [alpha, delta, charlie]
+explanation_markdown: |
+  Python compares tuples element by element, so the sort key
+  `(-plays, title)` sorts by play count first (negated so larger counts come
+  first) and breaks ties by title in ascending alphabetical order. A final
+  comprehension keeps only the titles.
+common_mistakes:
+  - Sorting by plays ascending instead of descending.
+  - Ignoring the alphabetical tie-break when play counts match.
+  - Returning the whole song dicts instead of just the titles.

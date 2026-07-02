@@ -1,0 +1,83 @@
+id: exercise.library.sliding_window.a01
+kind: exercise
+version: 1
+language: python
+title: Food Truck Busiest Window
+slug: sliding-window-a01
+difficulty: easy
+concepts:
+  - patterns.sliding_window
+  - patterns.running_total
+  - python.lists
+prerequisites:
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sliding_window.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original food-truck hourly-orders scenario with a fixed-size maximum-sum window.
+prompt_markdown: |
+  A food truck logs how many orders it takes each hour it is parked. Given the
+  list `orders` and a window size `k`, write `busiest_window(data)` returning the
+  largest total number of orders across any `k` consecutive hours.
+
+  `data` is a dict: `{"orders": [...], "k": k}`. You may assume `k` is at least 1
+  and no larger than the number of hours recorded.
+starter_code: |
+  def busiest_window(data):
+      return 0
+function_name: busiest_window
+input_mode: function
+solution_sketch: Sum the first k hours, then slide by adding the new hour and dropping the oldest, tracking the max.
+sample_solution: |
+  def busiest_window(data):
+      orders = data["orders"]
+      k = data["k"]
+      window = sum(orders[:k])
+      best = window
+      for i in range(k, len(orders)):
+          window += orders[i] - orders[i - k]
+          if window > best:
+              best = window
+      return best
+hints:
+  - level: 1
+    text: You never need to re-add every hour; keep a running total for the current window.
+  - level: 2
+    text: Start with the sum of the first k hours, then slide one hour at a time.
+  - level: 3
+    text: When you move the window right, add orders[i] and subtract orders[i - k].
+tests:
+  public:
+    - name: single_window
+      input: {orders: [4, 2, 7], k: 3}
+      expected: 13
+    - name: k_one
+      input: {orders: [3, 9, 1, 6], k: 1}
+      expected: 9
+    - name: middle_peak
+      input: {orders: [1, 5, 5, 1], k: 2}
+      expected: 10
+  validation:
+    - name: front_heavy
+      input: {orders: [8, 7, 1, 1, 1], k: 2}
+      expected: 15
+    - name: uniform
+      input: {orders: [2, 2, 2, 2], k: 3}
+      expected: 6
+    - name: last_window_best
+      input: {orders: [1, 1, 1, 9, 9], k: 2}
+      expected: 18
+explanation_markdown: |
+  A fixed-size sliding window avoids recomputing each window from scratch. After
+  summing the first `k` hours, each step to the right adds the incoming hour and
+  removes the hour that just left the window, so the whole scan is O(n) instead of
+  O(n*k). Tracking the largest window total as you go yields the busiest stretch.
+common_mistakes:
+  - Recomputing sum(orders[start:start+k]) for every window, which is slower than needed.
+  - Forgetting to subtract the hour that leaves the window when sliding.
+  - Initializing best to 0, which breaks if every value is negative.

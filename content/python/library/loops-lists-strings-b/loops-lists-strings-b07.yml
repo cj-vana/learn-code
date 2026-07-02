@@ -1,0 +1,89 @@
+id: exercise.library.loops_lists_strings.b07
+kind: exercise
+version: 1
+language: python
+title: Compress a Color Strip
+slug: loops-lists-strings-b07
+difficulty: medium
+concepts:
+  - python.strings
+  - python.loops
+prerequisites:
+  - python.functions
+estimated_time_minutes: 18
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings.b07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original LED color-strip run-length scenario, prompt, tests, and explanation.
+prompt_markdown: |
+  An LED strip is described by a string where each character is a color code, read
+  left to right. Write `compress_strip(colors)` returning a compact string that
+  replaces every run of identical characters with that character followed by the
+  run length. For example `"aaabb"` becomes `"a3b2"`, and a single character still
+  gets a count of 1. An empty string returns an empty string.
+starter_code: |
+  def compress_strip(colors):
+      return ""
+function_name: compress_strip
+input_mode: function
+solution_sketch: Walk the string tracking the current character and its run length, emitting char plus count when the run ends.
+sample_solution: |
+  def compress_strip(colors):
+      if not colors:
+          return ""
+      result = []
+      current = colors[0]
+      count = 1
+      for ch in colors[1:]:
+          if ch == current:
+              count += 1
+          else:
+              result.append(current + str(count))
+              current = ch
+              count = 1
+      result.append(current + str(count))
+      return "".join(result)
+hints:
+  - level: 1
+    text: Compare each character to the one before it to detect run boundaries.
+  - level: 2
+    text: Keep the current character and how many times it has repeated so far.
+  - level: 3
+    text: When the character changes, append char plus count and start a new run; do not forget the final run.
+tests:
+  public:
+    - name: empty
+      input: ""
+      expected: ""
+    - name: repeats
+      input: "aaabb"
+      expected: "a3b2"
+    - name: all_singles
+      input: "abc"
+      expected: "a1b1c1"
+  validation:
+    - name: one_char
+      input: "z"
+      expected: "z1"
+    - name: long_run
+      input: "wwww"
+      expected: "w4"
+    - name: mixed_runs
+      input: "rrgbbb"
+      expected: "r2g1b3"
+    - name: alternating
+      input: "abab"
+      expected: "a1b1a1b1"
+explanation_markdown: |
+  Track the character currently being counted and how long its run is. Each time
+  the next character differs, flush the finished run as the character joined with
+  its count, then restart the counter. A final flush after the loop emits the last
+  run, which is easy to forget.
+common_mistakes:
+  - Dropping the final run because it is never flushed after the loop.
+  - Comparing to the wrong neighbor and miscounting run lengths.
+  - Omitting the count for runs of length one.

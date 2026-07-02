@@ -1,0 +1,76 @@
+id: exercise.library.mixed_capstones.a08
+kind: exercise
+version: 1
+language: python
+title: Trim the Sorted Guest List
+slug: mixed-capstones-a08
+difficulty: easy
+concepts:
+  - patterns.two_pointers
+  - python.lists
+prerequisites: []
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.mixed_capstones.a08
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original alphabetised guest-list scenario collapsing adjacent duplicates with a read/write pointer, plus its own tests.
+prompt_markdown: |
+  A venue prints an alphabetised guest list, but some names were entered twice and
+  now sit next to each other. Write `dedupe_sorted(names)` where `names` is a list
+  of guest names already in sorted order. Return a new list with each name kept
+  only once, preserving the sorted order. An empty list returns an empty list.
+starter_code: |
+  def dedupe_sorted(names):
+      return []
+function_name: dedupe_sorted
+input_mode: function
+solution_sketch: Walk the list once with a write pointer at the end of the result, appending a name only when it differs from the last kept name.
+sample_solution: |
+  def dedupe_sorted(names):
+      result = []
+      for name in names:
+          if not result or result[-1] != name:
+              result.append(name)
+      return result
+hints:
+  - level: 1
+    text: Because the list is sorted, any duplicates of a name sit right next to it.
+  - level: 2
+    text: Compare each name with the last one you decided to keep.
+  - level: 3
+    text: Append a name only when the result is empty or its final element differs, so runs of equal names collapse to one.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: no_dupes
+      input: [ana, bo, cy]
+      expected: [ana, bo, cy]
+    - name: with_dupes
+      input: [ana, ana, bo]
+      expected: [ana, bo]
+  validation:
+    - name: all_same
+      input: [zoe, zoe, zoe]
+      expected: [zoe]
+    - name: runs
+      input: [al, al, bo, cy, cy, cy]
+      expected: [al, bo, cy]
+    - name: single
+      input: [solo]
+      expected: [solo]
+explanation_markdown: |
+  A read pointer sweeps the list while a write pointer sits at the end of the
+  result, so this is the two-pointer dedup pattern in O(n) time. Since the list is
+  sorted, equal names form a contiguous run, and keeping a name only when it
+  differs from the last kept one collapses each run to a single entry. Comparing
+  against `result[-1]` is the write pointer looking back at what it last stored.
+common_mistakes:
+  - Assuming the list may be unsorted and reaching for a set, which loses the guaranteed order.
+  - Comparing each name to the original previous element instead of the last kept one, which can drop the wrong entries.
+  - Mutating the list while iterating over it rather than building a fresh result.

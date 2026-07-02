@@ -1,0 +1,76 @@
+id: exercise.library.dicts_sets_tuples.b01
+kind: exercise
+version: 1
+language: python
+title: Combine Market Stall Totals
+slug: dicts-sets-tuples-b01
+difficulty: easy
+concepts:
+  - python.dictionaries
+prerequisites:
+  - python.loops
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples.b01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original farmers-market stall scenario merging two produce logs into one summed dict.
+prompt_markdown: |
+  A farmers-market stall weighs its produce twice a day. You are given a dict
+  with two keys, `morning` and `afternoon`, each mapping produce names to
+  kilograms sold in that shift. Write `combine_stall_totals(data)` that returns
+  one dict mapping each produce name to the total kilograms across both shifts.
+  Produce that appears in only one shift keeps its single value. Two empty
+  shifts return an empty dict.
+starter_code: |
+  def combine_stall_totals(data):
+      return {}
+function_name: combine_stall_totals
+input_mode: function
+solution_sketch: Copy the morning dict, then add each afternoon amount onto the matching key.
+sample_solution: |
+  def combine_stall_totals(data):
+      totals = dict(data["morning"])
+      for item, kilograms in data["afternoon"].items():
+          totals[item] = totals.get(item, 0) + kilograms
+      return totals
+hints:
+  - level: 1
+    text: Start from a copy of the morning totals so you do not mutate the input.
+  - level: 2
+    text: Loop over the afternoon items and add each amount to the running dict.
+  - level: 3
+    text: Use totals.get(item, 0) + kilograms so new produce starts from zero.
+tests:
+  public:
+    - name: both_empty
+      input: {morning: {}, afternoon: {}}
+      expected: {}
+    - name: only_morning
+      input: {morning: {apples: 5}, afternoon: {}}
+      expected: {apples: 5}
+    - name: overlap
+      input: {morning: {apples: 5, pears: 2}, afternoon: {apples: 3, plums: 4}}
+      expected: {apples: 8, pears: 2, plums: 4}
+  validation:
+    - name: only_afternoon
+      input: {morning: {}, afternoon: {kale: 7}}
+      expected: {kale: 7}
+    - name: full_overlap
+      input: {morning: {beets: 1, corn: 2}, afternoon: {beets: 9, corn: 8}}
+      expected: {beets: 10, corn: 10}
+    - name: mixed_keys
+      input: {morning: {carrots: 1, leeks: 2, onions: 3}, afternoon: {leeks: 5, garlic: 4}}
+      expected: {carrots: 1, leeks: 7, onions: 3, garlic: 4}
+explanation_markdown: |
+  Copying the morning dict gives a starting point without changing the caller's
+  data. Iterating the afternoon items and using `get(item, 0)` means keys shared
+  by both shifts accumulate while brand-new keys start from zero. Dictionary
+  lookups are O(1), so the merge runs in one pass over the afternoon entries.
+common_mistakes:
+  - Mutating the morning dict directly instead of copying it first.
+  - Overwriting shared keys instead of adding the two amounts together.
+  - Skipping produce that appears in only one of the two shifts.

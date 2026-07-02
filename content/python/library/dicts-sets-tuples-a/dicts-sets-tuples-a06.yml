@@ -1,0 +1,81 @@
+id: exercise.library.dicts_sets_tuples.a06
+kind: exercise
+version: 1
+language: python
+title: Group Trail Names By Initial
+slug: dicts-sets-tuples-a06
+difficulty: medium
+concepts:
+  - python.dictionaries
+  - python.sorting
+prerequisites:
+  - python.functions
+  - python.loops
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples.a06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original hiking-trail grouping-by-first-letter scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A park ranger is organizing a directory of hiking trails. Write
+  `group_by_initial(names)` where `names` is a list of lowercase trail names.
+
+  Return a dict that groups the names by their first letter: each key is a first
+  letter and each value is the list of names starting with that letter, sorted
+  alphabetically. An empty list returns an empty dict. You may assume every name
+  has at least one character.
+starter_code: |
+  def group_by_initial(names):
+      return {}
+function_name: group_by_initial
+input_mode: function
+solution_sketch: Bucket names by first letter with setdefault, then sort each bucket.
+sample_solution: |
+  def group_by_initial(names):
+      groups = {}
+      for name in names:
+          groups.setdefault(name[0], []).append(name)
+      for bucket in groups.values():
+          bucket.sort()
+      return groups
+hints:
+  - level: 1
+    text: Each distinct first letter becomes a key holding a list of names.
+  - level: 2
+    text: dict.setdefault(letter, []) gives you a list to append to for a new letter.
+  - level: 3
+    text: After grouping, call sort() on each list so every bucket is alphabetized.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: {}
+    - name: one_name
+      input: [aspen]
+      expected: { a: [aspen] }
+    - name: two_groups
+      input: [apple, banana, avocado]
+      expected: { a: [apple, avocado], b: [banana] }
+  validation:
+    - name: sort_within_group
+      input: [pear, plum, peach]
+      expected: { p: [peach, pear, plum] }
+    - name: several_letters
+      input: [cat, cow, dog, deer, ant]
+      expected: { c: [cat, cow], d: [deer, dog], a: [ant] }
+    - name: single_group
+      input: [kite, koala, kiwi]
+      expected: { k: [kite, kiwi, koala] }
+explanation_markdown: |
+  `setdefault(name[0], [])` returns the existing list for a first letter or
+  creates a fresh one, so appending builds each group in a single pass. Sorting
+  every bucket afterward guarantees the names inside each group are alphabetized,
+  independent of the order they arrived in.
+common_mistakes:
+  - Overwriting a letter's list each time instead of appending to it.
+  - Forgetting to sort the names within each group.
+  - Using the whole name as the key rather than its first letter.

@@ -1,0 +1,76 @@
+id: exercise.library.dicts_sets_tuples.a01
+kind: exercise
+version: 1
+language: python
+title: New Blooms This Week
+slug: dicts-sets-tuples-a01
+difficulty: easy
+concepts:
+  - python.sets
+  - python.sorting
+prerequisites:
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original botanical-garden bloom-tracking scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A botanical garden logs which plants are flowering each week. Write
+  `new_blooms(data)` where `data` is a dict with two keys: `this_week` and
+  `last_week`, each a list of plant names.
+
+  Return a sorted list of the plants that are flowering this week but were not
+  flowering last week. Ignore duplicates within a list. If nothing is new,
+  return an empty list.
+starter_code: |
+  def new_blooms(data):
+      return []
+function_name: new_blooms
+input_mode: function
+solution_sketch: Subtract last week's set from this week's set, then sort the result.
+sample_solution: |
+  def new_blooms(data):
+      this_week = set(data["this_week"])
+      last_week = set(data["last_week"])
+      return sorted(this_week - last_week)
+hints:
+  - level: 1
+    text: You only care about names present this week but missing last week.
+  - level: 2
+    text: Turning each list into a set lets you use set subtraction.
+  - level: 3
+    text: Compute set(this_week) - set(last_week) and pass it to sorted().
+tests:
+  public:
+    - name: both_empty
+      input: { this_week: [], last_week: [] }
+      expected: []
+    - name: all_new
+      input: { this_week: [rose, tulip], last_week: [] }
+      expected: [rose, tulip]
+    - name: some_overlap
+      input: { this_week: [rose, tulip, daisy], last_week: [rose] }
+      expected: [daisy, tulip]
+  validation:
+    - name: none_new
+      input: { this_week: [iris], last_week: [iris, lily] }
+      expected: []
+    - name: duplicates_this_week
+      input: { this_week: [aster, aster, zinnia], last_week: [zinnia] }
+      expected: [aster]
+    - name: sorted_output
+      input: { this_week: [violet, begonia, marigold], last_week: [begonia] }
+      expected: [marigold, violet]
+explanation_markdown: |
+  Sets make "present here but not there" easy: `set(this_week) - set(last_week)`
+  keeps only the names unique to this week and automatically drops duplicates.
+  Wrapping the result in `sorted()` returns a predictable, alphabetized list.
+common_mistakes:
+  - Returning the set directly instead of a sorted list.
+  - Subtracting in the wrong order and reporting plants that stopped blooming.
+  - Forgetting that a name repeated within a week should count once.

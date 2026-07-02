@@ -1,0 +1,77 @@
+id: exercise.library.hashmap_set.a05
+kind: exercise
+version: 1
+language: python
+title: Players On Both Clubs
+slug: hashmap-set-a05
+difficulty: easy
+concepts:
+  - patterns.set_membership
+  - python.sets
+  - python.sorting
+prerequisites:
+  - python.sets
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.hashmap_set.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original amateur-sports shared-roster scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  Two amateur sports clubs share some players. Write `shared_players(data)`
+  where `data` is a dict with keys `club_a` and `club_b`, each a list of player
+  names.
+
+  Return a sorted list of the names that appear on both rosters. Ignore
+  duplicate listings within a single roster. If no one is shared, return an
+  empty list.
+starter_code: |
+  def shared_players(data):
+      return []
+function_name: shared_players
+input_mode: function
+solution_sketch: Intersect the two rosters as sets, then sort the result.
+sample_solution: |
+  def shared_players(data):
+      club_a = set(data["club_a"])
+      club_b = set(data["club_b"])
+      return sorted(club_a & club_b)
+hints:
+  - level: 1
+    text: You want the names common to both rosters.
+  - level: 2
+    text: Turning each roster into a set lets you use set intersection.
+  - level: 3
+    text: Compute `set(club_a) & set(club_b)` and pass it to `sorted()`.
+tests:
+  public:
+    - name: no_overlap
+      input: { club_a: [ana, ben], club_b: [cid, dan] }
+      expected: []
+    - name: some_overlap
+      input: { club_a: [ana, ben, cid], club_b: [cid, ana, eli] }
+      expected: [ana, cid]
+    - name: empty_side
+      input: { club_a: [], club_b: [zoe] }
+      expected: []
+  validation:
+    - name: full_overlap
+      input: { club_a: [sam, tim], club_b: [tim, sam] }
+      expected: [sam, tim]
+    - name: duplicate_in_roster
+      input: { club_a: [rex, rex, moe], club_b: [moe] }
+      expected: [moe]
+    - name: sorted_output
+      input: { club_a: [pia, gia, ola], club_b: [ola, gia] }
+      expected: [gia, ola]
+explanation_markdown: |
+  Set intersection (`&`) keeps only names present in both rosters and drops any
+  within-roster duplicates for free. Wrapping the result in `sorted()` returns a
+  predictable alphabetized list.
+common_mistakes:
+  - Returning the set directly instead of a sorted list.
+  - Using union or difference instead of intersection.
+  - Forgetting that a name listed twice on one roster should count once.

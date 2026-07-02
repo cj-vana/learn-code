@@ -1,0 +1,77 @@
+id: exercise.library.hashmap_set.a03
+kind: exercise
+version: 1
+language: python
+title: Flag Rejected Gate Scans
+slug: hashmap-set-a03
+difficulty: easy
+concepts:
+  - patterns.set_membership
+  - patterns.filtering
+prerequisites:
+  - python.sets
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.hashmap_set.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original subway-gate pass-validation scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A subway gate keeps a list of valid pass numbers. Write `flag_invalid(data)`
+  where `data` is a dict with two keys:
+
+  - `valid`: a list of pass numbers that are allowed through
+  - `scans`: a list of pass numbers presented at the gate, in order
+
+  Return a list of the scanned pass numbers that are **not** allowed, keeping
+  them in scan order and including any repeats. If every scan is valid, return
+  an empty list.
+starter_code: |
+  def flag_invalid(data):
+      return []
+function_name: flag_invalid
+input_mode: function
+solution_sketch: Build a set of valid passes, then keep scans whose number is not in it.
+sample_solution: |
+  def flag_invalid(data):
+      valid = set(data["valid"])
+      return [scan for scan in data["scans"] if scan not in valid]
+hints:
+  - level: 1
+    text: Checking membership against a list is slow; a set makes each check fast.
+  - level: 2
+    text: Convert the valid pass numbers into a set once, before looping.
+  - level: 3
+    text: Keep each scan where `scan not in valid`, preserving order.
+tests:
+  public:
+    - name: no_scans
+      input: { valid: [10, 20], scans: [] }
+      expected: []
+    - name: all_valid
+      input: { valid: [10, 20, 30], scans: [20, 10] }
+      expected: []
+    - name: some_invalid
+      input: { valid: [10, 20], scans: [10, 99, 20, 77] }
+      expected: [99, 77]
+  validation:
+    - name: repeated_invalid
+      input: { valid: [5], scans: [5, 7, 7, 5] }
+      expected: [7, 7]
+    - name: all_invalid
+      input: { valid: [1, 2], scans: [3, 4] }
+      expected: [3, 4]
+    - name: empty_valid_list
+      input: { valid: [], scans: [8, 9] }
+      expected: [8, 9]
+explanation_markdown: |
+  A set gives O(1) membership tests, so filtering the scans is O(n) overall.
+  Building the comprehension in scan order keeps the result in the same
+  sequence the gate saw, and repeats are preserved because nothing is deduped.
+common_mistakes:
+  - Testing membership against the raw list, which is slower and needless.
+  - Deduplicating the result and dropping legitimate repeat rejections.
+  - Reordering the output instead of keeping scan order.

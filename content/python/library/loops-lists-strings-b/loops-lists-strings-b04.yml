@@ -1,0 +1,73 @@
+id: exercise.library.loops_lists_strings.b04
+kind: exercise
+version: 1
+language: python
+title: Workshop Acronym
+slug: loops-lists-strings-b04
+difficulty: easy
+concepts:
+  - python.strings
+  - python.loops
+prerequisites:
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings.b04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original workshop-title acronym scenario, prompt, tests, and explanation.
+prompt_markdown: |
+  A maker space labels each workshop with an acronym built from its title. Write
+  `make_acronym(phrase)` returning the uppercase first letter of every
+  space-separated word, joined together. An empty string returns an empty string.
+starter_code: |
+  def make_acronym(phrase):
+      return ""
+function_name: make_acronym
+input_mode: function
+solution_sketch: Take the first character of each word, uppercase it, and join the letters.
+sample_solution: |
+  def make_acronym(phrase):
+      letters = []
+      for word in phrase.split():
+          letters.append(word[0].upper())
+      return "".join(letters)
+hints:
+  - level: 1
+    text: Split the title into words so you can look at each one.
+  - level: 2
+    text: The first character of a word is word[0].
+  - level: 3
+    text: Uppercase each first letter and join them with no separator.
+tests:
+  public:
+    - name: empty
+      input: ""
+      expected: ""
+    - name: single
+      input: "growth"
+      expected: "G"
+    - name: three_words
+      input: "hands on deck"
+      expected: "HOD"
+  validation:
+    - name: four_words
+      input: "keep it super simple"
+      expected: "KISS"
+    - name: already_capitalized
+      input: "Central Park Zoo"
+      expected: "CPZ"
+    - name: two_words
+      input: "night market"
+      expected: "NM"
+explanation_markdown: |
+  Splitting on whitespace yields the words. Taking index 0 of each word gives its
+  first character, and `.upper()` normalizes the case. Joining with an empty
+  separator concatenates the initials into the acronym.
+common_mistakes:
+  - Forgetting to uppercase letters that are already lowercase.
+  - Indexing a word before checking the string was split into words.
+  - Joining with a space instead of an empty string.

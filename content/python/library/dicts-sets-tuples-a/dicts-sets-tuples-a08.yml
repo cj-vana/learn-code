@@ -1,0 +1,79 @@
+id: exercise.library.dicts_sets_tuples.a08
+kind: exercise
+version: 1
+language: python
+title: Distinct High Sensor Readings
+slug: dicts-sets-tuples-a08
+difficulty: easy
+concepts:
+  - python.comprehensions
+  - python.sets
+  - python.sorting
+  - patterns.filtering
+prerequisites:
+  - python.functions
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples.a08
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original greenhouse temperature-sensor threshold scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A greenhouse logs temperature readings from a sensor. Write
+  `distinct_high_readings(data)` where `data` is a dict with keys `readings`
+  (a list of integers) and `threshold` (an integer).
+
+  Return a sorted list of the distinct readings that are strictly greater than
+  the threshold. If none qualify, return an empty list.
+starter_code: |
+  def distinct_high_readings(data):
+      return []
+function_name: distinct_high_readings
+input_mode: function
+solution_sketch: Filter readings above the threshold into a set comprehension, then sort.
+sample_solution: |
+  def distinct_high_readings(data):
+      threshold = data["threshold"]
+      high = {reading for reading in data["readings"] if reading > threshold}
+      return sorted(high)
+hints:
+  - level: 1
+    text: You want values above the threshold, with repeats collapsed.
+  - level: 2
+    text: A set comprehension can filter and deduplicate in one step.
+  - level: 3
+    text: Build {r for r in readings if r > threshold} and pass it to sorted().
+tests:
+  public:
+    - name: empty
+      input: { readings: [], threshold: 10 }
+      expected: []
+    - name: none_above
+      input: { readings: [1, 2, 3], threshold: 5 }
+      expected: []
+    - name: some_above
+      input: { readings: [4, 8, 8, 12], threshold: 5 }
+      expected: [8, 12]
+  validation:
+    - name: strict_boundary
+      input: { readings: [10, 10, 11], threshold: 10 }
+      expected: [11]
+    - name: duplicates_above
+      input: { readings: [7, 7, 9, 9, 9], threshold: 5 }
+      expected: [7, 9]
+    - name: unsorted_input
+      input: { readings: [20, 3, 15, 20, 8], threshold: 9 }
+      expected: [15, 20]
+explanation_markdown: |
+  A set comprehension with an `if` clause both filters (keeping readings above
+  the threshold) and deduplicates in a single expression. Because a set has no
+  order, `sorted()` produces the ascending list. Using `>` rather than `>=`
+  enforces the strictly-greater rule, so a value equal to the threshold is
+  excluded.
+common_mistakes:
+  - Using >= and including readings equal to the threshold.
+  - Returning duplicates because a list was used instead of a set.
+  - Forgetting to sort the final result.

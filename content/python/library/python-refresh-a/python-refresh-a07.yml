@@ -1,0 +1,90 @@
+id: exercise.library.python_refresh.a07
+kind: exercise
+version: 1
+language: python
+title: Combine Two Inventory Fields
+slug: python-refresh-a07
+difficulty: medium
+concepts:
+  - python.types
+  - python.conditionals
+  - python.operators
+prerequisites:
+  - python.functions
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh.a07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original warehouse field-combining scenario, prompt, tests, and explanation.
+prompt_markdown: |
+  A warehouse form lets a worker combine two fields, but only when they are the
+  same kind of data. Write `combine_fields(pair)` where `pair` is a dict with keys
+  `"a"` and `"b"`. Follow these rules:
+
+  - If both values are numbers (an int or a float, but not a boolean), return
+    their sum.
+  - If both values are strings, return them joined together with `b` after `a`.
+  - Otherwise the fields are incompatible, so return `None`.
+
+  Remember that in Python a boolean counts as an integer, so treat booleans as
+  incompatible with numbers here.
+starter_code: |
+  def combine_fields(pair):
+      return None
+function_name: combine_fields
+input_mode: function
+solution_sketch: Write a number test that excludes bool, then branch on two numbers, two strings, else None.
+sample_solution: |
+  def combine_fields(pair):
+      a = pair["a"]
+      b = pair["b"]
+
+      def is_number(value):
+          return isinstance(value, (int, float)) and not isinstance(value, bool)
+
+      if is_number(a) and is_number(b):
+          return a + b
+      if isinstance(a, str) and isinstance(b, str):
+          return a + b
+      return None
+hints:
+  - level: 1
+    text: First decide what type each value is before deciding how to combine them.
+  - level: 2
+    text: A helper that returns True only for real numbers keeps the boolean rule in one place.
+  - level: 3
+    text: Check "both numbers" and "both strings"; if neither holds, return None.
+tests:
+  public:
+    - name: two_ints
+      input: {a: 3, b: 4}
+      expected: 7
+    - name: two_strings
+      input: {a: "go", b: "cart"}
+      expected: "gocart"
+    - name: number_and_text
+      input: {a: 3, b: "x"}
+      expected: null
+  validation:
+    - name: two_floats
+      input: {a: 1.5, b: 2.5}
+      expected: 4.0
+    - name: bool_with_number
+      input: {a: true, b: 2}
+      expected: null
+    - name: two_booleans
+      input: {a: true, b: false}
+      expected: null
+explanation_markdown: |
+  The `is_number` helper captures the tricky rule: a value counts as a number only
+  when it is an int or float and is not a bool, since `isinstance(True, int)` is
+  `True`. With that in place the two matching branches are simple, and every
+  mismatched pairing falls through to `return None`.
+common_mistakes:
+  - Letting a boolean pass the number check because bool is a subclass of int.
+  - Adding a number to a string, which raises a TypeError instead of returning None.
+  - Forgetting the final None for incompatible field types.

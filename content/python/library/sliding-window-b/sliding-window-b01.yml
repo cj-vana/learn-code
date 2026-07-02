@@ -1,0 +1,89 @@
+id: exercise.library.sliding_window.b01
+kind: exercise
+version: 1
+language: python
+title: Busiest Broadcast Window
+slug: sliding-window-b01
+difficulty: easy
+concepts:
+  - patterns.sliding_window
+  - patterns.running_total
+prerequisites:
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sliding_window.b01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original internet-radio listener scenario asking for the busiest fixed-length span.
+prompt_markdown: |
+  An internet radio station records how many people are tuned in during each
+  minute of a show. The producer wants to know the busiest continuous stretch of
+  a given length so they can schedule the big announcement then.
+
+  Write `busiest_window(data)` where `data` is a dict with two keys:
+  `listeners` (a list of per-minute listener counts) and `span` (the number of
+  consecutive minutes to consider). Return the largest total number of listeners
+  across any block of `span` consecutive minutes. You may assume
+  `1 <= span <= len(listeners)`.
+starter_code: |
+  def busiest_window(data):
+      return 0
+function_name: busiest_window
+input_mode: function
+solution_sketch: Sum the first span minutes, then slide by adding the new minute and dropping the one that left the window.
+sample_solution: |
+  def busiest_window(data):
+      listeners = data["listeners"]
+      span = data["span"]
+      window = sum(listeners[:span])
+      best = window
+      for i in range(span, len(listeners)):
+          window += listeners[i] - listeners[i - span]
+          if window > best:
+              best = window
+      return best
+hints:
+  - level: 1
+    text: You never need to re-add every minute; only the two minutes at the edges of the window change as it moves.
+  - level: 2
+    text: Start with the sum of the first span minutes, then update it as the window slides forward.
+  - level: 3
+    text: When the window moves right by one, add listeners[i] and subtract listeners[i - span], then compare against the best so far.
+tests:
+  public:
+    - name: single_window
+      input: { listeners: [4, 2, 7], span: 3 }
+      expected: 13
+    - name: pick_middle
+      input: { listeners: [1, 5, 6, 1], span: 2 }
+      expected: 11
+    - name: span_one
+      input: { listeners: [3, 9, 2], span: 1 }
+      expected: 9
+  validation:
+    - name: start_best
+      input: { listeners: [10, 8, 1, 2], span: 2 }
+      expected: 18
+    - name: end_best
+      input: { listeners: [1, 2, 3, 9, 9], span: 2 }
+      expected: 18
+    - name: all_equal
+      input: { listeners: [5, 5, 5, 5], span: 3 }
+      expected: 15
+    - name: longer
+      input: { listeners: [2, 1, 5, 1, 3, 2], span: 3 }
+      expected: 9
+explanation_markdown: |
+  A fixed-length sliding window turns an O(n*span) scan into a single O(n) pass.
+  Compute the sum of the first `span` minutes once, then move the window forward
+  one minute at a time: each step adds the newly included minute and subtracts the
+  minute that just fell off the left edge. Tracking the maximum of these running
+  sums gives the busiest stretch without ever re-summing a full window.
+common_mistakes:
+  - Re-summing every window from scratch, which is slower and easy to get wrong at the edges.
+  - Forgetting to subtract the minute that leaves the window when sliding.
+  - Initialising the best value to 0, which fails if some counts are meant to be compared as the only window.

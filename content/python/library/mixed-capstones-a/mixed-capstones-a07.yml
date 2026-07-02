@@ -1,0 +1,90 @@
+id: exercise.library.mixed_capstones.a07
+kind: exercise
+version: 1
+language: python
+title: Steadiest Temperature Window
+slug: mixed-capstones-a07
+difficulty: medium
+concepts:
+  - patterns.sliding_window
+  - python.lists
+  - python.slicing
+prerequisites:
+  - python.dictionaries
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.mixed_capstones.a07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original incubator-stability scenario minimising the spread across fixed windows, with its own tests and edge handling.
+prompt_markdown: |
+  An egg incubator logs an integer temperature each minute, and you want the most
+  stable stretch of a given length. Write `steadiest_window(data)` where `data` is
+  a dict with key `temps` (a list of integers) and key `window` (an integer `k`).
+  For every block of `k` consecutive readings, its spread is the largest reading
+  minus the smallest. Return the smallest spread across all such blocks. If `k` is
+  less than 1 or larger than the number of readings, return `0`.
+starter_code: |
+  def steadiest_window(data):
+      return 0
+function_name: steadiest_window
+input_mode: function
+solution_sketch: Slide a fixed window of length k across the readings, compute each window's max minus min, and keep the smallest spread.
+sample_solution: |
+  def steadiest_window(data):
+      temps = data["temps"]
+      k = data["window"]
+      n = len(temps)
+      if k < 1 or k > n:
+          return 0
+      best = None
+      for start in range(n - k + 1):
+          window = temps[start:start + k]
+          spread = max(window) - min(window)
+          if best is None or spread < best:
+              best = spread
+      return best
+hints:
+  - level: 1
+    text: Consider every block of exactly k neighbouring readings.
+  - level: 2
+    text: For each block the spread is max(block) - min(block); you want the block with the smallest spread.
+  - level: 3
+    text: Slide the start index from 0 to n - k, track the running minimum spread, and remember to guard invalid k.
+tests:
+  public:
+    - name: whole
+      input: {temps: [3, 7, 4], window: 3}
+      expected: 4
+    - name: window_one
+      input: {temps: [5, 9, 2], window: 1}
+      expected: 0
+    - name: pick_steady
+      input: {temps: [1, 2, 8, 9], window: 2}
+      expected: 1
+  validation:
+    - name: flat_pair
+      input: {temps: [10, 10, 3, 10], window: 2}
+      expected: 0
+    - name: window_too_big
+      input: {temps: [4, 5], window: 3}
+      expected: 0
+    - name: descending
+      input: {temps: [9, 6, 4, 1], window: 3}
+      expected: 5
+    - name: mixed
+      input: {temps: [2, 8, 3, 4, 3], window: 3}
+      expected: 1
+explanation_markdown: |
+  Each fixed-size block is a sliding window, and its stability is captured by the
+  gap between its largest and smallest reading. Scanning every start position and
+  tracking the minimum spread yields the steadiest stretch. Guarding an invalid
+  `k` keeps the empty and oversized cases well defined, returning 0 when no valid
+  window exists.
+common_mistakes:
+  - Comparing spreads to 0 or a huge constant instead of seeding best from the first window.
+  - Letting the start index run past n - k, which reads a short final block.
+  - Confusing spread (max minus min) with the window's total or average.

@@ -1,0 +1,83 @@
+id: exercise.library.sliding_window.a02
+kind: exercise
+version: 1
+language: python
+title: Darkest Stargazing Window
+slug: sliding-window-a02
+difficulty: easy
+concepts:
+  - patterns.sliding_window
+  - python.lists
+prerequisites:
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sliding_window.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original observatory sky-brightness scenario using a fixed-size minimum-sum window.
+prompt_markdown: |
+  An amateur observatory takes a sky-brightness reading every minute; smaller
+  numbers mean darker skies. To pick the best stretch for a long exposure, write
+  `darkest_window(data)` returning the smallest total brightness across any `k`
+  consecutive minutes.
+
+  `data` is a dict: `{"readings": [...], "k": k}`. You may assume `k` is at least
+  1 and no larger than the number of readings.
+starter_code: |
+  def darkest_window(data):
+      return 0
+function_name: darkest_window
+input_mode: function
+solution_sketch: Track a running window sum and keep the smallest total seen as the window slides.
+sample_solution: |
+  def darkest_window(data):
+      readings = data["readings"]
+      k = data["k"]
+      window = sum(readings[:k])
+      best = window
+      for i in range(k, len(readings)):
+          window += readings[i] - readings[i - k]
+          if window < best:
+              best = window
+      return best
+hints:
+  - level: 1
+    text: This is the same sliding-window idea as a maximum, but you keep the minimum instead.
+  - level: 2
+    text: Seed best with the sum of the first k readings before you slide.
+  - level: 3
+    text: As you slide, update the running sum, then compare it against best with <.
+tests:
+  public:
+    - name: all
+      input: {readings: [5, 2, 8], k: 3}
+      expected: 15
+    - name: k_one
+      input: {readings: [4, 1, 7, 3], k: 1}
+      expected: 1
+    - name: dip
+      input: {readings: [9, 1, 1, 9], k: 2}
+      expected: 2
+  validation:
+    - name: end_dip
+      input: {readings: [8, 8, 2, 1], k: 2}
+      expected: 3
+    - name: uniform
+      input: {readings: [4, 4, 4, 4], k: 2}
+      expected: 8
+    - name: start_low
+      input: {readings: [1, 2, 9, 9, 9], k: 3}
+      expected: 12
+explanation_markdown: |
+  Finding the minimum-sum window mirrors the maximum-sum version: sum the first
+  `k` readings, then slide by adding the new minute and dropping the oldest, and
+  keep whichever running total is smallest. The single O(n) pass beats summing
+  every window independently.
+common_mistakes:
+  - Seeding best with 0 or a huge constant instead of the first window's sum.
+  - Comparing with > (max) when the goal is the minimum.
+  - Rebuilding the window sum from scratch each step instead of adjusting it.

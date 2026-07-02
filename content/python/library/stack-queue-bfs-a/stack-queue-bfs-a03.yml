@@ -1,0 +1,82 @@
+id: exercise.library.stack_queue_bfs.a03
+kind: exercise
+version: 1
+language: python
+title: Collapsing Matching Tiles
+slug: stack-queue-bfs-a03
+difficulty: easy
+concepts:
+  - patterns.stack
+  - python.strings
+prerequisites:
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.stack_queue_bfs.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original tile-matching puzzle scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  In a match puzzle, a row of tiles is a string of colour letters. Whenever two
+  tiles of the same colour sit next to each other, they cancel and vanish. A
+  cancellation can bring new neighbours together, so this repeats until no two
+  adjacent tiles share a colour.
+
+  Write `collapse_tiles(tiles)` returning the final row after all possible
+  cancellations. An empty row stays empty.
+starter_code: |
+  def collapse_tiles(tiles):
+      return ""
+function_name: collapse_tiles
+input_mode: function
+solution_sketch: Walk left to right and pop the stack when the next tile equals the current top, else push it.
+sample_solution: |
+  def collapse_tiles(tiles):
+      stack = []
+      for tile in tiles:
+          if stack and stack[-1] == tile:
+              stack.pop()
+          else:
+              stack.append(tile)
+      return "".join(stack)
+hints:
+  - level: 1
+    text: A tile only ever cancels with the tile immediately before it that is still on the row.
+  - level: 2
+    text: Keep surviving tiles on a stack; the top is the current left neighbour.
+  - level: 3
+    text: If the next tile matches the stack top, pop it (they cancel); otherwise push the tile.
+tests:
+  public:
+    - name: empty
+      input: ""
+      expected: ""
+    - name: no_matches
+      input: abc
+      expected: abc
+    - name: nested_pair
+      input: abba
+      expected: ""
+  validation:
+    - name: two_pairs
+      input: aabb
+      expected: ""
+    - name: leaves_one
+      input: cabba
+      expected: c
+    - name: partial
+      input: xxy
+      expected: y
+explanation_markdown: |
+  The stack top is always the closest surviving tile to the left, so comparing
+  the next tile against it decides a cancellation instantly. Popping on a match
+  naturally exposes the earlier tile as the new neighbour, which is exactly the
+  chain-reaction the puzzle describes. Each tile is pushed and popped at most
+  once, so the work is O(n).
+common_mistakes:
+  - Scanning for pairs repeatedly instead of resolving chains with one stack pass.
+  - Checking stack[-1] without first confirming the stack is non-empty.
+  - Forgetting that cancellations expose new adjacent pairs.

@@ -1,0 +1,90 @@
+id: exercise.library.two_pointers.b03
+kind: exercise
+version: 1
+language: python
+title: Settle the Sold-Out Shelf
+slug: two-pointers-b03
+difficulty: medium
+concepts:
+  - patterns.two_pointers
+  - python.lists
+prerequisites:
+  - python.lists
+estimated_time_minutes: 16
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.two_pointers.b03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original warehouse restocking scenario using a stable partition, with fresh prompt and tests.
+prompt_markdown: |
+  A warehouse shelf is described by a list of stock counts, one per slot. A
+  count of `0` means that slot is sold out. Staff want every sold-out slot
+  pushed to the end of the shelf, while the slots that still hold stock keep
+  their original left-to-right order.
+
+  Write `settle_stock(counts)` that returns a new list with all non-zero counts
+  first, in their original order, followed by every `0`. An empty list returns
+  an empty list.
+starter_code: |
+  def settle_stock(counts):
+      return []
+function_name: settle_stock
+input_mode: function
+solution_sketch: Use a write pointer for the next in-stock slot and a read pointer that scans forward, swapping non-zero values into place.
+sample_solution: |
+  def settle_stock(counts):
+      result = list(counts)
+      write = 0
+      for read in range(len(result)):
+          if result[read] != 0:
+              result[write], result[read] = result[read], result[write]
+              write += 1
+      return result
+hints:
+  - level: 1
+    text: Keep one pointer marking where the next in-stock value belongs and another that reads across the whole shelf.
+  - level: 2
+    text: When the read pointer finds a non-zero count, place it at the write pointer and then move the write pointer forward.
+  - level: 3
+    text: Swapping the read and write positions keeps the non-zero counts in order while zeros drift toward the back.
+tests:
+  public:
+    - name: no_sold_out
+      input: [3, 1, 4]
+      expected: [3, 1, 4]
+    - name: all_sold_out
+      input: [0, 0, 0]
+      expected: [0, 0, 0]
+    - name: mixed
+      input: [0, 3, 0, 5, 7]
+      expected: [3, 5, 7, 0, 0]
+  validation:
+    - name: empty
+      input: []
+      expected: []
+    - name: leading_zero
+      input: [0, 2, 1]
+      expected: [2, 1, 0]
+    - name: trailing_zeros
+      input: [4, 0, 0]
+      expected: [4, 0, 0]
+    - name: single_zero
+      input: [0]
+      expected: [0]
+    - name: alternating
+      input: [5, 0, 6, 0, 7, 0]
+      expected: [5, 6, 7, 0, 0, 0]
+explanation_markdown: |
+  Two pointers moving in the same direction give a stable partition in one pass.
+  The `write` pointer marks the next spot reserved for an in-stock count, and the
+  `read` pointer scans every slot. Whenever `read` finds a non-zero count, it is
+  swapped into the `write` slot and `write` advances, so in-stock values land in
+  their original order while sold-out zeros accumulate behind them. The scan is
+  O(n) and needs no extra list beyond the copy that keeps the input untouched.
+common_mistakes:
+  - Only moving the read pointer when advancing write, which reorders the in-stock counts.
+  - Copying the zeros forward first and losing the original order of the stocked slots.
+  - Treating any falsy value the same as 0 without checking the count itself.

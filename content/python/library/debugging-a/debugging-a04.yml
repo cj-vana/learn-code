@@ -1,0 +1,80 @@
+id: exercise.library.debugging.a04
+kind: exercise
+version: 1
+language: python
+title: Drop the Dead Readings
+slug: debugging-a04
+difficulty: easy
+concepts:
+  - python.debugging
+  - python.lists
+  - patterns.filtering
+prerequisites:
+  - python.functions
+  - python.loops
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.debugging.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original rain-gauge scenario framed around the mutate-while-iterating filtering bug.
+prompt_markdown: |
+  A rooftop rain gauge logs a reading every hour, but a stuck sensor sometimes
+  records a 0. Write `drop_zeros(readings)` returning a new list with every 0
+  removed while keeping the other readings in their original order.
+
+  A classic bug is removing items from a list while looping over that same list,
+  which makes the loop skip neighbors. Build a fresh list instead.
+starter_code: |
+  def drop_zeros(readings):
+      return []
+function_name: drop_zeros
+input_mode: function
+solution_sketch: Iterate once and append every nonzero reading to a new list.
+sample_solution: |
+  def drop_zeros(readings):
+      kept = []
+      for value in readings:
+          if value != 0:
+              kept.append(value)
+      return kept
+hints:
+  - level: 1
+    text: Do not delete from the list you are looping over.
+  - level: 2
+    text: Start an empty result list before the loop.
+  - level: 3
+    text: Append a reading only when it is not equal to 0.
+tests:
+  public:
+    - name: mixed
+      input: [0, 3, 0, 0, 5]
+      expected: [3, 5]
+    - name: empty
+      input: []
+      expected: []
+    - name: no_zeros
+      input: [1, 2]
+      expected: [1, 2]
+  validation:
+    - name: all_zeros
+      input: [0, 0, 0]
+      expected: []
+    - name: alternating
+      input: [4, 0, 4, 0, 4]
+      expected: [4, 4, 4]
+    - name: single_value
+      input: [7]
+      expected: [7]
+explanation_markdown: |
+  Removing elements from a list while iterating over it shifts the remaining
+  items, so the loop's index lands past a neighbor and skips it. Building a
+  separate result list sidesteps the problem: you read the input once, left to
+  right, and copy only the readings you want to keep.
+common_mistakes:
+  - Calling readings.remove(0) inside a for loop over readings.
+  - Skipping consecutive zeros because the index advanced past them.
+  - Returning the mutated input instead of a clean new list.

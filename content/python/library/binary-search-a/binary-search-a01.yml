@@ -1,0 +1,88 @@
+id: exercise.library.binary_search.a01
+kind: exercise
+version: 1
+language: python
+title: Locate a Catalog Number
+slug: binary-search-a01
+difficulty: easy
+concepts:
+  - patterns.binary_search
+  - python.lists
+prerequisites:
+  - python.lists
+  - python.sorting
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+input_mode: function
+provenance:
+  brief_id: library.binary_search.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original library-shelf catalog-lookup scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A library shelf stores book catalog numbers in strictly ascending order.
+  Write `find_book(data)` where `data` is a dict with keys `catalog` (the
+  sorted list of numbers) and `wanted` (the number to locate).
+
+  Return the index of `wanted` in `catalog`, or `-1` if it is not on the shelf.
+  Use binary search so a huge shelf stays fast.
+starter_code: |
+  def find_book(data):
+      return -1
+function_name: find_book
+solution_sketch: Halve the search window each step, comparing the middle number to the target.
+sample_solution: |
+  def find_book(data):
+      catalog = data["catalog"]
+      wanted = data["wanted"]
+      lo, hi = 0, len(catalog) - 1
+      while lo <= hi:
+          mid = (lo + hi) // 2
+          if catalog[mid] == wanted:
+              return mid
+          if catalog[mid] < wanted:
+              lo = mid + 1
+          else:
+              hi = mid - 1
+      return -1
+hints:
+  - level: 1
+    text: Because the list is sorted, you can throw away half of it after each comparison.
+  - level: 2
+    text: Track a low and high index and look at the middle element between them.
+  - level: 3
+    text: If the middle value is too small move low past mid; if too large move high below mid.
+tests:
+  public:
+    - name: empty
+      input: {catalog: [], wanted: 5}
+      expected: -1
+    - name: found_middle
+      input: {catalog: [3, 7, 11, 18, 25], wanted: 11}
+      expected: 2
+    - name: not_found
+      input: {catalog: [3, 7, 11, 18, 25], wanted: 8}
+      expected: -1
+  validation:
+    - name: first
+      input: {catalog: [3, 7, 11, 18, 25], wanted: 3}
+      expected: 0
+    - name: last
+      input: {catalog: [3, 7, 11, 18, 25], wanted: 25}
+      expected: 4
+    - name: single_hit
+      input: {catalog: [42], wanted: 42}
+      expected: 0
+    - name: single_miss
+      input: {catalog: [42], wanted: 7}
+      expected: -1
+explanation_markdown: |
+  Binary search keeps a window `[lo, hi]` that must contain the target if it
+  exists. Each step checks the middle element and discards the half that cannot
+  hold `wanted`, so the work is O(log n) instead of scanning all n numbers.
+common_mistakes:
+  - Using `while lo < hi` and missing a match when the window shrinks to one element.
+  - Forgetting to return -1 when the loop ends without a hit.
+  - Updating lo or hi to mid instead of mid + 1 / mid - 1, causing an infinite loop.

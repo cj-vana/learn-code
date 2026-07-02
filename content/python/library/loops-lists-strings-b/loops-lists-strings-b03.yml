@@ -1,0 +1,73 @@
+id: exercise.library.loops_lists_strings.b03
+kind: exercise
+version: 1
+language: python
+title: Express Train Stops
+slug: loops-lists-strings-b03
+difficulty: easy
+concepts:
+  - python.slicing
+  - python.lists
+prerequisites:
+  - python.functions
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings.b03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original express-train slicing scenario, prompt, tests, and explanation.
+prompt_markdown: |
+  An express service runs along a transit line but only halts at every `step`-th
+  stop, always including the very first stop. Write `every_nth_stop(data)` where
+  `data` is a dict with keys `stops` (a list of stop names) and `step` (an integer
+  of 1 or more). Return the list of stops the express actually visits.
+starter_code: |
+  def every_nth_stop(data):
+      return []
+function_name: every_nth_stop
+input_mode: function
+solution_sketch: Slice the list with the given step, starting from the first stop.
+sample_solution: |
+  def every_nth_stop(data):
+      stops = data["stops"]
+      step = data["step"]
+      return stops[::step]
+hints:
+  - level: 1
+    text: A slice can skip elements using a step value.
+  - level: 2
+    text: Leaving the start and end blank slices the whole list.
+  - level: 3
+    text: Use stops[::step] to take every step-th stop from the start.
+tests:
+  public:
+    - name: step_one
+      input: {stops: [alba, birch, cedar], step: 1}
+      expected: [alba, birch, cedar]
+    - name: step_two
+      input: {stops: [alba, birch, cedar, dune, elm], step: 2}
+      expected: [alba, cedar, elm]
+    - name: step_three
+      input: {stops: [a1, a2, a3, a4, a5, a6, a7], step: 3}
+      expected: [a1, a4, a7]
+  validation:
+    - name: empty_line
+      input: {stops: [], step: 2}
+      expected: []
+    - name: step_past_end
+      input: {stops: [north, south], step: 5}
+      expected: [north]
+    - name: even_length
+      input: {stops: [p, q, r, s], step: 2}
+      expected: [p, r]
+explanation_markdown: |
+  Extended slice syntax `list[::step]` selects elements at regular intervals,
+  beginning at index 0. Because the start is index 0, the first stop is always
+  included, and Python stops cleanly when the index runs past the end.
+common_mistakes:
+  - Building the result with a manual loop and mishandling the final index.
+  - Starting from index 1 instead of the first stop.
+  - Assuming the step evenly divides the number of stops.

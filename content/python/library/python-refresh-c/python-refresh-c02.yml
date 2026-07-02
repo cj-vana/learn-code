@@ -1,0 +1,100 @@
+id: exercise.library.python_refresh.c02
+kind: exercise
+version: 1
+language: python
+title: Harbor Ferry Fare
+slug: python-refresh-c02
+difficulty: easy
+concepts:
+  - python.conditionals
+  - python.types
+  - python.operators
+prerequisites:
+  - python.functions
+  - python.variables
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh.c02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original harbor-ferry pricing rules combining an age-based base fare with a boolean resident discount.
+prompt_markdown: |
+  A harbor ferry sells tickets whose price depends on the rider's age and whether
+  they are a local resident. The function receives a single dictionary `booking`
+  with two keys:
+
+  - `"age"`: the rider's age in whole years (an int),
+  - `"resident"`: a bool that is `True` for local residents.
+
+  Write `ferry_fare(booking)` that returns the fare as a whole-dollar int using
+  these rules, applied in order:
+
+  1. Riders under 5 travel free (fare 0).
+  2. Riders 65 or older pay the senior fare of 6.
+  3. Everyone else pays the standard fare of 12.
+  4. After the base fare is set, a resident takes 2 dollars off, but the fare
+     never drops below 0 (a free child stays free).
+starter_code: |
+  def ferry_fare(booking):
+      return 0
+function_name: ferry_fare
+input_mode: function
+solution_sketch: Read the two keys, pick a base fare with if/elif/else, then subtract the resident discount only when the fare is positive.
+sample_solution: |
+  def ferry_fare(booking):
+      age = booking["age"]
+      resident = booking["resident"]
+      if age < 5:
+          fare = 0
+      elif age >= 65:
+          fare = 6
+      else:
+          fare = 12
+      if resident and fare > 0:
+          fare -= 2
+      return fare
+hints:
+  - level: 1
+    text: Pull age and resident out of the dictionary into their own variables first.
+  - level: 2
+    text: Decide the base fare with an if/elif/else chain before you think about the discount.
+  - level: 3
+    text: Apply the resident discount only when the fare is greater than 0 so a free child stays at 0.
+tests:
+  public:
+    - name: young_child_free
+      input: {age: 3, resident: false}
+      expected: 0
+    - name: standard_adult
+      input: {age: 30, resident: false}
+      expected: 12
+    - name: senior_resident
+      input: {age: 70, resident: true}
+      expected: 4
+  validation:
+    - name: senior_boundary_nonresident
+      input: {age: 65, resident: false}
+      expected: 6
+    - name: adult_resident
+      input: {age: 40, resident: true}
+      expected: 10
+    - name: child_resident_stays_free
+      input: {age: 4, resident: true}
+      expected: 0
+    - name: age_five_pays_standard
+      input: {age: 5, resident: false}
+      expected: 12
+explanation_markdown: |
+  The base fare comes from a single if/elif/else chain on age, so each rider lands
+  in exactly one band: free under 5, senior at 65 and up, standard otherwise. The
+  discount is a separate step because it applies on top of whatever base was chosen.
+  Guarding it with `fare > 0` keeps a free child at 0 instead of going negative, and
+  because `resident` is already a bool you can use it directly in the `if` without
+  comparing it to True.
+common_mistakes:
+  - Applying the resident discount before choosing the base fare, or to a free child.
+  - Using <= 5 or > 65 and getting the boundary ages 5 and 65 wrong.
+  - Comparing resident == True instead of using the boolean directly, or forgetting to read it from the dict.

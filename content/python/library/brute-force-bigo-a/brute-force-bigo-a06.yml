@@ -1,0 +1,87 @@
+id: exercise.library.brute_force_bigo.a06
+kind: exercise
+version: 1
+language: python
+title: Solar Panels a Fixed Gap Apart
+slug: brute-force-bigo-a06
+difficulty: easy
+concepts:
+  - patterns.brute_force
+  - python.lists
+prerequisites:
+  - python.loops
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.brute_force_bigo.a06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original solar-array reading scenario counting pairs whose readings differ by an exact gap.
+prompt_markdown: |
+  A rooftop solar array reports each panel's afternoon output as a number in a
+  list. An engineer wants pairs of panels whose outputs differ by an exact
+  amount. Write `count_diff_pairs(data)` where `data` is a dict with keys
+  `readings` and `gap`. Return how many unordered pairs of different positions
+  have an absolute difference equal to `gap`. Every distinct pair of positions
+  is considered, even if two panels report the same output.
+starter_code: |
+  def count_diff_pairs(data):
+      return 0
+function_name: count_diff_pairs
+input_mode: function
+solution_sketch: For every unordered pair, add one when the absolute difference of the two readings equals gap.
+sample_solution: |
+  def count_diff_pairs(data):
+      readings = data["readings"]
+      gap = data["gap"]
+      n = len(readings)
+      total = 0
+      for i in range(n):
+          for j in range(i + 1, n):
+              if abs(readings[i] - readings[j]) == gap:
+                  total += 1
+      return total
+hints:
+  - level: 1
+    text: Look at every pair of two different panels and measure how far apart their readings are.
+  - level: 2
+    text: Use abs() so the order of subtraction does not matter.
+  - level: 3
+    text: A nested loop with the inner index at i + 1 visits each pair once; add 1 whenever the gap matches.
+tests:
+  public:
+    - name: empty
+      input: {readings: [], gap: 3}
+      expected: 0
+    - name: two_pairs
+      input: {readings: [4, 7, 10], gap: 3}
+      expected: 2
+    - name: no_pairs
+      input: {readings: [1, 2, 9], gap: 5}
+      expected: 0
+  validation:
+    - name: zero_gap_duplicates
+      input: {readings: [5, 5, 5], gap: 0}
+      expected: 3
+    - name: single_reading
+      input: {readings: [8], gap: 2}
+      expected: 0
+    - name: mixed
+      input: {readings: [10, 4, 6, 8], gap: 2}
+      expected: 3
+    - name: wide_gap
+      input: {readings: [0, 20, 40], gap: 20}
+      expected: 2
+explanation_markdown: |
+  The brute-force plan checks every unordered pair of positions and tests the
+  absolute difference of the two readings against the target gap. Using `abs`
+  means `a - b` and `b - a` are treated the same. With `n` readings there are
+  `n * (n - 1) / 2` pairs, so counting them all is O(n^2). A gap of 0 counts
+  pairs of equal readings, which is why three identical panels contribute three
+  pairs.
+common_mistakes:
+  - Dropping abs() and only matching when the earlier reading is larger.
+  - Counting ordered pairs, which doubles every match.
+  - Forgetting that a gap of 0 counts pairs of equal readings.

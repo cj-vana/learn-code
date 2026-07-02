@@ -1,0 +1,74 @@
+id: exercise.library.python_refresh.a08
+kind: exercise
+version: 1
+language: python
+title: Library Checkout Eligibility
+slug: python-refresh-a08
+difficulty: easy
+concepts:
+  - python.conditionals
+  - python.operators
+  - python.types
+prerequisites:
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh.a08
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original public-library checkout eligibility scenario, prompt, tests, and explanation.
+prompt_markdown: |
+  A public library decides whether a patron may check out a book. Write
+  `can_check_out(patron)` where `patron` is a dict with keys `"has_card"` (a
+  boolean) and `"fines_owed"` (a dollar amount). A patron may check out only when
+  they hold a valid card AND owe strictly less than 10 dollars in fines. Return
+  `True` or `False`.
+starter_code: |
+  def can_check_out(patron):
+      return False
+function_name: can_check_out
+input_mode: function
+solution_sketch: Return the boolean combining has_card being true and fines under 10.
+sample_solution: |
+  def can_check_out(patron):
+      return patron["has_card"] and patron["fines_owed"] < 10
+hints:
+  - level: 1
+    text: Two conditions must both be true for checkout to be allowed.
+  - level: 2
+    text: One condition is already a boolean; the other is a comparison against 10.
+  - level: 3
+    text: Join them with and and return the result directly.
+tests:
+  public:
+    - name: clear_yes
+      input: {has_card: true, fines_owed: 0}
+      expected: true
+    - name: no_card
+      input: {has_card: false, fines_owed: 0}
+      expected: false
+    - name: too_many_fines
+      input: {has_card: true, fines_owed: 12.5}
+      expected: false
+  validation:
+    - name: just_under_limit
+      input: {has_card: true, fines_owed: 9.99}
+      expected: true
+    - name: exactly_ten
+      input: {has_card: true, fines_owed: 10}
+      expected: false
+    - name: no_card_big_fine
+      input: {has_card: false, fines_owed: 50}
+      expected: false
+explanation_markdown: |
+  Both requirements must hold, so `and` is the natural connector. `has_card` is
+  already a boolean, and `fines_owed < 10` produces one too, so returning their
+  combination gives the answer directly. The strict `<` means a patron owing
+  exactly 10 dollars is blocked.
+common_mistakes:
+  - Using <= so a patron owing exactly the limit is wrongly allowed.
+  - Using or instead of and, letting either condition pass on its own.
+  - Ignoring the card status and checking only the fines.

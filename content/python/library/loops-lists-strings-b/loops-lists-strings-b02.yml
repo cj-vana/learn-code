@@ -1,0 +1,82 @@
+id: exercise.library.loops_lists_strings.b02
+kind: exercise
+version: 1
+language: python
+title: Longest Open Streak
+slug: loops-lists-strings-b02
+difficulty: easy
+concepts:
+  - python.loops
+  - python.lists
+prerequisites:
+  - python.functions
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings.b02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original farm-stand open-days scenario, prompt, tests, and explanation.
+prompt_markdown: |
+  A roadside farm stand records whether it was `open` or `closed` on each day of
+  a season. Write `longest_open_streak(days)` returning the length of the longest
+  run of consecutive `open` days. An empty list returns 0.
+starter_code: |
+  def longest_open_streak(days):
+      return 0
+function_name: longest_open_streak
+input_mode: function
+solution_sketch: Track the current run length and the best run seen while scanning once.
+sample_solution: |
+  def longest_open_streak(days):
+      best = 0
+      current = 0
+      for day in days:
+          if day == "open":
+              current += 1
+              if current > best:
+                  best = current
+          else:
+              current = 0
+      return best
+hints:
+  - level: 1
+    text: Keep a counter for the current run of open days.
+  - level: 2
+    text: Reset the counter to 0 whenever you hit a closed day.
+  - level: 3
+    text: After each open day, compare the current run against the best so far.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: 0
+    - name: all_closed
+      input: [closed, closed]
+      expected: 0
+    - name: simple
+      input: [open, open, closed, open]
+      expected: 2
+  validation:
+    - name: ends_open
+      input: [closed, open, open, open]
+      expected: 3
+    - name: single_open
+      input: [open]
+      expected: 1
+    - name: alternating
+      input: [open, closed, open, closed, open]
+      expected: 1
+    - name: peak_in_middle
+      input: [open, open, closed, open, open, open, closed]
+      expected: 3
+explanation_markdown: |
+  One pass is enough. A running counter grows on each open day and resets to zero
+  on a closed day. Recording the maximum the counter reaches gives the longest
+  streak without scanning the list more than once.
+common_mistakes:
+  - Forgetting to reset the current counter on a closed day.
+  - Returning the final run length instead of the largest run seen.
+  - Missing a streak that ends at the last element.

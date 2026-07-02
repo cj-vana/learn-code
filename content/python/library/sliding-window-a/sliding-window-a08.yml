@@ -1,0 +1,84 @@
+id: exercise.library.sliding_window.a08
+kind: exercise
+version: 1
+language: python
+title: Most Varied Museum Window
+slug: sliding-window-a08
+difficulty: easy
+concepts:
+  - patterns.sliding_window
+  - python.sets
+prerequisites:
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sliding_window.a08
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original museum visitor-arrival scenario counting the most distinct exhibits in a fixed window.
+prompt_markdown: |
+  A museum greeter records which exhibit each visitor heads to first, in arrival
+  order, as a list of labels. To spot the busiest mix, write
+  `max_distinct_in_window(data)` returning the largest number of distinct exhibits
+  represented by any `k` consecutive visitors.
+
+  `data` is a dict: `{"visits": [...], "k": k}`. You may assume `k` is at least 1
+  and no larger than the number of visitors.
+starter_code: |
+  def max_distinct_in_window(data):
+      return 0
+function_name: max_distinct_in_window
+input_mode: function
+solution_sketch: For each window of k consecutive visitors, count the distinct labels and keep the maximum.
+sample_solution: |
+  def max_distinct_in_window(data):
+      visits = data["visits"]
+      k = data["k"]
+      best = 0
+      for start in range(len(visits) - k + 1):
+          window = visits[start:start + k]
+          distinct = len(set(window))
+          if distinct > best:
+              best = distinct
+      return best
+hints:
+  - level: 1
+    text: A set discards duplicates, so its size is the number of distinct labels.
+  - level: 2
+    text: Slide the window one visitor at a time from the first valid start to the last.
+  - level: 3
+    text: The last valid start index is len(visits) - k; take len(set(window)) at each start.
+tests:
+  public:
+    - name: all_same
+      input: {visits: ['art', 'art', 'art'], k: 2}
+      expected: 1
+    - name: all_distinct
+      input: {visits: ['a', 'b', 'c'], k: 3}
+      expected: 3
+    - name: window_two
+      input: {visits: ['a', 'a', 'b', 'b'], k: 2}
+      expected: 2
+  validation:
+    - name: k_one
+      input: {visits: ['x', 'y', 'z'], k: 1}
+      expected: 1
+    - name: peak_middle
+      input: {visits: ['a', 'b', 'c', 'a', 'a'], k: 3}
+      expected: 3
+    - name: repeats
+      input: {visits: ['p', 'q', 'p', 'q', 'r'], k: 4}
+      expected: 3
+explanation_markdown: |
+  Each window of `k` visitors is turned into a set, which automatically collapses
+  repeated exhibit labels, so its length is the count of distinct exhibits. Sliding
+  the start index from 0 through `len(visits) - k` and keeping the largest count
+  finds the most varied stretch. Building a fresh set per window is simple and
+  fast enough for these inputs.
+common_mistakes:
+  - Letting the start index run past len(visits) - k, producing short final windows.
+  - Counting total visitors in the window instead of distinct labels.
+  - Comparing labels with case-insensitivity when the labels are meant to match exactly.

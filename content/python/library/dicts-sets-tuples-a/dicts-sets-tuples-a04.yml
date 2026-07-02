@@ -1,0 +1,75 @@
+id: exercise.library.dicts_sets_tuples.a04
+kind: exercise
+version: 1
+language: python
+title: Distinct Cleaning Stops
+slug: dicts-sets-tuples-a04
+difficulty: easy
+concepts:
+  - python.tuples
+  - python.sets
+  - patterns.set_membership
+prerequisites:
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original robot-vacuum grid-position scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A robot vacuum records the grid cell it pauses on as a two-item list
+  `[row, col]`. Write `count_distinct_stops(points)` that returns how many
+  distinct cells the robot paused on across the whole run.
+
+  The same cell can appear many times and should be counted once. An empty run
+  returns 0.
+starter_code: |
+  def count_distinct_stops(points):
+      return 0
+function_name: count_distinct_stops
+input_mode: function
+solution_sketch: Convert each pair to a tuple so it can go in a set, then count the set.
+sample_solution: |
+  def count_distinct_stops(points):
+      seen = {tuple(point) for point in points}
+      return len(seen)
+hints:
+  - level: 1
+    text: You are counting unique positions, so duplicates should collapse.
+  - level: 2
+    text: A list cannot go in a set, but a tuple can because it is hashable.
+  - level: 3
+    text: Build {tuple(point) for point in points} and return its length.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: 0
+    - name: all_unique
+      input: [[0, 0], [1, 2], [3, 4]]
+      expected: 3
+    - name: with_duplicates
+      input: [[0, 0], [0, 0], [1, 1]]
+      expected: 2
+  validation:
+    - name: single
+      input: [[5, 5]]
+      expected: 1
+    - name: all_same
+      input: [[2, 3], [2, 3], [2, 3]]
+      expected: 1
+    - name: mixed
+      input: [[1, 0], [0, 1], [1, 0], [2, 2], [0, 1]]
+      expected: 3
+explanation_markdown: |
+  A set removes duplicates automatically, but its members must be hashable. A
+  `[row, col]` list is not hashable, so converting each pair to a `tuple` first
+  lets it live in the set. The number of distinct stops is just the set's length.
+common_mistakes:
+  - Trying to add the lists directly to a set and hitting a TypeError.
+  - Counting total stops instead of distinct ones.
+  - Comparing pairs by hand instead of letting a set deduplicate them.

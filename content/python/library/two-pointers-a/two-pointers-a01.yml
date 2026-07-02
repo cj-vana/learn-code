@@ -1,0 +1,79 @@
+id: exercise.library.two_pointers.a01
+kind: exercise
+version: 1
+language: python
+title: Symmetric Garden Path
+slug: two-pointers-a01
+difficulty: easy
+concepts:
+  - patterns.two_pointers
+  - python.lists
+prerequisites:
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.two_pointers.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original garden-path symmetry scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A landscaper lays a path of coloured tiles and wants it to look the same when
+  viewed from either end. Write `is_symmetric_path(tiles)` where `tiles` is a
+  list of colour names. Return `True` if the path reads the same forwards and
+  backwards, and `False` otherwise. An empty path counts as symmetric.
+starter_code: |
+  def is_symmetric_path(tiles):
+      return False
+function_name: is_symmetric_path
+input_mode: function
+solution_sketch: Walk one pointer in from each end, comparing the two tiles until they meet.
+sample_solution: |
+  def is_symmetric_path(tiles):
+      left = 0
+      right = len(tiles) - 1
+      while left < right:
+          if tiles[left] != tiles[right]:
+              return False
+          left += 1
+          right -= 1
+      return True
+hints:
+  - level: 1
+    text: Compare the first tile with the last, then move inward.
+  - level: 2
+    text: Keep one index at the start and one at the end, stepping them toward each other.
+  - level: 3
+    text: While left < right, return False on any mismatch; otherwise advance left and retreat right.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: true
+    - name: single
+      input: [red]
+      expected: true
+    - name: odd_palindrome
+      input: [red, blue, red]
+      expected: true
+  validation:
+    - name: not_symmetric
+      input: [red, blue, green]
+      expected: false
+    - name: even_palindrome
+      input: [ash, birch, birch, ash]
+      expected: true
+    - name: even_mismatch
+      input: [ash, birch, cedar, ash]
+      expected: false
+explanation_markdown: |
+  Two pointers starting at opposite ends let you check symmetry in a single pass
+  using O(1) extra space. Each step compares a mirrored pair and moves both
+  pointers inward; if they never disagree before crossing, the sequence is a
+  palindrome.
+common_mistakes:
+  - Comparing only the halves without pairing mirrored positions correctly.
+  - Looping while left <= right and comparing a tile with itself unnecessarily.
+  - Building a reversed copy and forgetting the empty-path case.

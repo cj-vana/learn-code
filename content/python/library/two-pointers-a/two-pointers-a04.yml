@@ -1,0 +1,82 @@
+id: exercise.library.two_pointers.a04
+kind: exercise
+version: 1
+language: python
+title: Settle Sold-Out Seats
+slug: two-pointers-a04
+difficulty: easy
+concepts:
+  - patterns.two_pointers
+  - python.lists
+prerequisites:
+  - python.functions
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.two_pointers.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original theatre seat-map compaction scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A theatre stores a row's seat map as a list of integers. A non-zero value is a
+  held seat number; a `0` marks a sold-out slot. The box office wants every held
+  seat pushed to the front in its original order, with all the sold-out `0`s
+  gathered at the end.
+
+  Write `settle_seats(seats)` and return the rearranged list. The relative order
+  of the held (non-zero) seats must be preserved.
+starter_code: |
+  def settle_seats(seats):
+      return []
+function_name: settle_seats
+input_mode: function
+solution_sketch: Keep a write pointer for the next held seat and swap non-zeros forward as a read pointer scans.
+sample_solution: |
+  def settle_seats(seats):
+      result = seats[:]
+      write = 0
+      for read in range(len(result)):
+          if result[read] != 0:
+              result[write], result[read] = result[read], result[write]
+              write += 1
+      return result
+hints:
+  - level: 1
+    text: Track the position where the next held seat should land.
+  - level: 2
+    text: A read pointer scans forward while a write pointer marks the front region of held seats.
+  - level: 3
+    text: When the read pointer finds a non-zero, swap it to the write position and advance write.
+tests:
+  public:
+    - name: mixed
+      input: [0, 1, 0, 3, 12]
+      expected: [1, 3, 12, 0, 0]
+    - name: no_zeros
+      input: [1, 2, 3]
+      expected: [1, 2, 3]
+    - name: all_zeros
+      input: [0, 0, 0]
+      expected: [0, 0, 0]
+  validation:
+    - name: empty
+      input: []
+      expected: []
+    - name: leading_zeros
+      input: [0, 0, 5]
+      expected: [5, 0, 0]
+    - name: interleaved
+      input: [4, 0, 0, 4, 0, 7]
+      expected: [4, 4, 7, 0, 0, 0]
+explanation_markdown: |
+  A slow write pointer and a fast read pointer partition the list in one pass. The
+  write pointer always points just past the settled held seats; each time the read
+  pointer finds a non-zero value it swaps it into place. Because held seats are
+  moved in the order they are seen, their relative order is preserved while the
+  zeros fall to the back.
+common_mistakes:
+  - Deleting zeros and re-padding, which can reorder the held seats.
+  - Advancing the write pointer even when the current value is a zero.
+  - Assuming the input has no zeros or is never empty.

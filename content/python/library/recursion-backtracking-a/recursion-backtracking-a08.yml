@@ -1,0 +1,98 @@
+id: exercise.library.recursion_backtracking.a08
+kind: exercise
+version: 1
+language: python
+title: Assemble Fixed-Size Gift Bags
+slug: recursion-backtracking-a08
+difficulty: medium
+concepts:
+  - patterns.backtracking
+  - patterns.recursion
+  - python.lists
+prerequisites:
+  - python.functions
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.recursion_backtracking.a08
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original gift-shop scenario that enumerates every fixed-size selection of treats in input order using a start-index backtracking walk.
+prompt_markdown: |
+  A gift shop assembles bags that each hold exactly `size` different treats,
+  chosen from a list of distinct `treats`. Write `gift_bags(data)` where `data`
+  is a dict with keys `treats` (a list of distinct names) and `size` (an
+  integer). Return a list of every possible bag, where each bag is a list of
+  treat names. Keep the treats inside each bag in the same order they appear in
+  the input, and list the bags in that same left-to-right order. Asking for a
+  bag of size 0 yields one empty bag; asking for more treats than exist yields no
+  bags.
+starter_code: |
+  def gift_bags(data):
+      return []
+function_name: gift_bags
+input_mode: function
+solution_sketch: Walk the treats with a start index, appending choices to a partial bag and recording it once it reaches the requested size.
+sample_solution: |
+  def gift_bags(data):
+      treats = data["treats"]
+      size = data["size"]
+      result = []
+      current = []
+
+      def build(start):
+          if len(current) == size:
+              result.append(list(current))
+              return
+          for i in range(start, len(treats)):
+              current.append(treats[i])
+              build(i + 1)
+              current.pop()
+
+      build(0)
+      return result
+hints:
+  - level: 1
+    text: Grow a partial bag one treat at a time and record it once it reaches the requested size.
+  - level: 2
+    text: Pass a start index so each step only considers treats that come after the last one chosen, avoiding repeats and reorderings.
+  - level: 3
+    text: Loop i from start, append treats[i], recurse with i + 1, then pop to undo the choice before trying the next i.
+tests:
+  public:
+    - name: pairs
+      input: {treats: [mint, cocoa, fudge], size: 2}
+      expected: [[mint, cocoa], [mint, fudge], [cocoa, fudge]]
+    - name: singles
+      input: {treats: [mint, cocoa], size: 1}
+      expected: [[mint], [cocoa]]
+    - name: whole_shelf
+      input: {treats: [mint, cocoa], size: 2}
+      expected: [[mint, cocoa]]
+  validation:
+    - name: empty_bag
+      input: {treats: [mint, cocoa, fudge], size: 0}
+      expected: [[]]
+    - name: too_many
+      input: {treats: [mint], size: 2}
+      expected: []
+    - name: three_of_four
+      input: {treats: [ade, bun, cob, dip], size: 3}
+      expected: [[ade, bun, cob], [ade, bun, dip], [ade, cob, dip], [bun, cob, dip]]
+    - name: each_alone
+      input: {treats: [pip, qui, rho], size: 1}
+      expected: [[pip], [qui], [rho]]
+explanation_markdown: |
+  Each bag is a selection of `size` treats with the input order preserved and no
+  treat repeated. The `start` index is what enforces both rules: every recursive
+  step only looks at treats to the right of the last one picked, so choices never
+  double back. When the partial bag reaches `size` we snapshot a copy into the
+  results, then the pop undoes the last choice so the loop can try the next
+  treat, the backtracking step. Size 0 records the empty bag immediately, and a
+  size larger than the shelf never fills a bag, so no bags are recorded.
+common_mistakes:
+  - Looping from 0 instead of start, which produces reordered duplicate bags.
+  - Appending current directly instead of a copy, so later pops mutate saved bags.
+  - Forgetting to pop after recursing, leaving stale treats in the partial bag.

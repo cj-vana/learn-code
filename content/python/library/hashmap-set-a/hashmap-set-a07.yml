@@ -1,0 +1,78 @@
+id: exercise.library.hashmap_set.a07
+kind: exercise
+version: 1
+language: python
+title: Reconcile Two Manifests
+slug: hashmap-set-a07
+difficulty: medium
+concepts:
+  - patterns.hash_map_counting
+prerequisites:
+  - python.dictionaries
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.hashmap_set.a07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original depot loading-versus-unloading manifest reconciliation scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A depot double-checks a shipment by comparing the loading manifest with the
+  unloading manifest. Write `manifests_match(data)` where `data` is a dict with
+  keys `loaded` and `unloaded`, each a list of crate labels.
+
+  Return `True` if both lists contain exactly the same labels the same number
+  of times (order does not matter), and `False` otherwise.
+starter_code: |
+  def manifests_match(data):
+      return False
+function_name: manifests_match
+input_mode: function
+solution_sketch: Tally each manifest into a count dict and compare the two dicts.
+sample_solution: |
+  def manifests_match(data):
+      def tally(labels):
+          counts = {}
+          for label in labels:
+              counts[label] = counts.get(label, 0) + 1
+          return counts
+      return tally(data["loaded"]) == tally(data["unloaded"])
+hints:
+  - level: 1
+    text: Two manifests match only if every label appears the same number of times in each.
+  - level: 2
+    text: Build a count dict for each list; label to how many times it appears.
+  - level: 3
+    text: Compare the two dicts directly with `==`; dict equality ignores order.
+tests:
+  public:
+    - name: both_empty
+      input: { loaded: [], unloaded: [] }
+      expected: true
+    - name: same_reordered
+      input: { loaded: [a, b, a], unloaded: [a, a, b] }
+      expected: true
+    - name: missing_label
+      input: { loaded: [a, b, c], unloaded: [a, b] }
+      expected: false
+  validation:
+    - name: count_mismatch
+      input: { loaded: [x, x, y], unloaded: [x, y, y] }
+      expected: false
+    - name: exact_match
+      input: { loaded: [p, q, r], unloaded: [r, q, p] }
+      expected: true
+    - name: extra_copy
+      input: { loaded: [m], unloaded: [m, m] }
+      expected: false
+explanation_markdown: |
+  Comparing lengths alone is not enough, and sorting both lists works but costs
+  O(n log n). Counting each manifest into a dict is O(n), and Python's dict
+  equality treats two dicts as equal only when they hold the same keys with the
+  same values, which is exactly the same-labels-same-counts rule.
+common_mistakes:
+  - Comparing only the lengths of the two lists.
+  - Comparing sets, which ignores how many times each label appears.
+  - Assuming the labels arrive in the same order in both manifests.

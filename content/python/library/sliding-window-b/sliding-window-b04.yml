@@ -1,0 +1,94 @@
+id: exercise.library.sliding_window.b04
+kind: exercise
+version: 1
+language: python
+title: Calm Air Windows
+slug: sliding-window-b04
+difficulty: easy
+concepts:
+  - patterns.sliding_window
+  - patterns.running_total
+prerequisites:
+  - python.lists
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sliding_window.b04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original air-quality scenario counting fixed-length windows whose average stays within a healthy limit.
+prompt_markdown: |
+  A city sensor reports an air-quality index (AQI) once per hour. Health officials
+  want to know how many stretches of a fixed number of hours were comfortable on
+  average, meaning the average AQI over the stretch was at most a healthy limit.
+
+  Write `calm_windows(data)` where `data` is a dict with three keys: `readings`
+  (a list of hourly AQI values), `span` (the number of consecutive hours in a
+  stretch), and `limit` (the highest acceptable average). Return how many stretches
+  of exactly `span` consecutive hours have an average AQI of at most `limit`. To
+  avoid rounding, compare the window's total against `limit * span`. You may assume
+  `1 <= span <= len(readings)`.
+starter_code: |
+  def calm_windows(data):
+      return 0
+function_name: calm_windows
+input_mode: function
+solution_sketch: Slide a fixed window while keeping its running total, counting each window whose total is at most limit times span.
+sample_solution: |
+  def calm_windows(data):
+      readings = data["readings"]
+      span = data["span"]
+      limit = data["limit"]
+      if span <= 0 or span > len(readings):
+          return 0
+      threshold = limit * span
+      total = sum(readings[:span])
+      count = 1 if total <= threshold else 0
+      for i in range(span, len(readings)):
+          total += readings[i] - readings[i - span]
+          if total <= threshold:
+              count += 1
+      return count
+hints:
+  - level: 1
+    text: An average of at most limit over span hours is the same as a total of at most limit times span, which avoids fractions.
+  - level: 2
+    text: Keep a running total for the current window and slide it one hour at a time.
+  - level: 3
+    text: After each slide, add the new hour and subtract the departing hour, then check the total against limit * span.
+tests:
+  public:
+    - name: all_calm
+      input: { readings: [1, 2, 3], span: 1, limit: 5 }
+      expected: 3
+    - name: some_over
+      input: { readings: [2, 4, 10], span: 2, limit: 4 }
+      expected: 1
+    - name: exact_limit
+      input: { readings: [3, 3, 3], span: 3, limit: 3 }
+      expected: 1
+  validation:
+    - name: none_calm
+      input: { readings: [9, 9, 9, 9], span: 2, limit: 4 }
+      expected: 0
+    - name: all_calm_multi
+      input: { readings: [1, 1, 1, 1], span: 2, limit: 1 }
+      expected: 3
+    - name: mixed
+      input: { readings: [1, 2, 9, 1, 1], span: 2, limit: 3 }
+      expected: 2
+    - name: span_all
+      input: { readings: [4, 1, 1, 4], span: 4, limit: 2 }
+      expected: 0
+explanation_markdown: |
+  Comparing an average to a limit is the same as comparing the window's total to
+  `limit * span`, so the whole problem stays in integer arithmetic. A fixed-length
+  sliding window keeps the current total up to date in constant time per step: add
+  the hour entering the window and subtract the hour leaving it. Each window whose
+  total lands at or below the threshold is counted, giving an O(n) scan.
+common_mistakes:
+  - Dividing to get an average and running into floating-point rounding instead of comparing totals.
+  - Using a strict less-than and missing windows whose average exactly equals the limit.
+  - Rebuilding the window total from scratch each step rather than sliding it.

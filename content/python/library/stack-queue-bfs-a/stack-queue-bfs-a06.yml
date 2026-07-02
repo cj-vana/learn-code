@@ -1,0 +1,145 @@
+id: exercise.library.stack_queue_bfs.a06
+kind: exercise
+version: 1
+language: python
+title: Fewest Connection Hops
+slug: stack-queue-bfs-a06
+difficulty: easy
+concepts:
+  - patterns.queue_bfs
+  - python.dictionaries
+prerequisites:
+  - python.lists
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.stack_queue_bfs.a06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original social-connections shortest-hop scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A community app stores mutual connections as an adjacency map: each name points
+  to a list of the names directly connected to it. You are given a dict `data`
+  with keys `"graph"`, `"start"`, and `"target"`.
+
+  Write `hops(data)` returning the fewest connection hops needed to travel from
+  `start` to `target`. If `start` equals `target`, return `0`. If `target`
+  cannot be reached, return `-1`.
+starter_code: |
+  def hops(data):
+      return -1
+function_name: hops
+input_mode: function
+solution_sketch: Breadth-first search from start, tracking distance, and return it the first time target is reached.
+sample_solution: |
+  from collections import deque
+
+  def hops(data):
+      graph = data["graph"]
+      start = data["start"]
+      target = data["target"]
+      if start == target:
+          return 0
+      visited = {start}
+      queue = deque([(start, 0)])
+      while queue:
+          node, dist = queue.popleft()
+          for neighbour in graph.get(node, []):
+              if neighbour == target:
+                  return dist + 1
+              if neighbour not in visited:
+                  visited.add(neighbour)
+                  queue.append((neighbour, dist + 1))
+      return -1
+hints:
+  - level: 1
+    text: BFS explores everything one hop away before anything two hops away, so it finds the shortest path first.
+  - level: 2
+    text: Store each node together with its distance from the start and mark nodes visited as you enqueue them.
+  - level: 3
+    text: The first time you meet the target, its distance is the answer; if the queue empties without finding it, return -1.
+tests:
+  public:
+    - name: same_person
+      input:
+        graph:
+          ana: [ben, cara]
+          ben: [ana, dan]
+          cara: [ana]
+          dan: [ben, evan]
+          evan: [dan]
+        start: ana
+        target: ana
+      expected: 0
+    - name: direct
+      input:
+        graph:
+          ana: [ben, cara]
+          ben: [ana, dan]
+          cara: [ana]
+          dan: [ben, evan]
+          evan: [dan]
+        start: ana
+        target: ben
+      expected: 1
+    - name: two_hops
+      input:
+        graph:
+          ana: [ben, cara]
+          ben: [ana, dan]
+          cara: [ana]
+          dan: [ben, evan]
+          evan: [dan]
+        start: ana
+        target: dan
+      expected: 2
+  validation:
+    - name: three_hops
+      input:
+        graph:
+          ana: [ben, cara]
+          ben: [ana, dan]
+          cara: [ana]
+          dan: [ben, evan]
+          evan: [dan]
+          fern: [gus]
+          gus: [fern]
+        start: ana
+        target: evan
+      expected: 3
+    - name: unreachable
+      input:
+        graph:
+          ana: [ben, cara]
+          ben: [ana, dan]
+          cara: [ana]
+          dan: [ben, evan]
+          evan: [dan]
+          fern: [gus]
+          gus: [fern]
+        start: ana
+        target: fern
+      expected: -1
+    - name: reverse_direct
+      input:
+        graph:
+          ana: [ben, cara]
+          ben: [ana, dan]
+          cara: [ana]
+          dan: [ben, evan]
+          evan: [dan]
+        start: cara
+        target: ana
+      expected: 1
+explanation_markdown: |
+  Because every hop has the same cost, breadth-first search visits nodes in
+  order of increasing distance, so the first time the target appears it is via a
+  shortest path. Marking nodes visited as they are enqueued stops re-processing
+  and avoids infinite loops on the cycles created by mutual connections. Each
+  node and edge is touched once, giving O(V + E) time.
+common_mistakes:
+  - Using depth-first search, which can report a longer path than the shortest.
+  - Forgetting to mark nodes visited, causing repeats or infinite loops on cycles.
+  - Not handling start == target or an unreachable target.

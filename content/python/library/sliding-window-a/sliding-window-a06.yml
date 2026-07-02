@@ -1,0 +1,92 @@
+id: exercise.library.sliding_window.a06
+kind: exercise
+version: 1
+language: python
+title: Longest Affordable Road-Trip Run
+slug: sliding-window-a06
+difficulty: medium
+concepts:
+  - patterns.sliding_window
+  - patterns.two_pointers
+  - python.lists
+prerequisites:
+  - python.lists
+estimated_time_minutes: 18
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sliding_window.a06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original road-trip fuel-budget scenario using a variable-size window over non-negative leg costs.
+prompt_markdown: |
+  A road-trip planner lists the fuel cost of each leg between stops, in order. On
+  one tank you can drive a run of consecutive legs only while their total cost
+  stays within `budget`. Write `longest_affordable_run(data)` returning the length
+  of the longest run of consecutive legs whose total fuel cost is at most
+  `budget`.
+
+  `data` is a dict: `{"legs": [...], "budget": budget}`. Every leg cost is a
+  non-negative integer. If no leg fits (any single leg alone exceeds the budget),
+  return 0.
+starter_code: |
+  def longest_affordable_run(data):
+      return 0
+function_name: longest_affordable_run
+input_mode: function
+solution_sketch: Grow a window on the right and shrink from the left whenever the running total exceeds the budget.
+sample_solution: |
+  def longest_affordable_run(data):
+      legs = data["legs"]
+      budget = data["budget"]
+      left = 0
+      total = 0
+      best = 0
+      for right in range(len(legs)):
+          total += legs[right]
+          while total > budget and left <= right:
+              total -= legs[left]
+              left += 1
+          if right - left + 1 > best:
+              best = right - left + 1
+      return best
+hints:
+  - level: 1
+    text: The window can grow and shrink, so its size is not fixed; use two indices for its ends.
+  - level: 2
+    text: Extend the right edge one leg at a time and keep a running total of the window.
+  - level: 3
+    text: While the total exceeds the budget, drop legs from the left until it fits, then measure the length.
+tests:
+  public:
+    - name: all_fit
+      input: {legs: [1, 2, 1], budget: 10}
+      expected: 3
+    - name: none_fit
+      input: {legs: [7, 8, 9], budget: 5}
+      expected: 0
+    - name: partial
+      input: {legs: [2, 3, 1, 5], budget: 5}
+      expected: 2
+  validation:
+    - name: single_big_skipped
+      input: {legs: [1, 1, 20, 1, 1], budget: 3}
+      expected: 2
+    - name: all_zero
+      input: {legs: [0, 0, 0, 0], budget: 0}
+      expected: 4
+    - name: whole_fits_exact
+      input: {legs: [3, 3, 3], budget: 9}
+      expected: 3
+explanation_markdown: |
+  Because every leg cost is non-negative, the window's total only grows when the
+  right edge moves and only shrinks when the left edge moves. Whenever the total
+  exceeds the budget, advancing the left edge restores a valid window, and each
+  index moves at most once, so the scan is O(n). Tracking the widest valid window
+  gives the longest affordable run. A leg that alone exceeds the budget collapses
+  the window to length 0 at that position.
+common_mistakes:
+  - Assuming a fixed window size instead of letting it grow and shrink.
+  - Forgetting the left <= right guard, which can over-shrink past the current leg.
+  - Using a nested restart of left for each right, which is slower than a single moving pointer.

@@ -1,0 +1,102 @@
+id: exercise.library.stack_queue_bfs.a05
+kind: exercise
+version: 1
+language: python
+title: Help-Desk Ticket Queue
+slug: stack-queue-bfs-a05
+difficulty: easy
+concepts:
+  - patterns.queue_bfs
+  - python.lists
+prerequisites:
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.stack_queue_bfs.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original help-desk ticket queue simulation scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A help desk serves support tickets in first-in, first-out order. You are given
+  a list of events. Each event is either `["ADD", name]`, which puts a new
+  ticket for `name` at the back of the queue, or `["SERVE"]`, which serves and
+  removes the ticket at the front.
+
+  Write `serve_order(events)` returning the list of names in the order they were
+  served. A `["SERVE"]` when the queue is empty is skipped.
+starter_code: |
+  def serve_order(events):
+      return []
+function_name: serve_order
+input_mode: function
+solution_sketch: Enqueue on ADD, dequeue from the front on SERVE, and record each served name.
+sample_solution: |
+  from collections import deque
+
+  def serve_order(events):
+      queue = deque()
+      served = []
+      for event in events:
+          if event[0] == "ADD":
+              queue.append(event[1])
+          elif event[0] == "SERVE":
+              if queue:
+                  served.append(queue.popleft())
+      return served
+hints:
+  - level: 1
+    text: A queue serves the oldest waiting ticket first, not the newest.
+  - level: 2
+    text: Add names to the back and remove from the front so order is preserved.
+  - level: 3
+    text: A deque lets you append on the right and popleft from the front in O(1); skip SERVE when the queue is empty.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: add_then_serve
+      input:
+        - [ADD, ana]
+        - [SERVE]
+      expected: [ana]
+    - name: fifo_front_first
+      input:
+        - [ADD, ana]
+        - [ADD, ben]
+        - [SERVE]
+      expected: [ana]
+  validation:
+    - name: serve_empty_skipped
+      input:
+        - [SERVE]
+        - [ADD, cara]
+        - [SERVE]
+      expected: [cara]
+    - name: two_served_in_order
+      input:
+        - [ADD, ana]
+        - [ADD, ben]
+        - [SERVE]
+        - [SERVE]
+      expected: [ana, ben]
+    - name: interleaved
+      input:
+        - [ADD, ana]
+        - [SERVE]
+        - [ADD, ben]
+        - [ADD, cara]
+        - [SERVE]
+      expected: [ana, ben]
+explanation_markdown: |
+  A queue is the natural fit for "first come, first served": names enter at the
+  back and leave from the front, preserving arrival order. Guarding the dequeue
+  with a non-empty check makes an early SERVE a harmless no-op. Using a deque
+  keeps both ends O(1), so the whole simulation is O(n).
+common_mistakes:
+  - Serving the most recently added ticket instead of the oldest.
+  - Calling popleft() on an empty queue and crashing.
+  - Using list.pop(0) in a tight loop, which is O(n) per removal.

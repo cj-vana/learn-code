@@ -1,0 +1,78 @@
+id: exercise.library.dicts_sets_tuples.a02
+kind: exercise
+version: 1
+language: python
+title: Combine Donation Boxes
+slug: dicts-sets-tuples-a02
+difficulty: easy
+concepts:
+  - python.dictionaries
+prerequisites:
+  - python.functions
+  - python.loops
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original food-drive donation-box merging scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A neighborhood food drive collects goods in two boxes. Write
+  `combine_donations(data)` where `data` is a dict with keys `box_a` and
+  `box_b`, each a dict mapping an item name to the count donated in that box.
+
+  Return a single dict that totals the counts across both boxes. Items that
+  appear in only one box keep their count; items in both boxes have their counts
+  added together. If both boxes are empty, return an empty dict.
+starter_code: |
+  def combine_donations(data):
+      return {}
+function_name: combine_donations
+input_mode: function
+solution_sketch: Start from a copy of one box and add each item from the other with dict.get defaulting to zero.
+sample_solution: |
+  def combine_donations(data):
+      totals = dict(data["box_a"])
+      for item, count in data["box_b"].items():
+          totals[item] = totals.get(item, 0) + count
+      return totals
+hints:
+  - level: 1
+    text: Every item name becomes a key whose value is the summed count.
+  - level: 2
+    text: Copy the first box, then walk through the second box's items.
+  - level: 3
+    text: Use totals.get(item, 0) + count so new items start from zero.
+tests:
+  public:
+    - name: both_empty
+      input: { box_a: {}, box_b: {} }
+      expected: {}
+    - name: disjoint
+      input: { box_a: { books: 5 }, box_b: { toys: 3 } }
+      expected: { books: 5, toys: 3 }
+    - name: overlap
+      input: { box_a: { books: 5, toys: 2 }, box_b: { toys: 3 } }
+      expected: { books: 5, toys: 5 }
+  validation:
+    - name: only_a
+      input: { box_a: { cans: 1, jars: 2 }, box_b: {} }
+      expected: { cans: 1, jars: 2 }
+    - name: only_b
+      input: { box_a: {}, box_b: { blankets: 4 } }
+      expected: { blankets: 4 }
+    - name: multi_overlap
+      input: { box_a: { rice: 1, beans: 1, pasta: 1 }, box_b: { beans: 2, pasta: 3, soup: 4 } }
+      expected: { rice: 1, beans: 3, pasta: 4, soup: 4 }
+explanation_markdown: |
+  Copying `box_a` gives a starting total you can safely mutate. Iterating over
+  `box_b.items()` and using `totals.get(item, 0)` means items missing from the
+  first box begin at zero, so overlapping items add correctly and unique items
+  carry over unchanged.
+common_mistakes:
+  - Overwriting counts instead of adding them for shared items.
+  - Mutating box_a in place, which changes the caller's data.
+  - Forgetting to default missing items to zero before adding.

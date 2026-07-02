@@ -1,0 +1,81 @@
+id: exercise.library.dicts_sets_tuples.b07
+kind: exercise
+version: 1
+language: python
+title: Fundraiser Donor Leaderboard
+slug: dicts-sets-tuples-b07
+difficulty: medium
+concepts:
+  - python.sorting
+  - python.dictionaries
+  - patterns.hash_map_counting
+prerequisites:
+  - python.loops
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples.b07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original school-fundraiser scenario summing per-donor gifts then ranking donors by total.
+prompt_markdown: |
+  A school fundraiser records every gift as a dict with `donor` (a name) and
+  `amount` (a positive integer). A donor may give several times. Write
+  `donation_leaderboard(donations)` that totals each donor's gifts and returns a
+  leaderboard: a list of `[donor, total]` pairs sorted by total from highest to
+  lowest. Break ties between equal totals by donor name in ascending
+  alphabetical order. An empty list of donations returns an empty list.
+starter_code: |
+  def donation_leaderboard(donations):
+      return []
+function_name: donation_leaderboard
+input_mode: function
+solution_sketch: Accumulate totals in a dict, then sort the items by (negative total, donor).
+sample_solution: |
+  def donation_leaderboard(donations):
+      totals = {}
+      for gift in donations:
+          donor = gift["donor"]
+          totals[donor] = totals.get(donor, 0) + gift["amount"]
+      ranked = sorted(totals.items(), key=lambda pair: (-pair[1], pair[0]))
+      return [[donor, total] for donor, total in ranked]
+hints:
+  - level: 1
+    text: First collapse the gifts into one total per donor using a dict.
+  - level: 2
+    text: Sort the dict's items with a tuple key so ties fall back to the name.
+  - level: 3
+    text: Sort by (-total, donor), then build [donor, total] pairs from the result.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: single_gift
+      input: [{donor: mara, amount: 30}]
+      expected: [[mara, 30]]
+    - name: sum_then_tie
+      input: [{donor: mara, amount: 30}, {donor: ivo, amount: 50}, {donor: mara, amount: 20}]
+      expected: [[ivo, 50], [mara, 50]]
+  validation:
+    - name: distinct_totals
+      input: [{donor: bo, amount: 10}, {donor: al, amount: 40}, {donor: cy, amount: 25}]
+      expected: [[al, 40], [cy, 25], [bo, 10]]
+    - name: pure_tie
+      input: [{donor: sam, amount: 15}, {donor: ana, amount: 15}]
+      expected: [[ana, 15], [sam, 15]]
+    - name: repeated_donor
+      input: [{donor: rex, amount: 5}, {donor: rex, amount: 5}, {donor: rex, amount: 90}, {donor: liv, amount: 60}]
+      expected: [[rex, 100], [liv, 60]]
+explanation_markdown: |
+  A dict accumulates each donor's running total in one pass, which is the
+  hash-map counting pattern applied to sums. Then `sorted` on the dict's items
+  with the key `(-total, donor)` ranks donors by descending total while breaking
+  ties alphabetically. Converting the sorted tuples into `[donor, total]` lists
+  gives the leaderboard shape the caller expects.
+common_mistakes:
+  - Sorting the raw gifts before summing, so repeated donors are never combined.
+  - Forgetting the alphabetical tie-break, leaving equal totals in arbitrary order.
+  - Returning dict items or tuples instead of [donor, total] lists.

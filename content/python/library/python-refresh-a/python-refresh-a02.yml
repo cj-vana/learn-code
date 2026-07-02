@@ -1,0 +1,89 @@
+id: exercise.library.python_refresh.a02
+kind: exercise
+version: 1
+language: python
+title: Label a Spreadsheet Cell
+slug: python-refresh-a02
+difficulty: easy
+concepts:
+  - python.types
+  - python.conditionals
+prerequisites:
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original spreadsheet-cell classification scenario, prompt, tests, and explanation.
+prompt_markdown: |
+  A tiny spreadsheet tool needs to describe what kind of value sits in a cell.
+  Write `describe_cell(value)` returning a lowercase word for the value's type:
+
+  - `None` -> `"nothing"`
+  - a boolean -> `"boolean"`
+  - a whole number -> `"integer"`
+  - a number with a decimal point -> `"decimal"`
+  - text -> `"text"`
+  - anything else -> `"other"`
+
+  Note that in Python a boolean is technically a kind of integer, so check for
+  booleans before you check for integers.
+starter_code: |
+  def describe_cell(value):
+      return "other"
+function_name: describe_cell
+input_mode: function
+solution_sketch: Test None, then bool, then int, then float, then str in that order.
+sample_solution: |
+  def describe_cell(value):
+      if value is None:
+          return "nothing"
+      if isinstance(value, bool):
+          return "boolean"
+      if isinstance(value, int):
+          return "integer"
+      if isinstance(value, float):
+          return "decimal"
+      if isinstance(value, str):
+          return "text"
+      return "other"
+hints:
+  - level: 1
+    text: Use isinstance to ask what type the value is.
+  - level: 2
+    text: The order of your checks matters because a boolean also counts as an integer.
+  - level: 3
+    text: Check `isinstance(value, bool)` before `isinstance(value, int)`.
+tests:
+  public:
+    - name: whole_number
+      input: 7
+      expected: "integer"
+    - name: fraction
+      input: 2.5
+      expected: "decimal"
+    - name: word
+      input: "note"
+      expected: "text"
+  validation:
+    - name: flag
+      input: true
+      expected: "boolean"
+    - name: missing
+      input: null
+      expected: "nothing"
+    - name: collection
+      input: [1, 2]
+      expected: "other"
+explanation_markdown: |
+  Because `bool` is a subclass of `int`, `isinstance(True, int)` is `True`. If the
+  integer check came first it would wrongly claim a boolean is an integer. Testing
+  `None` and `bool` before the numeric types keeps each branch unambiguous.
+common_mistakes:
+  - Checking for int before bool, so True is labeled an integer.
+  - Using type(value) == int, which also misclassifies booleans.
+  - Forgetting the catch-all return for values that match none of the types.

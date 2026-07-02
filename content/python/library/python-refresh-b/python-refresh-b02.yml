@@ -1,0 +1,94 @@
+id: exercise.library.python_refresh.b02
+kind: exercise
+version: 1
+language: python
+title: Classify a Spreadsheet Cell
+slug: python-refresh-b02
+difficulty: easy
+concepts:
+  - python.types
+  - python.conditionals
+prerequisites:
+  - python.functions
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh.b02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original spreadsheet cell-type classifier scenario built around Python's own runtime types.
+prompt_markdown: |
+  A small spreadsheet tool needs to label what kind of value sits in each
+  cell. Write `classify_cell(value)` that returns one of these strings:
+
+  - `"blank"` if the value is `None`, or a string that is empty or only spaces
+  - `"integer"` if the value is a whole number
+  - `"decimal"` if the value is a floating-point number
+  - `"text"` for any other string
+
+  You can assume the value is always `None`, an `int`, a `float`, or a `str`.
+starter_code: |
+  def classify_cell(value):
+      return "blank"
+function_name: classify_cell
+input_mode: function
+solution_sketch: Check for None and blank strings first, then distinguish int, float, and text.
+sample_solution: |
+  def classify_cell(value):
+      if value is None:
+          return "blank"
+      if isinstance(value, str):
+          return "blank" if value.strip() == "" else "text"
+      if isinstance(value, float):
+          return "decimal"
+      if isinstance(value, int):
+          return "integer"
+      return "text"
+hints:
+  - level: 1
+    text: The type of the value decides the label, so ask what type it is.
+  - level: 2
+    text: Handle None and strings before you test for numbers.
+  - level: 3
+    text: Use isinstance(value, float) and isinstance(value, int), and str.strip() to spot blank text.
+tests:
+  public:
+    - name: whole_number
+      input: 42
+      expected: integer
+    - name: decimal_number
+      input: 3.5
+      expected: decimal
+    - name: word
+      input: hello
+      expected: text
+  validation:
+    - name: none_is_blank
+      input: null
+      expected: blank
+    - name: empty_string_blank
+      input: ""
+      expected: blank
+    - name: spaces_blank
+      input: "   "
+      expected: blank
+    - name: negative_int
+      input: -7
+      expected: integer
+    - name: zero_int
+      input: 0
+      expected: integer
+    - name: digits_as_text
+      input: "42"
+      expected: text
+explanation_markdown: |
+  Python already tracks each value's type at runtime, so `isinstance` can
+  report it. Checking `None` and strings first keeps the numeric branches
+  simple, and `str.strip()` treats whitespace-only cells the same as empty
+  ones. A quoted `"42"` is still text, which is why the check order matters.
+common_mistakes:
+  - Testing for int before float, or forgetting that strings need their own branch.
+  - Treating a whitespace-only string as text instead of blank.
+  - Confusing the string "42" with the number 42.

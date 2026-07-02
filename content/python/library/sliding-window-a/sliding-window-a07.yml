@@ -1,0 +1,92 @@
+id: exercise.library.sliding_window.a07
+kind: exercise
+version: 1
+language: python
+title: Longest Open Ski Stretch
+slug: sliding-window-a07
+difficulty: medium
+concepts:
+  - patterns.sliding_window
+  - patterns.two_pointers
+  - python.strings
+prerequisites:
+  - python.lists
+estimated_time_minutes: 18
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sliding_window.a07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original ski-resort daily-status scenario finding the longest window with at most k closed days.
+prompt_markdown: |
+  A ski resort logs each day as `'O'` (open) or `'C'` (closed by weather). Using
+  snow machines, staff can force at most `k` closed days open. Write
+  `longest_open_stretch(data)` returning the length of the longest run of
+  consecutive days that could be kept open, i.e. the longest window containing at
+  most `k` `'C'` characters.
+
+  `data` is a dict: `{"log": "...", "k": k}`. The log contains only `'O'` and
+  `'C'`, and `k` is a non-negative integer.
+starter_code: |
+  def longest_open_stretch(data):
+      return 0
+function_name: longest_open_stretch
+input_mode: function
+solution_sketch: Slide a window that may hold at most k closed days, shrinking from the left when it holds too many.
+sample_solution: |
+  def longest_open_stretch(data):
+      log = data["log"]
+      k = data["k"]
+      left = 0
+      closed = 0
+      best = 0
+      for right in range(len(log)):
+          if log[right] == 'C':
+              closed += 1
+          while closed > k:
+              if log[left] == 'C':
+                  closed -= 1
+              left += 1
+          if right - left + 1 > best:
+              best = right - left + 1
+      return best
+hints:
+  - level: 1
+    text: Count how many closed days are inside the current window instead of scanning it repeatedly.
+  - level: 2
+    text: Extend the right edge each step; when the window holds more than k closed days, shrink from the left.
+  - level: 3
+    text: Only decrement the closed count when the day leaving on the left was itself a closed day.
+tests:
+  public:
+    - name: no_closed
+      input: {log: 'OOOO', k: 0}
+      expected: 4
+    - name: convert_one
+      input: {log: 'OOCOO', k: 1}
+      expected: 5
+    - name: too_many
+      input: {log: 'CCCC', k: 1}
+      expected: 1
+  validation:
+    - name: middle_run
+      input: {log: 'OCOCOO', k: 1}
+      expected: 4
+    - name: budget_unused
+      input: {log: 'OOOOO', k: 2}
+      expected: 5
+    - name: convert_two
+      input: {log: 'CCOCC', k: 2}
+      expected: 3
+explanation_markdown: |
+  The window tracks how many closed days it currently spans. Extending the right
+  edge may push that count past `k`, so the left edge advances until at most `k`
+  closed days remain, decrementing the count only when a closed day actually
+  leaves. Each index moves forward at most once, giving an O(n) scan, and the
+  widest valid window is the longest stretch that can be kept open.
+common_mistakes:
+  - Decrementing the closed count for every day that leaves rather than only closed days.
+  - Treating the window as fixed size instead of letting it grow and shrink.
+  - Off-by-one errors when measuring the window length as right - left + 1.

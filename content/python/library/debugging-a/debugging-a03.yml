@@ -1,0 +1,79 @@
+id: exercise.library.debugging.a03
+kind: exercise
+version: 1
+language: python
+title: Clean Up Member Codes
+slug: debugging-a03
+difficulty: easy
+concepts:
+  - python.debugging
+  - python.strings
+prerequisites:
+  - python.functions
+  - python.loops
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.debugging.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original climbing-gym membership-code scenario targeting stray-whitespace and casing bugs.
+prompt_markdown: |
+  A climbing gym imports member codes from a signup form, but the entries arrive
+  with stray spaces and inconsistent capitalization. Write
+  `normalize_codes(codes)` that returns a new list where each code has its
+  leading and trailing whitespace removed and its letters uppercased.
+
+  A common bug is comparing codes without cleaning them first, so `" ab "` and
+  `"AB"` look different when they should match. Keep the order of the list.
+starter_code: |
+  def normalize_codes(codes):
+      return []
+function_name: normalize_codes
+input_mode: function
+solution_sketch: For each code, strip surrounding whitespace and uppercase it, collecting into a new list.
+sample_solution: |
+  def normalize_codes(codes):
+      cleaned = []
+      for code in codes:
+          cleaned.append(code.strip().upper())
+      return cleaned
+hints:
+  - level: 1
+    text: Each code needs two fixes, spacing and capitalization.
+  - level: 2
+    text: str.strip() removes leading and trailing whitespace.
+  - level: 3
+    text: Chain code.strip().upper() to clean and uppercase in one step.
+tests:
+  public:
+    - name: spaces_and_case
+      input: ["  ab ", " Cd"]
+      expected: ["AB", "CD"]
+    - name: empty_list
+      input: []
+      expected: []
+    - name: single
+      input: ["x"]
+      expected: ["X"]
+  validation:
+    - name: words
+      input: [" red ", " BLUE "]
+      expected: ["RED", "BLUE"]
+    - name: only_spaces
+      input: ["  "]
+      expected: [""]
+    - name: already_upper
+      input: ["Mix", "mix"]
+      expected: ["MIX", "MIX"]
+explanation_markdown: |
+  Strings are immutable, so `strip` and `upper` return new strings rather than
+  changing the originals in place. Chaining them cleans each code in one
+  expression, and appending to a fresh list preserves the input order. A code
+  that is only whitespace becomes an empty string after stripping.
+common_mistakes:
+  - Expecting strip or upper to mutate the string in place.
+  - Cleaning only spacing or only case, but not both.
+  - Building comparisons on the raw, uncleaned codes.

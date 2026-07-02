@@ -1,0 +1,88 @@
+id: exercise.library.binary_search.a04
+kind: exercise
+version: 1
+language: python
+title: First Day the Reservoir Fills
+slug: binary-search-a04
+difficulty: easy
+concepts:
+  - patterns.binary_search
+  - python.lists
+prerequisites:
+  - python.lists
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+input_mode: function
+provenance:
+  brief_id: library.binary_search.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original reservoir water-level threshold scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A reservoir's water level is recorded once a day and never drops, so the list
+  of daily levels is non-decreasing. Write `first_day_reaching(data)` where
+  `data` has keys `levels` (the non-decreasing list) and `target`.
+
+  Return the index of the first day whose level is **at least** `target`, or
+  `-1` if the reservoir never reaches it. Use binary search.
+starter_code: |
+  def first_day_reaching(data):
+      return -1
+function_name: first_day_reaching
+solution_sketch: Binary search for the leftmost index whose level is at least the target, then check it exists.
+sample_solution: |
+  def first_day_reaching(data):
+      levels = data["levels"]
+      target = data["target"]
+      lo, hi = 0, len(levels)
+      while lo < hi:
+          mid = (lo + hi) // 2
+          if levels[mid] < target:
+              lo = mid + 1
+          else:
+              hi = mid
+      if lo < len(levels):
+          return lo
+      return -1
+hints:
+  - level: 1
+    text: Once the level reaches the target it stays there, so the qualifying days form a suffix of the list.
+  - level: 2
+    text: Search for the leftmost index whose level is not below the target.
+  - level: 3
+    text: If the window closes past the last index, the target was never reached, so return -1.
+tests:
+  public:
+    - name: reaches
+      input: {levels: [10, 20, 30, 40, 50], target: 30}
+      expected: 2
+    - name: reaches_between
+      input: {levels: [10, 20, 30, 40, 50], target: 25}
+      expected: 2
+    - name: never
+      input: {levels: [10, 20, 30], target: 100}
+      expected: -1
+  validation:
+    - name: first_day
+      input: {levels: [5, 5, 5], target: 5}
+      expected: 0
+    - name: last_day
+      input: {levels: [1, 2, 3, 4], target: 4}
+      expected: 3
+    - name: empty
+      input: {levels: [], target: 5}
+      expected: -1
+    - name: immediate_above
+      input: {levels: [7, 9, 11], target: 1}
+      expected: 0
+explanation_markdown: |
+  The levels never decrease, so "level at least target" is false for a prefix and
+  true for the rest. Binary search finds that switch point in O(log n). A final
+  bounds check turns an index past the end into `-1`, meaning the target was
+  never reached.
+common_mistakes:
+  - Returning lo without checking it is within the list, which reports a nonexistent day.
+  - Using <= target in the comparison and landing one day too late.
+  - Assuming the first qualifying day equals the first exact match, missing days that jump past the target.

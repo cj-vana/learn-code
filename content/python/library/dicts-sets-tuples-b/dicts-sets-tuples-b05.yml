@@ -1,0 +1,75 @@
+id: exercise.library.dicts_sets_tuples.b05
+kind: exercise
+version: 1
+language: python
+title: Ingredients in Only One Recipe
+slug: dicts-sets-tuples-b05
+difficulty: easy
+concepts:
+  - python.sets
+prerequisites:
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples.b05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original two-recipe scenario using symmetric difference to find non-shared ingredients.
+prompt_markdown: |
+  A cook is comparing two recipes to see what makes them different. You are given
+  a dict with keys `recipe_a` and `recipe_b`, each a list of ingredient names.
+  Write `single_recipe_ingredients(data)` that returns a sorted list of the
+  ingredients that appear in exactly one of the two recipes (in one but not the
+  other). Ingredients shared by both are excluded. Return an empty list if every
+  ingredient is shared.
+starter_code: |
+  def single_recipe_ingredients(data):
+      return []
+function_name: single_recipe_ingredients
+input_mode: function
+solution_sketch: Take the symmetric difference of the two ingredient sets and sort it.
+sample_solution: |
+  def single_recipe_ingredients(data):
+      recipe_a = set(data["recipe_a"])
+      recipe_b = set(data["recipe_b"])
+      return sorted(recipe_a ^ recipe_b)
+hints:
+  - level: 1
+    text: You want ingredients that are in one set but not both.
+  - level: 2
+    text: The symmetric-difference operator ^ keeps exactly the non-shared items.
+  - level: 3
+    text: Use sorted(set(recipe_a) ^ set(recipe_b)).
+tests:
+  public:
+    - name: identical
+      input: {recipe_a: [salt, egg], recipe_b: [egg, salt]}
+      expected: []
+    - name: disjoint
+      input: {recipe_a: [flour], recipe_b: [sugar]}
+      expected: [flour, sugar]
+    - name: partial_overlap
+      input: {recipe_a: [milk, oats, honey], recipe_b: [milk, cocoa]}
+      expected: [cocoa, honey, oats]
+  validation:
+    - name: one_empty
+      input: {recipe_a: [], recipe_b: [yeast, water]}
+      expected: [water, yeast]
+    - name: duplicates
+      input: {recipe_a: [basil, basil, thyme], recipe_b: [thyme]}
+      expected: [basil]
+    - name: larger_overlap
+      input: {recipe_a: [olives, bread, cheese], recipe_b: [bread, cheese, dill, egg]}
+      expected: [dill, egg, olives]
+explanation_markdown: |
+  The symmetric difference `a ^ b` is exactly the set of elements in either set
+  but not in both, which matches "appears in exactly one recipe." Converting the
+  lists to sets first removes duplicates and gives fast membership tests, and
+  `sorted` turns the result into a predictable list.
+common_mistakes:
+  - Using intersection (&), which returns shared ingredients instead of unshared ones.
+  - Using union (|), which keeps everything including the shared items.
+  - Returning the set instead of a sorted list.

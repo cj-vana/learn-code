@@ -1,0 +1,86 @@
+id: exercise.library.binary_search.a02
+kind: exercise
+version: 1
+language: python
+title: Where the New Ticket Goes
+slug: binary-search-a02
+difficulty: easy
+concepts:
+  - patterns.binary_search
+  - python.lists
+prerequisites:
+  - python.lists
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+input_mode: function
+provenance:
+  brief_id: library.binary_search.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original deli-ticket insertion-point scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A deli hands out ticket numbers kept in a list sorted in ascending order.
+  Write `insert_position(data)` where `data` has keys `tickets` (the sorted
+  list) and `new` (an incoming ticket number).
+
+  Return the index at which `new` should be inserted so the list stays sorted.
+  If `new` equals numbers already present, it goes just before the first equal
+  one (the leftmost valid spot).
+starter_code: |
+  def insert_position(data):
+      return 0
+function_name: insert_position
+solution_sketch: Binary search for the leftmost index whose value is not less than the new number.
+sample_solution: |
+  def insert_position(data):
+      tickets = data["tickets"]
+      new = data["new"]
+      lo, hi = 0, len(tickets)
+      while lo < hi:
+          mid = (lo + hi) // 2
+          if tickets[mid] < new:
+              lo = mid + 1
+          else:
+              hi = mid
+      return lo
+hints:
+  - level: 1
+    text: You are looking for the boundary between numbers smaller than new and the rest.
+  - level: 2
+    text: Let hi start at len(tickets) so the answer can be the very end of the list.
+  - level: 3
+    text: When the middle value is less than new, everything up to mid is too small, so move lo to mid + 1.
+tests:
+  public:
+    - name: empty
+      input: {tickets: [], new: 5}
+      expected: 0
+    - name: middle
+      input: {tickets: [10, 20, 30, 40], new: 25}
+      expected: 2
+    - name: before_all
+      input: {tickets: [10, 20, 30], new: 5}
+      expected: 0
+  validation:
+    - name: after_all
+      input: {tickets: [10, 20, 30], new: 50}
+      expected: 3
+    - name: equal_leftmost
+      input: {tickets: [10, 20, 20, 30], new: 20}
+      expected: 1
+    - name: exact_existing
+      input: {tickets: [10, 20, 30], new: 20}
+      expected: 1
+    - name: single
+      input: {tickets: [7], new: 7}
+      expected: 0
+explanation_markdown: |
+  This is the classic "lower bound" search. The window collapses onto the first
+  index whose value is at least `new`; inserting there keeps everything sorted
+  and places `new` ahead of any equal numbers. It runs in O(log n).
+common_mistakes:
+  - Starting hi at len(tickets) - 1, which makes appending to the end impossible.
+  - Using <= in the comparison, which lands after equal values instead of before them.
+  - Returning hi or mid instead of lo when the window closes.

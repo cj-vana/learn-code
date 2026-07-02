@@ -1,0 +1,85 @@
+id: exercise.library.prefix_sums.a04
+kind: exercise
+version: 1
+language: python
+title: Balancing Crates on a Plank
+slug: prefix-sums-a04
+difficulty: easy
+concepts:
+  - patterns.prefix_sums
+prerequisites:
+  - python.lists
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.prefix_sums.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original plank-balancing pivot scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A row of crates sits along a long plank, one crate per position. You want to
+  place a single support post directly under one crate so that the crates to its
+  left weigh the same as the crates to its right.
+
+  Write `balance_point(weights)` that returns the smallest index `i` where the sum
+  of the weights before `i` equals the sum of the weights after `i` (the crate at
+  `i` rests on the post and counts for neither side). If no such position exists,
+  return `-1`.
+starter_code: |
+  def balance_point(weights):
+      return -1
+function_name: balance_point
+input_mode: function
+solution_sketch: Track the left-side sum and derive the right side from the total, returning the first balanced index.
+sample_solution: |
+  def balance_point(weights):
+      total = sum(weights)
+      left = 0
+      for i, weight in enumerate(weights):
+          right = total - left - weight
+          if left == right:
+              return i
+          left += weight
+      return -1
+hints:
+  - level: 1
+    text: The right-side sum is the grand total minus the left side minus the crate on the post.
+  - level: 2
+    text: Compute the total once, then sweep left to right updating a running left sum.
+  - level: 3
+    text: Check for balance before adding the current crate to the left sum, and return the first index that matches.
+tests:
+  public:
+    - name: single_crate
+      input: [9]
+      expected: 0
+    - name: symmetric_middle
+      input: [2, 4, 2]
+      expected: 1
+    - name: no_balance
+      input: [1, 2, 3]
+      expected: -1
+  validation:
+    - name: all_equal
+      input: [1, 1, 1]
+      expected: 1
+    - name: interior_pivot
+      input: [2, 3, 4, 1, 4, 5]
+      expected: 3
+    - name: all_zeros_leftmost
+      input: [0, 0, 0]
+      expected: 0
+    - name: heavier_right
+      input: [10, 5, 5]
+      expected: -1
+explanation_markdown: |
+  Computing the grand total first lets each step read off the right-side sum in
+  O(1) as `total - left - weight`, so the whole scan is O(n). Updating `left`
+  only after the comparison keeps the current crate out of both sides, matching
+  the "rests on the post" rule.
+common_mistakes:
+  - Adding the current crate to the left sum before comparing, which shifts the pivot.
+  - Recomputing the right-side sum with a slice each step, making it O(n^2).
+  - Returning a later balanced index instead of the smallest one.

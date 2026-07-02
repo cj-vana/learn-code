@@ -1,0 +1,85 @@
+id: exercise.library.binary_search.a08
+kind: exercise
+version: 1
+language: python
+title: Peak of the Drone Climb
+slug: binary-search-a08
+difficulty: medium
+concepts:
+  - patterns.binary_search
+  - python.lists
+prerequisites:
+  - python.lists
+estimated_time_minutes: 18
+review_status: published
+source_status: original
+input_mode: function
+provenance:
+  brief_id: library.binary_search.a08
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original drone-altitude peak-finding scenario solved by binary search on a rise-then-fall list.
+prompt_markdown: |
+  A survey drone climbs steadily and then descends steadily, so its list of
+  altitude readings strictly increases up to a single highest point and then
+  strictly decreases. Write `peak_index(altitudes)` that returns the index of
+  the highest reading.
+
+  The list has at least 3 readings and exactly one peak. Use binary search, not
+  a full scan.
+starter_code: |
+  def peak_index(altitudes):
+      return 0
+function_name: peak_index
+solution_sketch: Binary search by comparing each midpoint with its neighbor and moving toward the rising side.
+sample_solution: |
+  def peak_index(altitudes):
+      lo, hi = 0, len(altitudes) - 1
+      while lo < hi:
+          mid = (lo + hi) // 2
+          if altitudes[mid] < altitudes[mid + 1]:
+              lo = mid + 1
+          else:
+              hi = mid
+      return lo
+hints:
+  - level: 1
+    text: If a reading is lower than the next one, the peak must be further to the right.
+  - level: 2
+    text: Compare altitudes[mid] with altitudes[mid + 1] to learn which side the peak is on.
+  - level: 3
+    text: When mid is on the rising slope move lo past mid; otherwise the peak is at mid or to its left.
+tests:
+  public:
+    - name: simple
+      input: [1, 3, 2]
+      expected: 1
+    - name: longer
+      input: [2, 5, 8, 10, 7, 4]
+      expected: 3
+    - name: peak_near_end
+      input: [1, 2, 3, 4, 5, 2]
+      expected: 4
+  validation:
+    - name: peak_near_start
+      input: [3, 9, 8, 7, 6, 5]
+      expected: 1
+    - name: five
+      input: [10, 20, 30, 25, 15]
+      expected: 2
+    - name: symmetric
+      input: [1, 4, 9, 4, 1]
+      expected: 2
+    - name: long_climb
+      input: [1, 2, 3, 4, 5, 6, 7, 4]
+      expected: 6
+explanation_markdown: |
+  On the way up each reading is smaller than the next; on the way down it is
+  larger. Comparing the midpoint with its right neighbor tells you which slope
+  you are on, letting you discard half the list each step. The window closes onto
+  the single peak in O(log n).
+common_mistakes:
+  - Comparing with altitudes[mid - 1] and running off the left edge of the list.
+  - Moving hi to mid - 1 when mid could itself be the peak, skipping the answer.
+  - Falling back to a linear scan for the maximum instead of using the rise-then-fall shape.

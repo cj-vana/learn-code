@@ -1,0 +1,73 @@
+id: exercise.library.loops_lists_strings.b01
+kind: exercise
+version: 1
+language: python
+title: Reverse a Marquee Sign
+slug: loops-lists-strings-b01
+difficulty: easy
+concepts:
+  - python.strings
+  - python.lists
+prerequisites:
+  - python.functions
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings.b01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original theatre marquee scenario, prompt, tests, and explanation.
+prompt_markdown: |
+  A theatre marquee shows a short message with words separated by single spaces.
+  The manager wants the same words displayed in reverse order. Write
+  `reverse_marquee(sign)` returning a new string with the word order reversed.
+  An empty string returns an empty string.
+starter_code: |
+  def reverse_marquee(sign):
+      return ""
+function_name: reverse_marquee
+input_mode: function
+solution_sketch: Split into words, reverse the list, and join back with spaces.
+sample_solution: |
+  def reverse_marquee(sign):
+      words = sign.split()
+      words.reverse()
+      return " ".join(words)
+hints:
+  - level: 1
+    text: Break the sentence into a list of individual words first.
+  - level: 2
+    text: A list can be reversed before you rebuild the string.
+  - level: 3
+    text: Use " ".join(words) after reversing the word list.
+tests:
+  public:
+    - name: empty
+      input: ""
+      expected: ""
+    - name: single
+      input: "sale"
+      expected: "sale"
+    - name: two_words
+      input: "grand opening"
+      expected: "opening grand"
+  validation:
+    - name: three_words
+      input: "buy one today"
+      expected: "today one buy"
+    - name: four_words
+      input: "fresh bread sold here"
+      expected: "here sold bread fresh"
+    - name: repeated_word
+      input: "go go team"
+      expected: "team go go"
+explanation_markdown: |
+  Splitting on whitespace turns the sentence into a list of words. Reversing that
+  list flips their order, and joining with a single space rebuilds the marquee
+  text. An empty string splits into an empty list, which joins back to "".
+common_mistakes:
+  - Reversing the characters of the whole string instead of the word order.
+  - Forgetting to rejoin the list into a string before returning.
+  - Adding an extra leading or trailing space when joining.

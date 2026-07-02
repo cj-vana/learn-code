@@ -1,0 +1,87 @@
+id: exercise.library.python_refresh.c01
+kind: exercise
+version: 1
+language: python
+title: Rooftop Garden Watering Advice
+slug: python-refresh-c01
+difficulty: easy
+concepts:
+  - python.conditionals
+  - python.operators
+prerequisites:
+  - python.functions
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh.c01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original rooftop-garden soil-moisture scenario with its own thresholds, prompt, and tests.
+prompt_markdown: |
+  A rooftop garden has a soil sensor that reports moisture as a whole-number
+  percentage from 0 to 100. Write `water_advice(moisture)` that returns a short
+  instruction string based on the reading:
+
+  - `"skip"` when the soil is at 60 percent or higher (already moist enough),
+  - `"light"` when the reading is from 30 up to but not including 60,
+  - `"soak"` when the reading is below 30.
+
+  The value 60 counts as "skip" and the value 30 counts as "light".
+starter_code: |
+  def water_advice(moisture):
+      return ""
+function_name: water_advice
+input_mode: function
+solution_sketch: Compare the reading against the two thresholds with an if/elif/else chain.
+sample_solution: |
+  def water_advice(moisture):
+      if moisture >= 60:
+          return "skip"
+      elif moisture >= 30:
+          return "light"
+      else:
+          return "soak"
+hints:
+  - level: 1
+    text: There are three possible answers, so you need three branches.
+  - level: 2
+    text: Check the highest threshold first, then the middle one, then let the rest fall through.
+  - level: 3
+    text: Use moisture >= 60 for "skip" and moisture >= 30 for "light"; everything else is "soak".
+tests:
+  public:
+    - name: clearly_moist
+      input: 75
+      expected: skip
+    - name: middle_range
+      input: 45
+      expected: light
+    - name: very_dry
+      input: 10
+      expected: soak
+  validation:
+    - name: skip_boundary
+      input: 60
+      expected: skip
+    - name: light_boundary
+      input: 30
+      expected: light
+    - name: just_below_light
+      input: 29
+      expected: soak
+    - name: bone_dry
+      input: 0
+      expected: soak
+explanation_markdown: |
+  The three outcomes are decided by two cut-off points, so an if/elif/else chain
+  reads the value once and picks exactly one branch. Because each `elif` only runs
+  when the earlier checks were false, testing `>= 60` first and then `>= 30` gives
+  the three non-overlapping bands without any extra range checks. Ordering matters:
+  if you checked `>= 30` before `>= 60`, a reading of 75 would wrongly stop at
+  "light".
+common_mistakes:
+  - Checking the lowest threshold first, so high readings match the wrong branch.
+  - Using > instead of >= and mishandling the boundary values 60 and 30.
+  - Returning None from a branch by forgetting one of the three cases.

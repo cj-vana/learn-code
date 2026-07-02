@@ -1,0 +1,77 @@
+id: exercise.library.dicts_sets_tuples.b08
+kind: exercise
+version: 1
+language: python
+title: Swim Meet Photo Finish
+slug: dicts-sets-tuples-b08
+difficulty: medium
+concepts:
+  - python.tuples
+  - python.sorting
+prerequisites:
+  - python.functions
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples.b08
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original swim-meet scenario ordering swimmers by a minutes-then-seconds finishing time with a name tie-break.
+prompt_markdown: |
+  A swim meet records each swimmer's finishing time split into whole minutes and
+  seconds. You are given a list where each entry is a dict with `swimmer` (a
+  name), `minutes` (an integer), and `seconds` (an integer from 0 to 59). Write
+  `photo_finish(times)` that returns the list of swimmer names ordered from
+  fastest to slowest finishing time. Compare by minutes first, then by seconds.
+  If two swimmers tie exactly, order them by name in ascending alphabetical
+  order. An empty list returns an empty list.
+starter_code: |
+  def photo_finish(times):
+      return []
+function_name: photo_finish
+input_mode: function
+solution_sketch: Sort by the tuple (minutes, seconds, swimmer) and return the names.
+sample_solution: |
+  def photo_finish(times):
+      ordered = sorted(times, key=lambda entry: (entry["minutes"], entry["seconds"], entry["swimmer"]))
+      return [entry["swimmer"] for entry in ordered]
+hints:
+  - level: 1
+    text: A faster time means fewer minutes, or the same minutes with fewer seconds.
+  - level: 2
+    text: A tuple sort key compares minutes first, then seconds, then the name.
+  - level: 3
+    text: 'Use key=lambda e: (e["minutes"], e["seconds"], e["swimmer"]).'
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: single
+      input: [{swimmer: nia, minutes: 1, seconds: 5}]
+      expected: [nia]
+    - name: by_minutes
+      input: [{swimmer: kai, minutes: 2, seconds: 10}, {swimmer: rio, minutes: 1, seconds: 55}]
+      expected: [rio, kai]
+  validation:
+    - name: seconds_tiebreak
+      input: [{swimmer: eli, minutes: 1, seconds: 40}, {swimmer: ada, minutes: 1, seconds: 20}]
+      expected: [ada, eli]
+    - name: name_tiebreak
+      input: [{swimmer: zed, minutes: 1, seconds: 30}, {swimmer: amy, minutes: 1, seconds: 30}]
+      expected: [amy, zed]
+    - name: three_swimmers
+      input: [{swimmer: bo, minutes: 0, seconds: 59}, {swimmer: cy, minutes: 1, seconds: 1}, {swimmer: al, minutes: 0, seconds: 58}]
+      expected: [al, bo, cy]
+explanation_markdown: |
+  Because a swimmer with fewer minutes always beats one with more, and seconds
+  only matter when the minutes match, the natural ordering is exactly how Python
+  compares the tuple `(minutes, seconds, swimmer)` left to right. Adding the name
+  as the third element resolves exact ties alphabetically. A final comprehension
+  pulls out just the ordered names.
+common_mistakes:
+  - Sorting by seconds alone and ignoring the minutes.
+  - Comparing minutes and seconds separately instead of as one tuple key.
+  - Returning the full time dicts rather than the swimmer names.

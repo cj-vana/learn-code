@@ -1,0 +1,75 @@
+id: exercise.library.dicts_sets_tuples.b03
+kind: exercise
+version: 1
+language: python
+title: Rank the Community Playlist
+slug: dicts-sets-tuples-b03
+difficulty: easy
+concepts:
+  - python.sorting
+  - python.tuples
+prerequisites:
+  - python.functions
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples.b03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original community-radio playlist ranking with a two-key sort by plays then title.
+prompt_markdown: |
+  A community radio show ranks its playlist for the week. You are given a list of
+  tracks, where each track is a dict with `title` (a string) and `plays` (an
+  integer). Write `rank_playlist(tracks)` that returns a list of titles ordered
+  by play count from highest to lowest. When two tracks have the same play count,
+  break the tie by title in ascending alphabetical order. An empty list returns
+  an empty list.
+starter_code: |
+  def rank_playlist(tracks):
+      return []
+function_name: rank_playlist
+input_mode: function
+solution_sketch: Sort by a (negative plays, title) tuple key, then pull out the titles.
+sample_solution: |
+  def rank_playlist(tracks):
+      ordered = sorted(tracks, key=lambda track: (-track["plays"], track["title"]))
+      return [track["title"] for track in ordered]
+hints:
+  - level: 1
+    text: You need two sort criteria applied together, not two separate sorts.
+  - level: 2
+    text: A tuple key lets you rank by plays first and title second.
+  - level: 3
+    text: 'Use key=lambda t: (-t["plays"], t["title"]) so higher plays come first.'
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: single
+      input: [{title: solstice, plays: 4}]
+      expected: [solstice]
+    - name: by_plays
+      input: [{title: aurora, plays: 2}, {title: breeze, plays: 5}]
+      expected: [breeze, aurora]
+  validation:
+    - name: tie_break_title
+      input: [{title: zephyr, plays: 3}, {title: apex, plays: 3}]
+      expected: [apex, zephyr]
+    - name: mixed_with_tie
+      input: [{title: coda, plays: 1}, {title: bloom, plays: 7}, {title: apex, plays: 7}]
+      expected: [apex, bloom, coda]
+    - name: three_distinct
+      input: [{title: mist, plays: 9}, {title: dune, plays: 2}, {title: fern, plays: 5}]
+      expected: [mist, fern, dune]
+explanation_markdown: |
+  Python sorts tuples element by element, so returning `(-plays, title)` as the
+  key ranks tracks by descending play count and then by ascending title within a
+  tie. Negating the play count is a clean way to sort one field descending while
+  keeping the other ascending. A final comprehension extracts just the titles.
+common_mistakes:
+  - Sorting by title and plays in two passes, which loses the primary ordering.
+  - Forgetting to reverse the play count, so the least-played track comes first.
+  - Returning the full track dicts instead of only their titles.

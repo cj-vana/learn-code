@@ -1,0 +1,82 @@
+id: exercise.library.mixed_capstones.a06
+kind: exercise
+version: 1
+language: python
+title: First Repeated Badge
+slug: mixed-capstones-a06
+difficulty: medium
+concepts:
+  - patterns.hash_map_counting
+  - python.dictionaries
+prerequisites:
+  - python.lists
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.mixed_capstones.a06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original conference re-entry scenario about the earliest badge to reach a second scan, with its own tests and tie reasoning.
+prompt_markdown: |
+  A conference scanner reads a badge id every time someone enters the hall. Write
+  `first_repeated_badge(scans)` where `scans` is a list of badge id strings in the
+  order they were scanned. Return the badge id whose **second** scan happens
+  earliest, that is, the first id you encounter that you have already seen. If no
+  badge is ever scanned twice, return the empty string `""`.
+starter_code: |
+  def first_repeated_badge(scans):
+      return ""
+function_name: first_repeated_badge
+input_mode: function
+solution_sketch: Count scans as you go and return the first badge whose count reaches two.
+sample_solution: |
+  def first_repeated_badge(scans):
+      counts = {}
+      for badge in scans:
+          counts[badge] = counts.get(badge, 0) + 1
+          if counts[badge] == 2:
+              return badge
+      return ""
+hints:
+  - level: 1
+    text: The answer is decided by which badge is the first to be scanned for a second time.
+  - level: 2
+    text: Track how many times each badge has been scanned as you move left to right.
+  - level: 3
+    text: The moment any badge's running count hits 2, that badge is the earliest repeat, so return it immediately.
+tests:
+  public:
+    - name: no_repeat
+      input: [a1, b2, c3]
+      expected: ""
+    - name: immediate
+      input: [x9, x9]
+      expected: x9
+    - name: later
+      input: [k1, k2, k1, k3]
+      expected: k1
+  validation:
+    - name: earliest_second_scan
+      input: [red, blue, green, blue]
+      expected: blue
+    - name: first_to_repeat_wins
+      input: [m1, n1, n1, m1]
+      expected: n1
+    - name: empty
+      input: []
+      expected: ""
+    - name: single
+      input: [solo]
+      expected: ""
+explanation_markdown: |
+  Scanning left to right while counting each badge lets you stop the instant a
+  count reaches two, which is exactly the earliest second scan. This runs in O(n)
+  with O(k) extra space for the distinct badges. The subtle case is when several
+  badges repeat: the winner is decided by whichever second scan comes first, not
+  by which badge first appeared, and returning immediately captures that.
+common_mistakes:
+  - Returning the first badge that appears more than once by first appearance rather than by earliest second scan.
+  - Building full counts first and then scanning again, which can pick the wrong badge when several repeat.
+  - Forgetting to return "" when no badge repeats.

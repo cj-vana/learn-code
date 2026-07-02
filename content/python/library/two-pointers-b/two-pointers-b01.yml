@@ -1,0 +1,95 @@
+id: exercise.library.two_pointers.b01
+kind: exercise
+version: 1
+language: python
+title: Gift Card Pastry Pair
+slug: two-pointers-b01
+difficulty: easy
+concepts:
+  - patterns.two_pointers
+prerequisites:
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.two_pointers.b01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original bakery gift-card scenario, prompt, tests, and explanation.
+prompt_markdown: |
+  A neighborhood bakery lists its pastry prices in cents, already sorted from
+  cheapest to most expensive. A customer holds a gift card worth exactly
+  `target` cents and wants to spend it on precisely two different pastries.
+
+  Write `has_gift_card_pair(data)` where `data` is a dict with keys `prices`
+  (a list of ints in non-decreasing order) and `target` (an int). Return `True`
+  if two pastries at different positions add up to exactly `target`, otherwise
+  `False`. An empty price list returns `False`.
+starter_code: |
+  def has_gift_card_pair(data):
+      return False
+function_name: has_gift_card_pair
+input_mode: function
+solution_sketch: Walk one pointer from the cheap end and one from the pricey end, moving inward based on the running sum.
+sample_solution: |
+  def has_gift_card_pair(data):
+      prices = data["prices"]
+      target = data["target"]
+      left = 0
+      right = len(prices) - 1
+      while left < right:
+          total = prices[left] + prices[right]
+          if total == target:
+              return True
+          if total < target:
+              left += 1
+          else:
+              right -= 1
+      return False
+hints:
+  - level: 1
+    text: Because the prices are sorted, you can start one index at the cheapest pastry and one at the most expensive.
+  - level: 2
+    text: Compare the sum of the two ends to the target; if the sum is too small the cheap end must move up, and if it is too big the pricey end must move down.
+  - level: 3
+    text: Loop while left is less than right, returning True on an exact match and False once the pointers meet.
+tests:
+  public:
+    - name: empty
+      input: { prices: [], target: 500 }
+      expected: false
+    - name: pair_found
+      input: { prices: [100, 200, 400, 700], target: 600 }
+      expected: true
+    - name: no_pair
+      input: { prices: [100, 200, 300], target: 1000 }
+      expected: false
+  validation:
+    - name: two_items_match
+      input: { prices: [300, 500], target: 800 }
+      expected: true
+    - name: two_items_miss
+      input: { prices: [300, 500], target: 900 }
+      expected: false
+    - name: duplicate_prices
+      input: { prices: [200, 200, 200], target: 400 }
+      expected: true
+    - name: all_too_small
+      input: { prices: [100, 400, 600, 900, 1100], target: 10000 }
+      expected: false
+    - name: pair_at_first_reach
+      input: { prices: [100, 300, 400, 600, 800, 1000], target: 1100 }
+      expected: true
+explanation_markdown: |
+  Sorted data lets two pointers sweep toward each other. Starting from the two
+  ends, the sum of `prices[left] + prices[right]` tells you which way to move:
+  if it is below `target`, only a larger cheap-side value can help, so `left`
+  advances; if it is above `target`, only a smaller pricey-side value can help,
+  so `right` retreats. Each step discards a value that cannot belong to any
+  valid pair, so the whole scan runs in one O(n) pass without nested loops.
+common_mistakes:
+  - Comparing a pastry with itself instead of requiring two different positions.
+  - Moving the wrong pointer, which skips over the matching pair.
+  - Forgetting to stop the loop when the two pointers meet.

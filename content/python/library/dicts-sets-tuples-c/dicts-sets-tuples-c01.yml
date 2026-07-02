@@ -1,0 +1,79 @@
+id: exercise.library.dicts_sets_tuples.c01
+kind: exercise
+version: 1
+language: python
+title: Shared Transit Stops
+slug: dicts-sets-tuples-c01
+difficulty: easy
+concepts:
+  - python.sets
+  - python.sorting
+prerequisites:
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples.c01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original city-transit scenario comparing two bus routes, with fresh prompt, tests, and explanation.
+prompt_markdown: |
+  A city planner is comparing two bus routes. Each route is a list of stop
+  names, and either list may repeat a stop or be empty.
+
+  Write `shared_stops(data)` where `data` is a dict with keys `line_a` and
+  `line_b`, each mapping to a list of stop names. Return an alphabetically
+  sorted list of the stop names served by BOTH routes, with no duplicates.
+starter_code: |
+  def shared_stops(data):
+      return []
+function_name: shared_stops
+input_mode: function
+solution_sketch: Build a set from each route, intersect them, and return the sorted result.
+sample_solution: |
+  def shared_stops(data):
+      line_a = set(data["line_a"])
+      line_b = set(data["line_b"])
+      return sorted(line_a & line_b)
+hints:
+  - level: 1
+    text: A stop counts only if it appears in each route at least once.
+  - level: 2
+    text: Turning each route into a set removes duplicates and makes overlap easy to find.
+  - level: 3
+    text: Intersect the two sets with & and pass the result to sorted().
+tests:
+  public:
+    - name: both_empty
+      input: {line_a: [], line_b: []}
+      expected: []
+    - name: no_overlap
+      input: {line_a: [elm, oak], line_b: [pine]}
+      expected: []
+    - name: some_overlap
+      input: {line_a: [elm, oak, main], line_b: [main, pine, oak]}
+      expected: [main, oak]
+    - name: duplicates_ignored
+      input: {line_a: [elm, elm, main], line_b: [main, main]}
+      expected: [main]
+  validation:
+    - name: sorted_result
+      input: {line_a: [river, hill, dale], line_b: [dale, river, sun]}
+      expected: [dale, river]
+    - name: all_shared
+      input: {line_a: [park, quay], line_b: [quay, park]}
+      expected: [park, quay]
+    - name: one_empty
+      input: {line_a: [cove, glen], line_b: []}
+      expected: []
+explanation_markdown: |
+  Converting each route to a set discards repeats and lets you use set algebra.
+  The intersection `line_a & line_b` keeps only stops present in both routes, and
+  `sorted` returns them as an alphabetical list. Each conversion is O(n), so the
+  whole check runs in linear time relative to the number of stops.
+common_mistakes:
+  - Returning the intersection as a set instead of a sorted list.
+  - Forgetting that a stop may be listed more than once in a route.
+  - Using the union or difference instead of the intersection.

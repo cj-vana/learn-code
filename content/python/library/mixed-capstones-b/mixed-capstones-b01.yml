@@ -1,0 +1,85 @@
+id: exercise.library.mixed_capstones.b01
+kind: exercise
+version: 1
+language: python
+title: Courier Checkpoint Order
+slug: mixed-capstones-b01
+difficulty: easy
+concepts:
+  - patterns.two_pointers
+prerequisites:
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.mixed_capstones.b01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original courier depot scanning scenario checking whether required checkpoints appear in order.
+prompt_markdown: |
+  A parcel courier scans a tag at every station it passes, producing a `scans`
+  list. Dispatch keeps a shorter `required` list of checkpoints that must be
+  visited in that exact relative order (other stops may happen in between).
+
+  Write `checkpoints_in_order(data)` where `data` is a dict with keys `scans`
+  and `required`. Return `True` if every required checkpoint appears in the
+  scans in the given order (as a subsequence), otherwise `False`. An empty
+  `required` list is always satisfied.
+starter_code: |
+  def checkpoints_in_order(data):
+      return False
+function_name: checkpoints_in_order
+input_mode: function
+solution_sketch: Walk the scans with one pointer into required, advancing it on each match.
+sample_solution: |
+  def checkpoints_in_order(data):
+      scans = data["scans"]
+      required = data["required"]
+      i = 0
+      for scan in scans:
+          if i < len(required) and scan == required[i]:
+              i += 1
+      return i == len(required)
+hints:
+  - level: 1
+    text: You only need to preserve the order of the required checkpoints, not make them contiguous.
+  - level: 2
+    text: Keep an index into required and advance it whenever the current scan matches that checkpoint.
+  - level: 3
+    text: After scanning everything, the required list was fully matched only if the index reached its length.
+tests:
+  public:
+    - name: empty_required
+      input: {scans: [dock, load], required: []}
+      expected: true
+    - name: in_order
+      input: {scans: [dock, scan, load, depot], required: [dock, load, depot]}
+      expected: true
+    - name: out_of_order
+      input: {scans: [load, dock, depot], required: [dock, load, depot]}
+      expected: false
+  validation:
+    - name: missing_last
+      input: {scans: [gate, weigh, seal], required: [gate, seal, depot]}
+      expected: false
+    - name: with_repeats
+      input: {scans: [hold, hold, dock, hold], required: [hold, hold, hold]}
+      expected: true
+    - name: gap_is_allowed
+      input: {scans: [gate, weigh, seal, depot], required: [gate, depot]}
+      expected: true
+    - name: empty_scans
+      input: {scans: [], required: [dock]}
+      expected: false
+explanation_markdown: |
+  This is a subsequence check. A single left-to-right pass with one pointer into
+  `required` is enough: each time the current scan equals the checkpoint we are
+  waiting for, the pointer moves on. Because neither list is revisited, the work
+  is O(n) in the number of scans rather than the O(n*m) you would get from
+  re-searching for each checkpoint.
+common_mistakes:
+  - Requiring the checkpoints to be contiguous instead of merely in order.
+  - Advancing the required index even when the scan does not match.
+  - Returning True before confirming that every required checkpoint was matched.

@@ -1,0 +1,78 @@
+id: exercise.library.loops_lists_strings.a06
+kind: exercise
+version: 1
+language: python
+title: First Plays Playlist
+slug: loops-lists-strings-a06
+difficulty: medium
+concepts:
+  - python.lists
+  - python.loops
+  - patterns.set_membership
+prerequisites:
+  - python.functions
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings.a06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original playlist first-appearance dedup scenario, prompt, and tests.
+prompt_markdown: |
+  A playlist app trims repeated songs but keeps the order they were first heard.
+  Write `first_plays(songs)` returning a new list of the song ids in the order
+  each one first appears, with every later duplicate removed.
+starter_code: |
+  def first_plays(songs):
+      return []
+function_name: first_plays
+input_mode: function
+solution_sketch: Track seen ids in a set and append each id the first time it appears.
+sample_solution: |
+  def first_plays(songs):
+      seen = set()
+      result = []
+      for song in songs:
+          if song not in seen:
+              seen.add(song)
+              result.append(song)
+      return result
+hints:
+  - level: 1
+    text: Walk the list once and decide whether each id is new.
+  - level: 2
+    text: A set remembers which ids have already been added and tests membership fast.
+  - level: 3
+    text: Append to the result and record in the set only when the id is not already seen.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: no_dupes
+      input: ['a', 'b', 'c']
+      expected: ['a', 'b', 'c']
+    - name: with_dupes
+      input: ['a', 'b', 'a', 'c', 'b']
+      expected: ['a', 'b', 'c']
+  validation:
+    - name: all_same
+      input: ['x', 'x', 'x']
+      expected: ['x']
+    - name: keeps_first_order
+      input: ['drum', 'bass', 'drum', 'harp', 'bass', 'flute']
+      expected: ['drum', 'bass', 'harp', 'flute']
+    - name: adjacent_and_far
+      input: ['p', 'p', 'q', 'p', 'r', 'q']
+      expected: ['p', 'q', 'r']
+explanation_markdown: |
+  A set gives O(1) membership checks, so one pass keeps the whole routine O(n).
+  The result list records each id the first time it is seen, which preserves
+  first-appearance order, while the set prevents any later duplicate from being
+  appended again.
+common_mistakes:
+  - Sorting the result and losing the first-appearance order.
+  - Using a list instead of a set for membership, making the scan slow.
+  - Adding an id to the result before checking whether it was already seen.

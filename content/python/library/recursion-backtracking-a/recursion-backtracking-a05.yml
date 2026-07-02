@@ -1,0 +1,79 @@
+id: exercise.library.recursion_backtracking.a05
+kind: exercise
+version: 1
+language: python
+title: Deepest Backup Folder
+slug: recursion-backtracking-a05
+difficulty: easy
+concepts:
+  - patterns.recursion
+  - python.lists
+prerequisites:
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.recursion_backtracking.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original backup-folder scenario where nested lists model subfolders and recursion reports the deepest nesting level.
+prompt_markdown: |
+  A backup tool describes a folder as a list of its subfolders, and each
+  subfolder is described the same way. A folder with no subfolders is an empty
+  list. Write `folder_depth(tree)` that returns how many folders deep the
+  deepest branch goes. A folder with no subfolders has depth 1, a folder holding
+  only empty subfolders has depth 2, and so on.
+starter_code: |
+  def folder_depth(tree):
+      return 0
+function_name: folder_depth
+input_mode: function
+solution_sketch: A leaf folder has depth 1; otherwise return 1 plus the largest depth among its subfolders.
+sample_solution: |
+  def folder_depth(tree):
+      if not tree:
+          return 1
+      return 1 + max(folder_depth(sub) for sub in tree)
+hints:
+  - level: 1
+    text: An empty list is a folder with nothing inside, so its depth is just 1.
+  - level: 2
+    text: A non-empty folder is one level deeper than its deepest subfolder.
+  - level: 3
+    text: Return 1 + max(folder_depth(sub) for sub in tree), and return 1 when tree is empty.
+tests:
+  public:
+    - name: leaf
+      input: []
+      expected: 1
+    - name: one_level
+      input: [[], []]
+      expected: 2
+    - name: two_levels
+      input: [[[]]]
+      expected: 3
+  validation:
+    - name: uneven
+      input: [[], [[]]]
+      expected: 3
+    - name: deep_chain
+      input: [[[[[]]]]]
+      expected: 5
+    - name: wide
+      input: [[], [], []]
+      expected: 2
+    - name: mixed
+      input: [[[], []], []]
+      expected: 3
+explanation_markdown: |
+  Depth is defined in terms of itself: a folder is one deeper than its deepest
+  child. The base case is a folder with no subfolders, which has depth 1. For a
+  non-empty folder we ask each subfolder for its own depth, take the largest,
+  and add 1 for the current level. Because every subfolder is strictly smaller
+  than its parent, the recursion always bottoms out at empty lists.
+common_mistakes:
+  - Returning 0 for an empty folder, which shifts every depth down by one.
+  - Adding the child depths together instead of taking their maximum.
+  - Calling max on an empty sequence by not handling the leaf case first.

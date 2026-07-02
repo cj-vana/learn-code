@@ -1,0 +1,81 @@
+id: exercise.library.python_refresh.a05
+kind: exercise
+version: 1
+language: python
+title: Parking Garage Fee
+slug: python-refresh-a05
+difficulty: easy
+concepts:
+  - python.conditionals
+  - python.operators
+prerequisites:
+  - python.functions
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original parking-garage fee scenario, prompt, tests, and explanation.
+prompt_markdown: |
+  A parking garage bills by the length of a stay in whole minutes. Write
+  `parking_fee(minutes)` that returns the charge in dollars:
+
+  - The first 30 minutes are free (charge 0).
+  - Beyond that, every started hour of the total stay costs 2 dollars, so a
+    61-minute stay counts as two started hours.
+  - The daily charge is capped at 12 dollars no matter how long the stay.
+starter_code: |
+  def parking_fee(minutes):
+      return 0
+function_name: parking_fee
+input_mode: function
+solution_sketch: Return 0 within the grace period, else charge 2 per started hour capped at 12.
+sample_solution: |
+  def parking_fee(minutes):
+      if minutes <= 30:
+          return 0
+      started_hours = (minutes + 59) // 60
+      return min(started_hours * 2, 12)
+hints:
+  - level: 1
+    text: Handle the free grace period first with its own check.
+  - level: 2
+    text: To round minutes up to whole hours, use integer math like (minutes + 59) // 60.
+  - level: 3
+    text: Multiply the started hours by 2, then cap the result with min(..., 12).
+tests:
+  public:
+    - name: within_grace
+      input: 20
+      expected: 0
+    - name: part_hour
+      input: 45
+      expected: 2
+    - name: two_hours
+      input: 90
+      expected: 4
+  validation:
+    - name: grace_boundary
+      input: 30
+      expected: 0
+    - name: just_past_hour
+      input: 61
+      expected: 4
+    - name: hits_cap
+      input: 600
+      expected: 12
+    - name: long_stay
+      input: 1000
+      expected: 12
+explanation_markdown: |
+  The grace period is a clean early return: any stay of 30 minutes or fewer costs
+  nothing. Past that, `(minutes + 59) // 60` rounds up to the number of started
+  hours using only integer arithmetic, and `min(..., 12)` enforces the daily cap
+  so a very long stay never exceeds 12 dollars.
+common_mistakes:
+  - Using plain division, which under-counts a partial hour instead of rounding up.
+  - Forgetting the daily cap so long stays overcharge.
+  - Charging for the first 30 minutes that should be free.

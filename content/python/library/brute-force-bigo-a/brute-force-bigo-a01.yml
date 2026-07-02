@@ -1,0 +1,86 @@
+id: exercise.library.brute_force_bigo.a01
+kind: exercise
+version: 1
+language: python
+title: Two Crates That Fill the Pallet
+slug: brute-force-bigo-a01
+difficulty: easy
+concepts:
+  - patterns.brute_force
+  - python.lists
+prerequisites:
+  - python.loops
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.brute_force_bigo.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original loading-dock pallet scenario with a hand-built pair scan, prompt, and tests.
+prompt_markdown: |
+  A loading dock stacks crates on a pallet that has one exact target weight.
+  Given a list of crate `weights` and a `limit`, write
+  `hits_pallet_limit(data)` where `data` is a dict with keys `weights` and
+  `limit`. Return `True` if any two crates in *different* positions have weights
+  that add up to exactly `limit`, otherwise `False`. A crate cannot be paired
+  with itself, but two crates that happen to weigh the same still count.
+starter_code: |
+  def hits_pallet_limit(data):
+      return False
+function_name: hits_pallet_limit
+input_mode: function
+solution_sketch: Check every unordered pair of positions with a nested loop and stop when one sums to the limit.
+sample_solution: |
+  def hits_pallet_limit(data):
+      weights = data["weights"]
+      limit = data["limit"]
+      n = len(weights)
+      for i in range(n):
+          for j in range(i + 1, n):
+              if weights[i] + weights[j] == limit:
+                  return True
+      return False
+hints:
+  - level: 1
+    text: Try every possible pair of two different crates and see if one pair matches.
+  - level: 2
+    text: An outer loop picks the first crate; an inner loop picks a later crate so no pair repeats.
+  - level: 3
+    text: Start the inner index at i + 1 so a crate is never added to itself, and return True the moment a pair sums to limit.
+tests:
+  public:
+    - name: empty
+      input: {weights: [], limit: 10}
+      expected: false
+    - name: simple_hit
+      input: {weights: [3, 7, 5], limit: 10}
+      expected: true
+    - name: no_hit
+      input: {weights: [1, 2, 4], limit: 100}
+      expected: false
+  validation:
+    - name: pair_at_end
+      input: {weights: [5, 1, 9, 4], limit: 13}
+      expected: true
+    - name: single_item
+      input: {weights: [10], limit: 10}
+      expected: false
+    - name: equal_values
+      input: {weights: [6, 6, 1], limit: 12}
+      expected: true
+    - name: no_pair
+      input: {weights: [2, 3, 5, 8], limit: 20}
+      expected: false
+explanation_markdown: |
+  The brute-force idea is to try every unordered pair of positions. The outer
+  loop fixes the first crate; the inner loop starts one step later so each pair
+  is examined once and a crate is never paired with itself. With `n` crates
+  there are `n * (n - 1) / 2` pairs, so this runs in O(n^2) time. Returning
+  early on the first match keeps the best case fast without changing the worst
+  case.
+common_mistakes:
+  - Starting the inner loop at 0, which pairs a crate with itself.
+  - Returning False inside the loop before all pairs have been checked.
+  - Assuming two crates must have different weights to form a pair.

@@ -1,0 +1,90 @@
+id: exercise.library.prefix_sums.a08
+kind: exercise
+version: 1
+language: python
+title: Step Count Target Windows
+slug: prefix-sums-a08
+difficulty: medium
+concepts:
+  - patterns.prefix_sums
+  - patterns.hash_map_counting
+prerequisites:
+  - python.lists
+estimated_time_minutes: 18
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.prefix_sums.a08
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original fitness-tracker contiguous-window counting scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A fitness tracker logs the number of steps taken during each hour of the day.
+  A coach wants to know how many contiguous blocks of consecutive hours add up to
+  exactly a target number of steps.
+
+  Write `count_target_windows(data)` where `data` is a dict with keys `amounts`
+  (a list of hourly step counts) and `target` (a number). Return how many
+  contiguous sublists of `amounts` sum to exactly `target`. Blocks at different
+  start or end hours count separately even if they contain the same values.
+starter_code: |
+  def count_target_windows(data):
+      return 0
+function_name: count_target_windows
+input_mode: function
+solution_sketch: Scan prefix sums and use a dict of seen prefixes to count windows ending at each hour.
+sample_solution: |
+  def count_target_windows(data):
+      amounts = data["amounts"]
+      target = data["target"]
+      seen = {0: 1}
+      running = 0
+      count = 0
+      for amount in amounts:
+          running += amount
+          count += seen.get(running - target, 0)
+          seen[running] = seen.get(running, 0) + 1
+      return count
+hints:
+  - level: 1
+    text: A block from hour i to j sums to prefix[j] minus prefix[i], so equal-to-target windows share a fixed prefix gap.
+  - level: 2
+    text: As you build the running prefix sum, ask how many earlier prefixes equal running minus target.
+  - level: 3
+    text: "Store each prefix value's frequency in a dict, seeding it with {0: 1} for windows that start at hour 0."
+tests:
+  public:
+    - name: two_windows
+      input: {amounts: [1, 2, 3], target: 3}
+      expected: 2
+    - name: three_singles
+      input: {amounts: [5, 5, 5], target: 5}
+      expected: 3
+    - name: unreachable_target
+      input: {amounts: [1, 2, 3], target: 100}
+      expected: 0
+  validation:
+    - name: empty_log
+      input: {amounts: [], target: 0}
+      expected: 0
+    - name: all_zero_target_zero
+      input: {amounts: [0, 0, 0], target: 0}
+      expected: 6
+    - name: scattered_matches
+      input: {amounts: [2, 1, 3, 1, 2], target: 3}
+      expected: 3
+    - name: overlapping_pairs
+      input: {amounts: [4, 4, 4], target: 8}
+      expected: 2
+explanation_markdown: |
+  Every contiguous window is the difference of two prefix sums, so a window sums to
+  `target` exactly when an earlier prefix equals the current prefix minus `target`.
+  Counting how often each prefix value has appeared in a dict turns the search into
+  one O(n) pass. Seeding the dict with `{0: 1}` accounts for windows that start at
+  the very first hour, and repeated prefixes (as in the all-zero case) correctly
+  contribute multiple windows.
+common_mistakes:
+  - "Forgetting to seed the dict with {0: 1}, which misses windows starting at index 0."
+  - Recording the current prefix before counting, which can double-count a zero target.
+  - Falling back to checking every start/end pair, which is O(n^2) instead of O(n).

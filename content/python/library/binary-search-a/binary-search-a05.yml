@@ -1,0 +1,89 @@
+id: exercise.library.binary_search.a05
+kind: exercise
+version: 1
+language: python
+title: Earliest Open Appointment
+slug: binary-search-a05
+difficulty: easy
+concepts:
+  - patterns.binary_search
+  - python.lists
+prerequisites:
+  - python.lists
+  - python.sorting
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+input_mode: function
+provenance:
+  brief_id: library.binary_search.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original clinic appointment-slot ceiling-search scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A clinic keeps its open appointment start-times (minutes past midnight) in a
+  list sorted in ascending order. Write `earliest_slot(data)` where `data` has
+  keys `slots` (the sorted list) and `requested` (the earliest acceptable time).
+
+  Return the earliest open time that is **at or after** `requested`, or `-1` if
+  no such slot exists. Use binary search.
+starter_code: |
+  def earliest_slot(data):
+      return -1
+function_name: earliest_slot
+solution_sketch: Binary search for the leftmost slot not before the requested time and return its value.
+sample_solution: |
+  def earliest_slot(data):
+      slots = data["slots"]
+      requested = data["requested"]
+      lo, hi = 0, len(slots)
+      while lo < hi:
+          mid = (lo + hi) // 2
+          if slots[mid] < requested:
+              lo = mid + 1
+          else:
+              hi = mid
+      if lo < len(slots):
+          return slots[lo]
+      return -1
+hints:
+  - level: 1
+    text: You want the first slot that is not earlier than the requested time.
+  - level: 2
+    text: Find that boundary index with binary search, then read the value there.
+  - level: 3
+    text: If the boundary lands past the last slot, every time is too early, so return -1.
+tests:
+  public:
+    - name: exact
+      input: {slots: [540, 600, 660, 720], requested: 600}
+      expected: 600
+    - name: next_up
+      input: {slots: [540, 600, 660, 720], requested: 610}
+      expected: 660
+    - name: none
+      input: {slots: [540, 600], requested: 800}
+      expected: -1
+  validation:
+    - name: first
+      input: {slots: [540, 600, 660], requested: 500}
+      expected: 540
+    - name: last
+      input: {slots: [540, 600, 660], requested: 660}
+      expected: 660
+    - name: empty
+      input: {slots: [], requested: 100}
+      expected: -1
+    - name: between
+      input: {slots: [90, 150, 210], requested: 151}
+      expected: 210
+explanation_markdown: |
+  This is a "ceiling" search: the answer is the smallest slot value greater than
+  or equal to `requested`. Binary search locates the boundary index in O(log n),
+  and reading the slot there gives the time. A boundary past the end means no
+  slot qualifies.
+common_mistakes:
+  - Returning the index instead of the slot value.
+  - Using <= requested in the comparison and skipping an exact match.
+  - Forgetting the bounds check and indexing past the end of the list.

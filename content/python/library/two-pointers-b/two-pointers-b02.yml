@@ -1,0 +1,99 @@
+id: exercise.library.two_pointers.b02
+kind: exercise
+version: 1
+language: python
+title: Merge Two Boarding Schedules
+slug: two-pointers-b02
+difficulty: easy
+concepts:
+  - patterns.two_pointers
+  - python.lists
+prerequisites:
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.two_pointers.b02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original ferry-terminal schedule-merge scenario, prompt, tests, and explanation.
+prompt_markdown: |
+  A ferry terminal keeps two separate boarding lists, each already sorted by
+  departure minute: one for early sailings and one for late sailings. The
+  dispatcher wants a single combined list of departure minutes in
+  non-decreasing order.
+
+  Write `merge_schedules(data)` where `data` is a dict with keys `early` and
+  `late`, each a list of ints sorted in non-decreasing order. Return one merged
+  list containing every minute from both lists, still sorted. Either list may be
+  empty.
+starter_code: |
+  def merge_schedules(data):
+      return []
+function_name: merge_schedules
+input_mode: function
+solution_sketch: Advance one index per list, always copying the smaller front value, then append whatever remains.
+sample_solution: |
+  def merge_schedules(data):
+      early = data["early"]
+      late = data["late"]
+      i = 0
+      j = 0
+      merged = []
+      while i < len(early) and j < len(late):
+          if early[i] <= late[j]:
+              merged.append(early[i])
+              i += 1
+          else:
+              merged.append(late[j])
+              j += 1
+      merged.extend(early[i:])
+      merged.extend(late[j:])
+      return merged
+hints:
+  - level: 1
+    text: Keep a separate index for each list and compare the values sitting at the front of both.
+  - level: 2
+    text: Append the smaller of the two front values and advance only that list's index.
+  - level: 3
+    text: When one list is exhausted, append everything left in the other list in order.
+tests:
+  public:
+    - name: both_empty
+      input: { early: [], late: [] }
+      expected: []
+    - name: one_empty
+      input: { early: [1, 4, 9], late: [] }
+      expected: [1, 4, 9]
+    - name: interleaved
+      input: { early: [1, 5, 8], late: [2, 3, 9] }
+      expected: [1, 2, 3, 5, 8, 9]
+  validation:
+    - name: first_empty
+      input: { early: [], late: [2, 6] }
+      expected: [2, 6]
+    - name: equal_fronts
+      input: { early: [2, 2], late: [2, 3] }
+      expected: [2, 2, 2, 3]
+    - name: all_early_first
+      input: { early: [1, 2], late: [8, 9] }
+      expected: [1, 2, 8, 9]
+    - name: all_late_first
+      input: { early: [7, 8], late: [1, 2] }
+      expected: [1, 2, 7, 8]
+    - name: single_each
+      input: { early: [4], late: [3] }
+      expected: [3, 4]
+explanation_markdown: |
+  Two pointers, one per sorted list, let you merge without re-sorting. At each
+  step the smaller front value is the next value overall, so you copy it and
+  advance only that list. Once either pointer runs off the end, the other list
+  is already sorted, so you can append its remaining slice directly. Using `<=`
+  when the fronts tie keeps the merge stable and touches each value exactly
+  once, giving an O(m + n) pass.
+common_mistakes:
+  - Advancing both indices on every step instead of only the one you copied from.
+  - Forgetting to append the leftover tail after one list empties.
+  - Rebuilding and sorting a combined list, which ignores the two-pointer idea.

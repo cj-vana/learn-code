@@ -1,0 +1,89 @@
+id: exercise.library.python_refresh.b06
+kind: exercise
+version: 1
+language: python
+title: Read an RSVP Reply
+slug: python-refresh-b06
+difficulty: easy
+concepts:
+  - python.functions
+  - python.conditionals
+  - python.strings
+prerequisites:
+  - python.variables
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh.b06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original event-RSVP interpreter that normalizes a reply string against a fixed set of accepting words.
+prompt_markdown: |
+  An event organizer collects one-word RSVP replies and needs to know who is
+  attending. A reply counts as "attending" when, after trimming surrounding
+  spaces and ignoring capitalization, it is one of these words:
+
+  `yes`, `y`, `yeah`, `yep`, `yup`, `sure`, `ok`, `okay`
+
+  Any other reply (including an empty one) means the guest is not attending.
+
+  Write `is_attending(reply)` that takes the reply string and returns `True`
+  if it means yes, otherwise `False`.
+starter_code: |
+  def is_attending(reply):
+      return False
+function_name: is_attending
+input_mode: function
+solution_sketch: Normalize the reply and test membership in the set of accepting words.
+sample_solution: |
+  def is_attending(reply):
+      yes_words = {"yes", "y", "yeah", "yep", "yup", "sure", "ok", "okay"}
+      return reply.strip().lower() in yes_words
+hints:
+  - level: 1
+    text: Clean up the reply before comparing it to anything.
+  - level: 2
+    text: strip() removes surrounding spaces and lower() removes case differences.
+  - level: 3
+    text: Keep the accepting words in a set and check membership with in.
+tests:
+  public:
+    - name: plain_yes
+      input: "yes"
+      expected: true
+    - name: shouted_yes
+      input: "YES"
+      expected: true
+    - name: plain_no
+      input: "no"
+      expected: false
+  validation:
+    - name: padded_yeah
+      input: "  yeah  "
+      expected: true
+    - name: mixed_case_yep
+      input: Yep
+      expected: true
+    - name: maybe_is_no
+      input: maybe
+      expected: false
+    - name: empty_reply
+      input: ""
+      expected: false
+    - name: nope
+      input: nope
+      expected: false
+    - name: okay_accepted
+      input: Okay
+      expected: true
+explanation_markdown: |
+  Normalizing the input first means one comparison handles many spellings:
+  `strip()` drops stray spaces and `lower()` erases case, so `"  YES "` and
+  `"yes"` collapse to the same value. A set of accepting words makes the
+  final `in` check both short and fast.
+common_mistakes:
+  - Comparing the raw reply, so extra spaces or capitals slip through.
+  - Listing only "yes" and missing the other accepting words.
+  - Returning the reply string instead of a boolean.

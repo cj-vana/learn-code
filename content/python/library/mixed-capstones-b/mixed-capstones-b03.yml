@@ -1,0 +1,88 @@
+id: exercise.library.mixed_capstones.b03
+kind: exercise
+version: 1
+language: python
+title: Museum Visitor Windows
+slug: mixed-capstones-b03
+difficulty: medium
+concepts:
+  - patterns.prefix_sums
+prerequisites:
+  - python.lists
+estimated_time_minutes: 18
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.mixed_capstones.b03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original museum hourly-attendance scenario answering many inclusive range totals with prefix sums.
+prompt_markdown: |
+  A museum records how many visitors entered during each hour it is open in a
+  `counts` list. The operations desk fires off several range questions, each a
+  pair `[start, end]` of hour indices (inclusive), and wants the total visitors
+  in that span.
+
+  Write `visitor_totals(data)` where `data` is a dict with keys `counts` and
+  `queries` (a list of `[start, end]` pairs, with `0 <= start <= end < len(counts)`).
+  Return a list holding the total for each query, in order. With no queries,
+  return an empty list.
+starter_code: |
+  def visitor_totals(data):
+      return []
+function_name: visitor_totals
+input_mode: function
+solution_sketch: Build a prefix-sum array once, then answer each range in O(1) via prefix[end+1] - prefix[start].
+sample_solution: |
+  def visitor_totals(data):
+      counts = data["counts"]
+      queries = data["queries"]
+      prefix = [0]
+      for value in counts:
+          prefix.append(prefix[-1] + value)
+      results = []
+      for start, end in queries:
+          results.append(prefix[end + 1] - prefix[start])
+      return results
+hints:
+  - level: 1
+    text: Answering many overlapping ranges by re-adding the slice each time repeats a lot of work.
+  - level: 2
+    text: Precompute a running total so any range sum becomes a subtraction of two precomputed values.
+  - level: 3
+    text: With prefix[0] = 0 and prefix[i+1] = prefix[i] + counts[i], the inclusive range [start, end] equals prefix[end + 1] - prefix[start].
+tests:
+  public:
+    - name: single_hour
+      input: {counts: [4, 2, 7, 1, 5], queries: [[0, 0]]}
+      expected: [4]
+    - name: full_range
+      input: {counts: [4, 2, 7, 1, 5], queries: [[0, 4]]}
+      expected: [19]
+    - name: middle_span
+      input: {counts: [4, 2, 7, 1, 5], queries: [[1, 3]]}
+      expected: [10]
+  validation:
+    - name: multiple_queries
+      input: {counts: [4, 2, 7, 1, 5], queries: [[0, 1], [2, 2], [3, 4]]}
+      expected: [6, 7, 6]
+    - name: no_queries
+      input: {counts: [4, 2, 7, 1, 5], queries: []}
+      expected: []
+    - name: overlapping
+      input: {counts: [3, 0, 0, 9], queries: [[0, 3], [1, 2], [3, 3]]}
+      expected: [12, 0, 9]
+    - name: single_element_list
+      input: {counts: [10], queries: [[0, 0], [0, 0]]}
+      expected: [10, 10]
+explanation_markdown: |
+  When many range-sum questions hit the same array, prefix sums pay off. Building
+  `prefix`, where `prefix[i]` is the total of the first `i` counts, costs one
+  O(n) pass. After that, the sum of any inclusive range `[start, end]` is just
+  `prefix[end + 1] - prefix[start]`, an O(1) lookup. So q queries cost O(n + q)
+  instead of O(n * q) from re-adding each slice.
+common_mistakes:
+  - Using prefix[end] - prefix[start] and dropping the final hour of the range.
+  - Forgetting the leading 0 in the prefix array, which shifts every index.
+  - Re-summing counts[start:end+1] per query, which defeats the purpose of prefix sums.

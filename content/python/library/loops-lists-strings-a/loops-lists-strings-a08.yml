@@ -1,0 +1,70 @@
+id: exercise.library.loops_lists_strings.a08
+kind: exercise
+version: 1
+language: python
+title: Inspect Every Other Package
+slug: loops-lists-strings-a08
+difficulty: easy
+concepts:
+  - python.lists
+  - python.slicing
+prerequisites:
+  - python.functions
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings.a08
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original conveyor-belt every-other sampling scenario, prompt, and tests.
+prompt_markdown: |
+  A conveyor belt inspector checks every other package, starting with the first
+  one. Write `inspected_packages(packages)` returning a new list containing the
+  packages at positions 0, 2, 4, and so on, in their original order.
+starter_code: |
+  def inspected_packages(packages):
+      return []
+function_name: inspected_packages
+input_mode: function
+solution_sketch: Use a step-2 slice starting at index 0.
+sample_solution: |
+  def inspected_packages(packages):
+      return packages[::2]
+hints:
+  - level: 1
+    text: A slice can take a step value as its third part.
+  - level: 2
+    text: packages[start:stop:step] with step 2 skips every other item.
+  - level: 3
+    text: Leaving start and stop empty and using step 2 gives packages[::2].
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: single
+      input: ['a']
+      expected: ['a']
+    - name: several
+      input: ['a', 'b', 'c', 'd', 'e']
+      expected: ['a', 'c', 'e']
+  validation:
+    - name: even_count
+      input: ['p', 'q', 'r', 's']
+      expected: ['p', 'r']
+    - name: numbers
+      input: [10, 20, 30, 40, 50, 60]
+      expected: [10, 30, 50]
+    - name: two_items
+      input: ['x', 'y']
+      expected: ['x']
+explanation_markdown: |
+  The slice `packages[::2]` walks the list from the start to the end taking every
+  second element, which are exactly indices 0, 2, 4, and so on. It returns a new
+  list and works for any length, including empty and single-element lists.
+common_mistakes:
+  - Starting at index 1 and inspecting the wrong packages.
+  - Using a step of 2 in a range but forgetting to collect the elements themselves.
+  - Mutating the original list instead of returning a new one.

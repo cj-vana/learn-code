@@ -1,0 +1,136 @@
+id: exercise.library.stack_queue_bfs.a08
+kind: exercise
+version: 1
+language: python
+title: Org Chart Level Order
+slug: stack-queue-bfs-a08
+difficulty: medium
+concepts:
+  - patterns.queue_bfs
+  - python.dictionaries
+prerequisites:
+  - python.lists
+estimated_time_minutes: 18
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.stack_queue_bfs.a08
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original org-chart level-order traversal scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  An org chart maps each person to a list of their direct reports (a person with
+  no reports maps to an empty list). You are given a dict `data` with keys
+  `"chart"` and `"top"`, the name of the person at the root.
+
+  Write `levels(data)` returning a list of lists: the names at each depth level,
+  discovered by breadth-first search. Level 0 is `[top]`, level 1 is everyone who
+  reports directly to `top`, and so on. Within a level, keep the order the names
+  were discovered.
+starter_code: |
+  def levels(data):
+      return []
+function_name: levels
+input_mode: function
+solution_sketch: BFS level by level, popping exactly the current level's size before recording the next level.
+sample_solution: |
+  from collections import deque
+
+  def levels(data):
+      chart = data["chart"]
+      top = data["top"]
+      result = []
+      queue = deque([top])
+      while queue:
+          level_size = len(queue)
+          current = []
+          for _ in range(level_size):
+              node = queue.popleft()
+              current.append(node)
+              for report in chart.get(node, []):
+                  queue.append(report)
+          result.append(current)
+      return result
+hints:
+  - level: 1
+    text: Breadth-first search naturally visits the chart one level at a time.
+  - level: 2
+    text: Before draining a level, record how many names are currently in the queue.
+  - level: 3
+    text: Pop exactly that many names into one level's list while enqueuing their reports for the next round.
+tests:
+  public:
+    - name: single_person
+      input:
+        chart:
+          solo: []
+        top: solo
+      expected: [[solo]]
+    - name: one_level
+      input:
+        chart:
+          boss: [wren, xavi]
+          wren: []
+          xavi: []
+        top: boss
+      expected: [[boss], [wren, xavi]]
+    - name: four_levels
+      input:
+        chart:
+          ceo: [vp1, vp2]
+          vp1: [lead_a, lead_b]
+          vp2: [lead_c]
+          lead_a: []
+          lead_b: [ic1]
+          lead_c: []
+          ic1: []
+        top: ceo
+      expected: [[ceo], [vp1, vp2], [lead_a, lead_b, lead_c], [ic1]]
+  validation:
+    - name: start_midway
+      input:
+        chart:
+          ceo: [vp1, vp2]
+          vp1: [lead_a, lead_b]
+          vp2: [lead_c]
+          lead_a: []
+          lead_b: [ic1]
+          lead_c: []
+          ic1: []
+        top: vp1
+      expected: [[vp1], [lead_a, lead_b], [ic1]]
+    - name: leaf_only
+      input:
+        chart:
+          ceo: [vp1, vp2]
+          vp1: [lead_a, lead_b]
+          vp2: [lead_c]
+          lead_a: []
+          lead_b: [ic1]
+          lead_c: []
+          ic1: []
+        top: lead_c
+      expected: [[lead_c]]
+    - name: small_subtree
+      input:
+        chart:
+          ceo: [vp1, vp2]
+          vp1: [lead_a, lead_b]
+          vp2: [lead_c]
+          lead_a: []
+          lead_b: [ic1]
+          lead_c: []
+          ic1: []
+        top: vp2
+      expected: [[vp2], [lead_c]]
+explanation_markdown: |
+  Capturing `len(queue)` before draining fixes exactly how many names belong to
+  the current level, so their reports (already being appended) become the next
+  level without mixing depths. Because reports are enqueued in list order and
+  processed front to back, discovery order within each level is preserved. Every
+  name is enqueued and popped once, giving O(n) work over the chart.
+common_mistakes:
+  - Reading len(queue) inside the loop after it has already changed, blurring the levels.
+  - Flattening everyone into one list instead of grouping by depth.
+  - Enqueuing reports before snapshotting the level size for this round.

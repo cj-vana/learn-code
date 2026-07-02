@@ -1,0 +1,71 @@
+id: exercise.library.loops_lists_strings.a03
+kind: exercise
+version: 1
+language: python
+title: Parking Garage Level
+slug: loops-lists-strings-a03
+difficulty: easy
+concepts:
+  - python.strings
+  - python.slicing
+prerequisites:
+  - python.functions
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original parking-ticket suffix scenario, prompt, and tests.
+prompt_markdown: |
+  A parking garage prints a ticket code where the last three characters name the
+  level. Write `garage_level(code)` returning the last three characters of
+  `code`. If the code has fewer than three characters, return the whole code.
+starter_code: |
+  def garage_level(code):
+      return ''
+function_name: garage_level
+input_mode: function
+solution_sketch: Slice the last three characters, which also handles short codes.
+sample_solution: |
+  def garage_level(code):
+      return code[-3:]
+hints:
+  - level: 1
+    text: A negative slice start counts from the end of the string.
+  - level: 2
+    text: code[-3:] asks for the final three characters.
+  - level: 3
+    text: When the string is shorter than three, that same slice returns all of it.
+tests:
+  public:
+    - name: standard
+      input: 'TCKB2'
+      expected: 'KB2'
+    - name: exactly_three
+      input: 'X7Q'
+      expected: 'X7Q'
+    - name: shorter
+      input: 'Z9'
+      expected: 'Z9'
+  validation:
+    - name: long_code
+      input: 'PARK000129'
+      expected: '129'
+    - name: single_char
+      input: 'A'
+      expected: 'A'
+    - name: empty
+      input: ''
+      expected: ''
+explanation_markdown: |
+  The slice `code[-3:]` starts three characters from the end and runs to the
+  end. Python slices never raise for out-of-range bounds, so a one- or
+  two-character code simply returns itself, which is exactly the required
+  behavior for short codes.
+common_mistakes:
+  - Using code[3:] which takes everything after the third character instead.
+  - Adding an explicit length check that a negative slice already handles.
+  - Reversing the string instead of taking its suffix.

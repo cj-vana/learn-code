@@ -1,0 +1,87 @@
+id: exercise.library.binary_search.a03
+kind: exercise
+version: 1
+language: python
+title: Parcels Within the Weight Limit
+slug: binary-search-a03
+difficulty: easy
+concepts:
+  - patterns.binary_search
+  - python.lists
+prerequisites:
+  - python.lists
+  - python.sorting
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+input_mode: function
+provenance:
+  brief_id: library.binary_search.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original courier-depot parcel-weight counting scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A courier depot lists parcel weights in kilograms, sorted in ascending order.
+  Write `count_within_limit(data)` where `data` has keys `weights` (the sorted
+  list) and `limit` (a maximum weight).
+
+  Return how many parcels weigh **at most** `limit`. Find the boundary with
+  binary search instead of counting one by one.
+starter_code: |
+  def count_within_limit(data):
+      return 0
+function_name: count_within_limit
+solution_sketch: Binary search for the first index whose weight exceeds the limit; that index is the count.
+sample_solution: |
+  def count_within_limit(data):
+      weights = data["weights"]
+      limit = data["limit"]
+      lo, hi = 0, len(weights)
+      while lo < hi:
+          mid = (lo + hi) // 2
+          if weights[mid] <= limit:
+              lo = mid + 1
+          else:
+              hi = mid
+      return lo
+hints:
+  - level: 1
+    text: Every weight before the first over-limit parcel counts, so you only need that boundary index.
+  - level: 2
+    text: Search for the first position where the weight is strictly greater than limit.
+  - level: 3
+    text: When weights[mid] <= limit, that parcel and all before it qualify, so move lo to mid + 1.
+tests:
+  public:
+    - name: empty
+      input: {weights: [], limit: 10}
+      expected: 0
+    - name: some
+      input: {weights: [2, 4, 6, 8, 10], limit: 6}
+      expected: 3
+    - name: none
+      input: {weights: [5, 9, 12], limit: 3}
+      expected: 0
+  validation:
+    - name: all
+      input: {weights: [1, 2, 3], limit: 100}
+      expected: 3
+    - name: boundary_inclusive
+      input: {weights: [1, 3, 3, 3, 7], limit: 3}
+      expected: 4
+    - name: exact_max
+      input: {weights: [4, 8, 15, 16, 23], limit: 23}
+      expected: 5
+    - name: between
+      input: {weights: [4, 8, 15, 16, 23], limit: 20}
+      expected: 4
+explanation_markdown: |
+  Because the weights are sorted, the parcels at or below the limit form a prefix
+  of the list. Binary search finds where that prefix ends (an "upper bound"), and
+  the boundary index equals the count. The limit itself counts because the check
+  uses `<=`.
+common_mistakes:
+  - Using < instead of <=, which drops parcels that weigh exactly the limit.
+  - Returning the boundary value rather than the boundary index.
+  - Starting hi at len(weights) - 1 and missing the case where every parcel qualifies.

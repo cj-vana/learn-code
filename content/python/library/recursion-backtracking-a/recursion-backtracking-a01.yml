@@ -1,0 +1,84 @@
+id: exercise.library.recursion_backtracking.a01
+kind: exercise
+version: 1
+language: python
+title: Count Items Across Nested Totes
+slug: recursion-backtracking-a01
+difficulty: easy
+concepts:
+  - patterns.recursion
+  - python.lists
+prerequisites:
+  - python.functions
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.recursion_backtracking.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original warehouse tote scenario where nested lists model bins inside bins and recursion sums every item count.
+prompt_markdown: |
+  A warehouse packs items into totes, and a tote may hold either a plain
+  item count (an integer) or smaller sub-totes nested inside it (a list).
+  Write `total_items(bins)` where `bins` is a list that can contain integers
+  and other lists nested to any depth. Return the sum of every integer found
+  anywhere in the structure. An empty list contributes nothing.
+starter_code: |
+  def total_items(bins):
+      return 0
+function_name: total_items
+input_mode: function
+solution_sketch: Walk the list; add integers directly and recurse into any nested list, summing the results.
+sample_solution: |
+  def total_items(bins):
+      total = 0
+      for item in bins:
+          if isinstance(item, list):
+              total += total_items(item)
+          else:
+              total += item
+      return total
+hints:
+  - level: 1
+    text: A tote is either a number you add or a list you must look inside.
+  - level: 2
+    text: When an element is itself a list, call the same function on it and add whatever it returns.
+  - level: 3
+    text: Keep a running total; for each element use isinstance(item, list) to decide between recursing and adding.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: 0
+    - name: flat
+      input: [4, 1, 5]
+      expected: 10
+    - name: one_nest
+      input: [2, [3, 4], 1]
+      expected: 10
+  validation:
+    - name: deep_single
+      input: [[[7]]]
+      expected: 7
+    - name: mixed_depths
+      input: [1, [2, [3, 4]], 5]
+      expected: 15
+    - name: empty_pockets
+      input: [1, [], [2, []], 3]
+      expected: 6
+    - name: all_nested
+      input: [[1, 2], [3, 4], [5]]
+      expected: 15
+explanation_markdown: |
+  Each element is one of two shapes: a number to add, or a list to explore.
+  Recursion mirrors that split. For a list element we call `total_items` again,
+  which handles its own contents the same way, no matter how deep the nesting
+  goes. The base case is implicit: a loop over an empty list adds nothing and
+  returns the running total. Every integer is visited exactly once, so the work
+  is proportional to the number of nodes in the structure.
+common_mistakes:
+  - Trying to add a nested list directly instead of recursing into it.
+  - Forgetting that the input can nest more than one level deep.
+  - Resetting the running total inside the recursive call.

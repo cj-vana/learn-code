@@ -1,0 +1,92 @@
+id: exercise.library.recursion_backtracking.a06
+kind: exercise
+version: 1
+language: python
+title: Exact-Calorie Yogurt Cups
+slug: recursion-backtracking-a06
+difficulty: easy
+concepts:
+  - patterns.backtracking
+  - patterns.recursion
+prerequisites:
+  - python.functions
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.recursion_backtracking.a06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original frozen-yogurt scenario that counts subsets of scoop calories hitting an exact target by exploring a take-or-skip choice tree.
+prompt_markdown: |
+  A frozen-yogurt bar offers a row of scoops, each with a positive calorie
+  value, and a customer wants a cup that totals an exact calorie `target`. Each
+  scoop can be used at most once. Write `count_exact_cups(data)` where `data` is
+  a dict with keys `scoops` (a list of positive integers) and `target` (an
+  integer). Return how many distinct subsets of the scoops add up to exactly the
+  target. The empty selection counts only when the target is 0.
+starter_code: |
+  def count_exact_cups(data):
+      return 0
+function_name: count_exact_cups
+input_mode: function
+solution_sketch: For each scoop branch into taking or skipping it, counting a subset whenever the remaining target reaches exactly 0.
+sample_solution: |
+  def count_exact_cups(data):
+      scoops = data["scoops"]
+      target = data["target"]
+
+      def build(index, remaining):
+          if remaining == 0:
+              return 1
+          if index == len(scoops) or remaining < 0:
+              return 0
+          take = build(index + 1, remaining - scoops[index])
+          skip = build(index + 1, remaining)
+          return take + skip
+
+      return build(0, target)
+hints:
+  - level: 1
+    text: At each scoop you make one of two choices, use it or leave it out.
+  - level: 2
+    text: Track how much target is left; a subset succeeds the moment the remainder hits exactly 0.
+  - level: 3
+    text: Recurse once with remaining - scoops[index] and once with remaining unchanged, and add the two counts.
+tests:
+  public:
+    - name: single_way
+      input: {scoops: [2, 3, 5], target: 5}
+      expected: 2
+    - name: unreachable
+      input: {scoops: [4, 6], target: 5}
+      expected: 0
+    - name: zero_target
+      input: {scoops: [1, 2, 3], target: 0}
+      expected: 1
+  validation:
+    - name: use_all
+      input: {scoops: [1, 2, 3], target: 6}
+      expected: 1
+    - name: two_subsets
+      input: {scoops: [1, 2, 3, 4], target: 5}
+      expected: 2
+    - name: empty_scoops
+      input: {scoops: [], target: 0}
+      expected: 1
+    - name: too_small
+      input: {scoops: [10, 20], target: 5}
+      expected: 0
+explanation_markdown: |
+  Every scoop presents a yes-or-no decision, and the full set of choices forms a
+  binary tree. Each path down the tree corresponds to one candidate subset. We
+  carry a `remaining` target and subtract a scoop's calories when we take it. A
+  leaf where `remaining` is exactly 0 marks a valid subset and contributes 1;
+  running past the last scoop or overshooting contributes 0. Summing both
+  branches at every node totals all subsets that land on the target. For
+  `[2, 3, 5]` reaching 5, the winners are `{5}` and `{2, 3}`.
+common_mistakes:
+  - Stopping at the first subset found instead of counting every one.
+  - Reusing the same scoop by not advancing the index on the take branch.
+  - Checking the index bound before the success check, which misses subsets that complete on the last scoop.

@@ -1,0 +1,85 @@
+id: exercise.library.hashmap_set.b03
+kind: exercise
+version: 1
+language: python
+title: Bookstore Special Orders
+slug: hashmap-set-b03
+difficulty: easy
+concepts:
+  - patterns.set_membership
+  - python.sets
+prerequisites:
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.hashmap_set.b03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original bookstore scenario listing customer-requested titles that are not on the shelf, deduplicated in request order.
+prompt_markdown: |
+  A neighborhood bookstore keeps a list of titles currently `in_stock` and a list
+  of titles customers `requested` at the counter. Write `special_orders(data)`
+  that returns the titles a customer asked for that are not in stock and therefore
+  must be special-ordered. List each such title once, in the order it was first
+  requested. `data` is a dict with keys `in_stock` and `requested`, each a list
+  of title strings.
+starter_code: |
+  def special_orders(data):
+      return []
+function_name: special_orders
+input_mode: function
+solution_sketch: Put the in-stock titles in a set, then collect requested titles missing from it while skipping repeats.
+sample_solution: |
+  def special_orders(data):
+      in_stock = set(data["in_stock"])
+      orders = []
+      already = set()
+      for title in data["requested"]:
+          if title not in in_stock and title not in already:
+              orders.append(title)
+              already.add(title)
+      return orders
+hints:
+  - level: 1
+    text: Membership tests against the in-stock titles decide what must be ordered.
+  - level: 2
+    text: Convert in_stock to a set so each lookup is O(1).
+  - level: 3
+    text: Keep a second set of titles already added so duplicates are not listed twice.
+tests:
+  public:
+    - name: both_empty
+      input: {in_stock: [], requested: []}
+      expected: []
+    - name: one_missing
+      input: {in_stock: [atlas, brook], requested: [atlas, cliff]}
+      expected: [cliff]
+    - name: all_available
+      input: {in_stock: [pine, quartz], requested: [pine, quartz]}
+      expected: []
+  validation:
+    - name: dedup_requests
+      input: {in_stock: [reef], requested: [tide, tide, reef, vale]}
+      expected: [tide, vale]
+    - name: preserve_order
+      input: {in_stock: [maple], requested: [nettle, maple, oak, nettle]}
+      expected: [nettle, oak]
+    - name: nothing_stocked
+      input: {in_stock: [], requested: [wren, wren, yarrow]}
+      expected: [wren, yarrow]
+    - name: all_missing_distinct
+      input: {in_stock: [dawn], requested: [ember, frost, glade]}
+      expected: [ember, frost, glade]
+explanation_markdown: |
+  Storing the in-stock titles in a set turns each availability check into an O(1)
+  lookup, so a single pass over the requests is O(n). A second set of titles you
+  have already recorded keeps the result free of duplicates while still preserving
+  the order in which each missing title was first requested, since you append the
+  first time you encounter it and skip it thereafter.
+common_mistakes:
+  - Returning a set, which loses the first-request ordering.
+  - Listing a missing title twice when a customer requests it more than once.
+  - Scanning the in-stock list with `in` on each request, making the work O(n*m).

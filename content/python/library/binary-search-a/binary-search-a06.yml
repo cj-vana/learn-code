@@ -1,0 +1,87 @@
+id: exercise.library.binary_search.a06
+kind: exercise
+version: 1
+language: python
+title: Best Seat You Can Afford
+slug: binary-search-a06
+difficulty: easy
+concepts:
+  - patterns.binary_search
+  - python.lists
+prerequisites:
+  - python.lists
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+input_mode: function
+provenance:
+  brief_id: library.binary_search.a06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original theater seat-pricing floor-search scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A theater lists its seat prices in a list sorted in ascending order. Write
+  `best_affordable_seat(data)` where `data` has keys `prices` (the sorted list)
+  and `budget`.
+
+  Return the index of the **most expensive** seat whose price is at or below
+  `budget`, or `-1` if even the cheapest seat costs more than the budget. Use
+  binary search.
+starter_code: |
+  def best_affordable_seat(data):
+      return -1
+function_name: best_affordable_seat
+solution_sketch: Binary search for how many prices fit the budget; the last such index is the answer.
+sample_solution: |
+  def best_affordable_seat(data):
+      prices = data["prices"]
+      budget = data["budget"]
+      lo, hi = 0, len(prices)
+      while lo < hi:
+          mid = (lo + hi) // 2
+          if prices[mid] <= budget:
+              lo = mid + 1
+          else:
+              hi = mid
+      return lo - 1
+hints:
+  - level: 1
+    text: The affordable seats form a prefix of the sorted prices; you want the last one.
+  - level: 2
+    text: Binary search for the first price that exceeds the budget.
+  - level: 3
+    text: The index just before that boundary is the priciest affordable seat, or -1 if the boundary is 0.
+tests:
+  public:
+    - name: affordable
+      input: {prices: [20, 35, 50, 80], budget: 55}
+      expected: 2
+    - name: exact
+      input: {prices: [20, 35, 50, 80], budget: 35}
+      expected: 1
+    - name: too_poor
+      input: {prices: [20, 35, 50], budget: 10}
+      expected: -1
+  validation:
+    - name: all_affordable
+      input: {prices: [10, 20, 30], budget: 100}
+      expected: 2
+    - name: cheapest_exact
+      input: {prices: [15, 25, 40], budget: 15}
+      expected: 0
+    - name: empty
+      input: {prices: [], budget: 50}
+      expected: -1
+    - name: just_below
+      input: {prices: [10, 20, 30, 40], budget: 39}
+      expected: 2
+explanation_markdown: |
+  Sorted prices mean every seat you can afford comes before every one you cannot.
+  Binary search finds the first over-budget price (an "upper bound"); the index
+  right before it is the dearest seat within budget. When nothing is affordable
+  the boundary sits at 0 and the answer is `-1`.
+common_mistakes:
+  - Returning the boundary index itself, which points at the first seat you cannot afford.
+  - Using < instead of <= and rejecting a seat priced exactly at the budget.
+  - Forgetting that a boundary of 0 means no seat fits, so -1 must be returned.

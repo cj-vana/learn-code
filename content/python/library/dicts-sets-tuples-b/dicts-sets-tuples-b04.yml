@@ -1,0 +1,71 @@
+id: exercise.library.dicts_sets_tuples.b04
+kind: exercise
+version: 1
+language: python
+title: Shelf Label Lengths
+slug: dicts-sets-tuples-b04
+difficulty: easy
+concepts:
+  - python.dictionaries
+  - python.comprehensions
+prerequisites: []
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples.b04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original library-shelf label scenario mapping each label to its character length.
+prompt_markdown: |
+  A library prints shelf labels and wants to check how wide each one is. Write
+  `label_lengths(labels)` that takes a list of label strings and returns a dict
+  mapping each label to its number of characters. If the same label appears more
+  than once it still maps to a single entry. An empty list returns an empty dict.
+starter_code: |
+  def label_lengths(labels):
+      return {}
+function_name: label_lengths
+input_mode: function
+solution_sketch: Build a dict comprehension mapping each label to len(label).
+sample_solution: |
+  def label_lengths(labels):
+      return {label: len(label) for label in labels}
+hints:
+  - level: 1
+    text: The keys are the labels themselves and the values are their lengths.
+  - level: 2
+    text: len(label) gives the character count for one label.
+  - level: 3
+    text: 'A dict comprehension {label: len(label) for label in labels} does it in one line.'
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: {}
+    - name: single
+      input: [oak]
+      expected: {oak: 3}
+    - name: several
+      input: [ash, maple, elm]
+      expected: {ash: 3, maple: 5, elm: 3}
+  validation:
+    - name: duplicate_label
+      input: [fig, fig]
+      expected: {fig: 3}
+    - name: increasing_lengths
+      input: [a, bb, ccc]
+      expected: {a: 1, bb: 2, ccc: 3}
+    - name: longer_words
+      input: [willow, birch]
+      expected: {willow: 6, birch: 5}
+explanation_markdown: |
+  A dict comprehension walks the list once, using each label as a key and its
+  length as the value. Because dict keys are unique, a repeated label simply
+  overwrites its own identical entry, so the result naturally deduplicates. This
+  is the idiomatic way to turn a list into a lookup table in Python.
+common_mistakes:
+  - Returning a list of lengths instead of a dict keyed by label.
+  - Swapping keys and values so lengths become the keys.
+  - Assuming duplicate labels need special handling.

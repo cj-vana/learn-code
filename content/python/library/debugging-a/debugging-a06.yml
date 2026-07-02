@@ -1,0 +1,81 @@
+id: exercise.library.debugging.a06
+kind: exercise
+version: 1
+language: python
+title: Basket Total With Missing Prices
+slug: debugging-a06
+difficulty: easy
+concepts:
+  - python.debugging
+  - python.dictionaries
+prerequisites:
+  - python.functions
+  - python.loops
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.debugging.a06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original farm-stand checkout scenario built around avoiding a dictionary KeyError on unknown items.
+prompt_markdown: |
+  A farm stand rings up a basket of items. Write `total_basket(data)` where
+  `data` is a dict with keys `prices` (a dict mapping item name to its whole-cent
+  price) and `items` (a list of item names in the basket). Return the total price
+  of the basket.
+
+  The bug to avoid: indexing `prices[item]` raises `KeyError` when an item is not
+  in the price list. Treat any unknown item as costing 0.
+starter_code: |
+  def total_basket(data):
+      return 0
+function_name: total_basket
+input_mode: function
+solution_sketch: Add prices.get(item, 0) for each item so missing items contribute 0.
+sample_solution: |
+  def total_basket(data):
+      prices = data["prices"]
+      items = data["items"]
+      total = 0
+      for item in items:
+          total += prices.get(item, 0)
+      return total
+hints:
+  - level: 1
+    text: Some basket items may not appear in the price list.
+  - level: 2
+    text: Square-bracket lookup raises KeyError for a missing key.
+  - level: 3
+    text: Use prices.get(item, 0) so unknown items add 0.
+tests:
+  public:
+    - name: two_items
+      input: {prices: {apple: 3, pear: 2}, items: [apple, pear]}
+      expected: 5
+    - name: repeated
+      input: {prices: {apple: 3}, items: [apple, apple, apple]}
+      expected: 9
+    - name: unknown_only
+      input: {prices: {}, items: [mystery]}
+      expected: 0
+  validation:
+    - name: one_missing
+      input: {prices: {a: 5, b: 2}, items: [a, b, c]}
+      expected: 7
+    - name: empty_basket
+      input: {prices: {a: 5}, items: []}
+      expected: 0
+    - name: mixed_order
+      input: {prices: {plum: 4, fig: 1}, items: [fig, fig, plum]}
+      expected: 6
+explanation_markdown: |
+  Looking a key up with `prices[item]` assumes the key exists; when it does not,
+  Python raises `KeyError` and the whole function crashes. The `dict.get` method
+  takes a default, so `prices.get(item, 0)` returns the price when known and 0
+  otherwise, letting the running total absorb missing items gracefully.
+common_mistakes:
+  - Using prices[item], which raises KeyError on an unknown item.
+  - Forgetting that the same item can appear more than once.
+  - Resetting the total inside the loop instead of before it.

@@ -1,0 +1,83 @@
+id: exercise.library.hashmap_set.b01
+kind: exercise
+version: 1
+language: python
+title: First Reused Pool Locker
+slug: hashmap-set-b01
+difficulty: easy
+concepts:
+  - patterns.set_membership
+  - python.sets
+prerequisites:
+  - python.loops
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.hashmap_set.b01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original swimming-pool locker scenario about spotting the first locker code handed out a second time.
+prompt_markdown: |
+  A public swimming pool hands out lockers in the order swimmers arrive and
+  records each locker code as it is assigned. Because the same locker can be
+  reused later in the day, a code may appear more than once in the log.
+  Write `first_reused_locker(codes)` that returns the first locker code that is
+  assigned for a second time, scanning the log from left to right. If no locker
+  is ever reused, return an empty string.
+starter_code: |
+  def first_reused_locker(codes):
+      return ""
+function_name: first_reused_locker
+input_mode: function
+solution_sketch: Track seen codes in a set and return the first code already present when you reach it.
+sample_solution: |
+  def first_reused_locker(codes):
+      seen = set()
+      for code in codes:
+          if code in seen:
+              return code
+          seen.add(code)
+      return ""
+hints:
+  - level: 1
+    text: You only need to know whether a code has appeared earlier in the log.
+  - level: 2
+    text: A set gives O(1) membership checks as you walk the list once.
+  - level: 3
+    text: Before adding each code to the set, check if it is already there and return it if so.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: ""
+    - name: no_reuse
+      input: [A1, B2, C3]
+      expected: ""
+    - name: simple_reuse
+      input: [A1, B2, A1, C3]
+      expected: A1
+  validation:
+    - name: immediate_repeat
+      input: [m7, m7]
+      expected: m7
+    - name: second_wins
+      input: [p4, q5, q5, p4]
+      expected: q5
+    - name: interleaved
+      input: [s1, t2, s1, t2]
+      expected: s1
+    - name: last_pair
+      input: [d1, d2, d3, d2]
+      expected: d2
+explanation_markdown: |
+  Walking the log once and remembering every code in a set turns each
+  "have I seen this before?" question into an O(1) lookup, so the whole scan is
+  O(n). The first time a code is already in the set, it is by definition the
+  earliest locker to be reused, so you can return immediately. If the loop ends
+  without a hit, nothing was reused and the empty string reports that.
+common_mistakes:
+  - Adding a code to the set before checking membership, so every code looks reused.
+  - Returning the last repeat instead of the first by scanning to the end.
+  - Forgetting the empty-string result when no locker is ever reused.

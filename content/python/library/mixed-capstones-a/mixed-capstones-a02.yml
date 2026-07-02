@@ -1,0 +1,88 @@
+id: exercise.library.mixed_capstones.a02
+kind: exercise
+version: 1
+language: python
+title: Merge Two Check-in Lanes
+slug: mixed-capstones-a02
+difficulty: easy
+concepts:
+  - patterns.two_pointers
+  - python.lists
+prerequisites:
+  - python.dictionaries
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.mixed_capstones.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original airport check-in scenario framing a stable merge of two already-sorted lanes with its own tests.
+prompt_markdown: |
+  Two airport check-in lanes each release passengers in order of their arrival
+  minute, so each lane is already sorted. Write `merge_check_in_lanes(data)`
+  where `data` is a dict with keys `lane_a` and `lane_b`, each a list of
+  non-decreasing integer arrival minutes. Return a single list holding every
+  arrival minute from both lanes in non-decreasing order, keeping duplicates.
+starter_code: |
+  def merge_check_in_lanes(data):
+      return []
+function_name: merge_check_in_lanes
+input_mode: function
+solution_sketch: Advance one index into each sorted lane, always appending the smaller front value, then attach whatever remains.
+sample_solution: |
+  def merge_check_in_lanes(data):
+      a = data["lane_a"]
+      b = data["lane_b"]
+      i = 0
+      j = 0
+      merged = []
+      while i < len(a) and j < len(b):
+          if a[i] <= b[j]:
+              merged.append(a[i])
+              i += 1
+          else:
+              merged.append(b[j])
+              j += 1
+      merged.extend(a[i:])
+      merged.extend(b[j:])
+      return merged
+hints:
+  - level: 1
+    text: You never need to sort from scratch; both lanes are already ordered.
+  - level: 2
+    text: Keep one index per lane and repeatedly take the smaller of the two current front values.
+  - level: 3
+    text: When one lane runs out, extend the result with the untouched tail of the other lane.
+tests:
+  public:
+    - name: both_empty
+      input: {lane_a: [], lane_b: []}
+      expected: []
+    - name: one_empty
+      input: {lane_a: [], lane_b: [3, 5, 9]}
+      expected: [3, 5, 9]
+    - name: interleave
+      input: {lane_a: [1, 4, 6], lane_b: [2, 3, 5]}
+      expected: [1, 2, 3, 4, 5, 6]
+  validation:
+    - name: duplicates
+      input: {lane_a: [2, 2, 4], lane_b: [2, 3]}
+      expected: [2, 2, 2, 3, 4]
+    - name: tail_from_a
+      input: {lane_a: [5, 8, 10], lane_b: [1]}
+      expected: [1, 5, 8, 10]
+    - name: negatives
+      input: {lane_a: [-3, 0, 2], lane_b: [-5, 1]}
+      expected: [-5, -3, 0, 1, 2]
+explanation_markdown: |
+  Because each lane is already sorted, two indices walking forward in lockstep
+  produce the merged order in O(n + m) time. At every step the smaller of the two
+  front values is the next overall smallest, so appending it and advancing that
+  one index preserves order. When either index reaches the end, the remaining
+  tail of the other lane is already sorted and can be appended as-is.
+common_mistakes:
+  - Concatenating both lanes and calling sort(), which throws away the sorted structure and is slower.
+  - Using < instead of <= so equal values change the relative order or drop a duplicate.
+  - Forgetting to append the leftover tail after one lane is exhausted.

@@ -1,0 +1,73 @@
+id: exercise.library.python_refresh.a04
+kind: exercise
+version: 1
+language: python
+title: Validate a Locker Code
+slug: python-refresh-a04
+difficulty: easy
+concepts:
+  - python.conditionals
+  - python.strings
+  - python.operators
+prerequisites:
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original gym-locker code validation scenario, prompt, tests, and explanation.
+prompt_markdown: |
+  A gym issues each member a locker code that must be exactly four digits, with no
+  letters or symbols. Write `is_valid_locker_code(code)` that takes the code as a
+  string and returns `True` when it is exactly four characters long and every
+  character is a digit, and `False` otherwise.
+starter_code: |
+  def is_valid_locker_code(code):
+      return False
+function_name: is_valid_locker_code
+input_mode: function
+solution_sketch: Return whether the length is 4 and the string is all digits.
+sample_solution: |
+  def is_valid_locker_code(code):
+      return len(code) == 4 and code.isdigit()
+hints:
+  - level: 1
+    text: Two things must both be true, so combine two checks.
+  - level: 2
+    text: Use len(code) to check the length and a string method to check the characters.
+  - level: 3
+    text: code.isdigit() reports whether every character is a digit; join it with the length check using and.
+tests:
+  public:
+    - name: valid
+      input: "1234"
+      expected: true
+    - name: has_letter
+      input: "12a4"
+      expected: false
+    - name: too_short
+      input: "123"
+      expected: false
+  validation:
+    - name: too_long
+      input: "12345"
+      expected: false
+    - name: all_zeros
+      input: "0000"
+      expected: true
+    - name: empty
+      input: ""
+      expected: false
+explanation_markdown: |
+  Both conditions must hold, so `and` short-circuits: if the length is not 4 the
+  digit check is never even run. `str.isdigit()` returns `False` for an empty
+  string and for any string containing a non-digit, which covers the letter and
+  symbol cases without extra work.
+common_mistakes:
+  - Checking only the length or only the digits, but not both.
+  - Comparing the code to a number instead of treating it as a string.
+  - Assuming an empty string passes the digit check.

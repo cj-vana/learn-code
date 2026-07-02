@@ -1,0 +1,89 @@
+id: exercise.library.two_pointers.a07
+kind: exercise
+version: 1
+language: python
+title: Members At Both Branches
+slug: two-pointers-a07
+difficulty: easy
+concepts:
+  - patterns.two_pointers
+  - python.lists
+prerequisites:
+  - python.functions
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.two_pointers.a07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original two-branch library membership overlap scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  Two library branches each keep a sorted roster of the member ID numbers that
+  checked in today. Neither roster repeats an ID. Management wants the IDs that
+  visited both branches.
+
+  Write `shared_members(data)` where `data` is a dict with keys `first` and
+  `second`, each a list of distinct integers sorted in ascending order. Return the
+  IDs present in both lists, in ascending order.
+starter_code: |
+  def shared_members(data):
+      return []
+function_name: shared_members
+input_mode: function
+solution_sketch: Walk a pointer through each sorted roster, recording matches and advancing the smaller side otherwise.
+sample_solution: |
+  def shared_members(data):
+      first = data["first"]
+      second = data["second"]
+      i = 0
+      j = 0
+      shared = []
+      while i < len(first) and j < len(second):
+          if first[i] == second[j]:
+              shared.append(first[i])
+              i += 1
+              j += 1
+          elif first[i] < second[j]:
+              i += 1
+          else:
+              j += 1
+      return shared
+hints:
+  - level: 1
+    text: Both rosters are sorted, so compare the current ID from each side.
+  - level: 2
+    text: Equal IDs are a match; otherwise the smaller one can never match later, so skip it.
+  - level: 3
+    text: On a match record it and advance both pointers; otherwise advance the pointer at the smaller ID.
+tests:
+  public:
+    - name: some_overlap
+      input: {first: [1, 3, 5, 7], second: [3, 4, 5, 6]}
+      expected: [3, 5]
+    - name: no_overlap
+      input: {first: [1, 2], second: [3, 4]}
+      expected: []
+    - name: full_overlap
+      input: {first: [2, 4], second: [2, 4]}
+      expected: [2, 4]
+  validation:
+    - name: empty_first
+      input: {first: [], second: [1, 2]}
+      expected: []
+    - name: one_common
+      input: {first: [10, 20, 30], second: [5, 20, 40]}
+      expected: [20]
+    - name: subset
+      input: {first: [1, 2, 3, 4], second: [2, 4]}
+      expected: [2, 4]
+explanation_markdown: |
+  Because both rosters are sorted, a single synchronized walk finds the
+  intersection in O(n + m) time. Matching IDs are collected and both pointers move
+  on; when the values differ, the smaller ID cannot appear again on that side, so
+  only that pointer advances. This avoids building any lookup structure.
+common_mistakes:
+  - Advancing both pointers when the IDs differ and skipping over a match.
+  - Using nested loops that compare every ID against every other.
+  - Assuming both rosters are the same length.

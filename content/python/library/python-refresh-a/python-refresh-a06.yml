@@ -1,0 +1,77 @@
+id: exercise.library.python_refresh.a06
+kind: exercise
+version: 1
+language: python
+title: Neighborhood Vote Outcome
+slug: python-refresh-a06
+difficulty: easy
+concepts:
+  - python.conditionals
+prerequisites:
+  - python.functions
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh.a06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original neighborhood-association vote scenario, prompt, tests, and explanation.
+prompt_markdown: |
+  A neighborhood association votes on a proposal. Write `vote_outcome(tally)`
+  where `tally` is a dict with keys `"in_favor"` and `"against"`, each holding a
+  count of votes. Return `"passed"` when there are strictly more votes in favor,
+  `"failed"` when there are strictly more against, and `"tie"` when the two counts
+  are equal.
+starter_code: |
+  def vote_outcome(tally):
+      return "tie"
+function_name: vote_outcome
+input_mode: function
+solution_sketch: Compare the two counts and return the matching outcome string.
+sample_solution: |
+  def vote_outcome(tally):
+      in_favor = tally["in_favor"]
+      against = tally["against"]
+      if in_favor > against:
+          return "passed"
+      if against > in_favor:
+          return "failed"
+      return "tie"
+hints:
+  - level: 1
+    text: Pull the two counts out of the dict, then compare them.
+  - level: 2
+    text: There are three outcomes, so you need to distinguish greater, less, and equal.
+  - level: 3
+    text: After checking in_favor > against and against > in_favor, the only case left is a tie.
+tests:
+  public:
+    - name: clear_pass
+      input: {in_favor: 5, against: 3}
+      expected: "passed"
+    - name: clear_fail
+      input: {in_favor: 2, against: 4}
+      expected: "failed"
+    - name: even
+      input: {in_favor: 3, against: 3}
+      expected: "tie"
+  validation:
+    - name: no_votes
+      input: {in_favor: 0, against: 0}
+      expected: "tie"
+    - name: unanimous
+      input: {in_favor: 10, against: 0}
+      expected: "passed"
+    - name: narrow_fail
+      input: {in_favor: 1, against: 2}
+      expected: "failed"
+explanation_markdown: |
+  Two strict comparisons split the possibilities into three. If neither
+  `in_favor > against` nor `against > in_favor` is true, the counts must be equal,
+  so the final `return "tie"` needs no condition of its own.
+common_mistakes:
+  - Using >= somewhere, which reports a tie as a pass or fail.
+  - Handling only pass and fail and forgetting the tie case.
+  - Reading the wrong key from the dict.

@@ -1,0 +1,83 @@
+id: exercise.library.recursion_backtracking.a03
+kind: exercise
+version: 1
+language: python
+title: Loyalty Card Digit Root
+slug: recursion-backtracking-a03
+difficulty: easy
+concepts:
+  - patterns.recursion
+prerequisites:
+  - python.functions
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.recursion_backtracking.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original cafe loyalty-card scenario that collapses a card number to a single check digit by repeated recursive digit sums.
+prompt_markdown: |
+  A cafe turns each loyalty card number into a single "check digit" by adding
+  up its digits, then adding the digits of that result, and repeating until only
+  one digit is left. Write `digit_root(number)` that returns this final single
+  digit for a non-negative integer `number`. If `number` is already a single
+  digit, return it unchanged.
+starter_code: |
+  def digit_root(number):
+      return 0
+function_name: digit_root
+input_mode: function
+solution_sketch: If the number is below 10 return it; otherwise sum its digits and recurse on that smaller sum.
+sample_solution: |
+  def digit_root(number):
+      if number < 10:
+          return number
+      digit_sum = 0
+      n = number
+      while n > 0:
+          digit_sum += n % 10
+          n //= 10
+      return digit_root(digit_sum)
+hints:
+  - level: 1
+    text: A number under 10 is already the answer, so that is your stopping point.
+  - level: 2
+    text: Add up the digits once, then feed that smaller total back through the same process.
+  - level: 3
+    text: Compute the digit sum with % 10 and // 10, then return digit_root(digit_sum).
+tests:
+  public:
+    - name: single_digit
+      input: 7
+      expected: 7
+    - name: two_digits
+      input: 38
+      expected: 2
+    - name: rolls_to_nine
+      input: 99
+      expected: 9
+  validation:
+    - name: zero
+      input: 0
+      expected: 0
+    - name: five_digits
+      input: 12345
+      expected: 6
+    - name: all_nines
+      input: 9999
+      expected: 9
+    - name: teen
+      input: 10
+      expected: 1
+explanation_markdown: |
+  Each pass replaces the number with the sum of its digits, which is always much
+  smaller, so the value shrinks quickly toward a single digit. The base case
+  (`number < 10`) stops the recursion and returns the result. Because summing
+  digits never increases the value, the recursion is guaranteed to terminate.
+  38 becomes 11 becomes 2; 12345 becomes 15 becomes 6.
+common_mistakes:
+  - Summing the digits only once and returning that instead of recursing until one digit remains.
+  - Using a stopping condition of number == 0, which skips non-zero single digits.
+  - Forgetting that 0 is already a single digit and should be returned as-is.

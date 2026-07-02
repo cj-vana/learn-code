@@ -1,0 +1,83 @@
+id: exercise.library.debugging.a08
+kind: exercise
+version: 1
+language: python
+title: Merge Two Stock Counts
+slug: debugging-a08
+difficulty: medium
+concepts:
+  - python.debugging
+  - python.dictionaries
+  - patterns.hash_map_counting
+prerequisites:
+  - python.functions
+  - python.loops
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.debugging.a08
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original two-warehouse inventory scenario centered on the overwrite-instead-of-sum merge bug.
+prompt_markdown: |
+  Two warehouses each keep a stock count of parts. Write `merge_counts(data)`
+  where `data` is a dict with keys `first` and `second`, each a dict mapping a
+  part name to its count. Return one dict with the combined counts: a part in
+  both warehouses should have its counts added together.
+
+  The bug to avoid: updating the merged dict with `merged[key] = value`
+  overwrites the running total instead of adding to it, so shared parts lose the
+  first warehouse's count.
+starter_code: |
+  def merge_counts(data):
+      return {}
+function_name: merge_counts
+input_mode: function
+solution_sketch: Accumulate each dict's entries with get(key, 0) + value so shared keys sum.
+sample_solution: |
+  def merge_counts(data):
+      merged = {}
+      for source in (data["first"], data["second"]):
+          for key, value in source.items():
+              merged[key] = merged.get(key, 0) + value
+      return merged
+hints:
+  - level: 1
+    text: A part present in both warehouses must have its counts combined.
+  - level: 2
+    text: Assigning merged[key] = value throws away any count already there.
+  - level: 3
+    text: Use merged[key] = merged.get(key, 0) + value for every entry.
+tests:
+  public:
+    - name: overlap
+      input: {first: {a: 2, b: 1}, second: {b: 3, c: 4}}
+      expected: {a: 2, b: 4, c: 4}
+    - name: both_empty
+      input: {first: {}, second: {}}
+      expected: {}
+    - name: one_empty
+      input: {first: {x: 5}, second: {}}
+      expected: {x: 5}
+  validation:
+    - name: shared_key
+      input: {first: {red: 1}, second: {red: 1, blue: 2}}
+      expected: {red: 2, blue: 2}
+    - name: zero_counts
+      input: {first: {a: 0}, second: {a: 0}}
+      expected: {a: 0}
+    - name: three_parts
+      input: {first: {p: 3, q: 2}, second: {q: 5, r: 1}}
+      expected: {p: 3, q: 7, r: 1}
+explanation_markdown: |
+  Merging counts is an accumulation problem. Iterating over both source dicts and
+  writing `merged[key] = merged.get(key, 0) + value` starts each key at 0 the
+  first time it appears and adds to the existing total afterward. Plain
+  assignment would replace a shared part's total with only the second
+  warehouse's count, silently dropping stock.
+common_mistakes:
+  - Overwriting with merged[key] = value instead of adding.
+  - Using dict.update, which replaces shared counts rather than summing them.
+  - Missing parts that appear in only one of the two warehouses.

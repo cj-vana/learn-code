@@ -1,0 +1,82 @@
+id: exercise.library.loops_lists_strings.a07
+kind: exercise
+version: 1
+language: python
+title: Longest Sunny Streak
+slug: loops-lists-strings-a07
+difficulty: medium
+concepts:
+  - python.strings
+  - python.loops
+  - patterns.running_total
+prerequisites:
+  - python.functions
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings.a07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original weather-log consecutive-run scenario, prompt, and tests.
+prompt_markdown: |
+  A weather station logs each day as `'S'` (sunny) or `'R'` (rainy) in one
+  string, oldest day first. Write `longest_sunny_streak(log)` returning the
+  length of the longest run of consecutive `'S'` characters. A log with no sunny
+  days (or an empty log) returns 0.
+starter_code: |
+  def longest_sunny_streak(log):
+      return 0
+function_name: longest_sunny_streak
+input_mode: function
+solution_sketch: Track the current run of 'S' and the best run seen, resetting on 'R'.
+sample_solution: |
+  def longest_sunny_streak(log):
+      best = 0
+      current = 0
+      for day in log:
+          if day == 'S':
+              current += 1
+              if current > best:
+                  best = current
+          else:
+              current = 0
+      return best
+hints:
+  - level: 1
+    text: Keep two counters, one for the current streak and one for the best streak.
+  - level: 2
+    text: Each sunny day extends the current streak; a rainy day resets it to 0.
+  - level: 3
+    text: After extending the current streak, update best whenever current exceeds it.
+tests:
+  public:
+    - name: empty
+      input: ''
+      expected: 0
+    - name: all_rainy
+      input: 'RRRR'
+      expected: 0
+    - name: one_streak
+      input: 'RSSSR'
+      expected: 3
+  validation:
+    - name: streak_at_end
+      input: 'SRSSSS'
+      expected: 4
+    - name: two_streaks
+      input: 'SSRSSS'
+      expected: 3
+    - name: single_sunny
+      input: 'S'
+      expected: 1
+explanation_markdown: |
+  A `current` counter grows on each sunny day and resets to 0 on a rainy day,
+  measuring the length of the run ending at the current position. Recording the
+  largest `current` ever seen in `best` captures the longest streak, and one
+  pass over the string makes it O(n).
+common_mistakes:
+  - Counting every 'S' instead of only consecutive ones.
+  - Forgetting to reset the current streak on a rainy day.
+  - Updating best only after the loop, missing a streak that ends mid-string.

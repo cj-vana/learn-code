@@ -1,0 +1,88 @@
+id: exercise.library.loops_lists_strings.b05
+kind: exercise
+version: 1
+language: python
+title: Group Shelf Codes
+slug: loops-lists-strings-b05
+difficulty: easy
+concepts:
+  - python.strings
+  - python.lists
+  - python.dictionaries
+prerequisites:
+  - python.functions
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings.b05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original warehouse shelf-code grouping scenario, prompt, tests, and explanation.
+prompt_markdown: |
+  A warehouse organizes shelf codes into aisles by their first character. Write
+  `group_by_prefix(codes)` returning a dict that maps each first character to the
+  list of codes beginning with it, keeping the codes in their original order. Each
+  code is a non-empty string. An empty list returns an empty dict.
+starter_code: |
+  def group_by_prefix(codes):
+      return {}
+function_name: group_by_prefix
+input_mode: function
+solution_sketch: Use each code's first character as a dict key and append the code to that key's list.
+sample_solution: |
+  def group_by_prefix(codes):
+      groups = {}
+      for code in codes:
+          key = code[0]
+          if key not in groups:
+              groups[key] = []
+          groups[key].append(code)
+      return groups
+hints:
+  - level: 1
+    text: The aisle for a code is decided by code[0].
+  - level: 2
+    text: A dict can map each first character to a list of matching codes.
+  - level: 3
+    text: Create an empty list the first time you see a key, then append.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: {}
+    - name: single
+      input: [A12]
+      expected:
+        A: [A12]
+    - name: two_aisles
+      input: [A1, B2, A3]
+      expected:
+        A: [A1, A3]
+        B: [B2]
+  validation:
+    - name: mixed
+      input: [c9, c8, d1]
+      expected:
+        c: [c9, c8]
+        d: [d1]
+    - name: all_same
+      input: [x1, x2, x3]
+      expected:
+        x: [x1, x2, x3]
+    - name: all_distinct
+      input: [p, q, r]
+      expected:
+        p: [p]
+        q: [q]
+        r: [r]
+explanation_markdown: |
+  The first character of each code names its group. When a character appears for
+  the first time, start a new empty list under that key; otherwise append to the
+  existing list. Appending in scan order preserves the original ordering within
+  each group.
+common_mistakes:
+  - Overwriting a group instead of appending to it.
+  - Forgetting to create the list before the first append.
+  - Assuming codes are already sorted by their first character.

@@ -1,0 +1,84 @@
+id: exercise.library.python_refresh.b03
+kind: exercise
+version: 1
+language: python
+title: Pack Eggs Into Cartons
+slug: python-refresh-b03
+difficulty: easy
+concepts:
+  - python.operators
+  - python.functions
+prerequisites:
+  - python.variables
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh.b03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original egg-packing scenario using integer division and remainder on cartons of twelve.
+prompt_markdown: |
+  A farm packs eggs into cartons that each hold exactly 12 eggs. Any eggs
+  that cannot fill a whole carton are left loose.
+
+  Write `pack_eggs(total)` that takes the total number of eggs as a
+  non-negative integer and returns a dict with two keys:
+
+  - `"full_cartons"`: how many complete cartons of 12 you can fill
+  - `"loose_eggs"`: how many eggs are left over
+starter_code: |
+  def pack_eggs(total):
+      return {"full_cartons": 0, "loose_eggs": 0}
+function_name: pack_eggs
+input_mode: function
+solution_sketch: Integer-divide by 12 for full cartons and take the remainder for loose eggs.
+sample_solution: |
+  def pack_eggs(total):
+      return {
+          "full_cartons": total // 12,
+          "loose_eggs": total % 12,
+      }
+hints:
+  - level: 1
+    text: One operator gives whole cartons and another gives the leftovers.
+  - level: 2
+    text: Floor division // counts how many complete groups of 12 fit.
+  - level: 3
+    text: The remainder operator % gives the eggs that do not fill a carton.
+tests:
+  public:
+    - name: exact_one_carton
+      input: 12
+      expected: {full_cartons: 1, loose_eggs: 0}
+    - name: some_loose
+      input: 30
+      expected: {full_cartons: 2, loose_eggs: 6}
+    - name: none
+      input: 0
+      expected: {full_cartons: 0, loose_eggs: 0}
+  validation:
+    - name: under_a_carton
+      input: 7
+      expected: {full_cartons: 0, loose_eggs: 7}
+    - name: many
+      input: 100
+      expected: {full_cartons: 8, loose_eggs: 4}
+    - name: exact_three
+      input: 36
+      expected: {full_cartons: 3, loose_eggs: 0}
+    - name: eleven_loose
+      input: 11
+      expected: {full_cartons: 0, loose_eggs: 11}
+    - name: one_over
+      input: 13
+      expected: {full_cartons: 1, loose_eggs: 1}
+explanation_markdown: |
+  Splitting a count into equal groups is exactly what floor division and the
+  remainder do together. `total // 12` counts complete cartons, and
+  `total % 12` reports whatever is left, which is always between 0 and 11.
+common_mistakes:
+  - Using regular division / and getting a float instead of a whole count.
+  - Swapping the roles of // and % in the two keys.
+  - Forgetting that the remainder can never reach 12.

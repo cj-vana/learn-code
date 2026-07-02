@@ -1,0 +1,77 @@
+id: exercise.library.loops_lists_strings.a04
+kind: exercise
+version: 1
+language: python
+title: Longest Practiced Word
+slug: loops-lists-strings-a04
+difficulty: easy
+concepts:
+  - python.lists
+  - python.strings
+  - python.loops
+prerequisites:
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original spelling-club longest-word scenario, prompt, and tests.
+prompt_markdown: |
+  A spelling club lists the words practiced during a session. Write
+  `longest_word(words)` returning the longest word in the list. If two or more
+  words tie for the longest length, return the first one that reaches that
+  length. An empty list returns the empty string `''`.
+starter_code: |
+  def longest_word(words):
+      return ''
+function_name: longest_word
+input_mode: function
+solution_sketch: Track the best word so far, replacing it only on a strictly longer word.
+sample_solution: |
+  def longest_word(words):
+      longest = ''
+      for word in words:
+          if len(word) > len(longest):
+              longest = word
+      return longest
+hints:
+  - level: 1
+    text: Remember the best word seen so far while you loop.
+  - level: 2
+    text: Start with the empty string, whose length is 0.
+  - level: 3
+    text: Replace the best word only when the new word is strictly longer, so ties keep the earlier word.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: ''
+    - name: single
+      input: ['garden']
+      expected: 'garden'
+    - name: clear_winner
+      input: ['cat', 'hippo', 'ox']
+      expected: 'hippo'
+  validation:
+    - name: tie_takes_first
+      input: ['tree', 'bush', 'fern']
+      expected: 'tree'
+    - name: later_longer
+      input: ['a', 'bb', 'cccc', 'ddd']
+      expected: 'cccc'
+    - name: empty_strings
+      input: ['', '', 'x']
+      expected: 'x'
+explanation_markdown: |
+  A single pass keeps the longest word found so far. Comparing with strictly
+  greater-than (`>`) means a later word of equal length never replaces an
+  earlier one, so ties naturally resolve to the first word that reached the
+  maximum length. Starting from `''` handles the empty-list case for free.
+common_mistakes:
+  - Using >= so a tie returns the last matching word instead of the first.
+  - Initializing with words[0] and crashing on an empty list.
+  - Comparing the words themselves instead of their lengths.

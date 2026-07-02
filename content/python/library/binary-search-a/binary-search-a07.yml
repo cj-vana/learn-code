@@ -1,0 +1,91 @@
+id: exercise.library.binary_search.a07
+kind: exercise
+version: 1
+language: python
+title: Largest Square Garden Bed
+slug: binary-search-a07
+difficulty: medium
+concepts:
+  - patterns.binary_search
+  - concepts.big_o
+prerequisites: []
+estimated_time_minutes: 18
+review_status: published
+source_status: original
+input_mode: function
+provenance:
+  brief_id: library.binary_search.a07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original landscaping square-bed sizing scenario solved by binary search on the answer.
+prompt_markdown: |
+  A landscaper has `area` square paving tiles and wants to lay them into the
+  largest possible solid square bed. Write `largest_square_side(area)` that
+  returns the largest integer side length `s` such that `s * s` is at most
+  `area`.
+
+  `area` is a non-negative integer. Solve it with binary search on the side
+  length rather than calling a square-root function.
+starter_code: |
+  def largest_square_side(area):
+      return 0
+function_name: largest_square_side
+solution_sketch: Binary search the side length, keeping the largest one whose square fits within area.
+sample_solution: |
+  def largest_square_side(area):
+      if area < 1:
+          return 0
+      lo, hi = 1, area
+      best = 0
+      while lo <= hi:
+          mid = (lo + hi) // 2
+          if mid * mid <= area:
+              best = mid
+              lo = mid + 1
+          else:
+              hi = mid - 1
+      return best
+hints:
+  - level: 1
+    text: A larger side always needs more tiles, so the "does it fit" test is monotonic.
+  - level: 2
+    text: Search for the biggest side whose square does not exceed area.
+  - level: 3
+    text: When mid * mid fits, remember mid and try a larger side; otherwise shrink the upper bound.
+tests:
+  public:
+    - name: perfect
+      input: 49
+      expected: 7
+    - name: zero
+      input: 0
+      expected: 0
+    - name: non_perfect
+      input: 50
+      expected: 7
+  validation:
+    - name: one
+      input: 1
+      expected: 1
+    - name: two
+      input: 2
+      expected: 1
+    - name: big
+      input: 1000000
+      expected: 1000
+    - name: almost
+      input: 99
+      expected: 9
+    - name: between
+      input: 26
+      expected: 5
+explanation_markdown: |
+  The predicate "a side of length s fits" is false for all s past some point and
+  true before it, so the answer is monotonic and binary search applies. Each step
+  tests the middle side; if its square fits, we record it and reach higher,
+  otherwise we drop down. This runs in O(log area) multiplications.
+common_mistakes:
+  - Returning mid at the end instead of the last side that actually fit.
+  - Forgetting the area == 0 case, where the largest side is 0.
+  - Using mid * mid < area (strict) and rejecting perfect squares like 49.

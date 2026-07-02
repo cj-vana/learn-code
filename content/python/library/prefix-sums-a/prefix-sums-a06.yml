@@ -1,0 +1,88 @@
+id: exercise.library.prefix_sums.a06
+kind: exercise
+version: 1
+language: python
+title: Trivia Night Lead Tracker
+slug: prefix-sums-a06
+difficulty: easy
+concepts:
+  - patterns.prefix_sums
+prerequisites:
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.prefix_sums.a06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original two-team trivia running-score scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  Two teams play a trivia night made up of several rounds. After each round you
+  want to know which team is ahead on cumulative points.
+
+  Write `lead_after_rounds(data)` where `data` is a dict with keys `team_a` and
+  `team_b`, two equal-length lists of the points each team scored per round.
+  Return a list with one entry per round: `"A"` if team A's running total is
+  higher after that round, `"B"` if team B's is higher, or `"tie"` if they are
+  level.
+starter_code: |
+  def lead_after_rounds(data):
+      return []
+function_name: lead_after_rounds
+input_mode: function
+solution_sketch: Carry a running total for each team and compare them after every round.
+sample_solution: |
+  def lead_after_rounds(data):
+      team_a = data["team_a"]
+      team_b = data["team_b"]
+      result = []
+      sum_a = 0
+      sum_b = 0
+      for i in range(len(team_a)):
+          sum_a += team_a[i]
+          sum_b += team_b[i]
+          if sum_a > sum_b:
+              result.append("A")
+          elif sum_b > sum_a:
+              result.append("B")
+          else:
+              result.append("tie")
+      return result
+hints:
+  - level: 1
+    text: Keep two running totals, one per team, updated together each round.
+  - level: 2
+    text: After adding a round's points, compare the two prefix sums to decide the leader.
+  - level: 3
+    text: Append "A", "B", or "tie" depending on which running total is larger.
+tests:
+  public:
+    - name: lead_changes
+      input: {team_a: [10, 5], team_b: [8, 8]}
+      expected: [A, B]
+    - name: single_tie
+      input: {team_a: [5], team_b: [5]}
+      expected: [tie]
+    - name: no_rounds
+      input: {team_a: [], team_b: []}
+      expected: []
+  validation:
+    - name: b_pulls_ahead
+      input: {team_a: [3, 3, 3], team_b: [1, 10, 0]}
+      expected: [A, B, B]
+    - name: always_level
+      input: {team_a: [0, 0], team_b: [0, 0]}
+      expected: [tie, tie]
+    - name: catches_up_to_tie
+      input: {team_a: [7, 0, 0], team_b: [2, 5, 0]}
+      expected: [A, tie, tie]
+explanation_markdown: |
+  Each team's score line is a prefix sum, and comparing the two prefixes after
+  every round reports the leader in a single O(n) pass. Because both totals update
+  in lockstep, the standings never fall out of sync with the rounds played.
+common_mistakes:
+  - Comparing the per-round points instead of the cumulative totals.
+  - Forgetting the tie case and only handling strict A-versus-B wins.
+  - Building only one running total and comparing it against a raw round score.

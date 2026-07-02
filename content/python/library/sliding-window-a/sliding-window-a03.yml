@@ -1,0 +1,85 @@
+id: exercise.library.sliding_window.a03
+kind: exercise
+version: 1
+language: python
+title: Count Busy Bakery Stretches
+slug: sliding-window-a03
+difficulty: easy
+concepts:
+  - patterns.sliding_window
+  - patterns.running_total
+  - python.lists
+prerequisites:
+  - python.functions
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sliding_window.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original bakery daily-loaf-sales scenario counting fixed windows above a target.
+prompt_markdown: |
+  A neighborhood bakery records how many loaves it sells each day. The owner
+  wants to know how many `k`-day stretches were unusually busy. Write
+  `count_busy_stretches(data)` returning how many windows of `k` consecutive days
+  have a total strictly greater than `target`.
+
+  `data` is a dict: `{"sales": [...], "k": k, "target": target}`. You may assume
+  `k` is at least 1 and no larger than the number of days.
+starter_code: |
+  def count_busy_stretches(data):
+      return 0
+function_name: count_busy_stretches
+input_mode: function
+solution_sketch: Slide a running k-day sum across the list and count how often it exceeds the target.
+sample_solution: |
+  def count_busy_stretches(data):
+      sales = data["sales"]
+      k = data["k"]
+      target = data["target"]
+      window = sum(sales[:k])
+      count = 1 if window > target else 0
+      for i in range(k, len(sales)):
+          window += sales[i] - sales[i - k]
+          if window > target:
+              count += 1
+      return count
+hints:
+  - level: 1
+    text: Every window of k days has a total; you are counting how many of those totals beat the target.
+  - level: 2
+    text: Keep the running k-day sum instead of re-summing each window.
+  - level: 3
+    text: Use strictly greater than (>), so a total exactly equal to the target does not count.
+tests:
+  public:
+    - name: none_qualify
+      input: {sales: [1, 1, 1, 1], k: 2, target: 5}
+      expected: 0
+    - name: some
+      input: {sales: [3, 4, 1, 5], k: 2, target: 6}
+      expected: 1
+    - name: all_single_days
+      input: {sales: [10, 10, 10], k: 1, target: 5}
+      expected: 3
+  validation:
+    - name: boundary_excluded
+      input: {sales: [4, 4, 4], k: 2, target: 8}
+      expected: 0
+    - name: every_window
+      input: {sales: [2, 9, 2, 9, 2], k: 2, target: 10}
+      expected: 4
+    - name: full_length
+      input: {sales: [1, 2, 3, 4], k: 4, target: 9}
+      expected: 1
+explanation_markdown: |
+  The window total is maintained incrementally, so each of the O(n) windows is
+  checked in constant time. The comparison uses `>` rather than `>=`, so a stretch
+  whose total exactly equals the target is treated as ordinary rather than busy.
+  The first window is counted before the loop, then every slid window is checked.
+common_mistakes:
+  - Using >= and accidentally counting stretches that only tie the target.
+  - Forgetting to check the very first window before sliding.
+  - Re-summing each window from scratch instead of updating the running total.

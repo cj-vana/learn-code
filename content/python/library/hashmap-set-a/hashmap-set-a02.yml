@@ -1,0 +1,78 @@
+id: exercise.library.hashmap_set.a02
+kind: exercise
+version: 1
+language: python
+title: First Solo Parcel
+slug: hashmap-set-a02
+difficulty: easy
+concepts:
+  - patterns.hash_map_counting
+prerequisites:
+  - python.dictionaries
+  - python.loops
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.hashmap_set.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original conveyor-belt parcel-scanning scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A sorting belt scans parcel codes in the order they pass a sensor. Write
+  `first_unique(codes)` returning the first code that appears exactly once in
+  the whole list.
+
+  If every code repeats, or the list is empty, return the empty string `""`.
+starter_code: |
+  def first_unique(codes):
+      return ""
+function_name: first_unique
+input_mode: function
+solution_sketch: Count every code first, then scan again and return the first with count one.
+sample_solution: |
+  def first_unique(codes):
+      counts = {}
+      for code in codes:
+          counts[code] = counts.get(code, 0) + 1
+      for code in codes:
+          if counts[code] == 1:
+              return code
+      return ""
+hints:
+  - level: 1
+    text: You cannot know a code is unique until you have seen the whole list.
+  - level: 2
+    text: Make one pass to count occurrences, then a second pass in original order.
+  - level: 3
+    text: During the second pass, return the first code whose count equals 1.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: ""
+    - name: single
+      input: [ax9]
+      expected: ax9
+    - name: skip_repeat
+      input: [k1, k1, k2]
+      expected: k2
+  validation:
+    - name: unique_in_middle
+      input: [pp, qq, pp, rr, qq]
+      expected: rr
+    - name: all_repeat
+      input: [zz, zz, ww, ww]
+      expected: ""
+    - name: leading_unique
+      input: [solo, dup, dup]
+      expected: solo
+explanation_markdown: |
+  A single dict pass records how often each code appears. Scanning the original
+  list a second time preserves arrival order, so the first code with a count of
+  1 is the answer. The whole thing runs in O(n) time.
+common_mistakes:
+  - Returning a code the first time it is seen, before knowing whether it repeats later.
+  - Iterating the dict instead of the original list, which can lose scan order.
+  - Forgetting the fallback "" when no code is unique.

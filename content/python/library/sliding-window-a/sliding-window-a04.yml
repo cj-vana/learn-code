@@ -1,0 +1,87 @@
+id: exercise.library.sliding_window.a04
+kind: exercise
+version: 1
+language: python
+title: Loudest Vowel Run in a Chant
+slug: sliding-window-a04
+difficulty: easy
+concepts:
+  - patterns.sliding_window
+  - python.strings
+prerequisites:
+  - python.functions
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sliding_window.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original choir-chant scenario counting maximum vowels in a fixed-size character window.
+prompt_markdown: |
+  A choir director writes a chant as a single lowercase string, one letter per
+  beat. To find the most singable stretch, write `max_vowels_in_window(data)`
+  returning the greatest number of vowels (`a`, `e`, `i`, `o`, `u`) found in any
+  `k` consecutive letters.
+
+  `data` is a dict: `{"chant": "...", "k": k}`. The chant is all lowercase, and
+  `k` is at least 1 and no larger than the chant's length.
+starter_code: |
+  def max_vowels_in_window(data):
+      return 0
+function_name: max_vowels_in_window
+input_mode: function
+solution_sketch: Count vowels in the first window, then slide by adjusting for the entering and leaving letters.
+sample_solution: |
+  def max_vowels_in_window(data):
+      chant = data["chant"]
+      k = data["k"]
+      vowels = set("aeiou")
+      count = sum(1 for c in chant[:k] if c in vowels)
+      best = count
+      for i in range(k, len(chant)):
+          if chant[i] in vowels:
+              count += 1
+          if chant[i - k] in vowels:
+              count -= 1
+          if count > best:
+              best = count
+      return best
+hints:
+  - level: 1
+    text: Track how many vowels are inside the current window rather than recounting each time.
+  - level: 2
+    text: A set of vowels lets you test membership quickly.
+  - level: 3
+    text: When sliding, add 1 if the entering letter is a vowel and subtract 1 if the leaving letter was.
+tests:
+  public:
+    - name: all_vowels
+      input: {chant: 'aeiou', k: 2}
+      expected: 2
+    - name: no_vowels
+      input: {chant: 'bcdfg', k: 3}
+      expected: 0
+    - name: mixed
+      input: {chant: 'abcde', k: 2}
+      expected: 1
+  validation:
+    - name: cluster
+      input: {chant: 'xaeiox', k: 3}
+      expected: 3
+    - name: full_length
+      input: {chant: 'queue', k: 5}
+      expected: 4
+    - name: k_one
+      input: {chant: 'sky', k: 1}
+      expected: 0
+explanation_markdown: |
+  Keeping a running vowel count for the current window turns each slide into two
+  constant-time checks: was the entering letter a vowel, and was the leaving
+  letter a vowel? That makes the whole scan O(n). Because only the five lowercase
+  vowels are in the set, consonants and any uppercase letters are ignored.
+common_mistakes:
+  - Recounting vowels across the whole window on every step.
+  - Adjusting for the entering letter but forgetting the one that leaves the window.
+  - Treating y or uppercase letters as vowels.

@@ -1,0 +1,76 @@
+id: exercise.library.brute_force_bigo.a02
+kind: exercise
+version: 1
+language: python
+title: Round-Robin Matchup Count
+slug: brute-force-bigo-a02
+difficulty: easy
+concepts:
+  - concepts.big_o
+prerequisites: []
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.brute_force_bigo.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original curling-league scheduling scenario that turns a pairwise brute-force count into a closed formula.
+prompt_markdown: |
+  A neighborhood curling league plays a round-robin: every team plays every
+  other team exactly once. Write `count_matchups(team_count)` that returns how
+  many games are scheduled when there are `team_count` teams. This is the same
+  number of pairs a brute-force "compare every team with every other team" scan
+  would examine, so you can compute it directly instead of looping. With zero or
+  one team there are no games.
+starter_code: |
+  def count_matchups(team_count):
+      return 0
+function_name: count_matchups
+input_mode: function
+solution_sketch: Each unordered pair plays once, so the answer is team_count * (team_count - 1) // 2.
+sample_solution: |
+  def count_matchups(team_count):
+      return team_count * (team_count - 1) // 2
+hints:
+  - level: 1
+    text: Picture a grid of teams versus teams and count only the cells above the diagonal.
+  - level: 2
+    text: A double loop would run the inner check n * (n - 1) / 2 times for n teams.
+  - level: 3
+    text: Use integer division // by 2 so each unordered pair is counted once, not twice.
+tests:
+  public:
+    - name: none
+      input: 0
+      expected: 0
+    - name: one_team
+      input: 1
+      expected: 0
+    - name: four_teams
+      input: 4
+      expected: 6
+  validation:
+    - name: two_teams
+      input: 2
+      expected: 1
+    - name: five_teams
+      input: 5
+      expected: 10
+    - name: eight_teams
+      input: 8
+      expected: 28
+    - name: ten_teams
+      input: 10
+      expected: 45
+explanation_markdown: |
+  A brute-force pairing scan checks each unordered pair of teams once. For `n`
+  teams there are `n * (n - 1) / 2` such pairs, which is why nested-loop
+  algorithms over all pairs are O(n^2). Because the count follows a closed
+  formula, you can return it in constant O(1) time without any loop at all.
+  Integer division by 2 removes the double-counting of "A vs B" and "B vs A".
+common_mistakes:
+  - Returning n * n, which counts a team playing itself and both orderings.
+  - Using / instead of //, producing a float like 6.0 instead of 6.
+  - Forgetting that 0 and 1 teams yield 0 games.

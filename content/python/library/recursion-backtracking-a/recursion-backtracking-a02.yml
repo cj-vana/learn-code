@@ -1,0 +1,80 @@
+id: exercise.library.recursion_backtracking.a02
+kind: exercise
+version: 1
+language: python
+title: Rewind a Track Code
+slug: recursion-backtracking-a02
+difficulty: easy
+concepts:
+  - patterns.recursion
+  - python.strings
+  - python.slicing
+prerequisites:
+  - python.functions
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.recursion_backtracking.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original music-app track-code scenario that teaches string reversal through a shrinking recursive call rather than slicing tricks.
+prompt_markdown: |
+  A music app stores each song as a short `code` string, and a "rewind" feature
+  plays the characters back to front. Write `reverse_code(code)` that returns
+  the characters of `code` in reverse order, but build it recursively: peel off
+  one character per call instead of reversing the whole string at once. An empty
+  string returns an empty string.
+starter_code: |
+  def reverse_code(code):
+      return ""
+function_name: reverse_code
+input_mode: function
+solution_sketch: Return the last character joined to the recursive reversal of everything before it, stopping at length 0 or 1.
+sample_solution: |
+  def reverse_code(code):
+      if len(code) <= 1:
+          return code
+      return code[-1] + reverse_code(code[:-1])
+hints:
+  - level: 1
+    text: A one-character (or empty) string is already its own reverse.
+  - level: 2
+    text: The reverse of a string is its last character followed by the reverse of the rest.
+  - level: 3
+    text: Return code[-1] + reverse_code(code[:-1]) and let the base case handle length 0 or 1.
+tests:
+  public:
+    - name: empty
+      input: ""
+      expected: ""
+    - name: single
+      input: "q"
+      expected: "q"
+    - name: word
+      input: "orbit"
+      expected: "tibro"
+  validation:
+    - name: pair
+      input: "go"
+      expected: "og"
+    - name: digits
+      input: "12345"
+      expected: "54321"
+    - name: palindrome
+      input: "level"
+      expected: "level"
+    - name: mixed
+      input: "a1b2"
+      expected: "2b1a"
+explanation_markdown: |
+  The recursive definition of a reversal is short: the last character comes
+  first, and behind it sits the reversal of everything else. Each call handles
+  one character and hands the smaller remainder to the next call, so a string of
+  length `n` unwinds through `n` calls before the base case (length 0 or 1)
+  returns. The characters then reattach in reverse as the calls resolve.
+common_mistakes:
+  - Forgetting the base case, so the recursion never stops.
+  - Slicing the wrong end and shrinking the string on the side you already kept.
+  - Returning the recursive call without attaching the peeled-off character.

@@ -1,0 +1,86 @@
+id: exercise.library.python_refresh.b07
+kind: exercise
+version: 1
+language: python
+title: Parking Garage Fee
+slug: python-refresh-b07
+difficulty: medium
+concepts:
+  - python.conditionals
+  - python.operators
+prerequisites:
+  - python.functions
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh.b07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original parking-garage tariff with a flat first hour, per-hour steps, and a daily cap, priced in cents.
+prompt_markdown: |
+  A parking garage charges in whole cents like this:
+
+  - 0 hours parked costs 0
+  - the first hour costs 400
+  - each additional hour costs 250
+  - but the total is never more than a daily cap of 2000
+
+  Write `parking_fee(hours)` that takes the number of whole hours parked as a
+  non-negative integer and returns the fee in cents.
+starter_code: |
+  def parking_fee(hours):
+      return 0
+function_name: parking_fee
+input_mode: function
+solution_sketch: Handle zero, add the flat first hour to the per-hour steps, then clamp with the cap.
+sample_solution: |
+  def parking_fee(hours):
+      if hours <= 0:
+          return 0
+      fee = 400 + (hours - 1) * 250
+      return min(fee, 2000)
+hints:
+  - level: 1
+    text: Parking for no time at all is a special case worth handling first.
+  - level: 2
+    text: After the flat first hour, there are hours - 1 additional hours to charge.
+  - level: 3
+    text: Use min(fee, 2000) so the total never passes the daily cap.
+tests:
+  public:
+    - name: one_hour
+      input: 1
+      expected: 400
+    - name: three_hours
+      input: 3
+      expected: 900
+    - name: no_time
+      input: 0
+      expected: 0
+  validation:
+    - name: two_hours
+      input: 2
+      expected: 650
+    - name: five_hours
+      input: 5
+      expected: 1400
+    - name: just_under_cap
+      input: 7
+      expected: 1900
+    - name: reaches_cap
+      input: 8
+      expected: 2000
+    - name: all_day
+      input: 24
+      expected: 2000
+explanation_markdown: |
+  The fee has three layers. Zero hours is its own case. Otherwise the flat
+  400 covers the first hour and `(hours - 1) * 250` adds the rest. The daily
+  cap is enforced last with `min`, so any total above 2000 is pulled back
+  down to 2000; that first happens at 8 hours, where 2150 becomes 2000.
+common_mistakes:
+  - Charging 250 for every hour and forgetting the higher flat first hour.
+  - Multiplying by hours instead of hours - 1 for the additional hours.
+  - Leaving out the cap so long stays overcharge.

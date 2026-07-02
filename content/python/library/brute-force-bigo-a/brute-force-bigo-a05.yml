@@ -1,0 +1,83 @@
+id: exercise.library.brute_force_bigo.a05
+kind: exercise
+version: 1
+language: python
+title: Any Repeated Badge Number
+slug: brute-force-bigo-a05
+difficulty: easy
+concepts:
+  - patterns.brute_force
+  - concepts.big_o
+prerequisites:
+  - python.lists
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.brute_force_bigo.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original conference-badge duplicate check done with an explicit pairwise brute-force comparison.
+prompt_markdown: |
+  A conference desk scans attendee badge numbers into a list as people arrive.
+  Write `has_repeat_badge(badges)` that returns `True` if any badge number
+  appears more than once in the list, otherwise `False`. Solve it the
+  brute-force way: compare each badge against every later badge. An empty list
+  and a list with a single badge both return `False`.
+starter_code: |
+  def has_repeat_badge(badges):
+      return False
+function_name: has_repeat_badge
+input_mode: function
+solution_sketch: Compare every pair of positions with a nested loop and return True on the first equal pair.
+sample_solution: |
+  def has_repeat_badge(badges):
+      n = len(badges)
+      for i in range(n):
+          for j in range(i + 1, n):
+              if badges[i] == badges[j]:
+                  return True
+      return False
+hints:
+  - level: 1
+    text: Compare each badge with the ones that come after it in the list.
+  - level: 2
+    text: An outer loop fixes one badge; an inner loop starting at i + 1 checks every later badge.
+  - level: 3
+    text: Return True as soon as two positions hold the same number; return False only after all pairs pass.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: false
+    - name: all_unique
+      input: [4, 9, 2, 7]
+      expected: false
+    - name: has_repeat
+      input: [4, 9, 2, 9]
+      expected: true
+  validation:
+    - name: adjacent_repeat
+      input: [1, 1, 3]
+      expected: true
+    - name: repeat_at_ends
+      input: [5, 2, 8, 5]
+      expected: true
+    - name: single_badge
+      input: [42]
+      expected: false
+    - name: all_same
+      input: [7, 7, 7]
+      expected: true
+explanation_markdown: |
+  Comparing every badge against every later badge examines all `n * (n - 1) / 2`
+  unordered pairs, so this brute-force duplicate check is O(n^2) in the worst
+  case. Starting the inner loop at `i + 1` avoids comparing a badge with itself
+  and avoids checking the same pair twice. Returning early on the first match
+  makes the best case fast, but the worst case (all unique) still touches every
+  pair.
+common_mistakes:
+  - Starting the inner loop at i, which compares a badge with itself and always reports a repeat.
+  - Returning False from inside the loop before all pairs are checked.
+  - Assuming the list is sorted so only neighbors need comparing.

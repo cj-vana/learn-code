@@ -1,0 +1,90 @@
+id: exercise.library.stack_queue_bfs.a04
+kind: exercise
+version: 1
+language: python
+title: Assembly-Line Postfix Panel
+slug: stack-queue-bfs-a04
+difficulty: easy
+concepts:
+  - patterns.stack
+  - python.lists
+prerequisites:
+  - python.lists
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.stack_queue_bfs.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original factory control-panel postfix evaluator scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A factory control panel runs instructions in postfix (reverse Polish) form. The
+  input is a list where each item is either an integer or one of the operator
+  strings `"+"`, `"-"`, or `"*"`. A number is placed on a stack. An operator
+  removes the top two numbers, applies itself with the **first-removed value on
+  the right**, and puts the result back.
+
+  Write `run_panel(tokens)` returning the single integer left on the stack after
+  all instructions run. An empty program returns `0`. Assume the input is valid.
+starter_code: |
+  def run_panel(tokens):
+      return 0
+function_name: run_panel
+input_mode: function
+solution_sketch: Push numbers on a stack; each operator pops two operands, combines them, and pushes the result.
+sample_solution: |
+  def run_panel(tokens):
+      stack = []
+      for token in tokens:
+          if token in ("+", "-", "*"):
+              right = stack.pop()
+              left = stack.pop()
+              if token == "+":
+                  stack.append(left + right)
+              elif token == "-":
+                  stack.append(left - right)
+              else:
+                  stack.append(left * right)
+          else:
+              stack.append(token)
+      return stack[-1] if stack else 0
+hints:
+  - level: 1
+    text: Numbers wait on a stack until an operator needs them.
+  - level: 2
+    text: On an operator, pop two values; the first one popped is the right-hand operand.
+  - level: 3
+    text: Push each computed result back so later operators can use it, then return the final top value.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: 0
+    - name: single_number
+      input: [7]
+      expected: 7
+    - name: add
+      input: [3, 4, "+"]
+      expected: 7
+  validation:
+    - name: grouped
+      input: [5, 1, 2, "+", "*"]
+      expected: 15
+    - name: subtraction_order
+      input: [10, 4, "-"]
+      expected: 6
+    - name: chained
+      input: [2, 3, "*", 4, "-"]
+      expected: 2
+explanation_markdown: |
+  Postfix removes the need for parentheses: operands are already in order on the
+  stack when an operator arrives. Popping the right operand first matters for
+  non-commutative operators like subtraction, which is why `[10, 4, "-"]` is `6`,
+  not `-6`. Pushing each result back lets later operators build on it, and the
+  final value on top is the answer. The scan is O(n).
+common_mistakes:
+  - Swapping the operands so subtraction and other order-sensitive ops come out backwards.
+  - Forgetting to push the intermediate result back onto the stack.
+  - Treating operator strings as numbers or vice versa.

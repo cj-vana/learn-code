@@ -1,0 +1,92 @@
+id: exercise.library.python_refresh.b01
+kind: exercise
+version: 1
+language: python
+title: Riverside Museum Admission
+slug: python-refresh-b01
+difficulty: easy
+concepts:
+  - python.conditionals
+  - python.functions
+prerequisites:
+  - python.variables
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh.b01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original riverside museum age-band pricing scenario with its own thresholds and tests.
+prompt_markdown: |
+  The Riverside Museum charges admission by age, in whole dollars:
+
+  - under 5 years old: free (0)
+  - 5 through 17: 8
+  - 18 through 64: 15
+  - 65 and older: 10
+
+  Write `museum_admission_price(age)` that takes a visitor's age as a
+  non-negative integer and returns the price they pay.
+starter_code: |
+  def museum_admission_price(age):
+      return 0
+function_name: museum_admission_price
+input_mode: function
+solution_sketch: Compare the age against each band boundary from youngest to oldest.
+sample_solution: |
+  def museum_admission_price(age):
+      if age < 5:
+          return 0
+      if age <= 17:
+          return 8
+      if age <= 64:
+          return 15
+      return 10
+hints:
+  - level: 1
+    text: There are four price bands, so you need to decide which one the age falls into.
+  - level: 2
+    text: Check the boundaries in order, starting with the youngest visitors.
+  - level: 3
+    text: Once age < 5 is ruled out, an age <= 17 must be a youth, and so on.
+tests:
+  public:
+    - name: toddler_free
+      input: 3
+      expected: 0
+    - name: youth_rate
+      input: 12
+      expected: 8
+    - name: adult_rate
+      input: 40
+      expected: 15
+  validation:
+    - name: senior_rate
+      input: 70
+      expected: 10
+    - name: newborn
+      input: 0
+      expected: 0
+    - name: youngest_youth
+      input: 5
+      expected: 8
+    - name: oldest_youth
+      input: 17
+      expected: 8
+    - name: youngest_adult
+      input: 18
+      expected: 15
+    - name: youngest_senior
+      input: 65
+      expected: 10
+explanation_markdown: |
+  Ordering the checks from youngest to oldest lets each `if` assume the
+  earlier bands were already ruled out. After confirming the visitor is at
+  least 5, an age of 17 or less must be a youth; after that, 64 or less must
+  be an adult, and everyone remaining is a senior.
+common_mistakes:
+  - Using overlapping ranges that let two bands both match.
+  - Getting a boundary wrong, such as charging a 17-year-old the adult price.
+  - Forgetting the free band for children under 5.

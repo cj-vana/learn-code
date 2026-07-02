@@ -1,0 +1,90 @@
+id: exercise.library.python_refresh.b08
+kind: exercise
+version: 1
+language: python
+title: Which Way Does the Elevator Go
+slug: python-refresh-b08
+difficulty: easy
+concepts:
+  - python.conditionals
+  - python.variables
+prerequisites:
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh.b08
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original elevator-direction scenario comparing a current floor to a target floor, including basement floors.
+prompt_markdown: |
+  An elevator needs to know which way to move. Given its current floor and a
+  requested target floor, it should report its direction.
+
+  Write `elevator_direction(request)` where `request` is a dict with keys:
+
+  - `"current"`: the floor the elevator is on, an integer (basements are negative)
+  - `"target"`: the floor that was requested, an integer
+
+  Return `"up"` if the target is higher than the current floor, `"down"` if
+  it is lower, and `"hold"` if they are the same.
+starter_code: |
+  def elevator_direction(request):
+      return "hold"
+function_name: elevator_direction
+input_mode: function
+solution_sketch: Compare target against current and return one of three direction strings.
+sample_solution: |
+  def elevator_direction(request):
+      current = request["current"]
+      target = request["target"]
+      if target > current:
+          return "up"
+      if target < current:
+          return "down"
+      return "hold"
+hints:
+  - level: 1
+    text: There are exactly three possible answers based on comparing two numbers.
+  - level: 2
+    text: Pull current and target out of the dict, then compare them.
+  - level: 3
+    text: If neither target > current nor target < current is true, they must be equal.
+tests:
+  public:
+    - name: going_up
+      input: {current: 2, target: 7}
+      expected: up
+    - name: going_down
+      input: {current: 9, target: 3}
+      expected: down
+    - name: staying_put
+      input: {current: 4, target: 4}
+      expected: hold
+  validation:
+    - name: down_into_basement
+      input: {current: 0, target: -2}
+      expected: down
+    - name: up_from_basement
+      input: {current: -1, target: 5}
+      expected: up
+    - name: top_floor_hold
+      input: {current: 10, target: 10}
+      expected: hold
+    - name: one_floor_up
+      input: {current: 3, target: 4}
+      expected: up
+    - name: one_floor_down
+      input: {current: 6, target: 5}
+      expected: down
+explanation_markdown: |
+  Direction is a straight comparison of two integers. Because negative floors
+  are ordinary numbers, the same `>` and `<` checks handle basements without
+  any special cases. When neither comparison is true, the floors are equal and
+  the elevator holds.
+common_mistakes:
+  - Forgetting the equal case, so a matching target returns nothing.
+  - Reversing the comparison and swapping up with down.
+  - Assuming floors are always positive and mishandling basements.

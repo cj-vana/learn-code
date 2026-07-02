@@ -1,0 +1,87 @@
+id: exercise.library.brute_force_bigo.a03
+kind: exercise
+version: 1
+language: python
+title: Bead Motif on a Bracelet
+slug: brute-force-bigo-a03
+difficulty: easy
+concepts:
+  - patterns.brute_force
+  - python.strings
+prerequisites:
+  - python.loops
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.brute_force_bigo.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original beaded-bracelet motif search with overlapping matches, prompt, and tests.
+prompt_markdown: |
+  A jewelry maker records a bracelet as a string of bead-color letters, such as
+  `'RGBRG'`. She wants to know how often a short repeating `motif` shows up.
+  Write `count_motif(data)` where `data` is a dict with keys `motif` and
+  `bracelet`. Return how many times `motif` appears in `bracelet`, counting
+  **overlapping** placements (so `'AA'` appears twice in `'AAA'`). An empty motif
+  returns 0, and a motif longer than the bracelet returns 0.
+starter_code: |
+  def count_motif(data):
+      return 0
+function_name: count_motif
+input_mode: function
+solution_sketch: Slide a window of the motif's length across the bracelet and count exact matches.
+sample_solution: |
+  def count_motif(data):
+      motif = data["motif"]
+      bracelet = data["bracelet"]
+      m = len(motif)
+      if m == 0:
+          return 0
+      total = 0
+      for start in range(len(bracelet) - m + 1):
+          if bracelet[start:start + m] == motif:
+              total += 1
+      return total
+hints:
+  - level: 1
+    text: Check every starting position where the motif could still fit inside the bracelet.
+  - level: 2
+    text: For each start index, slice out a chunk the same length as the motif and compare it.
+  - level: 3
+    text: Let start run from 0 up to len(bracelet) - len(motif); overlaps are counted because you never skip ahead.
+tests:
+  public:
+    - name: empty_bracelet
+      input: {motif: 'RG', bracelet: ''}
+      expected: 0
+    - name: two_matches
+      input: {motif: 'RG', bracelet: 'RGBRG'}
+      expected: 2
+    - name: no_match
+      input: {motif: 'YY', bracelet: 'RGBRGB'}
+      expected: 0
+  validation:
+    - name: overlapping
+      input: {motif: 'AA', bracelet: 'AAAA'}
+      expected: 3
+    - name: whole_bracelet
+      input: {motif: 'RGB', bracelet: 'RGB'}
+      expected: 1
+    - name: motif_too_long
+      input: {motif: 'RGBR', bracelet: 'RGB'}
+      expected: 0
+    - name: alternating
+      input: {motif: 'AB', bracelet: 'ABABAB'}
+      expected: 3
+explanation_markdown: |
+  The brute-force substring search tries every start position where the motif
+  could fit and compares that slice against the motif. Because the window slides
+  one bead at a time and never jumps, overlapping occurrences are all counted.
+  With a bracelet of length `n` and a motif of length `m`, there are about
+  `n - m + 1` windows and each comparison costs up to `m`, giving O(n * m) work.
+common_mistakes:
+  - Skipping ahead by the motif length and missing overlapping matches.
+  - Letting start run past len(bracelet) - len(motif), producing short slices that never match.
+  - Forgetting the empty-motif and too-long-motif cases.

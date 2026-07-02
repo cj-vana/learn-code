@@ -1,0 +1,108 @@
+id: exercise.library.recursion_backtracking.a07
+kind: exercise
+version: 1
+language: python
+title: Seat the Dinner Club Around a Feud
+slug: recursion-backtracking-a07
+difficulty: medium
+concepts:
+  - patterns.backtracking
+  - patterns.recursion
+  - python.lists
+prerequisites:
+  - python.functions
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.recursion_backtracking.a07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original dinner-club seating scenario that counts row arrangements while pruning any placement putting two feuding guests side by side.
+prompt_markdown: |
+  A dinner club seats its guests in a single row of chairs, one guest per chair.
+  Two guests are feuding and must never end up in adjacent chairs. Write
+  `count_seatings(data)` where `data` is a dict with keys `guests` (a list of
+  distinct names) and `feud` (a two-element list naming the feuding pair).
+  Return how many distinct left-to-right seatings keep the feuding pair out of
+  neighboring chairs. Guest names are distinct, and an empty row has one
+  seating.
+starter_code: |
+  def count_seatings(data):
+      return 0
+function_name: count_seatings
+input_mode: function
+solution_sketch: Build the row one seat at a time, skipping any guest that would sit next to the other feuding guest, and count every completed row.
+sample_solution: |
+  def count_seatings(data):
+      guests = data["guests"]
+      feud = set(data["feud"])
+      used = [False] * len(guests)
+      row = []
+      count = 0
+
+      def place(position):
+          nonlocal count
+          if position == len(guests):
+              count += 1
+              return
+          for i in range(len(guests)):
+              if used[i]:
+                  continue
+              name = guests[i]
+              if row and {row[-1], name} == feud:
+                  continue
+              used[i] = True
+              row.append(name)
+              place(position + 1)
+              row.pop()
+              used[i] = False
+
+      place(0)
+      return count
+hints:
+  - level: 1
+    text: Fill the row seat by seat, trying every guest who has not been placed yet.
+  - level: 2
+    text: Before placing a guest, check whether it and the guest already in the previous seat are the feuding pair.
+  - level: 3
+    text: Skip a candidate when {previous_seat, candidate} equals the feud set, and count a row only when all seats are filled.
+tests:
+  public:
+    - name: only_the_pair
+      input: {guests: [ana, ben], feud: [ana, ben]}
+      expected: 0
+    - name: trio
+      input: {guests: [ana, ben, cai], feud: [ana, ben]}
+      expected: 2
+    - name: quartet
+      input: {guests: [ana, ben, cai, dot], feud: [ana, ben]}
+      expected: 12
+  validation:
+    - name: other_pair_feuds
+      input: {guests: [ana, ben, cai], feud: [ben, cai]}
+      expected: 2
+    - name: quartet_other_feud
+      input: {guests: [ana, ben, cai, dot], feud: [cai, dot]}
+      expected: 12
+    - name: five_guests
+      input: {guests: [ana, ben, cai, dot, eli], feud: [ana, ben]}
+      expected: 72
+    - name: lone_guest
+      input: {guests: [ana], feud: [ana, ben]}
+      expected: 1
+explanation_markdown: |
+  We construct the row one seat at a time. At each seat we try every guest who
+  has not been placed yet, marking and unmarking them as we go, the classic
+  backtracking shape. The only extra rule prunes a branch early: if the guest
+  about to sit is the feuding partner of whoever is already in the previous
+  seat, we skip that choice. Because the feud only cares about neighbors,
+  checking the previous seat is enough. Counting only fully filled rows gives the
+  answer. For `n` guests the total number of arrangements without the pair
+  adjacent works out to `n! - 2 * (n - 1)!`, which the search reproduces:
+  three guests give 2, four give 12, five give 72.
+common_mistakes:
+  - Comparing the new guest only to the first seat instead of the immediately previous one.
+  - Forgetting to unmark a guest after exploring, so later branches think they are still seated.
+  - Counting partial rows rather than only rows where every seat is filled.

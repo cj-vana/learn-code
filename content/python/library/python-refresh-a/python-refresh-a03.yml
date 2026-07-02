@@ -1,0 +1,79 @@
+id: exercise.library.python_refresh.a03
+kind: exercise
+version: 1
+language: python
+title: Split the Brunch Bill
+slug: python-refresh-a03
+difficulty: medium
+concepts:
+  - python.operators
+  - python.variables
+prerequisites:
+  - python.functions
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original brunch bill-splitting scenario, prompt, tests, and explanation.
+prompt_markdown: |
+  A group finishing brunch wants to split the check evenly, tip included. Write
+  `split_bill(order)` where `order` is a dict with keys `"total"` (the pre-tip
+  amount), `"people"` (how many are paying), and `"tip_percent"` (a whole-number
+  percentage). Return each person's share, rounded to 2 decimal places.
+
+  For example `{"total": 100, "people": 4, "tip_percent": 20}` means a 120 dollar
+  bill split four ways, or 30.0 each.
+starter_code: |
+  def split_bill(order):
+      return 0.0
+function_name: split_bill
+input_mode: function
+solution_sketch: Scale the total by the tip, divide by the number of people, and round to cents.
+sample_solution: |
+  def split_bill(order):
+      total = order["total"]
+      people = order["people"]
+      tip_percent = order["tip_percent"]
+      with_tip = total * (1 + tip_percent / 100)
+      return round(with_tip / people, 2)
+hints:
+  - level: 1
+    text: Read the three values out of the dict first, then work with them.
+  - level: 2
+    text: Turn the tip percentage into a multiplier like 1 + tip_percent / 100.
+  - level: 3
+    text: Divide the tipped total by the number of people and round the result to 2 places.
+tests:
+  public:
+    - name: even_split
+      input: {total: 100, people: 4, tip_percent: 20}
+      expected: 30.0
+    - name: pair
+      input: {total: 50, people: 2, tip_percent: 10}
+      expected: 27.5
+    - name: no_tip
+      input: {total: 90, people: 3, tip_percent: 0}
+      expected: 30.0
+  validation:
+    - name: rounds_up
+      input: {total: 45.5, people: 5, tip_percent: 10}
+      expected: 10.01
+    - name: repeating_decimal
+      input: {total: 20, people: 3, tip_percent: 15}
+      expected: 7.67
+    - name: free_meal
+      input: {total: 0, people: 2, tip_percent: 20}
+      expected: 0.0
+explanation_markdown: |
+  Storing each dict value in its own variable keeps the arithmetic readable.
+  Multiplying the total by `1 + tip_percent / 100` adds the tip in one step, and
+  dividing by the head count gives the per-person share. Rounding to 2 places
+  turns a long floating-point result into a clean cents value.
+common_mistakes:
+  - Dividing before adding the tip, which taxes the wrong amount.
+  - Using tip_percent directly instead of converting it to a fraction of 100.
+  - Forgetting to round, so the answer carries floating-point noise.

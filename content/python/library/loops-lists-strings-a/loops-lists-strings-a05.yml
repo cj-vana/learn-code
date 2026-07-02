@@ -1,0 +1,75 @@
+id: exercise.library.loops_lists_strings.a05
+kind: exercise
+version: 1
+language: python
+title: Club Name Acronym
+slug: loops-lists-strings-a05
+difficulty: easy
+concepts:
+  - python.strings
+  - python.loops
+prerequisites:
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original club-name acronym scenario, prompt, and tests.
+prompt_markdown: |
+  A student club builds an acronym from its name. Write `make_acronym(name)`
+  that takes each word in `name`, uses its first letter, uppercases it, and
+  joins the letters into one string. Words are separated by spaces, and any
+  extra spaces should be ignored. An empty or space-only name returns `''`.
+starter_code: |
+  def make_acronym(name):
+      return ''
+function_name: make_acronym
+input_mode: function
+solution_sketch: Split on whitespace, then collect the uppercased first letter of each word.
+sample_solution: |
+  def make_acronym(name):
+      letters = ''
+      for word in name.split():
+          letters += word[0].upper()
+      return letters
+hints:
+  - level: 1
+    text: str.split() with no argument breaks on runs of whitespace and drops empties.
+  - level: 2
+    text: The first character of a word is word[0].
+  - level: 3
+    text: Uppercase each first letter with .upper() before joining.
+tests:
+  public:
+    - name: empty
+      input: ''
+      expected: ''
+    - name: three_words
+      input: 'future engineers tomorrow'
+      expected: 'FET'
+    - name: already_upper
+      input: 'Radio Data System'
+      expected: 'RDS'
+  validation:
+    - name: single_word
+      input: 'photography'
+      expected: 'P'
+    - name: extra_spaces
+      input: '  green  power  grid '
+      expected: 'GPG'
+    - name: mixed_case
+      input: 'aLPHA bETA'
+      expected: 'AB'
+explanation_markdown: |
+  Calling `name.split()` with no argument splits on any run of whitespace and
+  discards empty pieces, so leading, trailing, and doubled spaces cause no
+  trouble. Taking `word[0]` and uppercasing it builds each acronym letter, and
+  an empty name yields an empty word list and therefore an empty result.
+common_mistakes:
+  - Splitting on a single space, which leaves empty strings for doubled spaces.
+  - Indexing word[0] without first splitting, taking only the sentence's first letter.
+  - Forgetting to uppercase letters that are already lowercase.

@@ -1,0 +1,92 @@
+id: exercise.library.mixed_capstones.b04
+kind: exercise
+version: 1
+language: python
+title: Library Shelf Slot
+slug: mixed-capstones-b04
+difficulty: easy
+concepts:
+  - patterns.binary_search
+prerequisites:
+  - python.lists
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.mixed_capstones.b04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original library shelving scenario finding the leftmost insertion slot for a new catalog number.
+prompt_markdown: |
+  A library shelf holds books ordered by catalog number in a sorted `catalog`
+  list. A returned book with catalog number `new_id` must be re-shelved so the
+  list stays sorted. If its number ties existing books, it should slide in
+  ahead of the first equal number (the leftmost valid slot).
+
+  Write `shelf_position(data)` where `data` is a dict with keys `catalog` (a
+  list sorted ascending) and `new_id`. Return the index where `new_id` should be
+  inserted. Do this in O(log n) with binary search rather than scanning.
+starter_code: |
+  def shelf_position(data):
+      return 0
+function_name: shelf_position
+input_mode: function
+solution_sketch: Binary search for the leftmost index whose value is not less than new_id.
+sample_solution: |
+  def shelf_position(data):
+      catalog = data["catalog"]
+      target = data["new_id"]
+      lo = 0
+      hi = len(catalog)
+      while lo < hi:
+          mid = (lo + hi) // 2
+          if catalog[mid] < target:
+              lo = mid + 1
+          else:
+              hi = mid
+      return lo
+hints:
+  - level: 1
+    text: The list is already sorted, so you can halve the search space each step instead of walking it.
+  - level: 2
+    text: Track a lo/hi range and look for the first position whose value is not less than new_id.
+  - level: 3
+    text: When catalog[mid] < new_id move lo past mid, otherwise pull hi down to mid; lo is the answer when they meet.
+tests:
+  public:
+    - name: insert_middle
+      input: {catalog: [10, 20, 30, 40], new_id: 25}
+      expected: 2
+    - name: insert_front
+      input: {catalog: [10, 20, 30, 40], new_id: 5}
+      expected: 0
+    - name: insert_end
+      input: {catalog: [10, 20, 30, 40], new_id: 50}
+      expected: 4
+  validation:
+    - name: empty_shelf
+      input: {catalog: [], new_id: 7}
+      expected: 0
+    - name: tie_goes_left
+      input: {catalog: [10, 20, 20, 30], new_id: 20}
+      expected: 1
+    - name: all_duplicates
+      input: {catalog: [5, 5, 5, 5], new_id: 5}
+      expected: 0
+    - name: between_duplicates
+      input: {catalog: [1, 3, 3, 3, 9], new_id: 3}
+      expected: 1
+    - name: above_all
+      input: {catalog: [2, 4, 6], new_id: 10}
+      expected: 3
+explanation_markdown: |
+  Because the shelf is sorted, binary search finds the insertion slot in
+  O(log n). The loop narrows a `[lo, hi)` window to the leftmost index whose
+  value is at least `new_id`: values strictly smaller push `lo` up, everything
+  else pulls `hi` down. When the window closes, `lo` is the first slot where the
+  new number belongs, which also keeps ties ahead of existing equal numbers.
+common_mistakes:
+  - Using catalog[mid] <= target, which lands after equal numbers instead of before them.
+  - Setting hi to len(catalog) - 1, which can miss an insertion at the very end.
+  - Falling back to a linear scan, giving O(n) instead of the intended O(log n).

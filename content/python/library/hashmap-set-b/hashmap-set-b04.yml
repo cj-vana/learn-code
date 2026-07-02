@@ -1,0 +1,86 @@
+id: exercise.library.hashmap_set.b04
+kind: exercise
+version: 1
+language: python
+title: Museum Repeat Visitors
+slug: hashmap-set-b04
+difficulty: medium
+concepts:
+  - patterns.hash_map_counting
+  - patterns.set_membership
+  - python.dictionaries
+  - python.sets
+prerequisites:
+  - python.dictionaries
+  - python.sets
+estimated_time_minutes: 18
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.hashmap_set.b04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original museum entry-log scenario finding members who visited on at least two distinct days, ignoring same-day re-entries.
+prompt_markdown: |
+  A museum scans a membership card each time a member walks through the door and
+  stores an entry as a two-item list `[member, day]`. A member may re-enter on the
+  same day (for example, after stepping out for lunch), and those repeat scans
+  should not count as separate visits. Write `repeat_visitors(entries)` that
+  returns a sorted list of the members who entered on **at least two different
+  days**. `entries` is a list of `[member, day]` lists.
+starter_code: |
+  def repeat_visitors(entries):
+      return []
+function_name: repeat_visitors
+input_mode: function
+solution_sketch: Map each member to a set of the distinct days they entered, then keep members with two or more days.
+sample_solution: |
+  def repeat_visitors(entries):
+      days_by_member = {}
+      for member, day in entries:
+          days_by_member.setdefault(member, set()).add(day)
+      result = [member for member, days in days_by_member.items() if len(days) >= 2]
+      return sorted(result)
+hints:
+  - level: 1
+    text: Same-day re-entries must collapse, so count distinct days, not raw scans.
+  - level: 2
+    text: A set of days per member automatically ignores duplicate same-day entries.
+  - level: 3
+    text: Keep members whose day-set has 2 or more elements, then sort the names.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: one_visit
+      input: [[ana, mon]]
+      expected: []
+    - name: same_day_twice
+      input: [[ana, mon], [ana, mon]]
+      expected: []
+  validation:
+    - name: two_days
+      input: [[ana, mon], [ana, tue]]
+      expected: [ana]
+    - name: mixed_members
+      input: [[ana, mon], [ben, mon], [ana, tue], [ben, mon]]
+      expected: [ana]
+    - name: two_qualify_sorted
+      input: [[xen, d1], [yan, d1], [xen, d2], [yan, d2], [zed, d1]]
+      expected: [xen, yan]
+    - name: reentry_ignored
+      input: [[cara, fri], [dana, fri], [cara, sat], [dana, sun], [cara, fri]]
+      expected: [cara, dana]
+explanation_markdown: |
+  The key idea is that "visits" means distinct days, so each member maps to a
+  **set** of days rather than a raw scan count. `setdefault(member, set())` builds
+  that mapping in one pass, and adding a day to a set silently drops same-day
+  re-entries. After the pass, a member qualifies when their day-set holds two or
+  more days, and sorting the survivors gives a stable, predictable result. The
+  whole thing is O(n) work plus the final sort.
+common_mistakes:
+  - Counting raw scans, so two same-day entries wrongly look like two visits.
+  - Using a list of days instead of a set and never deduplicating same-day entries.
+  - Returning the members in dict order instead of sorting them.

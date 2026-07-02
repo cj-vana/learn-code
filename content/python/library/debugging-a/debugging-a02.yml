@@ -1,0 +1,79 @@
+id: exercise.library.debugging.a02
+kind: exercise
+version: 1
+language: python
+title: Split the Pastries
+slug: debugging-a02
+difficulty: easy
+concepts:
+  - python.debugging
+  - python.operators
+prerequisites:
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.debugging.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original bakery-boxing scenario contrasting true division with floor division and remainder.
+prompt_markdown: |
+  A bakery packs `total` pastries as evenly as possible into `boxes` boxes.
+  Write `split_pastries(data)` where `data` is a dict with keys `total` and
+  `boxes`. Return a two-item list `[per_box, leftover]`: how many pastries each
+  box gets and how many are left over.
+
+  A frequent bug is using `/`, which gives a float and never tells you the
+  remainder. Use integer (floor) division and the modulo operator instead.
+starter_code: |
+  def split_pastries(data):
+      return [0, 0]
+function_name: split_pastries
+input_mode: function
+solution_sketch: Use // for pastries per box and % for the leftover, then return both.
+sample_solution: |
+  def split_pastries(data):
+      total = data["total"]
+      boxes = data["boxes"]
+      per_box = total // boxes
+      leftover = total % boxes
+      return [per_box, leftover]
+hints:
+  - level: 1
+    text: Each box should hold a whole number of pastries, not a fraction.
+  - level: 2
+    text: total // boxes gives the whole count per box.
+  - level: 3
+    text: total % boxes gives what is left after filling every box evenly.
+tests:
+  public:
+    - name: uneven
+      input: {total: 10, boxes: 3}
+      expected: [3, 1]
+    - name: exact
+      input: {total: 8, boxes: 4}
+      expected: [2, 0]
+    - name: nothing
+      input: {total: 0, boxes: 5}
+      expected: [0, 0]
+  validation:
+    - name: half
+      input: {total: 7, boxes: 2}
+      expected: [3, 1]
+    - name: big
+      input: {total: 20, boxes: 6}
+      expected: [3, 2]
+    - name: one_each
+      input: {total: 5, boxes: 5}
+      expected: [1, 0]
+explanation_markdown: |
+  Splitting evenly is a floor-division problem. `total // boxes` counts how many
+  whole pastries fit in each box, and `total % boxes` is the remainder that
+  cannot be distributed evenly. Using `/` would return a float such as 3.333 and
+  would lose the leftover entirely.
+common_mistakes:
+  - Using / instead of // and getting a float per box.
+  - Forgetting the remainder and reporting only the per-box count.
+  - Swapping the order so leftover appears before per_box.

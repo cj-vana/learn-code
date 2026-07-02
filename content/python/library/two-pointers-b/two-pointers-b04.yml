@@ -1,0 +1,92 @@
+id: exercise.library.two_pointers.b04
+kind: exercise
+version: 1
+language: python
+title: Mirror Bead Bracelet
+slug: two-pointers-b04
+difficulty: easy
+concepts:
+  - patterns.two_pointers
+prerequisites:
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.two_pointers.b04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original beadwork symmetry-count scenario with fresh prompt, tests, and explanation.
+prompt_markdown: |
+  A jewelry maker lays out a straight strip of colored beads and wants it to
+  read the same from either end, like a mirror. Each bead is a short color code
+  string. A strip is a perfect mirror when the first bead matches the last, the
+  second matches the second-to-last, and so on.
+
+  Write `count_mismatches(beads)` that returns how many mirrored positions fail
+  to match. Compare position `i` from the start against position `i` from the
+  end and count each pair whose colors differ. For an odd-length strip the
+  center bead pairs with itself and never counts. An empty strip returns 0.
+starter_code: |
+  def count_mismatches(beads):
+      return 0
+function_name: count_mismatches
+input_mode: function
+solution_sketch: Walk one pointer inward from each end, counting each pair of beads that do not match.
+sample_solution: |
+  def count_mismatches(beads):
+      left = 0
+      right = len(beads) - 1
+      breaks = 0
+      while left < right:
+          if beads[left] != beads[right]:
+              breaks += 1
+          left += 1
+          right -= 1
+      return breaks
+hints:
+  - level: 1
+    text: Pair the bead at the start with the bead at the end, then step both pointers toward the middle.
+  - level: 2
+    text: Each time a mirrored pair of colors differs, add one to a running count of breaks.
+  - level: 3
+    text: Stop once left reaches or passes right so the middle bead of an odd strip is never double-counted.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: 0
+    - name: perfect_mirror
+      input: ['r', 'g', 'b', 'g', 'r']
+      expected: 0
+    - name: one_break
+      input: ['a', 'x', 'c']
+      expected: 1
+  validation:
+    - name: all_break_even
+      input: ['1', '2', '3', '4']
+      expected: 2
+    - name: two_same
+      input: ['teal', 'teal']
+      expected: 0
+    - name: two_different
+      input: ['teal', 'rose']
+      expected: 1
+    - name: single_bead
+      input: ['gold']
+      expected: 0
+    - name: several_breaks
+      input: ['a', 'b', 'c', 'b', 'a', 'f']
+      expected: 3
+explanation_markdown: |
+  Checking mirror symmetry is a natural fit for two pointers starting at the ends
+  and closing inward. Each loop step compares one symmetric pair, `beads[left]`
+  against `beads[right]`, and tallies a break when they differ. Because both
+  pointers move one step per iteration, every pair is examined exactly once and
+  the loop ends when they meet, so an odd-length center bead is skipped. The scan
+  runs in O(n) with no reversed copy of the strip.
+common_mistakes:
+  - Looping past the middle so each pair is counted twice.
+  - Counting the lone center bead of an odd-length strip as a mismatch.
+  - Building a reversed copy and comparing whole strips instead of pairing positions.

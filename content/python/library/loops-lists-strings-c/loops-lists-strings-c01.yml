@@ -1,0 +1,91 @@
+id: exercise.library.loops_lists_strings.c01
+kind: exercise
+version: 1
+language: python
+title: Abbreviate Trail Signposts
+slug: loops-lists-strings-c01
+difficulty: easy
+concepts:
+  - python.strings
+  - python.loops
+  - python.lists
+prerequisites:
+  - python.functions
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings.c01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original park-trail signpost scenario with initials-building prompt, tests, and explanation.
+prompt_markdown: |
+  A regional park is printing compact signposts for its walking trails. Each
+  trail has a full name made of one or more words separated by spaces, and the
+  crew wants a short code built from the first letter of every word, in
+  uppercase.
+
+  Write `trail_initials(names)` that takes a list of trail-name strings and
+  returns a new list holding the code for each name, in the same order. A name
+  may include extra spaces between words, which should be ignored. A name that
+  has no words (an empty string or only spaces) produces an empty code, and an
+  empty input list returns an empty list.
+starter_code: |
+  def trail_initials(names):
+      return []
+function_name: trail_initials
+input_mode: function
+solution_sketch: For each name, split into words and collect the uppercased first letter of each word.
+sample_solution: |
+  def trail_initials(names):
+      codes = []
+      for name in names:
+          letters = ""
+          for word in name.split():
+              letters += word[0].upper()
+          codes.append(letters)
+      return codes
+hints:
+  - level: 1
+    text: Build one code string per trail name, keeping the results in order.
+  - level: 2
+    text: Splitting a name on whitespace gives you the words; extra spaces disappear automatically.
+  - level: 3
+    text: For each word take word[0], uppercase it, and append it to the code you are building.
+tests:
+  public:
+    - name: empty_list
+      input: []
+      expected: []
+    - name: single_two_words
+      input: ["cedar path"]
+      expected: ["CP"]
+    - name: two_names
+      input: ["blue ridge loop", "sunset"]
+      expected: ["BRL", "S"]
+  validation:
+    - name: three_words
+      input: ["north star way"]
+      expected: ["NSW"]
+    - name: mixed_lengths
+      input: ["oak", "elm grove trail"]
+      expected: ["O", "EGT"]
+    - name: extra_spaces
+      input: ["  river   bend  "]
+      expected: ["RB"]
+    - name: empty_name
+      input: [""]
+      expected: [""]
+explanation_markdown: |
+  Each trail name is handled independently. Calling `name.split()` breaks the
+  name into words using any run of whitespace as a separator, so leading,
+  trailing, and repeated spaces are dropped for free. Taking `word[0]` grabs the
+  first character of each word, `.upper()` normalizes the case, and concatenating
+  those letters builds the code. Names with no words yield an empty string
+  because the inner loop never runs, and appending each code to a result list
+  preserves the original order.
+common_mistakes:
+  - Splitting on a single literal space, which leaves empty pieces when names contain double spaces.
+  - Forgetting to uppercase the first letter of each word.
+  - Returning one joined string instead of a list with one code per name.

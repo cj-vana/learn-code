@@ -1,0 +1,88 @@
+id: exercise.library.python_refresh.b05
+kind: exercise
+version: 1
+language: python
+title: Should the Bakery Run the Big Oven
+slug: python-refresh-b05
+difficulty: medium
+concepts:
+  - python.conditionals
+  - python.operators
+prerequisites:
+  - python.functions
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.python_refresh.b05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original bakery big-oven decision combining a volume threshold with a weekend rule via boolean logic.
+prompt_markdown: |
+  A bakery decides each morning whether to fire up its large oven. It is
+  worth running when either of these is true:
+
+  - there are at least 20 orders, on any day, or
+  - it is the weekend **and** there are at least 12 orders
+
+  Write `run_big_oven(day)` where `day` is a dict with keys:
+
+  - `"orders"`: the number of orders for the day, an integer
+  - `"is_weekend"`: a boolean, `True` on weekends
+
+  Return `True` if the big oven should run, otherwise `False`.
+starter_code: |
+  def run_big_oven(day):
+      return False
+function_name: run_big_oven
+input_mode: function
+solution_sketch: Combine the volume threshold and the weekend rule with or and and.
+sample_solution: |
+  def run_big_oven(day):
+      orders = day["orders"]
+      is_weekend = day["is_weekend"]
+      return orders >= 20 or (is_weekend and orders >= 12)
+hints:
+  - level: 1
+    text: There are two separate reasons to run the oven; either one is enough.
+  - level: 2
+    text: The weekend reason needs two things at once, so it uses and.
+  - level: 3
+    text: Join the two reasons with or, and remember 20 and 12 are inclusive thresholds.
+tests:
+  public:
+    - name: weekday_high_volume
+      input: {orders: 25, is_weekend: false}
+      expected: true
+    - name: weekday_low_volume
+      input: {orders: 15, is_weekend: false}
+      expected: false
+    - name: weekend_medium_volume
+      input: {orders: 12, is_weekend: true}
+      expected: true
+  validation:
+    - name: weekend_too_few
+      input: {orders: 11, is_weekend: true}
+      expected: false
+    - name: weekend_high_volume
+      input: {orders: 30, is_weekend: true}
+      expected: true
+    - name: weekday_exact_threshold
+      input: {orders: 20, is_weekend: false}
+      expected: true
+    - name: weekday_medium_volume
+      input: {orders: 12, is_weekend: false}
+      expected: false
+    - name: quiet_weekend
+      input: {orders: 0, is_weekend: true}
+      expected: false
+explanation_markdown: |
+  The decision is a single boolean expression. `orders >= 20` covers busy
+  days regardless of the calendar, while `is_weekend and orders >= 12` adds a
+  lower bar that only applies on weekends. Joining them with `or` means the
+  oven runs whenever at least one rule is satisfied.
+common_mistakes:
+  - Using and where or is needed, so both rules must hold at once.
+  - Treating the thresholds as strict (greater-than) instead of inclusive.
+  - Applying the weekend discount on weekdays too.

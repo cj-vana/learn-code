@@ -1,0 +1,74 @@
+id: exercise.library.dicts_sets_tuples.a05
+kind: exercise
+version: 1
+language: python
+title: Words Per Book Title
+slug: dicts-sets-tuples-a05
+difficulty: easy
+concepts:
+  - python.comprehensions
+  - python.dictionaries
+  - python.strings
+prerequisites:
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dicts_sets_tuples.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original library-catalog title word-count scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A small library is tidying its catalog. Write `title_word_counts(titles)`
+  where `titles` is a list of title strings.
+
+  Return a dict mapping each title to the number of words it contains, where
+  words are separated by spaces. Assume the titles in the list are distinct. An
+  empty list returns an empty dict.
+starter_code: |
+  def title_word_counts(titles):
+      return {}
+function_name: title_word_counts
+input_mode: function
+solution_sketch: Use a dict comprehension mapping each title to the length of its split.
+sample_solution: |
+  def title_word_counts(titles):
+      return {title: len(title.split()) for title in titles}
+hints:
+  - level: 1
+    text: Splitting a title on spaces gives you its list of words.
+  - level: 2
+    text: The number of words is the length of that split list.
+  - level: 3
+    text: 'A dict comprehension {title: len(title.split()) for title in titles} builds the whole mapping at once.'
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: {}
+    - name: one_title
+      input: ["quiet morning"]
+      expected: { "quiet morning": 2 }
+    - name: two_titles
+      input: ["sky", "the long road home"]
+      expected: { "sky": 1, "the long road home": 4 }
+  validation:
+    - name: single_words
+      input: ["alpha", "beta"]
+      expected: { "alpha": 1, "beta": 1 }
+    - name: mixed_lengths
+      input: ["a b c", "hello"]
+      expected: { "a b c": 3, "hello": 1 }
+    - name: two_words
+      input: ["open water"]
+      expected: { "open water": 2 }
+explanation_markdown: |
+  `str.split()` with no argument breaks a string on runs of whitespace and
+  returns the list of words, so `len(title.split())` is the word count. A dict
+  comprehension pairs each title with that count in a single expression.
+common_mistakes:
+  - Counting characters with len(title) instead of splitting into words.
+  - Building the dict with a loop but forgetting to store the count.
+  - Assuming split needs an explicit space argument when the default already handles it.

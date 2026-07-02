@@ -1,0 +1,86 @@
+id: exercise.library.prefix_sums.a03
+kind: exercise
+version: 1
+language: python
+title: Fundraiser Goal Day
+slug: prefix-sums-a03
+difficulty: easy
+concepts:
+  - patterns.prefix_sums
+  - patterns.running_total
+prerequisites:
+  - python.lists
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.prefix_sums.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original school-fundraiser cumulative-donation scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A school fundraiser tracks how much money is donated each day. The organisers
+  want to know the first day on which the running total reaches or passes their
+  goal.
+
+  Write `day_goal_reached(data)` where `data` is a dict with keys `daily` (a list
+  of daily donation amounts) and `goal` (a number). Return the 1-based day number
+  on which the cumulative total first becomes greater than or equal to `goal`. If
+  the goal is never reached, return `-1`.
+starter_code: |
+  def day_goal_reached(data):
+      return -1
+function_name: day_goal_reached
+input_mode: function
+solution_sketch: Accumulate donations day by day and return the first day whose running total meets the goal.
+sample_solution: |
+  def day_goal_reached(data):
+      daily = data["daily"]
+      goal = data["goal"]
+      running = 0
+      for index, amount in enumerate(daily):
+          running += amount
+          if running >= goal:
+              return index + 1
+      return -1
+hints:
+  - level: 1
+    text: Keep a cumulative total and check it after each day's donation is added.
+  - level: 2
+    text: Return as soon as the running total first meets or exceeds the goal.
+  - level: 3
+    text: Convert the 0-based loop index to a 1-based day by adding 1, and return -1 if the loop finishes.
+tests:
+  public:
+    - name: reached_on_third_day
+      input: {daily: [5, 5, 5], goal: 12}
+      expected: 3
+    - name: reached_immediately
+      input: {daily: [10], goal: 10}
+      expected: 1
+    - name: never_reached
+      input: {daily: [1, 2, 3], goal: 100}
+      expected: -1
+  validation:
+    - name: empty_campaign
+      input: {daily: [], goal: 5}
+      expected: -1
+    - name: exact_on_first_day
+      input: {daily: [4, 4, 4], goal: 4}
+      expected: 1
+    - name: slow_zero_days
+      input: {daily: [0, 0, 7], goal: 7}
+      expected: 3
+    - name: exact_on_last_day
+      input: {daily: [3, 3, 3, 3], goal: 9}
+      expected: 3
+explanation_markdown: |
+  Scanning the prefix sums left to right lets you stop at the first crossing point
+  instead of computing every day's total up front. Returning `index + 1` reports
+  a human-friendly day number, and the trailing `-1` handles campaigns that fall
+  short.
+common_mistakes:
+  - Returning the 0-based index instead of the 1-based day number.
+  - Using `>` instead of `>=`, which skips a day that hits the goal exactly.
+  - Forgetting to return -1 when the goal is never reached.

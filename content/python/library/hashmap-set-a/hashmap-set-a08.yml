@@ -1,0 +1,81 @@
+id: exercise.library.hashmap_set.a08
+kind: exercise
+version: 1
+language: python
+title: Songs On Every Playlist
+slug: hashmap-set-a08
+difficulty: medium
+concepts:
+  - patterns.set_membership
+  - python.sets
+  - python.sorting
+prerequisites:
+  - python.sets
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.hashmap_set.a08
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original music-app cross-playlist common-song scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A music app wants the songs that appear on all of a user's playlists. Write
+  `common_songs(playlists)` where `playlists` is a list of playlists, and each
+  playlist is itself a list of song titles.
+
+  Return a sorted list of the titles that appear in every playlist. Ignore
+  duplicate titles within a single playlist. If there are no playlists, or the
+  playlists share nothing, return an empty list.
+starter_code: |
+  def common_songs(playlists):
+      return []
+function_name: common_songs
+input_mode: function
+solution_sketch: Start from the first playlist's set and intersect it with each remaining one.
+sample_solution: |
+  def common_songs(playlists):
+      if not playlists:
+          return []
+      common = set(playlists[0])
+      for playlist in playlists[1:]:
+          common &= set(playlist)
+      return sorted(common)
+hints:
+  - level: 1
+    text: A song must be present in every playlist to count.
+  - level: 2
+    text: Intersecting sets keeps only elements common to all of them.
+  - level: 3
+    text: Seed the result with the first playlist's set, then `&=` each remaining playlist.
+tests:
+  public:
+    - name: no_playlists
+      input: []
+      expected: []
+    - name: single_playlist
+      input: [[dawn, echo, dawn]]
+      expected: [dawn, echo]
+    - name: shared_one
+      input: [[dawn, echo], [echo, flow]]
+      expected: [echo]
+  validation:
+    - name: three_playlists
+      input: [[a, b, c], [b, c, d], [c, b, e]]
+      expected: [b, c]
+    - name: nothing_common
+      input: [[one], [two], [three]]
+      expected: []
+    - name: duplicates_within
+      input: [[sun, sun, moon], [moon, moon]]
+      expected: [moon]
+explanation_markdown: |
+  Intersection across sets keeps only titles present everywhere, and seeding the
+  running result with the first playlist means each later `&=` can only shrink
+  it. Converting playlists to sets discards within-playlist duplicates, and
+  `sorted()` gives a stable, alphabetized answer.
+common_mistakes:
+  - Using union instead of intersection and returning too many songs.
+  - Starting the running set empty, so every intersection stays empty.
+  - Forgetting the no-playlists case and indexing `playlists[0]` on an empty list.

@@ -1,0 +1,81 @@
+id: exercise.library.hashmap_set.a01
+kind: exercise
+version: 1
+language: python
+title: Most-Played Show Genre
+slug: hashmap-set-a01
+difficulty: easy
+concepts:
+  - patterns.hash_map_counting
+  - python.sorting
+prerequisites:
+  - python.dictionaries
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.hashmap_set.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original radio-show genre-logging scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A radio host logs the genre of every track played during a show. Write
+  `top_genre(genres)` returning the genre that was played the most times.
+
+  If two or more genres tie for the most plays, return the one that comes first
+  alphabetically. For an empty list, return the empty string `""`.
+starter_code: |
+  def top_genre(genres):
+      return ""
+function_name: top_genre
+input_mode: function
+solution_sketch: Count plays per genre, then pick the highest count, breaking ties alphabetically.
+sample_solution: |
+  def top_genre(genres):
+      counts = {}
+      for genre in genres:
+          counts[genre] = counts.get(genre, 0) + 1
+      best = ""
+      best_count = 0
+      for genre in sorted(counts):
+          if counts[genre] > best_count:
+              best = genre
+              best_count = counts[genre]
+      return best
+hints:
+  - level: 1
+    text: First find out how many times each genre was played.
+  - level: 2
+    text: A dict mapping genre to its play count lets you compare totals.
+  - level: 3
+    text: Scan the genres in alphabetical order and keep the first one that beats the running maximum.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: ""
+    - name: single
+      input: [jazz]
+      expected: jazz
+    - name: clear_winner
+      input: [pop, rock, pop]
+      expected: pop
+  validation:
+    - name: tie_breaks_alphabetically
+      input: [rock, jazz, rock, jazz]
+      expected: jazz
+    - name: three_genres
+      input: [folk, folk, blues, blues, folk]
+      expected: folk
+    - name: all_same
+      input: [soul, soul]
+      expected: soul
+explanation_markdown: |
+  Counting with a dict is O(n), and a strict greater-than comparison keeps the
+  first genre seen at each new maximum. By walking the genres in `sorted()`
+  order, the earliest alphabetical name wins any tie automatically.
+common_mistakes:
+  - Using `>=` instead of `>`, which lets a later tie overwrite the earlier winner.
+  - Forgetting to handle the empty list and returning something other than "".
+  - Comparing counts in insertion order instead of alphabetical order for ties.

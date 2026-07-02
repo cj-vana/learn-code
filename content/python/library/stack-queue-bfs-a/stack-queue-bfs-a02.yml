@@ -1,0 +1,80 @@
+id: exercise.library.stack_queue_bfs.a02
+kind: exercise
+version: 1
+language: python
+title: Notebook Undo Keystrokes
+slug: stack-queue-bfs-a02
+difficulty: easy
+concepts:
+  - patterns.stack
+  - python.strings
+prerequisites:
+  - python.lists
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.stack_queue_bfs.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original note-taking keystroke-undo scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A note-taking app records a session as a list of keystrokes. Each entry is
+  either a single character that was typed, or the token `"UNDO"`, which deletes
+  the most recently typed character still on screen.
+
+  Write `final_text(keystrokes)` returning the text left on screen after all
+  keystrokes are applied. An `"UNDO"` when the screen is empty does nothing.
+starter_code: |
+  def final_text(keystrokes):
+      return ""
+function_name: final_text
+input_mode: function
+solution_sketch: Push typed characters on a stack and pop on each UNDO, then join the stack.
+sample_solution: |
+  def final_text(keystrokes):
+      stack = []
+      for key in keystrokes:
+          if key == "UNDO":
+              if stack:
+                  stack.pop()
+          else:
+              stack.append(key)
+      return "".join(stack)
+hints:
+  - level: 1
+    text: Undo always removes the newest character, which is the top of a stack.
+  - level: 2
+    text: Append each typed character; on UNDO, pop the last one if there is anything to remove.
+  - level: 3
+    text: After processing every keystroke, join the stack contents into a single string.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: ""
+    - name: no_undo
+      input: [h, i]
+      expected: hi
+    - name: one_undo
+      input: [a, b, UNDO]
+      expected: a
+  validation:
+    - name: undo_on_empty
+      input: [UNDO, x]
+      expected: x
+    - name: two_undos
+      input: [c, a, t, UNDO, UNDO, r]
+      expected: cr
+    - name: all_removed
+      input: [a, UNDO, UNDO]
+      expected: ""
+explanation_markdown: |
+  The screen behaves like a stack: typing pushes, and undo pops the newest
+  character. Guarding the pop with a non-empty check makes undo-on-empty a
+  harmless no-op. One pass over the keystrokes gives O(n) work.
+common_mistakes:
+  - Calling pop() on an empty stack and crashing on an early UNDO.
+  - Removing the oldest character instead of the newest.
+  - Building the string as you go instead of joining once at the end.

@@ -1,0 +1,77 @@
+id: exercise.library.debugging.a01
+kind: exercise
+version: 1
+language: python
+title: Number the Shelves
+slug: debugging-a01
+difficulty: easy
+concepts:
+  - python.debugging
+  - python.loops
+prerequisites:
+  - python.functions
+  - python.loops
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.debugging.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original shelf-numbering scenario built around the classic off-by-one range mistake.
+prompt_markdown: |
+  A pottery studio labels its drying shelves starting at 1. Write
+  `shelf_labels(n)` returning a list of the shelf numbers `[1, 2, ..., n]`.
+
+  A common beginner bug is looping over `range(n)`, which starts at 0 and stops
+  one short. Make sure the first label is 1 and the last label is exactly `n`.
+  When `n` is 0 there are no shelves, so return an empty list.
+starter_code: |
+  def shelf_labels(n):
+      return []
+function_name: shelf_labels
+input_mode: function
+solution_sketch: Loop over range(1, n + 1) and collect each number into a list.
+sample_solution: |
+  def shelf_labels(n):
+      labels = []
+      for shelf in range(1, n + 1):
+          labels.append(shelf)
+      return labels
+hints:
+  - level: 1
+    text: The first shelf is numbered 1, not 0.
+  - level: 2
+    text: range(n) gives 0..n-1, which is off by one at both ends.
+  - level: 3
+    text: Use range(1, n + 1) so the loop covers 1 through n inclusive.
+tests:
+  public:
+    - name: none
+      input: 0
+      expected: []
+    - name: one
+      input: 1
+      expected: [1]
+    - name: three
+      input: 3
+      expected: [1, 2, 3]
+  validation:
+    - name: five
+      input: 5
+      expected: [1, 2, 3, 4, 5]
+    - name: two
+      input: 2
+      expected: [1, 2]
+    - name: four
+      input: 4
+      expected: [1, 2, 3, 4]
+explanation_markdown: |
+  Beginners often reach for `range(n)`, but that yields 0 through n-1. Since the
+  shelves start at 1 and end at n, the correct bound is `range(1, n + 1)`. The
+  upper argument to `range` is exclusive, so `n + 1` is what makes `n` appear.
+common_mistakes:
+  - Using range(n), which starts at 0 and stops at n-1.
+  - Forgetting the +1 so the last shelf n is dropped.
+  - Returning None instead of an empty list when n is 0.

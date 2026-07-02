@@ -1,0 +1,95 @@
+id: exercise.library.sliding_window.b02
+kind: exercise
+version: 1
+language: python
+title: Bakery No-Waste Run
+slug: sliding-window-b02
+difficulty: medium
+concepts:
+  - patterns.sliding_window
+  - patterns.two_pointers
+prerequisites:
+  - python.lists
+estimated_time_minutes: 18
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sliding_window.b02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original bakery leftovers scenario asking for the longest run of days whose waste stays within a budget.
+prompt_markdown: |
+  A neighbourhood bakery records how many pastries go unsold each day. Management
+  wants to celebrate the longest streak of consecutive days where the total waste
+  stayed within a set budget.
+
+  Write `longest_run(data)` where `data` is a dict with two keys: `leftovers`
+  (a list of non-negative daily leftover counts) and `budget` (the maximum total
+  waste allowed across a streak). Return the length of the longest run of
+  consecutive days whose leftovers sum to at most `budget`. If no single day
+  fits within the budget, return 0. An empty list returns 0.
+starter_code: |
+  def longest_run(data):
+      return 0
+function_name: longest_run
+input_mode: function
+solution_sketch: Grow a window on the right; whenever the running total exceeds the budget, shrink from the left until it fits, tracking the widest valid width.
+sample_solution: |
+  def longest_run(data):
+      leftovers = data["leftovers"]
+      budget = data["budget"]
+      left = 0
+      total = 0
+      best = 0
+      for right in range(len(leftovers)):
+          total += leftovers[right]
+          while total > budget and left <= right:
+              total -= leftovers[left]
+              left += 1
+          current = right - left + 1
+          if current > best:
+              best = current
+      return best
+hints:
+  - level: 1
+    text: Because leftovers are never negative, extending the window can only raise the total and shrinking it can only lower it.
+  - level: 2
+    text: Keep two indices marking the window's edges and a running total of the days between them.
+  - level: 3
+    text: After adding each new day on the right, advance the left edge while the total is over budget, then measure the window width.
+tests:
+  public:
+    - name: empty
+      input: { leftovers: [], budget: 5 }
+      expected: 0
+    - name: all_fit
+      input: { leftovers: [1, 2, 3], budget: 10 }
+      expected: 3
+    - name: shrink_needed
+      input: { leftovers: [4, 4, 4], budget: 9 }
+      expected: 2
+  validation:
+    - name: single_over
+      input: { leftovers: [12, 3, 4], budget: 10 }
+      expected: 2
+    - name: exact_budget
+      input: { leftovers: [5, 5, 5], budget: 10 }
+      expected: 2
+    - name: long_tail
+      input: { leftovers: [2, 1, 1, 1, 9], budget: 5 }
+      expected: 4
+    - name: all_zero
+      input: { leftovers: [0, 0, 0, 0], budget: 0 }
+      expected: 4
+explanation_markdown: |
+  With non-negative values, the running total is monotonic in the window's width,
+  which is exactly what makes a variable-length sliding window work. Extend the
+  right edge one day at a time and add each day to the total. Whenever the total
+  exceeds the budget, advance the left edge, subtracting days until the window is
+  valid again. The widest valid window seen along the way is the answer, and each
+  index moves forward at most once, so the whole scan is O(n).
+common_mistakes:
+  - Trying every start and end pair, which is O(n^2) and unnecessary here.
+  - Forgetting to subtract the leftmost day's leftovers when shrinking the window.
+  - Not handling a day whose own leftovers already exceed the budget, which should leave the streak at 0 for that day.

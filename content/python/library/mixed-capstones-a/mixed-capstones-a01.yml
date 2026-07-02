@@ -1,0 +1,84 @@
+id: exercise.library.mixed_capstones.a01
+kind: exercise
+version: 1
+language: python
+title: Busiest Bus Stop
+slug: mixed-capstones-a01
+difficulty: easy
+concepts:
+  - patterns.hash_map_counting
+  - python.dictionaries
+  - python.sorting
+prerequisites:
+  - python.lists
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.mixed_capstones.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original bus-boarding scenario with a deterministic alphabetical tie-break, its own prompt, and its own tests.
+prompt_markdown: |
+  A city bus records the name of the stop where each passenger boards. Write
+  `busiest_stop(stops)` where `stops` is a list of stop names. Return the name
+  of the stop with the most boardings. If several stops tie for the most, return
+  the one that comes first alphabetically. An empty list returns the empty
+  string `""`.
+starter_code: |
+  def busiest_stop(stops):
+      return ""
+function_name: busiest_stop
+input_mode: function
+solution_sketch: Count boardings per stop in a dict, then scan stops in alphabetical order keeping the first that reaches the highest count.
+sample_solution: |
+  def busiest_stop(stops):
+      counts = {}
+      for stop in stops:
+          counts[stop] = counts.get(stop, 0) + 1
+      best = ""
+      best_count = 0
+      for stop in sorted(counts):
+          if counts[stop] > best_count:
+              best = stop
+              best_count = counts[stop]
+      return best
+hints:
+  - level: 1
+    text: Build a dictionary mapping each stop name to how many times it appears.
+  - level: 2
+    text: The winner has the largest count; ties should resolve to the alphabetically smallest name.
+  - level: 3
+    text: Walk the names in sorted() order and only replace the best when a count is strictly greater, so equal counts keep the earlier (smaller) name.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: ""
+    - name: single
+      input: [oak]
+      expected: oak
+    - name: clear_winner
+      input: [oak, elm, oak]
+      expected: oak
+  validation:
+    - name: tie_alpha
+      input: [elm, oak, elm, oak]
+      expected: elm
+    - name: three_way
+      input: [pine, oak, oak, pine, birch, pine]
+      expected: pine
+    - name: all_same
+      input: [maple, maple, maple]
+      expected: maple
+explanation_markdown: |
+  Counting with a dictionary gives O(1) updates, so one pass builds the tally in
+  O(n). To settle ties deterministically, iterate the distinct names in sorted
+  order and only overwrite the current best on a strictly larger count. Because
+  equal counts never replace an earlier name, the alphabetically smallest of the
+  top stops wins.
+common_mistakes:
+  - Returning the last name seen with the max count instead of applying a stable tie-break.
+  - Using >= when comparing counts, which lets a later alphabetical name overwrite the winner on a tie.
+  - Forgetting that an empty list must return "" rather than raising on max() of nothing.

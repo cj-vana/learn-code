@@ -1,0 +1,81 @@
+id: exercise.library.recursion_backtracking.a04
+kind: exercise
+version: 1
+language: python
+title: Stepping-Stone Hop Patterns
+slug: recursion-backtracking-a04
+difficulty: easy
+concepts:
+  - patterns.recursion
+prerequisites:
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.recursion_backtracking.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original garden stepping-stone scenario that counts distinct hop patterns of one or two stones using two recursive branches.
+prompt_markdown: |
+  A delivery robot crosses a garden path of `stones` stepping stones laid in a
+  line. On each hop it moves forward exactly one stone or exactly two stones.
+  Write `count_hop_patterns(stones)` returning how many distinct sequences of
+  hops land it exactly on the far end. Crossing zero stones counts as one way
+  (the robot simply does not hop).
+starter_code: |
+  def count_hop_patterns(stones):
+      return 0
+function_name: count_hop_patterns
+input_mode: function
+solution_sketch: The ways to finish equal the ways after a one-stone hop plus the ways after a two-stone hop, with small base cases.
+sample_solution: |
+  def count_hop_patterns(stones):
+      if stones < 0:
+          return 0
+      if stones == 0:
+          return 1
+      return count_hop_patterns(stones - 1) + count_hop_patterns(stones - 2)
+hints:
+  - level: 1
+    text: Think about the very first hop, either one stone or two, and what remains after it.
+  - level: 2
+    text: The total ways are the ways to cross what is left after a one-hop plus the ways after a two-hop.
+  - level: 3
+    text: Return count_hop_patterns(stones - 1) + count_hop_patterns(stones - 2), with 0 stones as one way and negatives as zero.
+tests:
+  public:
+    - name: no_stones
+      input: 0
+      expected: 1
+    - name: two
+      input: 2
+      expected: 2
+    - name: four
+      input: 4
+      expected: 5
+  validation:
+    - name: one
+      input: 1
+      expected: 1
+    - name: three
+      input: 3
+      expected: 3
+    - name: six
+      input: 6
+      expected: 13
+    - name: ten
+      input: 10
+      expected: 89
+explanation_markdown: |
+  Every crossing starts with either a one-stone hop or a two-stone hop, and
+  those two choices lead to completely separate sets of sequences. So the count
+  for `stones` is the count for `stones - 1` plus the count for `stones - 2`.
+  The base cases anchor it: reaching the end exactly is one way, and overshooting
+  (a negative remainder) is zero ways. The counts grow as 1, 1, 2, 3, 5, 8, 13,
+  so six stones give 13 and ten give 89.
+common_mistakes:
+  - Returning 0 instead of 1 for zero stones, which makes every count collapse to zero.
+  - Only recursing on one of the two hop sizes.
+  - Ignoring the negative case, so an over-long hop is counted as a valid crossing.

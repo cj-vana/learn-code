@@ -1,0 +1,83 @@
+id: exercise.library.stack_queue_bfs.b01
+kind: exercise
+version: 1
+language: python
+title: Settle Canceling Crates on the Belt
+slug: stack-queue-bfs-b01
+difficulty: easy
+concepts:
+  - patterns.stack
+  - python.lists
+prerequisites:
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.stack_queue_bfs.b01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original warehouse conveyor scenario where adjacent identical crates lock together and drop off, expressed as its own prompt and tests.
+prompt_markdown: |
+  Crates ride down a warehouse conveyor belt in a single line. Each crate carries
+  a color label. Whenever two crates with the **same** label end up next to each
+  other, they lock together and are lifted off the belt, which may bring two new
+  crates into contact so the collapsing repeats.
+
+  Write `settle_crates(labels)` that takes a list of color-label strings in belt
+  order and returns the list of labels that remain after every possible adjacent
+  identical pair has been removed. An empty belt returns an empty list.
+starter_code: |
+  def settle_crates(labels):
+      return []
+function_name: settle_crates
+input_mode: function
+solution_sketch: Push each label onto a stack, popping instead whenever it matches the current top.
+sample_solution: |
+  def settle_crates(labels):
+      stack = []
+      for label in labels:
+          if stack and stack[-1] == label:
+              stack.pop()
+          else:
+              stack.append(label)
+      return stack
+hints:
+  - level: 1
+    text: Walk through the crates left to right and keep the ones that survive so far in a growing pile.
+  - level: 2
+    text: A stack (a plain list used with append and pop) lets you compare each new crate to the most recent survivor.
+  - level: 3
+    text: If the new label equals the label on top of the stack, pop that top instead of pushing; otherwise append the new label.
+tests:
+  public:
+    - name: empty_belt
+      input: []
+      expected: []
+    - name: no_pairs
+      input: [red, blue, green]
+      expected: [red, blue, green]
+    - name: single_pair
+      input: [red, red]
+      expected: []
+  validation:
+    - name: nested_cancel
+      input: [red, blue, blue, red]
+      expected: []
+    - name: leftover_in_middle
+      input: [red, red, blue, green, green]
+      expected: [blue]
+    - name: chain_with_survivors
+      input: [amber, teal, coral, coral, teal, slate]
+      expected: [amber, slate]
+explanation_markdown: |
+  The stack always holds the crates that have survived so far, in belt order. For
+  each incoming crate you only ever compare it to the top of the stack: if they
+  match, both cancel and you pop; otherwise the crate becomes the new top. Because
+  a pop can expose a fresh matching pair, this single left-to-right pass captures
+  all the cascading removals in O(n) time.
+common_mistakes:
+  - Scanning the list repeatedly for pairs instead of letting the stack expose new adjacencies in one pass.
+  - Forgetting to check that the stack is non-empty before reading its top element.
+  - Returning a boolean or count instead of the remaining list of labels.

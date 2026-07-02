@@ -1,0 +1,79 @@
+id: exercise.library.debugging.a07
+kind: exercise
+version: 1
+language: python
+title: Is the Fare In Range
+slug: debugging-a07
+difficulty: easy
+concepts:
+  - python.debugging
+  - python.conditionals
+prerequisites:
+  - python.functions
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.debugging.a07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original transit-fare scenario contrasting inclusive and exclusive boundary comparisons.
+prompt_markdown: |
+  A transit app checks whether a proposed fare falls within an allowed band.
+  Write `within_budget(data)` where `data` is a dict with keys `amount`, `low`,
+  and `high`. Return `True` when `amount` is between `low` and `high`
+  **inclusive**, and `False` otherwise.
+
+  The bug to avoid: writing `low < amount < high` excludes the endpoints, so a
+  fare exactly equal to `low` or `high` is wrongly rejected. Use `<=` on both
+  sides.
+starter_code: |
+  def within_budget(data):
+      return False
+function_name: within_budget
+input_mode: function
+solution_sketch: Return low <= amount <= high so both endpoints count as inside.
+sample_solution: |
+  def within_budget(data):
+      amount = data["amount"]
+      low = data["low"]
+      high = data["high"]
+      return low <= amount <= high
+hints:
+  - level: 1
+    text: The endpoints low and high should both count as inside the band.
+  - level: 2
+    text: Strict < would reject a fare that equals a boundary.
+  - level: 3
+    text: Python lets you chain comparisons as low <= amount <= high.
+tests:
+  public:
+    - name: inside
+      input: {amount: 5, low: 1, high: 10}
+      expected: true
+    - name: below
+      input: {amount: 0, low: 1, high: 10}
+      expected: false
+    - name: on_high_edge
+      input: {amount: 10, low: 1, high: 10}
+      expected: true
+  validation:
+    - name: on_low_edge
+      input: {amount: 1, low: 1, high: 5}
+      expected: true
+    - name: above
+      input: {amount: 6, low: 1, high: 5}
+      expected: false
+    - name: negative_band
+      input: {amount: -3, low: -5, high: 0}
+      expected: true
+explanation_markdown: |
+  Because the band is inclusive, a fare equal to `low` or `high` must count as
+  inside. The chained comparison `low <= amount <= high` reads naturally and
+  checks both bounds at once. Using strict `<` on either side would create an
+  off-by-one style bug that rejects the exact endpoints.
+common_mistakes:
+  - Writing low < amount < high and excluding the endpoints.
+  - Reversing the operators so nothing ever counts as inside.
+  - Returning the amount instead of a boolean.

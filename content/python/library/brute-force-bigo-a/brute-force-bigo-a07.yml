@@ -1,0 +1,87 @@
+id: exercise.library.brute_force_bigo.a07
+kind: exercise
+version: 1
+language: python
+title: Three Trail Segments to the Goal
+slug: brute-force-bigo-a07
+difficulty: medium
+concepts:
+  - patterns.brute_force
+  - concepts.big_o
+prerequisites:
+  - python.lists
+estimated_time_minutes: 16
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.brute_force_bigo.a07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original day-hike planning scenario using a three-nested-loop brute-force triple search.
+prompt_markdown: |
+  A hiker plans a day trip by stitching together exactly three trail segments so
+  their distances add up to a target `goal`. Write `can_reach_goal(data)` where
+  `data` is a dict with keys `distances` and `goal`. Return `True` if some three
+  segments at *different* positions have distances summing to exactly `goal`,
+  otherwise `False`. Fewer than three segments always returns `False`; two
+  segments that happen to share a distance still count as different positions.
+starter_code: |
+  def can_reach_goal(data):
+      return False
+function_name: can_reach_goal
+input_mode: function
+solution_sketch: Try every unordered triple of positions with three nested loops and stop when one sums to the goal.
+sample_solution: |
+  def can_reach_goal(data):
+      distances = data["distances"]
+      goal = data["goal"]
+      n = len(distances)
+      for i in range(n):
+          for j in range(i + 1, n):
+              for k in range(j + 1, n):
+                  if distances[i] + distances[j] + distances[k] == goal:
+                      return True
+      return False
+hints:
+  - level: 1
+    text: You need three different segments, so build every group of three positions.
+  - level: 2
+    text: Three nested loops with indices i < j < k generate each unordered triple exactly once.
+  - level: 3
+    text: Start each inner loop one past the loop outside it, and return True as soon as a triple hits the goal.
+tests:
+  public:
+    - name: too_few
+      input: {distances: [5, 5], goal: 10}
+      expected: false
+    - name: simple_triple
+      input: {distances: [2, 4, 6, 3], goal: 12}
+      expected: true
+    - name: no_triple
+      input: {distances: [1, 2, 3], goal: 100}
+      expected: false
+  validation:
+    - name: exact_three
+      input: {distances: [1, 2, 3], goal: 6}
+      expected: true
+    - name: uses_later_segments
+      input: {distances: [10, 1, 2, 7], goal: 19}
+      expected: true
+    - name: none_reach
+      input: {distances: [4, 4, 4, 4], goal: 15}
+      expected: false
+    - name: repeated_distances
+      input: {distances: [5, 5, 5], goal: 15}
+      expected: true
+explanation_markdown: |
+  The brute-force approach enumerates every unordered triple of positions using
+  three nested loops with `i < j < k`, which keeps each triple unique and never
+  reuses a position. With `n` segments there are about `n * (n - 1) * (n - 2) / 6`
+  triples, so this runs in O(n^3) time. That cubic growth is why brute force over
+  triples becomes slow quickly, but it is straightforward and correct for the
+  small inputs here.
+common_mistakes:
+  - Reusing the same position by starting an inner loop at the same index as the outer one.
+  - Only checking consecutive triples instead of all combinations.
+  - Returning False before every triple has been tried.

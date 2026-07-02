@@ -1,0 +1,87 @@
+id: exercise.library.sliding_window.a05
+kind: exercise
+version: 1
+language: python
+title: First Fully Charged Window
+slug: sliding-window-a05
+difficulty: easy
+concepts:
+  - patterns.sliding_window
+  - python.lists
+prerequisites:
+  - python.functions
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sliding_window.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original solar-panel hourly-energy scenario returning the first window index reaching a target.
+prompt_markdown: |
+  A rooftop solar panel logs how much energy it produces each hour. A battery
+  finishes charging once any `k` consecutive hours produce at least `target`
+  energy in total. Write `first_charged_window(data)` returning the starting hour
+  index (0-based) of the first such window, or `-1` if no window reaches the
+  target.
+
+  `data` is a dict: `{"energy": [...], "k": k, "target": target}`. You may assume
+  `k` is at least 1 and no larger than the number of hours.
+starter_code: |
+  def first_charged_window(data):
+      return -1
+function_name: first_charged_window
+input_mode: function
+solution_sketch: Slide a running k-hour sum and return the start index of the first window that reaches the target.
+sample_solution: |
+  def first_charged_window(data):
+      energy = data["energy"]
+      k = data["k"]
+      target = data["target"]
+      window = sum(energy[:k])
+      if window >= target:
+          return 0
+      for i in range(k, len(energy)):
+          window += energy[i] - energy[i - k]
+          if window >= target:
+              return i - k + 1
+      return -1
+hints:
+  - level: 1
+    text: Check the first k-hour window before sliding, since it might already reach the target.
+  - level: 2
+    text: When the window ends at index i, its start index is i - k + 1.
+  - level: 3
+    text: Return as soon as a window's total is at least the target; return -1 if none ever is.
+tests:
+  public:
+    - name: first_window
+      input: {energy: [5, 5, 1], k: 2, target: 8}
+      expected: 0
+    - name: none
+      input: {energy: [1, 1, 1, 1], k: 2, target: 5}
+      expected: -1
+    - name: later
+      input: {energy: [1, 1, 4, 4], k: 2, target: 7}
+      expected: 2
+  validation:
+    - name: exact_target
+      input: {energy: [3, 4, 2], k: 2, target: 7}
+      expected: 0
+    - name: last_window
+      input: {energy: [2, 2, 2, 9, 9], k: 2, target: 15}
+      expected: 3
+    - name: k_one
+      input: {energy: [1, 2, 8, 3], k: 1, target: 5}
+      expected: 2
+explanation_markdown: |
+  The running window sum lets each window be tested in constant time, and the
+  function returns the moment a window's total reaches the target. The start index
+  of a window ending at position `i` is `i - k + 1`. Using `>=` means a window that
+  exactly equals the target counts as charged. If the loop finishes without a hit,
+  the answer is `-1`.
+common_mistakes:
+  - Returning the ending index i instead of the starting index i - k + 1.
+  - Skipping the check on the first window before the loop starts.
+  - Using > so a window that exactly meets the target is missed.

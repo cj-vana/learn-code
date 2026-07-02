@@ -1,0 +1,83 @@
+id: exercise.library.stack_queue_bfs.a01
+kind: exercise
+version: 1
+language: python
+title: Balanced Cue Brackets
+slug: stack-queue-bfs-a01
+difficulty: easy
+concepts:
+  - patterns.stack
+  - python.strings
+prerequisites:
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.stack_queue_bfs.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original stage-lighting cue-script scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A stage-lighting cue script groups cues with three kinds of brackets:
+  round `()`, square `[]`, and curly `{}`. Any other character is ordinary text.
+
+  Write `brackets_balanced(script)` returning `True` if every opening bracket is
+  closed by a matching bracket of the same kind in the correct order, and `False`
+  otherwise. All non-bracket characters are ignored. An empty string is balanced.
+starter_code: |
+  def brackets_balanced(script):
+      return False
+function_name: brackets_balanced
+input_mode: function
+solution_sketch: Push each opener on a stack and pop-match it when the matching closer appears.
+sample_solution: |
+  def brackets_balanced(script):
+      pairs = {")": "(", "]": "[", "}": "{"}
+      openers = set(pairs.values())
+      stack = []
+      for ch in script:
+          if ch in openers:
+              stack.append(ch)
+          elif ch in pairs:
+              if not stack or stack.pop() != pairs[ch]:
+                  return False
+      return not stack
+hints:
+  - level: 1
+    text: The most recently opened bracket must be the first one to close.
+  - level: 2
+    text: Push every opening bracket onto a stack and check the top when you hit a closer.
+  - level: 3
+    text: A closer is valid only if the stack top is its matching opener; the string is balanced only if the stack ends empty.
+tests:
+  public:
+    - name: empty
+      input: ""
+      expected: true
+    - name: nested_mix
+      input: "{[()]}"
+      expected: true
+    - name: wrong_kind
+      input: "(]"
+      expected: false
+  validation:
+    - name: interleaved
+      input: "([)]"
+      expected: false
+    - name: with_text
+      input: "cue[3](start)"
+      expected: true
+    - name: unclosed
+      input: "((("
+      expected: false
+explanation_markdown: |
+  A stack captures "last opened, first closed" perfectly. Each opener is pushed;
+  each closer must match whatever is on top, so a mismatch or an empty stack
+  means the script is unbalanced. Leftover openers at the end are also unbalanced.
+  Every character is handled once, so the scan is O(n).
+common_mistakes:
+  - Only counting brackets instead of checking that kinds match in order.
+  - Forgetting that a closer with an empty stack is immediately invalid.
+  - Returning True while openers remain on the stack at the end.

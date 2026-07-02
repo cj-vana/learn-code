@@ -1,0 +1,84 @@
+id: exercise.library.prefix_sums.a05
+kind: exercise
+version: 1
+language: python
+title: Food Truck Peak Cash
+slug: prefix-sums-a05
+difficulty: easy
+concepts:
+  - patterns.prefix_sums
+  - patterns.running_total
+prerequisites:
+  - python.lists
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.prefix_sums.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original food-truck cash-drawer scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A food truck opens its shift with an empty cash drawer holding 0 dollars.
+  Throughout the day money moves in and out: a sale adds a positive amount and
+  paying a supplier subtracts (a negative amount).
+
+  Write `peak_balance(flows)` that returns the highest amount the drawer ever
+  holds during the shift, including the opening balance of 0. For example,
+  `[5, -3, 4]` moves the drawer through 0, 5, 2, 6, so the peak is `6`.
+starter_code: |
+  def peak_balance(flows):
+      return 0
+function_name: peak_balance
+input_mode: function
+solution_sketch: Track the running balance and remember the largest value it reaches, starting from the opening 0.
+sample_solution: |
+  def peak_balance(flows):
+      running = 0
+      peak = 0
+      for flow in flows:
+          running += flow
+          if running > peak:
+              peak = running
+      return peak
+hints:
+  - level: 1
+    text: The drawer's balance after each transaction is a running prefix sum of the flows.
+  - level: 2
+    text: Start both the running balance and the peak at 0 so the opening balance counts.
+  - level: 3
+    text: After updating the running balance, compare it with the best peak seen so far.
+tests:
+  public:
+    - name: rises_to_peak
+      input: [5, -3, 4]
+      expected: 6
+    - name: only_losses
+      input: [-2, -1]
+      expected: 0
+    - name: empty_shift
+      input: []
+      expected: 0
+  validation:
+    - name: peak_at_end
+      input: [1, 1, -5, 10]
+      expected: 7
+    - name: peak_midway
+      input: [3, 4, -10, 1]
+      expected: 7
+    - name: single_sale
+      input: [8]
+      expected: 8
+    - name: single_payout
+      input: [-4]
+      expected: 0
+explanation_markdown: |
+  The balance after each transaction is a prefix sum, and the answer is simply the
+  maximum prefix seen. Seeding both `running` and `peak` at 0 lets the opening
+  balance win when every transaction is a loss, so the drawer never reports a peak
+  below where it started.
+common_mistakes:
+  - Initialising the peak to the first flow instead of 0, breaking the all-losses case.
+  - Tracking the maximum single flow rather than the maximum running balance.
+  - Assuming the peak is always the final balance.

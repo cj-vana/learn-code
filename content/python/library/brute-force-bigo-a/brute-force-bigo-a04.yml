@@ -1,0 +1,83 @@
+id: exercise.library.brute_force_bigo.a04
+kind: exercise
+version: 1
+language: python
+title: Which Reshelving Plan Is Cheaper
+slug: brute-force-bigo-a04
+difficulty: easy
+concepts:
+  - concepts.big_o
+prerequisites: []
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.brute_force_bigo.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original library-reshelving comparison illustrating the crossover between an O(n^2) and an O(n) cost.
+prompt_markdown: |
+  A librarian is choosing between two reshelving plans for a cart of `catalog_size`
+  books. The `nested` plan compares every book against every other and costs
+  `catalog_size * catalog_size` comparisons. The `linear` plan uses a lookup card
+  and costs `50 * catalog_size` comparisons. Write `cheaper_method(catalog_size)`
+  returning the string `'nested'` if the nested plan does fewer comparisons,
+  `'linear'` if the linear plan does fewer, or `'tie'` if they are equal.
+starter_code: |
+  def cheaper_method(catalog_size):
+      return 'tie'
+function_name: cheaper_method
+input_mode: function
+solution_sketch: Compute both comparison counts and return the name of the smaller one, or 'tie' if equal.
+sample_solution: |
+  def cheaper_method(catalog_size):
+      nested_cost = catalog_size * catalog_size
+      linear_cost = 50 * catalog_size
+      if nested_cost < linear_cost:
+          return 'nested'
+      if linear_cost < nested_cost:
+          return 'linear'
+      return 'tie'
+hints:
+  - level: 1
+    text: Work out the actual comparison count for each plan at this catalog size, then compare them.
+  - level: 2
+    text: The nested cost grows like the square of the size while the linear cost grows in a straight line.
+  - level: 3
+    text: Below the crossover the nested plan wins; above it the linear plan wins; exactly at it they tie.
+tests:
+  public:
+    - name: small_catalog
+      input: 10
+      expected: 'nested'
+    - name: crossover
+      input: 50
+      expected: 'tie'
+    - name: large_catalog
+      input: 100
+      expected: 'linear'
+  validation:
+    - name: empty_cart
+      input: 0
+      expected: 'tie'
+    - name: one_book
+      input: 1
+      expected: 'nested'
+    - name: just_below_crossover
+      input: 49
+      expected: 'nested'
+    - name: just_above_crossover
+      input: 51
+      expected: 'linear'
+explanation_markdown: |
+  This is the heart of Big-O thinking: constant factors decide the winner for
+  small inputs, but growth rate decides it for large ones. The nested plan is
+  O(n^2) and the linear plan is O(n) with a constant of 50. For `n < 50` the
+  squared cost is still smaller, at `n = 50` they tie, and for `n > 50` the
+  quadratic cost overtakes the linear one and keeps pulling away. Comparing the
+  exact counts tells you which side of the crossover you are on.
+common_mistakes:
+  - Assuming the O(n^2) plan is always slower, even for tiny catalogs.
+  - Ignoring the constant factor of 50 on the linear plan.
+  - Forgetting the exact-tie case at the crossover size.

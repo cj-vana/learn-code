@@ -1,0 +1,91 @@
+id: exercise.library.sliding_window.b03
+kind: exercise
+version: 1
+language: python
+title: Rolling Rainfall Totals
+slug: sliding-window-b03
+difficulty: easy
+concepts:
+  - patterns.sliding_window
+  - patterns.running_total
+prerequisites:
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sliding_window.b03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original weather-station scenario producing a list of consecutive fixed-length rainfall totals.
+prompt_markdown: |
+  A weather station stores the millimetres of rain that fell on each day. To spot
+  wet spells, an analyst wants the total rainfall for every block of consecutive
+  days of a fixed length, listed in order from the earliest block to the latest.
+
+  Write `rolling_totals(data)` where `data` is a dict with two keys: `rainfall`
+  (a list of daily rainfall amounts) and `window` (the block length in days).
+  Return a list where each entry is the sum of one block of `window` consecutive
+  days. If `window` is larger than the number of days recorded, or is not
+  positive, return an empty list.
+starter_code: |
+  def rolling_totals(data):
+      return []
+function_name: rolling_totals
+input_mode: function
+solution_sketch: Sum the first block, then slide one day at a time by adding the incoming day and dropping the outgoing one, appending each total.
+sample_solution: |
+  def rolling_totals(data):
+      rainfall = data["rainfall"]
+      window = data["window"]
+      if window <= 0 or window > len(rainfall):
+          return []
+      total = sum(rainfall[:window])
+      result = [total]
+      for i in range(window, len(rainfall)):
+          total += rainfall[i] - rainfall[i - window]
+          result.append(total)
+      return result
+hints:
+  - level: 1
+    text: The number of blocks is the number of days minus the window length, plus one, when the window fits.
+  - level: 2
+    text: Compute the first block's total directly, then reuse it for the next block instead of re-adding everything.
+  - level: 3
+    text: Sliding forward means adding rainfall[i] and subtracting rainfall[i - window], then appending the new total.
+tests:
+  public:
+    - name: basic_two
+      input: { rainfall: [1, 2, 3, 4], window: 2 }
+      expected: [3, 5, 7]
+    - name: whole
+      input: { rainfall: [5, 5, 5], window: 3 }
+      expected: [15]
+    - name: window_one
+      input: { rainfall: [4, 0, 2], window: 1 }
+      expected: [4, 0, 2]
+  validation:
+    - name: too_big
+      input: { rainfall: [1, 2], window: 3 }
+      expected: []
+    - name: empty
+      input: { rainfall: [], window: 2 }
+      expected: []
+    - name: four_days
+      input: { rainfall: [2, 4, 6, 8, 10], window: 3 }
+      expected: [12, 18, 24]
+    - name: zeros
+      input: { rainfall: [0, 0, 0, 0], window: 2 }
+      expected: [0, 0, 0]
+explanation_markdown: |
+  Each block overlaps the previous one in all but its first and last day, so once
+  you know one block's total you can get the next in constant time: add the day
+  entering on the right and subtract the day leaving on the left. Starting from the
+  sum of the first `window` days, one pass produces every block total in O(n).
+  Guarding against a window longer than the data (or a non-positive window) keeps
+  the function from returning bogus blocks.
+common_mistakes:
+  - Producing the wrong number of blocks by looping past the last valid start day.
+  - Recomputing each block sum from scratch instead of sliding.
+  - Forgetting the empty-list result when the window does not fit the data.

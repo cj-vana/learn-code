@@ -1,0 +1,75 @@
+id: exercise.library.loops_lists_strings.a01
+kind: exercise
+version: 1
+language: python
+title: Count Trail Climbs
+slug: loops-lists-strings-a01
+difficulty: easy
+concepts:
+  - python.strings
+  - python.loops
+prerequisites:
+  - python.functions
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.loops_lists_strings.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original trail-terrain scenario, prompt, tests, and explanation.
+prompt_markdown: |
+  A park ranger records each segment of a trail as a single character in one
+  string: `'F'` for flat, `'U'` for uphill, and `'D'` for downhill. Write
+  `count_climbs(trail)` returning how many uphill (`'U'`) segments the trail has.
+  Only an uppercase `'U'` counts. An empty string returns 0.
+starter_code: |
+  def count_climbs(trail):
+      return 0
+function_name: count_climbs
+input_mode: function
+solution_sketch: Loop over the characters and count how many equal 'U'.
+sample_solution: |
+  def count_climbs(trail):
+      total = 0
+      for step in trail:
+          if step == 'U':
+              total += 1
+      return total
+hints:
+  - level: 1
+    text: A string can be looped over one character at a time.
+  - level: 2
+    text: Keep a counter that starts at 0 before the loop.
+  - level: 3
+    text: Add 1 to the counter only when the character equals 'U'.
+tests:
+  public:
+    - name: empty
+      input: ''
+      expected: 0
+    - name: one_climb
+      input: 'FFUF'
+      expected: 1
+    - name: mixed
+      input: 'UFDUU'
+      expected: 3
+  validation:
+    - name: no_climbs
+      input: 'FFDDF'
+      expected: 0
+    - name: all_climbs
+      input: 'UUUU'
+      expected: 4
+    - name: case_matters
+      input: 'uUuU'
+      expected: 2
+explanation_markdown: |
+  Iterating over a string yields one character per step. A running counter that
+  increases only when the character is `'U'` measures the uphill segments in a
+  single O(n) pass. Because the check is `== 'U'`, lowercase `'u'` is ignored.
+common_mistakes:
+  - Counting every character instead of only the uphill ones.
+  - Treating lowercase 'u' as an uphill segment.
+  - Resetting the counter inside the loop.

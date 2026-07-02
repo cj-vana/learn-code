@@ -1,0 +1,86 @@
+id: exercise.library.prefix_sums.a07
+kind: exercise
+version: 1
+language: python
+title: Rainfall Range Reports
+slug: prefix-sums-a07
+difficulty: medium
+concepts:
+  - patterns.prefix_sums
+prerequisites:
+  - python.lists
+estimated_time_minutes: 16
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.prefix_sums.a07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original weather-station rainfall range-query scenario with its own prompt, tests, and explanation.
+prompt_markdown: |
+  A weather station stores the millimetres of rain measured on each day of a
+  season. Reporters keep asking for the total rainfall over different date
+  ranges, so you precompute once and answer each request quickly.
+
+  Write `range_sum_queries(data)` where `data` is a dict with keys `readings` (a
+  list of daily rainfall totals) and `queries` (a list of `[start, end]` pairs of
+  0-based day indices, both ends inclusive). Return a list with the summed
+  rainfall for each query, in the same order the queries are given.
+starter_code: |
+  def range_sum_queries(data):
+      return []
+function_name: range_sum_queries
+input_mode: function
+solution_sketch: Build a prefix-sum array once, then answer each range as a subtraction of two prefixes.
+sample_solution: |
+  def range_sum_queries(data):
+      readings = data["readings"]
+      queries = data["queries"]
+      prefix = [0]
+      for value in readings:
+          prefix.append(prefix[-1] + value)
+      result = []
+      for start, end in queries:
+          result.append(prefix[end + 1] - prefix[start])
+      return result
+hints:
+  - level: 1
+    text: Precompute cumulative rainfall so any range total is one subtraction.
+  - level: 2
+    text: Let prefix[k] be the sum of the first k days, with prefix[0] equal to 0.
+  - level: 3
+    text: An inclusive range [start, end] sums to prefix[end + 1] - prefix[start].
+tests:
+  public:
+    - name: three_queries
+      input: {readings: [4, 2, 7, 1], queries: [[0, 1], [1, 3], [2, 2]]}
+      expected: [6, 10, 7]
+    - name: whole_season
+      input: {readings: [5, 5, 5], queries: [[0, 2]]}
+      expected: [15]
+    - name: no_queries
+      input: {readings: [3, 1, 4, 1, 5], queries: []}
+      expected: []
+  validation:
+    - name: single_day
+      input: {readings: [10], queries: [[0, 0]]}
+      expected: [10]
+    - name: overlapping_ranges
+      input: {readings: [1, 2, 3, 4], queries: [[0, 3], [2, 3], [0, 0]]}
+      expected: [10, 7, 1]
+    - name: uniform_days
+      input: {readings: [2, 2, 2, 2, 2], queries: [[1, 3], [0, 4]]}
+      expected: [6, 10]
+    - name: dry_and_wet
+      input: {readings: [0, 9, 0, 9], queries: [[0, 1], [2, 3]]}
+      expected: [9, 9]
+explanation_markdown: |
+  Building the prefix array costs O(n) once, after which every range query is an
+  O(1) subtraction, so `q` queries cost O(n + q) instead of O(n * q). The extra
+  leading `0` in `prefix` lets a range that starts on day 0 work without a special
+  case, since `prefix[start]` is then 0.
+common_mistakes:
+  - Using `prefix[end] - prefix[start]` and dropping the last day of the range.
+  - Forgetting the leading 0, which breaks queries that begin at index 0.
+  - Re-summing the slice for every query, which defeats the point of prefix sums.
