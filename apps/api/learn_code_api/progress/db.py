@@ -99,3 +99,15 @@ class ProgressRepository:
 
     def summary(self, *, now: datetime) -> ProgressSummary:
         return rollups_mod.build_summary(self._conn, now=now)
+
+    def concept_mastery_map(self) -> dict[str, int]:
+        """Read-only: current mastery score per concept."""
+        return rollups_mod.read_concept_mastery(self._conn)
+
+    def review_due_map(self) -> dict[str, datetime]:
+        """Read-only: current review due timestamp per concept."""
+        return rollups_mod.read_review_due(self._conn)
+
+    def concept_snapshot(self) -> dict[str, rollups_mod.ConceptSnapshotRow]:
+        """Read-only per-concept planner state built from rollups + events."""
+        return rollups_mod.read_concept_snapshot(self._conn)

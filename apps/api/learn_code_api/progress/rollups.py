@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import sqlite3
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 from enum import StrEnum
 
@@ -501,3 +502,73 @@ def _recommend_next_action(conn: sqlite3.Connection, *, now: datetime) -> str:
         return f"Practice {weak_row[0]}"
 
     return "Start a new exercise"
+
+
+@dataclass(frozen=True)
+class ConceptSnapshotRow:
+    """Read-only per-concept rollup state for the adaptive planner.
+
+    Neutral shape (no planner import) so the progress package stays a leaf:
+    the API wiring maps these rows into ``planner.ProgressSnapshot``.
+    """
+
+    concept_id: str
+    mastery: int
+    label: str
+    review_due_at: datetime | None
+    recent_attempts: int
+    last_status: str | None
+    last_confidence: int | None
+
+
+def read_concept_mastery(conn: sqlite3.Connection) -> dict[str, int]:
+    """Current mastery score per concept (empty when nothing recorded yet)."""
+    return {
+        row[0]: row[1]
+        for row in conn.execute("SELECT concept_id, mastery FROM concept_mastery").fetchall()
+    }
+
+
+def read_review_due(conn: sqlite3.Connection) -> dict[str, datetime]:
+    """Current review due timestamp per concept."""
+    return {
+        row[0]: datetime.fromisoformat(row[1])
+        for row in conn.execute("SELECT concept_id, review_due_at FROM review_queue").fetchall()
+    }
+
+
+def read_concept_snapshot(conn: sqlite3.Connection) -> dict[str, ConceptSnapshotRow]:
+    """Build per-concept planner state from the rollups plus the event log.
+
+    Deterministic: mastery/label/review come from the rollup tables, and the
+    recent-attempt signals are folded from ExerciseSubmitted events in
+    chronological order (spec ordering), so the last event wins.
+    """
+    mastery_rows = conn.execute(
+        "SELECT concept_id, mastery, label FROM concept_mastery"
+    ).fetchall()
+    review_due = read_review_due(conn)
+
+    recent_attempts: dict[str, int] = {}
+    last_status: dict[str, str] = {}
+    last_confidence: dict[str, int | None] = {}
+    for event in fetch_events_ordered(conn):
+        if event.type != EventType.EXERCISE_SUBMITTED:
+            continue
+        for concept_id in event.payload.get("concepts", []):
+            recent_attempts[concept_id] = recent_attempts.get(concept_id, 0) + 1
+            last_status[concept_id] = event.payload.get("status")
+            last_confidence[concept_id] = event.payload.get("confidence")
+
+    snapshot: dict[str, ConceptSnapshotRow] = {}
+    for concept_id, mastery, label in mastery_rows:
+        snapshot[concept_id] = ConceptSnapshotRow(
+            concept_id=concept_id,
+            mastery=mastery,
+            label=label,
+            review_due_at=review_due.get(concept_id),
+            recent_attempts=recent_attempts.get(concept_id, 0),
+            last_status=last_status.get(concept_id),
+            last_confidence=last_confidence.get(concept_id),
+        )
+    return snapshot
