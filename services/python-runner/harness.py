@@ -254,7 +254,7 @@ def _exercise_tests_result(
     # Grade in the parent: expected values only ever live here, so the child
     # process (the submission) can never read them off disk to fake a pass.
     cases = job.get("tests") or []
-    test_summary, had_crash, crash_type = _grade_cases(cases, payload["results"])
+    test_summary, had_crash, crash_type = _grade_cases(cases, payload.get("results"))
     passed_count = sum(1 for entry in test_summary if entry["passed"])
     failed_count = len(test_summary) - passed_count
 
@@ -280,19 +280,54 @@ def _exercise_tests_result(
     )
 
 
-def _grade_cases(cases: list, raw_results: list) -> tuple[list, bool, str | None]:
+def _grade_cases(cases: list, raw_results) -> tuple[list, bool, str | None]:
     """Compare each recorded actual output against the (parent-held) expected.
+
+    Grading is driven by the parent-held ``cases`` list, never by the length or
+    contents of the child-reported ``raw_results``. The child process is the
+    untrusted submission: it can print extra, reordered, or truncated result
+    sentinels (e.g. via an ``atexit`` handler that omits hidden validation
+    cases). Results are matched back to cases by name and any case the child
+    failed to report is counted as a failure, so a submission can never make a
+    case silently vanish from the score.
 
     Validation-visibility messages are sanitized here so hidden inputs/expected
     values are never returned to the frontend.
     """
+    results_by_name: dict = {}
+    if isinstance(raw_results, list):
+        for res in raw_results:
+            if isinstance(res, dict):
+                res_name = res.get("name")
+                # Keep the first report for a name so a later forged duplicate
+                # cannot override the genuine appendix result.
+                if res_name is not None and res_name not in results_by_name:
+                    results_by_name[res_name] = res
+
     test_summary: list[dict] = []
     had_crash = False
     crash_type: str | None = None
 
-    for case, res in zip(cases, raw_results):
+    for case in cases:
         name = case["name"]
         visibility = case["visibility"]
+        res = results_by_name.get(name)
+
+        if res is None:
+            # The child never reported a result for this case (missing or forged
+            # output). Treat it as a crash so it can never count as a pass.
+            had_crash = True
+            crash_type = crash_type or "MissingResult"
+            message = (
+                "No result was reported for this test."
+                if visibility == "public"
+                else "Validation test did not pass."
+            )
+            test_summary.append(
+                {"name": name, "visibility": visibility, "passed": False, "message": message}
+            )
+            continue
+
         outcome = res.get("outcome")
 
         if outcome == "missing_function":

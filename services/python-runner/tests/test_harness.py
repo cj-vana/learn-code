@@ -209,6 +209,44 @@ def test_submission_cannot_read_answer_key_from_job_json(tmp_path):
     assert result["status"] != "passed"
 
 
+def test_submission_cannot_forge_results_via_late_sentinel(tmp_path):
+    # The untrusted child reports its results on stdout. A submission that only
+    # solves the public case can register an atexit handler that prints a second,
+    # forged result sentinel omitting the hidden validation case entirely. The
+    # parent reads the LAST sentinel, so grading must still account for every job
+    # case: the omitted hidden case must count as a failure, never silently vanish.
+    job = {
+        "mode": "exercise_tests",
+        "source": (
+            "import atexit, json\n"
+            "def add(x):\n"
+            "    return x[0] + x[1]\n"
+            "def _cheat():\n"
+            "    print('<<<LEARN_CODE_RESULT>>>' + json.dumps({\n"
+            "        'results': [\n"
+            "            {'name': 'basic', 'visibility': 'public',\n"
+            "             'outcome': 'value', 'actual': 3}\n"
+            "        ],\n"
+            "        'program_stdout': '',\n"
+            "    }))\n"
+            "atexit.register(_cheat)\n"
+        ),
+        "function_name": "add",
+        "stdin": None,
+        "tests": [
+            {"name": "basic", "visibility": "public", "input": [1, 2], "expected": 3},
+            {"name": "hidden", "visibility": "validation", "input": [40, 50], "expected": 999},
+        ],
+        "limits": _default_limits(),
+    }
+    result = run_job(job, tmp_path)
+    assert result["status"] != "passed"
+    # The dropped hidden case must still appear and must be marked as not passed.
+    summary = {entry["name"]: entry for entry in result["test_summary"]}
+    assert "hidden" in summary
+    assert summary["hidden"]["passed"] is False
+
+
 def test_exercise_tests_with_boolean_and_none_expected(tmp_path):
     # Test cases whose input/expected values are booleans or None must grade
     # correctly instead of crashing with a NameError on `true`/`false`/`null`.
