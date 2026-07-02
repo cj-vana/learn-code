@@ -19,13 +19,15 @@ TINY_DRILL_MAX_MINUTES = 5
 LOW_CONFIDENCE_THRESHOLD = 3
 TARGET_DATE_WINDOW_DAYS = 30
 DEFAULT_LIMIT = 5
+QUIZ_READY_MASTERY = 60  # spec tie-break: "several patterns above 60" prefer quizzes
+QUIZ_READY_MIN_CONCEPTS = 2
 
 TIER_BASE_PRIORITY = {
     1: 1.0,  # due reviews for weak/recently failed concepts
     2: 0.8,  # prerequisites blocking high-value patterns
     3: 0.6,  # weak patterns below 50 mastery
     4: 0.4,  # new high-yield patterns
-    5: 0.2,  # mixed recognition quizzes (no quiz content in V1 catalog)
+    5: 0.2,  # mixed recognition quizzes
     6: 0.05,  # capstone / timed practice
 }
 DEPTH_PENALTY = 0.02
@@ -90,6 +92,8 @@ class ConceptProgress:
 class ProgressSnapshot:
     concepts: dict[str, ConceptProgress] = field(default_factory=dict)
     target_interview_date: date | None = None
+    completed_lesson_ids: frozenset[str] = frozenset()
+    completed_quiz_ids: frozenset[str] = frozenset()
 
     def concept(self, concept_id: str) -> ConceptProgress:
         return self.concepts.get(
@@ -105,7 +109,10 @@ class ProgressSnapshot:
 
 @dataclass(frozen=True)
 class _Candidate:
-    exercise: ExerciseContent
+    content_id: str
+    title: str
+    concepts: list[str]
+    estimated_time_minutes: int
     tier: int
     kind: PlanKind
     priority: float
@@ -123,9 +130,8 @@ def build_today_plan(
     """Build a deterministic, priority-ordered Today plan.
 
     See spec: Adaptive planning > Prioritization order and Tie-breaking.
-    V1 content only ships exercises (see content/loader.py), so this only
-    ever emits "exercise" and "review" plan items; lesson/quiz/capstone
-    tiers are reserved for when that content exists.
+    Emits exercise/review items, lesson items for weak or new concepts, and
+    quiz items for due reviews and mixed discrimination practice.
     """
     prereq_depth = _concept_prereq_depth(catalog)
     blocking_concepts = _blocking_concepts(catalog)
@@ -137,13 +143,21 @@ def build_today_plan(
         )
         if candidate is not None:
             candidates.append(candidate)
+    for lesson in sorted(catalog.lessons, key=lambda item: item.id):
+        candidate = _classify_lesson(lesson, progress, prereq_depth, blocking_concepts)
+        if candidate is not None:
+            candidates.append(candidate)
+    for quiz in sorted(catalog.quizzes, key=lambda item: item.id):
+        candidate = _classify_quiz(quiz, progress, now, prereq_depth)
+        if candidate is not None:
+            candidates.append(candidate)
 
-    candidates.sort(key=lambda candidate: (-candidate.priority, candidate.exercise.id))
+    candidates.sort(key=lambda candidate: (-candidate.priority, candidate.content_id))
 
     items: list[PlanItem] = []
     for index, candidate in enumerate(candidates[:limit]):
         alternatives = [
-            other.exercise.id
+            other.content_id
             for other in candidates[index + 1 : index + 1 + 2]
         ]
         items.append(_to_plan_item(candidate, alternatives))
@@ -295,8 +309,93 @@ def _classify_exercise(
     return None
 
 
+def _classify_lesson(
+    lesson,
+    progress: ProgressSnapshot,
+    prereq_depth: dict[str, int],
+    blocking_concepts: set[str],
+) -> _Candidate | None:
+    """Lessons teach a concept once: emit while any covered concept is below
+    practicing mastery and the lesson is not yet completed. Completed lessons
+    never re-emit (reviews happen through drills and quizzes, not re-reading).
+    """
+    if lesson.id in progress.completed_lesson_ids:
+        return None
+    concept_states = [progress.concept(concept_id) for concept_id in lesson.concepts]
+    below = [state for state in concept_states if state.mastery < PRACTICING_FLOOR]
+    if not below:
+        return None
+    primary = min(below, key=lambda state: (state.mastery, state.concept_id))
+    tier = 2 if primary.concept_id in blocking_concepts else 4
+    return _build_candidate(
+        lesson,
+        tier=tier,
+        kind=PlanKind.LESSON,
+        primary=primary,
+        prereq_depth=prereq_depth,
+        reason=f"Lesson for {primary.concept_id} before more practice",
+        because=[f"{primary.concept_id} mastery is {primary.mastery}"],
+    )
+
+
+def _classify_quiz(
+    quiz,
+    progress: ProgressSnapshot,
+    now: datetime,
+    prereq_depth: dict[str, int],
+) -> _Candidate | None:
+    """Tier 1: a quiz is the review vehicle when one of its concepts is due
+    and weak (even if the quiz was completed before). Tier 5: mixed
+    discrimination practice once several concepts are above QUIZ_READY_MASTERY
+    (spec tie-break: "Prefer mixed quizzes when several patterns are above
+    60"); completed quizzes do not re-emit at tier 5.
+    """
+    concept_states = [progress.concept(concept_id) for concept_id in quiz.concepts]
+
+    due_weak = [
+        state
+        for state in concept_states
+        if state.review_due_at is not None
+        and state.review_due_at <= now
+        and (state.mastery < PRACTICING_FLOOR or state.last_status not in (None, "passed"))
+    ]
+    if due_weak:
+        primary = min(due_weak, key=lambda state: (state.mastery, state.concept_id))
+        return _build_candidate(
+            quiz,
+            tier=1,
+            kind=PlanKind.QUIZ,
+            primary=primary,
+            prereq_depth=prereq_depth,
+            reason=f"Review quiz for {primary.concept_id} after recent difficulty",
+            because=[
+                f"{primary.concept_id} mastery is {primary.mastery}",
+                f"review was due at {primary.review_due_at.isoformat()}",
+            ],
+        )
+
+    if quiz.id in progress.completed_quiz_ids:
+        return None
+
+    ready = [state for state in concept_states if state.mastery >= QUIZ_READY_MASTERY]
+    if len(ready) >= QUIZ_READY_MIN_CONCEPTS:
+        primary = min(ready, key=lambda state: (state.mastery, state.concept_id))
+        return _build_candidate(
+            quiz,
+            tier=5,
+            kind=PlanKind.QUIZ,
+            primary=primary,
+            prereq_depth=prereq_depth,
+            reason="Mixed quiz to discriminate between practiced patterns",
+            because=[
+                f"{len(ready)} concepts are at or above {QUIZ_READY_MASTERY} mastery"
+            ],
+        )
+    return None
+
+
 def _build_candidate(
-    exercise: ExerciseContent,
+    content,
     *,
     tier: int,
     kind: PlanKind,
@@ -310,7 +409,7 @@ def _build_candidate(
     priority -= min(depth, MAX_TIE_BREAK_STEPS) * DEPTH_PENALTY
     priority -= min(primary.recent_attempts, MAX_TIE_BREAK_STEPS) * ATTEMPTS_PENALTY
 
-    is_tiny_drill = exercise.estimated_time_minutes <= TINY_DRILL_MAX_MINUTES
+    is_tiny_drill = content.estimated_time_minutes <= TINY_DRILL_MAX_MINUTES
     low_confidence = (
         primary.last_confidence is not None and primary.last_confidence < LOW_CONFIDENCE_THRESHOLD
     )
@@ -320,7 +419,10 @@ def _build_candidate(
     priority = round(min(max(priority, 0.0), 1.0), 4)
 
     return _Candidate(
-        exercise=exercise,
+        content_id=content.id,
+        title=content.title,
+        concepts=list(content.concepts),
+        estimated_time_minutes=content.estimated_time_minutes,
         tier=tier,
         kind=kind,
         priority=priority,
@@ -330,16 +432,17 @@ def _build_candidate(
 
 
 def _to_plan_item(candidate: _Candidate, alternatives: list[str]) -> PlanItem:
-    exercise = candidate.exercise
-    item_id = str(uuid.uuid5(_PLAN_ITEM_NAMESPACE, f"{candidate.kind.value}:{exercise.id}"))
+    item_id = str(
+        uuid.uuid5(_PLAN_ITEM_NAMESPACE, f"{candidate.kind.value}:{candidate.content_id}")
+    )
     return PlanItem(
         id=item_id,
         kind=candidate.kind,
-        content_id=exercise.id,
-        title=exercise.title,
-        concepts=list(exercise.concepts),
+        content_id=candidate.content_id,
+        title=candidate.title,
+        concepts=list(candidate.concepts),
         priority=candidate.priority,
-        estimated_time_minutes=exercise.estimated_time_minutes,
+        estimated_time_minutes=candidate.estimated_time_minutes,
         rationale=Rationale(
             reason=candidate.reason,
             because=candidate.because,

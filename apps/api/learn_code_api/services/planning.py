@@ -20,7 +20,7 @@ from learn_code_api.progress.db import ProgressRepository
 from learn_code_api.progress.rollups import MasteryLabel
 
 
-def build_snapshot(repo: ProgressRepository) -> ProgressSnapshot:
+def build_snapshot(repo: ProgressRepository, catalog: ContentCatalog) -> ProgressSnapshot:
     rows = repo.concept_snapshot()
     concepts = {
         concept_id: ConceptProgress(
@@ -35,12 +35,23 @@ def build_snapshot(repo: ProgressRepository) -> ProgressSnapshot:
         )
         for concept_id, row in rows.items()
     }
+    coverage = repo.quiz_question_coverage()
+    completed_quiz_ids = frozenset(
+        quiz.id
+        for quiz in catalog.quizzes
+        if {question.id for question in quiz.questions} <= coverage.get(quiz.id, set())
+    )
     # V1 has no target-date UI, so interview date pacing stays unset.
-    return ProgressSnapshot(concepts=concepts, target_interview_date=None)
+    return ProgressSnapshot(
+        concepts=concepts,
+        target_interview_date=None,
+        completed_lesson_ids=frozenset(repo.completed_lesson_ids()),
+        completed_quiz_ids=completed_quiz_ids,
+    )
 
 
 def today_plan(
     catalog: ContentCatalog, repo: ProgressRepository, *, now: datetime
 ) -> list[PlanItem]:
-    snapshot = build_snapshot(repo)
+    snapshot = build_snapshot(repo, catalog)
     return build_today_plan(catalog, snapshot, now=now)

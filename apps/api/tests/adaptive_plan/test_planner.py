@@ -7,7 +7,12 @@ from learn_code_api.adaptive_plan.planner import (
     ProgressSnapshot,
     build_today_plan,
 )
-from learn_code_api.content.models import ContentCatalog, ExerciseContent
+from learn_code_api.content.models import (
+    ContentCatalog,
+    ExerciseContent,
+    LessonContent,
+    QuizContent,
+)
 from learn_code_api.progress.rollups import MasteryLabel
 from tests.content.test_models import valid_exercise_data
 
@@ -240,3 +245,163 @@ def test_capstone_requires_all_concepts_at_least_practicing():
     assert len(plan) == 1
     assert plan[0].content_id == exercise.id
     assert plan[0].kind == "exercise"
+
+
+def _test_provenance() -> dict:
+    return {
+        "brief_id": "t.planner",
+        "author": "generated",
+        "generated_at": "2026-07-02T00:00:00Z",
+        "inspiration_sources": [],
+        "originality_notes": "Original planner fixture.",
+    }
+
+
+def make_lesson(**overrides: object) -> LessonContent:
+    data = {
+        "id": "lesson.t.1",
+        "kind": "lesson",
+        "version": 1,
+        "language": "python",
+        "title": "Lesson fixture",
+        "slug": "lesson-fixture",
+        "difficulty": "easy",
+        "concepts": ["python.lists"],
+        "prerequisites": [],
+        "estimated_time_minutes": 10,
+        "review_status": "published",
+        "source_status": "original",
+        "provenance": _test_provenance(),
+        "body_markdown": "Body.",
+        "checkpoints": [{"question": "q?", "answer": "a", "explanation": "e"}],
+    }
+    data.update(overrides)
+    return LessonContent.model_validate(data)
+
+
+def make_quiz(**overrides: object) -> QuizContent:
+    data = {
+        "id": "quiz.t.1",
+        "kind": "quiz",
+        "version": 1,
+        "language": "python",
+        "title": "Quiz fixture",
+        "slug": "quiz-fixture",
+        "difficulty": "easy",
+        "concepts": ["python.lists", "python.strings"],
+        "prerequisites": [],
+        "estimated_time_minutes": 5,
+        "review_status": "published",
+        "source_status": "original",
+        "provenance": _test_provenance(),
+        "quiz_type": "mixed_review",
+        "questions": [
+            {
+                "id": "quiz.t.1.q1",
+                "prompt": "?",
+                "choices": ["a", "b"],
+                "correct_choice": "a",
+                "explanation": "because",
+                "concepts": ["python.lists"],
+            }
+        ],
+    }
+    data.update(overrides)
+    return QuizContent.model_validate(data)
+
+
+def _concept(
+    concept_id: str,
+    *,
+    mastery: int,
+    review_due_at: datetime | None = None,
+    last_status: str | None = None,
+) -> ConceptProgress:
+    from learn_code_api.progress.rollups import mastery_label
+
+    return ConceptProgress(
+        concept_id=concept_id,
+        mastery=mastery,
+        label=mastery_label(mastery),
+        attempted=True,
+        review_due_at=review_due_at,
+        last_status=last_status,
+    )
+
+
+def test_lesson_emitted_for_new_concept():
+    catalog = ContentCatalog(
+        exercises=[], lessons=[make_lesson(id="lesson.l1")], quizzes=[]
+    )
+    snapshot = ProgressSnapshot(concepts={})
+    items = build_today_plan(catalog, snapshot, now=NOW)
+    assert [item.kind.value for item in items] == ["lesson"]
+    assert items[0].content_id == "lesson.l1"
+
+
+def test_completed_lesson_never_reemits():
+    catalog = ContentCatalog(
+        exercises=[], lessons=[make_lesson(id="lesson.l1")], quizzes=[]
+    )
+    snapshot = ProgressSnapshot(
+        concepts={}, completed_lesson_ids=frozenset({"lesson.l1"})
+    )
+    assert build_today_plan(catalog, snapshot, now=NOW) == []
+
+
+def test_lesson_not_emitted_once_concepts_practicing():
+    catalog = ContentCatalog(
+        exercises=[], lessons=[make_lesson(id="lesson.l1")], quizzes=[]
+    )
+    snapshot = ProgressSnapshot(
+        concepts={"python.lists": _concept("python.lists", mastery=60)}
+    )
+    assert build_today_plan(catalog, snapshot, now=NOW) == []
+
+
+def test_quiz_emitted_when_concepts_ready():
+    catalog = ContentCatalog(exercises=[], lessons=[], quizzes=[make_quiz(id="quiz.q1")])
+    snapshot = ProgressSnapshot(
+        concepts={
+            "python.lists": _concept("python.lists", mastery=65),
+            "python.strings": _concept("python.strings", mastery=70),
+        }
+    )
+    items = build_today_plan(catalog, snapshot, now=NOW)
+    assert [item.kind.value for item in items] == ["quiz"]
+    assert items[0].content_id == "quiz.q1"
+
+
+def test_completed_quiz_not_reemitted_when_not_due():
+    catalog = ContentCatalog(exercises=[], lessons=[], quizzes=[make_quiz(id="quiz.q1")])
+    snapshot = ProgressSnapshot(
+        concepts={
+            "python.lists": _concept("python.lists", mastery=65),
+            "python.strings": _concept("python.strings", mastery=70),
+        },
+        completed_quiz_ids=frozenset({"quiz.q1"}),
+    )
+    assert build_today_plan(catalog, snapshot, now=NOW) == []
+
+
+def test_due_review_quiz_outranks_and_reemits_even_if_completed():
+    catalog = ContentCatalog(
+        exercises=[],
+        lessons=[],
+        quizzes=[make_quiz(id="quiz.q1", concepts=["python.lists"])],
+    )
+    snapshot = ProgressSnapshot(
+        concepts={
+            "python.lists": _concept(
+                "python.lists",
+                mastery=30,
+                review_due_at=NOW,
+                last_status="failed_tests",
+            )
+        },
+        completed_quiz_ids=frozenset({"quiz.q1"}),
+    )
+    items = build_today_plan(catalog, snapshot, now=NOW)
+    assert len(items) == 1
+    assert items[0].kind.value == "quiz"
+    assert items[0].priority >= 0.9
