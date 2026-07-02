@@ -2,6 +2,7 @@ import { Navigate, Route, Routes } from 'react-router-dom';
 import { WorkbenchShell } from './components/WorkbenchShell';
 import { LearnRoute } from './routes/LearnRoute';
 import { ExerciseRoute } from './routes/ExerciseRoute';
+import { LessonRoute } from './routes/LessonRoute';
 import { PlaygroundRoute } from './routes/PlaygroundRoute';
 import { ReviewRoute } from './routes/ReviewRoute';
 import { LibraryRoute } from './routes/LibraryRoute';
@@ -15,6 +16,7 @@ export function App() {
         <Route index element={<Navigate to="/learn" replace />} />
         <Route path="/learn" element={<LearnRoute />} />
         <Route path="/exercise/:id" element={<ExerciseRoute />} />
+        <Route path="/lesson/:id" element={<LessonRoute />} />
         <Route path="/playground" element={<PlaygroundRoute />} />
         <Route path="/review" element={<ReviewRoute />} />
         <Route path="/library" element={<LibraryRoute />} />
