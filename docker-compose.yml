@@ -1,0 +1,95 @@
+# Learn Code -- single-host Docker Compose stack.
+#
+# `docker compose up --build` builds all four images and starts web + api +
+# runner-broker. python-runner is a build-only image (scale 0): it is built but
+# never started as a long-lived service; runner-broker `docker run`s a fresh
+# container from it per job.
+#
+# SECURITY BOUNDARY: runner-broker is the ONLY service that mounts the Docker
+# socket. web and api never touch it and reach the runner solely over HTTP
+# (RUNNER_BROKER_URL). `docker compose config` is the V1 release gate.
+#
+# Config lives in .env.example; copy it to .env to override any value.
+
+name: learn-code
+
+services:
+  web:
+    build:
+      context: ./apps/web
+    # localhost-only publish. The Vite dev server proxies /api -> api:8000 by
+    # service name (apps/web/vite.config.ts), so the browser only sees /api.
+    ports:
+      - "127.0.0.1:5173:5173"
+    environment:
+      VITE_API_PROXY_TARGET: ${VITE_API_PROXY_TARGET:-http://api:8000}
+    depends_on:
+      - api
+
+  api:
+    build:
+      context: ./apps/api
+    # localhost-only publish. The API is the only SQLite writer.
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      # SQLite lives on the api-data named volume; sqlite:////data/... is an
+      # absolute path (four slashes), parsed by dependencies._database_path_from_env.
+      LEARN_CODE_DATABASE_URL: sqlite:////data/learn-code.sqlite3
+      LEARN_CODE_CONTENT_ROOT: ${LEARN_CODE_CONTENT_ROOT:-/srv/content/python}
+      RUNNER_BROKER_URL: http://runner-broker:8080
+      OLLAMA_ENABLED: ${OLLAMA_ENABLED:-auto}
+      OLLAMA_HOST: ${OLLAMA_HOST:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-granite-code:8b}
+      OLLAMA_TIMEOUT_SECONDS: ${OLLAMA_TIMEOUT_SECONDS:-30}
+    volumes:
+      # Persistent SQLite: survives restarts via the named volume.
+      - api-data:/data
+      # Content is data, not code: mount read-only so authoring needs no rebuild.
+      - ./content:/srv/content:ro
+    # On Linux, host.docker.internal resolves to the host so a host-run Ollama is
+    # reachable (Docker Desktop already provides this mapping).
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - runner-broker
+    # SECURITY: the api must NOT mount /var/run/docker.sock.
+
+  runner-broker:
+    build:
+      context: ./services/runner-broker
+    # Internal only: NO host port. Reachable only by the api over the compose
+    # network. This is the ONLY service that mounts the Docker socket; it creates
+    # sibling python-runner containers on the HOST daemon.
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      # SIBLING-CONTAINER WORKSPACE PATH: the executor does
+      # tempfile.mkdtemp(dir=RUNNER_WORKSPACE_ROOT) then bind-mounts that dir to
+      # /workspace in a runner container it launches via the HOST daemon. The
+      # daemon resolves the bind SOURCE on the HOST, not inside this container,
+      # so the workspace dir must exist at the SAME ABSOLUTE PATH on the host and
+      # in here. Binding host:container to the identical absolute path guarantees
+      # it. RUNNER_WORKSPACE_DIR must be an absolute path (default /tmp/learn-code-runner).
+      - ${RUNNER_WORKSPACE_DIR:-/tmp/learn-code-runner}:${RUNNER_WORKSPACE_DIR:-/tmp/learn-code-runner}
+      # exercise_tests.py resolves test cases from the content tree by id.
+      - ./content:/srv/content:ro
+    environment:
+      PYTHON_RUNNER_IMAGE: ${PYTHON_RUNNER_IMAGE:-learn-code-python-runner:local}
+      RUNNER_WORKSPACE_ROOT: ${RUNNER_WORKSPACE_DIR:-/tmp/learn-code-runner}
+      LEARN_CODE_CONTENT_ROOT: ${LEARN_CODE_CONTENT_ROOT:-/srv/content/python}
+    # No depends_on python-runner: python-runner is a build-only image (below),
+    # not a runtime service. runner-broker only needs its tag to exist, which
+    # `docker compose build` / `up --build` guarantees.
+
+  # Build-only image for the short-lived execution containers. `scale: 0` means
+  # `docker compose build` and `up --build` BUILD the tag runner-broker runs,
+  # but `up` never starts it as a long-lived service. It has no ports and no
+  # Docker socket.
+  python-runner:
+    build:
+      context: ./services/python-runner
+    image: ${PYTHON_RUNNER_IMAGE:-learn-code-python-runner:local}
+    scale: 0
+
+volumes:
+  api-data:
