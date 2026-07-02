@@ -16,6 +16,8 @@ import { CommandButton } from '../components/CommandButton';
 import { TestReceipt } from '../components/TestReceipt';
 import { HintLadder } from '../components/HintLadder';
 import { MasteryMeter } from '../components/MasteryMeter';
+import { TimedBanner, useActiveTimedSession } from '../components/TimedBanner';
+import { recordOutcome } from '../lib/timedSession';
 import { describeError, formatMinutes, humanizeConcept, masteryLabel } from '../lib/format';
 
 const CONFIDENCE_LEVELS = [1, 2, 3, 4, 5];
@@ -67,17 +69,30 @@ export function ExerciseRoute() {
     run.mutate({ exercise_id: id, language: 'python', source });
   };
 
+  const timedSession = useActiveTimedSession(id);
+  const inTimedSession = Boolean(
+    id && timedSession?.exercises.some((exercise) => exercise.id === id),
+  );
+
   const onSubmit = () => {
     if (!id || !detail) return;
-    submit.mutate({
-      exercise_id: id,
-      content_version: detail.version,
-      language: 'python',
-      source,
-      predicted_pattern: predictedPattern,
-      confidence,
-      hints_used: revealedHints,
-    });
+    submit.mutate(
+      {
+        exercise_id: id,
+        content_version: detail.version,
+        language: 'python',
+        source,
+        predicted_pattern: predictedPattern,
+        confidence,
+        hints_used: revealedHints,
+        timed_session_id: inTimedSession ? timedSession?.session_id : null,
+      },
+      {
+        onSuccess: (response) => {
+          if (inTimedSession) recordOutcome(id, response.run.status);
+        },
+      },
+    );
   };
 
   const onRequestReview = () => {
@@ -97,6 +112,9 @@ export function ExerciseRoute() {
   return (
     <div className="stack">
       <PageHeading kicker="Solve Bench" title={detail?.title ?? 'Exercise'} />
+      {id && inTimedSession && timedSession ? (
+        <TimedBanner exerciseId={id} session={timedSession} />
+      ) : null}
 
       <QueryState
         isLoading={content.isLoading}

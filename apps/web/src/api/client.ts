@@ -32,6 +32,8 @@ import type {
   ReviewRequest,
   RunResult,
   SubmissionResponse,
+  TimedSessionRequest,
+  TimedSessionResponse,
 } from '../contracts';
 
 export const API_BASE = '/api/v1';
@@ -182,6 +184,13 @@ export const apiClient = {
       method: 'POST',
       signal,
     });
+  },
+
+  startTimedSession(
+    body: TimedSessionRequest,
+    signal?: AbortSignal,
+  ): Promise<TimedSessionResponse> {
+    return request<TimedSessionResponse>('/sessions/timed', { method: 'POST', body, signal });
   },
 
   unenrollPath(pathId: string, signal?: AbortSignal): Promise<PathEnrollmentResponse> {

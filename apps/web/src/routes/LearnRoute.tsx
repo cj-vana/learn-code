@@ -153,6 +153,17 @@ export function LearnRoute() {
             </QueryState>
           </Panel>
 
+          <Panel title="Timed practice" eyebrow="Interview simulation">
+            <p className="muted">
+              Pick a problem count, set a per-problem clock, and solve against it.
+            </p>
+            <div className="command-row">
+              <Link className="command-btn" to="/timed">
+                Open the stopwatch bench
+              </Link>
+            </div>
+          </Panel>
+
           <Panel title="Mistake inbox" eyebrow="Filed for follow-up" tone="ink">
             <QueryState
               isLoading={progress.isLoading}

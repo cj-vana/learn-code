@@ -142,6 +142,7 @@ export interface ExerciseSubmissionRequest {
   predicted_pattern?: string | null;
   confidence?: number | null;
   hints_used?: number;
+  timed_session_id?: string | null;
 }
 
 export interface ProgressDelta {
@@ -259,6 +260,25 @@ export interface PathDetail {
 export interface PathEnrollmentResponse {
   path_id: string;
   enrolled: boolean;
+}
+
+export interface TimedSessionRequest {
+  concept_filter?: string | null;
+  count?: number;
+  minutes_per_problem?: number;
+}
+
+export interface TimedSessionExercise {
+  id: string;
+  title: string;
+  concepts: string[];
+  estimated_time_minutes: number;
+}
+
+export interface TimedSessionResponse {
+  session_id: string;
+  minutes_per_problem: number;
+  exercises: TimedSessionExercise[];
 }
 
 export interface QuizAnswerResponse {

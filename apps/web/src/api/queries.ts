@@ -12,6 +12,7 @@ import type {
   PublicRunRequest,
   QuizAnswerRequest,
   ReviewRequest,
+  TimedSessionRequest,
 } from '../contracts';
 
 export const queryKeys = {
@@ -149,6 +150,12 @@ export function useUnenrollPath() {
       void queryClient.invalidateQueries({ queryKey: queryKeys.paths });
       void queryClient.invalidateQueries({ queryKey: queryKeys.plan });
     },
+  });
+}
+
+export function useStartTimedSession() {
+  return useMutation({
+    mutationFn: (body: TimedSessionRequest) => apiClient.startTimedSession(body),
   });
 }
 
