@@ -48,3 +48,10 @@ export function formatDueDate(iso: string | null): string {
     year: 'numeric',
   });
 }
+
+/** Single source of truth for kind -> route mapping; `review` items are
+ *  exercises resurfaced by the planner. */
+export function contentHref(kind: string, id: string): string {
+  const base = kind === 'lesson' ? '/lesson' : kind === 'quiz' ? '/quiz' : '/exercise';
+  return `${base}/${encodeURIComponent(id)}`;
+}

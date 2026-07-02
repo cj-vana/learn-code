@@ -6,10 +6,10 @@ import { Panel } from '../components/Panel';
 import { QueryState } from '../components/QueryState';
 import { PatternChip } from '../components/PatternChip';
 import { RationaleDisclosure } from '../components/RationaleDisclosure';
-import { formatMinutes, humanizeConcept } from '../lib/format';
+import { contentHref, formatMinutes, humanizeConcept } from '../lib/format';
 
 function planHref(item: PlanItem): string {
-  return `/exercise/${encodeURIComponent(item.content_id)}`;
+  return contentHref(item.kind, item.content_id);
 }
 
 function AdaptivePlanCard({ item }: { item: PlanItem }) {
