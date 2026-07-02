@@ -155,6 +155,34 @@ def quiz(quiz_id: str) -> None:
 
 
 @app.command()
+def paths() -> None:
+    """List learning paths with enrollment and progress."""
+    items = _handle(lambda: _client().paths())
+    typer.echo(render.render_paths(items))
+
+
+@app.command()
+def path(path_id: str) -> None:
+    """Show a path's syllabus with per-item status."""
+    detail = _handle(lambda: _client().path_detail(path_id))
+    typer.echo(render.render_path_detail(detail))
+
+
+@app.command()
+def enroll(path_id: str) -> None:
+    """Enroll in a path (supersedes any current enrollment)."""
+    response = _handle(lambda: _client().enroll_path(path_id))
+    typer.echo(f"Enrolled in {response['path_id']}.")
+
+
+@app.command()
+def unenroll(path_id: str) -> None:
+    """Leave a path; derived progress is kept."""
+    response = _handle(lambda: _client().unenroll_path(path_id))
+    typer.echo(f"Unenrolled from {response['path_id']}.")
+
+
+@app.command()
 def progress() -> None:
     """Show mastery, streak, and the next recommended action."""
     summary = _handle(lambda: _client().progress())

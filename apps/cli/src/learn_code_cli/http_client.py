@@ -100,6 +100,18 @@ class ApiClient:
             json={"language": "python", "source": source, "stdin": stdin},
         )
 
+    def paths(self) -> list[dict[str, Any]]:
+        return self._request("GET", "/paths")
+
+    def path_detail(self, path_id: str) -> dict[str, Any]:
+        return self._request("GET", f"/paths/{path_id}")
+
+    def enroll_path(self, path_id: str) -> dict[str, Any]:
+        return self._request("POST", f"/paths/{path_id}/enroll")
+
+    def unenroll_path(self, path_id: str) -> dict[str, Any]:
+        return self._request("POST", f"/paths/{path_id}/unenroll")
+
     def answer_quiz(self, quiz_id: str, question_id: str, choice: str) -> dict[str, Any]:
         return self._request(
             "POST",

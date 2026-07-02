@@ -94,6 +94,40 @@ def render_lesson(detail: dict[str, Any]) -> str:
     return "\n".join(lines)
 
 
+def render_paths(items: list[dict[str, Any]]) -> str:
+    if not items:
+        return "No paths published yet."
+    lines = []
+    for item in items:
+        marker = "enrolled" if item.get("enrolled") else "       -"
+        lines.append(
+            f"[{marker}] {item['percent_complete']:>3}%  {item['id']}  "
+            f"({item['path_type']}, {item['units']} units, ~{item['estimated_hours']}h)  "
+            f"{item['title']}"
+        )
+    return "\n".join(lines)
+
+
+def render_path_detail(detail: dict[str, Any]) -> str:
+    lines = [
+        f"{detail['title']}  ({detail['path_type']} path · ~{detail['estimated_hours']}h · "
+        f"{detail['percent_complete']}% complete)",
+        detail["description"],
+    ]
+    for unit in detail.get("units", []):
+        lines.append("")
+        lines.append(f"{unit['title']}  [{unit['percent_complete']}%]")
+        for item in unit.get("items", []):
+            mark = "x" if item["status"] == "complete" else " "
+            lines.append(
+                f"  [{mark}] {item['kind']:<8} {item['title']}  ({item['id']})"
+            )
+    if detail.get("next_item_id"):
+        lines.append("")
+        lines.append(f"next: {detail['next_item_id']}")
+    return "\n".join(lines)
+
+
 def render_progress(summary: dict[str, Any]) -> str:
     lines = [
         f"streak: {summary.get('streak_days', 0)} days | "

@@ -349,3 +349,92 @@ def test_missing_solution_file_is_friendly(runner, tmp_path):
     result = runner.invoke(app, ["run", "ex", str(tmp_path / "nope.py")])
     assert result.exit_code == 1
     assert "Can't read" in result.stdout
+
+
+PATH_SUMMARY = {
+    "id": "path.skill.python_foundations",
+    "path_type": "skill",
+    "title": "Python Foundations",
+    "slug": "python-foundations",
+    "description": "The ground floor.",
+    "outcomes": ["Use variables and conditionals"],
+    "estimated_hours": 9,
+    "units": 2,
+    "items": 56,
+    "enrolled": True,
+    "percent_complete": 25,
+}
+
+PATH_DETAIL = {
+    **{k: v for k, v in PATH_SUMMARY.items() if k not in {"units", "items"}},
+    "units": [
+        {
+            "id": "unit.python_refresh",
+            "title": "Python Refresh",
+            "description": "Start here.",
+            "percent_complete": 50,
+            "items": [
+                {
+                    "id": "lesson.library.python_refresh.a01",
+                    "kind": "lesson",
+                    "title": "Variables, gently",
+                    "estimated_time_minutes": 8,
+                    "status": "complete",
+                },
+                {
+                    "id": "quiz.library.python_refresh.a01",
+                    "kind": "quiz",
+                    "title": "Refresh check",
+                    "estimated_time_minutes": 5,
+                    "status": "todo",
+                },
+            ],
+        }
+    ],
+    "next_item_id": "quiz.library.python_refresh.a01",
+}
+
+
+@respx.mock
+def test_paths_lists_progress(runner, api_base):
+    respx.get(f"{api_base}/paths").mock(
+        return_value=httpx.Response(200, json=[PATH_SUMMARY])
+    )
+    result = runner.invoke(app, ["paths"])
+    assert result.exit_code == 0
+    assert "Python Foundations" in result.stdout
+    assert "25%" in result.stdout
+    assert "enrolled" in result.stdout
+
+
+@respx.mock
+def test_path_shows_syllabus(runner, api_base):
+    respx.get(f"{api_base}/paths/path.skill.python_foundations").mock(
+        return_value=httpx.Response(200, json=PATH_DETAIL)
+    )
+    result = runner.invoke(app, ["path", "path.skill.python_foundations"])
+    assert result.exit_code == 0
+    assert "Python Refresh" in result.stdout
+    assert "Variables, gently" in result.stdout
+    assert "next: quiz.library.python_refresh.a01" in result.stdout
+
+
+@respx.mock
+def test_enroll_and_unenroll(runner, api_base):
+    respx.post(f"{api_base}/paths/path.skill.python_foundations/enroll").mock(
+        return_value=httpx.Response(
+            200, json={"path_id": "path.skill.python_foundations", "enrolled": True}
+        )
+    )
+    respx.post(f"{api_base}/paths/path.skill.python_foundations/unenroll").mock(
+        return_value=httpx.Response(
+            200, json={"path_id": "path.skill.python_foundations", "enrolled": False}
+        )
+    )
+    result = runner.invoke(app, ["enroll", "path.skill.python_foundations"])
+    assert result.exit_code == 0
+    assert "Enrolled" in result.stdout
+
+    result = runner.invoke(app, ["unenroll", "path.skill.python_foundations"])
+    assert result.exit_code == 0
+    assert "Unenrolled" in result.stdout
