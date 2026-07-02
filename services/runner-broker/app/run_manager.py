@@ -29,12 +29,31 @@ class RunManager:
         self._executor = executor
         self._content_root = content_root
         self._lock = asyncio.Lock()
+        self._active_task: asyncio.Task | None = None
 
     async def run(self, request: RunnerRequest) -> RunnerResponse:
         if self._lock.locked():
             raise BusyError("runner-broker is already executing a run")
-        async with self._lock:
+        # Hold the slot on a task, not on the request coroutine. The executor's
+        # real work runs in an uncancellable worker thread (main.py's
+        # `_ThreadedExecutor` via `asyncio.to_thread`); if we guarded the run
+        # with `async with self._lock` and the request coroutine were cancelled
+        # (e.g. client disconnect), the lock would release while that thread's
+        # container kept running, and a retry could launch a SECOND concurrent
+        # run. Instead the lock is released only when the run task itself
+        # finishes, and `asyncio.shield` keeps that task alive across a cancelled
+        # request so the single-active-run invariant holds.
+        await self._lock.acquire()
+        task = asyncio.ensure_future(self._run_and_release(request))
+        self._active_task = task  # keep a strong ref so a cancelled request can't orphan it
+        return await asyncio.shield(task)
+
+    async def _run_and_release(self, request: RunnerRequest) -> RunnerResponse:
+        try:
             return await self._run_locked(request)
+        finally:
+            self._active_task = None
+            self._lock.release()
 
     async def _run_locked(self, request: RunnerRequest) -> RunnerResponse:
         try:
