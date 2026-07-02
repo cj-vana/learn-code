@@ -212,6 +212,55 @@ export interface LessonCompletionResponse {
   completed_at: string;
 }
 
+export interface PathItemStatus {
+  id: string;
+  kind: string;
+  title: string;
+  estimated_time_minutes: number;
+  status: 'todo' | 'complete';
+}
+
+export interface PathUnitDetail {
+  id: string;
+  title: string;
+  description: string;
+  items: PathItemStatus[];
+  percent_complete: number;
+}
+
+export interface PathSummary {
+  id: string;
+  path_type: string;
+  title: string;
+  slug: string;
+  description: string;
+  outcomes: string[];
+  estimated_hours: number;
+  units: number;
+  items: number;
+  enrolled: boolean;
+  percent_complete: number;
+}
+
+export interface PathDetail {
+  id: string;
+  path_type: string;
+  title: string;
+  slug: string;
+  description: string;
+  outcomes: string[];
+  estimated_hours: number;
+  enrolled: boolean;
+  percent_complete: number;
+  units: PathUnitDetail[];
+  next_item_id: string | null;
+}
+
+export interface PathEnrollmentResponse {
+  path_id: string;
+  enrolled: boolean;
+}
+
 export interface QuizAnswerResponse {
   question_id: string;
   correct: boolean;

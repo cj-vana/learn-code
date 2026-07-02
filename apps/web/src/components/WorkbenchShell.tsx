@@ -3,6 +3,7 @@ import { RuntimeStatusStrip } from './RuntimeStatusStrip';
 
 const NAV = [
   { to: '/learn', label: "Today's Bench" },
+  { to: '/paths', label: 'Course Rail' },
   { to: '/playground', label: 'Scratch Bench' },
   { to: '/review', label: 'Mistake Lab' },
   { to: '/library', label: 'Pattern Atlas' },

@@ -22,6 +22,8 @@ export const queryKeys = {
   contentDetail: (id: string) => ['content', id] as const,
   lessonDetail: (id: string) => ['lesson', id] as const,
   quizDetail: (id: string) => ['quiz', id] as const,
+  paths: ['paths'] as const,
+  pathDetail: (id: string) => ['paths', id] as const,
 };
 
 export function useHealth() {
@@ -109,6 +111,43 @@ export function useCompleteLesson() {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.plan });
       void queryClient.invalidateQueries({ queryKey: queryKeys.progress });
+    },
+  });
+}
+
+export function usePaths() {
+  return useQuery({
+    queryKey: queryKeys.paths,
+    queryFn: ({ signal }) => apiClient.listPaths(signal),
+  });
+}
+
+export function usePathDetail(pathId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.pathDetail(pathId ?? ''),
+    queryFn: ({ signal }) => apiClient.getPath(pathId as string, signal),
+    enabled: Boolean(pathId),
+  });
+}
+
+export function useEnrollPath() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (pathId: string) => apiClient.enrollPath(pathId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.paths });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.plan });
+    },
+  });
+}
+
+export function useUnenrollPath() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (pathId: string) => apiClient.unenrollPath(pathId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.paths });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.plan });
     },
   });
 }

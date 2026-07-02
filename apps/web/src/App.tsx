@@ -4,6 +4,8 @@ import { LearnRoute } from './routes/LearnRoute';
 import { ExerciseRoute } from './routes/ExerciseRoute';
 import { LessonRoute } from './routes/LessonRoute';
 import { QuizRoute } from './routes/QuizRoute';
+import { PathsRoute } from './routes/PathsRoute';
+import { PathRoute } from './routes/PathRoute';
 import { PlaygroundRoute } from './routes/PlaygroundRoute';
 import { ReviewRoute } from './routes/ReviewRoute';
 import { LibraryRoute } from './routes/LibraryRoute';
@@ -19,6 +21,8 @@ export function App() {
         <Route path="/exercise/:id" element={<ExerciseRoute />} />
         <Route path="/lesson/:id" element={<LessonRoute />} />
         <Route path="/quiz/:id" element={<QuizRoute />} />
+        <Route path="/paths" element={<PathsRoute />} />
+        <Route path="/path/:id" element={<PathRoute />} />
         <Route path="/playground" element={<PlaygroundRoute />} />
         <Route path="/review" element={<ReviewRoute />} />
         <Route path="/library" element={<LibraryRoute />} />

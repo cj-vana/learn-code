@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { usePlan, useProgress } from '../api/queries';
+import { usePathDetail, usePaths, usePlan, useProgress } from '../api/queries';
 import type { PlanItem } from '../contracts';
 import { PageHeading } from '../components/PageHeading';
 import { Panel } from '../components/Panel';
@@ -58,6 +58,41 @@ function SessionStack({ items }: { items: PlanItem[] }) {
   );
 }
 
+function ContinuePathCard() {
+  const paths = usePaths();
+  const enrolled = paths.data?.find((path) => path.enrolled);
+  const detail = usePathDetail(enrolled?.id);
+  if (!enrolled) return null;
+
+  const nextItem = detail.data?.next_item_id
+    ? detail.data.units
+        .flatMap((unit) => unit.items)
+        .find((item) => item.id === detail.data?.next_item_id)
+    : undefined;
+
+  return (
+    <Panel title="Continue your path" eyebrow={`${enrolled.percent_complete}% of ${enrolled.title}`}>
+      {nextItem ? (
+        <div className="command-row">
+          <Link
+            className="command-btn command-btn--pine"
+            to={contentHref(nextItem.kind, nextItem.id)}
+          >
+            Next: {nextItem.title}
+          </Link>
+          <Link className="command-btn" to={`/path/${encodeURIComponent(enrolled.id)}`}>
+            View syllabus
+          </Link>
+        </div>
+      ) : (
+        <p className="muted">
+          Path complete — <Link to="/paths">pick your next one</Link>.
+        </p>
+      )}
+    </Panel>
+  );
+}
+
 export function LearnRoute() {
   const plan = usePlan();
   const progress = useProgress();
@@ -72,6 +107,7 @@ export function LearnRoute() {
 
       <div className="page-grid">
         <div className="stack">
+          <ContinuePathCard />
           <Panel title="Adaptive plan" eyebrow="Top of the queue">
             <QueryState
               isLoading={plan.isLoading}

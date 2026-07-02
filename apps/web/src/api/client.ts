@@ -19,6 +19,9 @@ import type {
   LessonCompletionResponse,
   LessonDetail,
   OllamaReview,
+  PathDetail,
+  PathEnrollmentResponse,
+  PathSummary,
   PlanItem,
   PlaygroundRunRequest,
   ProgressSummary,
@@ -164,6 +167,28 @@ export const apiClient = {
       `/lessons/${encodeURIComponent(lessonId)}/complete`,
       { method: 'POST', signal },
     );
+  },
+
+  listPaths(signal?: AbortSignal): Promise<PathSummary[]> {
+    return request<PathSummary[]>('/paths', { signal });
+  },
+
+  getPath(pathId: string, signal?: AbortSignal): Promise<PathDetail> {
+    return request<PathDetail>(`/paths/${encodeURIComponent(pathId)}`, { signal });
+  },
+
+  enrollPath(pathId: string, signal?: AbortSignal): Promise<PathEnrollmentResponse> {
+    return request<PathEnrollmentResponse>(`/paths/${encodeURIComponent(pathId)}/enroll`, {
+      method: 'POST',
+      signal,
+    });
+  },
+
+  unenrollPath(pathId: string, signal?: AbortSignal): Promise<PathEnrollmentResponse> {
+    return request<PathEnrollmentResponse>(`/paths/${encodeURIComponent(pathId)}/unenroll`, {
+      method: 'POST',
+      signal,
+    });
   },
 
   getPlan(signal?: AbortSignal): Promise<PlanItem[]> {
