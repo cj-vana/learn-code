@@ -4,12 +4,13 @@
  * one place and query keys stay consistent.
  */
 
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from './client';
 import type {
   ExerciseSubmissionRequest,
   PlaygroundRunRequest,
   PublicRunRequest,
+  QuizAnswerRequest,
   ReviewRequest,
 } from '../contracts';
 
@@ -19,6 +20,8 @@ export const queryKeys = {
   progress: ['progress'] as const,
   contentList: ['content'] as const,
   contentDetail: (id: string) => ['content', id] as const,
+  lessonDetail: (id: string) => ['lesson', id] as const,
+  quizDetail: (id: string) => ['quiz', id] as const,
 };
 
 export function useHealth() {
@@ -80,5 +83,43 @@ export function useRunPlayground() {
 export function useRequestReview() {
   return useMutation({
     mutationFn: (body: ReviewRequest) => apiClient.requestReview(body),
+  });
+}
+
+export function useLessonDetail(lessonId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.lessonDetail(lessonId ?? ''),
+    queryFn: ({ signal }) => apiClient.getLesson(lessonId as string, signal),
+    enabled: Boolean(lessonId),
+  });
+}
+
+export function useQuizDetail(quizId: string | undefined) {
+  return useQuery({
+    queryKey: queryKeys.quizDetail(quizId ?? ''),
+    queryFn: ({ signal }) => apiClient.getQuiz(quizId as string, signal),
+    enabled: Boolean(quizId),
+  });
+}
+
+export function useCompleteLesson() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (lessonId: string) => apiClient.completeLesson(lessonId),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.plan });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.progress });
+    },
+  });
+}
+
+export function useAnswerQuiz() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (body: QuizAnswerRequest) => apiClient.answerQuiz(body),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.plan });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.progress });
+    },
   });
 }

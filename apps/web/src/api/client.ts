@@ -16,6 +16,8 @@ import type {
   ErrorCode,
   ExerciseSubmissionRequest,
   HealthResponse,
+  LessonCompletionResponse,
+  LessonDetail,
   OllamaReview,
   PlanItem,
   PlaygroundRunRequest,
@@ -23,6 +25,7 @@ import type {
   PublicRunRequest,
   QuizAnswerRequest,
   QuizAnswerResponse,
+  QuizDetail,
   ReviewRequest,
   RunResult,
   SubmissionResponse,
@@ -146,6 +149,21 @@ export const apiClient = {
 
   getContent(exerciseId: string, signal?: AbortSignal): Promise<ContentDetail> {
     return request<ContentDetail>(`/content/${encodeURIComponent(exerciseId)}`, { signal });
+  },
+
+  getLesson(lessonId: string, signal?: AbortSignal): Promise<LessonDetail> {
+    return request<LessonDetail>(`/content/${encodeURIComponent(lessonId)}`, { signal });
+  },
+
+  getQuiz(quizId: string, signal?: AbortSignal): Promise<QuizDetail> {
+    return request<QuizDetail>(`/content/${encodeURIComponent(quizId)}`, { signal });
+  },
+
+  completeLesson(lessonId: string, signal?: AbortSignal): Promise<LessonCompletionResponse> {
+    return request<LessonCompletionResponse>(
+      `/lessons/${encodeURIComponent(lessonId)}/complete`,
+      { method: 'POST', signal },
+    );
   },
 
   getPlan(signal?: AbortSignal): Promise<PlanItem[]> {

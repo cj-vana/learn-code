@@ -159,10 +159,57 @@ export interface SubmissionResponse {
 }
 
 export interface QuizAnswerRequest {
+  quiz_id: string;
   question_id: string;
-  correct: boolean;
+  choice: string;
+}
+
+export interface CheckpointDetail {
+  question: string;
+  answer: string;
+  explanation: string;
+}
+
+export interface LessonDetail {
+  id: string;
+  kind: 'lesson';
+  version: number;
+  language: string;
+  title: string;
+  slug: string;
+  difficulty: string;
   concepts: string[];
-  explanation?: string;
+  prerequisites: string[];
+  estimated_time_minutes: number;
+  body_markdown: string;
+  checkpoints: CheckpointDetail[];
+}
+
+export interface QuizQuestionDetail {
+  id: string;
+  prompt: string;
+  choices: string[];
+  concepts: string[];
+}
+
+export interface QuizDetail {
+  id: string;
+  kind: 'quiz';
+  version: number;
+  language: string;
+  title: string;
+  slug: string;
+  difficulty: string;
+  concepts: string[];
+  prerequisites: string[];
+  estimated_time_minutes: number;
+  quiz_type: string;
+  questions: QuizQuestionDetail[];
+}
+
+export interface LessonCompletionResponse {
+  lesson_id: string;
+  completed_at: string;
 }
 
 export interface QuizAnswerResponse {

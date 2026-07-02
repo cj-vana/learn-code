@@ -96,4 +96,43 @@ describe('apiClient', () => {
   it('exposes ApiError as an Error subclass', () => {
     expect(new ApiError('internal_error', 'boom', 500)).toBeInstanceOf(Error);
   });
+
+  it('fetches lesson and quiz detail from /content and completes lessons', async () => {
+    const { calls } = mockApi({
+      'GET /api/v1/content/lesson.l1': { json: { id: 'lesson.l1', kind: 'lesson' } },
+      'GET /api/v1/content/quiz.q1': { json: { id: 'quiz.q1', kind: 'quiz' } },
+      'POST /api/v1/lessons/lesson.l1/complete': {
+        json: { lesson_id: 'lesson.l1', completed_at: '2026-07-02T12:00:00Z' },
+      },
+    });
+
+    await apiClient.getLesson('lesson.l1');
+    await apiClient.getQuiz('quiz.q1');
+    await apiClient.completeLesson('lesson.l1');
+
+    expect(calls[0]).toMatchObject({ method: 'GET', url: '/api/v1/content/lesson.l1' });
+    expect(calls[1]).toMatchObject({ method: 'GET', url: '/api/v1/content/quiz.q1' });
+    expect(calls[2]).toMatchObject({
+      method: 'POST',
+      url: '/api/v1/lessons/lesson.l1/complete',
+    });
+  });
+
+  it('sends graded quiz answers with quiz_id, question_id, and choice', async () => {
+    const { calls } = mockApi({
+      'POST /api/v1/quizzes/answer': {
+        json: {
+          question_id: 'q1',
+          correct: true,
+          explanation: 'because',
+          concepts_changed: [],
+          next_review_due_at: null,
+        },
+      },
+    });
+
+    await apiClient.answerQuiz({ quiz_id: 'quiz.q1', question_id: 'q1', choice: 'a' });
+
+    expect(calls[0].body).toEqual({ quiz_id: 'quiz.q1', question_id: 'q1', choice: 'a' });
+  });
 });
