@@ -44,6 +44,9 @@ __all__ = [
     "PathSummary",
     "PathDetail",
     "PathEnrollmentResponse",
+    "TimedSessionRequest",
+    "TimedSessionExercise",
+    "TimedSessionResponse",
 ]
 
 
@@ -225,6 +228,33 @@ class PathEnrollmentResponse(BaseModel):
     enrolled: bool
 
 
+class TimedSessionRequest(BaseModel):
+    """Interview-simulation config. Timing is advisory: budgets never block."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    concept_filter: str | None = None
+    count: int = Field(default=3, ge=1, le=10)
+    minutes_per_problem: int = Field(default=15, ge=1, le=60)
+
+
+class TimedSessionExercise(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str
+    title: str
+    concepts: list[str]
+    estimated_time_minutes: int
+
+
+class TimedSessionResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    session_id: str
+    minutes_per_problem: int
+    exercises: list[TimedSessionExercise]
+
+
 class RunResult(BaseModel):
     """The public-safe view of a runner-broker execution."""
 
@@ -267,6 +297,7 @@ class ExerciseSubmissionRequest(BaseModel):
     predicted_pattern: str | None = None
     confidence: int | None = None
     hints_used: int = Field(default=0, ge=0)
+    timed_session_id: str | None = None
 
 
 class ProgressDelta(BaseModel):

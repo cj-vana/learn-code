@@ -15,6 +15,7 @@ from learn_code_api.routers import (
     quizzes,
     reviews,
     runs,
+    sessions,
 )
 
 api_router = APIRouter(prefix="/api/v1")
@@ -28,6 +29,7 @@ for module in (
     lessons,
     quizzes,
     paths,
+    sessions,
     reviews,
 ):
     api_router.include_router(module.router)

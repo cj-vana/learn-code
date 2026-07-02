@@ -81,8 +81,19 @@ class ProgressRepository:
         predicted_pattern: str | None = None,
         time_minutes: int = 0,
         language: str = "python",
+        timed_session_id: str | None = None,
     ) -> ProgressEvent:
         """Convenience wrapper that builds and appends an ExerciseSubmitted event."""
+        payload = {
+            "status": status,
+            "concepts": concepts,
+            "hints_used": hints_used,
+            "confidence": confidence,
+            "predicted_pattern": predicted_pattern,
+            "time_minutes": time_minutes,
+        }
+        if timed_session_id is not None:
+            payload["timed_session_id"] = timed_session_id
         event = ProgressEvent(
             id=events_mod.new_event_id(),
             type=EventType.EXERCISE_SUBMITTED,
@@ -91,14 +102,7 @@ class ProgressRepository:
             content_version=content_version,
             language=language,
             session_id=session_id,
-            payload={
-                "status": status,
-                "concepts": concepts,
-                "hints_used": hints_used,
-                "confidence": confidence,
-                "predicted_pattern": predicted_pattern,
-                "time_minutes": time_minutes,
-            },
+            payload=payload,
         )
         return self.append_event(event)
 

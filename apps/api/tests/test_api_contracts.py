@@ -674,3 +674,69 @@ def test_path_unknown_id_is_404(tmp_path):
     resp = client.get("/api/v1/paths/path.skill.nope")
     assert resp.status_code == 404
     assert resp.json()["error"]["code"] == "content_not_found"
+
+
+def _master_concepts(client, exercise_id: str, times: int = 5) -> None:
+    for _ in range(times):
+        client.post(
+            "/api/v1/exercises/submit",
+            json={
+                "exercise_id": exercise_id,
+                "content_version": 1,
+                "language": "python",
+                "source": "def f(): ...",
+            },
+        )
+
+
+def test_timed_session_empty_when_nothing_practicing(tmp_path):
+    client, _, _ = make_client(tmp_path)
+    resp = client.post("/api/v1/sessions/timed", json={})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["session_id"]
+    assert body["minutes_per_problem"] == 15
+    assert body["exercises"] == []
+
+
+def test_timed_session_selects_practicing_exercises(tmp_path):
+    client, _, _ = make_client(tmp_path)
+    _master_concepts(client, COUNT_TAGS_ID)
+
+    resp = client.post("/api/v1/sessions/timed", json={"count": 2, "minutes_per_problem": 10})
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["minutes_per_problem"] == 10
+    assert len(body["exercises"]) == 2
+
+    progress = client.get("/api/v1/progress").json()
+    practicing = {c["id"] for c in progress["concepts"] if c["mastery"] >= 50}
+    for item in body["exercises"]:
+        assert set(item["concepts"]) <= practicing
+
+
+def test_timed_session_concept_filter(tmp_path):
+    client, _, _ = make_client(tmp_path)
+    _master_concepts(client, COUNT_TAGS_ID)
+
+    resp = client.post(
+        "/api/v1/sessions/timed",
+        json={"count": 10, "concept_filter": "patterns.hash_map_counting"},
+    )
+    for item in resp.json()["exercises"]:
+        assert "patterns.hash_map_counting" in item["concepts"]
+
+
+def test_submit_records_timed_session_id(tmp_path):
+    client, _, _ = make_client(tmp_path)
+    resp = client.post(
+        "/api/v1/exercises/submit",
+        json={
+            "exercise_id": COUNT_TAGS_ID,
+            "content_version": 1,
+            "language": "python",
+            "source": "def f(): ...",
+            "timed_session_id": "timed-123",
+        },
+    )
+    assert resp.status_code == 200
