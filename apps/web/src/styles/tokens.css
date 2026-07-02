@@ -1,0 +1,21 @@
+:root {
+  --paper: #f3efe2;
+  --paper-aged: #e7dec7;
+  --ink: #14130f;
+  --blackboard: #1a211b;
+  --panel: #242b22;
+  --pine: #476047;
+  --rust: #a13d2d;
+  --ochre: #b2873b;
+  --blueprint: #5c8fa3;
+  --graphite: #6d685d;
+  --rule: #b8ae98;
+  --focus: #ff8a2a;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-6: 24px;
+  --space-8: 32px;
+  --radius: 6px;
+}
