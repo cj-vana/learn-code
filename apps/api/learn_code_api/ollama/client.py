@@ -151,11 +151,15 @@ class HttpOllamaClient:
             data = json.loads(content)
         except (json.JSONDecodeError, TypeError):
             return OllamaReview(status="error", summary="Ollama returned unparseable review JSON.")
+        if not isinstance(data, dict):
+            return OllamaReview(status="error", summary="Ollama review did not match the schema.")
+        # The model is instructed to omit `status`; stamp it as available so the
+        # required field validates instead of forcing the whole reply to error.
         try:
-            review = OllamaReview.model_validate(data)
+            review = OllamaReview.model_validate({**data, "status": "available"})
         except ValueError:
             return OllamaReview(status="error", summary="Ollama review did not match the schema.")
-        return review.model_copy(update={"status": "available"})
+        return review
 
 
 _SYSTEM_PROMPT = (

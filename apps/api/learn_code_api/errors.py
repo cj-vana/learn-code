@@ -61,3 +61,9 @@ def register_error_handlers(app: FastAPI) -> None:
         return _envelope(
             422, "validation_error", "Request payload failed validation.", {"errors": errors}
         )
+
+    @app.exception_handler(Exception)
+    async def _handle_unexpected(_: Request, exc: Exception) -> JSONResponse:
+        # Any unhandled error still returns the standard envelope so the CLI and
+        # web clients never see Starlette's bare {"detail": ...} 500 body.
+        return _envelope(500, "internal_error", "An unexpected server error occurred.")

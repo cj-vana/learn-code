@@ -7,6 +7,8 @@ published seed catalog and progress is a temporary SQLite database per test.
 
 from __future__ import annotations
 
+import importlib
+import json
 from datetime import datetime, timezone
 from pathlib import Path
 
@@ -385,3 +387,99 @@ def test_ollama_client_unreachable_returns_unavailable():
     )
     review = client.review(context)
     assert review == UNAVAILABLE_REVIEW
+
+
+def test_ollama_available_parses_compliant_model_reply():
+    # The model is told to reply WITHOUT a `status` field; the client must still
+    # surface the review as `available` rather than falling into the error path.
+    compliant = {
+        "summary": "Clean single-pass counter.",
+        "correctness_notes": ["Handles the empty list."],
+        "readability_notes": [],
+        "python_simplifications": ["Consider collections.Counter."],
+        "big_o_notes": "O(n) time.",
+        "next_improvement": "Add a docstring.",
+        "encouragement": "Nice work.",
+    }
+
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"message": {"content": json.dumps(compliant)}})
+
+    client = HttpOllamaClient(
+        settings=OllamaSettings(
+            enabled="auto",
+            host="http://host.docker.internal:11434",
+            model="granite-code:8b",
+            timeout_seconds=1,
+        ),
+        transport=httpx.MockTransport(handler),
+    )
+    context = ReviewContext(
+        exercise_prompt="Count tags.",
+        concepts=COUNT_TAGS_CONCEPTS,
+        expected_pattern="patterns.hash_map_counting",
+        learner_code="def count_tags(tags): ...",
+        test_result_summary="3/3 public tests passed",
+        learner_level="beginner",
+        allow_solution_disclosure=False,
+    )
+    review = client.review(context)
+    assert review.status == "available"
+    assert review.summary == "Clean single-pass counter."
+    assert review.correctness_notes == ["Handles the empty list."]
+    assert review.big_o_notes == "O(n) time."
+
+
+def test_runner_client_maps_unknown_status_to_unavailable():
+    # The broker contract has statuses (e.g. "cancelled") the API enum omits; a
+    # 200 carrying one must not leak an unhandled ValidationError / bare 500.
+    def handler(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(200, json={"correlation_id": "c1", "status": "cancelled"})
+
+    client = HttpRunnerBrokerClient(
+        base_url="http://runner-broker:8080", transport=httpx.MockTransport(handler)
+    )
+    request = RunnerRequest(
+        correlation_id="c1",
+        mode=RunMode.PLAYGROUND,
+        language="python",
+        source="print('hi')",
+        test_profile=TestProfile.PLAYGROUND,
+    )
+    with pytest.raises(RunnerUnavailableError):
+        client.run(request)
+
+
+def test_unexpected_error_uses_internal_error_envelope(tmp_path):
+    class BoomOllama:
+        def review(self, context: ReviewContext) -> OllamaReview:
+            raise RuntimeError("unexpected boom")
+
+    deps = AppDependencies(
+        catalog=CATALOG,
+        runner_client=FakeRunner(),
+        ollama_client=BoomOllama(),
+        db_path=tmp_path / "progress.sqlite3",
+        session_id="test-session",
+        clock=lambda: NOW,
+    )
+    client = TestClient(create_app(deps), raise_server_exceptions=False)
+    resp = client.post(
+        "/api/v1/reviews",
+        json={"exercise_id": COUNT_TAGS_ID, "source": "def count_tags(tags): ..."},
+    )
+    assert resp.status_code == 500
+    body = resp.json()
+    assert body["error"]["code"] == "internal_error"
+    assert set(body["error"]) == {"code", "message", "details"}
+
+
+def test_importing_main_has_no_import_time_catalog_load(monkeypatch):
+    # Importing the module must not touch the filesystem: it previously loaded
+    # the catalog from a cwd-relative default, aborting collection unless run
+    # from the repo root.
+    monkeypatch.setenv("LEARN_CODE_CONTENT_ROOT", str(tmp_nonexistent := Path("/nonexistent/content")))
+    assert not tmp_nonexistent.exists()
+    main_module = importlib.import_module("learn_code_api.main")
+    importlib.reload(main_module)  # must not raise despite the invalid content root
+    assert callable(main_module.create_app)

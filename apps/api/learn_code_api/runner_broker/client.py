@@ -16,7 +16,7 @@ from enum import Enum
 from typing import Any, Literal, Protocol
 
 import httpx
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ValidationError
 
 RUNS_PATH = "/internal/v1/runs"
 
@@ -131,4 +131,11 @@ class HttpRunnerBrokerClient:
         except httpx.RequestError as exc:
             raise RunnerUnavailableError(f"runner-broker is unreachable: {exc}") from exc
 
-        return RunnerResponse.model_validate(payload)
+        # A 200 whose body does not fit this contract (e.g. a broker status the
+        # API enum does not model) is an unusable response, not a valid run.
+        try:
+            return RunnerResponse.model_validate(payload)
+        except ValidationError as exc:
+            raise RunnerUnavailableError(
+                "runner-broker returned an unusable response"
+            ) from exc
