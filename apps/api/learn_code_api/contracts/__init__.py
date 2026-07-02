@@ -38,6 +38,7 @@ __all__ = [
     "LessonDetail",
     "QuizQuestionDetail",
     "QuizDetail",
+    "LessonCompletionResponse",
 ]
 
 
@@ -122,6 +123,13 @@ class LessonDetail(BaseModel):
     estimated_time_minutes: int
     body_markdown: str
     checkpoints: list[CheckpointDetail]
+
+
+class LessonCompletionResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    lesson_id: str
+    completed_at: str
 
 
 class QuizQuestionDetail(BaseModel):

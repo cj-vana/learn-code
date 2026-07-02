@@ -600,3 +600,19 @@ def test_quiz_detail_never_leaks_answers(tmp_path):
         assert question["choices"]
         assert "correct_choice" not in question
         assert "explanation" not in question
+
+
+def test_complete_lesson_records_completion(tmp_path):
+    client, _, _ = make_client(tmp_path)
+    resp = client.post(f"/api/v1/lessons/{LESSON_ID}/complete")
+    assert resp.status_code == 200
+    body = resp.json()
+    assert body["lesson_id"] == LESSON_ID
+    assert body["completed_at"]
+
+
+def test_complete_lesson_unknown_id_is_404(tmp_path):
+    client, _, _ = make_client(tmp_path)
+    resp = client.post("/api/v1/lessons/lesson.nope/complete")
+    assert resp.status_code == 404
+    assert resp.json()["error"]["code"] == "content_not_found"
