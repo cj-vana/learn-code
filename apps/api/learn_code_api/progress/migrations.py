@@ -57,6 +57,24 @@ MIGRATIONS: tuple[Migration, ...] = (
         );
         """,
     ),
+    Migration(
+        version=2,
+        description="add lesson completion and quiz answer coverage rollups",
+        sql="""
+        CREATE TABLE IF NOT EXISTS lesson_completions (
+            lesson_id TEXT PRIMARY KEY,
+            completed_at TEXT NOT NULL
+        );
+
+        CREATE TABLE IF NOT EXISTS quiz_answer_log (
+            quiz_id TEXT NOT NULL,
+            question_id TEXT NOT NULL,
+            correct INTEGER NOT NULL,
+            updated_at TEXT NOT NULL,
+            PRIMARY KEY (quiz_id, question_id)
+        );
+        """,
+    ),
 )
 
 

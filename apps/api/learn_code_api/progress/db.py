@@ -55,6 +55,9 @@ class ProgressRepository:
         elif event.type == EventType.PATTERN_PREDICTED:
             rollups_mod.apply_pattern_predicted(self._conn, event)
             self._conn.commit()
+        elif event.type == EventType.LESSON_COMPLETED:
+            rollups_mod.apply_lesson_completed(self._conn, event)
+            self._conn.commit()
 
         return event
 
@@ -92,6 +95,36 @@ class ProgressRepository:
             },
         )
         return self.append_event(event)
+
+    def record_lesson_completed(
+        self,
+        *,
+        lesson_id: str,
+        content_version: int,
+        session_id: str,
+        now: datetime,
+        language: str = "python",
+    ) -> ProgressEvent:
+        """Convenience wrapper that builds and appends a LessonCompleted event."""
+        event = ProgressEvent(
+            id=events_mod.new_event_id(),
+            type=EventType.LESSON_COMPLETED,
+            created_at=now,
+            content_id=lesson_id,
+            content_version=content_version,
+            language=language,
+            session_id=session_id,
+            payload={},
+        )
+        return self.append_event(event)
+
+    def completed_lesson_ids(self) -> set[str]:
+        """Read-only: ids of lessons the learner has completed."""
+        return rollups_mod.read_completed_lesson_ids(self._conn)
+
+    def quiz_question_coverage(self) -> dict[str, set[str]]:
+        """Read-only: per-quiz set of question ids answered at least once."""
+        return rollups_mod.read_quiz_question_coverage(self._conn)
 
     def recompute_rollups(self) -> None:
         """Rebuild all rollup tables from the stored event log."""

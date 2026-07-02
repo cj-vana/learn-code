@@ -256,6 +256,34 @@ def apply_quiz_answered(conn: sqlite3.Connection, event: ProgressEvent) -> None:
     for concept_id in concepts:
         _apply_concept_outcome(conn, concept_id=concept_id, delta=delta, passed=correct, now=now)
 
+    question_id = payload.get("question_id")
+    if event.content_id is not None and question_id is not None:
+        conn.execute(
+            """
+            INSERT INTO quiz_answer_log (quiz_id, question_id, correct, updated_at)
+            VALUES (?, ?, ?, ?)
+            ON CONFLICT(quiz_id, question_id) DO UPDATE SET
+                correct = excluded.correct,
+                updated_at = excluded.updated_at
+            """,
+            (event.content_id, question_id, 1 if correct else 0, now.isoformat()),
+        )
+
+
+def apply_lesson_completed(conn: sqlite3.Connection, event: ProgressEvent) -> None:
+    """Fold one LessonCompleted event. Grants no mastery (spec: manual
+    completion never grants mastery without quiz or exercise evidence)."""
+    if event.content_id is None:
+        return
+    conn.execute(
+        """
+        INSERT INTO lesson_completions (lesson_id, completed_at)
+        VALUES (?, ?)
+        ON CONFLICT(lesson_id) DO UPDATE SET completed_at = excluded.completed_at
+        """,
+        (event.content_id, event.created_at.isoformat()),
+    )
+
 
 def apply_pattern_predicted(conn: sqlite3.Connection, event: ProgressEvent) -> None:
     """Fold one standalone PatternPredicted event into the rollup tables.
@@ -375,6 +403,8 @@ def recompute_rollups(conn: sqlite3.Connection) -> None:
     conn.execute("DELETE FROM review_queue")
     conn.execute("DELETE FROM exercise_summary")
     conn.execute("DELETE FROM daily_activity")
+    conn.execute("DELETE FROM lesson_completions")
+    conn.execute("DELETE FROM quiz_answer_log")
 
     for event in fetch_events_ordered(conn):
         if event.type == EventType.EXERCISE_SUBMITTED:
@@ -383,10 +413,11 @@ def recompute_rollups(conn: sqlite3.Connection) -> None:
             apply_quiz_answered(conn, event)
         elif event.type == EventType.PATTERN_PREDICTED:
             apply_pattern_predicted(conn, event)
-        # Other required event types (LessonCompleted, HintViewed,
-        # PlaygroundRunCompleted, ReviewCompleted, PlanItemSkipped,
-        # OllamaReviewRequested) are stored for audit today; V1 content only ships
-        # exercises, so there is no rollup behavior to implement for them yet.
+        elif event.type == EventType.LESSON_COMPLETED:
+            apply_lesson_completed(conn, event)
+        # Other required event types (HintViewed, PlaygroundRunCompleted,
+        # ReviewCompleted, PlanItemSkipped, OllamaReviewRequested) are stored
+        # for audit today; there is no rollup behavior to implement for them yet.
 
     conn.commit()
 
@@ -535,6 +566,19 @@ def read_review_due(conn: sqlite3.Connection) -> dict[str, datetime]:
         row[0]: datetime.fromisoformat(row[1])
         for row in conn.execute("SELECT concept_id, review_due_at FROM review_queue").fetchall()
     }
+
+
+def read_completed_lesson_ids(conn: sqlite3.Connection) -> set[str]:
+    return {row[0] for row in conn.execute("SELECT lesson_id FROM lesson_completions").fetchall()}
+
+
+def read_quiz_question_coverage(conn: sqlite3.Connection) -> dict[str, set[str]]:
+    coverage: dict[str, set[str]] = {}
+    for quiz_id, question_id in conn.execute(
+        "SELECT quiz_id, question_id FROM quiz_answer_log"
+    ).fetchall():
+        coverage.setdefault(quiz_id, set()).add(question_id)
+    return coverage
 
 
 def read_concept_snapshot(conn: sqlite3.Connection) -> dict[str, ConceptSnapshotRow]:
