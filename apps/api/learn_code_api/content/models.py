@@ -4,7 +4,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, PositiveInt
+from pydantic import BaseModel, ConfigDict, Field, PositiveInt, model_validator
 
 
 class ReviewStatus(StrEnum):
@@ -142,12 +142,53 @@ class QuizContent(BaseModel):
     questions: list[QuizQuestion] = Field(min_length=1)
 
 
+class PathUnit(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    id: str = Field(min_length=1)
+    title: str = Field(min_length=1)
+    description: str = Field(min_length=1)
+    items: list[str] = Field(min_length=1)
+
+
+class PathContent(BaseModel):
+    """A curated, ordered curriculum over existing lesson/quiz/exercise ids."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    id: str = Field(min_length=1)
+    kind: Literal["path"]
+    path_type: Literal["career", "skill"]
+    version: PositiveInt
+    language: Literal["python"]
+    title: str = Field(min_length=1)
+    slug: str = Field(min_length=1)
+    description: str = Field(min_length=1)
+    outcomes: list[str] = Field(min_length=1)
+    estimated_hours: PositiveInt
+    review_status: ReviewStatus
+    source_status: Literal["original"]
+    provenance: Provenance
+    units: list[PathUnit] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _reject_duplicate_items(self) -> "PathContent":
+        seen: set[str] = set()
+        for unit in self.units:
+            for item_id in unit.items:
+                if item_id in seen:
+                    raise ValueError(f"duplicate path item: {item_id}")
+                seen.add(item_id)
+        return self
+
+
 class ContentCatalog(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     exercises: list[ExerciseContent]
     lessons: list[LessonContent] = Field(default_factory=list)
     quizzes: list[QuizContent] = Field(default_factory=list)
+    paths: list[PathContent] = Field(default_factory=list)
 
 
 class ValidationIssue(BaseModel):

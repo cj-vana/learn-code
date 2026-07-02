@@ -10,6 +10,7 @@ from learn_code_api.content.models import (
     ContentCatalog,
     ExerciseContent,
     LessonContent,
+    PathContent,
     QuizContent,
     ReviewStatus,
 )
@@ -30,6 +31,7 @@ def load_catalog(content_root: Path, include_drafts: bool = False) -> ContentCat
     exercises: list[ExerciseContent] = []
     lessons: list[LessonContent] = []
     quizzes: list[QuizContent] = []
+    paths: list[PathContent] = []
     for path in _yaml_files(root):
         raw = _load_raw_content(path)
         review_status = _load_review_status(path, raw)
@@ -42,11 +44,15 @@ def load_catalog(content_root: Path, include_drafts: bool = False) -> ContentCat
             lessons.append(_load_lesson(path, raw))
         elif kind == "quiz":
             quizzes.append(_load_quiz(path, raw))
+        elif kind == "path":
+            paths.append(_load_path(path, raw))
         else:
             raise ContentLoadError(f"unsupported content kind in {path}: {kind!r}")
 
-    _reject_duplicates([*exercises, *lessons, *quizzes])
-    return ContentCatalog(exercises=exercises, lessons=lessons, quizzes=quizzes)
+    _reject_duplicates([*exercises, *lessons, *quizzes, *paths])
+    return ContentCatalog(
+        exercises=exercises, lessons=lessons, quizzes=quizzes, paths=paths
+    )
 
 
 def _yaml_files(root: Path) -> list[Path]:
@@ -97,6 +103,13 @@ def _load_lesson(path: Path, raw: dict[str, Any]) -> LessonContent:
 def _load_quiz(path: Path, raw: dict[str, Any]) -> QuizContent:
     try:
         return QuizContent.model_validate(raw)
+    except ValidationError as exc:
+        raise ContentLoadError(f"invalid content in {path}: {exc}") from exc
+
+
+def _load_path(path: Path, raw: dict[str, Any]) -> PathContent:
+    try:
+        return PathContent.model_validate(raw)
     except ValidationError as exc:
         raise ContentLoadError(f"invalid content in {path}: {exc}") from exc
 
