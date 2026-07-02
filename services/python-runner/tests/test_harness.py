@@ -184,6 +184,58 @@ def test_stdout_truncation(tmp_path):
     assert len(result["stdout"].encode("utf-8")) <= 1024
 
 
+def test_submission_cannot_read_answer_key_from_job_json(tmp_path):
+    # A submission that tries to read the validation answers straight out of
+    # job.json must not be able to pass without solving the exercise.
+    job = {
+        "mode": "exercise_tests",
+        "source": (
+            "import json\n"
+            "def add(x):\n"
+            "    for t in json.load(open('job.json'))['tests']:\n"
+            "        if t['input'] == x:\n"
+            "            return t['expected']\n"
+            "    return None\n"
+        ),
+        "function_name": "add",
+        "stdin": None,
+        "tests": [
+            {"name": "basic", "visibility": "public", "input": [1, 2], "expected": 3},
+            {"name": "hidden", "visibility": "validation", "input": [40, 50], "expected": 999},
+        ],
+        "limits": _default_limits(),
+    }
+    result = run_job(job, tmp_path)
+    assert result["status"] != "passed"
+
+
+def test_exercise_tests_with_boolean_and_none_expected(tmp_path):
+    # Test cases whose input/expected values are booleans or None must grade
+    # correctly instead of crashing with a NameError on `true`/`false`/`null`.
+    job = {
+        "mode": "exercise_tests",
+        "source": (
+            "def classify(x):\n"
+            "    if x is None:\n"
+            "        return None\n"
+            "    return x % 2 == 0\n"
+        ),
+        "function_name": "classify",
+        "stdin": None,
+        "tests": [
+            {"name": "even", "visibility": "public", "input": 4, "expected": True},
+            {"name": "odd", "visibility": "public", "input": 3, "expected": False},
+            {"name": "none", "visibility": "validation", "input": None, "expected": None},
+        ],
+        "limits": _default_limits(),
+    }
+    result = run_job(job, tmp_path)
+    assert result["status"] == "passed"
+    assert result["passed"] == 3
+    assert result["failed"] == 0
+    assert result["error_type"] is None
+
+
 def test_wall_clock_timeout(tmp_path):
     job = {
         "mode": "playground",

@@ -27,6 +27,7 @@ stay minimal (stdlib only).
 
 from __future__ import annotations
 
+import base64
 import json
 import subprocess
 import sys
@@ -36,72 +37,66 @@ from pathlib import Path
 
 RESULT_SENTINEL = "<<<LEARN_CODE_RESULT>>>"
 
+# The appendix that runs inside the untrusted submission process. It receives
+# only the test *inputs* (base64-encoded JSON, decoded with json.loads at
+# runtime so booleans/None survive as real Python objects), never the expected
+# answers: it reports each call's actual return value and lets the trusted
+# parent process decide pass/fail. Keeping expected values out of this process
+# means submitted code cannot read the answer key off disk.
 _EXERCISE_APPENDIX = """
+import base64 as _lc_base64
 import json as _lc_json
 import contextlib as _lc_contextlib
 import io as _lc_io
 
-_lc_tests = __LC_TESTS_JSON__
+_lc_cases = _lc_json.loads(_lc_base64.b64decode(__LC_CASES_B64__).decode("utf-8"))
 _lc_function_name = __LC_FUNCTION_NAME__
 _lc_results = []
-_lc_had_crash = False
-_lc_crash_type = None
 _lc_stdout_parts = []
 
 _lc_target = globals().get(_lc_function_name)
 if not callable(_lc_target):
-    _lc_had_crash = True
-    _lc_crash_type = "NameError"
-    for _lc_case in _lc_tests:
+    for _lc_case in _lc_cases:
         _lc_results.append({
             "name": _lc_case["name"],
             "visibility": _lc_case["visibility"],
-            "passed": False,
-            "message": (
-                "Submitted code does not define the required function."
-                if _lc_case["visibility"] == "public"
-                else "Validation test raised an error."
-            ),
+            "outcome": "missing_function",
         })
 else:
-    for _lc_case in _lc_tests:
+    for _lc_case in _lc_cases:
         _lc_buf = _lc_io.StringIO()
         try:
             with _lc_contextlib.redirect_stdout(_lc_buf):
                 _lc_actual = _lc_target(_lc_case["input"])
-            _lc_passed = _lc_actual == _lc_case["expected"]
-            if _lc_passed:
-                _lc_message = None
-            elif _lc_case["visibility"] == "public":
-                _lc_message = "expected {!r}, got {!r}".format(_lc_case["expected"], _lc_actual)
-            else:
-                _lc_message = "Validation test did not pass."
-            _lc_results.append({
-                "name": _lc_case["name"],
-                "visibility": _lc_case["visibility"],
-                "passed": _lc_passed,
-                "message": _lc_message,
-            })
+            try:
+                _lc_json.dumps(_lc_actual)
+                _lc_entry = {
+                    "name": _lc_case["name"],
+                    "visibility": _lc_case["visibility"],
+                    "outcome": "value",
+                    "actual": _lc_actual,
+                }
+            except (TypeError, ValueError):
+                _lc_entry = {
+                    "name": _lc_case["name"],
+                    "visibility": _lc_case["visibility"],
+                    "outcome": "unrepresentable",
+                    "actual_repr": repr(_lc_actual)[:200],
+                }
+            _lc_results.append(_lc_entry)
         except Exception as _lc_exc:
-            _lc_had_crash = True
-            _lc_crash_type = type(_lc_exc).__name__
-            if _lc_case["visibility"] == "public":
-                _lc_message = "{}: {}".format(type(_lc_exc).__name__, _lc_exc)
-            else:
-                _lc_message = "Validation test raised an error."
             _lc_results.append({
                 "name": _lc_case["name"],
                 "visibility": _lc_case["visibility"],
-                "passed": False,
-                "message": _lc_message,
+                "outcome": "error",
+                "error_type": type(_lc_exc).__name__,
+                "error_message": "{}".format(_lc_exc),
             })
         finally:
             _lc_stdout_parts.append(_lc_buf.getvalue())
 
 print("__SENTINEL__" + _lc_json.dumps({
     "results": _lc_results,
-    "had_crash": _lc_had_crash,
-    "crash_type": _lc_crash_type,
     "program_stdout": "".join(_lc_stdout_parts),
 }))
 """.replace("__SENTINEL__", RESULT_SENTINEL)
@@ -137,9 +132,16 @@ def _build_script(job: dict) -> str:
     source = job["source"]
     if job["mode"] == "playground":
         return source
-    tests_json = json.dumps(job.get("tests") or [])
+    # Only name/visibility/input reach the untrusted process; expected answers
+    # stay in the parent. base64 keeps the payload out of the source grammar so
+    # booleans/None never render as the invalid Python tokens true/false/null.
+    cases = [
+        {"name": t["name"], "visibility": t["visibility"], "input": t["input"]}
+        for t in (job.get("tests") or [])
+    ]
+    cases_b64 = base64.b64encode(json.dumps(cases).encode("utf-8")).decode("ascii")
     function_name_json = json.dumps(job.get("function_name"))
-    appendix = _EXERCISE_APPENDIX.replace("__LC_TESTS_JSON__", tests_json).replace(
+    appendix = _EXERCISE_APPENDIX.replace("__LC_CASES_B64__", repr(cases_b64)).replace(
         "__LC_FUNCTION_NAME__", function_name_json
     )
     return source + "\n" + appendix
@@ -201,7 +203,7 @@ def run_job(job: dict, workdir: Path) -> dict:
     if mode == "playground":
         result = _playground_result(proc, duration_ms)
     else:
-        result = _exercise_tests_result(proc, duration_ms)
+        result = _exercise_tests_result(proc, job, duration_ms)
 
     result = _apply_output_caps(result, stdout_kb, stderr_kb)
     return result
@@ -222,7 +224,9 @@ def _playground_result(proc: subprocess.CompletedProcess, duration_ms: int) -> d
     )
 
 
-def _exercise_tests_result(proc: subprocess.CompletedProcess, duration_ms: int) -> dict:
+def _exercise_tests_result(
+    proc: subprocess.CompletedProcess, job: dict, duration_ms: int
+) -> dict:
     stdout = proc.stdout or ""
     marker = stdout.rfind(RESULT_SENTINEL)
     if marker == -1:
@@ -247,13 +251,16 @@ def _exercise_tests_result(proc: subprocess.CompletedProcess, duration_ms: int) 
             duration_ms=duration_ms,
         )
 
-    test_summary = payload["results"]
+    # Grade in the parent: expected values only ever live here, so the child
+    # process (the submission) can never read them off disk to fake a pass.
+    cases = job.get("tests") or []
+    test_summary, had_crash, crash_type = _grade_cases(cases, payload["results"])
     passed_count = sum(1 for entry in test_summary if entry["passed"])
     failed_count = len(test_summary) - passed_count
 
-    if payload["had_crash"]:
+    if had_crash:
         status = "runtime_error"
-        error_type = payload["crash_type"]
+        error_type = crash_type
     elif failed_count == 0:
         status = "passed"
         error_type = None
@@ -271,6 +278,61 @@ def _exercise_tests_result(proc: subprocess.CompletedProcess, duration_ms: int) 
         test_summary=test_summary,
         error_type=error_type,
     )
+
+
+def _grade_cases(cases: list, raw_results: list) -> tuple[list, bool, str | None]:
+    """Compare each recorded actual output against the (parent-held) expected.
+
+    Validation-visibility messages are sanitized here so hidden inputs/expected
+    values are never returned to the frontend.
+    """
+    test_summary: list[dict] = []
+    had_crash = False
+    crash_type: str | None = None
+
+    for case, res in zip(cases, raw_results):
+        name = case["name"]
+        visibility = case["visibility"]
+        outcome = res.get("outcome")
+
+        if outcome == "missing_function":
+            had_crash = True
+            crash_type = "NameError"
+            passed = False
+            message = (
+                "Submitted code does not define the required function."
+                if visibility == "public"
+                else "Validation test raised an error."
+            )
+        elif outcome == "error":
+            had_crash = True
+            crash_type = res.get("error_type") or "RuntimeError"
+            passed = False
+            if visibility == "public":
+                message = "{}: {}".format(res.get("error_type"), res.get("error_message"))
+            else:
+                message = "Validation test raised an error."
+        elif outcome == "unrepresentable":
+            passed = False
+            if visibility == "public":
+                message = "expected {!r}, got {}".format(case["expected"], res.get("actual_repr"))
+            else:
+                message = "Validation test did not pass."
+        else:  # "value"
+            actual = res.get("actual")
+            passed = actual == case["expected"]
+            if passed:
+                message = None
+            elif visibility == "public":
+                message = "expected {!r}, got {!r}".format(case["expected"], actual)
+            else:
+                message = "Validation test did not pass."
+
+        test_summary.append(
+            {"name": name, "visibility": visibility, "passed": passed, "message": message}
+        )
+
+    return test_summary, had_crash, crash_type
 
 
 def _apply_output_caps(result: dict, stdout_kb: int, stderr_kb: int) -> dict:
@@ -298,6 +360,10 @@ def main(argv: list[str]) -> int:
 
     try:
         job = json.loads(job_path.read_text())
+        # The job file holds every validation test's expected answer. Remove it
+        # before running the submission so submitted code sharing this workspace
+        # cannot open it and read the answer key.
+        job_path.unlink(missing_ok=True)
         result = run_job(job, workdir)
     except Exception:  # last-resort guard so a result.json is always written
         result = _blank_result(

@@ -1,7 +1,7 @@
 from pathlib import Path
 
 from app.contracts import RunLimits, RunMode
-from app.executor import ContainerRunOutcome, Executor, build_container_options
+from app.executor import ContainerRunOutcome, DockerPyAdapter, Executor, build_container_options
 from fakes import FakeDockerAdapter
 
 EXERCISE_LIMITS = RunLimits.for_mode(RunMode.EXERCISE_TESTS)
@@ -12,6 +12,7 @@ def test_build_container_options_matches_security_baseline():
     assert options == {
         "network_disabled": True,
         "mem_limit": "256m",
+        "nano_cpus": 1_000_000_000,
         "pids_limit": 64,
         "cap_drop": ["ALL"],
         "security_opt": ["no-new-privileges"],
@@ -19,6 +20,13 @@ def test_build_container_options_matches_security_baseline():
         "user": "1000:1000",
         "remove": True,
     }
+
+
+def test_build_container_options_enforces_cpu_quota():
+    # The spec's "Runner default limits" mandate a 1 CPU quota; RunLimits.cpu_count
+    # must actually be enforced on the container, not silently dropped.
+    options = build_container_options(EXERCISE_LIMITS)
+    assert options["nano_cpus"] == EXERCISE_LIMITS.cpu_count * 1_000_000_000
 
 
 def test_executor_passes_security_options_to_adapter(tmp_path):
@@ -45,6 +53,7 @@ def test_executor_passes_security_options_to_adapter(tmp_path):
     assert call.options == {
         "network_disabled": True,
         "mem_limit": "256m",
+        "nano_cpus": 1_000_000_000,
         "pids_limit": 64,
         "cap_drop": ["ALL"],
         "security_opt": ["no-new-privileges"],
@@ -125,6 +134,66 @@ def test_executor_reports_memory_exceeded_from_adapter(tmp_path):
 
     assert result["status"] == "memory_exceeded"
     assert result["memory_exceeded"] is True
+
+
+class _FakeNotFound(Exception):
+    """Stand-in for docker.errors.NotFound raised when an auto-removed container is gone."""
+
+
+class _FakeContainer:
+    """Mimics an auto-removed (remove=True) container: reload() 404s post-exit."""
+
+    def __init__(self, status_code: int):
+        self._status_code = status_code
+        self.attrs: dict = {}
+
+    def start(self):
+        pass
+
+    def wait(self, timeout=None):
+        return {"StatusCode": self._status_code}
+
+    def reload(self):
+        raise _FakeNotFound("container gone (auto-removed)")
+
+    def kill(self):
+        pass
+
+    def remove(self, force=False):
+        pass
+
+
+class _FakeContainers:
+    def __init__(self, container):
+        self._container = container
+
+    def create(self, **kwargs):
+        return self._container
+
+
+class _FakeClient:
+    def __init__(self, container):
+        self.containers = _FakeContainers(container)
+
+
+def test_docker_adapter_infers_oom_when_autoremoved_container_exits_137():
+    # Under AutoRemove (remove=True) the daemon deletes the container on exit,
+    # so container.reload()/inspect races and cannot report OOMKilled. Exit
+    # code 137 (128 + SIGKILL) must still surface as memory_exceeded.
+    adapter = DockerPyAdapter()
+    adapter._client = _FakeClient(_FakeContainer(status_code=137))
+
+    outcome = adapter.run(
+        image="img",
+        command=["python3", "/app/harness.py"],
+        volumes={},
+        options={"remove": True},
+        timeout_seconds=5.0,
+    )
+
+    assert outcome.timed_out is False
+    assert outcome.exit_code == 137
+    assert outcome.oom_killed is True
 
 
 def test_executor_reports_internal_error_when_no_result_written(tmp_path):

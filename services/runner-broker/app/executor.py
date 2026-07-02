@@ -25,11 +25,15 @@ CONTAINER_WORKSPACE_PATH = "/workspace"
 
 
 def build_container_options(limits: RunLimits) -> dict[str, Any]:
-    """The exact container hardening options required by the brief, with
-    mem_limit/pids_limit driven by the run's limits (256m/64 by default)."""
+    """The container hardening options required by the brief, with
+    mem_limit/nano_cpus/pids_limit driven by the run's limits (256m/1 CPU/64 by
+    default). `nano_cpus` enforces the spec's "CPU quota: 1 CPU" (design spec,
+    "Runner default limits"); docker-py expresses a CPU quota in units of 1e-9
+    CPUs, so cpu_count=1 => 1_000_000_000."""
     return {
         "network_disabled": True,
         "mem_limit": f"{limits.memory_mb}m",
+        "nano_cpus": limits.cpu_count * 1_000_000_000,
         "pids_limit": limits.pids,
         "cap_drop": ["ALL"],
         "security_opt": ["no-new-privileges"],
@@ -114,7 +118,17 @@ class DockerPyAdapter:
                     container.reload()
                     oom_killed = bool(container.attrs.get("State", {}).get("OOMKilled"))
                 except Exception:
+                    # With AutoRemove (remove=True) the daemon deletes the
+                    # container on exit, so reload()/inspect usually 404s here
+                    # and can never report OOMKilled. Fall through to the exit
+                    # code below.
                     pass
+                # Exit code 137 == 128 + SIGKILL. In the non-timeout path the
+                # only thing that SIGKILLs the container is the daemon reaping
+                # it for exceeding mem_limit, so treat 137 as an OOM kill even
+                # when inspect could not confirm it.
+                if not oom_killed and exit_code == 137:
+                    oom_killed = True
         finally:
             try:
                 container.remove(force=True)
