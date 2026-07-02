@@ -1,0 +1,64 @@
+id: path.skill.debugging
+kind: path
+path_type: skill
+version: 1
+language: python
+title: Debugging & Pythonic Habits
+slug: debugging-pythonic-habits
+description: Read tracebacks, fix classic beginner mistakes, and build habits that prevent them.
+outcomes:
+- Diagnose the most common Python errors from the traceback alone
+- Spot and fix assignment-versus-comparison and scope mistakes
+estimated_hours: 5
+review_status: published
+source_status: original
+provenance:
+  brief_id: brief.paths.v1
+  author: agent
+  generated_at: '2026-07-02T18:00:00Z'
+  inspiration_sources: []
+  originality_notes: Curated ordering over the repository's original content bank; no external syllabus
+    copied.
+units:
+- id: unit.debugging
+  title: Debugging
+  description: Lessons, drills, and quizzes for debugging.
+  items:
+  - lesson.library.debugging.a01
+  - lesson.library.debugging.a02
+  - lesson.library.debugging.a03
+  - lesson.library.debugging.a04
+  - exercise.library.debugging.a01
+  - exercise.library.debugging.a02
+  - exercise.library.debugging.a03
+  - exercise.library.debugging.a04
+  - exercise.library.debugging.a05
+  - exercise.library.debugging.a06
+  - exercise.library.debugging.a07
+  - exercise.library.debugging.a08
+  - exercise.library.debugging.b01
+  - exercise.library.debugging.b02
+  - quiz.library.debugging.a01
+  - quiz.library.debugging.a02
+  - quiz.library.debugging.a03
+- id: unit.debugging_w2
+  title: 'Debugging: Round Two'
+  description: Lessons, drills, and quizzes for debugging.
+  items:
+  - lesson.library.debugging_w2.a01
+  - lesson.library.debugging_w2.a02
+  - lesson.library.debugging_w2.a03
+  - lesson.library.debugging_w2.a04
+  - exercise.library.debugging_w2.a01
+  - exercise.library.debugging_w2.a02
+  - exercise.library.debugging_w2.a03
+  - exercise.library.debugging_w2.a04
+  - exercise.library.debugging_w2.a05
+  - exercise.library.debugging_w2.a06
+  - exercise.library.debugging_w2.a07
+  - exercise.library.debugging_w2.a08
+  - exercise.library.debugging_w2.b01
+  - exercise.library.debugging_w2.b02
+  - quiz.library.debugging_w2.a01
+  - quiz.library.debugging_w2.a02
+  - quiz.library.debugging_w2.a03

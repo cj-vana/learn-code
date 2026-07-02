@@ -1,0 +1,86 @@
+id: path.skill.python_foundations
+kind: path
+path_type: skill
+version: 1
+language: python
+title: Python Foundations
+slug: python-foundations
+description: "Variables, types, conditionals, and functions \u2014 the ground floor, twice over for retention."
+outcomes:
+- Use variables, types, and conditionals without second-guessing
+- Write and call functions with confidence
+estimated_hours: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: brief.paths.v1
+  author: agent
+  generated_at: '2026-07-02T18:00:00Z'
+  inspiration_sources: []
+  originality_notes: Curated ordering over the repository's original content bank; no external syllabus
+    copied.
+units:
+- id: unit.python_refresh
+  title: Python Refresh
+  description: Lessons, drills, and quizzes for python refresh.
+  items:
+  - lesson.library.python_refresh.a01
+  - lesson.library.python_refresh.a02
+  - lesson.library.python_refresh.a03
+  - lesson.library.python_refresh.a04
+  - lesson.library.python_refresh.a05
+  - lesson.library.python_refresh.a06
+  - exercise.library.python_refresh.a01
+  - exercise.library.python_refresh.a02
+  - exercise.library.python_refresh.a03
+  - exercise.library.python_refresh.a04
+  - exercise.library.python_refresh.a05
+  - exercise.library.python_refresh.a06
+  - exercise.library.python_refresh.a07
+  - exercise.library.python_refresh.a08
+  - exercise.library.python_refresh.b01
+  - exercise.library.python_refresh.b02
+  - exercise.library.python_refresh.b03
+  - exercise.library.python_refresh.b04
+  - exercise.library.python_refresh.b05
+  - exercise.library.python_refresh.b06
+  - exercise.library.python_refresh.b07
+  - exercise.library.python_refresh.b08
+  - exercise.library.python_refresh.c01
+  - exercise.library.python_refresh.c02
+  - quiz.library.python_refresh.a01
+  - quiz.library.python_refresh.a02
+  - quiz.library.python_refresh.a03
+  - quiz.library.python_refresh.a04
+- id: unit.python_refresh_w2
+  title: 'Python Refresh: Round Two'
+  description: Lessons, drills, and quizzes for python refresh.
+  items:
+  - lesson.library.python_refresh_w2.a01
+  - lesson.library.python_refresh_w2.a02
+  - lesson.library.python_refresh_w2.a03
+  - lesson.library.python_refresh_w2.a04
+  - lesson.library.python_refresh_w2.a05
+  - lesson.library.python_refresh_w2.a06
+  - exercise.library.python_refresh_w2.a01
+  - exercise.library.python_refresh_w2.a02
+  - exercise.library.python_refresh_w2.a03
+  - exercise.library.python_refresh_w2.a04
+  - exercise.library.python_refresh_w2.a05
+  - exercise.library.python_refresh_w2.a06
+  - exercise.library.python_refresh_w2.a07
+  - exercise.library.python_refresh_w2.a08
+  - exercise.library.python_refresh_w2.b01
+  - exercise.library.python_refresh_w2.b02
+  - exercise.library.python_refresh_w2.b03
+  - exercise.library.python_refresh_w2.b04
+  - exercise.library.python_refresh_w2.b05
+  - exercise.library.python_refresh_w2.b06
+  - exercise.library.python_refresh_w2.b07
+  - exercise.library.python_refresh_w2.b08
+  - exercise.library.python_refresh_w2.c01
+  - exercise.library.python_refresh_w2.c02
+  - quiz.library.python_refresh_w2.a01
+  - quiz.library.python_refresh_w2.a02
+  - quiz.library.python_refresh_w2.a03
+  - quiz.library.python_refresh_w2.a04

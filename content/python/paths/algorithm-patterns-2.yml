@@ -1,0 +1,114 @@
+id: path.skill.algorithm_patterns_2
+kind: path
+path_type: skill
+version: 1
+language: python
+title: Algorithm Patterns II
+slug: algorithm-patterns-2
+description: Prefix sums, stacks and queues, binary search, recursion, and mixed capstones.
+outcomes:
+- Apply prefix sums, stacks, and binary search to fresh problems
+- Hold your own on mixed problems that hide which pattern applies
+estimated_hours: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: brief.paths.v1
+  author: agent
+  generated_at: '2026-07-02T18:00:00Z'
+  inspiration_sources: []
+  originality_notes: Curated ordering over the repository's original content bank; no external syllabus
+    copied.
+units:
+- id: unit.prefix_sums
+  title: Prefix Sums
+  description: Lessons, drills, and quizzes for prefix sums.
+  items:
+  - lesson.library.prefix_sums.a01
+  - lesson.library.prefix_sums.a02
+  - exercise.library.prefix_sums.a01
+  - exercise.library.prefix_sums.a02
+  - exercise.library.prefix_sums.a03
+  - exercise.library.prefix_sums.a04
+  - exercise.library.prefix_sums.a05
+  - exercise.library.prefix_sums.a06
+  - exercise.library.prefix_sums.a07
+  - exercise.library.prefix_sums.a08
+  - quiz.library.prefix_sums.a01
+  - quiz.library.prefix_sums.a02
+- id: unit.stack_queue_bfs
+  title: Stacks, Queues & BFS
+  description: Lessons, drills, and quizzes for stacks, queues & bfs.
+  items:
+  - lesson.library.stack_queue_bfs.a01
+  - lesson.library.stack_queue_bfs.a02
+  - lesson.library.stack_queue_bfs.a03
+  - exercise.library.stack_queue_bfs.a01
+  - exercise.library.stack_queue_bfs.a02
+  - exercise.library.stack_queue_bfs.a03
+  - exercise.library.stack_queue_bfs.a04
+  - exercise.library.stack_queue_bfs.a05
+  - exercise.library.stack_queue_bfs.a06
+  - exercise.library.stack_queue_bfs.a07
+  - exercise.library.stack_queue_bfs.a08
+  - exercise.library.stack_queue_bfs.b01
+  - exercise.library.stack_queue_bfs.b02
+  - quiz.library.stack_queue_bfs.a01
+  - quiz.library.stack_queue_bfs.a02
+  - quiz.library.stack_queue_bfs.a03
+- id: unit.binary_search
+  title: Binary Search
+  description: Lessons, drills, and quizzes for binary search.
+  items:
+  - lesson.library.binary_search.a01
+  - lesson.library.binary_search.a02
+  - lesson.library.binary_search.a03
+  - exercise.library.binary_search.a01
+  - exercise.library.binary_search.a02
+  - exercise.library.binary_search.a03
+  - exercise.library.binary_search.a04
+  - exercise.library.binary_search.a05
+  - exercise.library.binary_search.a06
+  - exercise.library.binary_search.a07
+  - exercise.library.binary_search.a08
+  - quiz.library.binary_search.a01
+  - quiz.library.binary_search.a02
+- id: unit.recursion_backtracking
+  title: Recursion & Backtracking
+  description: Lessons, drills, and quizzes for recursion & backtracking.
+  items:
+  - lesson.library.recursion_backtracking.a01
+  - lesson.library.recursion_backtracking.a02
+  - lesson.library.recursion_backtracking.a03
+  - exercise.library.recursion_backtracking.a01
+  - exercise.library.recursion_backtracking.a02
+  - exercise.library.recursion_backtracking.a03
+  - exercise.library.recursion_backtracking.a04
+  - exercise.library.recursion_backtracking.a05
+  - exercise.library.recursion_backtracking.a06
+  - exercise.library.recursion_backtracking.a07
+  - exercise.library.recursion_backtracking.a08
+  - quiz.library.recursion_backtracking.a01
+  - quiz.library.recursion_backtracking.a02
+- id: unit.mixed_capstones
+  title: Mixed Capstones
+  description: Lessons, drills, and quizzes for mixed capstones.
+  items:
+  - exercise.library.mixed_capstones.a01
+  - exercise.library.mixed_capstones.a02
+  - exercise.library.mixed_capstones.a03
+  - exercise.library.mixed_capstones.a04
+  - exercise.library.mixed_capstones.a05
+  - exercise.library.mixed_capstones.a06
+  - exercise.library.mixed_capstones.a07
+  - exercise.library.mixed_capstones.a08
+  - exercise.library.mixed_capstones.b01
+  - exercise.library.mixed_capstones.b02
+  - exercise.library.mixed_capstones.b03
+  - exercise.library.mixed_capstones.b04
+  - quiz.library.mixed_capstones.a01
+  - quiz.library.mixed_capstones.a02
+  - quiz.library.mixed_capstones.a03
+  - quiz.library.mixed_capstones.a04
+  - quiz.library.mixed_capstones.a05
+  - quiz.library.mixed_capstones.a06

@@ -1,0 +1,84 @@
+id: path.skill.data_structures
+kind: path
+path_type: skill
+version: 1
+language: python
+title: Data Structures in Python
+slug: data-structures-in-python
+description: "Dictionaries, sets, tuples, and sorting \u2014 the containers interviews lean on."
+outcomes:
+- Pick the right container for the job
+- Sort with keys and reason about lookup costs
+estimated_hours: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: brief.paths.v1
+  author: agent
+  generated_at: '2026-07-02T18:00:00Z'
+  inspiration_sources: []
+  originality_notes: Curated ordering over the repository's original content bank; no external syllabus
+    copied.
+units:
+- id: unit.dicts_sets_tuples
+  title: Dicts, Sets & Tuples
+  description: Lessons, drills, and quizzes for dicts, sets & tuples.
+  items:
+  - lesson.library.dicts_sets_tuples.a01
+  - lesson.library.dicts_sets_tuples.a02
+  - lesson.library.dicts_sets_tuples.a03
+  - lesson.library.dicts_sets_tuples.a04
+  - lesson.library.dicts_sets_tuples.a05
+  - exercise.library.dicts_sets_tuples.a01
+  - exercise.library.dicts_sets_tuples.a02
+  - exercise.library.dicts_sets_tuples.a03
+  - exercise.library.dicts_sets_tuples.a04
+  - exercise.library.dicts_sets_tuples.a05
+  - exercise.library.dicts_sets_tuples.a06
+  - exercise.library.dicts_sets_tuples.a07
+  - exercise.library.dicts_sets_tuples.a08
+  - exercise.library.dicts_sets_tuples.b01
+  - exercise.library.dicts_sets_tuples.b02
+  - exercise.library.dicts_sets_tuples.b03
+  - exercise.library.dicts_sets_tuples.b04
+  - exercise.library.dicts_sets_tuples.b05
+  - exercise.library.dicts_sets_tuples.b06
+  - exercise.library.dicts_sets_tuples.b07
+  - exercise.library.dicts_sets_tuples.b08
+  - exercise.library.dicts_sets_tuples.c01
+  - exercise.library.dicts_sets_tuples.c02
+  - quiz.library.dicts_sets_tuples.a01
+  - quiz.library.dicts_sets_tuples.a02
+  - quiz.library.dicts_sets_tuples.a03
+  - quiz.library.dicts_sets_tuples.a04
+- id: unit.dicts_sets_tuples_w2
+  title: 'Dicts, Sets & Tuples: Round Two'
+  description: Lessons, drills, and quizzes for dicts, sets & tuples.
+  items:
+  - lesson.library.dicts_sets_tuples_w2.a01
+  - lesson.library.dicts_sets_tuples_w2.a02
+  - lesson.library.dicts_sets_tuples_w2.a03
+  - lesson.library.dicts_sets_tuples_w2.a04
+  - lesson.library.dicts_sets_tuples_w2.a05
+  - exercise.library.dicts_sets_tuples_w2.a01
+  - exercise.library.dicts_sets_tuples_w2.a02
+  - exercise.library.dicts_sets_tuples_w2.a03
+  - exercise.library.dicts_sets_tuples_w2.a04
+  - exercise.library.dicts_sets_tuples_w2.a05
+  - exercise.library.dicts_sets_tuples_w2.a06
+  - exercise.library.dicts_sets_tuples_w2.a07
+  - exercise.library.dicts_sets_tuples_w2.a08
+  - exercise.library.dicts_sets_tuples_w2.b01
+  - exercise.library.dicts_sets_tuples_w2.b02
+  - exercise.library.dicts_sets_tuples_w2.b03
+  - exercise.library.dicts_sets_tuples_w2.b04
+  - exercise.library.dicts_sets_tuples_w2.b05
+  - exercise.library.dicts_sets_tuples_w2.b06
+  - exercise.library.dicts_sets_tuples_w2.b07
+  - exercise.library.dicts_sets_tuples_w2.b08
+  - exercise.library.dicts_sets_tuples_w2.c01
+  - exercise.library.dicts_sets_tuples_w2.c02
+  - quiz.library.dicts_sets_tuples_w2.a01
+  - quiz.library.dicts_sets_tuples_w2.a02
+  - quiz.library.dicts_sets_tuples_w2.a03
+  - quiz.library.dicts_sets_tuples_w2.a04
