@@ -285,6 +285,26 @@ def apply_lesson_completed(conn: sqlite3.Connection, event: ProgressEvent) -> No
     )
 
 
+def apply_path_enrolled(conn: sqlite3.Connection, event: ProgressEvent) -> None:
+    """One active path at a time: enrolling supersedes the previous path."""
+    if event.content_id is None:
+        return
+    conn.execute(
+        """
+        INSERT INTO active_path (id, path_id, enrolled_at)
+        VALUES (1, ?, ?)
+        ON CONFLICT(id) DO UPDATE SET
+            path_id = excluded.path_id,
+            enrolled_at = excluded.enrolled_at
+        """,
+        (event.content_id, event.created_at.isoformat()),
+    )
+
+
+def apply_path_unenrolled(conn: sqlite3.Connection, event: ProgressEvent) -> None:
+    conn.execute("DELETE FROM active_path WHERE id = 1")
+
+
 def apply_pattern_predicted(conn: sqlite3.Connection, event: ProgressEvent) -> None:
     """Fold one standalone PatternPredicted event into the rollup tables.
 
@@ -405,6 +425,7 @@ def recompute_rollups(conn: sqlite3.Connection) -> None:
     conn.execute("DELETE FROM daily_activity")
     conn.execute("DELETE FROM lesson_completions")
     conn.execute("DELETE FROM quiz_answer_log")
+    conn.execute("DELETE FROM active_path")
 
     for event in fetch_events_ordered(conn):
         if event.type == EventType.EXERCISE_SUBMITTED:
@@ -415,6 +436,10 @@ def recompute_rollups(conn: sqlite3.Connection) -> None:
             apply_pattern_predicted(conn, event)
         elif event.type == EventType.LESSON_COMPLETED:
             apply_lesson_completed(conn, event)
+        elif event.type == EventType.PATH_ENROLLED:
+            apply_path_enrolled(conn, event)
+        elif event.type == EventType.PATH_UNENROLLED:
+            apply_path_unenrolled(conn, event)
         # Other required event types (HintViewed, PlaygroundRunCompleted,
         # ReviewCompleted, PlanItemSkipped, OllamaReviewRequested) are stored
         # for audit today; there is no rollup behavior to implement for them yet.
@@ -579,6 +604,20 @@ def read_quiz_question_coverage(conn: sqlite3.Connection) -> dict[str, set[str]]
     ).fetchall():
         coverage.setdefault(quiz_id, set()).add(question_id)
     return coverage
+
+
+def read_active_path_id(conn: sqlite3.Connection) -> str | None:
+    row = conn.execute("SELECT path_id FROM active_path WHERE id = 1").fetchone()
+    return row[0] if row is not None else None
+
+
+def read_passed_exercise_ids(conn: sqlite3.Connection) -> set[str]:
+    return {
+        row[0]
+        for row in conn.execute(
+            "SELECT exercise_id FROM exercise_summary WHERE best_status = 'passed'"
+        ).fetchall()
+    }
 
 
 def read_concept_snapshot(conn: sqlite3.Connection) -> dict[str, ConceptSnapshotRow]:

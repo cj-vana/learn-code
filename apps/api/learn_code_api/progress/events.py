@@ -22,6 +22,8 @@ class EventType(StrEnum):
     REVIEW_COMPLETED = "ReviewCompleted"
     PLAN_ITEM_SKIPPED = "PlanItemSkipped"
     OLLAMA_REVIEW_REQUESTED = "OllamaReviewRequested"
+    PATH_ENROLLED = "PathEnrolled"
+    PATH_UNENROLLED = "PathUnenrolled"
 
 
 class ProgressEvent(BaseModel):

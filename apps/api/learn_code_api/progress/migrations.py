@@ -75,6 +75,17 @@ MIGRATIONS: tuple[Migration, ...] = (
         );
         """,
     ),
+    Migration(
+        version=3,
+        description="add single-row active path enrollment rollup",
+        sql="""
+        CREATE TABLE IF NOT EXISTS active_path (
+            id INTEGER PRIMARY KEY CHECK (id = 1),
+            path_id TEXT NOT NULL,
+            enrolled_at TEXT NOT NULL
+        );
+        """,
+    ),
 )
 
 

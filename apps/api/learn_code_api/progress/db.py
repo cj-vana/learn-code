@@ -58,6 +58,12 @@ class ProgressRepository:
         elif event.type == EventType.LESSON_COMPLETED:
             rollups_mod.apply_lesson_completed(self._conn, event)
             self._conn.commit()
+        elif event.type == EventType.PATH_ENROLLED:
+            rollups_mod.apply_path_enrolled(self._conn, event)
+            self._conn.commit()
+        elif event.type == EventType.PATH_UNENROLLED:
+            rollups_mod.apply_path_unenrolled(self._conn, event)
+            self._conn.commit()
 
         return event
 
@@ -117,6 +123,42 @@ class ProgressRepository:
             payload={},
         )
         return self.append_event(event)
+
+    def record_path_enrolled(
+        self, *, path_id: str, session_id: str, now: datetime, language: str = "python"
+    ) -> ProgressEvent:
+        event = ProgressEvent(
+            id=events_mod.new_event_id(),
+            type=EventType.PATH_ENROLLED,
+            created_at=now,
+            content_id=path_id,
+            language=language,
+            session_id=session_id,
+            payload={},
+        )
+        return self.append_event(event)
+
+    def record_path_unenrolled(
+        self, *, path_id: str, session_id: str, now: datetime, language: str = "python"
+    ) -> ProgressEvent:
+        event = ProgressEvent(
+            id=events_mod.new_event_id(),
+            type=EventType.PATH_UNENROLLED,
+            created_at=now,
+            content_id=path_id,
+            language=language,
+            session_id=session_id,
+            payload={},
+        )
+        return self.append_event(event)
+
+    def active_path_id(self) -> str | None:
+        """Read-only: the currently enrolled path id, if any."""
+        return rollups_mod.read_active_path_id(self._conn)
+
+    def passed_exercise_ids(self) -> set[str]:
+        """Read-only: exercise ids whose best status is a validation pass."""
+        return rollups_mod.read_passed_exercise_ids(self._conn)
 
     def completed_lesson_ids(self) -> set[str]:
         """Read-only: ids of lessons the learner has completed."""
