@@ -33,17 +33,40 @@ Career paths end in **scaffolded capstone projects** (a market ledger, an
 observatory log pipeline, a courier dispatch board) that compose everything the
 path taught.
 
-## Quick start
+## Install
+
+You need [Docker](https://docs.docker.com/get-docker/) with Compose v2
+(Docker Desktop on macOS/Windows, Docker Engine + the compose plugin on
+Linux). Everything else runs inside containers.
+
+**Build from source:**
 
 ```bash
+git clone https://github.com/cj-vana/learn-code.git
+cd learn-code
 docker compose up --build
 ```
+
+**Or use the prebuilt images from GHCR** (skips the build; the clone is still
+needed because the content library is mounted as data):
+
+```bash
+git clone https://github.com/cj-vana/learn-code.git
+cd learn-code
+docker compose -f docker-compose.yml -f docker-compose.ghcr.yml pull
+docker compose -f docker-compose.yml -f docker-compose.ghcr.yml up
+```
+
+Pin a release with `LEARN_CODE_TAG=1.2.0` (defaults to `latest`).
 
 Then open **http://127.0.0.1:5173**.
 
 The browser app and the CLI both talk to the same FastAPI backend. Learner code
 runs in short-lived, sandboxed Python containers via the runner-broker — nothing
 you write touches the host.
+
+**To update**: `git pull`, then rerun your install command above. The app's
+status strip tells you when a newer release exists.
 
 ### CLI
 
