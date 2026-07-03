@@ -53,8 +53,18 @@ def test_valid_path_model_validates():
 
 def test_duplicate_items_across_units_rejected():
     units = [
-        {"id": "unit.one", "title": "One", "description": "d", "items": ["lesson.library.two_pointers.a01"]},
-        {"id": "unit.two", "title": "Two", "description": "d", "items": ["lesson.library.two_pointers.a01"]},
+        {
+            "id": "unit.one",
+            "title": "One",
+            "description": "d",
+            "items": ["lesson.library.two_pointers.a01"],
+        },
+        {
+            "id": "unit.two",
+            "title": "Two",
+            "description": "d",
+            "items": ["lesson.library.two_pointers.a01"],
+        },
     ]
     with pytest.raises(ValidationError):
         PathContent.model_validate(_path(units=units))
@@ -78,9 +88,7 @@ def test_loader_rejects_duplicate_path_ids(tmp_path):
     import yaml
 
     (tmp_path / "a.yml").write_text(yaml.safe_dump(_path()), encoding="utf-8")
-    (tmp_path / "b.yml").write_text(
-        yaml.safe_dump(_path(slug="other-slug")), encoding="utf-8"
-    )
+    (tmp_path / "b.yml").write_text(yaml.safe_dump(_path(slug="other-slug")), encoding="utf-8")
     with pytest.raises(ContentLoadError):
         load_catalog(tmp_path)
 

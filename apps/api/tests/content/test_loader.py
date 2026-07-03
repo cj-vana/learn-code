@@ -29,7 +29,9 @@ def test_default_loader_excludes_drafts(tmp_path: Path):
     default_catalog = load_catalog(tmp_path)
     draft_catalog = load_catalog(tmp_path, include_drafts=True)
 
-    assert [exercise.id for exercise in default_catalog.exercises] == ["exercise.seed.count-tags-001"]
+    assert [exercise.id for exercise in default_catalog.exercises] == [
+        "exercise.seed.count-tags-001"
+    ]
     assert {exercise.id for exercise in draft_catalog.exercises} == {
         "exercise.seed.count-tags-001",
         "exercise.seed.draft-count-tags-001",

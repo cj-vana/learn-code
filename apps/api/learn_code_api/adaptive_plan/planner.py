@@ -142,9 +142,7 @@ def build_today_plan(
 
     candidates: list[_Candidate] = []
     for exercise in sorted(catalog.exercises, key=lambda item: item.id):
-        candidate = _classify_exercise(
-            exercise, progress, now, prereq_depth, blocking_concepts
-        )
+        candidate = _classify_exercise(exercise, progress, now, prereq_depth, blocking_concepts)
         if candidate is not None:
             candidates.append(candidate)
     for lesson in sorted(catalog.lessons, key=lambda item: item.id):
@@ -162,10 +160,7 @@ def build_today_plan(
 
     items: list[PlanItem] = []
     for index, candidate in enumerate(candidates[:limit]):
-        alternatives = [
-            other.content_id
-            for other in candidates[index + 1 : index + 1 + 2]
-        ]
+        alternatives = [other.content_id for other in candidates[index + 1 : index + 1 + 2]]
         items.append(_to_plan_item(candidate, alternatives))
     return items
 
@@ -192,9 +187,7 @@ def _concept_prereq_depth(catalog: ContentCatalog) -> dict[str, int]:
         if not parents:
             depth_cache[concept_id] = 0
             return 0
-        result = 1 + max(
-            depth_of(parent, visiting | {concept_id}) for parent in sorted(parents)
-        )
+        result = 1 + max(depth_of(parent, visiting | {concept_id}) for parent in sorted(parents))
         depth_cache[concept_id] = result
         return result
 
@@ -267,7 +260,9 @@ def _classify_exercise(
         )
 
     # Tier 3: weak patterns below 50 mastery.
-    weak = [state for state in concept_states if state.attempted and state.mastery < PRACTICING_FLOOR]
+    weak = [
+        state for state in concept_states if state.attempted and state.mastery < PRACTICING_FLOOR
+    ]
     if weak:
         primary = min(weak, key=lambda state: (state.mastery, state.concept_id))
         return _build_candidate(
@@ -393,9 +388,7 @@ def _classify_quiz(
             primary=primary,
             prereq_depth=prereq_depth,
             reason="Mixed quiz to discriminate between practiced patterns",
-            because=[
-                f"{len(ready)} concepts are at or above {QUIZ_READY_MASTERY} mastery"
-            ],
+            because=[f"{len(ready)} concepts are at or above {QUIZ_READY_MASTERY} mastery"],
         )
     return None
 

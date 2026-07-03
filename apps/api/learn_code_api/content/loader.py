@@ -50,9 +50,7 @@ def load_catalog(content_root: Path, include_drafts: bool = False) -> ContentCat
             raise ContentLoadError(f"unsupported content kind in {path}: {kind!r}")
 
     _reject_duplicates([*exercises, *lessons, *quizzes, *paths])
-    return ContentCatalog(
-        exercises=exercises, lessons=lessons, quizzes=quizzes, paths=paths
-    )
+    return ContentCatalog(exercises=exercises, lessons=lessons, quizzes=quizzes, paths=paths)
 
 
 def _yaml_files(root: Path) -> list[Path]:
@@ -83,7 +81,9 @@ def _load_review_status(path: Path, raw: dict[str, Any]) -> ReviewStatus:
     try:
         return ReviewStatus(raw["review_status"])
     except ValueError as exc:
-        raise ContentLoadError(f"invalid review_status in {path}: {raw['review_status']!r}") from exc
+        raise ContentLoadError(
+            f"invalid review_status in {path}: {raw['review_status']!r}"
+        ) from exc
 
 
 def _load_exercise(path: Path, raw: dict[str, Any]) -> ExerciseContent:

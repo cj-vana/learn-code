@@ -180,7 +180,11 @@ LESSON_DETAIL = {
     "concepts": ["python.loops"],
     "body_markdown": "Loops repeat work until a condition ends them.",
     "checkpoints": [
-        {"question": "What repeats?", "answer": "The body", "explanation": "Each pass runs the body."}
+        {
+            "question": "What repeats?",
+            "answer": "The body",
+            "explanation": "Each pass runs the body.",
+        }
     ],
 }
 
@@ -397,9 +401,7 @@ PATH_DETAIL = {
 
 @respx.mock
 def test_paths_lists_progress(runner, api_base):
-    respx.get(f"{api_base}/paths").mock(
-        return_value=httpx.Response(200, json=[PATH_SUMMARY])
-    )
+    respx.get(f"{api_base}/paths").mock(return_value=httpx.Response(200, json=[PATH_SUMMARY]))
     result = runner.invoke(app, ["paths"])
     assert result.exit_code == 0
     assert "Python Foundations" in result.stdout

@@ -43,7 +43,9 @@ def test_executor_passes_security_options_to_adapter(tmp_path):
         "test_summary": [],
         "error_type": None,
     }
-    executor = Executor(adapter=adapter, image="learn-code-python-runner:local", workspace_root=tmp_path)
+    executor = Executor(
+        adapter=adapter, image="learn-code-python-runner:local", workspace_root=tmp_path
+    )
 
     executor.execute(job={"mode": "playground", "source": "print(1)"}, limits=EXERCISE_LIMITS)
 
@@ -79,7 +81,9 @@ def test_executor_returns_parsed_result_from_workspace(tmp_path):
     }
     executor = Executor(adapter=adapter, image="img", workspace_root=tmp_path)
 
-    result = executor.execute(job={"mode": "playground", "source": "print(1)"}, limits=EXERCISE_LIMITS)
+    result = executor.execute(
+        job={"mode": "playground", "source": "print(1)"}, limits=EXERCISE_LIMITS
+    )
 
     assert result["status"] == "passed"
     assert result["stdout"] == "ok"
@@ -87,9 +91,18 @@ def test_executor_returns_parsed_result_from_workspace(tmp_path):
 
 def test_executor_cleans_up_workspace_on_success(tmp_path):
     adapter = FakeDockerAdapter()
-    adapter.result_to_write = {"status": "passed", "passed": 0, "failed": 0, "stdout": "",
-                                "stderr": "", "duration_ms": 1, "timed_out": False,
-                                "memory_exceeded": False, "test_summary": [], "error_type": None}
+    adapter.result_to_write = {
+        "status": "passed",
+        "passed": 0,
+        "failed": 0,
+        "stdout": "",
+        "stderr": "",
+        "duration_ms": 1,
+        "timed_out": False,
+        "memory_exceeded": False,
+        "test_summary": [],
+        "error_type": None,
+    }
     executor = Executor(adapter=adapter, image="img", workspace_root=tmp_path)
 
     executor.execute(job={"mode": "playground", "source": "print(1)"}, limits=EXERCISE_LIMITS)
@@ -119,7 +132,9 @@ def test_executor_reports_timeout_from_adapter(tmp_path):
     adapter.next_outcome = ContainerRunOutcome(exit_code=None, timed_out=True, oom_killed=False)
     executor = Executor(adapter=adapter, image="img", workspace_root=tmp_path)
 
-    result = executor.execute(job={"mode": "playground", "source": "import time; time.sleep(5)"}, limits=EXERCISE_LIMITS)
+    result = executor.execute(
+        job={"mode": "playground", "source": "import time; time.sleep(5)"}, limits=EXERCISE_LIMITS
+    )
 
     assert result["status"] == "timeout"
     assert result["timed_out"] is True
@@ -130,7 +145,9 @@ def test_executor_reports_memory_exceeded_from_adapter(tmp_path):
     adapter.next_outcome = ContainerRunOutcome(exit_code=137, timed_out=False, oom_killed=True)
     executor = Executor(adapter=adapter, image="img", workspace_root=tmp_path)
 
-    result = executor.execute(job={"mode": "playground", "source": "x = [0] * 10**9"}, limits=EXERCISE_LIMITS)
+    result = executor.execute(
+        job={"mode": "playground", "source": "x = [0] * 10**9"}, limits=EXERCISE_LIMITS
+    )
 
     assert result["status"] == "memory_exceeded"
     assert result["memory_exceeded"] is True
@@ -205,6 +222,8 @@ def test_executor_reports_internal_error_when_no_result_written(tmp_path):
     adapter = FakeDockerAdapter()  # no result_to_write configured, harness "crashed silently"
     executor = Executor(adapter=adapter, image="img", workspace_root=tmp_path)
 
-    result = executor.execute(job={"mode": "playground", "source": "print(1)"}, limits=EXERCISE_LIMITS)
+    result = executor.execute(
+        job={"mode": "playground", "source": "print(1)"}, limits=EXERCISE_LIMITS
+    )
 
     assert result["status"] == "internal_error"

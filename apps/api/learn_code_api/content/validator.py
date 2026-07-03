@@ -206,11 +206,15 @@ def _validate_exercise(
 
     if len(exercise.tests.public) < 3:
         issues.append(
-            ValidationIssue(path=exercise.id, message="exercise must include at least 3 public tests")
+            ValidationIssue(
+                path=exercise.id, message="exercise must include at least 3 public tests"
+            )
         )
     if len(exercise.tests.validation) < 3:
         issues.append(
-            ValidationIssue(path=exercise.id, message="exercise must include at least 3 validation tests")
+            ValidationIssue(
+                path=exercise.id, message="exercise must include at least 3 validation tests"
+            )
         )
 
     _check_suspicious_metadata(exercise, issues)

@@ -46,7 +46,9 @@ def test_seed_validator_rejects_unknown_exercise_concept(tmp_path: Path):
     report = validate_content_tree(tmp_path, run_solutions=False)
 
     assert not report.ok
-    assert any("unknown exercise concept: python.dictionries" in issue.message for issue in report.issues)
+    assert any(
+        "unknown exercise concept: python.dictionries" in issue.message for issue in report.issues
+    )
 
 
 def test_library_profile_accepts_taxonomy_concept_seed_rejects(tmp_path: Path):
@@ -68,7 +70,9 @@ def test_library_profile_still_rejects_unknown_concept(tmp_path: Path):
     report = validate_content_tree(tmp_path, profile="library", run_solutions=False)
 
     assert not report.ok
-    assert any("unknown exercise concept: patterns.made_up_thing" in i.message for i in report.issues)
+    assert any(
+        "unknown exercise concept: patterns.made_up_thing" in i.message for i in report.issues
+    )
 
 
 def test_validator_rejects_insufficient_tests(tmp_path: Path):

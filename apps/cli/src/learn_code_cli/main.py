@@ -161,24 +161,16 @@ def timed(
     concept: Optional[str] = typer.Option(None, "--concept"),
 ) -> None:
     """Start a timed practice set: eligible problems plus a per-problem budget."""
-    session = _handle(
-        lambda: _client().timed_session(count, minutes, concept)
-    )
+    session = _handle(lambda: _client().timed_session(count, minutes, concept))
     exercises = session["exercises"]
     if not exercises:
-        typer.echo(
-            "Nothing is timed-ready yet - get a few concepts to practicing mastery first."
-        )
+        typer.echo("Nothing is timed-ready yet - get a few concepts to practicing mastery first.")
         return
-    typer.echo(
-        f"Timed set ({len(exercises)} problems, {session['minutes_per_problem']} min each):"
-    )
+    typer.echo(f"Timed set ({len(exercises)} problems, {session['minutes_per_problem']} min each):")
     for number, exercise in enumerate(exercises, start=1):
         typer.echo(f"  {number}. {exercise['title']}  ({exercise['id']})")
     typer.echo("")
-    typer.echo(
-        "Set a timer per problem, then grade each with: learn-code submit <id> <file>"
-    )
+    typer.echo("Set a timer per problem, then grade each with: learn-code submit <id> <file>")
 
 
 @app.command()

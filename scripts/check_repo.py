@@ -61,7 +61,9 @@ def main() -> int:
         text = path.read_text(encoding="utf-8", errors="replace")
         for lineno, line in enumerate(text.splitlines(), start=1):
             if "https://" in line and "//" != line.lstrip()[:2] and "* " != line.lstrip()[:2]:
-                errors.append(f"external URL in web app ({rel}:{lineno}): offline-capable scope forbids it")
+                errors.append(
+                    f"external URL in web app ({rel}:{lineno}): offline-capable scope forbids it"
+                )
 
     if errors:
         for error in errors:

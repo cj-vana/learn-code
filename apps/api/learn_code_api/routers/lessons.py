@@ -23,6 +23,4 @@ def complete_lesson(
         session_id=deps.session_id,
         now=deps.clock(),
     )
-    return LessonCompletionResponse(
-        lesson_id=lesson.id, completed_at=event.created_at.isoformat()
-    )
+    return LessonCompletionResponse(lesson_id=lesson.id, completed_at=event.created_at.isoformat())

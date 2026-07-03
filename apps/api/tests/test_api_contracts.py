@@ -271,9 +271,7 @@ def test_submit_hints_used_reduces_mastery_gain(tmp_path):
     ).json()
 
     hinted_client, _, _ = make_client(tmp_path / "b")
-    hinted = hinted_client.post(
-        "/api/v1/exercises/submit", json={**body, "hints_used": 3}
-    ).json()
+    hinted = hinted_client.post("/api/v1/exercises/submit", json={**body, "hints_used": 3}).json()
 
     unhinted_after = unhinted["progress_delta"]["mastery_after"]
     hinted_after = hinted["progress_delta"]["mastery_after"]
@@ -561,7 +559,9 @@ def test_importing_main_has_no_import_time_catalog_load(monkeypatch):
     # Importing the module must not touch the filesystem: it previously loaded
     # the catalog from a cwd-relative default, aborting collection unless run
     # from the repo root.
-    monkeypatch.setenv("LEARN_CODE_CONTENT_ROOT", str(tmp_nonexistent := Path("/nonexistent/content")))
+    monkeypatch.setenv(
+        "LEARN_CODE_CONTENT_ROOT", str(tmp_nonexistent := Path("/nonexistent/content"))
+    )
     assert not tmp_nonexistent.exists()
     main_module = importlib.import_module("learn_code_api.main")
     importlib.reload(main_module)  # must not raise despite the invalid content root

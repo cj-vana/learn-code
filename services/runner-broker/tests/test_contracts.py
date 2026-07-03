@@ -118,9 +118,7 @@ def test_response_matches_spec_shape():
         timed_out=False,
         memory_exceeded=False,
         test_summary=[
-            TestSummaryEntry(
-                name="test_example_1", visibility="public", passed=True, message=None
-            )
+            TestSummaryEntry(name="test_example_1", visibility="public", passed=True, message=None)
         ],
         error_type=None,
         educational_hint_id=None,

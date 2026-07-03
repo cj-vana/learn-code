@@ -253,10 +253,7 @@ def test_exercise_tests_with_boolean_and_none_expected(tmp_path):
     job = {
         "mode": "exercise_tests",
         "source": (
-            "def classify(x):\n"
-            "    if x is None:\n"
-            "        return None\n"
-            "    return x % 2 == 0\n"
+            "def classify(x):\n    if x is None:\n        return None\n    return x % 2 == 0\n"
         ),
         "function_name": "classify",
         "stdin": None,

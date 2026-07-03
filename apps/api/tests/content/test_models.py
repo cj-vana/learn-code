@@ -40,7 +40,11 @@ def valid_exercise_data() -> dict:
             "public": [
                 {"name": "empty", "input": [], "expected": {}},
                 {"name": "one", "input": ["red"], "expected": {"red": 1}},
-                {"name": "repeat", "input": ["red", "red", "blue"], "expected": {"red": 2, "blue": 1}},
+                {
+                    "name": "repeat",
+                    "input": ["red", "red", "blue"],
+                    "expected": {"red": 2, "blue": 1},
+                },
             ],
             "validation": [
                 {"name": "mixed", "input": ["a", "b", "a"], "expected": {"a": 2, "b": 1}},

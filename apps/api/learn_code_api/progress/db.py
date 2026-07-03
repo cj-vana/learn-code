@@ -38,7 +38,9 @@ class ProgressRepository:
         `recompute_rollups()` in that case instead of the incremental fold.
         """
         max_created_at_before = events_mod.max_created_at(self._conn)
-        out_of_order = max_created_at_before is not None and event.created_at < max_created_at_before
+        out_of_order = (
+            max_created_at_before is not None and event.created_at < max_created_at_before
+        )
 
         sequence = events_mod.next_sequence(self._conn)
         events_mod.insert_event(self._conn, event, sequence)

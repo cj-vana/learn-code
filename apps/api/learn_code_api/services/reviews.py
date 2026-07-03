@@ -17,13 +17,9 @@ from learn_code_api.services import find_exercise
 _EXPECTED_PATTERN_INDEX = 0
 
 
-def review(
-    catalog: ContentCatalog, ollama: OllamaClient, request: ReviewRequest
-) -> OllamaReview:
+def review(catalog: ContentCatalog, ollama: OllamaClient, request: ReviewRequest) -> OllamaReview:
     exercise = find_exercise(catalog, request.exercise_id)
-    expected_pattern = (
-        exercise.concepts[_EXPECTED_PATTERN_INDEX] if exercise.concepts else None
-    )
+    expected_pattern = exercise.concepts[_EXPECTED_PATTERN_INDEX] if exercise.concepts else None
     context = ReviewContext(
         exercise_prompt=exercise.prompt_markdown,
         concepts=list(exercise.concepts),

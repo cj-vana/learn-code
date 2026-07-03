@@ -26,8 +26,7 @@ def friendly_error(error: ApiError) -> str:
 
 def unreachable(api_url: str) -> str:
     return (
-        f"Can't reach the API at {api_url}.\n"
-        f"Start the stack from the repo root:\n  {COMPOSE_HINT}"
+        f"Can't reach the API at {api_url}.\nStart the stack from the repo root:\n  {COMPOSE_HINT}"
     )
 
 
@@ -125,9 +124,7 @@ def render_path_detail(detail: dict[str, Any]) -> str:
         lines.append(f"{unit['title']}  [{unit['percent_complete']}%]{lock}")
         for item in unit.get("items", []):
             mark = "x" if item["status"] == "complete" else " "
-            lines.append(
-                f"  [{mark}] {item['kind']:<8} {item['title']}  ({item['id']})"
-            )
+            lines.append(f"  [{mark}] {item['kind']:<8} {item['title']}  ({item['id']})")
         if unit.get("milestone") and unit_status == "complete":
             lines.append(f"  ** milestone: {unit['milestone']}")
     if detail.get("next_item_id"):
@@ -145,9 +142,7 @@ def render_progress(summary: dict[str, Any]) -> str:
     if concepts:
         lines.append("concepts:")
         for concept in concepts:
-            lines.append(
-                f"- {concept['id']}: {concept['mastery']} ({concept['label']})"
-            )
+            lines.append(f"- {concept['id']}: {concept['mastery']} ({concept['label']})")
     else:
         lines.append("concepts: none yet")
     mistakes = summary.get("recent_mistakes", [])

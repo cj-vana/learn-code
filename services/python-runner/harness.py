@@ -224,9 +224,7 @@ def _playground_result(proc: subprocess.CompletedProcess, duration_ms: int) -> d
     )
 
 
-def _exercise_tests_result(
-    proc: subprocess.CompletedProcess, job: dict, duration_ms: int
-) -> dict:
+def _exercise_tests_result(proc: subprocess.CompletedProcess, job: dict, duration_ms: int) -> dict:
     stdout = proc.stdout or ""
     marker = stdout.rfind(RESULT_SENTINEL)
     if marker == -1:

@@ -749,7 +749,9 @@ def area_key(area: str, wave: int) -> str:
     return area if wave == 1 else f"{area}_w2"
 
 
-def order_lessons(lessons: list[str], concepts: dict[str, set], prereqs: dict[str, set]) -> list[str]:
+def order_lessons(
+    lessons: list[str], concepts: dict[str, set], prereqs: dict[str, set]
+) -> list[str]:
     """Stable topological sort: a lesson whose prerequisites are taught by a
     sibling lesson in the same unit comes after that sibling. Ties keep id
     order; a cycle falls back to id order for the remainder."""
@@ -757,7 +759,7 @@ def order_lessons(lessons: list[str], concepts: dict[str, set], prereqs: dict[st
     taught: set = set()
     ordered: list[str] = []
     while remaining:
-        taught_by_remaining = set().union(*(concepts[l] for l in remaining))
+        taught_by_remaining = set().union(*(concepts[item] for item in remaining))
         pick = None
         for lesson in remaining:
             unmet_here = prereqs[lesson] - taught
@@ -802,7 +804,11 @@ def main() -> None:
     concepts: dict[str, set] = {}
     prereqs: dict[str, set] = {}
     lesson_ids: set[str] = set()
-    for pool, kind in ((catalog.lessons, "lesson"), (catalog.exercises, "exercise"), (catalog.quizzes, "quiz")):
+    for pool, kind in (
+        (catalog.lessons, "lesson"),
+        (catalog.exercises, "exercise"),
+        (catalog.quizzes, "quiz"),
+    ):
         for item in pool:
             concepts[item.id] = set(item.concepts)
             prereqs[item.id] = set(item.prerequisites)
@@ -881,7 +887,9 @@ def main() -> None:
         }
         out = PATHS_DIR / f"{spec['slug']}.yml"
         out.write_text(yaml.safe_dump(doc, sort_keys=False, width=100), encoding="utf-8")
-        print(f"wrote {out.relative_to(REPO_ROOT)} ({len(units)} units, ~{doc['estimated_hours']}h)")
+        print(
+            f"wrote {out.relative_to(REPO_ROOT)} ({len(units)} units, ~{doc['estimated_hours']}h)"
+        )
 
 
 if __name__ == "__main__":

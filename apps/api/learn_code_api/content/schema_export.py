@@ -15,7 +15,9 @@ def export_content_schema(output_path: Path | None = DEFAULT_SCHEMA_PATH) -> dic
     schema = ExerciseContent.model_json_schema()
     if output_path is not None:
         output_path.parent.mkdir(parents=True, exist_ok=True)
-        output_path.write_text(json.dumps(schema, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+        output_path.write_text(
+            json.dumps(schema, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+        )
     return schema
 
 

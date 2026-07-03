@@ -330,9 +330,7 @@ def _concept(
 
 
 def test_lesson_emitted_for_new_concept():
-    catalog = ContentCatalog(
-        exercises=[], lessons=[make_lesson(id="lesson.l1")], quizzes=[]
-    )
+    catalog = ContentCatalog(exercises=[], lessons=[make_lesson(id="lesson.l1")], quizzes=[])
     snapshot = ProgressSnapshot(concepts={})
     items = build_today_plan(catalog, snapshot, now=NOW)
     assert [item.kind.value for item in items] == ["lesson"]
@@ -340,22 +338,14 @@ def test_lesson_emitted_for_new_concept():
 
 
 def test_completed_lesson_never_reemits():
-    catalog = ContentCatalog(
-        exercises=[], lessons=[make_lesson(id="lesson.l1")], quizzes=[]
-    )
-    snapshot = ProgressSnapshot(
-        concepts={}, completed_lesson_ids=frozenset({"lesson.l1"})
-    )
+    catalog = ContentCatalog(exercises=[], lessons=[make_lesson(id="lesson.l1")], quizzes=[])
+    snapshot = ProgressSnapshot(concepts={}, completed_lesson_ids=frozenset({"lesson.l1"}))
     assert build_today_plan(catalog, snapshot, now=NOW) == []
 
 
 def test_lesson_not_emitted_once_concepts_practicing():
-    catalog = ContentCatalog(
-        exercises=[], lessons=[make_lesson(id="lesson.l1")], quizzes=[]
-    )
-    snapshot = ProgressSnapshot(
-        concepts={"python.lists": _concept("python.lists", mastery=60)}
-    )
+    catalog = ContentCatalog(exercises=[], lessons=[make_lesson(id="lesson.l1")], quizzes=[])
+    snapshot = ProgressSnapshot(concepts={"python.lists": _concept("python.lists", mastery=60)})
     assert build_today_plan(catalog, snapshot, now=NOW) == []
 
 

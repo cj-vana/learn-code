@@ -47,9 +47,7 @@ def enroll(
     repo: ProgressRepository = Depends(get_repo),
 ) -> PathEnrollmentResponse:
     path_content = find_path(deps.catalog, path_id)
-    repo.record_path_enrolled(
-        path_id=path_content.id, session_id=deps.session_id, now=deps.clock()
-    )
+    repo.record_path_enrolled(path_id=path_content.id, session_id=deps.session_id, now=deps.clock())
     return PathEnrollmentResponse(path_id=path_content.id, enrolled=True)
 
 

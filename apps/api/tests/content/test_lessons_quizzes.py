@@ -35,7 +35,13 @@ def _lesson(**over) -> dict:
         "source_status": "original",
         "provenance": _provenance(),
         "body_markdown": "Loops repeat work until a condition ends them.",
-        "checkpoints": [{"question": "What repeats?", "answer": "The body", "explanation": "Each pass runs the body."}],
+        "checkpoints": [
+            {
+                "question": "What repeats?",
+                "answer": "The body",
+                "explanation": "Each pass runs the body.",
+            }
+        ],
     }
     data.update(over)
     return data

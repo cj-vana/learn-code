@@ -22,9 +22,7 @@ class Settings:
         # env var is set, and that walk (`parents[3]`) raises IndexError from the
         # container layout `/srv/app/settings.py`, crashing import at startup.
         env_content_root = os.environ.get("LEARN_CODE_CONTENT_ROOT")
-        self.content_root = (
-            Path(env_content_root) if env_content_root else _default_content_root()
-        )
+        self.content_root = Path(env_content_root) if env_content_root else _default_content_root()
         self.workspace_root = (
             Path(os.environ["RUNNER_WORKSPACE_ROOT"])
             if "RUNNER_WORKSPACE_ROOT" in os.environ

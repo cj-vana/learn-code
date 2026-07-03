@@ -103,9 +103,7 @@ def answer_quiz(
     now: datetime,
 ) -> QuizAnswerResponse:
     quiz = find_quiz(catalog, request.quiz_id)
-    question = next(
-        (item for item in quiz.questions if item.id == request.question_id), None
-    )
+    question = next((item for item in quiz.questions if item.id == request.question_id), None)
     if question is None:
         raise ContentNotFoundError(
             f"quiz {quiz.id!r} has no question {request.question_id!r}",

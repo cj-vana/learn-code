@@ -17,9 +17,7 @@ router = APIRouter(tags=["exercises"])
 
 
 @router.post("/exercises/run", response_model=RunResult)
-def run_public(
-    request: PublicRunRequest, deps: AppDependencies = Depends(get_deps)
-) -> RunResult:
+def run_public(request: PublicRunRequest, deps: AppDependencies = Depends(get_deps)) -> RunResult:
     return public_run(deps.catalog, deps.runner_client, request)
 
 

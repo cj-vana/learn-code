@@ -14,7 +14,9 @@ class SampleSolutionResult:
     failures: list[str] = field(default_factory=list)
 
 
-def run_sample_solution(exercise: ExerciseContent | dict[str, Any], timeout_seconds: float = 2.0) -> SampleSolutionResult:
+def run_sample_solution(
+    exercise: ExerciseContent | dict[str, Any], timeout_seconds: float = 2.0
+) -> SampleSolutionResult:
     """Run trusted seed sample-solution code against function-mode tests in a short-lived process."""
     if isinstance(exercise, dict):
         exercise = ExerciseContent.model_validate(exercise)
@@ -30,12 +32,18 @@ def run_sample_solution(exercise: ExerciseContent | dict[str, Any], timeout_seco
     if process.is_alive():
         process.terminate()
         process.join(1)
-        return SampleSolutionResult(False, [f"sample solution timed out after {timeout_seconds:g}s"])
+        return SampleSolutionResult(
+            False, [f"sample solution timed out after {timeout_seconds:g}s"]
+        )
 
     if process.exitcode != 0 and queue.empty():
-        return SampleSolutionResult(False, [f"sample solution process exited with {process.exitcode}"])
+        return SampleSolutionResult(
+            False, [f"sample solution process exited with {process.exitcode}"]
+        )
 
-    payload = queue.get() if not queue.empty() else {"ok": False, "failures": ["no result returned"]}
+    payload = (
+        queue.get() if not queue.empty() else {"ok": False, "failures": ["no result returned"]}
+    )
     return SampleSolutionResult(ok=bool(payload["ok"]), failures=list(payload["failures"]))
 
 

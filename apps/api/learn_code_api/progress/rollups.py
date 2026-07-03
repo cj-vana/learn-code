@@ -79,7 +79,10 @@ def effective_mastery_label(score: int, spacing_stage: int) -> MasteryLabel:
     (spec: "Repeated success on different days is required for interview_ready").
     """
     label = mastery_label(score)
-    if label == MasteryLabel.INTERVIEW_READY and spacing_stage < REVIEWS_REQUIRED_FOR_INTERVIEW_READY:
+    if (
+        label == MasteryLabel.INTERVIEW_READY
+        and spacing_stage < REVIEWS_REQUIRED_FOR_INTERVIEW_READY
+    ):
         return MasteryLabel.REVIEW_READY
     return label
 
@@ -185,7 +188,9 @@ def _apply_concept_outcome(
         "SELECT mastery, updated_at FROM concept_mastery WHERE concept_id = ?", (concept_id,)
     ).fetchone()
     current_score = mastery_row[0] if mastery_row is not None else 0
-    previous_updated_at = datetime.fromisoformat(mastery_row[1]) if mastery_row is not None else None
+    previous_updated_at = (
+        datetime.fromisoformat(mastery_row[1]) if mastery_row is not None else None
+    )
     new_score = clamp_mastery(current_score + delta)
 
     queue_row = conn.execute(
@@ -627,9 +632,7 @@ def read_concept_snapshot(conn: sqlite3.Connection) -> dict[str, ConceptSnapshot
     recent-attempt signals are folded from ExerciseSubmitted events in
     chronological order (spec ordering), so the last event wins.
     """
-    mastery_rows = conn.execute(
-        "SELECT concept_id, mastery, label FROM concept_mastery"
-    ).fetchall()
+    mastery_rows = conn.execute("SELECT concept_id, mastery, label FROM concept_mastery").fetchall()
     review_due = read_review_due(conn)
 
     recent_attempts: dict[str, int] = {}

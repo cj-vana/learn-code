@@ -110,7 +110,9 @@ async def test_second_concurrent_request_gets_busy():
     await asyncio.sleep(0.02)  # let the first request acquire the lock
 
     with pytest.raises(BusyError):
-        await manager.run(make_playground_request(correlation_id="33333333-3333-3333-3333-333333333333"))
+        await manager.run(
+            make_playground_request(correlation_id="33333333-3333-3333-3333-333333333333")
+        )
 
     await first  # let the first run finish cleanly
 
@@ -122,7 +124,9 @@ async def test_lock_released_after_run_completes():
 
     await manager.run(make_playground_request())
     # A second run after the first completed should not raise BusyError.
-    await manager.run(make_playground_request(correlation_id="44444444-4444-4444-4444-444444444444"))
+    await manager.run(
+        make_playground_request(correlation_id="44444444-4444-4444-4444-444444444444")
+    )
 
     assert len(executor.calls) == 2
 

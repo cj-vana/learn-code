@@ -43,9 +43,7 @@ def list_content(
 
 
 @router.get("/content/{content_id}", response_model=AnyDetail)
-def content_detail(
-    content_id: str, deps: AppDependencies = Depends(get_deps)
-) -> AnyDetail:
+def content_detail(content_id: str, deps: AppDependencies = Depends(get_deps)) -> AnyDetail:
     item = find_content(deps.catalog, content_id)
     if isinstance(item, LessonContent):
         return _to_lesson_detail(item)
