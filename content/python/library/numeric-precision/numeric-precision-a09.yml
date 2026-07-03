@@ -1,0 +1,119 @@
+id: exercise.library.numeric_precision.a09
+kind: exercise
+version: 1
+language: python
+title: Choosing the Comet Crew
+slug: numeric-precision-a09
+difficulty: medium
+concepts:
+  - python.numeric_precision
+  - concepts.number_theory
+prerequisites:
+  - python.dictionaries
+  - python.operators
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.numeric_precision.a09
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original combinations-count drill using math.comb for exact big-integer counting, framed around picking an unordered team of telescopes at an observatory.
+prompt_markdown: |
+  An observatory has `n` telescopes and wants to point exactly `k` of them at a
+  passing comet. Only which telescopes are chosen matters, not the order they are
+  picked, so the number of distinct crews is the binomial coefficient "n choose
+  k".
+
+  Computing that by multiplying and dividing factorials by hand overflows in most
+  languages and drifts if you use floats. Python's `math.comb` computes it exactly
+  as an arbitrary-precision integer, and it already handles the awkward edges: it
+  returns `0` when `k` is larger than `n` (you cannot choose more telescopes than
+  exist) and `1` when `k` is `0` (there is exactly one way to choose nothing).
+
+  Write `comet_crews(job)` where `job` is a dictionary with two keys:
+
+  - `"n"`: a non-negative integer, the number of telescopes.
+  - `"k"`: a non-negative integer, the number to point at the comet.
+
+  Return `math.comb(n, k)`, the exact count of distinct crews.
+
+  Example: `comet_crews({"n": 5, "k": 2})` returns `10`, the number of ways to
+  pick 2 telescopes out of 5.
+starter_code: |
+  import math
+
+
+  def comet_crews(job):
+      return 0
+function_name: comet_crews
+input_mode: function
+solution_sketch: Read n and k from the dictionary and return math.comb(n, k), which gives the exact binomial coefficient and already returns 0 when k exceeds n.
+sample_solution: |
+  import math
+
+
+  def comet_crews(job):
+      return math.comb(job["n"], job["k"])
+hints:
+  - level: 1
+    text: The number of unordered ways to choose k items from n is the binomial coefficient, written "n choose k".
+  - level: 2
+    text: math.comb(n, k) computes that exactly as a Python integer, with no float rounding and no overflow.
+  - level: 3
+    text: Just return math.comb(job["n"], job["k"]); it already yields 0 when k > n and 1 when k is 0.
+tests:
+  public:
+    - name: choose_two
+      input:
+        n: 5
+        k: 2
+      expected: 10
+    - name: choose_none
+      input:
+        n: 5
+        k: 0
+      expected: 1
+    - name: choose_all
+      input:
+        n: 5
+        k: 5
+      expected: 1
+  validation:
+    - name: k_exceeds_n
+      input:
+        n: 3
+        k: 5
+      expected: 0
+    - name: symmetric_pick
+      input:
+        n: 10
+        k: 7
+      expected: 120
+    - name: large_exact
+      input:
+        n: 50
+        k: 25
+      expected: 126410606437752
+    - name: both_zero
+      input:
+        n: 0
+        k: 0
+      expected: 1
+explanation_markdown: |
+  `math.comb(n, k)` returns the exact number of ways to choose `k` items from `n`
+  without regard to order. Because Python integers grow without bound, the answer
+  for something like `math.comb(50, 25)` comes out as the precise
+  `126410606437752` rather than a rounded float. Any approach that built the value
+  from `math.factorial(n) / (math.factorial(k) * math.factorial(n - k))` with true
+  division `/` would produce a float and lose the last digits for large inputs.
+
+  The two edge cases fall out for free: choosing more than you have
+  (`k > n`) yields `0`, and choosing zero items yields `1` because the empty
+  selection is the single valid "crew" of nothing. Relying on the built-in keeps
+  those conventions consistent so you never special-case them yourself.
+common_mistakes:
+  - Building the answer from factorials with true division /, which returns a float and loses precision for large n.
+  - Computing an ordered count (permutations) instead of an unordered one; comb divides out the k! orderings that perm keeps.
+  - Special-casing k > n or k == 0 by hand and getting the boundary wrong; math.comb already returns 0 and 1 respectively.

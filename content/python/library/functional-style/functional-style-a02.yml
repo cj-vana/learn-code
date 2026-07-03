@@ -1,0 +1,140 @@
+id: exercise.library.functional_style.a02
+kind: exercise
+version: 1
+language: python
+title: The Harbor Toll Booth
+slug: functional-style-a02
+difficulty: easy
+concepts:
+  - python.functional_style
+  - python.closures_decorators
+prerequisites:
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.functional_style.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original manual-currying drill framed as a harbor toll booth that fixes a base charge once and reuses the captured closure across many vessels.
+prompt_markdown: |
+  A harbor toll booth settles on one **base charge** for the morning, then applies
+  a two-argument operation between that base and each arriving vessel's number.
+  Rather than pass the base every time, the clerk *curries* the operation: fix the
+  first argument once, keep the returned one-argument function, and call it for
+  every vessel.
+
+  Write `curry_and_apply(spec)`. The single argument `spec` is a dict:
+
+  - `spec["op"]`: the name of a two-argument operation (see below).
+  - `spec["base"]`: the integer first argument, fixed once.
+  - `spec["values"]`: a list of integers; each is the second argument for one call.
+
+  Inside your solution, build a helper that takes a two-argument function `f` and
+  returns a function of the first argument `a`, which in turn returns a function
+  of the second argument `b` giving `f(a, b)`. Curry the chosen operation, bind
+  `spec["base"]` as the first argument once, then apply the resulting one-argument
+  function to each value in order.
+
+  The operations, where `a` is the base and `b` is a vessel value:
+
+  - `"add"` -> `a + b`
+  - `"mul"` -> `a * b`
+  - `"sub"` -> `a - b`
+  - `"power"` -> `a ** b`
+
+  Return a list of the results, one per value, in the same order. If
+  `spec["values"]` is empty, return an empty list.
+
+  Example: `{"op": "add", "base": 10, "values": [1, 2, 5]}` fixes the base at 10
+  and returns `[11, 12, 15]`.
+starter_code: |
+  def curry_and_apply(spec):
+      return []
+function_name: curry_and_apply
+input_mode: function
+solution_sketch: Define a curry helper that nests two closures over a binary function, curry the chosen op, bind the base to get a reusable one-argument closure, then map that closure across the values.
+sample_solution: |
+  def curry_and_apply(spec):
+      ops = {
+          "add": lambda a, b: a + b,
+          "mul": lambda a, b: a * b,
+          "sub": lambda a, b: a - b,
+          "power": lambda a, b: a ** b,
+      }
+
+      def curry_two_arg(func):
+          def take_first(a):
+              def take_second(b):
+                  return func(a, b)
+              return take_second
+          return take_first
+
+      bound = curry_two_arg(ops[spec["op"]])(spec["base"])
+      return [bound(value) for value in spec["values"]]
+hints:
+  - level: 1
+    text: Currying splits a two-argument call into two one-argument calls; the first call captures the base and hands back a function still waiting for the second argument.
+  - level: 2
+    text: Write a helper whose inner function closes over both the operation and the first argument, so calling it later with just the second argument completes the work.
+  - level: 3
+    text: Call the curry helper with the chosen op, then call the returned function once with spec["base"] to get a reusable closure; apply that same closure to every value in a comprehension.
+tests:
+  public:
+    - name: add_base_ten
+      input:
+        op: "add"
+        base: 10
+        values: [1, 2, 5]
+      expected: [11, 12, 15]
+    - name: empty_values
+      input:
+        op: "mul"
+        base: 3
+        values: []
+      expected: []
+    - name: mul_base_four
+      input:
+        op: "mul"
+        base: 4
+        values: [0, 1, 2]
+      expected: [0, 4, 8]
+  validation:
+    - name: sub_keeps_base_first
+      input:
+        op: "sub"
+        base: 100
+        values: [1, 10, 100]
+      expected: [99, 90, 0]
+    - name: power_base_two
+      input:
+        op: "power"
+        base: 2
+        values: [0, 1, 3, 10]
+      expected: [1, 2, 8, 1024]
+    - name: add_negative_base
+      input:
+        op: "add"
+        base: -5
+        values: [5, -5, 0]
+      expected: [0, -10, -5]
+    - name: single_value
+      input:
+        op: "mul"
+        base: 7
+        values: [6]
+      expected: [42]
+explanation_markdown: |
+  Currying rewrites `f(a, b)` as `f(a)(b)`: the outer call fixes `a` and returns a
+  closure that remembers it. Because the base is captured once, every later call
+  supplies only the vessel value, and the same closure is reused across the whole
+  list. That is the functional-style payoff here, one configured behavior applied
+  many times without re-passing shared state. The nested `def`s make the capture
+  explicit: `take_second` closes over both `func` and `a`, so it can finish the
+  computation whenever it is finally called.
+common_mistakes:
+  - Reversing the operands for "sub" or "power", computing b - a or b ** a instead of base first.
+  - Rebuilding the curried function inside the loop instead of binding the base once and reusing the closure.
+  - Returning the closure itself rather than the list of computed results.

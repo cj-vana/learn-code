@@ -1,0 +1,97 @@
+id: lesson.library.binary_data_struct.a03
+kind: lesson
+version: 1
+language: python
+title: 'memoryview and array: Working Big Buffers Without Copying'
+slug: lesson-binary-data-struct-a03
+difficulty: hard
+concepts:
+  - python.binary_data
+  - concepts.performance
+prerequisites:
+  - python.binary_data
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.binary_data_struct.a03
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original memoryview/array walkthrough framed around processing a telescope camera's frame buffer, with fresh worked examples.
+body_markdown: |
+  Slicing copies. `chunk = frame[i:j]` on a 100 MB camera dump allocates
+  a fresh buffer per slice — fine at small scale, ruinous in a loop over
+  ten thousand frames. Python's answer is the **buffer protocol**: a way
+  for objects to expose their raw memory so other code can *view* it
+  without copying. `memoryview` is your handle on it.
+
+  ### Views: windows, not copies
+
+  ```python
+  data = bytearray(open_frame())      # one big buffer
+  view = memoryview(data)
+  header = view[0:16]                 # a WINDOW — zero bytes copied
+  pixels = view[16:]
+
+  pixels[0] = 255                     # writes through to data!
+  ```
+
+  A view of a *mutable* buffer is itself writable: assigning through the
+  view mutates the underlying bytearray. That is the superpower and the
+  hazard in one — you can patch a region of a giant buffer through a
+  cheap window, and you can also be surprised that "copying then
+  modifying" modified the original, because nothing was copied. The
+  discipline mirrors your simulation unit's snapshot rule: know, at
+  every line, whether you hold a copy or a view. (`view.tobytes()` when
+  you genuinely need an independent copy; views of immutable `bytes`
+  are read-only.)
+
+  Slicing a view yields another view — still zero-copy — so parsing a
+  large file becomes arithmetic over windows instead of a cascade of
+  allocations. One operational note: a view holds its buffer alive (your
+  memory-model unit again) and a bytearray with live exported views
+  refuses resizing — release views (`view.release()` or a `with` block)
+  when done.
+
+  ### array: a million floats without a million objects
+
+  A Python list of a million readings stores a million *boxed* float
+  objects plus a pointer table — roughly an order of magnitude more
+  memory than the raw numbers. `array.array` stores them machine-packed:
+
+  ```python
+  from array import array
+
+  temps = array("d", readings)     # typecode d: C doubles, 8 bytes each
+  temps[0], len(temps), sum(temps) # list-like API
+  ```
+
+  One element type per array (typecodes: `"b"`,`"h"`,`"i"`,`"q"` signed
+  ints, unsigned uppercase, `"f"`/`"d"` floats), list-like operations,
+  and — because arrays speak the buffer protocol — `memoryview(temps)`,
+  `struct`-style reinterpretation, and direct `.tobytes()` for shipping.
+  Assigning a wrong-typed value raises TypeError: the array's type
+  discipline is enforced at the boundary, like every good boundary in
+  this course.
+
+  ### The honest scope
+
+  This is numpy's neighborhood, one floor down: numpy adds vectorized
+  *math* over exactly this kind of packed buffer (and the buffer
+  protocol is how numpy and friends share data without copying). What
+  `array` + `memoryview` give you in the stdlib is the storage half —
+  compact numeric data and zero-copy windows. When the exercises have
+  you sum a slice through a view or patch a buffer region in place, you
+  are practicing the memory discipline that all high-performance Python
+  data work sits on.
+checkpoints:
+  - question: pixels = memoryview(buf)[16:] followed by pixels[0] = 255 changes buf. Why, and when is that the desired behavior versus a bug?
+    answer: 'A memoryview is a window onto the original buffer, not a copy — writes go through; desired when patching regions of a large buffer cheaply, a bug when the code believed it held an independent copy (use tobytes() for that).'
+    explanation: 'Copy-versus-view is the discipline: zero-copy is the feature, and knowing which you hold at every line is the price of using it.'
+  - question: Why does array.array("d", million_floats) use roughly a tenth of the memory of the equivalent list?
+    answer: 'The array packs raw 8-byte machine doubles contiguously, while the list stores a pointer per element to a full boxed Python float object (with refcount, type pointer, and value).'
+    explanation: 'Boxed-versus-packed is THE memory story of numeric Python — and packed storage via the buffer protocol is the foundation numpy builds its math on.'
+  - question: A bytearray with an open memoryview raises BufferError when you try to append to it. What is Python protecting?
+    answer: 'Resizing could move the buffer in memory, leaving the exported view pointing at freed storage; Python forbids resizing while views exist, so views must be released before the buffer changes shape.'
+    explanation: 'The restriction is the buffer protocol''s safety contract — zero-copy access in exchange for lifetime discipline.'

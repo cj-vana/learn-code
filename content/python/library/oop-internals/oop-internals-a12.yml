@@ -1,0 +1,194 @@
+id: exercise.library.oop_internals.a12
+kind: exercise
+version: 1
+language: python
+title: What the Subscript Actually Captured
+slug: oop-internals-a12
+difficulty: hard
+concepts:
+  - python.descriptors_mro
+  - patterns.recursion
+  - python.type_hints
+prerequisites:
+  - python.classes
+  - patterns.recursion
+  - python.dictionaries
+estimated_time_minutes: 24
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.oop_internals.a12
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original model of __class_getitem__/GenericAlias capture as a recursive normalizer that reproduces the single-argument-vs-tuple rule for subscript parameters.
+prompt_markdown: |
+  When you subscript a class in a type hint — like `Matrix[int]` or `Matrix[int, str]` —
+  Python calls `Matrix.__class_getitem__(params)` and captures the result as a
+  `GenericAlias` recording the origin class and its argument tuple. The subtle part is how
+  the subscript becomes `params`: a single subscript arrives *as itself*, while a
+  comma-separated subscript arrives as *one tuple*. You will reproduce that capture with a
+  recursive normalizer over a described subscription expression.
+
+  Write `subscriptable_capture(payload)`. The `payload` is a *subscription node* — a dict
+  with keys `"cls"` (the origin class name, a str) and `"subscript"` (a *subscript node*
+  describing what appears inside the brackets). A subscript node is one of:
+
+  - a parameter leaf: `{"param": "int"}` — a single type parameter named by a string;
+  - a group: `{"group": [<subscript node>, ...]}` — a comma-separated subscript, i.e. the
+    things Python bundles into one tuple (the group may be empty, modelling `Matrix[()]`);
+  - a nested subscription: `{"cls": ..., "subscript": ...}` — another subscription such as
+    `Vector[float]` used inside the brackets.
+
+  Return the captured alias as a dict `{"origin": <cls name>, "args": [<arg>, ...]}` where
+  `"args"` is the tuple of captured arguments (as a list), built by these rules:
+
+  - The arguments come from the top-level `"subscript"`. If that subscript is a `group`,
+    the arguments are its elements *in order* (so `Matrix[int, str]` captures two args). If
+    it is anything else (a param leaf or a nested subscription), it is a *single*
+    argument, so `"args"` is a one-element list. `Matrix[()]` (an empty group) captures
+    zero args, giving `"args": []`.
+  - Each captured argument is normalized recursively:
+    - a param leaf becomes just its name string, e.g. `"int"`;
+    - a nested subscription becomes its own `{"origin": ..., "args": [...]}` dict;
+    - a nested group (a parenthesized tuple sitting inside another subscript, e.g. the
+      `(int, str)` in `Matrix[(int, str), bool]`) becomes a plain list of its normalized
+      elements, e.g. `["int", "str"]`.
+
+  Example: `Matrix[Vector[int], str]` is
+  `{"cls": "Matrix", "subscript": {"group": [{"cls": "Vector", "subscript": {"param": "int"}}, {"param": "str"}]}}`
+  and captures
+  `{"origin": "Matrix", "args": [{"origin": "Vector", "args": ["int"]}, "str"]}`.
+starter_code: |
+  def subscriptable_capture(payload):
+      return {}
+function_name: subscriptable_capture
+input_mode: function
+solution_sketch: Write a recursive normalize(node) that turns a param into its name, a subscription into an origin/args dict (single arg unless the subscript is a group), and a bare group into a list; the top-level call unpacks a top-level group into multiple args or wraps a single subscript as one arg.
+sample_solution: |
+  def subscriptable_capture(payload):
+      def build_args(subscript):
+          if "group" in subscript:
+              return [normalize(child) for child in subscript["group"]]
+          return [normalize(subscript)]
+
+      def normalize(node):
+          if "param" in node:
+              return node["param"]
+          if "cls" in node:
+              return {"origin": node["cls"], "args": build_args(node["subscript"])}
+          # a bare group standing in for a parenthesized tuple argument
+          return [normalize(child) for child in node["group"]]
+
+      return {"origin": payload["cls"], "args": build_args(payload["subscript"])}
+hints:
+  - level: 1
+    text: The whole thing is one recursion over subscript nodes; write a helper `normalize(node)` that returns a string for a param, an origin/args dict for a subscription, and a list for a bare group.
+  - level: 2
+    text: Separate the "how many arguments" decision into its own step - only a top-level group spreads into multiple args; a lone param or lone nested subscription is exactly one argument.
+  - level: 3
+    text: 'Let `build_args(subscript)` return `[normalize(child) for child in subscript["group"]]` when the subscript is a group, else `[normalize(subscript)]`; then `normalize` reuses `build_args` for each nested subscription''s own subscript.'
+tests:
+  public:
+    - name: single_param
+      input:
+        cls: Matrix
+        subscript: {param: int}
+      expected:
+        origin: Matrix
+        args: [int]
+    - name: two_params_become_tuple
+      input:
+        cls: Matrix
+        subscript:
+          group:
+            - {param: int}
+            - {param: str}
+      expected:
+        origin: Matrix
+        args: [int, str]
+    - name: nested_subscription
+      input:
+        cls: Matrix
+        subscript:
+          cls: Vector
+          subscript: {param: float}
+      expected:
+        origin: Matrix
+        args:
+          - {origin: Vector, args: [float]}
+  validation:
+    - name: empty_group_zero_args
+      input:
+        cls: Matrix
+        subscript: {group: []}
+      expected:
+        origin: Matrix
+        args: []
+    - name: mixed_nested_and_param
+      input:
+        cls: Matrix
+        subscript:
+          group:
+            - {cls: Vector, subscript: {param: int}}
+            - {param: str}
+      expected:
+        origin: Matrix
+        args:
+          - {origin: Vector, args: [int]}
+          - str
+    - name: parenthesized_tuple_argument
+      input:
+        cls: Matrix
+        subscript:
+          group:
+            - group:
+                - {param: int}
+                - {param: str}
+            - {param: bool}
+      expected:
+        origin: Matrix
+        args:
+          - [int, str]
+          - bool
+    - name: deeply_nested_subscription
+      input:
+        cls: Grid
+        subscript:
+          cls: Matrix
+          subscript:
+            cls: Vector
+            subscript: {param: float}
+      expected:
+        origin: Grid
+        args:
+          - origin: Matrix
+            args:
+              - {origin: Vector, args: [float]}
+    - name: three_param_group
+      input:
+        cls: Record
+        subscript:
+          group:
+            - {param: int}
+            - {param: str}
+            - {param: bytes}
+      expected:
+        origin: Record
+        args: [int, str, bytes]
+explanation_markdown: |
+  `SomeClass[params]` is sugar for `SomeClass.__class_getitem__(params)`, and the standard
+  implementation (via `types.GenericAlias`) stores the origin class plus a tuple of
+  arguments you can read back as `__origin__` and `__args__`. The rule that trips people up
+  is the single-vs-tuple distinction: `Matrix[int]` passes the bare `int`, so `__args__`
+  is the one-tuple `(int,)`, while `Matrix[int, str]` passes the tuple `(int, str)`, so
+  `__args__` has two entries. `Matrix[()]` passes an empty tuple and captures zero args.
+  Nesting is recursive — `Vector[float]` inside the brackets is itself a `GenericAlias`,
+  and a parenthesized tuple sitting among the arguments stays a tuple. Modelling this as a
+  small recursive normalizer, with one helper deciding argument count and another
+  normalizing each node, mirrors exactly how the machinery walks a subscript expression to
+  build the alias.
+common_mistakes:
+  - Always spreading the subscript into multiple args, so `Matrix[int]` wrongly captures the characters or elements of `int` instead of a single argument.
+  - Failing to recurse, so a nested subscription like `Vector[float]` is left as a raw node instead of its own `{"origin", "args"}` capture.
+  - Collapsing a parenthesized tuple argument into separate arguments, losing the distinction between `Matrix[(int, str), bool]` (two args) and `Matrix[int, str, bool]` (three args).

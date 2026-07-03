@@ -1,0 +1,111 @@
+id: exercise.library.concurrency_foundations.a11
+kind: exercise
+version: 1
+language: python
+title: Tallying the Bakery's Oven Reports
+slug: concurrency-foundations-a11
+difficulty: medium
+concepts:
+  - python.concurrency_model
+  - concepts.grouping_aggregation
+  - patterns.hash_map_counting
+prerequisites:
+  - python.dictionaries
+  - python.sorting
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.concurrency_foundations.a11
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original map/reduce combine step framed as merging per-oven pastry tallies at a bakery; models the reduce phase of a parallel word-count-style job.
+prompt_markdown: |
+  A bakery runs several ovens in parallel. At the end of a shift each oven hands in
+  its own tally — a dict mapping pastry name to how many it produced. The manager
+  combines them into one grand total. This is the reduce step of a map/reduce job:
+  many partial dicts in, one merged result out.
+
+  Write `aggregate_worker_results(partials)`. The single argument is a list of
+  dicts; each dict maps a string key to a non-negative integer count. Sum the counts
+  across every partial, then return the merged totals as a list of `[key, total]`
+  pairs sorted by key in ascending (alphabetical) order.
+
+  Keys may appear in some partials and not others. An empty input list returns `[]`,
+  and empty dicts within the list contribute nothing.
+
+  Example: `[{"apples": 3, "pears": 1}, {"apples": 2, "figs": 5}]` returns
+  `[["apples", 5], ["figs", 5], ["pears", 1]]`.
+starter_code: |
+  def aggregate_worker_results(partials):
+      return []
+function_name: aggregate_worker_results
+input_mode: function
+solution_sketch: Accumulate counts into a dict using get(key, 0) + count across all partials, then return [[key, total] for key in sorted(totals)].
+sample_solution: |
+  def aggregate_worker_results(partials):
+      totals = {}
+      for partial in partials:
+          for key, count in partial.items():
+              totals[key] = totals.get(key, 0) + count
+      return [[key, totals[key]] for key in sorted(totals)]
+hints:
+  - level: 1
+    text: Build one running dictionary of totals by walking every partial dict and adding its counts in.
+  - level: 2
+    text: totals[key] = totals.get(key, 0) + count safely handles keys you have not seen yet.
+  - level: 3
+    text: After merging, iterate sorted(totals) and emit a two-element list [key, total] for each key so the output is ordered and uses lists, not tuples.
+tests:
+  public:
+    - name: two_partials
+      input:
+        - {apples: 3, pears: 1}
+        - {apples: 2, figs: 5}
+      expected: [["apples", 5], ["figs", 5], ["pears", 1]]
+    - name: empty_list
+      input: []
+      expected: []
+    - name: single_partial
+      input:
+        - {loaves: 4, rolls: 2}
+      expected: [["loaves", 4], ["rolls", 2]]
+  validation:
+    - name: disjoint_keys
+      input:
+        - {a: 1}
+        - {b: 2}
+        - {c: 3}
+      expected: [["a", 1], ["b", 2], ["c", 3]]
+    - name: all_same_key
+      input:
+        - {x: 5}
+        - {x: 5}
+        - {x: 2}
+      expected: [["x", 12]]
+    - name: empty_dicts_ignored
+      input:
+        - {}
+        - {m: 1}
+        - {}
+      expected: [["m", 1]]
+    - name: overlapping_mixed
+      input:
+        - {cakes: 2, tarts: 3}
+        - {tarts: 1, buns: 4}
+        - {cakes: 5}
+      expected: [["buns", 4], ["cakes", 7], ["tarts", 4]]
+explanation_markdown: |
+  Reduce takes many independent partial results and folds them into one. Because
+  each worker counted its own slice of the data, the merge is just a per-key sum —
+  the same shape as the classic parallel word count. Using `totals.get(key, 0) +
+  count` means a key that only one oven produced still lands correctly, without a
+  separate check for "have I seen this key before". Sorting the keys at the end
+  turns an order-independent dict into a stable, comparable result, which is why the
+  output is a sorted list of pairs rather than a raw dict: it reads the same every
+  run regardless of which order the partials arrived in.
+common_mistakes:
+  - Overwriting totals[key] = count instead of adding, so only the last partial's count survives for shared keys.
+  - Returning tuples like (key, total) instead of two-element lists, which will not match the expected output.
+  - Skipping the sort and returning keys in insertion order, so the result depends on partial ordering.

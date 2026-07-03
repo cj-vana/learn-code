@@ -1,0 +1,163 @@
+id: exercise.library.http_shapes.a11
+kind: exercise
+version: 1
+language: python
+title: Layering the Bakery's Query Parameters
+slug: http-shapes-a11
+difficulty: medium
+concepts:
+  - python.http_model
+  - python.dictionaries
+prerequisites:
+  - python.dictionaries
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.http_shapes.a11
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original query-parameter merge with a None-means-delete override rule, framed around a neighborhood bakery ordering API.
+prompt_markdown: |
+  The Rosewell Bakery order page builds its API requests from a set of default
+  query parameters and then layers a caller's overrides on top. Write
+  `merge_query_params(request)` where `request` is a single dict with two keys:
+
+  - `"base"`: the starting parameters, a dict of name to value.
+  - `"overrides"`: changes to apply on top, a dict of name to value.
+
+  Return the merged parameter dict, following these rules:
+
+  - Start from the `"base"` parameters. Do not mutate the original `"base"`
+    dict; build and return a new dict.
+  - For each name in `"overrides"`:
+    - If its value is `None`, that is a request to **remove** the parameter:
+      drop it from the result if present, and do nothing if it was already
+      absent.
+    - Otherwise the override value replaces the base value, or adds the name if
+      it was not in `"base"`.
+  - Names that appear only in `"base"` (and are not overridden) carry through
+    unchanged.
+
+  Example: with `"base"` `{"page": "1", "sort": "fresh", "limit": "20"}` and
+  `"overrides"` `{"page": "2", "sort": None, "gluten_free": "yes"}`, the result
+  is `{"page": "2", "limit": "20", "gluten_free": "yes"}`.
+starter_code: |
+  def merge_query_params(request):
+      return {}
+function_name: merge_query_params
+input_mode: function
+solution_sketch: Copy the base dict, then walk the overrides applying each one, deleting the key when the override value is None and otherwise assigning it.
+sample_solution: |
+  def merge_query_params(request):
+      base = request["base"]
+      overrides = request["overrides"]
+      merged = dict(base)
+      for name, value in overrides.items():
+          if value is None:
+              merged.pop(name, None)
+          else:
+              merged[name] = value
+      return merged
+hints:
+  - level: 1
+    text: Make a copy of the base dict first with dict(base) so the caller's parameters are never mutated.
+  - level: 2
+    text: Walk the overrides one entry at a time; a value of None means remove that key rather than store None.
+  - level: 3
+    text: Use merged.pop(name, None) to delete a key that may or may not exist, and merged[name] = value for every non-None override.
+tests:
+  public:
+    - name: replace_and_add
+      input:
+        base:
+          page: '1'
+          sort: fresh
+        overrides:
+          page: '2'
+          gluten_free: 'yes'
+      expected:
+        page: '2'
+        sort: fresh
+        gluten_free: 'yes'
+    - name: empty_overrides
+      input:
+        base:
+          page: '1'
+          limit: '20'
+        overrides: {}
+      expected:
+        page: '1'
+        limit: '20'
+    - name: none_deletes_key
+      input:
+        base:
+          page: '1'
+          sort: fresh
+        overrides:
+          sort: null
+      expected:
+        page: '1'
+  validation:
+    - name: none_on_absent_key_noop
+      input:
+        base:
+          page: '1'
+        overrides:
+          sort: null
+      expected:
+        page: '1'
+    - name: overrides_only_base_empty
+      input:
+        base: {}
+        overrides:
+          page: '3'
+          view: grid
+      expected:
+        page: '3'
+        view: grid
+    - name: replace_add_delete_together
+      input:
+        base:
+          page: '1'
+          sort: fresh
+          limit: '20'
+        overrides:
+          page: '2'
+          sort: null
+          gluten_free: 'yes'
+      expected:
+        page: '2'
+        limit: '20'
+        gluten_free: 'yes'
+    - name: value_type_replaced
+      input:
+        base:
+          limit: '20'
+        overrides:
+          limit: 50
+      expected:
+        limit: 50
+    - name: delete_absent_leaves_empty
+      input:
+        base: {}
+        overrides:
+          page: null
+      expected: {}
+explanation_markdown: |
+  Layering configuration is a pattern that shows up far beyond query strings:
+  defaults sit at the bottom, and each higher layer either overrides a value or
+  removes it. Modeling "remove" as a `None` override is a common convention,
+  because a caller needs a way to say "drop the sort parameter entirely" that is
+  distinct from "set sort to some value."
+
+  Copying the base dict before applying overrides is the quiet but important
+  move here. Mutating the passed-in `"base"` would leak changes back to the
+  caller and make the same defaults behave differently on a second call.
+  `dict.pop(name, None)` deletes a key whether or not it exists, which keeps the
+  removal branch a single line without a membership check.
+common_mistakes:
+  - Storing `None` as a parameter value instead of deleting the key when an override is `None`.
+  - Mutating the `"base"` dict in place, which corrupts the shared defaults for later requests.
+  - Assuming every override adds or replaces, and crashing on a removal of a key that was never present.

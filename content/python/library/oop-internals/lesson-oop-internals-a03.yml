@@ -1,0 +1,96 @@
+id: lesson.library.oop_internals.a03
+kind: lesson
+version: 1
+language: python
+title: '__slots__ and the Anatomy of an Instance'
+slug: lesson-oop-internals-a03
+difficulty: hard
+concepts:
+  - python.descriptors_mro
+  - python.memory_model
+prerequisites:
+  - python.classes
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.oop_internals.a03
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original __slots__ walkthrough framed around a weather-station reading class, with fresh worked tradeoffs.
+body_markdown: |
+  By default, every Python instance carries a dictionary — `__dict__` —
+  holding its attributes. That is why you can bolt a new attribute onto any
+  object at any time: attribute assignment is just a dict write. Flexibility
+  has a price: a dict per instance costs real memory, and for a class with
+  millions of instances (one per sensor reading at a weather network), the
+  dicts dominate the bill.
+
+  ### Declaring the layout
+
+  `__slots__` trades the flexibility away:
+
+  ```python
+  class Reading:
+      __slots__ = ("station", "temp", "humidity")
+
+      def __init__(self, station, temp, humidity):
+          self.station, self.temp, self.humidity = station, temp, humidity
+  ```
+
+  Now instances have **no `__dict__` at all**. The three attributes live in
+  fixed slots inside the object — implemented, satisfyingly, as
+  *descriptors* that the class machinery generates for each slot name, so
+  everything from the first lesson applies. Consequences:
+
+  - Memory drops substantially per instance (no dict, just three
+    references) — the difference between fitting a dataset in RAM or not.
+  - `reading.pressure = 1013` raises `AttributeError: 'Reading' object has
+    no attribute 'pressure'` — assignment to undeclared names is now a
+    structural error. Half the value of slots is this *typo protection*:
+    `reading.temperture = 20` fails loudly instead of silently creating a
+    junk attribute.
+  - `vars(reading)` fails — code that generically walks `__dict__` needs
+    rewriting or a fallback.
+
+  ### The inheritance trap
+
+  Slots only deliver if the *whole chain* cooperates. If any class in the
+  hierarchy lacks `__slots__`, its instances get a `__dict__` anyway — a
+  slotted subclass of a normal class saves nothing:
+
+  ```python
+  class Base:            # no __slots__
+      pass
+  class Compact(Base):
+      __slots__ = ("x",)
+  Compact().anything = 1   # works! Base contributed a __dict__
+  ```
+
+  Subclasses declare only their *new* slots (repeating a parent's slot
+  wastes space and shadows the parent's descriptor). And if you genuinely
+  need "slots plus occasional dynamic attributes", the escape hatch is
+  explicit: include `"__dict__"` in the slots tuple.
+
+  ### When to reach for it
+
+  The honest guidance: slots are for classes instantiated in *bulk* —
+  readings, points, tree nodes, tokens — or where the typo-guard is worth
+  the ceremony. For ordinary domain classes made in the dozens, the
+  default dict is fine and more flexible (dataclasses support
+  `@dataclass(slots=True)`, which generates the tuple for you). Like most
+  internals in this area, the payoff is not that you will write `__slots__`
+  weekly — it is that instance layout, attribute lookup, and the
+  descriptors underneath stop being folklore and become machinery you can
+  reason about when something behaves strangely.
+checkpoints:
+  - question: What two distinct benefits does __slots__ buy, and what flexibility does it spend?
+    answer: Substantially smaller instances (no per-instance __dict__) and loud AttributeErrors on undeclared attribute names (typo protection); the cost is losing dynamic attribute assignment and __dict__-dependent tooling like vars().
+    explanation: 'Slots is a layout contract: declare everything up front, gain memory and strictness, lose the anything-goes dict.'
+  - question: A slotted class inherits from a plain class and its instances still accept arbitrary attributes. Why?
+    answer: Any class in the MRO without __slots__ contributes a per-instance __dict__, and the dict's presence re-enables dynamic assignment and cancels the memory savings; slots only pay when the entire inheritance chain declares them.
+    explanation: The inheritance trap is why slots retrofits fail silently — checking the whole chain is part of applying the feature.
+  - question: How are slot attributes actually implemented, connecting this lesson to the descriptor protocol?
+    answer: Class creation generates a descriptor per slot name; attribute access routes through its __get__/__set__ into a fixed offset in the instance, exactly like any data descriptor — which is also why a subclass redeclaring a parent's slot shadows the parent's descriptor.
+    explanation: Slots are the descriptor protocol applied by the interpreter itself — evidence that the "niche" protocol underlies core language behavior.

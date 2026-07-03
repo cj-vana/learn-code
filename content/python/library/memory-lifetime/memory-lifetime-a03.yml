@@ -1,0 +1,122 @@
+id: exercise.library.memory_lifetime.a03
+kind: exercise
+version: 1
+language: python
+title: Closing the Teaching Lab
+slug: memory-lifetime-a03
+difficulty: medium
+concepts:
+  - python.memory_model
+  - patterns.simulation
+prerequisites:
+  - python.dictionaries
+  - python.loops
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.memory_lifetime.a03
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original teaching-lab glassware framing for weakref.finalize run-once semantics and reverse-order shutdown flushing.
+prompt_markdown: |
+  The chemistry teaching lab attaches a *cleanup callback* to each piece of
+  glassware, the way `weakref.finalize` attaches a finalizer to an object. A
+  callback fires exactly once: either when its item is cleared away during the
+  session, or -- for anything still in use -- when the lab shuts down for the day.
+  At shutdown the surviving callbacks run in reverse order of registration (the
+  most recently registered runs first), matching how `weakref.finalize` flushes
+  live finalizers at interpreter exit.
+
+  Write `build_finalize_log(events)` that takes a list of event dicts and returns
+  the list of callback tags in the order they fired. Each event is one of:
+
+  - `{"op": "register", "item": "flask", "tag": "rinse-flask"}` -- attach a callback
+    to `item` that logs `tag`. Each item is registered at most once.
+  - `{"op": "clear", "item": "flask"}` -- the item is put away now; if its callback
+    is still live, fire it (append its tag) and mark it done. Clearing an item whose
+    callback already fired, or one that was never registered, does nothing.
+  - `{"op": "shutdown"}` -- fire every still-live callback in reverse registration
+    order, then mark them all done. A second shutdown fires nothing.
+
+  Registering an item does not fire anything on its own. An empty event list
+  returns an empty list.
+starter_code: |
+  def build_finalize_log(events):
+      return []
+function_name: build_finalize_log
+input_mode: function
+solution_sketch: Record registration order and live status per item, fire on clear when still live, and on shutdown walk the registration order backwards firing the survivors.
+sample_solution: |
+  def build_finalize_log(events):
+      order = []
+      tags = {}
+      alive = set()
+      log = []
+      for event in events:
+          op = event["op"]
+          if op == "register":
+              item = event["item"]
+              order.append(item)
+              tags[item] = event["tag"]
+              alive.add(item)
+          elif op == "clear":
+              item = event["item"]
+              if item in alive:
+                  log.append(tags[item])
+                  alive.discard(item)
+          elif op == "shutdown":
+              for item in reversed(order):
+                  if item in alive:
+                      log.append(tags[item])
+                      alive.discard(item)
+      return log
+hints:
+  - level: 1
+    text: Keep the order items were registered in and a set of which items still have a live callback.
+  - level: 2
+    text: A `clear` fires only if the item is still live, and firing removes it from the live set so it can never fire a second time.
+  - level: 3
+    text: On `shutdown`, walk the registration order in reverse and fire each item that is still live, discarding it as you go.
+tests:
+  public:
+    - name: clear_runs_once
+      input: [{"op": "register", "item": "flask", "tag": "rinse-flask"}, {"op": "clear", "item": "flask"}, {"op": "clear", "item": "flask"}]
+      expected: ["rinse-flask"]
+    - name: shutdown_reverse_order
+      input: [{"op": "register", "item": "a", "tag": "tag-a"}, {"op": "register", "item": "b", "tag": "tag-b"}, {"op": "shutdown"}]
+      expected: ["tag-b", "tag-a"]
+    - name: clear_then_shutdown
+      input: [{"op": "register", "item": "a", "tag": "tag-a"}, {"op": "register", "item": "b", "tag": "tag-b"}, {"op": "clear", "item": "a"}, {"op": "shutdown"}]
+      expected: ["tag-a", "tag-b"]
+  validation:
+    - name: no_events
+      input: []
+      expected: []
+    - name: registers_never_fire_alone
+      input: [{"op": "register", "item": "a", "tag": "A"}, {"op": "register", "item": "b", "tag": "B"}]
+      expected: []
+    - name: interleaved_clear_and_shutdown
+      input: [{"op": "register", "item": "x", "tag": "X"}, {"op": "clear", "item": "x"}, {"op": "register", "item": "y", "tag": "Y"}, {"op": "register", "item": "z", "tag": "Z"}, {"op": "clear", "item": "y"}, {"op": "shutdown"}]
+      expected: ["X", "Y", "Z"]
+    - name: double_shutdown
+      input: [{"op": "register", "item": "a", "tag": "A"}, {"op": "shutdown"}, {"op": "shutdown"}]
+      expected: ["A"]
+    - name: clear_unregistered_noop
+      input: [{"op": "clear", "item": "ghost"}, {"op": "register", "item": "a", "tag": "A"}, {"op": "shutdown"}]
+      expected: ["A"]
+explanation_markdown: |
+  A `weakref.finalize` object gives you a controlled hook that runs at most once,
+  when its referent is collected or when you invoke it yourself, and any finalizers
+  still alive are flushed at interpreter shutdown in reverse order of creation. The
+  two rules that trip people up are both about *lifetime*: run-once means you must
+  mark a callback dead the instant it fires, and the reverse-order shutdown mirrors
+  a stack, so newer resources tear down before the older ones they were built on.
+  Tracking registration order in a list and liveness in a set keeps both rules
+  independent and easy to reason about, and the empty-log cases show that mere
+  registration never triggers a callback.
+common_mistakes:
+  - Firing a callback on `register` instead of only on `clear` or `shutdown`.
+  - Flushing survivors in registration order at shutdown instead of reverse order.
+  - Letting an item's callback fire twice by forgetting to mark it done after it runs.

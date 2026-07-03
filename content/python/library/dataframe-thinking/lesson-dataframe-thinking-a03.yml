@@ -1,0 +1,94 @@
+id: lesson.library.dataframe_thinking.a03
+kind: lesson
+version: 1
+language: python
+title: 'Why the Real Libraries Are Fast — and When to Reach for Them'
+slug: lesson-dataframe-thinking-a03
+difficulty: medium
+concepts:
+  - concepts.dataframe_thinking
+  - concepts.performance
+prerequisites:
+  - concepts.dataframe_thinking
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dataframe_thinking.a03
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original conceptual tour of numpy/pandas vectorization and the reach-for-the-library decision, with fresh framing.
+body_markdown: |
+  You can now do dataframe work in pure Python: columnar layout, masking,
+  split-apply-combine. This closing lesson answers the two questions that
+  places that skill correctly — *why are numpy and pandas so much faster
+  than your pure-Python version?* and *when should you actually reach for
+  them?* (Conceptual tour — the exercises remain pure Python; the point
+  is judgment.)
+
+  ### Where the speed comes from
+
+  Your columnar sum `sum(cols["tons"])` loops in Python: for each value,
+  the interpreter fetches a boxed float object, unboxes it, adds, and
+  loops — overhead per element. numpy stores the column as a **packed
+  C array** (the `array` module's world, from the binary-data unit) and
+  runs the sum as a single compiled C loop over raw machine doubles — no
+  boxing, no per-element interpreter overhead. The same `df["a"] *
+  df["b"]` multiplies two million-element columns in one C call where
+  your list comprehension makes a million trips through the interpreter.
+  Three multipliers stack up: **no per-element boxing**, **compiled
+  loops**, and **contiguous memory** (cache-friendly, unlike
+  pointer-chased Python objects). That is 10–100× on real data, and it is
+  entirely a consequence of the columnar/packed layout you have been
+  practicing.
+
+  Vectorization is also *expressive*: `df[df.temp > 30].groupby("city")
+  .rain.mean()` says in one line what your mask + split-apply-combine
+  says in fifteen. Terseness plus speed is why the libraries dominate
+  numeric and tabular work.
+
+  ### When to reach for them — and when not
+
+  The honest decision table:
+
+  ```text
+  reach for pandas/numpy when:
+    - data is large enough that speed matters (thousands+ of rows, heavy math)
+    - you want the terse vectorized expression and its ecosystem (IO, plotting)
+    - the work is genuinely tabular/numeric
+
+  stay with pure Python when:
+    - small data where a dependency is not worth it (a config, a few hundred rows)
+    - the environment forbids dependencies (this sandbox; locked-down systems; a
+      simple script you want to run anywhere with zero install)
+    - the logic is not really tabular — a dict does the job
+  ```
+
+  The anti-pattern in both directions: hand-rolling vectorized numeric
+  code over a million rows in pure Python (import numpy — you are
+  fighting the interpreter), and pulling in pandas to sum three numbers
+  (a dependency, an import cost, and a learning burden for a `sum()`).
+  Matching the tool to the scale is the judgment.
+
+  ### What you actually gained
+
+  Here is the payoff of having built it by hand: when you *do* use
+  pandas, none of it is magic. `df.groupby` is your split-apply-combine.
+  A boolean mask is your True/False column. A slow pandas operation is a
+  layout or complexity issue you can reason about because you have
+  implemented the primitives. And in the many environments where pandas
+  is not available — a sandboxed runner, a minimal container, a
+  microcontroller, a colleague's laptop with nothing installed — you can
+  still do the analysis, because the *thinking* was never in the library.
+  The library is an accelerator for a way of thinking you now own outright.
+checkpoints:
+  - question: What three factors make numpy's column sum 10-100x faster than a pure-Python loop over the same values?
+    answer: 'No per-element boxing (raw machine doubles instead of boxed Python float objects), a single compiled C loop instead of per-element interpreter overhead, and contiguous cache-friendly memory instead of pointer-chased scattered objects — all consequences of the packed columnar layout.'
+    explanation: 'The speed is structural: it comes from how the data is stored and looped, which is exactly the columnar/packed idea practiced in pure Python.'
+  - question: Give one case for reaching for pandas and one for staying with pure Python.
+    answer: 'Reach for pandas when data is large and the work is genuinely tabular/numeric (thousands of rows, heavy math, wanting the ecosystem); stay pure Python for small data, dependency-forbidden or install-free environments, or logic that a plain dict handles — importing pandas to sum three numbers is as wrong as hand-vectorizing a million rows without it.'
+    explanation: 'Matching tool to scale is the judgment; both over- and under-reaching are anti-patterns.'
+  - question: What concrete advantage does having built masking and split-apply-combine by hand give you when you later use pandas?
+    answer: 'The library stops being magic — groupby is recognizably split-apply-combine, a mask is a True/False column, and a slow operation is a layout or complexity issue you can reason about; and where pandas is unavailable, you can still do the analysis because the thinking lives in you, not the import.'
+    explanation: 'Owning the primitives makes the library legible and debuggable and keeps you capable in environments that lack it.'

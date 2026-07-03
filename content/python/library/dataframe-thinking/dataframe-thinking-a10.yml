@@ -1,0 +1,154 @@
+id: exercise.library.dataframe_thinking.a10
+kind: exercise
+version: 1
+language: python
+title: Rolling the Harbor Counts
+slug: dataframe-thinking-a10
+difficulty: hard
+concepts:
+  - concepts.dataframe_thinking
+  - patterns.sliding_window
+prerequisites:
+  - python.lists
+  - python.slicing
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dataframe_thinking.a10
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original rolling-window drill framed around a harbor tallying hourly ferry passengers, reproducing a dataframe rolling aggregate with leading nulls where the window has not yet filled.
+prompt_markdown: |
+  A harbor logs the number of ferry passengers each hour and wants a *rolling*
+  summary — the same shape a dataframe produces with `.rolling(window)`: a new
+  column, the same length as the original, where each position summarizes the most
+  recent `window` values ending at that position.
+
+  Write `rolling_window_stat(payload)` that takes **one dictionary** with three
+  entries:
+
+  - `"values"`: a list of numbers (the hourly counts).
+  - `"window"`: a positive integer window size.
+  - `"stat"`: one of `"sum"`, `"mean"`, `"min"`, or `"max"`.
+
+  Example call:
+
+  ```python
+  rolling_window_stat({"values": [4, 7, 2, 9], "window": 2, "stat": "sum"})
+  # -> [None, 11, 9, 11]
+  ```
+
+  Return a **list the same length as `"values"`**:
+
+  - For a position `i`, the window is the slice of the `window` values ending at
+    `i` (that is, `values[i - window + 1 : i + 1]`).
+  - Until the window is full — every position `i` where fewer than `window` values
+    precede-and-include it (`i < window - 1`) — the output is `None`.
+  - Once full, output the chosen statistic over that window: `"sum"`, `"min"`, and
+    `"max"` return the plain value; `"mean"` returns the average **rounded to 4
+    decimal places**.
+  - If `window` is larger than the number of values, every position is `None`.
+  - With `window` equal to `1`, each position summarizes only itself.
+  - If `"values"` is empty, return an empty list.
+starter_code: |
+  def rolling_window_stat(payload):
+      return []
+function_name: rolling_window_stat
+input_mode: function
+solution_sketch: Walk each index, emit None while fewer than window values are available, otherwise slice the trailing window and reduce it with the requested statistic, rounding the mean to 4 places.
+sample_solution: |
+  def rolling_window_stat(payload):
+      values = payload["values"]
+      window = payload["window"]
+      stat = payload["stat"]
+      result = []
+      for i in range(len(values)):
+          if i < window - 1:
+              result.append(None)
+              continue
+          chunk = values[i - window + 1 : i + 1]
+          if stat == "sum":
+              result.append(sum(chunk))
+          elif stat == "mean":
+              result.append(round(sum(chunk) / len(chunk), 4))
+          elif stat == "min":
+              result.append(min(chunk))
+          else:
+              result.append(max(chunk))
+      return result
+hints:
+  - level: 1
+    text: The output is the same length as the input; the only special positions are the early ones where the window has not filled yet.
+  - level: 2
+    text: For index i the trailing window starts at i minus window plus one and ends at i inclusive; emit None whenever i is less than window minus one.
+  - level: 3
+    text: Reduce the slice with sum, min, or max directly, and for mean divide the sum by the slice length and round to 4 places.
+tests:
+  public:
+    - name: rolling_sum_w2
+      input:
+        values: [4, 7, 2, 9]
+        window: 2
+        stat: sum
+      expected: [null, 11, 9, 11]
+    - name: rolling_mean_w3
+      input:
+        values: [3, 6, 9, 12]
+        window: 3
+        stat: mean
+      expected: [null, null, 6.0, 9.0]
+    - name: window_one_max
+      input:
+        values: [5, 8]
+        window: 1
+        stat: max
+      expected: [5, 8]
+  validation:
+    - name: window_exceeds_length
+      input:
+        values: [2, 4]
+        window: 5
+        stat: sum
+      expected: [null, null]
+    - name: rolling_min_w2
+      input:
+        values: [9, 3, 7, 1]
+        window: 2
+        stat: min
+      expected: [null, 3, 3, 1]
+    - name: rolling_max_w3
+      input:
+        values: [1, 5, 2, 8, 3]
+        window: 3
+        stat: max
+      expected: [null, null, 5, 8, 8]
+    - name: mean_with_rounding
+      input:
+        values: [1, 2, 2]
+        window: 3
+        stat: mean
+      expected: [null, null, 1.6667]
+    - name: empty_values
+      input:
+        values: []
+        window: 2
+        stat: sum
+      expected: []
+explanation_markdown: |
+  A rolling aggregate answers "over the last `window` observations, what is the
+  summary right now?" at every position. The leading `None`s are not an afterthought
+  — they encode that the window genuinely has not filled, which is why a dataframe
+  puts `NaN` there rather than shrinking the window at the edges.
+
+  The core is a trailing slice: at index `i`, `values[i - window + 1 : i + 1]` is
+  exactly the `window` most recent values. Guarding on `i < window - 1` produces the
+  leading gaps, and everything after is a plain reduction (`sum`/`min`/`max`) or a
+  rounded average. Recomputing the slice each step is O(window) per position; for
+  large data a real library keeps a running total instead, but the windowing logic
+  you are practicing is identical.
+common_mistakes:
+  - Shrinking the window at the start (summarizing the first one or two values) instead of emitting None until it fills.
+  - Off-by-one slicing that drops the current element or the +1 on the end, so each window is shifted or one element short.
+  - Returning a list shorter than the input because the leading None positions were skipped instead of filled.

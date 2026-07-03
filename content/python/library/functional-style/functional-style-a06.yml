@@ -1,0 +1,145 @@
+id: exercise.library.functional_style.a06
+kind: exercise
+version: 1
+language: python
+title: The Surveyor's Cached Sightlines
+slug: functional-style-a06
+difficulty: medium
+concepts:
+  - python.functional_style
+  - concepts.memoization
+prerequisites:
+  - python.closures_decorators
+  - python.dictionaries
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.functional_style.a06
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original hand-rolled memoization drill framed as a surveyor whose costly sightline computation is wrapped in a cache, graded by counting how many real computations ran.
+prompt_markdown: |
+  A field surveyor computes each sightline from a station number, and the raw
+  computation is costly enough that repeating it for a station already measured is
+  pure waste. You will wrap the costly computation in a manual **memoizer**: a
+  cache that computes a result the first time a station appears and serves it from
+  memory on every repeat. The grader checks both the answers and how many real
+  computations actually ran.
+
+  Write `memoize_pure(spec)`. The single argument `spec` is a dict:
+
+  - `spec["calls"]`: a list of integer station numbers, in the order they are
+    requested (repeats are expected).
+
+  Model the costly computation as squaring the station number (`n * n`), but count
+  each time it truly runs. Build a memoizing wrapper around that computation using
+  a closure over a cache dict: on a cache miss, run the computation, store it, and
+  count it; on a cache hit, return the stored value and count nothing. Apply the
+  wrapped function to each station in `spec["calls"]`, in order.
+
+  Return a dict with exactly two fields:
+
+  - `"results"`: a list of the squared values, one per call, in order (including
+    repeats).
+  - `"computations"`: the integer number of times the underlying squaring
+    actually ran, which equals the count of distinct station numbers.
+
+  An empty `spec["calls"]` returns `{"results": [], "computations": 0}`.
+
+  Example: `{"calls": [3, 3, 5, 3, 5, 7]}` returns
+  `{"results": [9, 9, 25, 9, 25, 49], "computations": 3}` because only stations
+  3, 5, and 7 are ever computed; the rest are cache hits.
+starter_code: |
+  def memoize_pure(spec):
+      return {"results": [], "computations": 0}
+function_name: memoize_pure
+input_mode: function
+solution_sketch: Wrap a squaring function that increments a shared counter in a memoizer whose closure holds a cache dict; run each call through it, then report the results and the counter (which equals the number of distinct inputs).
+sample_solution: |
+  def memoize_pure(spec):
+      counter = {"runs": 0}
+
+      def costly_square(n):
+          counter["runs"] += 1
+          return n * n
+
+      def memoize(func):
+          cache = {}
+
+          def wrapper(arg):
+              if arg not in cache:
+                  cache[arg] = func(arg)
+              return cache[arg]
+
+          return wrapper
+
+      cached_square = memoize(costly_square)
+      results = [cached_square(station) for station in spec["calls"]]
+      return {"results": results, "computations": counter["runs"]}
+hints:
+  - level: 1
+    text: Memoization trades memory for time; keep a cache of already-computed answers and only do the real work when the input is new.
+  - level: 2
+    text: Let the wrapper close over a cache dict; check whether the argument is already a key before computing, and only run (and count) the underlying function on a miss.
+  - level: 3
+    text: Give the costly function a shared counter it bumps every time it runs; because the wrapper only calls it on cache misses, the final counter equals the number of distinct station numbers.
+tests:
+  public:
+    - name: repeats_are_cached
+      input:
+        calls: [3, 3, 5, 3, 5, 7]
+      expected:
+        results: [9, 9, 25, 9, 25, 49]
+        computations: 3
+    - name: empty_calls
+      input:
+        calls: []
+      expected:
+        results: []
+        computations: 0
+    - name: all_same_station
+      input:
+        calls: [4, 4, 4]
+      expected:
+        results: [16, 16, 16]
+        computations: 1
+  validation:
+    - name: all_distinct
+      input:
+        calls: [1, 2, 3, 4, 5]
+      expected:
+        results: [1, 4, 9, 16, 25]
+        computations: 5
+    - name: two_distinct_many_repeats
+      input:
+        calls: [2, 2, 2, 2, 3, 3]
+      expected:
+        results: [4, 4, 4, 4, 9, 9]
+        computations: 2
+    - name: negatives_and_zero
+      input:
+        calls: [0, -1, -1, 0, 5]
+      expected:
+        results: [0, 1, 1, 0, 25]
+        computations: 3
+    - name: interleaved_repeats
+      input:
+        calls: [10, 10, 20, 10, 20, 20, 30]
+      expected:
+        results: [100, 100, 400, 100, 400, 400, 900]
+        computations: 3
+explanation_markdown: |
+  A memoizer is a closure over a cache: the wrapper remembers past answers so the
+  expensive function runs at most once per distinct input. The counter makes that
+  saving visible, it rises only on cache misses, so it lands on the number of
+  unique station numbers no matter how many repeats stream in. This is the core of
+  what `functools.lru_cache` does for you, and building it by hand shows why the
+  wrapped function must be *pure*: caching by argument is only safe when the same
+  input always yields the same output. Negative and zero stations behave like any
+  other key, so `-1` and `0` each cost exactly one computation.
+common_mistakes:
+  - Counting every call instead of only cache misses, so "computations" equals len(calls).
+  - Storing the counter in a plain integer local rather than a mutable holder, so the inner function cannot update it.
+  - Returning the cached value but forgetting to store it first, which recomputes on every call and never populates the cache.

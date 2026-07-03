@@ -1,0 +1,44 @@
+id: path.skill.data_without_libraries
+kind: path
+path_type: skill
+version: 1
+language: python
+title: Data Analysis Without the Libraries
+slug: data-without-libraries
+description: "The dataframe mindset in pure Python: columnar layout, boolean masking, and split-apply-combine\
+  \ \u2014 so pandas is never magic and never mandatory."
+outcomes:
+- Think in columns and vectorized operations
+- Filter with masks and summarize with split-apply-combine
+estimated_hours: 4
+review_status: published
+source_status: original
+provenance:
+  brief_id: brief.paths.v1
+  author: agent
+  generated_at: '2026-07-02T18:00:00Z'
+  inspiration_sources: []
+  originality_notes: Curated ordering over the repository's original content bank; no external syllabus
+    copied.
+units:
+- id: unit.dataframe_thinking
+  title: DataFrame Thinking
+  description: Lessons, drills, and quizzes for dataframe thinking.
+  items:
+  - lesson.library.dataframe_thinking.a01
+  - lesson.library.dataframe_thinking.a02
+  - lesson.library.dataframe_thinking.a03
+  - exercise.library.dataframe_thinking.a01
+  - exercise.library.dataframe_thinking.a02
+  - exercise.library.dataframe_thinking.a03
+  - exercise.library.dataframe_thinking.a04
+  - quiz.library.dataframe_thinking.a01
+  - exercise.library.dataframe_thinking.a05
+  - exercise.library.dataframe_thinking.a06
+  - exercise.library.dataframe_thinking.a07
+  - exercise.library.dataframe_thinking.a08
+  - quiz.library.dataframe_thinking.a02
+  - exercise.library.dataframe_thinking.a09
+  - exercise.library.dataframe_thinking.a10
+  - exercise.library.dataframe_thinking.a11
+  - exercise.library.dataframe_thinking.a12

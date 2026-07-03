@@ -71,6 +71,28 @@ AREA_TITLES = {
     "tokenization_bpe": "Tokenization & BPE",
     "embeddings_similarity_search": "Embeddings & Retrieval",
     "attention_mechanics": "Attention Mechanics",
+    # Wave-6 expansion: niche/advanced internals
+    "oop_internals": "OOP Internals: Descriptors & MRO",
+    "memory_lifetime": "Memory Model & Object Lifetime",
+    "concurrency_foundations": "Concurrency Foundations",
+    "modern_syntax": "Modern Python Syntax",
+    "functools_operator": "functools, operator & itertools",
+    "binary_data_struct": "Bytes, Buffers & struct",
+    "numeric_precision": "Numeric Precision",
+    "introspection_metaprogramming": "Introspection & Metaprogramming",
+    "typing_runtime": "Typing at the Runtime Boundary",
+    # Wave-6 expansion: applied Python
+    "scripting_automation": "Scripting & Automation",
+    "pathlib_patterns": "pathlib & Path Logic",
+    "cli_parsing": "CLI Argument Parsing",
+    "http_shapes": "HTTP Request Shapes",
+    "sqlite_patterns": "SQLite Patterns",
+    "logging_diagnostics": "Logging & Diagnostics",
+    "config_parsing": "Config Parsing & Precedence",
+    "functional_style": "Functional-Style Python",
+    "caching_performance": "Caching & Performance",
+    "secure_coding": "Secure Coding",
+    "dataframe_thinking": "DataFrame Thinking",
 }
 
 _ORIGINAL_AREAS = [
@@ -486,6 +508,182 @@ PATHS = [
             ("attention_mechanics", 1),
         ],
     },
+    {
+        "id": "path.career.python_software_engineer",
+        "path_type": "career",
+        "title": "Python Software Engineer",
+        "slug": "python-software-engineer",
+        "description": (
+            "The deep-internals arc that separates a Python user from a Python "
+            "engineer: the object model and descriptors, the memory system, "
+            "concurrency, modern syntax, the functools/itertools toolbox, binary "
+            "data, numeric precision, introspection, and runtime typing — the "
+            "knowledge you reach for when other people's code misbehaves."
+        ),
+        "outcomes": [
+            "Reason about descriptors, the MRO, and __slots__ from first principles",
+            "Explain reference counting, cycles, and the GIL under pressure",
+            "Choose threads, processes, or asyncio by workload with confidence",
+            "Wield modern syntax, functools, struct, Decimal, and inspect fluently",
+            "Understand where type hints act at runtime and where they don't",
+        ],
+        "areas": [
+            ("python_refresh", 1),
+            ("oop_classes", 1),
+            ("modern_syntax", 1),
+            ("oop_internals", 1),
+            ("functools_operator", 1),
+            ("typing_runtime", 1),
+            ("numeric_precision", 1),
+            ("binary_data_struct", 1),
+            ("memory_lifetime", 1),
+            ("introspection_metaprogramming", 1),
+            ("concurrency_foundations", 1),
+            ("mixed_capstones", 1),
+        ],
+    },
+    {
+        "id": "path.career.python_automation_engineer",
+        "path_type": "career",
+        "title": "Python Automation & Backend Engineer",
+        "slug": "python-automation-and-backend",
+        "description": (
+            "The working-developer arc: build robust scripts and services from "
+            "files, dates, and CLIs through HTTP clients, SQLite, logging, config, "
+            "and secure coding — the practical Python that ships tools, glues "
+            "systems, and stays up at 3 a.m."
+        ),
+        "outcomes": [
+            "Architect automation as testable plan-then-act pipelines",
+            "Parse files, paths, CLIs, and config with precedence correctly",
+            "Model HTTP clients and SQLite access with retry and safety",
+            "Log for incidents and write code that resists injection",
+        ],
+        "areas": [
+            ("python_refresh", 1),
+            ("error_handling", 1),
+            ("files_formats", 1),
+            ("datetime_handling", 1),
+            ("scripting_automation", 1),
+            ("pathlib_patterns", 1),
+            ("cli_parsing", 1),
+            ("config_parsing", 1),
+            ("logging_diagnostics", 1),
+            ("http_shapes", 1),
+            ("sqlite_patterns", 1),
+            ("secure_coding", 1),
+            ("mixed_capstones", 1),
+        ],
+    },
+    {
+        "id": "path.skill.python_internals",
+        "path_type": "skill",
+        "title": "Python Internals",
+        "slug": "python-internals",
+        "description": "The object model up close: descriptors and the MRO, the memory system and the GIL, and reading a program with inspect and dis.",
+        "outcomes": [
+            "Explain descriptors, C3 linearization, and __slots__",
+            "Reason about refcounting, cycles, weakrefs, and the GIL",
+            "Introspect signatures, closures, and bytecode",
+        ],
+        "areas": [
+            ("oop_internals", 1),
+            ("memory_lifetime", 1),
+            ("introspection_metaprogramming", 1),
+        ],
+    },
+    {
+        "id": "path.skill.modern_python",
+        "path_type": "skill",
+        "title": "Modern Python",
+        "slug": "modern-python",
+        "description": "The idioms of contemporary Python: structural pattern matching, exception groups, the walrus, the functools/itertools deep cuts, and runtime typing.",
+        "outcomes": [
+            "Use match/case, except*, and modern parameter syntax well",
+            "Reach for singledispatch, partial, and itertools deep cuts",
+            "Handle type hints at the runtime boundary",
+        ],
+        "areas": [
+            ("modern_syntax", 1),
+            ("functools_operator", 1),
+            ("typing_runtime", 1),
+        ],
+    },
+    {
+        "id": "path.skill.bytes_and_numbers",
+        "path_type": "skill",
+        "title": "Bytes & Numbers",
+        "slug": "bytes-and-numbers",
+        "description": "The low-level data layers: bytes, struct, memoryview and buffers, plus float pitfalls, Decimal, and Fraction for numbers that must be exact.",
+        "outcomes": [
+            "Pack, unpack, and view binary data without copying",
+            "Choose float, Decimal, or Fraction by domain and avoid the traps",
+        ],
+        "areas": [("binary_data_struct", 1), ("numeric_precision", 1)],
+    },
+    {
+        "id": "path.skill.automation_toolkit",
+        "path_type": "skill",
+        "title": "Automation Toolkit",
+        "slug": "automation-toolkit",
+        "description": "Everything a robust script needs: plan-then-act architecture, path logic, CLI parsing, and layered configuration.",
+        "outcomes": [
+            "Build automation as testable plans separated from actions",
+            "Handle paths, CLI arguments, and config precedence correctly",
+        ],
+        "areas": [
+            ("scripting_automation", 1),
+            ("pathlib_patterns", 1),
+            ("cli_parsing", 1),
+            ("config_parsing", 1),
+        ],
+    },
+    {
+        "id": "path.skill.backend_services",
+        "path_type": "skill",
+        "title": "Backend & Web Services",
+        "slug": "backend-and-web-services",
+        "description": "The service developer's core: HTTP request/response shapes and retry logic, SQLite access, and diagnostics-grade logging.",
+        "outcomes": [
+            "Model HTTP clients with status handling and backoff",
+            "Query SQLite safely with parameters, joins, and transactions",
+            "Instrument code with leveled, structured logging",
+        ],
+        "areas": [
+            ("http_shapes", 1),
+            ("sqlite_patterns", 1),
+            ("logging_diagnostics", 1),
+        ],
+    },
+    {
+        "id": "path.skill.robust_and_fast",
+        "path_type": "skill",
+        "title": "Robust & Fast Python",
+        "slug": "robust-and-fast-python",
+        "description": "Write code that is both safe and quick: functional-style composition, caching and Big-O in practice, and secure coding against injection and secret leaks.",
+        "outcomes": [
+            "Compose transformations and know when a loop is clearer",
+            "Cache correctly and spot accidental quadratics",
+            "Validate at the boundary and defeat injection structurally",
+        ],
+        "areas": [
+            ("functional_style", 1),
+            ("caching_performance", 1),
+            ("secure_coding", 1),
+        ],
+    },
+    {
+        "id": "path.skill.data_without_libraries",
+        "path_type": "skill",
+        "title": "Data Analysis Without the Libraries",
+        "slug": "data-without-libraries",
+        "description": "The dataframe mindset in pure Python: columnar layout, boolean masking, and split-apply-combine — so pandas is never magic and never mandatory.",
+        "outcomes": [
+            "Think in columns and vectorized operations",
+            "Filter with masks and summarize with split-apply-combine",
+        ],
+        "areas": [("dataframe_thinking", 1)],
+    },
 ]
 
 
@@ -524,6 +722,20 @@ MILESTONES = {
         "eval_metrics_for_models": "Classic ML, autodiff, and evaluation — the ML core",
         "tokenization_bpe": "You build and tokenize language models by hand",
         "attention_mechanics": "AI engineer: attention itself, implemented from scratch",
+    },
+    "path.career.python_software_engineer": {
+        "oop_classes": "Object-oriented foundations set",
+        "typing_runtime": "Modern syntax, functools, and typing mastered",
+        "binary_data_struct": "Down to bytes and exact numbers",
+        "concurrency_foundations": "Internals, memory, and concurrency conquered",
+        "mixed_capstones": "Engineer: you reason about Python from the inside out",
+    },
+    "path.career.python_automation_engineer": {
+        "datetime_handling": "Files, dates, and robust I/O handled",
+        "config_parsing": "Scripting, CLIs, and config precedence down",
+        "logging_diagnostics": "Diagnostics-grade instrumentation in place",
+        "secure_coding": "Backend, database, and secure-coding skills complete",
+        "mixed_capstones": "Automation engineer: you ship tools that stay up",
     },
 }
 

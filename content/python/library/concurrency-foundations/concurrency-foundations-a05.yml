@@ -1,0 +1,182 @@
+id: exercise.library.concurrency_foundations.a05
+kind: exercise
+version: 1
+language: python
+title: Each Print Job Carries Its Own Settings
+slug: concurrency-foundations-a05
+difficulty: easy
+concepts:
+  - python.concurrency_model
+  - python.dictionaries
+prerequisites:
+  - python.dictionaries
+  - python.lists
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.concurrency_foundations.a05
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: >-
+    Original contextvars / copy_context isolation drill themed around a print
+    shop where each job runs against its own snapshot of the shop defaults;
+    models per-task context isolation as a deterministic pure function.
+prompt_markdown: |
+  A print shop has a set of default settings — paper size, colour mode, copies —
+  that every job starts from. When a job runs, it may tweak some settings just
+  for itself, but those tweaks must never leak into another job or change the
+  shop's defaults. This is exactly what `contextvars` gives you: each task runs
+  against a `copy_context()` snapshot, so a value set inside one task's context
+  is invisible to every other task and to the original.
+
+  Write `resolve_task_contexts(setup)`. The single argument `setup` is a dict
+  with:
+
+  - `"defaults"`: a dict of setting name to value — the shop's shared baseline.
+  - `"tasks"`: a list of dicts, one per job, each with an `"overrides"` dict of
+    the settings that job changes for itself.
+
+  For each task, build its resolved view: start from a fresh copy of
+  `"defaults"`, then apply that task's `"overrides"` on top (an override
+  replaces an existing setting or adds a new one). Tasks are fully isolated —
+  one task's overrides must not affect any other task's view.
+
+  Return a dict with:
+
+  - `"views"`: the list of resolved setting dicts, one per task, in task order.
+  - `"defaults_after"`: the shop defaults after all tasks have run, which must be
+    unchanged from the input `"defaults"`.
+
+  Edge cases you must handle: an empty `"tasks"` list gives an empty `"views"`
+  list; an empty `"overrides"` dict yields a view equal to the defaults; an
+  empty `"defaults"` dict is valid.
+starter_code: |
+  def resolve_task_contexts(setup):
+      return {}
+function_name: resolve_task_contexts
+input_mode: function
+solution_sketch: >-
+  For each task, copy the defaults with dict(defaults), update the copy with the
+  task's overrides, and collect the copies. Return the views plus a fresh copy of
+  the untouched defaults so callers can confirm no leak occurred.
+sample_solution: |
+  def resolve_task_contexts(setup):
+      defaults = setup["defaults"]
+      views = []
+      for task in setup["tasks"]:
+          snapshot = dict(defaults)
+          snapshot.update(task["overrides"])
+          views.append(snapshot)
+      return {"views": views, "defaults_after": dict(defaults)}
+hints:
+  - level: 1
+    text: >-
+      Each task needs its own copy of the defaults so its changes stay local.
+      `dict(defaults)` makes a shallow copy you can safely modify.
+  - level: 2
+    text: >-
+      Apply a task's overrides to its copy with `snapshot.update(task["overrides"])`,
+      which replaces existing keys and adds new ones.
+  - level: 3
+    text: >-
+      Never mutate `setup["defaults"]` itself — always copy first. Return
+      `dict(defaults)` for `"defaults_after"` to show the baseline survived
+      untouched.
+tests:
+  public:
+    - name: isolated_overrides
+      input:
+        defaults: {lang: "en", mode: "fast"}
+        tasks:
+          - {overrides: {lang: "fr"}}
+          - {overrides: {mode: "slow"}}
+      expected:
+        views:
+          - {lang: "fr", mode: "fast"}
+          - {lang: "en", mode: "slow"}
+        defaults_after: {lang: "en", mode: "fast"}
+    - name: no_overrides
+      input:
+        defaults: {x: 1}
+        tasks:
+          - {overrides: {}}
+      expected:
+        views:
+          - {x: 1}
+        defaults_after: {x: 1}
+    - name: no_tasks
+      input:
+        defaults: {a: 1}
+        tasks: []
+      expected:
+        views: []
+        defaults_after: {a: 1}
+  validation:
+    - name: add_new_key
+      input:
+        defaults: {level: "info"}
+        tasks:
+          - {overrides: {trace: true}}
+      expected:
+        views:
+          - {level: "info", trace: true}
+        defaults_after: {level: "info"}
+    - name: many_tasks
+      input:
+        defaults: {region: "west", retries: 3}
+        tasks:
+          - {overrides: {region: "east"}}
+          - {overrides: {retries: 5}}
+          - {overrides: {}}
+      expected:
+        views:
+          - {region: "east", retries: 3}
+          - {region: "west", retries: 5}
+          - {region: "west", retries: 3}
+        defaults_after: {region: "west", retries: 3}
+    - name: empty_defaults
+      input:
+        defaults: {}
+        tasks:
+          - {overrides: {k: "v"}}
+      expected:
+        views:
+          - {k: "v"}
+        defaults_after: {}
+    - name: override_all
+      input:
+        defaults: {a: 1, b: 2}
+        tasks:
+          - {overrides: {a: 9, b: 8}}
+      expected:
+        views:
+          - {a: 9, b: 8}
+        defaults_after: {a: 1, b: 2}
+explanation_markdown: |
+  `contextvars` exists so that concurrent tasks can each read and write their own
+  copy of some ambient state — a request id, a locale, a database transaction —
+  without stepping on one another. The mechanism is `copy_context()`: it takes a
+  snapshot of the current context, and any `ContextVar.set()` performed while
+  running inside that snapshot is visible only there. When the task finishes, the
+  original context is exactly as it was.
+
+  This drill models that guarantee with plain dicts. The single decisive move is
+  copying before mutating: `dict(defaults)` gives each task an independent
+  snapshot, so `snapshot.update(...)` cannot reach back into the shared baseline
+  or bleed into a sibling task. Returning `defaults_after` makes the invariant
+  checkable — if you had mutated the defaults in place, it would come back
+  changed and the test would catch it.
+
+  The subtle bug the copy prevents is aliasing: `snapshot = defaults` (no
+  `dict(...)`) binds the same object, so every task would share and overwrite one
+  dict, and the "isolation" would be a fiction. That is the pure-Python echo of
+  forgetting to run each task in its own copied context.
+common_mistakes:
+  - Writing `snapshot = defaults` instead of `snapshot = dict(defaults)`, which
+    aliases the shared dict so every task mutates the same object.
+  - Applying overrides directly onto `setup["defaults"]`, corrupting the baseline
+    and every later task's view.
+  - Returning the live `defaults` object as `"defaults_after"` after it was
+    mutated, instead of keeping it untouched throughout.

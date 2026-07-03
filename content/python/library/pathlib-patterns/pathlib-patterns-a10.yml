@@ -1,0 +1,127 @@
+id: exercise.library.pathlib_patterns.a10
+kind: exercise
+version: 1
+language: python
+title: Stamping a Version onto the Print
+slug: pathlib-patterns-a10
+difficulty: medium
+concepts:
+  - python.pathlib_os
+  - python.strings
+prerequisites:
+  - python.strings
+  - python.dictionaries
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.pathlib_patterns.a10
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original stem-insertion drill themed around a photo studio's versioned prints, exercising PurePosixPath stem and with_stem to insert a marker before the extension.
+prompt_markdown: |
+  A photo studio versions its prints by tucking a short marker onto the end of
+  the file name but *before* the extension, so `photo.png` becomes
+  `photo-thumb.png` rather than `photo.png-thumb`. The folder the file lives in
+  must stay exactly where it is.
+
+  Write `build_path_with_suffix(payload)` where `payload` is a dictionary with:
+
+  - `"path"` — a POSIX-style path string to a file.
+  - `"marker"` — the text to insert right after the file's stem.
+
+  Return the rebuilt path string. Rules:
+
+  - Insert the marker immediately after the stem and before the **final**
+    extension. `{"path": "report.txt", "marker": "_final"}` gives
+    `"report_final.txt"`.
+  - Only the last suffix counts as the extension. For `archive.tar.gz` the stem
+    is `archive.tar` and the extension is `.gz`, so
+    `{"path": "data/archive.tar.gz", "marker": "_v2"}` gives
+    `"data/archive.tar_v2.gz"`.
+  - A name with **no extension** gets the marker appended to the whole name:
+    `{"path": "README", "marker": "_old"}` gives `"README_old"`.
+  - A **dotfile** like `.gitignore` is treated as an extensionless name (the
+    leading dot is part of the name), so
+    `{"path": ".gitignore", "marker": "_bak"}` gives `".gitignore_bak"`.
+  - The directory portion, absolute or relative, is preserved unchanged.
+
+  Operate on the path string only; never touch a real filesystem.
+starter_code: |
+  from pathlib import PurePosixPath
+
+
+  def build_path_with_suffix(payload):
+      return ""
+function_name: build_path_with_suffix
+input_mode: function
+solution_sketch: Wrap the path in PurePosixPath, then use with_stem to replace the stem with stem + marker; the extension and parent are kept automatically.
+sample_solution: |
+  from pathlib import PurePosixPath
+
+
+  def build_path_with_suffix(payload):
+      path = PurePosixPath(payload["path"])
+      return str(path.with_stem(path.stem + payload["marker"]))
+hints:
+  - level: 1
+    text: A pure path object can tell you the stem (name without the final extension) and can rebuild a path with a new stem, keeping the extension and folder.
+  - level: 2
+    text: The new stem you want is the old `path.stem` with the marker concatenated onto it. Then let the path object reattach the suffix and parent.
+  - level: 3
+    text: Return `str(PurePosixPath(payload["path"]).with_stem(path.stem + payload["marker"]))`. For extensionless names and dotfiles the suffix is empty, so the marker simply lands at the end.
+tests:
+  public:
+    - name: simple
+      input:
+        path: "report.txt"
+        marker: "_final"
+      expected: "report_final.txt"
+    - name: with_directory
+      input:
+        path: "gallery/photo.png"
+        marker: "-thumb"
+      expected: "gallery/photo-thumb.png"
+    - name: no_extension
+      input:
+        path: "README"
+        marker: "_old"
+      expected: "README_old"
+  validation:
+    - name: absolute_path
+      input:
+        path: "/var/log/app.log"
+        marker: ".1"
+      expected: "/var/log/app.1.log"
+    - name: double_extension
+      input:
+        path: "data/archive.tar.gz"
+        marker: "_v2"
+      expected: "data/archive.tar_v2.gz"
+    - name: dotfile
+      input:
+        path: ".gitignore"
+        marker: "_bak"
+      expected: ".gitignore_bak"
+    - name: no_ext_with_dir
+      input:
+        path: "notes/todo"
+        marker: "-2"
+      expected: "notes/todo-2"
+explanation_markdown: |
+  `PurePosixPath` splits a name into a `stem` and a `suffix`, where the suffix
+  is only the final `.ext`. Building `path.stem + marker` and handing it to
+  `with_stem` reattaches the original suffix and keeps the parent directory, so
+  the marker always lands in the one spot you want: after the base name, before
+  the extension.
+
+  The tricky names resolve themselves once you trust pathlib's definitions. For
+  `archive.tar.gz` the stem is `archive.tar`, so the marker goes before `.gz`.
+  For `README` and `.gitignore` the suffix is empty, so `with_stem` just gives
+  a name that ends with the marker. A leading dot is treated as part of the
+  name, not an extension, which is why `.gitignore` has no suffix.
+common_mistakes:
+  - Appending the marker to the whole path so it lands after the extension (`report.txt_final`).
+  - Slicing on the first dot instead of the last, which mangles double extensions like `archive.tar.gz`.
+  - Treating `.gitignore` as having extension `.gitignore`, producing an empty stem and the wrong result.

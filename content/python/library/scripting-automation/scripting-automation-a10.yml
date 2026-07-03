@@ -1,0 +1,155 @@
+id: exercise.library.scripting_automation.a10
+kind: exercise
+version: 1
+language: python
+title: The Studio Batch Renamer
+slug: scripting-automation-a10
+difficulty: hard
+concepts:
+  - python.pathlib_os
+  - python.regex
+  - python.string_formatting
+prerequisites:
+  - python.strings
+  - python.dictionaries
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.scripting_automation.a10
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original template-rename engine framed around a photography studio renaming RAW exports with a small placeholder mini-language.
+prompt_markdown: |
+  A photography studio renames its RAW exports with a small template language so
+  every delivery follows the same naming scheme. Your job is the rendering engine:
+  given one source path and a pattern string, produce the new name by substituting
+  placeholders drawn from the path.
+
+  Write `render_rename(request)` that takes a single dictionary:
+
+  - `"path"`: the source path string.
+  - `"pattern"`: the template string.
+  - `"index"`: an integer sequence number.
+  - `"pad"`: the minimum width to zero-pad `"index"` to.
+
+  A placeholder is written as `{word}` where `word` is one or more letters,
+  digits, or underscores. Substitute exactly these placeholders:
+
+  - `{name}` -> the base name, e.g. `IMG_0007.CR2`
+  - `{stem}` -> the base name without its final suffix, e.g. `IMG_0007`
+  - `{ext}`  -> the final suffix **including the dot**, e.g. `.CR2`; an empty
+    string when the base name has no dot
+  - `{parent}` -> the name of the immediate parent directory, e.g. `italy`; an
+    empty string when the path has no directory component
+  - `{index}` -> the sequence number as a string, left-zero-padded to at least
+    `"pad"` characters (so index `7` with pad `3` becomes `007`; a `"pad"` of `0`
+    means no padding)
+
+  Rules and edge cases the tests cover:
+
+  - Literal text in the pattern is copied through unchanged.
+  - Any `{word}` token that is **not** one of the five names above is left in the
+    output exactly as written, braces included (e.g. `{date}` stays `{date}`).
+  - Text like `{ }` (with a space) or a lone `{` is not a valid `{word}` token and
+    is copied through literally.
+  - Only the final suffix is the extension: `backup.tar.gz` has stem `backup.tar`
+    and ext `.gz`.
+  - The same placeholder may appear more than once.
+
+  Example:
+
+  ```python
+  render_rename({
+      "path": "trips/italy/IMG_0007.CR2",
+      "pattern": "{parent}_{stem}_{index}{ext}",
+      "index": 7,
+      "pad": 3,
+  })
+  # -> "italy_IMG_0007_007.CR2"
+  ```
+starter_code: |
+  import re
+  from pathlib import PurePosixPath
+
+
+  def render_rename(request):
+      return ""
+function_name: render_rename
+input_mode: function
+solution_sketch: Derive name/stem/ext/parent from a PurePosixPath plus the zero-padded index, then use re.sub over the pattern with a replacement callback that substitutes known placeholders and returns the raw match for anything unknown.
+sample_solution: |
+  import re
+  from pathlib import PurePosixPath
+
+
+  def render_rename(request):
+      path = PurePosixPath(request["path"])
+      fields = {
+          "name": path.name,
+          "stem": path.stem,
+          "ext": path.suffix,
+          "parent": path.parent.name,
+          "index": str(request["index"]).zfill(request["pad"]),
+      }
+
+      def replace(match):
+          key = match.group(1)
+          return fields.get(key, match.group(0))
+
+      return re.sub(r"\{(\w+)\}", replace, request["pattern"])
+hints:
+  - level: 1
+    text: Pull the four path pieces from a PurePosixPath - .name, .stem, .suffix, and .parent.name - and build the padded index with str(index).zfill(pad).
+  - level: 2
+    text: 'Match placeholders with the regex \{(\w+)\} so tokens like "{ }" or a bare "{" are never treated as placeholders.'
+  - level: 3
+    text: In the re.sub replacement callback, look the captured word up in your fields dict and return match.group(0) unchanged when the key is unknown, which preserves tokens like {date}.
+tests:
+  public:
+    - name: full_template
+      input: {"path": "trips/italy/IMG_0007.CR2", "pattern": "{parent}_{stem}_{index}{ext}", "index": 7, "pad": 3}
+      expected: "italy_IMG_0007_007.CR2"
+    - name: unknown_placeholder_preserved
+      input: {"path": "reports/q1/summary.txt", "pattern": "{stem}-{date}{ext}", "index": 1, "pad": 2}
+      expected: "summary-{date}.txt"
+    - name: no_extension_no_pad
+      input: {"path": "notes/README", "pattern": "{index}_{stem}{ext}", "index": 5, "pad": 0}
+      expected: "5_README"
+  validation:
+    - name: double_suffix_stem_and_ext
+      input: {"path": "backup.tar.gz", "pattern": "{stem}{ext}", "index": 0, "pad": 4}
+      expected: "backup.tar.gz"
+    - name: empty_parent
+      input: {"path": "loose.jpg", "pattern": "[{parent}] {name}", "index": 2, "pad": 2}
+      expected: "[] loose.jpg"
+    - name: index_wider_than_pad
+      input: {"path": "a/b/c.md", "pattern": "{index}", "index": 123, "pad": 2}
+      expected: "123"
+    - name: brace_space_is_literal
+      input: {"path": "x/y.py", "pattern": "{ } {stem}", "index": 0, "pad": 1}
+      expected: "{ } y"
+    - name: repeated_placeholder
+      input: {"path": "dir/file.log", "pattern": "{ext}{ext}", "index": 0, "pad": 1}
+      expected: ".log.log"
+explanation_markdown: |
+  A template renderer has two independent jobs: computing the field values and
+  substituting them safely. Pathlib handles the first cleanly — `PurePosixPath`
+  exposes `.name`, `.stem`, `.suffix`, and `.parent`, and because `.parent` of a
+  directory-less path is `.`, its `.name` is the empty string, which is exactly
+  the "no parent" behavior you want for free. The padded index is a formatting
+  detail: `str(index).zfill(pad)` pads to at least `pad` characters and leaves
+  longer numbers untouched.
+
+  Substitution is where a naive approach breaks. Chained `str.replace` calls or a
+  bare `pattern.format(**fields)` would choke on unknown tokens like `{date}` (a
+  `KeyError`) or misfire on stray braces. Driving the replacement through
+  `re.sub(r"\{(\w+)\}", callback, pattern)` scopes substitution to well-formed
+  `{word}` tokens only, and returning `match.group(0)` for unrecognized keys
+  leaves them verbatim. That is why `{ }` and a lone `{` pass through untouched:
+  they never match the placeholder shape in the first place.
+common_mistakes:
+  - Using `pattern.format(**fields)`, which raises KeyError on an unknown token like `{date}` and mishandles literal braces.
+  - Reading the extension as everything after the first dot, so `backup.tar.gz` wrongly yields stem `backup` and ext `.tar.gz`.
+  - Padding with `str(index).zfill(pad)` but forgetting that a wider number (123 with pad 2) must stay `123`, not be truncated.

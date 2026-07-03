@@ -1,0 +1,92 @@
+id: quiz.library.sqlite_patterns.a02
+kind: quiz
+version: 1
+language: python
+title: sqlite3 Mechanics
+slug: quiz-sqlite-patterns-a02
+difficulty: medium
+concepts:
+  - python.sqlite_sql
+prerequisites:
+  - python.sqlite_sql
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sqlite_patterns.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax quiz on sqlite3 API mechanics — parameters, row factories, transactions, and pragmas.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: 'Which call correctly passes a single value to a placeholder?'
+    choices:
+      - db.execute("SELECT * FROM members WHERE name = ?", (name,))
+      - db.execute("SELECT * FROM members WHERE name = ?", name)
+      - db.execute(f"SELECT * FROM members WHERE name = {name}")
+      - db.execute("SELECT * FROM members WHERE name = ?", [name, None])
+    correct_choice: db.execute("SELECT * FROM members WHERE name = ?", (name,))
+    explanation: |
+      Parameters arrive as a sequence — the one-element tuple needs its
+      comma; a bare string is treated as a sequence of characters, the
+      classic confusing error.
+    concepts:
+      - python.sqlite_sql
+  - id: q2
+    prompt: What does `with db:` (the connection as context manager) do on exception versus success?
+    choices:
+      - Rolls back the transaction on exception, commits on clean exit — but does NOT close the connection
+      - Closes the connection in both cases
+      - Commits in both cases
+      - Suppresses the exception after rollback
+    correct_choice: Rolls back the transaction on exception, commits on clean exit — but does NOT close the connection
+    explanation: |
+      The connection context manager manages TRANSACTIONS, not the
+      connection's lifetime — a two-part surprise (no close, exception
+      still propagates) worth knowing cold.
+    concepts:
+      - python.sqlite_sql
+  - id: q3
+    prompt: cur.fetchone() after a query matching nothing returns what?
+    choices:
+      - None — the Optional pattern, requiring the is-None check before subscripting
+      - An empty tuple
+      - Raises StopIteration
+      - An empty Row object
+    correct_choice: None — the Optional pattern, requiring the is-None check before subscripting
+    explanation: |
+      fetchone is "a row or None" — the same maybe-shape as dict.get, with
+      the same narrowing obligation on the caller.
+    concepts:
+      - python.sqlite_sql
+  - id: q4
+    prompt: |
+      Foreign keys are declared in the schema but invalid member_ids insert
+      without error. What is missing?
+    choices:
+      - PRAGMA foreign_keys = ON — SQLite leaves enforcement off per connection by default
+      - An index on the foreign key column
+      - A COMMIT after each insert
+      - The REFERENCES clause requires NOT NULL
+    correct_choice: PRAGMA foreign_keys = ON — SQLite leaves enforcement off per connection by default
+    explanation: |
+      The most famous SQLite gotcha: declared constraints are inert until
+      the pragma enables them, per connection, every time.
+    concepts:
+      - python.sqlite_sql
+  - id: q5
+    prompt: For inserting 5,000 records, why executemany over a loop of execute calls?
+    choices:
+      - One statement preparation reused across all rows — clearer and faster, inside a single transaction
+      - executemany validates types while execute does not
+      - Loops of execute are forbidden by the DB-API
+      - executemany skips the transaction log
+    correct_choice: One statement preparation reused across all rows — clearer and faster, inside a single transaction
+    explanation: |
+      Bulk insert is a declared operation: prepare once, bind many — and
+      wrapping the batch in one transaction (not one per row) is where the
+      real speed lives.
+    concepts:
+      - python.sqlite_sql

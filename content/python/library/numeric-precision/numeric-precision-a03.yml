@@ -1,0 +1,156 @@
+id: exercise.library.numeric_precision.a03
+kind: exercise
+version: 1
+language: python
+title: The Roastery Scale's Rounding Rule
+slug: numeric-precision-a03
+difficulty: medium
+concepts:
+  - python.numeric_precision
+  - python.strings
+prerequisites:
+  - python.dictionaries
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.numeric_precision.a03
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original Decimal rounding-mode drill framed as a coffee roastery scale that rounds bean weights under a chosen policy.
+prompt_markdown: |
+  A coffee roastery weighs each bag of beans and must round the reading to a fixed
+  number of decimal places — but different customers demand different rounding
+  policies. Because the weight arrives as an exact decimal string, you round with
+  `decimal.Decimal`, which honours the true digits (unlike `round()` on a float,
+  where `round(2.675, 2)` famously gives `2.67`).
+
+  Write `decimal_round(request)` where `request` is a dict with three keys:
+
+  - `value`: the weight as a decimal string, e.g. `"2.675"`
+  - `places`: a non-negative integer number of decimal places to keep
+  - `mode`: one of these rounding-policy names (strings):
+    - `"HALF_UP"` — ties round away from zero
+    - `"HALF_EVEN"` — ties round to the nearest even digit (banker's rounding)
+    - `"UP"` — always away from zero
+    - `"DOWN"` — always toward zero (truncate)
+    - `"CEILING"` — always toward positive infinity
+    - `"FLOOR"` — always toward negative infinity
+
+  Return the rounded number as a string, quantised to exactly `places` decimals.
+  For example `{"value": "2.675", "places": 2, "mode": "HALF_UP"}` returns
+  `"2.68"`, while the same value with `"HALF_EVEN"` at 2 places also gives
+  `"2.68"`. When `places` is `0`, return a whole-number string with no decimal
+  point, e.g. `"3"`. Negative values are rounded by the same policy, so
+  `CEILING` on `"-2.671"` at 2 places gives `"-2.67"`.
+starter_code: |
+  from decimal import Decimal
+
+
+  def decimal_round(request):
+      return ""
+function_name: decimal_round
+input_mode: function
+solution_sketch: Map each policy name to its decimal.ROUND_* constant, build a quantum of the right number of places, then quantize the Decimal(value) with that rounding mode and return str of the result.
+sample_solution: |
+  from decimal import (
+      Decimal,
+      ROUND_HALF_UP,
+      ROUND_HALF_EVEN,
+      ROUND_UP,
+      ROUND_DOWN,
+      ROUND_CEILING,
+      ROUND_FLOOR,
+  )
+
+
+  def decimal_round(request):
+      modes = {
+          "HALF_UP": ROUND_HALF_UP,
+          "HALF_EVEN": ROUND_HALF_EVEN,
+          "UP": ROUND_UP,
+          "DOWN": ROUND_DOWN,
+          "CEILING": ROUND_CEILING,
+          "FLOOR": ROUND_FLOOR,
+      }
+      value = Decimal(request["value"])
+      quantum = Decimal(1).scaleb(-request["places"])
+      rounded = value.quantize(quantum, rounding=modes[request["mode"]])
+      return str(rounded)
+hints:
+  - level: 1
+    text: Build the Decimal straight from the string so the exact digits survive; a float would already have corrupted the tie.
+  - level: 2
+    text: quantize needs a quantum that carries the target number of decimals; Decimal(1).scaleb(-places) gives 0.01 for two places and 1 for zero.
+  - level: 3
+    text: Look up the ROUND_* constant for the mode name in a dict, pass it as rounding= to quantize, and return str of the result.
+tests:
+  public:
+    - name: half_up_tie
+      input:
+        value: "2.675"
+        places: 2
+        mode: "HALF_UP"
+      expected: "2.68"
+    - name: half_even_rounds_to_even
+      input:
+        value: "2.665"
+        places: 2
+        mode: "HALF_EVEN"
+      expected: "2.66"
+    - name: truncate_down
+      input:
+        value: "2.678"
+        places: 2
+        mode: "DOWN"
+      expected: "2.67"
+  validation:
+    - name: half_up_versus_even
+      input:
+        value: "2.665"
+        places: 2
+        mode: "HALF_UP"
+      expected: "2.67"
+    - name: always_up
+      input:
+        value: "2.671"
+        places: 2
+        mode: "UP"
+      expected: "2.68"
+    - name: ceiling_negative
+      input:
+        value: "-2.671"
+        places: 2
+        mode: "CEILING"
+      expected: "-2.67"
+    - name: floor_negative
+      input:
+        value: "-2.671"
+        places: 2
+        mode: "FLOOR"
+      expected: "-2.68"
+    - name: zero_places_banker
+      input:
+        value: "2.5"
+        places: 0
+        mode: "HALF_EVEN"
+      expected: "2"
+explanation_markdown: |
+  The float `2.675` is stored as slightly less than 2.675, so `round(2.675, 2)`
+  quietly rounds *down* to `2.67`. Building a `Decimal` from the *string* `"2.675"`
+  keeps the exact digits, so the tie is a real tie and the rounding policy decides
+  the outcome.
+
+  `quantize` rounds a Decimal to the exponent of a "quantum" you supply:
+  `Decimal("0.01")` for two places, `Decimal("1")` for zero. The `rounding`
+  argument selects the policy. `HALF_UP` and `HALF_EVEN` only differ on exact
+  ties — `2.665` goes to `2.67` under HALF_UP but to the even `2.66` under
+  banker's rounding, which is why financial systems favour HALF_EVEN to avoid a
+  systematic upward bias. `CEILING`/`FLOOR` are direction-based (toward positive
+  or negative infinity), so their behaviour on negatives is the mirror of what you
+  might expect from `UP`/`DOWN`.
+common_mistakes:
+  - Constructing the Decimal from a float (Decimal(2.675)) instead of the string, which reintroduces the very drift you were avoiding.
+  - Returning the Decimal object or a float rather than str, so the value no longer carries a fixed number of places.
+  - Confusing CEILING/FLOOR (direction toward infinities) with UP/DOWN (magnitude away from/toward zero) on negative inputs.

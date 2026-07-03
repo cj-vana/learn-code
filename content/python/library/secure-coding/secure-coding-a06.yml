@@ -1,0 +1,105 @@
+id: exercise.library.secure_coding.a06
+kind: exercise
+version: 1
+language: python
+title: Screening Ticket Commands in the Bakery Kitchen
+slug: secure-coding-a06
+difficulty: medium
+concepts:
+  - python.secure_coding
+  - python.strings
+prerequisites:
+  - python.functions
+  - python.strings
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.secure_coding.a06
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original shell-injection screening drill framed around a bakery kitchen-display system building printer commands, detecting shell metacharacters that could chain extra commands.
+prompt_markdown: |
+  A bakery's kitchen-display system builds a command string to print each order
+  ticket. If an order field carrying a shell metacharacter is dropped into that
+  command, an attacker could chain an extra command after the intended one. Before
+  the string is ever handed to a shell, it must be screened. Write
+  `has_shell_injection_risk(command)` that returns `True` when the command string
+  contains any dangerous shell metacharacter and `False` otherwise.
+
+  Treat each of these characters as dangerous:
+
+  - `;` (command separator)
+  - `|` (pipe)
+  - `&` (background / chaining)
+  - `$` (variable or command substitution)
+  - `` ` `` (backtick command substitution)
+  - `(` and `)` (subshell / `$(...)`)
+  - `<` and `>` (redirection)
+  - a newline character (`\n`)
+
+  If the command contains none of those characters, it is considered safe. Plain
+  text with letters, digits, spaces, dashes, dots, and slashes — like
+  `print order-42 table-7` — is safe. As soon as even one dangerous character
+  appears, the command is flagged.
+starter_code: |
+  def has_shell_injection_risk(command):
+      return False
+function_name: has_shell_injection_risk
+input_mode: function
+solution_sketch: Build a set of the dangerous metacharacters and return True if any character of the command is in that set.
+sample_solution: |
+  def has_shell_injection_risk(command):
+      dangerous = set(";|&$`()<>\n")
+      return any(char in dangerous for char in command)
+hints:
+  - level: 1
+    text: You only need to know whether any single character in the command is on the dangerous list.
+  - level: 2
+    text: Put every dangerous character into a set so membership tests are quick and clear.
+  - level: 3
+    text: Use any(char in dangerous for char in command); do not forget to include the newline character.
+tests:
+  public:
+    - name: safe_plain
+      input: print ticket_42
+      expected: false
+    - name: semicolon_chain
+      input: print ticket; rm -rf /
+      expected: true
+    - name: pipe_to_mail
+      input: print ticket | mail attacker
+      expected: true
+  validation:
+    - name: backtick_sub
+      input: print `whoami`
+      expected: true
+    - name: command_substitution
+      input: print $(cat secrets)
+      expected: true
+    - name: redirect_out
+      input: print ticket > /etc/passwd
+      expected: true
+    - name: background_amp
+      input: print ticket & shutdown
+      expected: true
+    - name: clean_dashes_slashes
+      input: print order-42 table-7
+      expected: false
+explanation_markdown: |
+  A shell interprets a whole family of punctuation characters as control syntax:
+  `;` ends one command and starts another, `|` pipes output, `&` chains or
+  backgrounds, `$` and backticks trigger substitution, parentheses open subshells,
+  and `<`/`>` redirect streams. If any of those reaches the shell from untrusted
+  input, the attacker controls more than the intended argument. Screening for the
+  full set — including a raw newline, which acts as a command separator — rejects
+  the injection before it runs. Storing the metacharacters in a set makes each
+  membership test clear and lets you scan the command character by character. The
+  stronger real-world fix is to avoid the shell entirely: pass an argument list to
+  the process directly, or use `shlex.quote`, so the metacharacters are never
+  interpreted. This screen is a defense-in-depth layer on top of that.
+common_mistakes:
+  - Forgetting the newline character, which a shell also treats as a command separator.
+  - Checking only for ";" and missing pipes, substitution, and redirection metacharacters.
+  - Blocking spaces or dashes, which are harmless and appear in normal ticket text.

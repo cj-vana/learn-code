@@ -1,0 +1,92 @@
+id: lesson.library.introspection_metaprogramming.a03
+kind: lesson
+version: 1
+language: python
+title: 'dis and the Shape of Bytecode'
+slug: lesson-introspection-metaprogramming-a03
+difficulty: hard
+concepts:
+  - python.introspection
+prerequisites:
+  - python.introspection
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.introspection_metaprogramming.a03
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original bytecode-intuition walkthrough with fresh disassembly examples and version-stability caveats.
+body_markdown: |
+  When you `def` a function, Python compiles its body to **bytecode** —
+  instructions for the CPython virtual machine — stored in
+  `func.__code__`. The `dis` module disassembles it, and while you will
+  rarely *need* bytecode, reading a little of it converts several
+  course-long claims from trusted facts into observed ones.
+
+  ```python
+  import dis
+
+  def fee(base):
+      return base * 1.15
+
+  dis.dis(fee)
+  #   LOAD_FAST    base
+  #   LOAD_CONST   1.15
+  #   BINARY_OP    *
+  #   RETURN_VALUE
+  ```
+
+  The VM is a stack machine: load operands onto a stack, operate,
+  return. Four instructions, and the mental model of "Python executes
+  your expressions step by step" becomes literal.
+
+  ### Three facts you have been told, now visible
+
+  **Why `n += 1` is not atomic** (concurrency unit): disassemble it and
+  see LOAD, ADD, STORE — three separate instructions. The GIL guarantees
+  each *instruction* is atomic; a thread switch between LOAD and STORE
+  loses an update. The race condition is right there in the listing.
+
+  **Why locals are faster than globals**: locals compile to `LOAD_FAST`
+  (an array index into the frame); globals to `LOAD_GLOBAL` (a dict
+  lookup every time). The classic optimization of binding a hot global
+  to a local before a tight loop is these two opcodes' difference.
+
+  **What comprehensions really are**: disassembly shows a comprehension
+  compiling to its own looping code — confirmation that it is a real
+  loop, just one the VM runs without name-rebinding overhead per
+  iteration.
+
+  ### The stability caveat
+
+  Bytecode is CPython's **private implementation detail**. Opcodes are
+  renamed, fused, and re-split between minor versions (3.11's
+  specializing interpreter rewrote swaths of them; other Python
+  implementations have entirely different internals). Two consequences:
+  never write logic that depends on exact opcode sequences, and when
+  *testing* anything bytecode-adjacent, assert loosely — "the
+  disassembly mentions LOAD_GLOBAL" — never exact listings. Your
+  exercise does precisely that: a substring check over captured `dis`
+  output, the honest level of coupling.
+
+  ### Where this sits in your toolbox
+
+  `dis` earns its place on three occasions: satisfying yourself *why*
+  one form outperforms another (before reaching for benchmarks);
+  understanding an interpreter-level bug report or changelog; and — the
+  quiet one — reading CPython's own development discussions, which
+  assume this vocabulary. It is the deepest layer this curriculum
+  visits, and the message at the bottom is reassuring: no magic, just a
+  small stack machine executing short instructions, one at a time.
+checkpoints:
+  - question: How does disassembling n += 1 explain the thread-safety warning from the concurrency unit?
+    answer: 'It compiles to separate LOAD, ADD, and STORE instructions; the GIL makes each instruction atomic but not the sequence, so a thread switch between LOAD and STORE causes both threads to write back counts based on the same stale read, losing an increment.'
+    explanation: 'The race is visible in the instruction listing — bytecode turns the "not atomic" claim into something you can point at.'
+  - question: 'Why do local variable reads outperform global reads, in opcode terms?'
+    answer: 'Locals compile to LOAD_FAST, an index into a fixed-size frame array; globals compile to LOAD_GLOBAL, a dictionary lookup on every access — array indexing versus hashing, per read.'
+    explanation: The locals-are-faster folklore has a two-opcode explanation, and it motivates the bind-global-to-local trick in hot loops.
+  - question: Why must tests about bytecode assert only loose properties like "contains LOAD_GLOBAL" rather than exact instruction sequences?
+    answer: 'Bytecode is CPython''s private, version-volatile implementation detail — opcodes are renamed and restructured between minor releases — so exact-match tests break on every upgrade while substring-level assertions survive.'
+    explanation: 'Coupling tests to implementation details you don''t control is the general anti-pattern; bytecode is its sharpest instance.'

@@ -98,6 +98,26 @@ LIBRARY_KNOWN_CONCEPTS = SEED_PROFILE_KNOWN_CONCEPTS | {
     "ai.attention_transformers",
     "ai.model_evaluation",
     "concepts.probability",
+    # Wave-6 expansion: niche/advanced internals
+    "python.descriptors_mro",
+    "python.memory_model",
+    "python.concurrency_model",
+    "python.modern_syntax",
+    "python.functools_operator",
+    "python.binary_data",
+    "python.numeric_precision",
+    "python.introspection",
+    # Wave-6 expansion: applied Python
+    "python.pathlib_os",
+    "python.cli_args",
+    "python.http_model",
+    "python.sqlite_sql",
+    "python.logging_diagnostics",
+    "python.config_parsing",
+    "python.functional_style",
+    "python.secure_coding",
+    "concepts.performance",
+    "concepts.dataframe_thinking",
 }
 
 _PROFILE_CONCEPTS = {

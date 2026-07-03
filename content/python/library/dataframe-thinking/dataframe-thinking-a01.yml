@@ -1,0 +1,126 @@
+id: exercise.library.dataframe_thinking.a01
+kind: exercise
+version: 1
+language: python
+title: Masking the Rooftop Weather Log
+slug: dataframe-thinking-a01
+difficulty: easy
+concepts:
+  - concepts.dataframe_thinking
+  - patterns.filtering
+prerequisites:
+  - python.dictionaries
+  - python.conditionals
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dataframe_thinking.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original boolean-mask drill framed around a rooftop weather station keeping only the hourly readings that clear a threshold, teaching the pandas mask-then-keep mental model in pure Python.
+prompt_markdown: |
+  A rooftop weather station keeps every hourly reading as one dictionary in a
+  flat list. An analyst wants to keep only the rows that pass a single
+  comparison, the same idea a data-frame library expresses as
+  `frame[frame["temp_c"] > 15]`: build a boolean mask, then keep the rows where
+  the mask is `True`.
+
+  Write `filter_rows(payload)` that takes a single dictionary with four keys:
+
+  - `"rows"`: a list of reading dictionaries.
+  - `"column"`: the field name to test.
+  - `"op"`: one of the comparison operators `">"`, `">="`, `"<"`, `"<="`,
+    `"=="`, `"!="` (given as a string).
+  - `"value"`: the value to compare each row's `column` against.
+
+  Return a **new list** holding the row dictionaries for which
+  `row[column] <op> value` is `True`, in their original order. Do not modify the
+  rows themselves. You may assume `"column"` is present in every row.
+
+  Edge cases the tests cover:
+
+  - An empty `"rows"` list returns an empty list `[]`.
+  - When no row passes, return `[]`.
+  - Comparisons may be against numbers or strings (for `"=="`/`"!="`).
+
+  Example:
+
+  ```python
+  filter_rows({
+      "rows": [{"hour": 6, "temp_c": 11}, {"hour": 12, "temp_c": 21}],
+      "column": "temp_c",
+      "op": ">",
+      "value": 15,
+  })
+  # -> [{"hour": 12, "temp_c": 21}]
+  ```
+starter_code: |
+  def filter_rows(payload):
+      return []
+function_name: filter_rows
+input_mode: function
+solution_sketch: Map each operator string to a two-argument comparison, then keep the rows whose column value satisfies the comparison against value, preserving order.
+sample_solution: |
+  def filter_rows(payload):
+      rows = payload["rows"]
+      column = payload["column"]
+      value = payload["value"]
+      comparisons = {
+          ">": lambda a, b: a > b,
+          ">=": lambda a, b: a >= b,
+          "<": lambda a, b: a < b,
+          "<=": lambda a, b: a <= b,
+          "==": lambda a, b: a == b,
+          "!=": lambda a, b: a != b,
+      }
+      keep = comparisons[payload["op"]]
+      return [row for row in rows if keep(row[column], value)]
+hints:
+  - level: 1
+    text: A boolean mask is just "which rows pass the test?" You want to walk the rows once and keep the ones where the comparison is True.
+  - level: 2
+    text: Store each operator string in a dictionary that maps to a small two-argument function, so you look the comparison up instead of writing six if-branches.
+  - level: 3
+    text: Return [row for row in rows if compare(row[column], value)] where compare is the function you looked up from payload["op"].
+tests:
+  public:
+    - name: empty_log
+      input: {"rows": [], "column": "temp_c", "op": ">", "value": 10}
+      expected: []
+    - name: warmer_than
+      input: {"rows": [{"hour": 6, "temp_c": 11, "sky": "clear"}, {"hour": 9, "temp_c": 16, "sky": "cloud"}, {"hour": 12, "temp_c": 21, "sky": "clear"}, {"hour": 15, "temp_c": 19, "sky": "rain"}], "column": "temp_c", "op": ">", "value": 15}
+      expected: [{"hour": 9, "temp_c": 16, "sky": "cloud"}, {"hour": 12, "temp_c": 21, "sky": "clear"}, {"hour": 15, "temp_c": 19, "sky": "rain"}]
+    - name: clear_sky_equals
+      input: {"rows": [{"hour": 6, "temp_c": 11, "sky": "clear"}, {"hour": 9, "temp_c": 16, "sky": "cloud"}, {"hour": 12, "temp_c": 21, "sky": "clear"}], "column": "sky", "op": "==", "value": "clear"}
+      expected: [{"hour": 6, "temp_c": 11, "sky": "clear"}, {"hour": 12, "temp_c": 21, "sky": "clear"}]
+  validation:
+    - name: at_most_cool
+      input: {"rows": [{"hour": 6, "temp_c": 11}, {"hour": 9, "temp_c": 16}, {"hour": 12, "temp_c": 21}], "column": "temp_c", "op": "<=", "value": 16}
+      expected: [{"hour": 6, "temp_c": 11}, {"hour": 9, "temp_c": 16}]
+    - name: not_rain
+      input: {"rows": [{"hour": 6, "sky": "clear"}, {"hour": 9, "sky": "cloud"}, {"hour": 15, "sky": "rain"}], "column": "sky", "op": "!=", "value": "rain"}
+      expected: [{"hour": 6, "sky": "clear"}, {"hour": 9, "sky": "cloud"}]
+    - name: ge_boundary_inclusive
+      input: {"rows": [{"hour": 6, "temp_c": 11}, {"hour": 12, "temp_c": 21}, {"hour": 15, "temp_c": 19}], "column": "temp_c", "op": ">=", "value": 21}
+      expected: [{"hour": 12, "temp_c": 21}]
+    - name: none_match
+      input: {"rows": [{"hour": 6, "temp_c": 11}, {"hour": 9, "temp_c": 16}], "column": "temp_c", "op": "<", "value": 5}
+      expected: []
+explanation_markdown: |
+  Boolean masking splits into two steps that a data-frame library fuses into one
+  expression: first decide, per row, whether it passes (the mask), then keep the
+  rows where the mask is `True`. Looking the operator up in a dictionary of tiny
+  comparison functions keeps the loop to a single line and avoids a six-way
+  `if`/`elif` ladder.
+
+  Building a fresh list with a comprehension leaves the caller's rows untouched,
+  which matches how a real filter returns a new view rather than mutating the
+  source. Order is preserved because you visit the rows front to back and append
+  the survivors as you meet them, so the result reads in the same sequence as the
+  log.
+common_mistakes:
+  - Returning the rows that fail the test by flipping the comparison, so the mask is inverted.
+  - Writing a long if/elif chain for the six operators and mishandling one of them (for example treating ">=" as ">").
+  - Comparing against the whole row instead of row[column], which never matches the threshold.

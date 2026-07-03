@@ -1,0 +1,184 @@
+id: exercise.library.oop_internals.a11
+kind: exercise
+version: 1
+language: python
+title: Same Crate or Just a Matching Label
+slug: oop-internals-a11
+difficulty: medium
+concepts:
+  - python.descriptors_mro
+  - python.memory_model
+prerequisites:
+  - python.conditionals
+  - python.strings
+  - python.dictionaries
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.oop_internals.a11
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original identity-vs-equality predictor encoding CPython's small-int cache and string-interning rules as an explicit, stated didactic model over described operands.
+prompt_markdown: |
+  A warehouse clerk keeps confusing two questions: "are these the *same* crate?" (`is`,
+  object identity) and "do these crates carry matching labels?" (`==`, value equality).
+  This exercise makes you predict both answers from CPython's caching rules, without ever
+  relying on the actual `is` operator — you encode the rules yourself.
+
+  Write `identity_vs_equality(payload)` where `payload` is a dict:
+
+  - `"alias"`: a boolean. If `True`, the two names refer to the *same object* (like
+    `b = a`), so identity and equality are both `True` immediately, whatever the operands.
+  - `"a"` and `"b"`: each an operand descriptor, a dict of the form
+    `{"kind": ..., "value": ..., "built": ...}`:
+    - `"kind"` is `"int"`, `"str"`, or `"list"`.
+    - `"value"` is the operand's value (a number for `"int"`, a string for `"str"`, a
+      list for `"list"`).
+    - `"built"` applies only to strings and is `"literal"` (a compile-time literal),
+      `"intern"` (explicitly passed through `sys.intern`), or `"runtime"` (assembled at
+      run time, e.g. by concatenation). Ignore `"built"` for ints and lists.
+
+  Return a two-element list `[is_result, eq_result]` of booleans, computed by these
+  stated rules (a deliberate teaching model of CPython 3.12 behaviour):
+
+  1. Equality (`==`): `True` only when both operands have the same `"kind"` and equal
+     `"value"`; different kinds are never equal (so an int and a str are never `==`).
+  2. Identity (`is`):
+     - If `"alias"` is `True`, identity is `True`.
+     - Otherwise, if the operands are not equal, identity is `False` (two distinct
+       objects).
+     - Otherwise (equal, not aliased), it depends on `"kind"`:
+       - `"int"`: `True` only if the shared value is in the cached range `-5..256`
+         inclusive; larger-magnitude ints build separate objects, so `False`.
+       - `"str"`: `True` only if *both* strings are interned. A string is interned when
+         its `"built"` is `"intern"`, or when its `"built"` is `"literal"` and its value
+         is non-empty and made up solely of letters, digits, and underscores (an
+         identifier-like literal). A `"runtime"` string is never interned.
+       - `"list"`: always `False` — two list displays are always separate objects, even
+         with equal contents.
+
+  Example: two identifier-like literal strings `"cargo"` give `[True, True]`; the ints
+  `257` and `257` give `[False, True]` (equal in value, but outside the small-int cache).
+starter_code: |
+  def identity_vs_equality(payload):
+      return [False, False]
+function_name: identity_vs_equality
+input_mode: function
+solution_sketch: Compute equality from matching kind and value first; then compute identity as alias-or (equal-and-kind-specific-cache-rule), where ints check the -5..256 range, strings check that both are interned, and lists are always distinct.
+sample_solution: |
+  def identity_vs_equality(payload):
+      a = payload["a"]
+      b = payload["b"]
+
+      def interned(operand):
+          built = operand.get("built")
+          if built == "intern":
+              return True
+          if built == "literal":
+              text = operand["value"]
+              return bool(text) and all(ch.isalnum() or ch == "_" for ch in text)
+          return False
+
+      equal = a["kind"] == b["kind"] and a["value"] == b["value"]
+
+      if payload["alias"]:
+          return [True, True]
+      if not equal:
+          return [False, equal]
+
+      kind = a["kind"]
+      if kind == "int":
+          same = -5 <= a["value"] <= 256
+      elif kind == "str":
+          same = interned(a) and interned(b)
+      else:
+          same = False
+      return [same, True]
+hints:
+  - level: 1
+    text: Work out equality first — same kind and equal value — because when two operands are not equal they cannot be the same object either.
+  - level: 2
+    text: An alias short-circuits everything to `[True, True]`; after that, identity only becomes True for equal operands under a per-kind caching rule.
+  - level: 3
+    text: 'Ints: identity True only for values in -5..256. Strings: identity True only if both are interned, where a literal counts as interned when it is non-empty and every character is alphanumeric or underscore, or when built is "intern". Lists: identity always False.'
+tests:
+  public:
+    - name: identifier_literals_same
+      input:
+        alias: false
+        a: {kind: str, value: cargo, built: literal}
+        b: {kind: str, value: cargo, built: literal}
+      expected: [true, true]
+    - name: big_int_equal_not_same
+      input:
+        alias: false
+        a: {kind: int, value: 257}
+        b: {kind: int, value: 257}
+      expected: [false, true]
+    - name: small_int_cached
+      input:
+        alias: false
+        a: {kind: int, value: 100}
+        b: {kind: int, value: 100}
+      expected: [true, true]
+  validation:
+    - name: alias_forces_both_true
+      input:
+        alias: true
+        a: {kind: list, value: [1, 2, 3]}
+        b: {kind: list, value: [1, 2, 3]}
+      expected: [true, true]
+    - name: equal_lists_never_same
+      input:
+        alias: false
+        a: {kind: list, value: [1, 2]}
+        b: {kind: list, value: [1, 2]}
+      expected: [false, true]
+    - name: runtime_string_not_interned
+      input:
+        alias: false
+        a: {kind: str, value: cargo, built: literal}
+        b: {kind: str, value: cargo, built: runtime}
+      expected: [false, true]
+    - name: spaced_literal_not_interned
+      input:
+        alias: false
+        a: {kind: str, value: 'hold seven', built: literal}
+        b: {kind: str, value: 'hold seven', built: literal}
+      expected: [false, true]
+    - name: cross_kind_never_equal
+      input:
+        alias: false
+        a: {kind: int, value: 5}
+        b: {kind: str, value: '5', built: literal}
+      expected: [false, false]
+    - name: forced_intern_matches
+      input:
+        alias: false
+        a: {kind: str, value: 'hold seven', built: intern}
+        b: {kind: str, value: 'hold seven', built: intern}
+      expected: [true, true]
+    - name: boundary_int_256
+      input:
+        alias: false
+        a: {kind: int, value: 256}
+        b: {kind: int, value: 256}
+      expected: [true, true]
+explanation_markdown: |
+  `==` asks whether two objects carry equal values; `is` asks whether they are literally
+  the same object in memory. They coincide only when a value happens to be shared from a
+  cache. CPython pre-builds the small integers from -5 to 256, so `257 is 257` is `False`
+  while `256 is 256` is `True`. It also interns some strings — identifier-like literals
+  and anything you pass to `sys.intern` — so those share one object, but a string built at
+  run time by concatenation is a fresh object even when its characters match. Containers
+  like lists are never shared: each display builds a new object, so equal lists are never
+  identical. The practical rule the clerk should learn: compare values with `==`, and only
+  reach for `is` when you truly mean identity (most idiomatically against `None`). Relying
+  on `is` for value comparison works by accident inside the cached ranges and breaks the
+  moment a value falls outside them.
+common_mistakes:
+  - Reporting identity `True` for equal large integers, forgetting the small-int cache only covers -5..256.
+  - Treating any equal strings as the same object, missing that runtime-built or space-containing strings are not interned.
+  - Letting cross-kind operands be equal (e.g. `5 == "5"`), when different kinds are never equal in this model.

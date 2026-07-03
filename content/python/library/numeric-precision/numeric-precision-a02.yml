@@ -1,0 +1,134 @@
+id: exercise.library.numeric_precision.a02
+kind: exercise
+version: 1
+language: python
+title: The Apothecary's Drifting Total
+slug: numeric-precision-a02
+difficulty: easy
+concepts:
+  - python.numeric_precision
+  - python.types
+prerequisites:
+  - python.lists
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.numeric_precision.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original demonstration of accumulated float error from hand-rolled summation versus math.fsum, framed as an apothecary dispensing tiny liquid doses.
+prompt_markdown: |
+  An apothecary's dispensing arm releases many liquid doses (in millilitres) and
+  needs the true combined volume. When you add floats one at a time in a plain
+  accumulation loop, each step rounds to the nearest representable value and the
+  errors pile up. `math.fsum` instead tracks the lost low-order bits and returns
+  the correctly rounded total.
+
+  Write `float_sum_error_demo(volumes)` where `volumes` is a non-empty list of
+  floats. Return a dict with exactly these three keys:
+
+  - `naive_total`: the total from a **hand-rolled** left-to-right loop — start at
+    `0.0` and add each value with `+=`. (Do *not* use the built-in `sum`: since
+    Python 3.12 it quietly applies compensated summation to floats, so it would
+    hide the very drift this exercise is about.)
+  - `compensated_total`: the result of `math.fsum(volumes)`
+  - `identical`: a boolean, `True` when the two totals are bit-for-bit equal,
+    `False` when the hand-rolled total has drifted
+
+  Example: `[0.1, 0.2, 0.3]` returns
+  `{"naive_total": 0.6000000000000001, "compensated_total": 0.6, "identical": False}`
+  because the step-by-step addition overshoots while `fsum` lands exactly on `0.6`.
+
+  Do not round either total — the point of the exercise is to expose the drift.
+  When the values add without loss (whole-number floats, or exact halves and
+  quarters), the two totals match and `identical` is `True`.
+starter_code: |
+  import math
+
+
+  def float_sum_error_demo(volumes):
+      return {}
+function_name: float_sum_error_demo
+input_mode: function
+solution_sketch: Accumulate a running total by hand with a += loop starting at 0.0, compute math.fsum on the same list, then report both totals and whether they are exactly equal.
+sample_solution: |
+  import math
+
+
+  def float_sum_error_demo(volumes):
+      naive_total = 0.0
+      for volume in volumes:
+          naive_total += volume
+      compensated_total = math.fsum(volumes)
+      return {
+          "naive_total": naive_total,
+          "compensated_total": compensated_total,
+          "identical": naive_total == compensated_total,
+      }
+hints:
+  - level: 1
+    text: Add the values by hand in a loop (total = 0.0, then total += each) so every intermediate rounding is left in place.
+  - level: 2
+    text: math.fsum keeps an exact running compensation and returns the correctly rounded total; call it on the same list.
+  - level: 3
+    text: Return the two totals in a dict and set identical to naive_total == compensated_total; do not round, and do not use the built-in sum for the naive total.
+tests:
+  public:
+    - name: classic_point_one_two_three
+      input: [0.1, 0.2, 0.3]
+      expected:
+        naive_total: 0.6000000000000001
+        compensated_total: 0.6
+        identical: false
+    - name: whole_numbers_match
+      input: [1.0, 2.0, 3.0]
+      expected:
+        naive_total: 6.0
+        compensated_total: 6.0
+        identical: true
+    - name: catastrophic_cancellation
+      input: [10000000000000000.0, 1.0, -10000000000000000.0]
+      expected:
+        naive_total: 0.0
+        compensated_total: 1.0
+        identical: false
+  validation:
+    - name: ten_tenths
+      input: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
+      expected:
+        naive_total: 0.9999999999999999
+        compensated_total: 1.0
+        identical: false
+    - name: single_value
+      input: [2.5]
+      expected:
+        naive_total: 2.5
+        compensated_total: 2.5
+        identical: true
+    - name: exact_halves
+      input: [0.5, 0.25, 0.25]
+      expected:
+        naive_total: 1.0
+        compensated_total: 1.0
+        identical: true
+explanation_markdown: |
+  Every float is the nearest binary approximation of its decimal, so `0.1` is
+  really a hair more than one tenth. A hand-rolled loop adds those approximations
+  one after another and the tiny errors accumulate: `0.1 + 0.2 + 0.3` overshoots to
+  `0.6000000000000001`, and ten tenths fall short at `0.9999999999999999`. The
+  `catastrophic_cancellation` case is the extreme version — adding `1e16`, then
+  `1.0`, then `-1e16` loses the `1.0` entirely because it is too small to survive
+  next to `1e16`, so the naive total is `0.0` while the true answer is `1.0`.
+
+  `math.fsum` uses compensated summation: it keeps the discarded low-order bits in
+  a set of partial sums and returns the single float closest to the true total.
+  Note the deliberate twist in the prompt — since Python 3.12 the built-in `sum`
+  *also* compensates for floats, so it would mask the drift. Accumulating by hand
+  is what exposes it, and `fsum` is what you reach for when a long list of floats
+  must total correctly.
+common_mistakes:
+  - Using the built-in sum for the naive total; on Python 3.12+ it compensates internally, so identical wrongly comes out True.
+  - Rounding the totals before returning, which hides the very drift the exercise is meant to reveal.
+  - Comparing the totals with math.isclose instead of ==, so identical reports True even when the bits differ.

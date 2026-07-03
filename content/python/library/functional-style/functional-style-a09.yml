@@ -1,0 +1,139 @@
+id: exercise.library.functional_style.a09
+kind: exercise
+version: 1
+language: python
+title: The Tide Station's First Alarm
+slug: functional-style-a09
+difficulty: medium
+concepts:
+  - python.functional_style
+  - python.comprehensions
+prerequisites:
+  - python.lists
+  - python.conditionals
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.functional_style.a09
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original first-match drill framed around a tide station watching hourly heights for a flood trip point, taught through a lazy generator expression fed to next() with a fallback default.
+prompt_markdown: |
+  A tide station logs the water height once an hour. Operators want to know the
+  **first** reading in the day that reaches a flood threshold so they can sound a
+  single alarm; if the water never gets that high, they report a calm-day value
+  instead.
+
+  Write `first_flood_height(payload)` that takes **one dictionary** with three
+  entries:
+
+  - `"heights"`: the hourly readings in order, a list of integers.
+  - `"threshold"`: the flood trip point, an integer.
+  - `"fallback"`: the value to return when no reading reaches the threshold.
+
+  Scan the readings left to right and return the **first** height that is
+  **greater than or equal to** the threshold. A reading exactly at the threshold
+  counts as a match. If no reading qualifies (including when `heights` is empty),
+  return `fallback` unchanged.
+
+  Example call:
+
+  ```python
+  first_flood_height({"heights": [1, 2, 7, 9], "threshold": 6, "fallback": -1})
+  # -> 7
+  ```
+
+  Do this the lazy, functional way: feed a **generator expression** to `next(...)`
+  with `fallback` as its default, so the scan stops at the first qualifying
+  reading and never inspects the rest.
+starter_code: |
+  def first_flood_height(payload):
+      return None
+function_name: first_flood_height
+input_mode: function
+solution_sketch: Pass next() a generator expression that yields readings at or above the threshold, and give next() the fallback as its default second argument so an exhausted (no-match or empty) generator returns the fallback instead of raising.
+sample_solution: |
+  def first_flood_height(payload):
+      threshold = payload["threshold"]
+      return next(
+          (height for height in payload["heights"] if height >= threshold),
+          payload["fallback"],
+      )
+hints:
+  - level: 1
+    text: You only need the first qualifying reading, so there is no reason to build a whole filtered list -- a lazy scan that can stop early is enough.
+  - level: 2
+    text: A generator expression (height for height in heights if height >= threshold) yields matches one at a time without materializing them all.
+  - level: 3
+    text: next(generator, fallback) returns the first yielded value, or the fallback default when the generator yields nothing, so no StopIteration ever escapes.
+tests:
+  public:
+    - name: first_reading_already_floods
+      input:
+        heights: [5, 3, 8]
+        threshold: 4
+        fallback: -1
+      expected: 5
+    - name: match_later_in_day
+      input:
+        heights: [1, 2, 7, 9]
+        threshold: 6
+        fallback: -1
+      expected: 7
+    - name: never_reaches_threshold
+      input:
+        heights: [1, 2, 3]
+        threshold: 10
+        fallback: -1
+      expected: -1
+  validation:
+    - name: empty_returns_fallback
+      input:
+        heights: []
+        threshold: 5
+        fallback: 0
+      expected: 0
+    - name: equal_to_threshold_counts
+      input:
+        heights: [2, 4, 6]
+        threshold: 4
+        fallback: -1
+      expected: 4
+    - name: negative_heights
+      input:
+        heights: [-5, -2, 0]
+        threshold: -1
+        fallback: 99
+      expected: 0
+    - name: fallback_can_be_a_string
+      input:
+        heights: [1, 2]
+        threshold: 9
+        fallback: "calm"
+      expected: "calm"
+    - name: stops_at_first_of_many_matches
+      input:
+        heights: [10, 20, 30]
+        threshold: 5
+        fallback: -1
+      expected: 10
+explanation_markdown: |
+  This is a find-first, not a filter-all. A list comprehension would build every
+  match and then throw all but one away, and taking `[0]` from it would raise
+  `IndexError` when nothing matched. The functional idiom is a **generator
+  expression driven by `next`**: the generator yields qualifying readings lazily,
+  `next` pulls exactly one, and the search short-circuits the moment a match
+  appears.
+
+  The second argument to `next` is its default: when the generator is exhausted --
+  because no reading qualified, or because `heights` was empty -- `next` returns
+  that default instead of raising `StopIteration`. That is what makes `fallback`
+  the clean, no-branch answer for the calm-day case, and it can be any type at all,
+  including a string. Using `>=` rather than `>` is what lets a reading sitting
+  exactly on the threshold trip the alarm.
+common_mistakes:
+  - Building a full list comprehension of matches and indexing [0], which scans everything and raises IndexError when there is no match.
+  - Calling next without a default, so a no-match or empty-input case raises StopIteration instead of returning the fallback.
+  - Using a strict > comparison, which misses a reading that sits exactly on the threshold value.

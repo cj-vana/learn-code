@@ -1,0 +1,110 @@
+id: lesson.library.functools_operator.a03
+kind: lesson
+version: 1
+language: python
+title: 'itertools Deep Cuts: pairwise, batched, tee, accumulate'
+slug: lesson-functools-operator-a03
+difficulty: medium
+concepts:
+  - python.functools_operator
+  - python.itertools_module
+prerequisites:
+  - python.itertools_module
+  - python.iterators_generators
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.functools_operator.a03
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original itertools deep-cuts walkthrough framed around a tide-gauge data feed, with fresh worked examples and the groupby trap.
+body_markdown: |
+  The collections-itertools unit covered the headliners. These are the
+  deep cuts — the tools that turn five-line loops into one readable call,
+  plus the one famous trap in the module.
+
+  ### pairwise and batched: windows without index math
+
+  A tide gauge produces a reading stream; you want the change between
+  consecutive readings, and separately, the readings grouped into
+  fixed-size transmission frames:
+
+  ```python
+  from itertools import pairwise, batched
+
+  deltas = [b - a for a, b in pairwise(levels)]      # 3.10+
+  frames = list(batched(levels, 8))                  # 3.12+: tuples of ≤8
+  ```
+
+  `pairwise("ABCD")` yields AB, BC, CD — the overlapping-window loop with
+  its off-by-one risk deleted. `batched` yields *non-overlapping* chunks,
+  final one short — note the contrast with `zip(*[iter(x)]*n)`, the old
+  idiom, which silently *drops* the ragged tail. Both are lazy, both work
+  on any iterable, and together they answer "adjacent" and "chunked" —
+  the two window shapes you have hand-rolled a dozen times in this
+  course.
+
+  ### accumulate: running anything
+
+  `accumulate` generalizes the running total: with a function argument it
+  runs *any* binary operation, and `initial=` seeds it:
+
+  ```python
+  from itertools import accumulate
+  from operator import mul
+
+  balances = list(accumulate(deposits, initial=100))       # running sum
+  compounded = list(accumulate(rates, mul, initial=1.0))   # running product
+  highest = list(accumulate(levels, max))                  # running maximum
+  ```
+
+  The `initial` value both seeds the fold and appears as the first output
+  (so output is one longer than input) — the same contract as your prefix
+  sums with a leading zero, which is exactly what
+  `accumulate(xs, initial=0)` produces.
+
+  ### tee: one stream, several readers
+
+  When two consumers need the same *iterator* (which can only be read
+  once), `tee` splits it:
+
+  ```python
+  from itertools import tee
+  now, ahead = tee(readings, 2)
+  next(ahead)                     # offset by one → zip(now, ahead) pairs neighbours
+  ```
+
+  Two contracts: after teeing, **do not touch the original iterator**
+  (the tees share it underneath), and tee buffers whatever gap opens
+  between its readers — two tees consumed miles apart quietly hold the
+  miles in memory. `pairwise` is literally a disciplined use of tee.
+
+  ### The groupby trap
+
+  `itertools.groupby` groups only **consecutive** equal-key elements. On
+  unsorted data it does not error — it returns *fragmented groups*, one
+  per run, and code that expects SQL-style grouping silently
+  double-counts:
+
+  ```python
+  # ["oak", "pine", "oak"] groups as oak / pine / oak — THREE groups
+  for species, run in groupby(sorted(logs), key=...):     # sort first!
+      ...
+  ```
+
+  Sort by the same key first, or use the dict-accumulation pattern from
+  data wrangling (which needs no sort). The exercises pin this trap
+  directly — you will produce the fragmented result and the correct one,
+  because having *seen* the fragmentation is what makes the rule stick.
+checkpoints:
+  - question: Both pairwise and batched produce "windows". State the difference, and what the old zip-based chunking idiom did wrong that batched fixes.
+    answer: 'pairwise yields overlapping adjacent pairs (AB, BC, CD); batched yields non-overlapping fixed-size chunks with the final one short — whereas zip(*[iter(x)]*n) silently dropped the ragged tail.'
+    explanation: 'Adjacent-versus-chunked covers the two window shapes of stream processing, and batched''s keep-the-tail contract removes the old idiom''s data-loss surprise.'
+  - question: What does accumulate(values, initial=0) produce, and which earlier technique from this course is it exactly?
+    answer: 'A running sum starting with the seed 0 itself — output one element longer than the input; it is the prefix-sums array with the leading zero, generated lazily.'
+    explanation: Recognizing stdlib tools as named versions of hand-built patterns is the point of the deep cuts — accumulate with mul or max generalizes the same fold.
+  - question: Why does groupby on unsorted data double-count categories, and what are the two correct alternatives?
+    answer: 'groupby only groups CONSECUTIVE equal keys, so a category appearing in two runs becomes two groups — no error raised; either sort by the same key first, or group with the dict-accumulation pattern which needs no sort.'
+    explanation: 'The consecutive-runs contract is the module''s most famous trap precisely because the wrong result looks plausible in small tests.'

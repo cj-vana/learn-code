@@ -1,0 +1,158 @@
+id: exercise.library.oop_internals.a07
+kind: exercise
+version: 1
+language: python
+title: The Observatory's Self-Registering Instruments
+slug: oop-internals-a07
+difficulty: medium
+concepts:
+  - python.descriptors_mro
+  - python.dictionaries
+prerequisites:
+  - python.classes
+  - python.dictionaries
+  - python.loops
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.oop_internals.a07
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original framing of __init_subclass__ auto-registration as a pure dict-folding drill over an observatory instrument driver registry.
+prompt_markdown: |
+  At a mountaintop observatory, every telescope instrument driver is a subclass of a
+  base `Instrument` class. The base class uses `__init_subclass__(cls, channel=...)` so
+  that the moment a driver subclass is *defined*, it registers itself under a data
+  channel name. You will model exactly what that hook does to the registry, as a pure
+  function over plain data.
+
+  Write `register_subclass(payload)` where `payload` is a dict with two keys:
+
+  - `"base_registry"`: a dict mapping channel name (str) to the currently registered
+    driver name (str). This is the registry as it stands before any new drivers load.
+  - `"definitions"`: a list of driver definitions, each a dict `{"name": <str>, "channel": <str or null>}`,
+    given in the order the classes are defined.
+
+  Process the definitions in order, exactly as `__init_subclass__` would fire once per
+  class definition, and return the resulting registry dict:
+
+  - For a definition whose `"channel"` is a non-empty string, set `registry[channel] = name`.
+    If that channel already holds a driver, the newer definition overwrites it (the last
+    class defined for a channel wins, just as later `__init_subclass__` calls overwrite
+    earlier registry entries).
+  - A definition whose `"channel"` is `null` (or the empty string `""`) is an abstract
+    intermediate base that opts out of registration: skip it entirely, changing nothing.
+  - Do not mutate the input `base_registry`; build and return a new dict. Starting from an
+    empty `base_registry` with no definitions returns an empty dict `{}`.
+
+  Example: with `base_registry = {"visible": "LegacyCam"}` and definitions
+  `[{"name": "IRCam", "channel": "infrared"}, {"name": "MidBase", "channel": null},
+  {"name": "HDVisible", "channel": "visible"}]`, the result is
+  `{"visible": "HDVisible", "infrared": "IRCam"}` — `MidBase` is skipped and `HDVisible`
+  overwrites `LegacyCam` on the `visible` channel.
+starter_code: |
+  def register_subclass(payload):
+      return {}
+function_name: register_subclass
+input_mode: function
+solution_sketch: Copy base_registry, then fold each definition in order, assigning registry[channel]=name for non-empty channels and skipping null/empty ones so later definitions overwrite earlier ones.
+sample_solution: |
+  def register_subclass(payload):
+      registry = dict(payload["base_registry"])
+      for definition in payload["definitions"]:
+          channel = definition["channel"]
+          if not channel:
+              continue
+          registry[channel] = definition["name"]
+      return registry
+hints:
+  - level: 1
+    text: Start from a *copy* of base_registry so you never mutate the caller's dict, then walk the definitions in the order given.
+  - level: 2
+    text: 'A channel of null or "" means the class opted out of registration — use a truthiness check like `if not channel: continue` to skip it.'
+  - level: 3
+    text: For a real channel just do `registry[channel] = definition["name"]`; because you process in order, a later definition naturally overwrites an earlier one on the same channel.
+tests:
+  public:
+    - name: skip_and_overwrite
+      input:
+        base_registry:
+          visible: LegacyCam
+        definitions:
+          - {name: IRCam, channel: infrared}
+          - {name: MidBase, channel: null}
+          - {name: HDVisible, channel: visible}
+      expected:
+        visible: HDVisible
+        infrared: IRCam
+    - name: empty_everything
+      input:
+        base_registry: {}
+        definitions: []
+      expected: {}
+    - name: fresh_registrations
+      input:
+        base_registry: {}
+        definitions:
+          - {name: RadioDish, channel: radio}
+          - {name: XRayGrid, channel: xray}
+      expected:
+        radio: RadioDish
+        xray: XRayGrid
+  validation:
+    - name: empty_string_channel_skipped
+      input:
+        base_registry:
+          radio: OldDish
+        definitions:
+          - {name: PhantomBase, channel: ''}
+          - {name: NewDish, channel: radio}
+      expected:
+        radio: NewDish
+    - name: last_definition_wins
+      input:
+        base_registry: {}
+        definitions:
+          - {name: FirstUV, channel: uv}
+          - {name: SecondUV, channel: uv}
+          - {name: ThirdUV, channel: uv}
+      expected:
+        uv: ThirdUV
+    - name: base_untouched_when_no_defs
+      input:
+        base_registry:
+          visible: Cam
+          infrared: IR
+        definitions: []
+      expected:
+        visible: Cam
+        infrared: IR
+    - name: mix_new_and_override
+      input:
+        base_registry:
+          visible: LegacyCam
+        definitions:
+          - {name: SkipMe, channel: null}
+          - {name: HDVisible, channel: visible}
+          - {name: RadioDish, channel: radio}
+          - {name: SkipMeToo, channel: ''}
+      expected:
+        visible: HDVisible
+        radio: RadioDish
+explanation_markdown: |
+  `__init_subclass__` is a classmethod on the *base* that Python calls automatically
+  once for every subclass, at the moment the subclass statement finishes executing. A
+  common use is a self-populating registry: each subclass passes a keyword like
+  `channel="infrared"` in its class header, and the hook stashes `cls` under that key.
+  Because the hook fires in source order, a class defined later simply reassigns the
+  key, so the newest driver wins — exactly the fold you implemented. Abstract
+  intermediate bases skip registration (here modelled by a `null` channel), which
+  mirrors the real pattern of guarding the hook with `if channel is not None`. Copying
+  the base registry first keeps the operation free of surprising side effects on the
+  caller's data.
+common_mistakes:
+  - Mutating `payload["base_registry"]` directly instead of copying it, which leaks changes back to the caller.
+  - Forgetting that a later definition on an existing channel must overwrite the earlier one rather than being ignored.
+  - Treating a `null` or empty-string channel as a real channel and registering it, instead of skipping the abstract base.

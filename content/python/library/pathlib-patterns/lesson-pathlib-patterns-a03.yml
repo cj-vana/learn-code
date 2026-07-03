@@ -1,0 +1,98 @@
+id: lesson.library.pathlib_patterns.a03
+kind: lesson
+version: 1
+language: python
+title: 'Naming Schemes: Slugs, Versions, and Collision-Free Files'
+slug: lesson-pathlib-patterns-a03
+difficulty: medium
+concepts:
+  - python.pathlib_os
+  - python.string_formatting
+prerequisites:
+  - python.pathlib_os
+  - python.regex
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.pathlib_patterns.a03
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original file-naming-scheme walkthrough framed around a recording studio's session exports, with fresh worked idioms.
+body_markdown: |
+  Every system that generates files needs a **naming scheme** — and a
+  scheme is a tiny language with parsing, generation, and invariants.
+  This lesson collects the idioms behind good ones, because "what should
+  this file be called" turns out to be design, not trivia.
+
+  A recording studio exports session bounces as:
+
+  ```text
+  2026-07-04_harvest-moon_take03.wav
+  ```
+
+  ### The three properties of a good scheme
+
+  - **Sortable**: the ISO date prefix makes lexicographic order equal
+    chronological order (your datetime unit's property, deployed).
+    Zero-padding does the same for numbers — `take03` sorts before
+    `take10`, but `take3` does not.
+  - **Parseable**: fields separated by a *reserved* character (`_`),
+    with each field forbidden from containing it. A scheme you cannot
+    parse back is write-only memory; the regex to recover the fields is
+    part of the scheme's definition (and one of your exercises).
+  - **Safe**: generated from arbitrary input — a session titled
+    `Harvest Moon (rough) / v2!` — via **slugification**: lowercase,
+    replace runs of non-alphanumerics with one hyphen, trim hyphens,
+    cap length. Every CMS and blog engine carries exactly this
+    function; you will write the studio's.
+
+  ### Versioning without collisions
+
+  When `take03` exists, the next export needs `take04` — deterministic,
+  gap-tolerant numbering:
+
+  ```python
+  def next_take(existing, prefix):
+      taken = {int(m.group(1))
+               for name in existing
+               if (m := re.fullmatch(rf"{re.escape(prefix)}_take(\d+)\.wav", name))}
+      return max(taken, default=0) + 1
+  ```
+
+  The details that separate this from the naive loop: `re.escape` on
+  the prefix (titles contain regex metacharacters — a `.` in a band
+  name must not match anything), `fullmatch` (no partial surprises),
+  the walrus for match-and-bind, and `max+1` rather than
+  first-gap-filling (reusing take numbers resurrects confusion between
+  old and new files; gaps are history, not waste).
+
+  ### Templates both ways
+
+  A scheme is fully specified by a *pair*: the format string that
+  generates and the regex that parses, kept adjacent so they cannot
+  drift:
+
+  ```python
+  TEMPLATE = "{date}_{slug}_take{take:02d}.wav"
+  PATTERN = re.compile(r"(\d{4}-\d{2}-\d{2})_([a-z0-9-]+)_take(\d+)\.wav")
+  ```
+
+  And the property test writes itself — parse(generate(fields)) ==
+  fields, your round-trip oracle — which is the exercise closing the
+  area. It is a satisfying full circle: string formatting, regex,
+  datetime ordering, slug hygiene, and property testing, all converging
+  on the humble question of what to name a file. Schemes designed this
+  way survive; files named ad hoc become the archaeology of the next
+  maintainer.
+checkpoints:
+  - question: Why does the scheme zero-pad take numbers and lead with an ISO date?
+    answer: 'Both make lexicographic order meaningful: zero-padded take03 < take10 sorts numerically correctly, and the ISO date prefix makes alphabetical listing chronological — files sort correctly in every tool with no parsing.'
+    explanation: 'Sortability is a scheme''s cheapest gift, and it comes entirely from choosing representations whose string order matches their semantic order.'
+  - question: In the next_take computation, why re.escape the prefix and why max+1 instead of filling the first gap?
+    answer: 'The prefix derives from user titles that may contain regex metacharacters — unescaped, a dot would match anything and miscount; max+1 never reuses a number, because a reused take number makes an old file and a new one indistinguishable in history.'
+    explanation: 'Escaping is correctness under hostile-ish input; monotonic numbering preserves the archival meaning of every past name.'
+  - question: What pair of artifacts fully defines a naming scheme, and what property test binds them?
+    answer: 'The generator (format template) and the parser (regex), kept adjacent; the round-trip property parse(generate(fields)) == fields proves they agree and catches drift when either changes.'
+    explanation: 'Generation without parsing is write-only naming; the round-trip oracle is the same encode/decode contract as every serializer in the course.'

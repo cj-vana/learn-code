@@ -1,0 +1,92 @@
+id: quiz.library.logging_diagnostics.a02
+kind: quiz
+version: 1
+language: python
+title: Logging Mechanics
+slug: quiz-logging-diagnostics-a02
+difficulty: medium
+concepts:
+  - python.logging_diagnostics
+prerequisites:
+  - python.logging_diagnostics
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.logging_diagnostics.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax quiz on logging levels, lazy formatting, effective-level resolution, and propagation.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: 'Ordered by severity, which is correct?'
+    choices:
+      - DEBUG < INFO < WARNING < ERROR < CRITICAL
+      - INFO < DEBUG < WARNING < CRITICAL < ERROR
+      - WARNING < INFO < DEBUG < ERROR < CRITICAL
+      - CRITICAL < ERROR < WARNING < INFO < DEBUG
+    correct_choice: DEBUG < INFO < WARNING < ERROR < CRITICAL
+    explanation: |
+      Numeric levels 10/20/30/40/50; a threshold of WARNING passes WARNING
+      and above, discarding DEBUG and INFO.
+    concepts:
+      - python.logging_diagnostics
+  - id: q2
+    prompt: 'Why does log.debug("processed %d in %d ms", n, ms) outperform the f-string form when DEBUG is disabled?'
+    choices:
+      - The %-args form defers formatting until the level check passes; the f-string builds the message unconditionally, wasting work when discarded
+      - The f-string form logs at the wrong level
+      - Percent-formatting is always faster than f-strings
+      - The f-string form raises when DEBUG is off
+    correct_choice: The %-args form defers formatting until the level check passes; the f-string builds the message unconditionally, wasting work when discarded
+    explanation: |
+      Passing template and args separately lets logging skip formatting for
+      disabled levels — a real hot-path saving, not a style rule.
+    concepts:
+      - python.logging_diagnostics
+  - id: q3
+    prompt: |
+      Explicit levels: root=WARNING, "app.web"=INFO. What is the effective
+      level of "app.web.routes" (NOTSET)?
+    choices:
+      - INFO — inherited from the nearest explicit ancestor, app.web
+      - WARNING — inherited from root
+      - NOTSET — no level applies
+      - DEBUG — children default to most verbose
+    correct_choice: INFO — inherited from the nearest explicit ancestor, app.web
+    explanation: |
+      Effective-level resolution ascends to the FIRST ancestor with a set
+      level; app.web at INFO is nearer than root, so it wins.
+    concepts:
+      - python.logging_diagnostics
+  - id: q4
+    prompt: What does setting logger.propagate = False do?
+    choices:
+      - Stops this logger's records from traveling up to ancestor handlers — useful to isolate output, dangerous if unintended
+      - Disables the logger entirely
+      - Raises the effective level to CRITICAL
+      - Duplicates records to all handlers
+    correct_choice: Stops this logger's records from traveling up to ancestor handlers — useful to isolate output, dangerous if unintended
+    explanation: |
+      propagate=False severs the upward flow — right for routing audit logs
+      to a dedicated handler, a silent-logger bug when set accidentally.
+    concepts:
+      - python.logging_diagnostics
+  - id: q5
+    prompt: |
+      Which format string produces "2026-07-04 02:41:07 WARNING shop.orders:
+      retried"?
+    choices:
+      - "%(asctime)s %(levelname)s %(name)s: %(message)s"
+      - "%(time)s %(level)s %(logger)s: %(msg)s"
+      - "{asctime} {levelname} {name}: {message}"
+      - "%asctime% %levelname% %name%: %message%"
+    correct_choice: "%(asctime)s %(levelname)s %(name)s: %(message)s"
+    explanation: |
+      logging's default formatter uses %-style named record attributes;
+      asctime, levelname, name, and message are the core fields of a
+      readable line.
+    concepts:
+      - python.logging_diagnostics

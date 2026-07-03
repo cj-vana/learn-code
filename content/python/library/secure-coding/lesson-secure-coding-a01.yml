@@ -1,0 +1,101 @@
+id: lesson.library.secure_coding.a01
+kind: lesson
+version: 1
+language: python
+title: 'The Trust Boundary: Validate Everything That Enters'
+slug: lesson-secure-coding-a01
+difficulty: medium
+concepts:
+  - python.secure_coding
+prerequisites:
+  - python.functions
+  - concepts.testing
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.secure_coding.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original secure-coding foundations walkthrough framed around a permit-application intake, with fresh worked validation.
+body_markdown: |
+  Security is not a feature you add — it is a property that follows from
+  one habit: **treat everything crossing into your program as hostile
+  until proven safe.** The line between "outside" and "inside" is the
+  *trust boundary*, and most vulnerabilities are a failure to validate
+  at it. This area makes the habit concrete; note that everything here is
+  *defensive* — recognizing and closing your own holes.
+
+  ### Where the boundaries are
+
+  A permit-application system receives data from many outside sources,
+  and *every* one is untrusted:
+
+  ```text
+  form fields · query strings · uploaded files · API responses
+  · config files · environment · database rows · other services
+  ```
+
+  The surprising entries — database rows, other internal services — are
+  the point: "internal" is not "trusted." Data placed by a past version,
+  a different team, or a compromised neighbor is still input. The
+  discipline is uniform: **validate at the boundary, trust within.**
+
+  ### Validation is allow, not deny
+
+  The critical design choice. Two ways to validate a permit code:
+
+  ```python
+  # deny-list: reject known-bad — a losing race forever
+  if ";" in code or "--" in code or "<" in code: reject()
+
+  # allow-list: accept only known-good — bounded and safe
+  if re.fullmatch(r"[A-Z]{2}-\d{4}", code): accept()
+  else: reject()
+  ```
+
+  Deny-lists enumerate the infinite set of bad inputs and always miss
+  one (a new encoding, a case variant, a character you forgot).
+  Allow-lists enumerate the finite set of *good* inputs — anything not
+  matching is rejected by default. **Specify what is valid and reject
+  everything else** is the single most important sentence in this area.
+  Your exercises build allow-list validators for structured fields
+  (codes, dates, enums, bounded numbers) precisely because the pattern
+  is the defense.
+
+  ### Validate structure, then meaning, then authority
+
+  Three layers, each a gate:
+
+  - **Structure**: is it the right shape? (an integer, a date, matching
+    the pattern) — reject malformed input before it reaches logic.
+  - **Meaning**: is it a sensible value? (quantity 1–1000, a date not in
+    year 3000, an enum member) — the boundary-value discipline from
+    testing, now a security control.
+  - **Authority**: is this requester allowed this action? — validation
+    proves the *data* is well-formed; it never proves the *actor* is
+    permitted. Confusing the two ("the input is valid, so allow it") is
+    a whole class of access-control bugs.
+
+  ### Fail closed, and say little
+
+  When validation fails, **deny by default** (fail closed — an error
+  should never leave a gate open) and return a *generic* message
+  externally. "Invalid permit code" is right; "no such user 'admin' in
+  table permits_v2" leaks your schema, your table names, and confirms a
+  username to an attacker. Log the detail internally (where the logging
+  area's discipline applies — minus the secrets), show a shrug
+  externally. Validate at the edge, allow-list the valid, layer the
+  checks, fail closed, reveal nothing — the spine every later lesson
+  hangs specifics on.
+checkpoints:
+  - question: Why is an allow-list validator fundamentally safer than a deny-list?
+    answer: 'A deny-list must enumerate the infinite, ever-growing set of bad inputs and will always miss one (a new encoding, a forgotten character); an allow-list enumerates the finite set of valid inputs and rejects everything else by default, so unforeseen inputs fail safe.'
+    explanation: '"Specify what is valid and reject everything else" converts an unwinnable enumeration race into a bounded, correct check.'
+  - question: Why is "the input is valid, therefore allow the action" a dangerous conflation?
+    answer: 'Validation proves the DATA is well-formed; it says nothing about whether the ACTOR is authorized to perform the action — mixing structural validity with authority is a whole class of access-control bugs where valid input from an unpermitted user is accepted.'
+    explanation: 'Structure, meaning, and authority are separate gates; passing one does not pass the others.'
+  - question: What does "fail closed" mean, and why must external error messages be generic?
+    answer: 'On any validation failure, deny by default so an error never leaves a gate open; and reveal nothing about internals — "invalid code" not "no such row in permits_v2", because detailed errors leak schema, confirm usernames, and guide attackers.'
+    explanation: 'Fail-closed plus minimal disclosure ensures failures are safe and uninformative to an adversary, with the real detail logged internally instead.'

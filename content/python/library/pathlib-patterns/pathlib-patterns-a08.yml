@@ -1,0 +1,128 @@
+id: exercise.library.pathlib_patterns.a08
+kind: exercise
+version: 1
+language: python
+title: Clearing Cargo for the Authorized Zone
+slug: pathlib-patterns-a08
+difficulty: medium
+concepts:
+  - python.pathlib_os
+  - python.conditionals
+prerequisites:
+  - python.strings
+  - python.dictionaries
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.pathlib_patterns.a08
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original containment-check drill themed around harbor dock clearance, exercising component-wise path containment with is_relative_to.
+prompt_markdown: |
+  A harbor's cargo system only clears a delivery if its storage location sits
+  inside the zone the courier is authorized for. Locations are POSIX-style path
+  strings, and a delivery is allowed when its path is the authorized zone
+  itself or lies somewhere beneath it.
+
+  Write `is_subpath(payload)` where `payload` is a dictionary with two keys:
+
+  - `"path"` — the delivery's storage location.
+  - `"base"` — the authorized zone.
+
+  Return `True` if `path` is the same location as `base` or is nested somewhere
+  beneath `base`, and `False` otherwise. Rules:
+
+  - Containment is measured **by whole path components**, never by matching
+    partial names. So the zone `harbor/dock-4` does **not** contain
+    `harbor/dock-40`, and `/var/data` does **not** contain `/var/database`.
+  - A path exactly equal to the base counts as contained: with
+    `path = "harbor/dock-4"` and `base = "harbor/dock-4"`, return `True`.
+  - A relative path is never inside an absolute base and vice versa, so
+    `path = "a/b"` with `base = "/a"` returns `False`.
+  - Assume the inputs contain no `.` or `..` segments.
+
+  Work purely on the path strings; never touch a real filesystem.
+starter_code: |
+  from pathlib import PurePosixPath
+
+
+  def is_subpath(payload):
+      return False
+function_name: is_subpath
+input_mode: function
+solution_sketch: Wrap both strings in PurePosixPath and return path.is_relative_to(base), which compares whole components and shares the anchor.
+sample_solution: |
+  from pathlib import PurePosixPath
+
+
+  def is_subpath(payload):
+      path = PurePosixPath(payload["path"])
+      base = PurePosixPath(payload["base"])
+      return path.is_relative_to(base)
+hints:
+  - level: 1
+    text: Pull the two strings out of the dictionary and turn each into a PurePosixPath before comparing them.
+  - level: 2
+    text: PurePosixPath has a method that answers "is this path the same as, or underneath, that other path?" purely by component.
+  - level: 3
+    text: Return `PurePosixPath(payload["path"]).is_relative_to(PurePosixPath(payload["base"]))`; it handles equality, the name-prefix trap, and the absolute/relative mismatch for you.
+tests:
+  public:
+    - name: nested_deeper
+      input:
+        path: "harbor/dock-4/crate"
+        base: "harbor/dock-4"
+      expected: true
+    - name: equal_location
+      input:
+        path: "harbor/dock-4"
+        base: "harbor/dock-4"
+      expected: true
+    - name: sibling_zone
+      input:
+        path: "harbor/dock-5"
+        base: "harbor/dock-4"
+      expected: false
+  validation:
+    - name: absolute_nested
+      input:
+        path: "/var/data/reef.db"
+        base: "/var/data"
+      expected: true
+    - name: name_prefix_trap
+      input:
+        path: "/var/database"
+        base: "/var/data"
+      expected: false
+    - name: unrelated
+      input:
+        path: "orchard/row-2/tree"
+        base: "grove"
+      expected: false
+    - name: deep_under_name
+      input:
+        path: "a/b/c/d"
+        base: "a"
+      expected: true
+    - name: mixed_anchor
+      input:
+        path: "a/b"
+        base: "/a"
+      expected: false
+explanation_markdown: |
+  `PurePosixPath.is_relative_to` asks whether one path can be reached by
+  extending the other, comparing them one whole component at a time. That
+  component-level view is exactly what makes it immune to the name-prefix trap:
+  `database` and `data` are different components even though one string starts
+  with the other, so `/var/database` is not inside `/var/data`.
+
+  Because a path equal to the base is trivially "relative to" itself, equality
+  returns `True` without a special case. And since an absolute path and a
+  relative path have different anchors (`/` versus the first name), they can
+  never contain one another, giving the `False` you want for a mixed pair.
+common_mistakes:
+  - Comparing raw strings with `startswith`, which wrongly reports `/var/database` as inside `/var/data`.
+  - Forgetting that an exactly-equal path should count as contained and adding an incorrect strict-descendant check.
+  - Not wrapping both values in PurePosixPath, so the anchor and component logic never runs.

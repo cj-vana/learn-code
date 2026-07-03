@@ -1,0 +1,161 @@
+id: exercise.library.binary_data_struct.a10
+kind: exercise
+version: 1
+language: python
+title: Hex Ledger at the Museum Scanning Desk
+slug: binary-data-struct-a10
+difficulty: medium
+concepts:
+  - python.binary_data
+  - python.string_formatting
+prerequisites:
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.binary_data_struct.a10
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original binascii hex round-trip drill themed around transcribing artifact scan bytes into a handwritten hex ledger and re-importing them.
+prompt_markdown: |
+  At the museum scanning desk, every artifact scan is copied into a paper
+  ledger as a string of hexadecimal digits so it can be re-keyed later without
+  a computer. Each byte becomes exactly two hex digits, and the archivists
+  sometimes write in uppercase for legibility. You will encode a scan to hex
+  and confirm it survives the round trip back.
+
+  Write `hex_roundtrip(payload)` that takes a single dictionary:
+
+  ```
+  {
+    "data":      [5, 255, 0, 16],   # raw byte values, each 0..255
+    "uppercase": false               # write A-F uppercase when true
+  }
+  ```
+
+  Do the following:
+
+  - Turn `data` into `bytes` and hex-encode it with `binascii.hexlify`, then
+    decode the result to an ASCII `str`. This yields lowercase digits with
+    **exactly two characters per byte**, so a byte of `5` becomes `"05"` (the
+    leading zero is kept) and `255` becomes `"ff"`.
+  - If `uppercase` is `true`, convert the hex string to uppercase.
+  - Decode the hex string back to bytes with `binascii.unhexlify` (it accepts
+    either letter case) and turn the recovered bytes into a **list of ints**.
+  - Return a dictionary with:
+    - `"hex"`: the hex string.
+    - `"restored"`: the decoded bytes as a list of ints.
+    - `"roundtrip_ok"`: `True` if `restored` equals the original `data`,
+      else `False`.
+
+  Edge cases: empty `data` produces the empty string `""` and restores to `[]`.
+  Because every byte maps to two digits, the hex string length is always
+  exactly twice the number of bytes.
+starter_code: |
+  import binascii
+
+
+  def hex_roundtrip(payload):
+      return {}
+function_name: hex_roundtrip
+input_mode: function
+solution_sketch: Hexlify the bytes into an ASCII string, optionally uppercase it, unhexlify back to a list of ints, and compare against the original bytes.
+sample_solution: |
+  import binascii
+
+
+  def hex_roundtrip(payload):
+      data = payload["data"]
+      uppercase = payload["uppercase"]
+      hex_str = binascii.hexlify(bytes(data)).decode("ascii")
+      if uppercase:
+          hex_str = hex_str.upper()
+      restored = list(binascii.unhexlify(hex_str))
+      return {
+          "hex": hex_str,
+          "restored": restored,
+          "roundtrip_ok": restored == list(data),
+      }
+hints:
+  - level: 1
+    text: binascii.hexlify takes bytes and returns bytes of hex digits; call .decode("ascii") to get a plain string.
+  - level: 2
+    text: Apply .upper() only when the uppercase flag is set -- hexlify always produces lowercase to begin with.
+  - level: 3
+    text: binascii.unhexlify reverses hexlify and tolerates upper or lower case, so decode, wrap in list(...), and compare to the original data.
+tests:
+  public:
+    - name: empty
+      input:
+        data: []
+        uppercase: false
+      expected:
+        hex: ""
+        restored: []
+        roundtrip_ok: true
+    - name: leading_zero_preserved
+      input:
+        data: [5, 255, 0, 16]
+        uppercase: false
+      expected:
+        hex: "05ff0010"
+        restored: [5, 255, 0, 16]
+        roundtrip_ok: true
+    - name: uppercase_letters
+      input:
+        data: [171, 205, 239]
+        uppercase: true
+      expected:
+        hex: "ABCDEF"
+        restored: [171, 205, 239]
+        roundtrip_ok: true
+  validation:
+    - name: single_zero
+      input:
+        data: [0]
+        uppercase: false
+      expected:
+        hex: "00"
+        restored: [0]
+        roundtrip_ok: true
+    - name: all_ff
+      input:
+        data: [255, 255]
+        uppercase: false
+      expected:
+        hex: "ffff"
+        restored: [255, 255]
+        roundtrip_ok: true
+    - name: mixed_uppercase
+      input:
+        data: [16, 32, 255]
+        uppercase: true
+      expected:
+        hex: "1020FF"
+        restored: [16, 32, 255]
+        roundtrip_ok: true
+    - name: deadbeef
+      input:
+        data: [222, 173, 190, 239]
+        uppercase: false
+      expected:
+        hex: "deadbeef"
+        restored: [222, 173, 190, 239]
+        roundtrip_ok: true
+explanation_markdown: |
+  Hexadecimal encoding is the plainest way to make bytes human-readable: base 16
+  needs exactly two digits to cover the 0..255 range of one byte, so the mapping
+  is a clean two-characters-per-byte with no padding rules to remember. The
+  leading zero matters -- dropping it (writing `"5"` for byte `5`) would break
+  the fixed-width alignment and make the string impossible to re-parse
+  unambiguously, which is why `hexlify` always zero-pads. `unhexlify` is the
+  exact inverse and is case-insensitive, so uppercasing for the ledger is purely
+  cosmetic and never affects the recovered bytes. The relationship
+  `len(hex) == 2 * len(data)` is a useful invariant for spotting a truncated
+  transcription.
+common_mistakes:
+  - Using hex() or format strings that drop the leading zero, so byte 5 becomes "5" instead of "05" and breaks the two-digit alignment.
+  - Leaving hexlify's output as bytes instead of decoding it to the required str.
+  - Returning the unhexlify bytes object rather than converting it to a list of ints.

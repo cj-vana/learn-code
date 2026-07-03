@@ -1,0 +1,106 @@
+id: lesson.library.sqlite_patterns.a03
+kind: lesson
+version: 1
+language: python
+title: 'Joins, Transactions, and Where SQL Meets Your Code'
+slug: lesson-sqlite-patterns-a03
+difficulty: medium
+concepts:
+  - python.sqlite_sql
+prerequisites:
+  - python.sqlite_sql
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sqlite_patterns.a03
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original joins-and-transactions walkthrough extending the co-op ledger to two tables, with fresh worked SQL.
+body_markdown: |
+  One table is a spreadsheet; a *second* table is a database. The co-op
+  adds loans:
+
+  ```sql
+  CREATE TABLE loans (
+      id INTEGER PRIMARY KEY,
+      member_id INTEGER NOT NULL REFERENCES members(id),
+      bike TEXT NOT NULL,
+      returned INTEGER DEFAULT 0
+  );
+  ```
+
+  `member_id` is a **foreign key** — a value that must match a row in
+  `members`. This is the relational move: instead of copying member
+  names into loans (which drift when someone renames), loans *refer*.
+  One fact, one place — normalization — and the wrangling area's join
+  exercises are exactly how such references get resolved back into
+  readable records.
+
+  ### Joins: the lookup, declared
+
+  ```sql
+  SELECT members.name, loans.bike
+  FROM loans JOIN members ON loans.member_id = members.id
+  WHERE loans.returned = 0;
+  ```
+
+  Your inner-join exercise (index one table by key, look up per row) is
+  this statement's manual implementation. The variant that trips
+  everyone: **LEFT JOIN** keeps unmatched left rows with NULLs on the
+  right — "every member and their loans, including members with none".
+  Choosing JOIN when you meant LEFT JOIN silently drops the loanless
+  members from a "all members" report; the defaults-fill left-join you
+  wrote in the wrangling area is the same decision in dict form.
+
+  (And enable enforcement: SQLite ships with foreign keys OFF per
+  connection — `db.execute("PRAGMA foreign_keys = ON")` is the
+  incantation, a famous gotcha.)
+
+  ### Transactions: all or nothing
+
+  Checking out a bike touches two tables — insert a loan, update
+  availability. A crash between them corrupts the ledger. Transactions
+  make the pair atomic:
+
+  ```python
+  with db:                          # commits on success, rolls back on exception
+      db.execute("INSERT INTO loans (member_id, bike) VALUES (?, ?)", (mid, bike))
+      db.execute("UPDATE bikes SET available = 0 WHERE name = ?", (bike,))
+  ```
+
+  `with db:` is the error-handling area's transaction-block exercise,
+  provided by the driver: any exception inside rolls back *both*
+  statements. The all-or-nothing guarantee is what "the ledger is never
+  half-updated" means, and the same reasoning as your atomic-write
+  idiom — state transitions must be indivisible.
+
+  ### The boundary discipline
+
+  Where should SQL live in a program? The pattern that survives:
+  **repository functions** — small, named functions owning the SQL,
+  returning plain data:
+
+  ```python
+  def open_loans(db):
+      return db.execute(OPEN_LOANS_SQL).fetchall()
+  ```
+
+  Callers see functions and records, never SQL strings; queries are
+  testable against `:memory:` fixtures; and the schema can evolve
+  behind the function names. This is the thin-boundary architecture a
+  third time — parse_args at the CLI edge, validators at the HTTP edge,
+  repositories at the database edge — and spotting it as *the same
+  pattern* is the real graduation from this wave: boundaries thin,
+  logic pure, every edge testable in memory.
+checkpoints:
+  - question: A "members and their current loans" report silently omits members with no loans. Which join was misused and what is the fix?
+    answer: 'An inner JOIN drops left rows with no match; LEFT JOIN keeps every member, with NULLs for the loan columns where none exist — the same keep-unmatched-with-defaults decision as the wrangling area''s left-join exercise.'
+    explanation: 'Inner-versus-left is the most common silent report bug in SQL; the choice states whether unmatched rows are data or noise.'
+  - question: Why do the two checkout statements live inside `with db:`, and what does it guarantee?
+    answer: 'They form one logical state transition — loan created AND bike marked out; the context manager commits both on success and rolls both back if any exception intervenes, so the ledger can never hold half the transition.'
+    explanation: 'Transactions are the database''s atomicity primitive — the same indivisibility your atomic-file-write idiom builds by hand.'
+  - question: What does the repository-function pattern keep out of the rest of the codebase, and what does it enable?
+    answer: 'SQL strings and schema knowledge stay inside small named functions returning plain data; callers get a typed, testable API, queries get :memory: fixture tests, and the schema can change behind stable function names.'
+    explanation: 'It is the thin-boundary architecture at the database edge — the third appearance of the pattern that organizes this whole applied wave.'

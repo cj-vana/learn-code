@@ -1,0 +1,99 @@
+id: quiz.library.introspection_metaprogramming.a02
+kind: quiz
+version: 1
+language: python
+title: inspect and dis Mechanics
+slug: quiz-introspection-metaprogramming-a02
+difficulty: hard
+concepts:
+  - python.introspection
+prerequisites:
+  - python.introspection
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.introspection_metaprogramming.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax quiz on signature objects, bind, closures introspection, and recursion-limit mechanics.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: |
+      For def ship(dest, speed=5), how do you distinguish dest (required)
+      from speed (optional) via inspect?
+    choices:
+      - sig.parameters["dest"].default is inspect.Parameter.empty, while speed's default is 5
+      - dest.default is None while speed.default is 5
+      - required parameters are absent from sig.parameters
+      - by checking the annotation for Optional
+    correct_choice: sig.parameters["dest"].default is inspect.Parameter.empty, while speed's default is 5
+    explanation: |
+      Parameter.empty is the dedicated no-default sentinel — None would be
+      indistinguishable from an actual default of None.
+    concepts:
+      - python.introspection
+  - id: q2
+    prompt: What does sig.bind(1, 2, 3) do for a function whose signature accepts only two parameters?
+    choices:
+      - Raises the same TypeError a real call would, without executing the function
+      - Returns a BoundArguments with the extra value in .leftovers
+      - Silently drops the third argument
+      - Defers the error until .apply_defaults()
+    correct_choice: Raises the same TypeError a real call would, without executing the function
+    explanation: |
+      bind replicates the full argument-matching ritual — its value is
+      getting call errors and canonical argument mappings with zero side
+      effects.
+    concepts:
+      - python.introspection
+  - id: q3
+    prompt: |
+      A closure returned by make_counter() references a hidden variable
+      count. Which introspection reveals the captured names and values?
+    choices:
+      - fn.__code__.co_freevars for the names and fn.__closure__ cells for the values
+      - fn.__dict__["count"]
+      - inspect.signature(fn).parameters
+      - vars(fn)
+    correct_choice: fn.__code__.co_freevars for the names and fn.__closure__ cells for the values
+    explanation: |
+      Free variables live in closure cells, not attributes or parameters —
+      the closures unit's "function with a memory", located physically.
+    concepts:
+      - python.introspection
+      - python.closures_decorators
+  - id: q4
+    prompt: |
+      sys.setrecursionlimit(10**9) followed by unbounded recursion does what?
+    choices:
+      - Crashes the process (segfault/abort) when the C stack overflows — the Python-level guard was moved past the real ceiling
+      - Runs forever safely
+      - Raises RecursionError at the new limit
+      - Automatically converts the recursion to iteration
+    correct_choice: Crashes the process (segfault/abort) when the C stack overflows — the Python-level guard was moved past the real ceiling
+    explanation: |
+      The limit exists BELOW the C stack's capacity so failure is a catchable
+      exception; setting it absurdly high restores the uncatchable crash.
+    concepts:
+      - python.introspection
+  - id: q5
+    prompt: |
+      A test asserts dis.dis output of a function equals a stored 40-line
+      listing, and CI breaks on a Python minor upgrade. What is the durable
+      rewrite?
+    choices:
+      - Assert a loose property — e.g. the captured disassembly contains "LOAD_GLOBAL" — since exact opcode sequences are version-private
+      - Pin Python forever
+      - Regenerate the listing in CI on every run
+      - Compare listings case-insensitively
+    correct_choice: Assert a loose property — e.g. the captured disassembly contains "LOAD_GLOBAL" — since exact opcode sequences are version-private
+    explanation: |
+      Bytecode is an implementation detail that changes between minor
+      versions; substring-level assertions capture the intended fact without
+      coupling to the volatile listing.
+    concepts:
+      - python.introspection
+      - concepts.testing

@@ -1,0 +1,121 @@
+id: exercise.library.numeric_precision.a10
+kind: exercise
+version: 1
+language: python
+title: Assigning the Harbor Berths
+slug: numeric-precision-a10
+difficulty: medium
+concepts:
+  - python.numeric_precision
+  - concepts.number_theory
+prerequisites:
+  - python.dictionaries
+  - python.operators
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.numeric_precision.a10
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original ordered-count drill using math.perm for exact big-integer permutation counting, framed around assigning distinct numbered berths to ships in a harbor where order matters.
+prompt_markdown: |
+  A harbor has `n` ships waiting and `k` numbered berths along the quay. Each
+  berth is distinct, so assigning ship A to berth 1 and ship B to berth 2 is a
+  different arrangement from the reverse. The number of ways to fill the berths is
+  therefore an **ordered** count: the number of `k`-length arrangements drawn from
+  `n` ships.
+
+  This is the permutation count `n! / (n - k)!`, but computing it that way risks
+  float drift and overflow in other languages. Python's `math.perm` gives the
+  exact arbitrary-precision integer directly. Like its combinations sibling, it
+  returns `0` when `k` is larger than `n`, and `1` when `k` is `0`. When `k`
+  equals `n` it collapses to the full factorial `n!`, since every ship gets a
+  berth.
+
+  Write `berth_plans(job)` where `job` is a dictionary with two keys:
+
+  - `"n"`: a non-negative integer, the number of ships.
+  - `"k"`: a non-negative integer, the number of berths to fill.
+
+  Return `math.perm(n, k)`, the exact count of distinct berth assignments.
+
+  Example: `berth_plans({"n": 5, "k": 2})` returns `20`, because there are 5
+  choices for the first berth and 4 for the second.
+starter_code: |
+  import math
+
+
+  def berth_plans(job):
+      return 0
+function_name: berth_plans
+input_mode: function
+solution_sketch: Read n and k from the dictionary and return math.perm(n, k), the exact ordered arrangement count that also returns 0 when k exceeds n and n! when k equals n.
+sample_solution: |
+  import math
+
+
+  def berth_plans(job):
+      return math.perm(job["n"], job["k"])
+hints:
+  - level: 1
+    text: When order matters, you want permutations, not combinations; there are n choices for the first slot, n-1 for the next, and so on.
+  - level: 2
+    text: math.perm(n, k) computes that exact ordered count as a Python integer with no rounding.
+  - level: 3
+    text: Return math.perm(job["n"], job["k"]); it yields 0 when k > n, 1 when k is 0, and n! when k equals n.
+tests:
+  public:
+    - name: arrange_two
+      input:
+        n: 5
+        k: 2
+      expected: 20
+    - name: arrange_none
+      input:
+        n: 5
+        k: 0
+      expected: 1
+    - name: full_factorial
+      input:
+        n: 4
+        k: 4
+      expected: 24
+  validation:
+    - name: k_exceeds_n
+      input:
+        n: 3
+        k: 5
+      expected: 0
+    - name: three_of_ten
+      input:
+        n: 10
+        k: 3
+      expected: 720
+    - name: large_exact
+      input:
+        n: 20
+        k: 10
+      expected: 670442572800
+    - name: both_zero
+      input:
+        n: 0
+        k: 0
+      expected: 1
+explanation_markdown: |
+  `math.perm(n, k)` counts ordered arrangements: it multiplies the `k` descending
+  factors `n * (n - 1) * ... * (n - k + 1)`. Because the slots are distinguishable,
+  it is always at least as large as `math.comb(n, k)` for the same inputs; the
+  difference is the `k!` orderings of a chosen group that permutations keep and
+  combinations divide away.
+
+  Returning the built-in keeps the result an exact integer, so
+  `math.perm(20, 10)` lands on `670442572800` with every digit intact. The edge
+  conventions match `math.comb`: too many berths (`k > n`) gives `0`, zero berths
+  gives `1`, and filling every berth (`k == n`) gives the full factorial `n!`
+  because there is nothing left over.
+common_mistakes:
+  - Using math.comb instead of math.perm, which undercounts because it ignores the order the berths are filled in.
+  - Dividing factorials with true division / and getting a float that loses precision on large n.
+  - Assuming k == n is a special case to handle separately; math.perm already returns n! there.

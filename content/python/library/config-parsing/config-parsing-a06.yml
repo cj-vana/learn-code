@@ -1,0 +1,230 @@
+id: exercise.library.config_parsing.a06
+kind: exercise
+version: 1
+language: python
+title: Auditing the Brewery's Config Against Its Schema
+slug: config-parsing-a06
+difficulty: medium
+concepts:
+  - python.config_parsing
+  - python.dictionaries
+  - python.types
+prerequisites:
+  - python.dictionaries
+  - python.types
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.config_parsing.a06
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original config schema validator reporting missing required keys and exact type mismatches, framed around a craft brewery, with the bool-is-not-int gotcha baked into the type check.
+prompt_markdown: |
+  Before the Ironbark brewery starts a batch, it audits its loaded config against
+  a tiny schema. Write `validate_config_schema(request)`, where `request` is a
+  single dict with three keys:
+
+  - `"config"` — the loaded settings dict (key name to value).
+  - `"required"` — a list of key names that must be present in `config`.
+  - `"types"` — a dict mapping some key names to an expected type **name**, one
+    of `"str"`, `"int"`, `"float"`, `"bool"`, `"list"`, or `"dict"`.
+
+  Return a report dict with exactly three keys:
+
+  - `"missing"` — the sorted list of names in `"required"` that are **not**
+    present in `config`.
+  - `"wrong_type"` — the sorted list of names that **are** present in `config`,
+    appear in `"types"`, and whose value's type does not exactly match the
+    expected type name.
+  - `"valid"` — `True` if both `"missing"` and `"wrong_type"` are empty,
+    otherwise `False`.
+
+  Rules that matter:
+
+  - Type matching is **exact**. Because Python's `bool` is technically a subclass
+    of `int`, a `True`/`False` value does **not** satisfy an expected type of
+    `"int"`, and an integer does not satisfy `"bool"`. Match on the value's exact
+    type, not on `isinstance`.
+  - A name listed in `"types"` but **absent** from `config` is not a type error
+    (there is nothing to check); it only counts as missing if it is in
+    `"required"`.
+  - A name in `"required"` that is not in `"types"` is only checked for presence,
+    never for type.
+  - Both output lists must be sorted alphabetically.
+
+  Example: with `config` `{"port": "8080"}`, `required` `["port"]`, and `types`
+  `{"port": "int"}`, the value is the string `"8080"`, so the report is
+  `{"missing": [], "wrong_type": ["port"], "valid": False}`.
+starter_code: |
+  def validate_config_schema(request):
+      return {"missing": [], "wrong_type": [], "valid": True}
+function_name: validate_config_schema
+input_mode: function
+solution_sketch: Map the type-name strings to real types, collect required keys absent from config as missing, collect present keys whose exact type differs from the expected type as wrong_type, sort both, and set valid from whether they are empty.
+sample_solution: |
+  def validate_config_schema(request):
+      config = request["config"]
+      required = request["required"]
+      types = request["types"]
+      type_map = {
+          "str": str,
+          "int": int,
+          "float": float,
+          "bool": bool,
+          "list": list,
+          "dict": dict,
+      }
+      missing = [name for name in required if name not in config]
+      wrong_type = []
+      for name, type_name in types.items():
+          if name in config and type(config[name]) is not type_map[type_name]:
+              wrong_type.append(name)
+      return {
+          "missing": sorted(missing),
+          "wrong_type": sorted(wrong_type),
+          "valid": not missing and not wrong_type,
+      }
+hints:
+  - level: 1
+    text: Build the missing list from required names not in config, and the wrong_type list from present names whose value has the wrong type.
+  - level: 2
+    text: Map the type-name strings ("int", "bool", ...) to the actual Python types with a small lookup dict so you can compare against them.
+  - level: 3
+    text: Use type(value) is expected_type rather than isinstance so a bool is not accepted where an int is required; then sort both lists and derive valid from them being empty.
+tests:
+  public:
+    - name: all_valid
+      input:
+        config:
+          host: "localhost"
+          port: 8080
+          debug: true
+        required:
+          - "host"
+          - "port"
+        types:
+          host: "str"
+          port: "int"
+          debug: "bool"
+      expected:
+        missing: []
+        wrong_type: []
+        valid: true
+    - name: missing_required_key
+      input:
+        config:
+          host: "localhost"
+        required:
+          - "host"
+          - "port"
+        types:
+          host: "str"
+      expected:
+        missing:
+          - "port"
+        wrong_type: []
+        valid: false
+    - name: wrong_type_string_for_int
+      input:
+        config:
+          port: "8080"
+        required:
+          - "port"
+        types:
+          port: "int"
+      expected:
+        missing: []
+        wrong_type:
+          - "port"
+        valid: false
+  validation:
+    - name: bool_does_not_satisfy_int
+      input:
+        config:
+          flag: true
+        required: []
+        types:
+          flag: "int"
+      expected:
+        missing: []
+        wrong_type:
+          - "flag"
+        valid: false
+    - name: int_field_matches
+      input:
+        config:
+          count: 5
+        required:
+          - "count"
+        types:
+          count: "int"
+      expected:
+        missing: []
+        wrong_type: []
+        valid: true
+    - name: missing_and_wrong_type_sorted
+      input:
+        config:
+          name: 42
+          extra: []
+        required:
+          - "name"
+          - "port"
+        types:
+          name: "str"
+      expected:
+        missing:
+          - "port"
+        wrong_type:
+          - "name"
+        valid: false
+    - name: list_and_dict_types
+      input:
+        config:
+          tags:
+            - "a"
+            - "b"
+          meta:
+            x: 1
+        required:
+          - "tags"
+          - "meta"
+        types:
+          tags: "list"
+          meta: "dict"
+      expected:
+        missing: []
+        wrong_type: []
+        valid: true
+    - name: typed_key_absent_is_not_error
+      input:
+        config: {}
+        required: []
+        types:
+          port: "int"
+      expected:
+        missing: []
+        wrong_type: []
+        valid: true
+explanation_markdown: |
+  A schema check answers two independent questions — is everything required
+  actually here, and is everything that is here the right shape — so the report
+  keeps them in separate lists rather than merging them into one pass/fail. The
+  separation is what makes the output useful for a real error message: "you're
+  missing `port`" and "`port` should be an int, not a string" are different fixes.
+
+  The sharp edge is `bool`. Since `bool` is a subclass of `int` in Python,
+  `isinstance(True, int)` is `True`, which would quietly let a stray boolean pass
+  an `int` field. Comparing with `type(value) is int` demands an exact match and
+  closes that gap. The other deliberate choice is only type-checking keys that
+  are actually present: a key named in the schema's types but missing from the
+  config is a presence question, handled by the required list, not a type error —
+  otherwise every optional typed setting would look broken whenever it was
+  omitted.
+common_mistakes:
+  - Using isinstance for the type check, which wrongly accepts a bool where an int is required.
+  - Flagging a type error for keys that are named in types but absent from config, instead of leaving them to the required check.
+  - Forgetting to sort the missing and wrong_type lists, so the output order depends on dict iteration.
+  - Counting a required-but-untyped key as a type error, or a typed-but-not-required absent key as missing.

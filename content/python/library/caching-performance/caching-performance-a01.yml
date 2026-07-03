@@ -1,0 +1,111 @@
+id: exercise.library.caching_performance.a01
+kind: exercise
+version: 1
+language: python
+title: Counting Routes to the Repair Loft
+slug: caching-performance-a01
+difficulty: easy
+concepts:
+  - concepts.performance
+  - concepts.memoization
+  - python.functools_operator
+prerequisites:
+  - python.functions
+  - patterns.recursion
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.caching_performance.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original memoization drill framed as counting stride sequences up a violin-workshop staircase, using functools.lru_cache to collapse repeated sub-staircases.
+prompt_markdown: |
+  The loft above a violin-repair workshop is reached by a staircase of `n`
+  steps. A luthier climbs it in strides that cover either 1 step or 2 steps at a
+  time. Write `climb_routes(n)` that returns how many distinct sequences of
+  strides reach the top of an `n`-step staircase.
+
+  - `n` is an integer with `n >= 0`.
+  - There is exactly one way to climb a staircase of 0 steps (take no strides)
+    and one way to climb a staircase of 1 step, so `climb_routes(0)` and
+    `climb_routes(1)` both return 1.
+  - For larger `n`, a route either starts with a 1-step stride (leaving `n - 1`
+    steps to climb) or a 2-step stride (leaving `n - 2`), so the count is
+    `climb_routes(n - 1) + climb_routes(n - 2)`.
+
+  Written as plain recursion this recomputes the same sub-staircases over and
+  over, which grows exponentially. Cache the results with `functools.lru_cache`
+  (or `functools.cache`) so each `n` is solved only once. For example,
+  `climb_routes(4)` returns 5.
+starter_code: |
+  from functools import lru_cache
+
+
+  @lru_cache(maxsize=None)
+  def climb_routes(n):
+      return 1
+function_name: climb_routes
+input_mode: function
+solution_sketch: Define the recurrence climb_routes(n) = climb_routes(n-1) + climb_routes(n-2) with base cases returning 1 for n below 2, and cache it with lru_cache so each staircase size is computed once.
+sample_solution: |
+  from functools import lru_cache
+
+
+  @lru_cache(maxsize=None)
+  def climb_routes(n):
+      if n < 2:
+          return 1
+      return climb_routes(n - 1) + climb_routes(n - 2)
+hints:
+  - level: 1
+    text: Look at the last stride only. It is either 1 step or 2 steps, which splits every route into two smaller, independent staircases.
+  - level: 2
+    text: Base cases first — a staircase of 0 or 1 steps has exactly one route. Otherwise return climb_routes(n - 1) + climb_routes(n - 2).
+  - level: 3
+    text: Put @lru_cache(maxsize=None) directly above the function so each repeated sub-staircase is answered from the cache instead of recomputed.
+tests:
+  public:
+    - name: zero_steps
+      input: 0
+      expected: 1
+    - name: one_step
+      input: 1
+      expected: 1
+    - name: four_steps
+      input: 4
+      expected: 5
+    - name: six_steps
+      input: 6
+      expected: 13
+  validation:
+    - name: two_steps
+      input: 2
+      expected: 2
+    - name: three_steps
+      input: 3
+      expected: 3
+    - name: ten_steps
+      input: 10
+      expected: 89
+    - name: twelve_steps
+      input: 12
+      expected: 233
+    - name: twenty_steps
+      input: 20
+      expected: 10946
+explanation_markdown: |
+  Each call to `climb_routes(n)` only depends on `climb_routes(n - 1)` and
+  `climb_routes(n - 2)`, but naive recursion re-solves those same sub-staircases
+  an exponential number of times. Wrapping the function in `lru_cache` turns it
+  into a lookup table: the first time a value of `n` is needed it is computed and
+  stored, and every later request for that `n` is a cache hit. That drops the
+  work from exponential to linear in `n`, and you can confirm the savings with
+  `climb_routes.cache_info()`, which reports the hits and misses. The counts
+  themselves are the Fibonacci numbers offset by one, which is why the recurrence
+  and the base cases both matter.
+common_mistakes:
+  - Leaving the cache off, so the recursion recomputes the same sub-staircases and blows up exponentially for larger n.
+  - Handling only n == 0 or only n == 1 as a base case, so the recursion slips past zero into negative arguments.
+  - Returning 0 for the empty staircase instead of 1, since there is exactly one route that takes no strides at all.

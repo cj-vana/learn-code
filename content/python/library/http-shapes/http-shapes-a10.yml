@@ -1,0 +1,155 @@
+id: exercise.library.http_shapes.a10
+kind: exercise
+version: 1
+language: python
+title: The Weather Feed's Retry Policy
+slug: http-shapes-a10
+difficulty: medium
+concepts:
+  - python.http_model
+  - python.conditionals
+prerequisites:
+  - python.conditionals
+  - python.dictionaries
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.http_shapes.a10
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original retry-policy decision function over HTTP status codes with capped exponential backoff, framed around a mountain weather feed client.
+prompt_markdown: |
+  A ridgeline weather station publishes readings through an HTTP feed, and your
+  client sometimes gets a bad response and must decide whether to try again.
+  Write `retry_decision(attempt_info)` where `attempt_info` is a single dict:
+
+  - `"status_code"`: the HTTP status of the response just received.
+  - `"attempt"`: which attempt this was, counting from `1`.
+  - `"max_attempts"`: the total number of attempts allowed.
+
+  Return a dict `{"retry": <bool>, "backoff_seconds": <int>}` using these rules:
+
+  - A status code is **retryable** when it is `429` (too many requests), `408`
+    (request timeout), or any server error in the range `500` through `599`
+    inclusive. Every other code (including all `2xx`, `3xx`, and other `4xx`
+    codes) is not retryable.
+  - `"retry"` is `True` only when the status is retryable **and** there is still
+    another attempt left, meaning `attempt` is strictly less than
+    `max_attempts`.
+  - When retrying, `"backoff_seconds"` is exponential with a base of one second,
+    computed as `2 ** (attempt - 1)`, but capped at `30`. So attempt `1` waits
+    `1`, attempt `2` waits `2`, attempt `3` waits `4`, and large attempts settle
+    at `30`.
+  - When not retrying, `"backoff_seconds"` is `0`.
+
+  Example: `{"status_code": 503, "attempt": 1, "max_attempts": 3}` returns
+  `{"retry": True, "backoff_seconds": 1}`.
+starter_code: |
+  def retry_decision(attempt_info):
+      return {"retry": False, "backoff_seconds": 0}
+function_name: retry_decision
+input_mode: function
+solution_sketch: Decide retryability from the status code, combine it with the attempt-budget check, and when retrying compute the capped exponential backoff; otherwise return a zero backoff.
+sample_solution: |
+  def retry_decision(attempt_info):
+      status = attempt_info["status_code"]
+      attempt = attempt_info["attempt"]
+      max_attempts = attempt_info["max_attempts"]
+      retryable = status in (429, 408) or 500 <= status <= 599
+      if retryable and attempt < max_attempts:
+          backoff = min(30, 2 ** (attempt - 1))
+          return {"retry": True, "backoff_seconds": backoff}
+      return {"retry": False, "backoff_seconds": 0}
+hints:
+  - level: 1
+    text: First decide whether the status code alone is worth retrying; only 429, 408, and the 500-599 range qualify.
+  - level: 2
+    text: Even a retryable status must not retry once you have used the last attempt, so require attempt < max_attempts as well.
+  - level: 3
+    text: When retrying, compute 2 ** (attempt - 1) and cap it with min(30, ...); otherwise the backoff is 0.
+tests:
+  public:
+    - name: success_no_retry
+      input:
+        status_code: 200
+        attempt: 1
+        max_attempts: 3
+      expected:
+        retry: false
+        backoff_seconds: 0
+    - name: server_error_retries
+      input:
+        status_code: 503
+        attempt: 1
+        max_attempts: 3
+      expected:
+        retry: true
+        backoff_seconds: 1
+    - name: not_found_no_retry
+      input:
+        status_code: 404
+        attempt: 1
+        max_attempts: 3
+      expected:
+        retry: false
+        backoff_seconds: 0
+  validation:
+    - name: rate_limited_second_attempt
+      input:
+        status_code: 429
+        attempt: 2
+        max_attempts: 5
+      expected:
+        retry: true
+        backoff_seconds: 2
+    - name: server_error_backoff_grows
+      input:
+        status_code: 500
+        attempt: 3
+        max_attempts: 5
+      expected:
+        retry: true
+        backoff_seconds: 4
+    - name: attempts_exhausted
+      input:
+        status_code: 503
+        attempt: 3
+        max_attempts: 3
+      expected:
+        retry: false
+        backoff_seconds: 0
+    - name: backoff_capped
+      input:
+        status_code: 408
+        attempt: 6
+        max_attempts: 10
+      expected:
+        retry: true
+        backoff_seconds: 30
+    - name: redirect_not_retryable
+      input:
+        status_code: 301
+        attempt: 1
+        max_attempts: 4
+      expected:
+        retry: false
+        backoff_seconds: 0
+explanation_markdown: |
+  A retry policy separates two questions that are easy to tangle: *is this
+  failure the kind that might succeed if repeated?* and *am I still allowed to
+  try?* Transient failures like a `503` from an overloaded server, a `429` rate
+  limit, or a `408` timeout can clear on their own, while a `404` or a `400` is a
+  permanent answer that retrying will never fix. Redirects and successes are not
+  failures at all.
+
+  The exponential backoff (`1, 2, 4, 8, ...`) spaces out repeated hits so a
+  struggling server gets room to recover instead of being hammered, and the cap
+  at `30` keeps the wait from growing without bound. Because the function is pure
+  logic over the status and attempt counters, it stays fully testable without any
+  real clock or sleep.
+common_mistakes:
+  - Retrying on any `4xx` code instead of only `429` and `408` among the client errors.
+  - Forgetting the `attempt < max_attempts` guard, so the client retries after its final allowed attempt.
+  - Computing `2 ** attempt` instead of `2 ** (attempt - 1)`, which makes the first backoff `2` instead of `1`, or omitting the cap.

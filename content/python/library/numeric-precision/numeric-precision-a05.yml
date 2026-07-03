@@ -1,0 +1,121 @@
+id: exercise.library.numeric_precision.a05
+kind: exercise
+version: 1
+language: python
+title: The Clockmaker's Gear Ratio
+slug: numeric-precision-a05
+difficulty: medium
+concepts:
+  - python.numeric_precision
+  - concepts.number_theory
+prerequisites:
+  - python.dictionaries
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.numeric_precision.a05
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original Fraction-reduction drill framed as a clockmaker expressing a gear tooth ratio in lowest terms.
+prompt_markdown: |
+  A clockmaker describes each gear pairing by its tooth ratio — a driving count
+  over a driven count — and always records it in lowest terms with a positive
+  denominator. `fractions.Fraction` does exactly this normalisation for you, using
+  the greatest common divisor.
+
+  Write `fraction_reduce(pair)` where `pair` is a dict with two integer keys:
+
+  - `numerator`: the driving tooth count (may be negative or zero)
+  - `denominator`: the driven tooth count (always a non-zero integer, possibly
+    negative)
+
+  Build a `Fraction` from the two counts and return the reduced ratio as a
+  two-element list `[numerator, denominator]`, where the denominator is positive
+  and any sign lives on the numerator.
+
+  Examples:
+
+  - `{"numerator": 6, "denominator": 8}` returns `[3, 4]`
+  - `{"numerator": 6, "denominator": -8}` returns `[-3, 4]` (sign moves to the top)
+  - `{"numerator": -6, "denominator": -8}` returns `[3, 4]` (two negatives cancel)
+  - `{"numerator": 0, "denominator": 5}` returns `[0, 1]` (zero normalises to 0/1)
+  - `{"numerator": 100, "denominator": 25}` returns `[4, 1]` (whole-number ratio)
+starter_code: |
+  from fractions import Fraction
+
+
+  def fraction_reduce(pair):
+      return [0, 1]
+function_name: fraction_reduce
+input_mode: function
+solution_sketch: Construct Fraction(numerator, denominator), which auto-reduces and moves the sign to the numerator, then return its numerator and denominator as a list.
+sample_solution: |
+  from fractions import Fraction
+
+
+  def fraction_reduce(pair):
+      ratio = Fraction(pair["numerator"], pair["denominator"])
+      return [ratio.numerator, ratio.denominator]
+hints:
+  - level: 1
+    text: Fraction(a, b) automatically divides out the greatest common divisor and normalises the sign for you.
+  - level: 2
+    text: After building the Fraction, read its .numerator and .denominator attributes; the denominator is always positive.
+  - level: 3
+    text: Return [ratio.numerator, ratio.denominator] as a list, not a tuple.
+tests:
+  public:
+    - name: simple_reduce
+      input:
+        numerator: 6
+        denominator: 8
+      expected: [3, 4]
+    - name: negative_denominator
+      input:
+        numerator: 6
+        denominator: -8
+      expected: [-3, 4]
+    - name: zero_numerator
+      input:
+        numerator: 0
+        denominator: 5
+      expected: [0, 1]
+  validation:
+    - name: double_negative
+      input:
+        numerator: -6
+        denominator: -8
+      expected: [3, 4]
+    - name: reduces_to_whole
+      input:
+        numerator: 100
+        denominator: 25
+      expected: [4, 1]
+    - name: already_lowest_terms
+      input:
+        numerator: 3
+        denominator: 4
+      expected: [3, 4]
+    - name: large_common_factor
+      input:
+        numerator: 84
+        denominator: 132
+      expected: [7, 11]
+explanation_markdown: |
+  A ratio like 6/8 and 3/4 describe the same gearing; "lowest terms" is the unique
+  representation you get by dividing both counts by their greatest common divisor
+  (here `gcd(6, 8) == 2`). `fractions.Fraction` runs that reduction the moment you
+  construct it, so `Fraction(6, 8)` *is* `Fraction(3, 4)`.
+
+  Fraction also fixes the sign convention: the denominator is always kept
+  positive, and any negative sign is carried on the numerator. That is why
+  `6/-8` becomes `[-3, 4]` and two negatives cancel to `[3, 4]`. A zero numerator
+  normalises to `0/1`, and a ratio that divides evenly, like `100/25`, reduces to a
+  denominator of `1`. Reading `.numerator` and `.denominator` back out gives you
+  the canonical pair.
+common_mistakes:
+  - Returning the raw input counts without reducing, so 6/8 is reported instead of 3/4.
+  - Leaving the negative sign on the denominator instead of letting Fraction move it to the numerator.
+  - Returning a tuple (ratio.numerator, ratio.denominator) rather than a list, which the grader treats as a different value.

@@ -1,0 +1,142 @@
+id: exercise.library.scripting_automation.a02
+kind: exercise
+version: 1
+language: python
+title: Oldest Scans First at the Darkroom
+slug: scripting-automation-a02
+difficulty: easy
+concepts:
+  - python.pathlib_os
+  - python.sorting
+prerequisites:
+  - python.lists
+  - python.dictionaries
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.scripting_automation.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original oldest-first ordering drill themed around a community darkroom's film-scan queue, working over record dicts rather than real files.
+prompt_markdown: |
+  A community darkroom digitizes rolls of film on a shared scanner, and the batch
+  processor always works the backlog oldest-first so nothing waits forever. You are
+  handed a list of scan records, one dict per file shaped like
+  `{"name": "roll-a.tif", "mtime": 1700}`, where `mtime` is an integer timestamp
+  (larger means more recently written).
+
+  Write `sort_files_by_mtime(records)` that returns just the file names ordered from
+  oldest to newest.
+
+  - Order primarily by ascending `mtime` (smallest first).
+  - When two files share the same `mtime`, break the tie by file name in ascending
+    (dictionary) order so the result is always deterministic.
+  - The returned value is a list of the `name` strings only, not the whole records.
+  - An empty input returns an empty list `[]`.
+
+  Do not mutate anything on disk; you are only computing a processing order from the
+  records.
+starter_code: |
+  def sort_files_by_mtime(records):
+      return []
+function_name: sort_files_by_mtime
+input_mode: function
+solution_sketch: Sort the records with a key of (mtime, name) so ties fall back to the name, then project out the name field into a new list.
+sample_solution: |
+  def sort_files_by_mtime(records):
+      ordered = sorted(records, key=lambda record: (record["mtime"], record["name"]))
+      return [record["name"] for record in ordered]
+hints:
+  - level: 1
+    text: sorted() with a key function lets you order records by a field without changing the original list.
+  - level: 2
+    text: Return a tuple key (record["mtime"], record["name"]) so Python compares mtime first and only uses the name to settle ties.
+  - level: 3
+    text: After sorting the records, build the answer with a comprehension that pulls record["name"] from each one in the new order.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: single
+      input:
+        - name: roll-a.tif
+          mtime: 100
+      expected:
+        - roll-a.tif
+    - name: distinct_times
+      input:
+        - name: c.tif
+          mtime: 300
+        - name: a.tif
+          mtime: 100
+        - name: b.tif
+          mtime: 200
+      expected:
+        - a.tif
+        - b.tif
+        - c.tif
+  validation:
+    - name: tie_breaks_on_name
+      input:
+        - name: z.tif
+          mtime: 50
+        - name: a.tif
+          mtime: 50
+      expected:
+        - a.tif
+        - z.tif
+    - name: mixed_ties_and_gaps
+      input:
+        - name: m.tif
+          mtime: 10
+        - name: k.tif
+          mtime: 10
+        - name: e.tif
+          mtime: 5
+      expected:
+        - e.tif
+        - k.tif
+        - m.tif
+    - name: reversed_input
+      input:
+        - name: d.raw
+          mtime: 40
+        - name: c.raw
+          mtime: 30
+        - name: b.raw
+          mtime: 20
+        - name: a.raw
+          mtime: 10
+      expected:
+        - a.raw
+        - b.raw
+        - c.raw
+        - d.raw
+    - name: same_time_three_names
+      input:
+        - name: nova.dng
+          mtime: 900
+        - name: comet.dng
+          mtime: 900
+        - name: aurora.dng
+          mtime: 900
+      expected:
+        - aurora.dng
+        - comet.dng
+        - nova.dng
+explanation_markdown: |
+  A tuple sort key is the clean way to express "order by this, then by that":
+  `(record["mtime"], record["name"])` tells Python to compare timestamps first and
+  fall back to the name only when timestamps tie. That fallback matters for
+  automation — without it, two files stamped at the same second could come back in
+  either order across runs, and a rerun-safe script wants a single deterministic
+  answer. `sorted()` returns a new list and leaves the caller's records untouched,
+  and the final comprehension projects out just the names in the freshly sorted
+  order. Sorting is O(n log n).
+common_mistakes:
+  - Sorting by mtime alone, so files with equal timestamps come back in an unpredictable order.
+  - Returning the whole record dicts instead of just the name strings the prompt asks for.
+  - Using .sort() on the input and mutating the caller's list when a fresh sorted() result was expected.

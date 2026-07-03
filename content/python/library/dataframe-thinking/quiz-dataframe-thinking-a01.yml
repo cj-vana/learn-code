@@ -1,0 +1,99 @@
+id: quiz.library.dataframe_thinking.a01
+kind: quiz
+version: 1
+language: python
+title: Thinking in Tables
+slug: quiz-dataframe-thinking-a01
+difficulty: medium
+concepts:
+  - concepts.dataframe_thinking
+prerequisites:
+  - concepts.dataframe_thinking
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dataframe_thinking.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pattern-recognition quiz on layout choice, vectorized thinking, and the reach-for-pandas decision.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      A task must compute a new column (price × quantity) for every row and
+      then the total. Which layout makes this most natural, and why?
+    choices:
+      - Column-oriented — each column is a list, so the elementwise product and the sum are single passes over contiguous values
+      - Row-oriented — dict access per row is faster
+      - Neither — it requires a database
+      - A set of tuples, for uniqueness
+    correct_choice: Column-oriented — each column is a list, so the elementwise product and the sum are single passes over contiguous values
+    explanation: |
+      Whole-column operations want columns; that packed-list layout is why
+      numpy/pandas are fast and why the columnar mental model transfers.
+    concepts:
+      - concepts.dataframe_thinking
+  - id: q2
+    prompt: |
+      "Average rainfall per region" from a flat table is which fundamental
+      data-analysis pattern?
+    choices:
+      - Split-apply-combine — group rows by region, apply mean to each, combine into a per-region result
+      - A join between rainfall and regions
+      - A boolean mask over rainfall
+      - A sort by region then a running total
+    correct_choice: Split-apply-combine — group rows by region, apply mean to each, combine into a per-region result
+    explanation: |
+      Per-group aggregation is the split-apply-combine engine under every
+      groupby call — the dict-accumulation pattern named as the primitive.
+    concepts:
+      - concepts.dataframe_thinking
+      - concepts.grouping_aggregation
+  - id: q3
+    prompt: |
+      Why does df["a"] * df["b"] over a million rows run 10-100x faster than
+      the equivalent pure-Python list comprehension?
+    choices:
+      - numpy stores packed machine numbers and multiplies them in one compiled C loop — no per-element boxing or interpreter overhead
+      - The comprehension has a syntax error
+      - pandas caches the result
+      - List comprehensions are single-threaded and numpy is not
+    correct_choice: numpy stores packed machine numbers and multiplies them in one compiled C loop — no per-element boxing or interpreter overhead
+    explanation: |
+      Speed comes from the packed columnar layout plus compiled loops; the
+      list comprehension pays interpreter overhead per element.
+    concepts:
+      - concepts.dataframe_thinking
+      - concepts.performance
+  - id: q4
+    prompt: |
+      A config loader handles about 40 rows of settings. A developer proposes
+      importing pandas to process them. What is the right call?
+    choices:
+      - Stay with pure Python dicts/lists — 40 rows do not justify a heavy dependency and its import and learning cost
+      - Use pandas — it is always cleaner
+      - Use numpy for the numeric fields only
+      - Convert the config to a database first
+    correct_choice: Stay with pure Python dicts/lists — 40 rows do not justify a heavy dependency and its import and learning cost
+    explanation: |
+      Matching tool to scale cuts both ways; pandas for tiny non-numeric data
+      is as much a mismatch as hand-vectorizing a million rows.
+    concepts:
+      - concepts.dataframe_thinking
+  - id: q5
+    prompt: |
+      You must keep whole rows where temp > 30 AND humidity < 40, across all
+      columns. What is the vectorized approach?
+    choices:
+      - Build two boolean masks, combine them elementwise with and, then apply the combined mask to every column
+      - Loop rows with a nested if and append matches
+      - Sort by temp then by humidity and slice
+      - Group by temp and filter groups
+    correct_choice: Build two boolean masks, combine them elementwise with and, then apply the combined mask to every column
+    explanation: |
+      Masks as reusable arrays combine with boolean logic and apply uniformly
+      across columns — exactly pandas' & on masks, in pure Python.
+    concepts:
+      - concepts.dataframe_thinking

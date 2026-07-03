@@ -1,0 +1,59 @@
+id: path.skill.bytes_and_numbers
+kind: path
+path_type: skill
+version: 1
+language: python
+title: Bytes & Numbers
+slug: bytes-and-numbers
+description: 'The low-level data layers: bytes, struct, memoryview and buffers, plus float pitfalls, Decimal,
+  and Fraction for numbers that must be exact.'
+outcomes:
+- Pack, unpack, and view binary data without copying
+- Choose float, Decimal, or Fraction by domain and avoid the traps
+estimated_hours: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: brief.paths.v1
+  author: agent
+  generated_at: '2026-07-02T18:00:00Z'
+  inspiration_sources: []
+  originality_notes: Curated ordering over the repository's original content bank; no external syllabus
+    copied.
+units:
+- id: unit.binary_data_struct
+  title: Bytes, Buffers & struct
+  description: Lessons, drills, and quizzes for bytes, buffers & struct.
+  items:
+  - lesson.library.binary_data_struct.a01
+  - lesson.library.binary_data_struct.a02
+  - lesson.library.binary_data_struct.a03
+  - exercise.library.binary_data_struct.a07
+  - exercise.library.binary_data_struct.a08
+  - quiz.library.binary_data_struct.a01
+  - exercise.library.binary_data_struct.a09
+  - exercise.library.binary_data_struct.a10
+  - quiz.library.binary_data_struct.a02
+  - exercise.library.binary_data_struct.a11
+  - exercise.library.binary_data_struct.a12
+- id: unit.numeric_precision
+  title: Numeric Precision
+  description: Lessons, drills, and quizzes for numeric precision.
+  items:
+  - lesson.library.numeric_precision.a01
+  - lesson.library.numeric_precision.a02
+  - lesson.library.numeric_precision.a03
+  - exercise.library.numeric_precision.a01
+  - exercise.library.numeric_precision.a02
+  - exercise.library.numeric_precision.a03
+  - exercise.library.numeric_precision.a04
+  - quiz.library.numeric_precision.a01
+  - exercise.library.numeric_precision.a05
+  - exercise.library.numeric_precision.a06
+  - exercise.library.numeric_precision.a07
+  - exercise.library.numeric_precision.a08
+  - quiz.library.numeric_precision.a02
+  - exercise.library.numeric_precision.a09
+  - exercise.library.numeric_precision.a10
+  - exercise.library.numeric_precision.a11
+  - exercise.library.numeric_precision.a12

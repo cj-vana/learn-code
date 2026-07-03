@@ -1,0 +1,103 @@
+id: lesson.library.scripting_automation.a01
+kind: lesson
+version: 1
+language: python
+title: 'The Shape of an Automation Script'
+slug: lesson-scripting-automation-a01
+difficulty: medium
+concepts:
+  - python.pathlib_os
+prerequisites:
+  - python.lists
+  - python.dictionaries
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.scripting_automation.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original automation-architecture walkthrough framed around a photographer's archive cleanup, with fresh worked structure.
+body_markdown: |
+  "Write a script to clean this up" is how most working Python begins: a
+  photographer's archive has 40,000 files needing renaming, sorting, and
+  deduplicating. The difference between a script that earns trust and one
+  that destroys a weekend is *architecture* — and the architecture is
+  always the same three stages:
+
+  ```text
+  gather  →  decide  →  act
+  ```
+
+  ### Keep the decisions pure
+
+  The gather stage lists what exists (file records, API rows). The decide
+  stage — the heart — computes *what should happen*, as data:
+
+  ```python
+  def plan_renames(files):
+      """[{name, size, shot_date}] -> [{op: 'rename', src, dst}]"""
+      plan = []
+      for f in files:
+          dst = f"{f['shot_date']}/{slugify(f['name'])}"
+          if dst != f["name"]:
+              plan.append({"op": "rename", "src": f["name"], "dst": dst})
+      return plan
+  ```
+
+  Notice what this function does *not* do: touch a disk. It maps records
+  to a **plan** — a list of intended operations — and that makes it a
+  pure function: testable with any fixture, reviewable as data,
+  identical in behavior on your laptop and the production archive. Every
+  exercise in this area has this shape, because this *is* the
+  professional shape: the act stage that executes a plan is a dumb
+  ten-line loop, and everything worth testing lives before it.
+
+  ### Dry-run is a printing act stage
+
+  The pattern's first dividend: a `--dry-run` flag is just choosing to
+  *print* the plan instead of executing it.
+
+  ```python
+  for step in plan:
+      print(f"would rename {step['src']} -> {step['dst']}")
+  ```
+
+  Scripts that can show their intentions before acting get trusted;
+  every serious ops tool (`rsync --dry-run`, `terraform plan`) works
+  this way. Because your decide stage returns data, dry-run costs three
+  lines.
+
+  ### Idempotence: safe to run twice
+
+  The second dividend. An automation script *will* be re-run — after a
+  crash, by a colleague, by cron, twice. **Idempotent** scripts converge
+  instead of compounding: renaming an already-renamed file is a no-op
+  (the `dst != name` check above), "create if missing" instead of
+  "create", "ensure state X" instead of "apply change". Your
+  testing-unit property `f(f(x)) == f(x)` is exactly this, wearing work
+  clothes — and your exercises verify plans stay empty when re-planned
+  over their own output.
+
+  ### Collect failures, finish the batch
+
+  One corrupt file must not abandon the other 39,999. The per-item
+  try/except with a rejects list — your files-and-formats discipline —
+  applies verbatim to operations: act on each step, collect
+  `(step, error)` failures, report both counts at the end. A script that
+  says "39,996 done, 4 failed, here they are" is an *operator's tool*; a
+  script that dies at item 8,412 is a liability.
+
+  Plan-as-data, dry-run, idempotence, failure ledgers: four habits, one
+  underlying move — separating deciding from doing.
+checkpoints:
+  - question: Why does the decide stage return a plan (list of operation records) instead of performing operations as it finds them?
+    answer: 'A plan is data: it can be unit-tested with fixtures, reviewed before execution, printed as a dry run, and executed by a trivial act loop — deciding-while-doing forfeits all four and welds logic to side effects.'
+    explanation: 'Plan-as-data is the single architectural move that makes automation testable and trustworthy; every serious ops tool exposes it as "plan" or "--dry-run".'
+  - question: A cleanup script crashed halfway and was re-run, and nothing duplicated or broke. Which property made that safe, and how is it achieved?
+    answer: 'Idempotence — operations are phrased as "ensure state" (rename if not already named, create if missing), so applying the script to its own output is a no-op; formally f(f(x)) == f(x), the testing unit''s property in production.'
+    explanation: 'Re-runs are inevitable (crashes, cron, humans); convergent scripts treat them as free, compounding ones treat them as incidents.'
+  - question: How should a 40,000-item batch script respond to 4 corrupt items, and what does the alternative cost?
+    answer: 'Catch per item, collect the failures with their reasons, complete the rest, and report "39,996 done, 4 failed: ..."; dying at the first failure abandons the batch and hides whether other items were also bad.'
+    explanation: 'The unit of failure should match the unit of work — the files-and-formats rule, applied to actions instead of records.'

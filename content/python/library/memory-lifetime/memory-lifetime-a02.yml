@@ -1,0 +1,100 @@
+id: exercise.library.memory_lifetime.a02
+kind: exercise
+version: 1
+language: python
+title: When the Last Dashboard Closes
+slug: memory-lifetime-a02
+difficulty: easy
+concepts:
+  - python.memory_model
+  - python.dictionaries
+prerequisites:
+  - python.loops
+  - python.conditionals
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.memory_lifetime.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original harbour ferry-registry framing for weak-reference eviction once the last strong reference is dropped.
+prompt_markdown: |
+  Harbourside runs a live vessel tracker. Each ferry object lives in a *weak
+  registry* -- it stays retrievable only while at least one open dashboard still
+  references it. Closing a dashboard drops one reference; when a ferry's last
+  dashboard closes, its reference count reaches zero and the weak registry evicts
+  it, freeing the object.
+
+  Write `is_evicted_after_del(scenario)` that takes a single dict:
+
+  ```
+  {
+      "refs": {"ferry-a": 2, "ferry-b": 1, "ferry-c": 3},  # open dashboards per ferry
+      "closures": ["ferry-b", "ferry-a"],                   # dashboards closed, in order
+      "key": "ferry-b"                                       # ferry we ask about
+  }
+  ```
+
+  Apply each closure in order: it lowers that ferry's reference count by one, but a
+  count never drops below zero. After all closures, return `True` if `key` has been
+  evicted (its remaining count is zero) and `False` if it is still retrievable. A
+  `key` that never appears in `refs` counts as evicted, so return `True`.
+starter_code: |
+  def is_evicted_after_del(scenario):
+      return False
+function_name: is_evicted_after_del
+input_mode: function
+solution_sketch: Copy the counts, subtract one per closure without going below zero, then report whether the key's remaining count is zero.
+sample_solution: |
+  def is_evicted_after_del(scenario):
+      refs = dict(scenario["refs"])
+      for name in scenario["closures"]:
+          if refs.get(name, 0) > 0:
+              refs[name] -= 1
+      return refs.get(scenario["key"], 0) == 0
+hints:
+  - level: 1
+    text: An object leaves a weak registry exactly when its last strong reference disappears -- that is, when its reference count hits zero.
+  - level: 2
+    text: Work on a copy of the counts and subtract one for each closure, but never let a count fall below zero.
+  - level: 3
+    text: Return whether the count stored for `key` ends at zero; a `key` missing from the counts is treated as zero, so it is evicted.
+tests:
+  public:
+    - name: last_ref_closed
+      input: {"refs": {"ferry-a": 2, "ferry-b": 1, "ferry-c": 3}, "closures": ["ferry-b"], "key": "ferry-b"}
+      expected: true
+    - name: still_referenced
+      input: {"refs": {"ferry-a": 2}, "closures": ["ferry-a"], "key": "ferry-a"}
+      expected: false
+    - name: untouched_stays_live
+      input: {"refs": {"ferry-a": 2, "ferry-b": 1}, "closures": ["ferry-b", "ferry-a"], "key": "ferry-a"}
+      expected: false
+  validation:
+    - name: driven_to_zero
+      input: {"refs": {"x": 2}, "closures": ["x", "x"], "key": "x"}
+      expected: true
+    - name: never_registered
+      input: {"refs": {"a": 1}, "closures": [], "key": "z"}
+      expected: true
+    - name: many_closures_various
+      input: {"refs": {"a": 3, "b": 2, "c": 1}, "closures": ["c", "b", "a", "a"], "key": "a"}
+      expected: false
+    - name: extra_closure_floored
+      input: {"refs": {"p": 1}, "closures": ["p", "p", "p"], "key": "p"}
+      expected: true
+explanation_markdown: |
+  Reference counting is the everyday half of Python's memory management: every name,
+  container slot, or argument that points at an object bumps its count, and each one
+  that goes away drops it. When the count reaches zero the object is reclaimed
+  immediately -- there is nothing left that could ever reach it. Modelling a weak
+  registry makes that boundary crisp: the ferry is retrievable at count one and gone
+  at count zero, and no amount of extra closing can push it "more negative" because
+  a real refcount is never below zero. Guarding each decrement with a `> 0` check
+  keeps the simulation faithful and avoids reporting a phantom live reference.
+common_mistakes:
+  - Letting a reference count go negative, so an extra closure masks the fact that the ferry was already evicted.
+  - Mutating scenario["refs"] directly and reporting a count that ignores the closures applied.
+  - Treating a never-registered key as still present instead of evicted.

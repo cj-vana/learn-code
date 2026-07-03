@@ -1,0 +1,127 @@
+id: exercise.library.caching_performance.a09
+kind: exercise
+version: 1
+language: python
+title: The Tile Cutter's Cache Report
+slug: caching-performance-a09
+difficulty: medium
+concepts:
+  - concepts.performance
+  - concepts.memoization
+prerequisites:
+  - python.dictionaries
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.caching_performance.a09
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original LRU hit-rate drill set in a mosaic tile-cutting studio that keeps a limited rack of pre-cut templates, using a fixed-capacity least-recently-used cache measured by hit rate.
+prompt_markdown: |
+  A mosaic studio keeps a small rack of pre-cut tile templates so it does not
+  re-cut a shape it recently used. The rack holds a fixed number of templates
+  (`capacity`). When a job needs a template:
+
+  - If it is already on the rack, that is a **hit**, and the template becomes the
+    most-recently-used one.
+  - If it is not on the rack, that is a **miss**. The studio cuts it and places it
+    on the rack as the most-recently-used template. If the rack is already full,
+    the **least-recently-used** template is discarded first to make room.
+
+  This is a classic least-recently-used (LRU) cache. Write
+  `cache_hit_rate(session)` where `session` is a dict:
+
+  ```python
+  {"capacity": 2, "keys": ["a", "b", "a", "c", "a"]}
+  ```
+
+  Process `keys` left to right and return the **hit rate**: the number of hits
+  divided by the total number of requests, rounded to 3 decimal places.
+
+  Edge cases:
+
+  - An empty `keys` list returns `0.0`.
+  - A `capacity` of `0` means nothing is ever cached, so every request is a miss
+    and the hit rate is `0.0`.
+  - Only a genuine reuse while the template is still on the rack counts as a hit —
+    if it was evicted before being requested again, that is a miss.
+starter_code: |
+  def cache_hit_rate(session):
+      return 0.0
+function_name: cache_hit_rate
+input_mode: function
+solution_sketch: Model the LRU rack with an insertion-ordered dict. On a hit, pop and re-insert the key so it becomes most-recently-used. On a miss with a full rack, evict the first key (least-recently-used) before inserting. Count hits, then round hits/total to 3 places, guarding the empty case.
+sample_solution: |
+  def cache_hit_rate(session):
+      capacity = session["capacity"]
+      keys = session["keys"]
+      rack = {}
+      hits = 0
+      for key in keys:
+          if key in rack:
+              hits += 1
+              rack.pop(key)
+              rack[key] = None
+          else:
+              if capacity <= 0:
+                  continue
+              if len(rack) >= capacity:
+                  oldest = next(iter(rack))
+                  rack.pop(oldest)
+              rack[key] = None
+      total = len(keys)
+      if total == 0:
+          return 0.0
+      return round(hits / total, 3)
+hints:
+  - level: 1
+    text: An insertion-ordered dict already remembers the order keys were added. Treat the first key as least-recently-used and the last as most-recently-used.
+  - level: 2
+    text: On a hit you must refresh recency — pop the key and re-insert it so it moves to the end. On a miss into a full rack, drop next(iter(rack)) first.
+  - level: 3
+    text: Guard the divide-by-zero — an empty keys list returns 0.0 before you ever compute a rate. A capacity of 0 means you skip caching entirely, so hits stays at 0.
+tests:
+  public:
+    - name: all_unique_no_reuse
+      input: {capacity: 2, keys: [a, b, c]}
+      expected: 0.0
+    - name: repeated_key_all_hits
+      input: {capacity: 2, keys: [x, x, x, x]}
+      expected: 0.75
+    - name: simple_mix
+      input: {capacity: 2, keys: [a, b, a, c, a]}
+      expected: 0.4
+  validation:
+    - name: empty_session
+      input: {capacity: 3, keys: []}
+      expected: 0.0
+    - name: capacity_zero_never_caches
+      input: {capacity: 0, keys: [a, a, b]}
+      expected: 0.0
+    - name: capacity_one_thrash
+      input: {capacity: 1, keys: [a, b, a, b]}
+      expected: 0.0
+    - name: lru_eviction_matters
+      input: {capacity: 2, keys: [a, b, c, b, c, a]}
+      expected: 0.333
+    - name: recency_saves_a_hit
+      input: {capacity: 2, keys: [a, b, a, c, b]}
+      expected: 0.2
+explanation_markdown: |
+  Hit rate is the headline number for any cache: it tells you what fraction of
+  requests avoided the expensive work. Simulating the LRU policy honestly is the
+  whole exercise, and the trick is that an insertion-ordered dict doubles as a
+  recency queue — the oldest entry is `next(iter(rack))` and the newest is
+  whatever you inserted last. Re-inserting on every hit keeps that ordering
+  truthful.
+
+  The `capacity_one_thrash` case shows why hit rate matters more than raw cache
+  presence: with room for only one template and an alternating access pattern,
+  the rack evicts exactly the entry you are about to need, yielding a 0% hit rate.
+  A cache that is too small for the working set can do almost no good at all.
+common_mistakes:
+  - Not refreshing recency on a hit, so a frequently reused key is still treated as old and gets evicted too early.
+  - Evicting on every miss even when the rack is not yet full, or evicting the most-recently-used entry instead of the least.
+  - Dividing hits by total without handling the empty-keys case, raising ZeroDivisionError.

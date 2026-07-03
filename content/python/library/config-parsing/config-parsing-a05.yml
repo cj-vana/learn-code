@@ -1,0 +1,122 @@
+id: exercise.library.config_parsing.a05
+kind: exercise
+version: 1
+language: python
+title: Decoding the Cannery's Environment Values
+slug: config-parsing-a05
+difficulty: easy
+concepts:
+  - python.config_parsing
+  - python.types
+  - python.strings
+prerequisites:
+  - python.strings
+  - python.types
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.config_parsing.a05
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original environment-variable coercion drill with a fixed precedence order (bool, int, float, string), framed around a seaside cannery reading its process environment.
+prompt_markdown: |
+  Environment variables always arrive as strings, so the Wharf Street cannery's
+  loader has to decide what each one really means. Write
+  `coerce_env_value(value)` that turns one environment string into the most
+  natural Python type, checking these cases **in order** and returning the first
+  that matches:
+
+  1. Strip leading and trailing whitespace first; call the result `s`.
+  2. **Boolean:** if `s` equals `"true"` or `"false"` ignoring case, return the
+     bool `True` or `False`.
+  3. **Integer:** if Python's `int(s)` succeeds, return that int (this covers a
+     leading `-`, e.g. `"-7"`).
+  4. **Float:** otherwise, if Python's `float(s)` succeeds, return that float
+     (e.g. `"2.5"` or `"2e3"`).
+  5. **String:** if none of the above apply, return `s` itself (the stripped
+     string).
+
+  Order matters: `"true"` becomes a bool, not the string `"true"`, and `"10"`
+  becomes the int `10`, not the float `10.0`. An empty (or all-whitespace)
+  string strips to `""`, which is not a bool, int, or float, so it comes back as
+  the empty string `""`.
+
+  Example: `coerce_env_value("  42  ")` returns the int `42`.
+starter_code: |
+  def coerce_env_value(value):
+      return value
+function_name: coerce_env_value
+input_mode: function
+solution_sketch: Strip the string, check case-insensitively for true/false, then try int() and float() in turn inside try/except blocks, and fall back to returning the stripped string.
+sample_solution: |
+  def coerce_env_value(value):
+      s = value.strip()
+      lowered = s.lower()
+      if lowered == "true":
+          return True
+      if lowered == "false":
+          return False
+      try:
+          return int(s)
+      except ValueError:
+          pass
+      try:
+          return float(s)
+      except ValueError:
+          pass
+      return s
+hints:
+  - level: 1
+    text: Strip the string once up front, then test the possibilities from most specific (a true/false word) to least specific (just a string).
+  - level: 2
+    text: Compare s.lower() against "true" and "false" for the boolean case before you try any numeric conversion.
+  - level: 3
+    text: Wrap int(s) and then float(s) in try/except ValueError blocks; if both raise, return the stripped string unchanged.
+tests:
+  public:
+    - name: integer
+      input: "42"
+      expected: 42
+    - name: boolean_true
+      input: "true"
+      expected: true
+    - name: plain_string
+      input: "localhost"
+      expected: "localhost"
+  validation:
+    - name: float_value
+      input: "2.5"
+      expected: 2.5
+    - name: boolean_uppercase
+      input: "FALSE"
+      expected: false
+    - name: negative_integer
+      input: "-7"
+      expected: -7
+    - name: whitespace_trimmed_int
+      input: "  100  "
+      expected: 100
+    - name: empty_string
+      input: ""
+      expected: ""
+explanation_markdown: |
+  Coercion is the step that turns flat string config into typed values a program
+  can branch on, and the precedence order is the whole game. Booleans go first
+  because `int("true")` would just fail and fall through — but the deeper reason
+  is intent: `"true"` clearly means a flag, not text. Integers are tried before
+  floats so `"10"` stays an `int` rather than becoming `10.0`, which keeps values
+  that are meant to be counts from silently turning into floating point.
+
+  Leaning on Python's own `int()` and `float()` inside `try`/`except` is both
+  shorter and more correct than hand-checking digits: they already understand
+  signs and scientific notation. The empty-string fallback is the safety net —
+  an unset-looking value that strips to `""` is not a number or a flag, so
+  returning it as-is lets a later layer decide whether that means "use the
+  default."
+common_mistakes:
+  - Checking int/float before the true/false words, so a boolean flag never gets recognized.
+  - Trying float before int, which turns whole numbers like "10" into 10.0.
+  - Hand-rolling digit checks that miss negative signs or exponents instead of letting int() and float() do the parsing.
+  - Letting the numeric conversions raise instead of catching ValueError and falling back to the string.

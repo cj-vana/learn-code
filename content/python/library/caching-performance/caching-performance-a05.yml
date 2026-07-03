@@ -1,0 +1,157 @@
+id: exercise.library.caching_performance.a05
+kind: exercise
+version: 1
+language: python
+title: The Cannery's Lazy Line
+slug: caching-performance-a05
+difficulty: medium
+concepts:
+  - concepts.performance
+  - python.iterators_generators
+  - python.functional_style
+prerequisites:
+  - python.dictionaries
+  - python.loops
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.caching_performance.a05
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original chained-generator pipeline drill framed as a cannery processing line, with stages described as data so learners build and compose lazy generator stages before summing the final stream.
+prompt_markdown: |
+  A cannery runs its numbers through a processing line built from small stages.
+  Each stage is a lazy generator that reads values one at a time from the stage
+  before it, so nothing is materialised until the very end, when the final values
+  are added up.
+
+  Write `pipeline_total(spec)` where `spec` is a dict with:
+
+  - `"source"`: a list of integers fed into the first stage.
+  - `"stages"`: a list of stage descriptions applied in order. Each stage is one
+    of:
+    - `{"op": "keep_even"}` — pass through only even numbers.
+    - `{"op": "drop_negative"}` — pass through only numbers `>= 0`.
+    - `{"op": "add", "by": k}` — add the integer `k` to each number.
+    - `{"op": "scale", "by": k}` — multiply each number by the integer `k`.
+
+  Build the stages as chained generators, run the source through them in the
+  given order, and return the integer sum of whatever values come out the end.
+
+  - With no stages, the source is summed unchanged.
+  - An empty source sums to 0.
+  - A pipeline whose filters remove every value also sums to 0.
+
+  Example: `{"source": [1, 2, 3, 4, 5], "stages": [{"op": "keep_even"}, {"op": "scale", "by": 3}]}`
+  keeps `[2, 4]`, scales them to `[6, 12]`, and returns `18`.
+starter_code: |
+  def pipeline_total(spec):
+      return 0
+function_name: pipeline_total
+input_mode: function
+solution_sketch: Define one generator per operation that consumes an upstream iterable and yields transformed or filtered values, fold the list of stage descriptions over the source iterator by rewrapping it stage by stage, then return sum() of the final generator.
+sample_solution: |
+  def pipeline_total(spec):
+      def keep_even(stream):
+          for value in stream:
+              if value % 2 == 0:
+                  yield value
+
+      def drop_negative(stream):
+          for value in stream:
+              if value >= 0:
+                  yield value
+
+      def add(stream, by):
+          for value in stream:
+              yield value + by
+
+      def scale(stream, by):
+          for value in stream:
+              yield value * by
+
+      stream = iter(spec["source"])
+      for stage in spec["stages"]:
+          op = stage["op"]
+          if op == "keep_even":
+              stream = keep_even(stream)
+          elif op == "drop_negative":
+              stream = drop_negative(stream)
+          elif op == "add":
+              stream = add(stream, stage["by"])
+          elif op == "scale":
+              stream = scale(stream, stage["by"])
+          else:
+              raise ValueError("unknown op: " + str(op))
+      return sum(stream)
+hints:
+  - level: 1
+    text: Write each operation as its own generator that takes the previous stream as an argument and yields values one at a time.
+  - level: 2
+    text: Start from iter(spec["source"]) and, for each stage in order, rebind your stream variable to the generator for that stage wrapped around the current stream.
+  - level: 3
+    text: Nothing actually runs until you call sum(stream) at the end, which pulls values through the whole chain of generators once.
+tests:
+  public:
+    - name: passthrough
+      input:
+        source: [1, 2, 3]
+        stages: []
+      expected: 6
+    - name: keep_even_then_scale
+      input:
+        source: [1, 2, 3, 4, 5]
+        stages:
+          - {op: keep_even}
+          - {op: scale, by: 3}
+      expected: 18
+    - name: add_then_drop_negative
+      input:
+        source: [-2, -1, 0, 1]
+        stages:
+          - {op: add, by: 1}
+          - {op: drop_negative}
+      expected: 3
+  validation:
+    - name: empty_source
+      input:
+        source: []
+        stages:
+          - {op: scale, by: 10}
+      expected: 0
+    - name: chain_three
+      input:
+        source: [1, 2, 3, 4, 5, 6]
+        stages:
+          - {op: keep_even}
+          - {op: add, by: 10}
+          - {op: scale, by: 2}
+      expected: 84
+    - name: drop_negative_only
+      input:
+        source: [-5, 3, -1, 8]
+        stages:
+          - {op: drop_negative}
+      expected: 11
+    - name: scale_zero
+      input:
+        source: [4, 5, 6]
+        stages:
+          - {op: scale, by: 0}
+      expected: 0
+explanation_markdown: |
+  Each stage is a generator that pulls from the stage before it, so the whole
+  pipeline is a chain of lazy iterators. Building the chain does no work at all —
+  rebinding `stream` to `keep_even(stream)` just wraps one generator around
+  another. The values only move when `sum()` starts pulling from the end, and
+  each value flows through every stage before the next value is requested. That
+  is the memory win of generator pipelines: at no point is an intermediate list
+  of all the numbers held in memory, only one value in flight at a time. Ordering
+  matters because filters change how many values reach the later stages, which is
+  why `keep_even` before `scale` gives a different total than the reverse.
+common_mistakes:
+  - Materialising each stage into a full list instead of yielding, which defeats the point of a lazy pipeline even though the total comes out the same.
+  - Applying the stages in the wrong order, so a filter runs after a transform that was supposed to feed it.
+  - Reusing a generator after it has already been drained, which yields nothing the second time because generators are single-use.

@@ -1,0 +1,120 @@
+id: exercise.library.concurrency_foundations.a10
+kind: exercise
+version: 1
+language: python
+title: Splitting a Poster Run Across Presses
+slug: concurrency-foundations-a10
+difficulty: medium
+concepts:
+  - python.concurrency_model
+  - python.slicing
+prerequisites:
+  - python.lists
+  - python.loops
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.concurrency_foundations.a10
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original balanced contiguous partitioning framed as dividing a print run across presses; models the work-splitting step that precedes a multiprocessing map.
+prompt_markdown: |
+  A print shop has one big run of posters and several presses. Before starting, a
+  supervisor splits the run into balanced batches — one contiguous batch per press —
+  so no press sits far ahead of the others. This is the partition step you would run
+  before handing chunks to worker processes.
+
+  Write `chunk_work_for_processes(payload)`. The single argument is a dict:
+
+  - `payload["items"]`: the list of work items, in order.
+  - `payload["num_workers"]`: a positive integer, the number of presses.
+
+  Return a list of exactly `num_workers` sublists that, concatenated left to right,
+  reproduce `items` in the original order. Balance the sizes so any two batches
+  differ by at most one item, and give the larger batches to the earlier workers.
+
+  Concretely, with `n = len(items)`, let `base = n // num_workers` and `rem = n %
+  num_workers`. The first `rem` workers each get `base + 1` items; the rest get
+  `base`. When there are more workers than items, the trailing workers get empty
+  lists. An empty `items` yields `num_workers` empty lists.
+
+  Example: `{"items": [1, 2, 3, 4, 5, 6, 7], "num_workers": 3}` returns
+  `[[1, 2, 3], [4, 5], [6, 7]]`.
+starter_code: |
+  def chunk_work_for_processes(payload):
+      return []
+function_name: chunk_work_for_processes
+input_mode: function
+solution_sketch: Use divmod(len(items), num_workers) to get base size and remainder; for each worker slice off base+1 items while remainder remains, else base, advancing a running start index.
+sample_solution: |
+  def chunk_work_for_processes(payload):
+      items = list(payload["items"])
+      num_workers = payload["num_workers"]
+      base, rem = divmod(len(items), num_workers)
+      chunks = []
+      start = 0
+      for worker in range(num_workers):
+          size = base + (1 if worker < rem else 0)
+          chunks.append(items[start:start + size])
+          start += size
+      return chunks
+hints:
+  - level: 1
+    text: divmod(len(items), num_workers) gives you the base chunk size and how many chunks need one extra item.
+  - level: 2
+    text: The first rem workers get base + 1 items and the rest get base; keep a running start index and slice items[start:start + size] for each worker.
+  - level: 3
+    text: Loop worker in range(num_workers) so you always produce exactly num_workers sublists, even when some end up empty because there are more workers than items.
+tests:
+  public:
+    - name: seven_across_three
+      input:
+        items: [1, 2, 3, 4, 5, 6, 7]
+        num_workers: 3
+      expected: [[1, 2, 3], [4, 5], [6, 7]]
+    - name: single_worker
+      input:
+        items: [1, 2, 3]
+        num_workers: 1
+      expected: [[1, 2, 3]]
+    - name: more_workers_than_items
+      input:
+        items: [1, 2]
+        num_workers: 4
+      expected: [[1], [2], [], []]
+  validation:
+    - name: even_split
+      input:
+        items: [1, 2, 3, 4, 5, 6]
+        num_workers: 3
+      expected: [[1, 2], [3, 4], [5, 6]]
+    - name: empty_items
+      input:
+        items: []
+        num_workers: 3
+      expected: [[], [], []]
+    - name: strings_uneven
+      input:
+        items: [a, b, c, d, e]
+        num_workers: 2
+      expected: [[a, b, c], [d, e]]
+    - name: workers_equal_items
+      input:
+        items: [1, 2, 3]
+        num_workers: 3
+      expected: [[1], [2], [3]]
+explanation_markdown: |
+  Balanced partitioning is the setup half of a map/reduce: split once, hand each
+  chunk to a worker, then combine. Giving the `rem` leftover items to the earliest
+  workers is what keeps every batch within one of the others — the alternative,
+  dumping the remainder on the last worker, leaves it lopsided. Looping over
+  `range(num_workers)` rather than over the items guarantees the output shape is
+  always `num_workers` lists, which matters downstream: a pool expects one chunk per
+  worker even if some chunks are empty. Slicing keeps the items contiguous and in
+  order, so results can later be stitched back together without resorting.
+common_mistakes:
+  - Giving the remainder items all to the last worker, producing one oversized chunk instead of a balanced split.
+  - Iterating over the items instead of over the workers, so you emit the wrong number of sublists when workers outnumber items.
+  - Forgetting to advance the running start index by the chunk size, so slices overlap or repeat items.

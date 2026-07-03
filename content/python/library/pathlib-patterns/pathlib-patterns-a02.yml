@@ -1,0 +1,97 @@
+id: exercise.library.pathlib_patterns.a02
+kind: exercise
+version: 1
+language: python
+title: Labelling Field Recordings
+slug: pathlib-patterns-a02
+difficulty: easy
+concepts:
+  - python.pathlib_os
+  - python.strings
+prerequisites:
+  - python.strings
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.pathlib_patterns.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original field-recording archive framing for extracting a path stem with PurePosixPath.
+prompt_markdown: |
+  A wildlife sound archive stores every take under a path like
+  `sessions/reef/hydrophone.wav`. To print a clean label you need the take's
+  **stem**: the final path component with its extension removed.
+
+  Write `get_stem(path_str)` that returns the stem of the last component. The
+  rules:
+
+  - `sessions/reef/hydrophone.wav` returns `hydrophone`.
+  - A name with no extension returns itself: `harbor/manifest` returns
+    `manifest`.
+  - Only the final extension is stripped: `field.tar.gz` returns `field.tar`.
+  - A hidden name keeps its leading dot: `.seedlog` returns `.seedlog`.
+  - A trailing slash is ignored: `vault/` returns `vault`.
+
+  Use `pathlib.PurePosixPath` so the parsing is pure string logic with no
+  filesystem access.
+starter_code: |
+  from pathlib import PurePosixPath
+
+
+  def get_stem(path_str):
+      return ""
+function_name: get_stem
+input_mode: function
+solution_sketch: Wrap the string in PurePosixPath and return its .stem attribute, which is the final component with only its last extension removed.
+sample_solution: |
+  from pathlib import PurePosixPath
+
+
+  def get_stem(path_str):
+      return PurePosixPath(path_str).stem
+hints:
+  - level: 1
+    text: PurePosixPath breaks a path into parts you can read as attributes without ever touching the filesystem.
+  - level: 2
+    text: The .name attribute is the final component; the .stem attribute is that name with its last extension removed.
+  - level: 3
+    text: Return PurePosixPath(path_str).stem; it leaves "manifest" and ".seedlog" untouched and turns "field.tar.gz" into "field.tar".
+tests:
+  public:
+    - name: strip_wav
+      input: "sessions/reef/hydrophone.wav"
+      expected: "hydrophone"
+    - name: no_extension
+      input: "harbor/manifest"
+      expected: "manifest"
+    - name: only_last
+      input: "field.tar.gz"
+      expected: "field.tar"
+  validation:
+    - name: hidden_dotfile
+      input: ".seedlog"
+      expected: ".seedlog"
+    - name: trailing_slash
+      input: "vault/"
+      expected: "vault"
+    - name: inner_dot_kept
+      input: "takes/loon.call.flac"
+      expected: "loon.call"
+    - name: bare_name
+      input: "single"
+      expected: "single"
+explanation_markdown: |
+  Where `.suffix` gives the extension, `.stem` gives everything else in the final
+  component: the name minus its last extension. `PurePosixPath` computes this
+  purely from the string, so a trailing slash (`vault/`) is normalised away and
+  the last real component is used. Only one extension is peeled, which is why
+  `field.tar.gz` becomes `field.tar` rather than `field`. Hidden files such as
+  `.seedlog` have no extension to strip, so the stem is the whole name including
+  the leading dot. Relying on the attribute avoids fragile hand-written splits
+  that mishandle multi-dot names and directories.
+common_mistakes:
+  - Using rsplit(".", 1) and dropping the wrong piece, which mangles hidden names like ".seedlog".
+  - Stripping every extension so "field.tar.gz" collapses to "field" instead of "field.tar".
+  - Forgetting the trailing slash case, then returning "" for "vault/" instead of "vault".

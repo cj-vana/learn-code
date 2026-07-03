@@ -1,0 +1,131 @@
+id: exercise.library.cli_parsing.a02
+kind: exercise
+version: 1
+language: python
+title: Naming the Bakery's Positional Slots
+slug: cli-parsing-a02
+difficulty: medium
+concepts:
+  - python.cli_args
+  - python.lists
+prerequisites:
+  - python.dictionaries
+  - python.slicing
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.cli_parsing.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original bakery oven-command framing for mapping positional CLI tokens onto a named spec with an overflow bucket.
+prompt_markdown: |
+  The bakery's oven controller reads a command like `bake sourdough 220` where the
+  meaning of each word comes purely from its position: the first word is the
+  action, the second is the loaf, the third is the temperature. It wants those
+  positions named.
+
+  Write `parse_positional_args(job)` where `job` is a dict with two keys:
+
+  - `job["argv"]`: a list of positional string tokens.
+  - `job["spec"]`: a list of names, in order, for those positions.
+
+  Return a dictionary built by these rules:
+
+  - Pair each name in `spec` with the token at the same index: `spec[0]` names
+    `argv[0]`, `spec[1]` names `argv[1]`, and so on.
+  - If `argv` has fewer tokens than `spec` has names, only include the names that
+    actually received a token; leave the rest out entirely.
+  - If `argv` has more tokens than `spec` has names, collect every leftover token
+    (those beyond the last named position) into a list under the key `"extra"`.
+    Only add the `"extra"` key when at least one leftover token exists.
+  - An empty `argv` returns an empty dictionary. An empty `spec` puts every token
+    into `"extra"`.
+
+  Example: `argv = ['copy', 'east', 'west', 'north']` with
+  `spec = ['command', 'source']` returns
+  `{'command': 'copy', 'source': 'east', 'extra': ['west', 'north']}`.
+starter_code: |
+  def parse_positional_args(job):
+      argv = job["argv"]
+      spec = job["spec"]
+      result = {}
+      # Name the positions you can, then bucket any leftover tokens into "extra".
+      return result
+function_name: parse_positional_args
+input_mode: function
+solution_sketch: Enumerate the spec names, assigning argv[i] when that index exists; slice argv[len(spec):] for leftovers and store them under "extra" only when the slice is non-empty.
+sample_solution: |
+  def parse_positional_args(job):
+      argv = job["argv"]
+      spec = job["spec"]
+      result = {}
+      for i, name in enumerate(spec):
+          if i < len(argv):
+              result[name] = argv[i]
+      leftover = argv[len(spec):]
+      if leftover:
+          result["extra"] = leftover
+      return result
+hints:
+  - level: 1
+    text: enumerate(spec) gives you both the index and the name, and the index is exactly the argv position that name should claim.
+  - level: 2
+    text: Guard each assignment with `if i < len(argv)` so names past the end of argv are simply skipped.
+  - level: 3
+    text: The leftover tokens are argv[len(spec):]; add them under "extra" only when that slice is truthy so you never attach an empty list.
+tests:
+  public:
+    - name: exact_match
+      input:
+        argv: ['build', 'release']
+        spec: ['command', 'target']
+      expected: {command: build, target: release}
+    - name: fewer_tokens
+      input:
+        argv: ['status']
+        spec: ['command', 'target']
+      expected: {command: status}
+    - name: extra_tokens
+      input:
+        argv: ['copy', 'east', 'west', 'north']
+        spec: ['command', 'source']
+      expected: {command: copy, source: east, extra: ['west', 'north']}
+  validation:
+    - name: empty_argv
+      input:
+        argv: []
+        spec: ['command', 'target']
+      expected: {}
+    - name: empty_spec_with_tokens
+      input:
+        argv: ['proof', 'chill']
+        spec: []
+      expected: {extra: ['proof', 'chill']}
+    - name: both_empty
+      input:
+        argv: []
+        spec: []
+      expected: {}
+    - name: single_exact
+      input:
+        argv: ['knead']
+        spec: ['action']
+      expected: {action: knead}
+explanation_markdown: |
+  Positional arguments carry no labels of their own; their meaning is a contract
+  between the caller's word order and the program's expectations. Zipping the
+  `spec` names against the `argv` tokens by index encodes that contract directly.
+  The two mismatch cases are what make this more than a one-liner. When fewer
+  tokens arrive than names exist, guarding on `i < len(argv)` lets the extra names
+  fall away instead of raising an IndexError or storing a wrong value. When more
+  tokens arrive than the spec accounts for, slicing `argv[len(spec):]` captures
+  exactly the overflow, and only attaching `"extra"` when that slice is non-empty
+  keeps the common exact-fit result clean. A slice past the end of a list returns
+  an empty list rather than erroring, which is why the same expression works even
+  when argv is shorter than spec.
+common_mistakes:
+  - Zipping spec and argv but then dropping leftover tokens entirely instead of collecting them under "extra".
+  - Always adding an "extra" key even when there is no overflow, producing a stray empty list on exact-fit inputs.
+  - Indexing argv[i] without a bounds check, which raises IndexError when spec is longer than argv.

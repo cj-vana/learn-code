@@ -1,0 +1,226 @@
+id: exercise.library.config_parsing.a08
+kind: exercise
+version: 1
+language: python
+title: Comparing the Greenhouse Climate Profiles
+slug: config-parsing-a08
+difficulty: medium
+concepts:
+  - python.config_parsing
+  - python.dictionaries
+prerequisites:
+  - python.dictionaries
+  - python.sets
+  - python.sorting
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.config_parsing.a08
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original config-diff drill framed as comparing two greenhouse climate profiles, producing an added/removed/changed/unchanged summary with from/to pairs and deterministic sorted key lists.
+prompt_markdown: |
+  A greenhouse controller keeps its climate settings as a flat dictionary, and the
+  crew wants to see what changed between last week's profile and this week's. Write
+  `diff_configs(request)` that produces a change summary.
+
+  The function receives **one dictionary** with two keys:
+
+  ```python
+  diff_configs({
+      "old": {"humidity": 60, "fan": "low"},
+      "new": {"humidity": 55, "fan": "low"},
+  })
+  # -> {
+  #   "added": [],
+  #   "removed": [],
+  #   "changed": {"humidity": {"from": 60, "to": 55}},
+  #   "unchanged": ["fan"],
+  # }
+  ```
+
+  Both `"old"` and `"new"` are flat dictionaries (string keys, scalar values).
+  Return a dictionary with exactly these four keys:
+
+  - `"added"` — a **sorted** list of keys present in `new` but not in `old`.
+  - `"removed"` — a **sorted** list of keys present in `old` but not in `new`.
+  - `"changed"` — a dictionary. For every key present in **both** whose value
+    differs, map the key to `{"from": <old value>, "to": <new value>}`. Compare
+    with `!=`, so a value that changes type (for example `"5"` becoming `5`) counts
+    as changed.
+  - `"unchanged"` — a **sorted** list of keys present in both whose values are equal.
+
+  When both inputs are empty, every list is empty and `"changed"` is `{}`.
+starter_code: |
+  def diff_configs(request):
+      return {"added": [], "removed": [], "changed": {}, "unchanged": []}
+function_name: diff_configs
+input_mode: function
+solution_sketch: Build key sets for old and new. Added is new-minus-old, removed is old-minus-new, both sorted. For the intersection, split keys into changed (unequal values, recorded as from/to dicts) and unchanged (equal values), sorting the unchanged list.
+sample_solution: |
+  def diff_configs(request):
+      old = request["old"]
+      new = request["new"]
+      old_keys = set(old)
+      new_keys = set(new)
+      changed = {}
+      unchanged = []
+      for key in old_keys & new_keys:
+          if old[key] != new[key]:
+              changed[key] = {"from": old[key], "to": new[key]}
+          else:
+              unchanged.append(key)
+      return {
+          "added": sorted(new_keys - old_keys),
+          "removed": sorted(old_keys - new_keys),
+          "changed": changed,
+          "unchanged": sorted(unchanged),
+      }
+hints:
+  - level: 1
+    text: Turn each config's keys into a set so you can use set difference and intersection to classify keys quickly.
+  - level: 2
+    text: new_keys - old_keys are the added keys and old_keys - new_keys are the removed keys; sort both before returning them.
+  - level: 3
+    text: Loop over the shared keys (old_keys & new_keys); when old[key] does not equal new[key], record a from/to entry in the changed dict, otherwise append the key to unchanged, then sort unchanged at the end.
+tests:
+  public:
+    - name: both_empty
+      input:
+        old: {}
+        new: {}
+      expected:
+        added: []
+        removed: []
+        changed: {}
+        unchanged: []
+    - name: added_and_removed
+      input:
+        old:
+          alpha: 1
+        new:
+          beta: 2
+      expected:
+        added:
+          - "beta"
+        removed:
+          - "alpha"
+        changed: {}
+        unchanged: []
+    - name: one_value_changed
+      input:
+        old:
+          port: 80
+        new:
+          port: 443
+      expected:
+        added: []
+        removed: []
+        changed:
+          port:
+            from: 80
+            to: 443
+        unchanged: []
+  validation:
+    - name: mixed_change_set
+      input:
+        old:
+          host: "north"
+          humidity: 60
+          heater: false
+        new:
+          host: "north"
+          humidity: 55
+          vent: true
+      expected:
+        added:
+          - "vent"
+        removed:
+          - "heater"
+        changed:
+          humidity:
+            from: 60
+            to: 55
+        unchanged:
+          - "host"
+    - name: type_change_counts
+      input:
+        old:
+          level: "5"
+        new:
+          level: 5
+      expected:
+        added: []
+        removed: []
+        changed:
+          level:
+            from: "5"
+            to: 5
+        unchanged: []
+    - name: sorted_key_lists
+      input:
+        old:
+          gamma: 1
+          alpha: 1
+          beta: 9
+        new:
+          alpha: 1
+          beta: 1
+          gamma: 1
+      expected:
+        added: []
+        removed: []
+        changed:
+          beta:
+            from: 9
+            to: 1
+        unchanged:
+          - "alpha"
+          - "gamma"
+    - name: everything_added
+      input:
+        old: {}
+        new:
+          x: 1
+          y: 2
+      expected:
+        added:
+          - "x"
+          - "y"
+        removed: []
+        changed: {}
+        unchanged: []
+    - name: everything_unchanged
+      input:
+        old:
+          fan: "auto"
+          mist: true
+        new:
+          fan: "auto"
+          mist: true
+      expected:
+        added: []
+        removed: []
+        changed: {}
+        unchanged:
+          - "fan"
+          - "mist"
+explanation_markdown: |
+  Config diffing is a set problem wearing a dictionary costume. Converting each
+  side's keys to a set turns "what's new" and "what vanished" into plain set
+  difference (`new_keys - old_keys` and `old_keys - new_keys`), and the shared keys
+  are the intersection. Sorting the key lists makes the output deterministic, which
+  matters when a diff feeds a review tool or a test.
+
+  For the shared keys, the only judgement call is equality, and using `!=` keeps it
+  honest: `"5"` and `5` are different values, so a silent type change surfaces as a
+  real change rather than hiding. Recording each change as an explicit
+  `{"from": ..., "to": ...}` pair means a reader never has to guess which value was
+  the old one, and it keeps the summary self-describing when logged.
+common_mistakes:
+  - Iterating one dict's keys and missing keys that exist only in the other config, so additions or removals go unreported.
+  - Returning the key lists in dictionary-iteration order instead of sorting them, making the output nondeterministic.
+  - Using == on the whole dicts instead of comparing per key, which tells you *that* something changed but not *what*.
+  - Treating "5" and 5 as equal by coercing before comparing, which hides genuine type drift.

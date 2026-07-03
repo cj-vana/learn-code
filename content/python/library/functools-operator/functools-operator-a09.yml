@@ -1,0 +1,107 @@
+id: exercise.library.functools_operator.a09
+kind: exercise
+version: 1
+language: python
+title: Rolling Posters Into Tubes
+slug: functools-operator-a09
+difficulty: medium
+concepts:
+  - python.functools_operator
+  - python.itertools_module
+prerequisites:
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.functools_operator.a09
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original itertools.batched drill framed as a print shop packing posters into fixed-capacity shipping tubes.
+prompt_markdown: |
+  A print shop finishes a run of posters and packs them, in order, into shipping
+  tubes that each hold a fixed number of posters. The last tube may be only
+  partially full. This is precisely what `itertools.batched` (new in Python 3.12)
+  does: it slices an iterable into consecutive chunks of a given size, with a
+  short final chunk if the count does not divide evenly.
+
+  Write `pack_into_tubes(data)` where `data` is a dict with two keys:
+
+  - `"posters"`: a list of poster identifiers (numbers or strings), in print
+    order.
+  - `"capacity"`: a positive integer (`>= 1`), the maximum posters per tube.
+
+  Return a list of tubes, where **each tube is a list** of the posters it holds.
+  `itertools.batched` hands back tuples, so convert each one to a list before
+  returning.
+
+  Edge cases you must handle:
+
+  - An empty `"posters"` list returns `[]` (no tubes needed).
+  - When the count does not divide evenly, the final tube holds the remainder —
+    e.g. 5 posters at capacity 2 gives `[[..2..], [..2..], [..1..]]`.
+  - A `"capacity"` larger than the number of posters yields a single tube
+    containing them all.
+
+  Example: `pack_into_tubes({"posters": [1, 2, 3, 4, 5], "capacity": 2})` returns
+  `[[1, 2], [3, 4], [5]]`.
+starter_code: |
+  import itertools
+
+
+  def pack_into_tubes(data):
+      return []
+function_name: pack_into_tubes
+input_mode: function
+solution_sketch: Feed the posters and capacity to itertools.batched, then convert each returned tuple chunk into a list.
+sample_solution: |
+  import itertools
+
+
+  def pack_into_tubes(data):
+      return [list(chunk) for chunk in itertools.batched(data["posters"], data["capacity"])]
+hints:
+  - level: 1
+    text: itertools.batched(iterable, n) yields consecutive chunks of length n, with a shorter final chunk when the length is not a multiple of n.
+  - level: 2
+    text: batched produces tuples, but the exercise wants lists — wrap each chunk with list().
+  - level: 3
+    text: A single comprehension does it - [list(chunk) for chunk in itertools.batched(data["posters"], data["capacity"])]. An empty input yields no chunks, so you get [].
+tests:
+  public:
+    - name: empty
+      input: {posters: [], capacity: 3}
+      expected: []
+    - name: even_split
+      input: {posters: [1, 2, 3, 4], capacity: 2}
+      expected: [[1, 2], [3, 4]]
+    - name: with_remainder
+      input: {posters: [1, 2, 3, 4, 5], capacity: 2}
+      expected: [[1, 2], [3, 4], [5]]
+  validation:
+    - name: capacity_one
+      input: {posters: ["a", "b", "c"], capacity: 1}
+      expected: [["a"], ["b"], ["c"]]
+    - name: capacity_exceeds_count
+      input: {posters: [1, 2], capacity: 5}
+      expected: [[1, 2]]
+    - name: seven_by_three
+      input: {posters: ["p1", "p2", "p3", "p4", "p5", "p6", "p7"], capacity: 3}
+      expected: [["p1", "p2", "p3"], ["p4", "p5", "p6"], ["p7"]]
+explanation_markdown: |
+  `itertools.batched` is the batching primitive people used to hand-roll with
+  slicing or `zip(*[iter(x)]*n)`. It walks the iterable once and emits tuples of
+  up to `n` elements, so the only chunk that can be shorter than `capacity` is the
+  last one — the natural "partial final tube" behaviour. An empty input produces
+  no tuples, so the empty-list result needs no special case.
+
+  Because `batched` returns tuples (immutable, cheap to build), the one conversion
+  step is wrapping each with `list()` to match the required return shape. If you
+  ever need the trailing partial batch suppressed instead, Python 3.13 added
+  `strict=True` to raise on an uneven final chunk — but here the short tube is
+  exactly what we want.
+common_mistakes:
+  - Returning the tuples from batched directly instead of converting each chunk to a list.
+  - Reimplementing the slicing by hand and dropping or mis-sizing the final partial tube.
+  - Assuming batched raises on a leftover remainder; by default it simply yields a shorter last chunk.

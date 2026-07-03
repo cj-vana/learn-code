@@ -1,0 +1,222 @@
+id: exercise.library.introspection_metaprogramming.a04
+kind: exercise
+version: 1
+language: python
+title: Cataloguing the Pottery Stations
+slug: introspection-metaprogramming-a04
+difficulty: medium
+concepts:
+  - python.introspection
+  - python.classes
+prerequisites:
+  - python.loops
+  - python.dictionaries
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.introspection_metaprogramming.a04
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original inspect.getmembers drill framed as a pottery studio auditing each station's public methods versus its public data attributes.
+prompt_markdown: |
+  A pottery studio wants a tidy audit of each work station: which **public methods**
+  it offers and which **public data attributes** it exposes. "Public" means the name
+  does not start with an underscore, which drops private helpers like `_log` and all
+  the dunder machinery.
+
+  Write `get_members_summary(station)`. The single argument is the station's name (a
+  string). Look up the corresponding object and use `inspect.getmembers` to walk
+  every member, then return:
+
+  ```python
+  {"methods": [sorted public method names], "data": [sorted public data names]}
+  ```
+
+  - Skip any member whose name starts with `"_"`.
+  - Classify a member as a **method** when `inspect.isroutine` reports it as a
+    routine (a function or bound method); otherwise it is **data**.
+  - Both lists must be sorted alphabetically.
+
+  The registry (already defined for you) maps these station names to live objects:
+
+  - `"kiln"` — methods `cool`, `ignite`; data `fuel`, `max_temp`, `target`
+  - `"wheel"` — methods `center`, `spin`, `stop`; data `clay`, `rpm`
+  - `"glaze_bench"` — methods `dip`; data `batches`, `house_recipe`
+
+  So `get_members_summary("kiln")` returns
+  `{"methods": ["cool", "ignite"], "data": ["fuel", "max_temp", "target"]}`. Note
+  that `max_temp` and `house_recipe` are class-level attributes while `target` and
+  `batches` are set on the instance — `getmembers` sees both. An unknown station
+  returns `{"methods": [], "data": []}`.
+starter_code: |
+  import inspect
+
+
+  class Kiln:
+      max_temp = 1300
+
+      def __init__(self):
+          self.target = 1040
+          self.fuel = "oak"
+          self._log = []
+
+      def ignite(self):
+          return "lit"
+
+      def cool(self):
+          return "cooling"
+
+
+  class Wheel:
+      def __init__(self):
+          self.rpm = 120
+          self.clay = "stoneware"
+
+      def spin(self):
+          return "spinning"
+
+      def stop(self):
+          return "stopped"
+
+      def center(self):
+          return "centered"
+
+
+  class GlazeBench:
+      house_recipe = "celadon"
+
+      def __init__(self):
+          self.batches = 3
+
+      def dip(self):
+          return "dipped"
+
+
+  REGISTRY = {"kiln": Kiln(), "wheel": Wheel(), "glaze_bench": GlazeBench()}
+
+
+  def get_members_summary(station):
+      return {"methods": [], "data": []}
+function_name: get_members_summary
+input_mode: function
+solution_sketch: Look the station up in the registry. Iterate inspect.getmembers(obj), skipping names that start with an underscore. Route each remaining member into methods when inspect.isroutine(value) is true, otherwise into data. Return both lists sorted.
+sample_solution: |
+  import inspect
+
+
+  class Kiln:
+      max_temp = 1300
+
+      def __init__(self):
+          self.target = 1040
+          self.fuel = "oak"
+          self._log = []
+
+      def ignite(self):
+          return "lit"
+
+      def cool(self):
+          return "cooling"
+
+
+  class Wheel:
+      def __init__(self):
+          self.rpm = 120
+          self.clay = "stoneware"
+
+      def spin(self):
+          return "spinning"
+
+      def stop(self):
+          return "stopped"
+
+      def center(self):
+          return "centered"
+
+
+  class GlazeBench:
+      house_recipe = "celadon"
+
+      def __init__(self):
+          self.batches = 3
+
+      def dip(self):
+          return "dipped"
+
+
+  REGISTRY = {"kiln": Kiln(), "wheel": Wheel(), "glaze_bench": GlazeBench()}
+
+
+  def get_members_summary(station):
+      obj = REGISTRY.get(station)
+      if obj is None:
+          return {"methods": [], "data": []}
+      methods = []
+      data = []
+      for name, value in inspect.getmembers(obj):
+          if name.startswith("_"):
+              continue
+          if inspect.isroutine(value):
+              methods.append(name)
+          else:
+              data.append(name)
+      return {"methods": sorted(methods), "data": sorted(data)}
+hints:
+  - level: 1
+    text: inspect.getmembers(obj) returns a list of (name, value) pairs covering everything reachable on the object, including inherited and dunder members — so you will need to filter.
+  - level: 2
+    text: Drop any pair whose name starts with an underscore to remove private helpers and the dunder machinery, leaving only the public surface.
+  - level: 3
+    text: For each surviving member, inspect.isroutine(value) is True for functions and bound methods; put those in "methods" and everything else in "data", then sort both lists.
+tests:
+  public:
+    - name: kiln_station
+      input: kiln
+      expected:
+        methods: [cool, ignite]
+        data: [fuel, max_temp, target]
+    - name: wheel_station
+      input: wheel
+      expected:
+        methods: [center, spin, stop]
+        data: [clay, rpm]
+    - name: glaze_bench_station
+      input: glaze_bench
+      expected:
+        methods: [dip]
+        data: [batches, house_recipe]
+  validation:
+    - name: unknown_station
+      input: extruder
+      expected:
+        methods: []
+        data: []
+    - name: kiln_again_is_stable
+      input: kiln
+      expected:
+        methods: [cool, ignite]
+        data: [fuel, max_temp, target]
+    - name: wheel_data_sorted
+      input: wheel
+      expected:
+        methods: [center, spin, stop]
+        data: [clay, rpm]
+explanation_markdown: |
+  `inspect.getmembers` is the reflective equivalent of opening every drawer: it
+  returns `(name, value)` pairs for everything the object can reach, which is why it
+  surfaces both the instance attributes set in `__init__` and the class-level
+  attributes defined on the body — but also every dunder method inherited from
+  `object`. The underscore filter is what turns that firehose into a useful public
+  audit.
+
+  Splitting methods from data leans on `inspect.isroutine`, which is `True` for
+  functions and bound methods and `False` for plain values like ints and strings.
+  That distinction is more precise than a bare `callable()` check would be, and
+  sorting both lists makes the result deterministic regardless of the order
+  `getmembers` happens to yield.
+common_mistakes:
+  - Forgetting that getmembers includes inherited dunder members, so skipping only names that start with a single underscore is not enough — filter every name that starts with "_".
+  - Using callable() in a way that would misclassify a class-valued attribute as a method; inspect.isroutine targets functions and methods specifically.
+  - Returning the lists in getmembers order instead of sorting them, making the output order-dependent.

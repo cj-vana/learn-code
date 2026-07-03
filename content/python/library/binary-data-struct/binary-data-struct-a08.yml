@@ -1,0 +1,162 @@
+id: exercise.library.binary_data_struct.a08
+kind: exercise
+version: 1
+language: python
+title: Compact Logs at the Harbor Weather Post
+slug: binary-data-struct-a08
+difficulty: medium
+concepts:
+  - python.binary_data
+  - python.types
+prerequisites:
+  - python.lists
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.binary_data_struct.a08
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original array.array drill themed around a harbor weather post storing typed numeric samples in fixed-width slots.
+prompt_markdown: |
+  The harbor weather post records readings into a compact typed buffer rather
+  than a plain Python list, because each slot has a fixed width and the whole
+  day fits in a tiny footprint. Python's `array.array` gives you exactly this:
+  a homogeneous numeric array whose element size is decided by a one-letter
+  **typecode**.
+
+  Write `typed_array_stats(payload)` that takes a single dictionary:
+
+  ```
+  {
+    "values":   [10, 255, 0, 128],   # integers, all valid for the typecode
+    "typecode": "B"                   # one of: b, B, h, H, i
+  }
+  ```
+
+  Build an `array.array` of that typecode from `values`, then return a
+  dictionary with these keys:
+
+  - `"min"`: the smallest value, or `None` if `values` is empty.
+  - `"max"`: the largest value, or `None` if `values` is empty.
+  - `"sum"`: the total of all values, or `0` if `values` is empty.
+  - `"itemsize"`: the number of bytes one element occupies, read from the
+    array's `itemsize` attribute. For the allowed typecodes this is `1` for
+    `b`/`B`, `2` for `h`/`H`, and `4` for `i`.
+
+  The typecodes mean: `b` signed byte (-128..127), `B` unsigned byte (0..255),
+  `h` signed short (-32768..32767), `H` unsigned short (0..65535), `i` signed
+  int. Every value is guaranteed to fit its typecode, so no range error can
+  occur. `itemsize` must come from the constructed array, not a hard-coded
+  lookup, and it is defined even when `values` is empty.
+starter_code: |
+  import array
+
+
+  def typed_array_stats(payload):
+      return {}
+function_name: typed_array_stats
+input_mode: function
+solution_sketch: Construct array.array(typecode, values), read itemsize from it, and return min/max/sum with None/None/0 fallbacks for the empty case.
+sample_solution: |
+  import array
+
+
+  def typed_array_stats(payload):
+      values = payload["values"]
+      typecode = payload["typecode"]
+      buffer = array.array(typecode, values)
+      return {
+          "min": min(buffer) if buffer else None,
+          "max": max(buffer) if buffer else None,
+          "sum": sum(buffer),
+          "itemsize": buffer.itemsize,
+      }
+hints:
+  - level: 1
+    text: array.array(typecode, values) builds the typed buffer, and it supports min(), max(), sum(), and len() just like a list.
+  - level: 2
+    text: The array object exposes .itemsize -- read it from the constructed array so it stays correct even when values is empty.
+  - level: 3
+    text: Guard min and max with a truthiness check on the array so an empty buffer returns None for both while sum stays 0.
+tests:
+  public:
+    - name: unsigned_bytes
+      input:
+        values: [10, 255, 0, 128]
+        typecode: "B"
+      expected:
+        min: 0
+        max: 255
+        sum: 393
+        itemsize: 1
+    - name: signed_shorts
+      input:
+        values: [-100, 200, -300, 50]
+        typecode: "h"
+      expected:
+        min: -300
+        max: 200
+        sum: -150
+        itemsize: 2
+    - name: empty_ints
+      input:
+        values: []
+        typecode: "i"
+      expected:
+        min: null
+        max: null
+        sum: 0
+        itemsize: 4
+  validation:
+    - name: single_unsigned_byte
+      input:
+        values: [42]
+        typecode: "B"
+      expected:
+        min: 42
+        max: 42
+        sum: 42
+        itemsize: 1
+    - name: wide_ints
+      input:
+        values: [1000000, -5, 3]
+        typecode: "i"
+      expected:
+        min: -5
+        max: 1000000
+        sum: 999998
+        itemsize: 4
+    - name: unsigned_shorts
+      input:
+        values: [0, 65535, 300]
+        typecode: "H"
+      expected:
+        min: 0
+        max: 65535
+        sum: 65835
+        itemsize: 2
+    - name: signed_bytes
+      input:
+        values: [-128, 127, 0]
+        typecode: "b"
+      expected:
+        min: -128
+        max: 127
+        sum: -1
+        itemsize: 1
+explanation_markdown: |
+  Unlike a Python list, which stores boxed object pointers, `array.array`
+  stores raw C-typed numbers back to back, so the typecode fully determines how
+  many bytes each element takes. That fixed width is why `itemsize` is a
+  property of the array type, not of the data -- an empty `array('i')` still
+  reports `itemsize` 4. The aggregate operations `min`, `max`, and `sum` work
+  on an array exactly as they do on a list, but you must handle the empty case
+  yourself: `min([])` and `max([])` raise `ValueError`, so guarding on the
+  array's truthiness and returning `None` keeps the function total. `sum` of an
+  empty array is already `0`, matching the fallback.
+common_mistakes:
+  - Hard-coding itemsize from the typecode string instead of reading it off the constructed array.
+  - Calling min or max on an empty array, which raises ValueError instead of returning None.
+  - Assuming the typecode changes the numeric result -- it only changes storage width, so sum, min, and max match the plain integer values.

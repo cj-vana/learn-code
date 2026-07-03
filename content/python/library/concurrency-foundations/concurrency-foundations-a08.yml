@@ -1,0 +1,138 @@
+id: exercise.library.concurrency_foundations.a08
+kind: exercise
+version: 1
+language: python
+title: Routing Work at the Harbor Control Room
+slug: concurrency-foundations-a08
+difficulty: medium
+concepts:
+  - python.concurrency_model
+  - python.conditionals
+prerequisites:
+  - python.dictionaries
+  - python.operators
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.concurrency_foundations.a08
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original I/O-bound vs CPU-bound classifier framed as a harbor control room choosing a concurrency tool; uses exact integer thresholds to avoid float boundary flakiness.
+prompt_markdown: |
+  A harbor control room profiles each background job before dispatching it, then
+  picks the right concurrency tool. The decision comes from how the job spends its
+  busy time: waiting on I/O, or burning CPU.
+
+  Write `is_io_bound_or_cpu_bound(payload)`. The single argument is a dict with two
+  non-negative integers:
+
+  - `payload["cpu_ms"]`: milliseconds spent computing.
+  - `payload["io_wait_ms"]`: milliseconds spent waiting on I/O.
+
+  Let `total = cpu_ms + io_wait_ms`. Classify and return a dict `{"profile": ...,
+  "recommended": ...}` using these exact rules, checked in order:
+
+  - If `total == 0`, the job is idle: profile `"idle"`, recommended `"none"`.
+  - If I/O wait is at least 70% of total — that is, `io_wait_ms * 10 >= 7 * total`
+    — profile `"io_bound"`, recommended `"asyncio"`.
+  - Else if I/O wait is at most 30% of total — that is, `io_wait_ms * 10 <= 3 *
+    total` — profile `"cpu_bound"`, recommended `"multiprocessing"`.
+  - Otherwise profile `"mixed"`, recommended `"threading"`.
+
+  Compare with the integer form shown (multiply through by 10) rather than dividing
+  into a float, so boundary cases like exactly 70% or 30% land on the intended side.
+
+  Example: `{"cpu_ms": 20, "io_wait_ms": 180}` returns
+  `{"profile": "io_bound", "recommended": "asyncio"}`.
+starter_code: |
+  def is_io_bound_or_cpu_bound(payload):
+      return {}
+function_name: is_io_bound_or_cpu_bound
+input_mode: function
+solution_sketch: Compute total; branch idle first, then compare io_wait_ms*10 against 7*total and 3*total to pick io_bound/cpu_bound/mixed, mapping each profile to its recommended tool.
+sample_solution: |
+  def is_io_bound_or_cpu_bound(payload):
+      cpu_ms = payload["cpu_ms"]
+      io_wait_ms = payload["io_wait_ms"]
+      total = cpu_ms + io_wait_ms
+      if total == 0:
+          return {"profile": "idle", "recommended": "none"}
+      if io_wait_ms * 10 >= 7 * total:
+          return {"profile": "io_bound", "recommended": "asyncio"}
+      if io_wait_ms * 10 <= 3 * total:
+          return {"profile": "cpu_bound", "recommended": "multiprocessing"}
+      return {"profile": "mixed", "recommended": "threading"}
+hints:
+  - level: 1
+    text: Handle the idle case first, before any division or percentage comparison, since total can be zero.
+  - level: 2
+    text: Keep the arithmetic in integers — compare io_wait_ms * 10 against 7 * total and 3 * total instead of computing io_wait_ms / total as a float.
+  - level: 3
+    text: io_bound is >= 70% (io_wait_ms * 10 >= 7 * total), cpu_bound is <= 30% (io_wait_ms * 10 <= 3 * total), and everything between is mixed. Map io_bound to asyncio, cpu_bound to multiprocessing, mixed to threading, idle to none.
+tests:
+  public:
+    - name: io_heavy
+      input:
+        cpu_ms: 20
+        io_wait_ms: 180
+      expected:
+        profile: io_bound
+        recommended: asyncio
+    - name: cpu_heavy
+      input:
+        cpu_ms: 300
+        io_wait_ms: 20
+      expected:
+        profile: cpu_bound
+        recommended: multiprocessing
+    - name: idle
+      input:
+        cpu_ms: 0
+        io_wait_ms: 0
+      expected:
+        profile: idle
+        recommended: none
+  validation:
+    - name: mixed_middle
+      input:
+        cpu_ms: 100
+        io_wait_ms: 100
+      expected:
+        profile: mixed
+        recommended: threading
+    - name: exactly_70_percent_io
+      input:
+        cpu_ms: 30
+        io_wait_ms: 70
+      expected:
+        profile: io_bound
+        recommended: asyncio
+    - name: exactly_30_percent_io
+      input:
+        cpu_ms: 70
+        io_wait_ms: 30
+      expected:
+        profile: cpu_bound
+        recommended: multiprocessing
+    - name: leaning_cpu_still_mixed
+      input:
+        cpu_ms: 90
+        io_wait_ms: 60
+      expected:
+        profile: mixed
+        recommended: threading
+explanation_markdown: |
+  This encodes the classic concurrency decision framework: I/O-bound work spends
+  most of its time waiting, so an event loop (`asyncio`) can overlap many waits on
+  one thread; CPU-bound work is limited by the GIL, so `multiprocessing` spreads it
+  across cores; genuinely mixed work often does fine with a thread pool. The reason
+  the rule is written with integer multiplication is precision: `io_wait_ms / total`
+  produces a float, and comparing a float to `0.7` can flip a boundary case the
+  wrong way. Rewriting `x/total >= 0.7` as `x*10 >= 7*total` keeps every comparison
+  exact, which is why 70% and 30% land deterministically.
+common_mistakes:
+  - Dividing into a float and comparing to 0.7 or 0.3, so an exact-boundary input classifies the wrong way.
+  - Computing the ratio before checking total, which raises ZeroDivisionError on an idle job.
+  - Using strict inequalities that leave the exact 70% or 30% cases falling through into mixed.

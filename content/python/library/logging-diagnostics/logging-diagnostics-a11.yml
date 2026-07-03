@@ -1,0 +1,171 @@
+id: exercise.library.logging_diagnostics.a11
+kind: exercise
+version: 1
+language: python
+title: The Wind-Farm Shift Tally
+slug: logging-diagnostics-a11
+difficulty: medium
+concepts:
+  - python.logging_diagnostics
+  - patterns.hash_map_counting
+  - concepts.grouping_aggregation
+prerequisites:
+  - python.dictionaries
+  - python.loops
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.logging_diagnostics.a11
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: >-
+    Original log-aggregation drill framed as an end-of-shift tally at a wind-farm
+    operations desk. Counts entries per canonical level name, folding the WARN and
+    FATAL aliases together and bucketing anything unrecognized under UNKNOWN.
+prompt_markdown: |
+  At the end of a shift, the wind-farm operations desk wants a single tally: how many
+  log entries came in at each severity. Turbines were commissioned by different
+  vendors, so the level names are inconsistent, and you must reconcile them.
+
+  Write `aggregate_log_counts_by_level(entries)`. The single argument is a list of
+  log entries, each a dict that usually has a `"level"` name. Return a dict mapping
+  **canonical** level names to how many entries fell under each. Only include levels
+  that actually occurred -- do not list a level with a count of zero.
+
+  Canonical names and folding rules:
+
+  - The canonical names are `NOTSET`, `DEBUG`, `INFO`, `WARNING`, `ERROR`,
+    `CRITICAL`.
+  - Level names are case-insensitive and may carry stray whitespace, so `"info"`,
+    `"INFO"`, and `"  Info "` all tally under `"INFO"`.
+  - Fold the aliases together: `"WARN"` counts as `"WARNING"` and `"FATAL"` counts as
+    `"CRITICAL"`.
+  - Any entry whose level name is unrecognized, or that has no `"level"` key at all,
+    tallies under the bucket `"UNKNOWN"`.
+
+  An empty entry list returns an empty dict.
+starter_code: |
+  def aggregate_log_counts_by_level(entries):
+      # Return a dict of canonical level name -> count.
+      return {}
+function_name: aggregate_log_counts_by_level
+input_mode: function
+solution_sketch: >-
+  Normalize each entry's level name (strip, upper-case, apply the alias map) to a
+  canonical bucket or UNKNOWN, then increment that bucket's running count in a dict.
+sample_solution: |
+  CANONICAL = {
+      "NOTSET": "NOTSET",
+      "DEBUG": "DEBUG",
+      "INFO": "INFO",
+      "WARNING": "WARNING",
+      "WARN": "WARNING",
+      "ERROR": "ERROR",
+      "CRITICAL": "CRITICAL",
+      "FATAL": "CRITICAL",
+  }
+
+
+  def aggregate_log_counts_by_level(entries):
+      counts = {}
+      for entry in entries:
+          raw = entry.get("level")
+          if isinstance(raw, str):
+              bucket = CANONICAL.get(raw.strip().upper(), "UNKNOWN")
+          else:
+              bucket = "UNKNOWN"
+          counts[bucket] = counts.get(bucket, 0) + 1
+      return counts
+hints:
+  - level: 1
+    text: Build the tally in a dict as you walk the entries, using dict.get(bucket, 0) + 1 so a level's first appearance starts it at 1.
+  - level: 2
+    text: Normalize each level name to a canonical bucket first, mapping WARN to WARNING and FATAL to CRITICAL before you count.
+  - level: 3
+    text: When the level is missing or is not one of the eight known spellings, count it under "UNKNOWN" instead of skipping it.
+tests:
+  public:
+    - name: simple_counts
+      input:
+        - {level: INFO}
+        - {level: INFO}
+        - {level: ERROR}
+      expected:
+        INFO: 2
+        ERROR: 1
+    - name: case_and_warn_alias
+      input:
+        - {level: warn}
+        - {level: WARNING}
+        - {level: Warn}
+      expected:
+        WARNING: 3
+    - name: empty_list
+      input: []
+      expected: {}
+  validation:
+    - name: fatal_folds_into_critical
+      input:
+        - {level: FATAL}
+        - {level: CRITICAL}
+      expected:
+        CRITICAL: 2
+    - name: unknown_bucket
+      input:
+        - {level: TRACE}
+        - {level: verbose}
+        - {level: INFO}
+      expected:
+        UNKNOWN: 2
+        INFO: 1
+    - name: all_six_levels
+      input:
+        - {level: NOTSET}
+        - {level: DEBUG}
+        - {level: INFO}
+        - {level: WARNING}
+        - {level: ERROR}
+        - {level: CRITICAL}
+      expected:
+        NOTSET: 1
+        DEBUG: 1
+        INFO: 1
+        WARNING: 1
+        ERROR: 1
+        CRITICAL: 1
+    - name: whitespace_names_merge
+      input:
+        - {level: '  info  '}
+        - {level: INFO}
+      expected:
+        INFO: 2
+    - name: mixed_realistic
+      input:
+        - {level: DEBUG}
+        - {level: debug}
+        - {level: ERROR}
+        - {level: warn}
+        - {level: bogus}
+      expected:
+        DEBUG: 2
+        ERROR: 1
+        WARNING: 1
+        UNKNOWN: 1
+explanation_markdown: |
+  This is grouping-and-counting, the pattern behind every "errors by severity" panel.
+  The dictionary is both the group index and the running total: you look up the
+  bucket, add one, and store it back, so a level's very first appearance seeds it at
+  one without any pre-seeding.
+
+  The reconciliation work happens before the count. Real logs mix casing and vendor
+  aliases, so folding `"warn"` into `"WARNING"` and `"FATAL"` into `"CRITICAL"` up
+  front means each true severity lands in exactly one bucket. Sending unrecognized or
+  missing levels to an `"UNKNOWN"` bucket -- rather than dropping them -- keeps the
+  tally honest: the totals still add up to the number of entries, and a surprise level
+  becomes visible instead of silently vanishing.
+common_mistakes:
+  - Counting the raw level strings, so "warn", "WARNING", and "Warn" split into three separate buckets.
+  - Dropping entries with an unknown or missing level, which makes the counts stop summing to the number of entries.
+  - Pre-listing all six levels with zero counts, so the result reports levels that never actually occurred.

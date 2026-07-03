@@ -1,0 +1,105 @@
+id: quiz.library.introspection_metaprogramming.a01
+kind: quiz
+version: 1
+language: python
+title: Introspection in Anger
+slug: quiz-introspection-metaprogramming-a01
+difficulty: hard
+concepts:
+  - python.introspection
+prerequisites:
+  - python.introspection
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.introspection_metaprogramming.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pattern-recognition quiz on applying inspect, recursion limits, and bytecode intuition to real tooling problems.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      A test framework must call user-written setup functions, passing only
+      the fixtures each function's parameter names request. What mechanism
+      powers this?
+    choices:
+      - inspect.signature — read the parameter names as data and assemble the matching arguments
+      - Parsing the function's source code with regex
+      - Requiring users to register parameter lists manually
+      - Calling the function and catching TypeErrors until it works
+    correct_choice: inspect.signature — read the parameter names as data and assemble the matching arguments
+    explanation: |
+      Dependency injection by parameter name is signature() reading the
+      interface the author already wrote — the exact machinery inside
+      pytest fixtures.
+    concepts:
+      - python.introspection
+  - id: q2
+    prompt: |
+      A traversal over user-supplied nested data crashes with RecursionError
+      on a 10,000-deep structure. Rank the fixes.
+    choices:
+      - Best - rewrite with an explicit stack (depth bounded by memory); acceptable - catch RecursionError at a boundary and fall back; worst - raise the limit and hope
+      - Best - raise the recursion limit to 1,000,000
+      - Best - wrap every recursive call in try/except
+      - Best - reject structures deeper than 999
+    correct_choice: Best - rewrite with an explicit stack (depth bounded by memory); acceptable - catch RecursionError at a boundary and fall back; worst - raise the limit and hope
+    explanation: |
+      Input-proportional depth calls for the explicit-stack twin of the
+      algorithm; cranking the limit toward the C stack's capacity trades a
+      catchable error for a segfault.
+    concepts:
+      - python.introspection
+      - patterns.recursion
+  - id: q3
+    prompt: |
+      Two functions are semantically identical, but one reads a module-level
+      constant in a tight loop and benchmarks slower. Which introspection
+      confirms the cause?
+    choices:
+      - dis.dis showing LOAD_GLOBAL (dict lookup) in one and LOAD_FAST (array index) in the other
+      - inspect.getsource showing longer lines
+      - sys.getrefcount showing more references
+      - signature() showing different defaults
+    correct_choice: dis.dis showing LOAD_GLOBAL (dict lookup) in one and LOAD_FAST (array index) in the other
+    explanation: |
+      The locals-versus-globals cost is an opcode difference; disassembly is
+      the direct evidence, and binding the global to a local before the
+      loop is the classic remedy.
+    concepts:
+      - python.introspection
+  - id: q4
+    prompt: |
+      A dispatcher receives a callable and must decide whether calling it
+      yields a result or a generator to iterate. Which check is correct?
+    choices:
+      - inspect.isgeneratorfunction(fn) — generator functions must be driven, not just called
+      - fn.__name__.startswith("gen")
+      - isinstance(fn, types.GeneratorType)
+      - Checking whether the return annotation is Iterator
+    correct_choice: inspect.isgeneratorfunction(fn) — generator functions must be driven, not just called
+    explanation: |
+      The classification family answers "what kind of callable" reliably;
+      GeneratorType matches generator OBJECTS (after calling), and naming or
+      annotations are conventions, not guarantees.
+    concepts:
+      - python.introspection
+  - id: q5
+    prompt: |
+      A code-audit tool flags functions whose __defaults__ tuple contains a
+      list or dict. What bug class is it hunting?
+    choices:
+      - Mutable default arguments — one shared object serves every call, accumulating state across calls
+      - Functions with too many parameters
+      - Defaults that shadow builtins
+      - Unhashable annotations
+    correct_choice: Mutable default arguments — one shared object serves every call, accumulating state across calls
+    explanation: |
+      The defaults tuple is created once at def time; a mutable object in it
+      is the physical location of the classic shared-default bug, and
+      introspection makes it statically detectable.
+    concepts:
+      - python.introspection

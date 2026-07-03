@@ -1,0 +1,199 @@
+id: exercise.library.binary_data_struct.a11
+kind: exercise
+version: 1
+language: python
+title: ROM Images and Scratch Pages
+slug: binary-data-struct-a11
+difficulty: medium
+concepts:
+  - python.binary_data
+  - python.exceptions
+prerequisites:
+  - python.lists
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.binary_data_struct.a11
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original mutability-contrast drill themed around a print-shop firmware team probing which edits a read-only ROM image rejects versus a writable scratch page.
+prompt_markdown: |
+  A print-shop firmware team keeps two kinds of byte blocks: read-only **ROM
+  images**, which must never change once burned, and writable **scratch
+  pages** they patch freely. In Python those map cleanly onto `bytes`
+  (immutable) and `bytearray` (mutable). Your job is to probe a single
+  operation against both and report which container tolerates it.
+
+  Write `bytes_vs_bytearray_check(payload)` that takes a single dictionary:
+
+  ```
+  {
+    "data":      [1, 2, 3],   # starting byte values, each 0..255
+    "operation": "set_item",  # one of the five operations below
+    "arg":       [1, 99]       # operation-specific argument (may be null)
+  }
+  ```
+
+  Build a fresh `bytes(data)` and a fresh `bytearray(data)`, then attempt the
+  operation on each independently. The operations are:
+
+  - `"set_item"`: `arg` is `[index, value]`; assign `container[index] = value`.
+  - `"append"`: `arg` is a single int `value`; call `container.append(value)`.
+  - `"reverse_inplace"`: `arg` is `null`; call `container.reverse()`.
+  - `"concat"`: `arg` is a list of ints; compute `container + bytes(arg)`.
+  - `"slice_copy"`: `arg` is `[start, end]`; compute `container[start:end]`.
+
+  For each container, if the operation raises `TypeError` or `AttributeError`,
+  treat it as unsupported. Return a dictionary with:
+
+  - `"bytes_ok"`: `True` if the operation succeeded on the `bytes` object.
+  - `"bytes_result"`: the resulting byte sequence as a **list of ints**, or
+    `None` if it was unsupported. For `set_item`, `append`, `reverse_inplace`,
+    and `concat` the result is the whole sequence after the operation; for
+    `slice_copy` it is just the extracted slice.
+  - `"bytearray_ok"` and `"bytearray_result"`: the same two values for the
+    `bytearray` object.
+
+  All indices and slice bounds are valid, and all values are in `0..255`, so
+  the only failures you will ever observe come from immutability, not from bad
+  arguments.
+starter_code: |
+  def bytes_vs_bytearray_check(payload):
+      return {}
+function_name: bytes_vs_bytearray_check
+input_mode: function
+solution_sketch: Run the requested operation on a fresh bytes and a fresh bytearray inside a try/except catching TypeError and AttributeError, returning the resulting list or None for each.
+sample_solution: |
+  def bytes_vs_bytearray_check(payload):
+      data = payload["data"]
+      operation = payload["operation"]
+      arg = payload.get("arg")
+
+      def attempt(container):
+          try:
+              if operation == "set_item":
+                  index, value = arg
+                  container[index] = value
+                  return list(container)
+              if operation == "append":
+                  container.append(arg)
+                  return list(container)
+              if operation == "reverse_inplace":
+                  container.reverse()
+                  return list(container)
+              if operation == "concat":
+                  return list(container + bytes(arg))
+              if operation == "slice_copy":
+                  start, end = arg
+                  return list(container[start:end])
+              raise ValueError(f"unknown operation: {operation}")
+          except (TypeError, AttributeError):
+              return None
+
+      bytes_result = attempt(bytes(data))
+      bytearray_result = attempt(bytearray(data))
+      return {
+          "bytes_ok": bytes_result is not None,
+          "bytes_result": bytes_result,
+          "bytearray_ok": bytearray_result is not None,
+          "bytearray_result": bytearray_result,
+      }
+hints:
+  - level: 1
+    text: bytes is immutable, so item assignment raises TypeError and methods like append or reverse do not exist and raise AttributeError.
+  - level: 2
+    text: Wrap the operation in try/except (TypeError, AttributeError); on failure return None, otherwise return list(container) or the slice.
+  - level: 3
+    text: Run the same helper on both bytes(data) and bytearray(data); concat and slice_copy succeed on both because they build a new object rather than mutating in place.
+tests:
+  public:
+    - name: set_item
+      input:
+        data: [1, 2, 3]
+        operation: "set_item"
+        arg: [1, 99]
+      expected:
+        bytes_ok: false
+        bytes_result: null
+        bytearray_ok: true
+        bytearray_result: [1, 99, 3]
+    - name: slice_copy
+      input:
+        data: [10, 20, 30, 40]
+        operation: "slice_copy"
+        arg: [1, 3]
+      expected:
+        bytes_ok: true
+        bytes_result: [20, 30]
+        bytearray_ok: true
+        bytearray_result: [20, 30]
+    - name: append
+      input:
+        data: [5, 5]
+        operation: "append"
+        arg: 9
+      expected:
+        bytes_ok: false
+        bytes_result: null
+        bytearray_ok: true
+        bytearray_result: [5, 5, 9]
+  validation:
+    - name: concat
+      input:
+        data: [1, 2]
+        operation: "concat"
+        arg: [3, 4]
+      expected:
+        bytes_ok: true
+        bytes_result: [1, 2, 3, 4]
+        bytearray_ok: true
+        bytearray_result: [1, 2, 3, 4]
+    - name: reverse_inplace
+      input:
+        data: [1, 2, 3]
+        operation: "reverse_inplace"
+        arg: null
+      expected:
+        bytes_ok: false
+        bytes_result: null
+        bytearray_ok: true
+        bytearray_result: [3, 2, 1]
+    - name: slice_copy_empty_range
+      input:
+        data: [1, 2, 3]
+        operation: "slice_copy"
+        arg: [1, 1]
+      expected:
+        bytes_ok: true
+        bytes_result: []
+        bytearray_ok: true
+        bytearray_result: []
+    - name: set_item_max_value
+      input:
+        data: [0, 0]
+        operation: "set_item"
+        arg: [0, 255]
+      expected:
+        bytes_ok: false
+        bytes_result: null
+        bytearray_ok: true
+        bytearray_result: [255, 0]
+explanation_markdown: |
+  `bytes` and `bytearray` hold the same kind of data, but one is frozen and one
+  is not, and that single difference drives everything here. Any operation that
+  tries to change a `bytes` object in place fails: item assignment raises
+  `TypeError` ("'bytes' object does not support item assignment"), and the
+  in-place methods `append` and `reverse` do not exist on `bytes` at all, so
+  Python raises `AttributeError`. The operations that succeed on both --
+  `concat` and `slice_copy` -- share a telling property: neither mutates its
+  operand. `container + bytes(arg)` builds a brand-new sequence, and
+  `container[start:end]` returns a fresh copy, so immutability is never
+  violated. Catching exactly `TypeError` and `AttributeError` lets a genuinely
+  unsupported operation report cleanly while a real bug (a bad index or an
+  out-of-range value) would still surface loudly.
+common_mistakes:
+  - Mutating a single shared container for both checks, so an in-place edit on the bytearray leaks into the bytes comparison.
+  - Catching every exception, which would hide real errors like an out-of-range byte value behind a false "unsupported" result.
+  - Assuming concat or slice fails on bytes -- both produce new objects and are fully supported on immutable bytes.

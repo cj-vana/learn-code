@@ -1,0 +1,105 @@
+id: quiz.library.sqlite_patterns.a01
+kind: quiz
+version: 1
+language: python
+title: Relational Reasoning
+slug: quiz-sqlite-patterns-a01
+difficulty: medium
+concepts:
+  - python.sqlite_sql
+prerequisites:
+  - python.sqlite_sql
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sqlite_patterns.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pattern-recognition quiz on SQL reasoning, injection, joins, and transactions.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      A login check runs f"SELECT * FROM users WHERE name='{u}' AND
+      pw='{p}'" and an attacker types ' OR '1'='1 as the password. What
+      happens and why?
+    choices:
+      - The WHERE clause becomes always-true and authentication passes without credentials — the input's quotes became SQL structure
+      - The query errors on the unbalanced quote
+      - Nothing — passwords are hashed
+      - The database detects and blocks the pattern
+    correct_choice: The WHERE clause becomes always-true and authentication passes without credentials — the input's quotes became SQL structure
+    explanation: |
+      String-assembled SQL lets data rewrite the statement; the classic
+      always-true injection bypasses the check entirely. Parameters make
+      the same input a literal (failing) password.
+    concepts:
+      - python.sqlite_sql
+      - python.secure_coding
+  - id: q2
+    prompt: |
+      A report of "each department and its headcount, including empty
+      departments" shows no empty departments. Which clause pairing is
+      wrong?
+    choices:
+      - JOIN should be LEFT JOIN from departments — inner joins drop departments with no matching employees
+      - GROUP BY should be ORDER BY
+      - COUNT(*) should be SUM(1)
+      - WHERE should come after GROUP BY
+    correct_choice: JOIN should be LEFT JOIN from departments — inner joins drop departments with no matching employees
+    explanation: |
+      Inner joins keep only matched rows; "including the unmatched" is the
+      definition of an outer join, with NULL-counting (COUNT(emp.id))
+      finishing the job.
+    concepts:
+      - python.sqlite_sql
+  - id: q3
+    prompt: |
+      Transferring credit between two member accounts runs two UPDATEs.
+      What failure does wrapping them in one transaction prevent?
+    choices:
+      - A crash between the UPDATEs leaving money debited from one account and never credited to the other — the pair commits or rolls back together
+      - Slow queries during the transfer
+      - Duplicate member names
+      - Reads seeing the old balance afterward
+    correct_choice: A crash between the UPDATEs leaving money debited from one account and never credited to the other — the pair commits or rolls back together
+    explanation: |
+      Atomicity is exactly for multi-statement state transitions; half a
+      transfer is corruption, and the transaction makes half impossible.
+    concepts:
+      - python.sqlite_sql
+  - id: q4
+    prompt: |
+      WHERE and HAVING both filter. A query needs "monthly totals, but only
+      for months with revenue over 10,000, counting only card payments."
+      Which condition goes where?
+    choices:
+      - card-payments filter in WHERE (rows, before grouping); revenue > 10000 in HAVING (groups, after aggregation)
+      - Both in WHERE for speed
+      - Both in HAVING for correctness
+      - revenue in WHERE, card filter in HAVING
+    correct_choice: card-payments filter in WHERE (rows, before grouping); revenue > 10000 in HAVING (groups, after aggregation)
+    explanation: |
+      WHERE prunes rows feeding the groups; HAVING tests aggregate results
+      that only exist after grouping — conditions split by what they can
+      see.
+    concepts:
+      - python.sqlite_sql
+  - id: q5
+    prompt: |
+      Loans reference members by copied NAME instead of member_id, and a
+      member's rename orphaned her loan history. What principle was
+      violated?
+    choices:
+      - Normalization — facts live in one place and are referenced by stable keys, so renames touch one row instead of drifting copies
+      - Indexing — names need a covering index
+      - Pagination — history should load in pages
+      - Caching — renames must flush caches
+    correct_choice: Normalization — facts live in one place and are referenced by stable keys, so renames touch one row instead of drifting copies
+    explanation: |
+      Copied facts drift; foreign keys to stable ids are the relational
+      answer, with joins reassembling readable records on demand.
+    concepts:
+      - python.sqlite_sql

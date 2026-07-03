@@ -1,0 +1,156 @@
+id: exercise.library.functools_operator.a05
+kind: exercise
+version: 1
+language: python
+title: Ranking the Market Stalls
+slug: functools-operator-a05
+difficulty: medium
+concepts:
+  - python.functools_operator
+  - python.sorting
+prerequisites:
+  - python.dictionaries
+  - python.lists
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.functools_operator.a05
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original operator.itemgetter multi-key sort drill themed around ordering farmers-market stall records.
+prompt_markdown: |
+  A farmers market keeps each stall as a record and needs them ranked by one or
+  more fields at once. Write `rank_stalls(job)` where `job` is a dict with:
+
+  - `"records"`: a list of stall dicts, each with the keys `"name"` (string),
+    `"zone"` (integer), and `"sales"` (integer)
+  - `"keys"`: a non-empty list of field names to sort by, in priority order
+
+  Return a new list of the same record dicts sorted **ascending** by those fields:
+  first by `keys[0]`, ties broken by `keys[1]`, and so on. Ties that remain after
+  every key must keep the records in their original input order (a stable sort).
+  An empty `records` list returns an empty list.
+
+  Build the sort key with `operator.itemgetter(*keys)` so a single call extracts
+  all the ranking fields as one tuple, instead of writing a `lambda` that hand-picks
+  each field.
+
+  Example: with keys `["zone", "sales"]`, a stall in zone 1 always ranks before a
+  stall in zone 2, and within a zone the lower `sales` comes first.
+starter_code: |
+  import operator
+
+
+  def rank_stalls(job):
+      return []
+function_name: rank_stalls
+input_mode: function
+solution_sketch: |
+  Call sorted(job["records"], key=operator.itemgetter(*job["keys"])); Python's
+  sort is stable, so equal keys keep input order.
+sample_solution: |
+  import operator
+
+
+  def rank_stalls(job):
+      key_func = operator.itemgetter(*job["keys"])
+      return sorted(job["records"], key=key_func)
+hints:
+  - level: 1
+    text: operator.itemgetter("zone", "sales") returns a callable that, given a record, yields the tuple (record["zone"], record["sales"]).
+  - level: 2
+    text: Tuples compare element by element, so sorting by that tuple sorts by the first field, then the second as a tie-breaker, and so on.
+  - level: 3
+    text: Use sorted(records, key=operator.itemgetter(*job["keys"])); unpack the keys list into itemgetter, and rely on sorted being stable for leftover ties.
+tests:
+  public:
+    - name: zone_then_sales
+      input:
+        records:
+          - {name: Fig, zone: 2, sales: 30}
+          - {name: Kale, zone: 1, sales: 50}
+          - {name: Plum, zone: 1, sales: 30}
+          - {name: Beet, zone: 2, sales: 30}
+        keys: [zone, sales]
+      expected:
+        - {name: Plum, zone: 1, sales: 30}
+        - {name: Kale, zone: 1, sales: 50}
+        - {name: Fig, zone: 2, sales: 30}
+        - {name: Beet, zone: 2, sales: 30}
+    - name: single_key_alpha
+      input:
+        records:
+          - {name: Cherry, zone: 1, sales: 10}
+          - {name: Apple, zone: 2, sales: 20}
+        keys: [name]
+      expected:
+        - {name: Apple, zone: 2, sales: 20}
+        - {name: Cherry, zone: 1, sales: 10}
+    - name: empty_records
+      input:
+        records: []
+        keys: [zone]
+      expected: []
+  validation:
+    - name: single_numeric_key
+      input:
+        records:
+          - {name: A, zone: 3, sales: 5}
+          - {name: B, zone: 1, sales: 5}
+          - {name: C, zone: 2, sales: 5}
+        keys: [zone]
+      expected:
+        - {name: B, zone: 1, sales: 5}
+        - {name: C, zone: 2, sales: 5}
+        - {name: A, zone: 3, sales: 5}
+    - name: three_keys_break_ties_by_name
+      input:
+        records:
+          - {name: Fig, zone: 2, sales: 30}
+          - {name: Beet, zone: 2, sales: 30}
+          - {name: Apple, zone: 2, sales: 30}
+        keys: [zone, sales, name]
+      expected:
+        - {name: Apple, zone: 2, sales: 30}
+        - {name: Beet, zone: 2, sales: 30}
+        - {name: Fig, zone: 2, sales: 30}
+    - name: stable_on_full_tie
+      input:
+        records:
+          - {name: X, zone: 1, sales: 9}
+          - {name: Y, zone: 1, sales: 9}
+          - {name: Z, zone: 1, sales: 9}
+        keys: [zone, sales]
+      expected:
+        - {name: X, zone: 1, sales: 9}
+        - {name: Y, zone: 1, sales: 9}
+        - {name: Z, zone: 1, sales: 9}
+    - name: sales_then_zone
+      input:
+        records:
+          - {name: Mint, zone: 2, sales: 40}
+          - {name: Sage, zone: 1, sales: 40}
+          - {name: Dill, zone: 3, sales: 10}
+        keys: [sales, zone]
+      expected:
+        - {name: Dill, zone: 3, sales: 10}
+        - {name: Sage, zone: 1, sales: 40}
+        - {name: Mint, zone: 2, sales: 40}
+explanation_markdown: |
+  `operator.itemgetter(*keys)` builds a single callable that pulls one or more
+  fields out of each record. With several keys it returns a tuple, and because
+  Python compares tuples element by element, sorting on that tuple gives you a
+  full multi-key ordering for free: primary field first, then each later field as
+  a tie-breaker. It is faster and clearer than an equivalent
+  `lambda r: (r["zone"], r["sales"])`, and it is the standard idiom for
+  data-record sorting.
+
+  Python's `sorted` is stable, so any records still tied after every ranking key
+  stay in their original relative order. That is why the fully tied stalls come
+  back in input order rather than being shuffled.
+common_mistakes:
+  - Passing the keys list itself to itemgetter instead of unpacking it with *keys, which looks up a single field named after the whole list.
+  - Sorting each key in a separate pass in the wrong order, instead of letting one itemgetter tuple do the whole comparison.
+  - Assuming ties are reordered; the sort is stable, so equal-key records keep their input order.

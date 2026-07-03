@@ -1,0 +1,194 @@
+id: exercise.library.scripting_automation.a03
+kind: exercise
+version: 1
+language: python
+title: Sweeping the Print Shop for Deliverables
+slug: scripting-automation-a03
+difficulty: medium
+concepts:
+  - python.pathlib_os
+  - patterns.filtering
+prerequisites:
+  - python.lists
+  - python.dictionaries
+  - python.strings
+  - python.sets
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.scripting_automation.a03
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original extension-whitelist filter framed as a print shop collecting only client-facing deliverables; the runner passes one request dict.
+prompt_markdown: |
+  A print shop's export folder is a jumble of working files and finished
+  deliverables. When a job ships, an automation sweeps the folder and keeps only the
+  file types the client actually receives.
+
+  Because the grader calls your function with a single argument, the job comes in as
+  one request dict:
+
+  ```python
+  {
+      "files": [{"name": "poster.pdf", "size": 900}, {"name": "draft.txt", "size": 3}],
+      "keep": ["pdf", ".svg", "PNG"]
+  }
+  ```
+
+  Write `filter_files_by_extension(request)` that returns the list of file names
+  whose extension is one of the wanted types, keeping them in their original input
+  order.
+
+  Matching rules:
+
+  - A file's extension is the text after its final dot, compared case-insensitively:
+    `BANNER.PNG` matches a wanted `"png"`.
+  - Each entry in `keep` may be written with or without a leading dot and in any
+    case, so `"pdf"`, `".pdf"`, and `"PDF"` all mean the same type.
+  - A multi-dot name matches on its last piece only: `archive.tar.gz` matches a
+    wanted `"gz"`.
+  - Files whose extension is not wanted are dropped.
+
+  An empty `keep` list keeps nothing (returns `[]`), and an empty `files` list also
+  returns `[]`. No real files are touched — you filter the records.
+starter_code: |
+  from pathlib import PurePath
+
+
+  def filter_files_by_extension(request):
+      return []
+function_name: filter_files_by_extension
+input_mode: function
+solution_sketch: Normalize every wanted extension to a bare lowercase form into a set, then keep each file whose PurePath suffix (also normalized) is in that set, preserving input order.
+sample_solution: |
+  from pathlib import PurePath
+
+
+  def filter_files_by_extension(request):
+      wanted = {ext.lstrip(".").lower() for ext in request["keep"]}
+      result = []
+      for record in request["files"]:
+          ext = PurePath(record["name"]).suffix[1:].lower()
+          if ext in wanted:
+              result.append(record["name"])
+      return result
+hints:
+  - level: 1
+    text: Normalize the keep list first so every wanted type is stored the same way, then you only have to normalize each file the same way to compare.
+  - level: 2
+    text: Build a set comprehension over request["keep"] using ext.lstrip(".").lower() so "pdf", ".pdf", and "PDF" collapse to one entry and lookups are O(1).
+  - level: 3
+    text: For each record compute PurePath(name).suffix[1:].lower() and append the name to the result when that value is in the wanted set, iterating request["files"] in order.
+tests:
+  public:
+    - name: keeps_wanted_types
+      input:
+        files:
+          - name: poster.pdf
+            size: 900
+          - name: logo.svg
+            size: 12
+          - name: draft.txt
+            size: 3
+        keep:
+          - pdf
+          - svg
+      expected:
+        - poster.pdf
+        - logo.svg
+    - name: case_insensitive_match
+      input:
+        files:
+          - name: BANNER.PNG
+            size: 50
+          - name: icon.png
+            size: 8
+        keep:
+          - png
+      expected:
+        - BANNER.PNG
+        - icon.png
+    - name: empty_keep_keeps_nothing
+      input:
+        files:
+          - name: a.pdf
+            size: 1
+        keep: []
+      expected: []
+  validation:
+    - name: dotted_keep_entries
+      input:
+        files:
+          - name: a.pdf
+            size: 1
+          - name: b.svg
+            size: 2
+        keep:
+          - ".pdf"
+          - ".svg"
+      expected:
+        - a.pdf
+        - b.svg
+    - name: multi_dot_last_piece
+      input:
+        files:
+          - name: archive.tar.gz
+            size: 100
+          - name: notes.gz
+            size: 5
+          - name: data.tar
+            size: 40
+        keep:
+          - gz
+      expected:
+        - archive.tar.gz
+        - notes.gz
+    - name: no_matches
+      input:
+        files:
+          - name: x.doc
+            size: 1
+        keep:
+          - pdf
+          - png
+      expected: []
+    - name: preserves_input_order
+      input:
+        files:
+          - name: third.pdf
+            size: 3
+          - name: skip.txt
+            size: 1
+          - name: first.pdf
+            size: 1
+          - name: second.svg
+            size: 2
+        keep:
+          - pdf
+          - svg
+      expected:
+        - third.pdf
+        - first.pdf
+        - second.svg
+    - name: empty_files
+      input:
+        files: []
+        keep:
+          - pdf
+      expected: []
+explanation_markdown: |
+  The trick is to normalize both sides of the comparison to the same shape once, up
+  front. Wanted types arrive in mixed forms (`"pdf"`, `".pdf"`, `"PDF"`), so
+  `ext.lstrip(".").lower()` strips any leading dots and case, collapsing them into a
+  single canonical entry. Storing those in a `set` makes each membership test O(1),
+  so the whole sweep is O(n) over the files. Each file is reduced to the same
+  canonical form with `PurePath(name).suffix[1:].lower()`, and because you iterate
+  `request["files"]` in order and only append matches, the surviving names keep
+  their original ordering — which matters when the downstream step expects a stable
+  manifest.
+common_mistakes:
+  - Comparing raw extensions without lowercasing, so BANNER.PNG slips past a keep list of ["png"].
+  - Forgetting that keep entries may include a leading dot, so ".pdf" never matches the bare "pdf" you parsed from the file.
+  - Using str.endswith on the whole name, which makes "notes.gz" also match a wanted "tes.gz" or mishandles multi-dot names.

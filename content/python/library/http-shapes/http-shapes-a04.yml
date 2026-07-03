@@ -1,0 +1,113 @@
+id: exercise.library.http_shapes.a04
+kind: exercise
+version: 1
+language: python
+title: Extending the Base Endpoint
+slug: http-shapes-a04
+difficulty: medium
+concepts:
+  - python.http_model
+  - python.strings
+prerequisites:
+  - python.dictionaries
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.http_shapes.a04
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original URL-join drill themed around composing a harbor API base with relative paths; pure urljoin logic.
+prompt_markdown: |
+  The harbor's client keeps a base endpoint and tacks on relative paths to reach
+  individual resources. Write `join_url(spec)` that takes a single dict with two
+  string keys, `"base"` and `"path"`, and returns the combined URL using the
+  same rules as `urllib.parse.urljoin`.
+
+  The input shape is one dict, for example
+  `{"base": "https://api.example.com/v1/", "path": "berths"}`.
+
+  Those rules, which trip people up until they are stated plainly:
+
+  - A **relative** path is resolved against the base's directory. Whether the
+    base's last segment counts as a directory depends on its trailing slash:
+    with a trailing slash (`.../v1/`) the segment is kept; without one
+    (`.../v1`) the last segment is treated as a file and replaced.
+  - A path that **starts with `/`** is host-absolute: it replaces the base's
+    entire path.
+  - A path that is itself a **full URL** (has its own scheme) replaces the base
+    completely.
+  - A `..` segment climbs one directory up from the base.
+
+  Examples:
+
+  - base `"https://api.example.com/v1/"`, path `"berths"` gives
+    `"https://api.example.com/v1/berths"`.
+  - base `"https://api.example.com/v1/"`, path `"/berths"` gives
+    `"https://api.example.com/berths"`.
+  - base `"https://api.example.com/v1"`, path `"berths"` gives
+    `"https://api.example.com/berths"`.
+starter_code: |
+  from urllib.parse import urljoin
+
+
+  def join_url(spec):
+      return ""
+function_name: join_url
+input_mode: function
+solution_sketch: Pull "base" and "path" out of the dict and return urljoin(base, path); the library implements all the resolution rules.
+sample_solution: |
+  from urllib.parse import urljoin
+
+
+  def join_url(spec):
+      return urljoin(spec["base"], spec["path"])
+hints:
+  - level: 1
+    text: The whole resolution algorithm already lives in urllib.parse.urljoin; you mostly need to feed it the two pieces.
+  - level: 2
+    text: The input is one dict, so read spec["base"] and spec["path"] before calling the joiner.
+  - level: 3
+    text: Return urljoin(spec["base"], spec["path"]); do not concatenate the strings yourself, or the trailing-slash and absolute-path rules will be wrong.
+tests:
+  public:
+    - name: relative_appends
+      input: {base: 'https://api.example.com/v1/', path: 'berths'}
+      expected: 'https://api.example.com/v1/berths'
+    - name: absolute_path_replaces
+      input: {base: 'https://api.example.com/v1/', path: '/berths'}
+      expected: 'https://api.example.com/berths'
+    - name: no_trailing_slash_replaces_segment
+      input: {base: 'https://api.example.com/v1', path: 'berths'}
+      expected: 'https://api.example.com/berths'
+  validation:
+    - name: parent_directory
+      input: {base: 'https://api.example.com/v1/', path: '../orders'}
+      expected: 'https://api.example.com/orders'
+    - name: replace_last_segment
+      input: {base: 'https://api.example.com/v1/berths', path: 'list'}
+      expected: 'https://api.example.com/v1/list'
+    - name: full_url_wins
+      input: {base: 'https://api.example.com/v1/', path: 'https://cdn.example.com/img'}
+      expected: 'https://cdn.example.com/img'
+    - name: relative_keeps_query
+      input: {base: 'https://api.example.com/v1/', path: 'berths?free=1'}
+      expected: 'https://api.example.com/v1/berths?free=1'
+explanation_markdown: |
+  Joining URLs looks like string concatenation but is not. `urljoin` implements
+  the reference-resolution rules from the URL spec, the same ones a browser uses
+  when a page links to a relative path. The single most surprising rule is the
+  trailing slash: `.../v1/` is a directory, so a relative path lands inside it,
+  but `.../v1` is treated as a file, so the relative path replaces `v1`. That is
+  why the two "berths" examples produce different results.
+
+  The other rules fall out of the same model: a leading `/` means "from the host
+  root", a `..` climbs a directory, and a reference that already has its own
+  scheme is absolute and ignores the base entirely. Because all of this is
+  fiddly and easy to get subtly wrong, the right move is to lean on the library
+  rather than reinvent the resolver with `+` and `str.rstrip`.
+common_mistakes:
+  - Concatenating base and path with a `+` (and maybe a manual `/`), which ignores the trailing-slash and absolute-path rules.
+  - Assuming a relative path always appends, so a `/`-prefixed path wrongly stays nested under the base directory.
+  - Forgetting the base without a trailing slash drops its last segment before the relative path is applied.

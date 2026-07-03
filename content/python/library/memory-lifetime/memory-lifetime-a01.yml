@@ -1,0 +1,111 @@
+id: exercise.library.memory_lifetime.a01
+kind: exercise
+version: 1
+language: python
+title: Sweeping the Scan Archive
+slug: memory-lifetime-a01
+difficulty: easy
+concepts:
+  - python.memory_model
+  - python.dictionaries
+prerequisites:
+  - python.loops
+  - python.sets
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.memory_lifetime.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original museum scan-archive framing for WeakValueDictionary get-or-set with a live-reference sweep.
+prompt_markdown: |
+  The Meridian Museum keeps a *weak cache* of freshly digitised plate scans. It
+  behaves like a `WeakValueDictionary`: an entry survives only while its scan is
+  still open on some workstation. The moment no workstation is holding a scan, the
+  cache quietly drops that entry -- the memory is reclaimed even though the label
+  is still a perfectly valid catalogue number.
+
+  Write `weak_cache_get_or_set(request)` that takes a single dict shaped like:
+
+  ```
+  {
+      "cache": {"m12": 100, "m31": 200, "m45": 300},  # label -> scan id
+      "held": ["m12", "m45"],                          # labels still open somewhere
+      "key": "m31",                                    # label being requested
+      "new_value": 999                                 # scan id to load if missing
+  }
+  ```
+
+  Do two things, in this order:
+
+  1. **Sweep** the cache: remove every entry whose label is not in `held` (its scan
+     has no strong reference left, so a weak cache would evict it).
+  2. **Get-or-set** `key`: if the label is still present after the sweep, leave its
+     scan id untouched; otherwise load it by storing `new_value` under `key`.
+
+  Return the resulting cache as a dict. An empty `cache` is allowed. `held` may name
+  labels that are not in the cache -- ignore those. For the example above the answer
+  is `{"m12": 100, "m45": 300, "m31": 999}`, because `m31` was swept out and then
+  reloaded with the fresh scan id.
+starter_code: |
+  def weak_cache_get_or_set(request):
+      return {}
+function_name: weak_cache_get_or_set
+input_mode: function
+solution_sketch: Keep only the entries whose label is in the held set, then insert key with new_value if it did not survive the sweep.
+sample_solution: |
+  def weak_cache_get_or_set(request):
+      cache = request["cache"]
+      held = set(request["held"])
+      key = request["key"]
+
+      survivors = {label: scan for label, scan in cache.items() if label in held}
+      if key not in survivors:
+          survivors[key] = request["new_value"]
+      return survivors
+hints:
+  - level: 1
+    text: A weak cache keeps a value alive only while something else still references it, so drop every label that is not in `held` before you do anything else.
+  - level: 2
+    text: Build a new dict from just the entries whose label is in `held`, then check whether `key` is still in that filtered dict.
+  - level: 3
+    text: If `key` did not survive the sweep, add `request["new_value"]` under it; return the filtered dict either way and never mutate the original cache.
+tests:
+  public:
+    - name: evict_and_recreate
+      input: {"cache": {"m12": 100, "m31": 200, "m45": 300}, "held": ["m12", "m45"], "key": "m31", "new_value": 999}
+      expected: {"m12": 100, "m45": 300, "m31": 999}
+    - name: hit_live_key
+      input: {"cache": {"m12": 100, "m31": 200}, "held": ["m12", "m31"], "key": "m12", "new_value": 555}
+      expected: {"m12": 100, "m31": 200}
+    - name: empty_cache_insert
+      input: {"cache": {}, "held": [], "key": "m99", "new_value": 42}
+      expected: {"m99": 42}
+  validation:
+    - name: all_dead_swept
+      input: {"cache": {"a": 1, "b": 2}, "held": [], "key": "a", "new_value": 7}
+      expected: {"a": 7}
+    - name: held_names_absent_label
+      input: {"cache": {"x": 3}, "held": ["x", "y"], "key": "y", "new_value": 8}
+      expected: {"x": 3, "y": 8}
+    - name: key_dead_others_live
+      input: {"cache": {"p": 1, "q": 2, "r": 3}, "held": ["q"], "key": "p", "new_value": 50}
+      expected: {"q": 2, "p": 50}
+    - name: live_key_keeps_old_value
+      input: {"cache": {"g": 9}, "held": ["g"], "key": "g", "new_value": 100}
+      expected: {"g": 9}
+explanation_markdown: |
+  A `WeakValueDictionary` only keeps an entry while some other strong reference to
+  its value is alive; when the last such reference disappears, the entry vanishes
+  on its own. Modelling that as a sweep keeps the lifetime rule explicit: filter to
+  the labels in `held`, which stands in for "still referenced somewhere". Only then
+  does get-or-set make sense -- asking for a label that was just evicted must reload
+  a fresh value, not resurrect the stale one. Building a new dict rather than
+  deleting from the caller's cache keeps the function free of surprising side
+  effects, exactly what you want from a lookup helper.
+common_mistakes:
+  - Doing the get-or-set before the sweep, so a stale scan id for an evicted label is returned instead of being reloaded.
+  - Overwriting a surviving entry's scan id with new_value even though its label is still held.
+  - Mutating request["cache"] in place instead of building the swept result, which corrupts the caller's dictionary.

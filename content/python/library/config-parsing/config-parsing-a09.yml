@@ -1,0 +1,194 @@
+id: exercise.library.config_parsing.a09
+kind: exercise
+version: 1
+language: python
+title: Applying the Radio Console Overrides
+slug: config-parsing-a09
+difficulty: medium
+concepts:
+  - python.config_parsing
+  - python.types
+prerequisites:
+  - python.dictionaries
+  - python.strings
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.config_parsing.a09
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original CLI-override drill framed as a community radio console applying command-line flags on top of a base config, coercing each override to the type of the existing base value.
+prompt_markdown: |
+  A community radio station boots its broadcast console from a base config, then
+  lets the operator override individual settings with command-line flags like
+  `--gain=2.5`. Write `config_from_cli_overrides(request)` that layers the flags on
+  top of the base and returns the merged result **without mutating the base**.
+
+  The function receives **one dictionary** with two keys:
+
+  ```python
+  config_from_cli_overrides({
+      "base": {"gain": 1.0, "live": False},
+      "overrides": ["--gain=2.5", "live=on"],
+  })
+  # -> {"gain": 2.5, "live": True}
+  ```
+
+  - `"base"` is the starting config dictionary.
+  - `"overrides"` is a list of `key=value` strings, applied left to right.
+
+  For each override string:
+
+  - Split on the **first** `=` only. Strip surrounding whitespace from both sides,
+    then strip any leading dashes off the key (so `--gain` and `gain` are the same).
+  - An override with no `=`, or with an empty key, is **skipped**.
+  - If the key already exists in `base`, coerce the string value to the **type of
+    the existing base value**:
+    - `bool` base value: `"true"`, `"1"`, `"yes"`, `"on"` (any case) become `True`;
+      `"false"`, `"0"`, `"no"`, `"off"` become `False`.
+    - `int` base value: convert with `int(value)`.
+    - `float` base value: convert with `float(value)`.
+    - `str` base value: keep the stripped string as-is.
+  - If the key is **not** in `base`, add it with the stripped string value (no
+    coercion — there is no existing type to match).
+  - When the same key is overridden more than once, the **last** override wins, and
+    coercion always matches the original base type.
+
+  Return a new dictionary. With no overrides, return a copy of the base unchanged.
+
+  Note: check `bool` before `int`, because in Python `bool` is a subclass of `int`.
+starter_code: |
+  def config_from_cli_overrides(request):
+      return dict(request["base"])
+function_name: config_from_cli_overrides
+input_mode: function
+solution_sketch: Copy the base dict. For each override, partition on the first "=", strip and de-dash the key, skip malformed entries, then coerce the value against the type of the original base value (checking bool before int) or store it as a raw string when the key is new.
+sample_solution: |
+  def config_from_cli_overrides(request):
+      base = request["base"]
+      overrides = request["overrides"]
+      result = dict(base)
+      for item in overrides:
+          if "=" not in item:
+              continue
+          raw_key, _, raw_value = item.partition("=")
+          key = raw_key.strip().lstrip("-")
+          value = raw_value.strip()
+          if not key:
+              continue
+          if key in base:
+              target = base[key]
+              if isinstance(target, bool):
+                  low = value.lower()
+                  if low in ("true", "1", "yes", "on"):
+                      result[key] = True
+                  elif low in ("false", "0", "no", "off"):
+                      result[key] = False
+                  else:
+                      result[key] = value
+              elif isinstance(target, int):
+                  result[key] = int(value)
+              elif isinstance(target, float):
+                  result[key] = float(value)
+              else:
+                  result[key] = value
+          else:
+              result[key] = value
+      return result
+hints:
+  - level: 1
+    text: Start from dict(base) so the caller's config is never mutated, then apply each override onto the copy in order.
+  - level: 2
+    text: Use item.partition("=") to split on the first equals sign; strip the key and lstrip("-") to drop leading dashes, and skip the entry when there is no "=" or the key is empty.
+  - level: 3
+    text: Look up the existing base value's type. Test isinstance(target, bool) before isinstance(target, int) because bool is a subclass of int, then convert the string accordingly; unknown keys are stored as raw strings.
+tests:
+  public:
+    - name: no_overrides_returns_copy
+      input:
+        base:
+          port: 80
+        overrides: []
+      expected:
+        port: 80
+    - name: string_override
+      input:
+        base:
+          host: "local"
+        overrides:
+          - "host=remote"
+      expected:
+        host: "remote"
+    - name: int_coercion
+      input:
+        base:
+          port: 80
+        overrides:
+          - "port=443"
+      expected:
+        port: 443
+  validation:
+    - name: bool_and_leading_dashes
+      input:
+        base:
+          live: false
+        overrides:
+          - "--live=on"
+      expected:
+        live: true
+    - name: float_coercion
+      input:
+        base:
+          gain: 1.0
+        overrides:
+          - "gain=2.5"
+      expected:
+        gain: 2.5
+    - name: new_key_stays_string
+      input:
+        base:
+          port: 80
+        overrides:
+          - "region=west"
+      expected:
+        port: 80
+        region: "west"
+    - name: last_override_wins
+      input:
+        base:
+          port: 80
+        overrides:
+          - "port=1"
+          - "port=2"
+      expected:
+        port: 2
+    - name: malformed_entry_skipped
+      input:
+        base:
+          amp: 1
+        overrides:
+          - "justtext"
+          - "amp=9"
+      expected:
+        amp: 9
+explanation_markdown: |
+  This is the CLI layer of the classic precedence chain (defaults < file < env <
+  flags), and the subtle part is type-matching. Command-line values arrive as
+  strings, but the base config already tells you what type each setting should be,
+  so you coerce against the *existing* value's type rather than guessing. Copying
+  the base first (`dict(base)`) keeps the merge non-destructive, which matters when
+  the same defaults get reused across several boots.
+
+  The one trap that bites almost everyone is that `bool` is a subclass of `int` in
+  Python: `isinstance(True, int)` is `True`. If you test `int` first, a boolean
+  setting like `live` would be run through `int("on")` and crash. Checking `bool`
+  before `int` routes `"on"`/`"off"` through the truthiness table instead. Stripping
+  leading dashes lets `--gain` and `gain` mean the same key, matching how real
+  argument styles blend together.
+common_mistakes:
+  - Checking isinstance(target, int) before isinstance(target, bool), so boolean settings crash on int("on") or silently coerce wrong.
+  - Mutating the base dict in place instead of copying it, leaking overrides back to the caller.
+  - Splitting on every "=" with str.split so a value containing "=" is truncated; partition on the first one instead.
+  - Coercing brand-new keys against a type they do not have, when they should simply be stored as strings.

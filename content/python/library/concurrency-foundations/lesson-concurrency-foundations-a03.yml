@@ -1,0 +1,87 @@
+id: lesson.library.concurrency_foundations.a03
+kind: lesson
+version: 1
+language: python
+title: 'Coordination: Queues, Deadlocks, and Task-Local State'
+slug: lesson-concurrency-foundations-a03
+difficulty: hard
+concepts:
+  - python.concurrency_model
+prerequisites:
+  - python.concurrency_model
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.concurrency_foundations.a03
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original coordination-patterns walkthrough covering producer/consumer queues, lock ordering, and contextvars, with a fresh cannery framing.
+body_markdown: |
+  Whichever concurrency tool you chose, the hard bugs live in
+  *coordination* — how tasks hand work to each other and share what they
+  must. Three patterns cover most of real life, and all three reduce to
+  logic you can test deterministically.
+
+  ### The producer/consumer queue
+
+  A cannery has fillers (producers) and labellers (consumers) working at
+  different speeds. The coordination tool is a **bounded queue**: fillers
+  put, labellers get, and two blocking rules keep the system honest —
+  *get on empty waits* for an item, *put on full waits* for space. The
+  bound is the point: an unbounded queue lets a fast producer bury a slow
+  consumer under unprocessed backlog (unbounded memory growth), while a
+  bounded queue applies **backpressure** — the producer is slowed to the
+  consumer's pace. `queue.Queue(maxsize=...)` for threads and
+  `asyncio.Queue` share these exact semantics, and your exercise
+  simulates them as a pure function over an operation list: which puts
+  and gets proceed, which wait, in what order.
+
+  ### Deadlock, and the boring rule that prevents it
+
+  Two rules of the classic disaster: task A holds lock L1 and wants L2;
+  task B holds L2 and wants L1. Nobody proceeds, forever — no error, no
+  timeout, just silence. The standard prevention is almost
+  disappointingly simple: **impose a global order on locks and always
+  acquire in that order.** If every task acquires L1-before-L2, the
+  circular wait cannot form. Deadlock detection is, once again, graph
+  work: draw an edge from each held lock to each wanted one, and a cycle
+  in the wait-for graph *is* the deadlock — your exercise implements
+  exactly that check over acquisition-order data.
+
+  ### Task-local state without leaks
+
+  A server handling many requests concurrently wants "the current
+  request id" available everywhere without threading it through every
+  call. Globals bleed across tasks; thread-locals bleed across async
+  tasks sharing a thread. `contextvars` — from the memory area — is the
+  designed answer: each task runs in a *copied context*, sets are
+  invisible outside the copy, and logging deep in the stack reads the
+  right id. The exercises model the copy-on-write semantics directly.
+
+  ### Failure across a batch of tasks
+
+  When several concurrent subtasks fail *together*, modern Python
+  aggregates them into an **ExceptionGroup** rather than reporting one
+  and discarding the rest (that is what `except*` matches — the modern
+  syntax area covers it). Your final exercise builds the summary shape:
+  which succeeded, which failed with what, all preserved.
+
+  A closing habit worth naming: everything in this area was practiced as
+  *pure functions over explicit event sequences* — schedules, wait-for
+  graphs, queue traces. That is not a platform workaround; it is how
+  robust concurrent systems are actually engineered. The concurrency is
+  a thin shell; the logic — testable, deterministic, reviewable — is the
+  core. Keep that separation and most concurrency "hard problems" shrink
+  to ordinary code.
+checkpoints:
+  - question: Why must a producer/consumer queue be bounded, and what is the mechanism called when a full queue slows the producer?
+    answer: 'Unbounded queues let a fast producer accumulate unlimited backlog (memory growth and stale work) ahead of a slow consumer; a bound makes put-on-full wait, transmitting the consumer''s pace upstream — backpressure.'
+    explanation: The bound converts an invisible resource failure into designed flow control — the single most important queue parameter.
+  - question: State the lock-ordering rule and explain, via the wait-for graph, why it prevents deadlock.
+    answer: 'Give all locks a global order and acquire strictly in that order; deadlock is a cycle in the graph of who-waits-for-whom, and ordered acquisition makes every edge point "upward" in the order, so no cycle can close.'
+    explanation: Reducing deadlock to cycle-in-a-graph makes both the detection (search for cycles) and the prevention (make cycles impossible) mechanical.
+  - question: Why are thread-local variables insufficient for request-scoped state in an asyncio server, and what replaces them?
+    answer: 'Many tasks interleave on one thread, so they would all read and clobber the same thread-local slot; contextvars give each task its own copied context, where sets are invisible outside the copy.'
+    explanation: The unit of isolation must match the unit of concurrency — thread-locals match threads, contextvars match logical tasks.

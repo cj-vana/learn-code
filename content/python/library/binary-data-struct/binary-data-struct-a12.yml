@@ -1,0 +1,164 @@
+id: exercise.library.binary_data_struct.a12
+kind: exercise
+version: 1
+language: python
+title: Checksums on the Lighthouse Telemetry Link
+slug: binary-data-struct-a12
+difficulty: hard
+concepts:
+  - python.binary_data
+  - patterns.bit_manipulation
+prerequisites:
+  - python.loops
+  - python.operators
+estimated_time_minutes: 24
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.binary_data_struct.a12
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original checksum-family drill themed around a lighthouse telemetry link appending an integrity code, implementing additive, Fletcher, and CRC schemes from their definitions.
+prompt_markdown: |
+  A lighthouse sends short telemetry packets to the harbor master over a noisy
+  radio link, appending an integrity code so the receiver can detect corruption.
+  Different links use different checksum families, trading simplicity for how
+  much damage they can catch. Implement four of them from their definitions.
+
+  Write `checksum_bytes(payload)` that takes a single dictionary:
+
+  ```
+  {
+    "data":      [1, 2, 3, 4],   # byte values, each 0..255
+    "algorithm": "crc8"           # one of: sum8, xor8, fletcher16, crc8
+  }
+  ```
+
+  Return a single integer: the checksum of `data` under the named algorithm.
+
+  - `"sum8"`: add all the bytes and take the result modulo 256. An empty input
+    gives `0`.
+  - `"xor8"`: exclusive-or all the bytes together, starting from `0` (so an
+    empty input gives `0`).
+  - `"fletcher16"`: run two rolling sums modulo 255. Start `low = 0` and
+    `high = 0`. For each byte `b`, set `low = (low + b) % 255` and then
+    `high = (high + low) % 255`. Return `high * 256 + low`. An empty input
+    gives `0`.
+  - `"crc8"`: a bitwise CRC-8 with polynomial `0x07`, initial value `0`, no
+    input or output reflection, and no final XOR. Start `crc = 0`. For each
+    byte `b`: set `crc = crc XOR b`, then repeat 8 times: if the top bit
+    (`crc & 0x80`) is set, `crc = ((crc << 1) XOR 0x07) & 0xFF`, otherwise
+    `crc = (crc << 1) & 0xFF`. Return the final `crc`. An empty input gives `0`.
+
+  Every algorithm must fit its stated width: `sum8`, `xor8`, and `crc8` return a
+  value in `0..255`, while `fletcher16` returns a value in `0..65535`.
+starter_code: |
+  def checksum_bytes(payload):
+      return 0
+function_name: checksum_bytes
+input_mode: function
+solution_sketch: Branch on the algorithm name and implement each from its definition -- modular sum, running XOR, the two Fletcher rolling sums mod 255, and the bitwise CRC-8 inner loop over 8 shifts per byte.
+sample_solution: |
+  def checksum_bytes(payload):
+      data = payload["data"]
+      algorithm = payload["algorithm"]
+
+      if algorithm == "sum8":
+          return sum(data) % 256
+
+      if algorithm == "xor8":
+          acc = 0
+          for b in data:
+              acc ^= b
+          return acc
+
+      if algorithm == "fletcher16":
+          low = 0
+          high = 0
+          for b in data:
+              low = (low + b) % 255
+              high = (high + low) % 255
+          return high * 256 + low
+
+      if algorithm == "crc8":
+          crc = 0
+          for b in data:
+              crc ^= b
+              for _ in range(8):
+                  if crc & 0x80:
+                      crc = ((crc << 1) ^ 0x07) & 0xFF
+                  else:
+                      crc = (crc << 1) & 0xFF
+          return crc
+
+      raise ValueError(f"unknown algorithm: {algorithm}")
+hints:
+  - level: 1
+    text: sum8 and xor8 are one-liners over the bytes -- sum(...) % 256 and a running XOR that starts at 0.
+  - level: 2
+    text: Fletcher-16 keeps two accumulators mod 255; update low first, then add the new low into high, and pack them as high * 256 + low.
+  - level: 3
+    text: For crc8, XOR each byte into crc then loop 8 times shifting left one bit, XORing 0x07 whenever the pre-shift top bit was set, and mask with 0xFF every step.
+tests:
+  public:
+    - name: sum8_basic
+      input:
+        data: [1, 2, 3, 4]
+        algorithm: "sum8"
+      expected: 10
+    - name: sum8_wraps
+      input:
+        data: [200, 100]
+        algorithm: "sum8"
+      expected: 44
+    - name: xor8_basic
+      input:
+        data: [255, 15]
+        algorithm: "xor8"
+      expected: 240
+  validation:
+    - name: xor8_empty
+      input:
+        data: []
+        algorithm: "xor8"
+      expected: 0
+    - name: fletcher16_basic
+      input:
+        data: [1, 2, 3, 4]
+        algorithm: "fletcher16"
+      expected: 5130
+    - name: crc8_check_vector
+      input:
+        data: [49, 50, 51, 52, 53, 54, 55, 56, 57]
+        algorithm: "crc8"
+      expected: 244
+    - name: crc8_small
+      input:
+        data: [1, 2, 3]
+        algorithm: "crc8"
+      expected: 72
+    - name: sum8_empty
+      input:
+        data: []
+        algorithm: "sum8"
+      expected: 0
+explanation_markdown: |
+  These four checksums form a ladder of strength. `sum8` is the weakest: adding
+  bytes is commutative, so swapping two bytes (a common transmission fault)
+  leaves the sum unchanged and undetected. `xor8` is similarly order-blind and
+  also misses any pair of identical bit-flips. `fletcher16` fixes the ordering
+  gap by keeping a second accumulator that folds in the running total after each
+  byte, so a byte's contribution depends on its position -- reordering now
+  changes the result. `crc8` is the strongest here: treating the message as the
+  coefficients of a polynomial and taking the remainder after division by the
+  generator `0x07` catches all single-bit and most burst errors. The bitwise
+  form processes one bit at a time -- shift left, and whenever the bit shifted
+  out of the top was a 1, XOR in the polynomial -- masking with `0xFF` to stay
+  in eight bits. The standard check string "123456789" (bytes 49..57) yielding
+  `244` (`0xF4`) is the well-known CRC-8/SMBUS test vector, a handy way to
+  confirm the implementation.
+common_mistakes:
+  - Forgetting the & 0xFF mask in the CRC inner loop, letting crc grow past eight bits and drift from the reference value.
+  - Using modulo 256 instead of 255 in Fletcher-16, which is a different (and incorrect) checksum.
+  - Updating high before low in Fletcher-16, or seeding the XOR accumulator with the first byte instead of 0.

@@ -1,0 +1,210 @@
+id: exercise.library.http_shapes.a12
+kind: exercise
+version: 1
+language: python
+title: Turning a Bad Response into an Error Summary
+slug: http-shapes-a12
+difficulty: hard
+concepts:
+  - python.http_model
+  - python.exceptions
+prerequisites:
+  - python.dictionaries
+  - python.conditionals
+estimated_time_minutes: 21
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.http_shapes.a12
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original response-to-error mapper that classifies HTTP status codes into named error summaries with a retryable flag, framed around a bike-share dock API client.
+prompt_markdown: |
+  A city bike-share API returns JSON, and your client turns any failure response
+  into a structured error summary that the rest of the program can act on (or
+  raise). Write `response_to_error(response)` where `response` is a single dict:
+
+  - `"status"`: the HTTP status code.
+  - `"body"`: the decoded response body, a dict. This key may be absent; treat a
+    missing body as an empty dict.
+
+  Decide the result with these rules:
+
+  - If `status` is below `400` (any success or redirect), there is no error:
+    return `{"raise": False}` and nothing else.
+  - Otherwise return a dict
+    `{"raise": True, "type": <name>, "status": <status>,
+    "message": <text>, "retryable": <bool>}`.
+  - The error **type** name is chosen from the status code:
+    - `400` -> `"BadRequest"`
+    - `401` -> `"Unauthorized"`
+    - `403` -> `"Forbidden"`
+    - `404` -> `"NotFound"`
+    - `409` -> `"Conflict"`
+    - `429` -> `"RateLimited"`
+    - any other code in `400`-`499` -> `"ClientError"`
+    - any code in `500`-`599` -> `"ServerError"`
+  - The **message** is the body's `"message"` field when it is present and is a
+    non-empty string; otherwise use the default `"<type> (<status>)"`, for
+    example `"ServerError (503)"`.
+  - **retryable** is `True` only for status `429` or any `500`-`599` code, and
+    `False` for every other error.
+
+  Example: `{"status": 404, "body": {"message": "No dock with that id"}}`
+  returns `{"raise": True, "type": "NotFound", "status": 404,
+  "message": "No dock with that id", "retryable": False}`.
+starter_code: |
+  def response_to_error(response):
+      return {"raise": False}
+function_name: response_to_error
+input_mode: function
+solution_sketch: Short-circuit on statuses below 400, otherwise map the status to a type name, pick the body message or a default, set retryable for 429 and 5xx, and assemble the summary dict.
+sample_solution: |
+  def response_to_error(response):
+      status = response["status"]
+      if status < 400:
+          return {"raise": False}
+      named = {
+          400: "BadRequest",
+          401: "Unauthorized",
+          403: "Forbidden",
+          404: "NotFound",
+          409: "Conflict",
+          429: "RateLimited",
+      }
+      if status in named:
+          error_type = named[status]
+      elif 400 <= status <= 499:
+          error_type = "ClientError"
+      else:
+          error_type = "ServerError"
+      body = response.get("body") or {}
+      raw_message = body.get("message")
+      if isinstance(raw_message, str) and raw_message:
+          message = raw_message
+      else:
+          message = f"{error_type} ({status})"
+      retryable = status == 429 or 500 <= status <= 599
+      return {
+          "raise": True,
+          "type": error_type,
+          "status": status,
+          "message": message,
+          "retryable": retryable,
+      }
+hints:
+  - level: 1
+    text: 'Handle the no-error case first: any status below 400 returns a two-key dict with raise set to False and nothing else.'
+  - level: 2
+    text: Use a small dict to map the specific codes to names, fall back to "ClientError" for other 4xx and "ServerError" for 5xx.
+  - level: 3
+    text: Read the body's "message" only when it is a non-empty string, otherwise build f"{error_type} ({status})"; mark retryable True for 429 and the whole 500-599 range.
+tests:
+  public:
+    - name: success_no_error
+      input:
+        status: 200
+        body:
+          docks: 12
+      expected:
+        raise: false
+    - name: not_found_with_message
+      input:
+        status: 404
+        body:
+          message: No dock with that id
+      expected:
+        raise: true
+        type: NotFound
+        status: 404
+        message: No dock with that id
+        retryable: false
+    - name: server_error_default_message
+      input:
+        status: 503
+        body: {}
+      expected:
+        raise: true
+        type: ServerError
+        status: 503
+        message: ServerError (503)
+        retryable: true
+  validation:
+    - name: unauthorized
+      input:
+        status: 401
+        body:
+          message: Token expired
+      expected:
+        raise: true
+        type: Unauthorized
+        status: 401
+        message: Token expired
+        retryable: false
+    - name: rate_limited_retryable
+      input:
+        status: 429
+        body: {}
+      expected:
+        raise: true
+        type: RateLimited
+        status: 429
+        message: RateLimited (429)
+        retryable: true
+    - name: other_client_error_generic
+      input:
+        status: 418
+        body:
+          message: I refuse to brew
+      expected:
+        raise: true
+        type: ClientError
+        status: 418
+        message: I refuse to brew
+        retryable: false
+    - name: redirect_no_error
+      input:
+        status: 302
+        body: {}
+      expected:
+        raise: false
+    - name: empty_message_falls_back
+      input:
+        status: 400
+        body:
+          message: ''
+      expected:
+        raise: true
+        type: BadRequest
+        status: 400
+        message: BadRequest (400)
+        retryable: false
+    - name: missing_body_key
+      input:
+        status: 500
+      expected:
+        raise: true
+        type: ServerError
+        status: 500
+        message: ServerError (500)
+        retryable: true
+explanation_markdown: |
+  Translating a raw response into a structured error is the seam between the
+  network layer and your application's own error handling. Instead of scattering
+  status-code checks everywhere, one function classifies the failure once: it
+  names the error, decides whether the caller should treat it as retryable, and
+  produces a human-readable message. That summary is exactly what you would hand
+  to an exception constructor before raising.
+
+  Two edge cases make this deceptively tricky. First, a server can return the
+  `"message"` field but leave it empty, so the code accepts it only when it is a
+  non-empty string and otherwise synthesizes a stable default. Second, the body
+  itself may be missing, so `response.get("body") or {}` guards against both an
+  absent key and a `None` value before calling `.get` on it. Deriving
+  `retryable` from the status keeps it consistent with the retry policy a client
+  would apply next.
+common_mistakes:
+  - Returning the full error dict for `3xx` redirects instead of the bare no-error result with raise set to False.
+  - Using the body's `"message"` even when it is an empty string, producing a blank, useless message.
+  - Calling `.get` on a body that is missing or `None`, or marking `4xx` codes other than `429` as retryable.

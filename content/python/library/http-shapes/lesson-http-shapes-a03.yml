@@ -1,0 +1,90 @@
+id: lesson.library.http_shapes.a03
+kind: lesson
+version: 1
+language: python
+title: 'Client Logic: Pagination, Backoff, and the Shape of Robustness'
+slug: lesson-http-shapes-a03
+difficulty: medium
+concepts:
+  - python.http_model
+prerequisites:
+  - python.http_model
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.http_shapes.a03
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original API-client-logic walkthrough covering pagination, rate limits, and backoff as pure functions, with the ferry API framing.
+body_markdown: |
+  Real API work is not one request — it is loops of requests governed by
+  policies: pagination until exhausted, retries with backoff, rate-limit
+  respect. Every one of those policies is a pure function over response
+  data, which is why you can build a production-grade client brain
+  without a network.
+
+  ### Pagination: three dialects, one loop
+
+  APIs deliver big collections in pages, in one of three styles:
+
+  - **Offset**: `?offset=200&limit=100` — you compute positions; simple,
+    but pages shift when items are inserted mid-iteration.
+  - **Page number**: `?page=3` — same math, coarser handle.
+  - **Cursor**: each response carries an opaque `next_cursor` token
+    (or a `next` URL); you echo it back until it comes empty. Immune to
+    insertion-shift, and the modern default.
+
+  The consuming loop is the same for all three: request, extend
+  results, compute the next request from the response, stop when the
+  dialect's "no more" signal appears (fewer than `limit` items; a null
+  cursor). Your exercises implement each dialect's next-request
+  function and the classic trap: the API that returns `has_more: true`
+  with an empty items list — terminate on *both* signals or loop
+  forever.
+
+  ### Backoff: retrying like an adult
+
+  The retry policy from the error-handling unit gets its production
+  form here. On retryable failures (5xx, 429, timeouts):
+
+  ```text
+  delay = min(base * 2**attempt, cap)          # exponential, capped
+  ```
+
+  Exponential growth (1s, 2s, 4s, 8s...) is the part everyone knows.
+  The two parts that distinguish real clients: a **cap** (nobody waits
+  17 minutes), and **jitter** — randomizing each delay within a range —
+  because a thousand clients that failed together and retry on the same
+  schedule re-arrive together, re-killing the server they just
+  knocked over (the *thundering herd*). Your exercise computes the
+  deterministic schedule from explicit parameters; real systems add the
+  randomness at the last moment.
+
+  And the override: a 429 carrying `Retry-After: 30` is the server
+  *telling you* the delay. Honoring it beats any computed schedule —
+  rate-limit headers (`X-RateLimit-Remaining`, reset timestamps) are
+  the API's cooperation protocol, and your budget-tracking exercise
+  implements the client half: slow down *before* the 429 by watching
+  the remaining-budget header.
+
+  ### The assembled client
+
+  Compose the area: build the URL (`urlencode`), send a request dict,
+  validate the response ladder (status, content-type, shape), branch
+  4xx/5xx into fail-fast versus backoff-retry, paginate by dialect,
+  respect the budget headers. Each piece is a function you have
+  written; the socket at the bottom is one line of somebody's library.
+  This is the actual anatomy of every SDK you have ever imported — and
+  when one misbehaves, you now know which organ to inspect.
+checkpoints:
+  - question: Why has cursor pagination displaced offset pagination as the API default?
+    answer: 'Offsets are positional — an item inserted mid-iteration shifts every later page, duplicating or skipping records; a cursor is an opaque bookmark tied to the last item seen, so iteration is stable under concurrent writes.'
+    explanation: 'The dialects differ in what they promise under mutation, and real collections mutate — cursors encode "continue after this", not "start at position N".'
+  - question: What problem does jitter solve that plain exponential backoff does not?
+    answer: 'The thundering herd: clients that failed simultaneously retry on identical schedules and re-arrive as one synchronized wave, re-overloading the recovering server; randomizing each delay spreads the wave.'
+    explanation: 'Backoff paces one client; jitter de-synchronizes the fleet — both are needed the moment more than one client exists.'
+  - question: 'When a 429 response includes Retry-After: 30, what should the retry policy do with its computed exponential delay?'
+    answer: 'Discard it and honor the header — the server has stated exactly when capacity returns; computed backoff is a guess, and the cooperative protocol (including watching remaining-budget headers to slow down pre-429) outperforms it.'
+    explanation: 'Rate-limit headers are the API talking; clients that listen get throughput, clients that guess get banned.'

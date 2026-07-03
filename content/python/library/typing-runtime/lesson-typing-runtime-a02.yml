@@ -1,0 +1,105 @@
+id: lesson.library.typing_runtime.a02
+kind: lesson
+version: 1
+language: python
+title: 'Protocols and Literals at Runtime'
+slug: lesson-typing-runtime-a02
+difficulty: hard
+concepts:
+  - python.type_hints
+prerequisites:
+  - python.type_hints
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.typing_runtime.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original walkthrough of runtime_checkable protocols, Literal dispatch, and NewType with fresh harbor-scheduling examples.
+body_markdown: |
+  The structural-typing constructs from the type-hints unit — Protocol,
+  TypedDict, Literal — each have a precise runtime story, and knowing it
+  is what lets you use them beyond the checker.
+
+  ### runtime_checkable: structural isinstance, shallowly
+
+  A Protocol is normally checker-only. Decorate it and it gains runtime
+  powers:
+
+  ```python
+  from typing import Protocol, runtime_checkable
+
+  @runtime_checkable
+  class Berthable(Protocol):
+      def berth_length(self) -> float: ...
+
+  isinstance(tugboat, Berthable)     # True if a berth_length attr exists
+  ```
+
+  The check is honest but *shallow*: it verifies the **presence** of the
+  protocol's methods, not their signatures or return types — an object
+  whose `berth_length` takes three arguments and returns a string still
+  passes. That makes runtime protocol checks a good *dispatch* tool
+  ("does this object play the role?") and a poor *validation* tool. Your
+  exercise implements the presence-check semantics directly, which
+  inoculates against overtrusting it. (Non-method members are checked
+  even more loosely; data-attribute protocols and runtime_checkable mix
+  poorly.)
+
+  ### Literal: closed vocabularies
+
+  `Literal["north", "south"]` types a value as one of an enumerated set
+  of constants. At runtime, the vocabulary is extractable:
+
+  ```python
+  from typing import Literal, get_args
+
+  Direction = Literal["north", "south", "east", "west"]
+  VALID = set(get_args(Direction))        # runtime validation set, for free
+
+  def set_heading(d: Direction): ...
+  ```
+
+  The pattern is worth naming: define the vocabulary *once* as a Literal
+  type, let the checker enforce it statically at call sites, and derive
+  the runtime validation set from the same definition with `get_args` —
+  one source of truth serving both worlds. It is the lightweight cousin
+  of an Enum (which brings identity, iteration, and namespacing at the
+  cost of ceremony); Literal wins for small string vocabularies in
+  signatures, Enum when the values need behavior.
+
+  ### NewType: distinctness without a class
+
+  Two ids, both ints, easy to swap accidentally:
+
+  ```python
+  from typing import NewType
+
+  BerthId = NewType("BerthId", int)
+  VesselId = NewType("VesselId", int)
+
+  def assign(vessel: VesselId, berth: BerthId): ...
+  assign(berth_id, vessel_id)     # checker error — caught the swap!
+  ```
+
+  At runtime, `BerthId` is an identity function — `BerthId(7)` *is* the
+  int 7, zero overhead, `type()` says int. All the distinctness lives in
+  the checker. That is the entire point: domain-distinct scalars
+  (user ids, quantities, currencies-in-cents) get swap protection with
+  no wrapper-class tax. The contrast rounds out the runtime map:
+  Protocol checks structure shallowly at runtime if asked, Literal
+  exposes its vocabulary to runtime, and NewType evaporates entirely —
+  three constructs, three deliberate positions on the static/runtime
+  line.
+checkpoints:
+  - question: What exactly does isinstance check against a @runtime_checkable Protocol, and what use does that honestly support?
+    answer: 'Only the PRESENCE of the protocol''s methods/attributes — signatures and return types are not verified; that supports role-based dispatch ("does this object offer the interface?") but not validation of correctness.'
+    explanation: 'Shallow structural checking is cheap and useful for routing, and dangerously incomplete as a data validator — the distinction decides where to deploy it.'
+  - question: How does the Literal + get_args pattern give static and runtime enforcement from one definition?
+    answer: 'Define the vocabulary once as Literal[...]; the checker rejects bad constants at call sites statically, and set(get_args(TheType)) derives the same vocabulary as a runtime validation set — one source of truth, two enforcement layers.'
+    explanation: 'Deriving the runtime set from the type eliminates the drift that occurs when a docstring list and a validation list are maintained separately.'
+  - question: What is NewType("UserId", int) at runtime, and why is that emptiness the feature?
+    answer: 'An identity function — calling it returns the int unchanged, with no wrapper object or overhead; all distinctness exists in the checker, which is precisely the goal: swap protection between domain scalars at zero runtime cost.'
+    explanation: 'NewType occupies the extreme static end of the spectrum: maximal checker semantics, deliberately zero runtime footprint.'

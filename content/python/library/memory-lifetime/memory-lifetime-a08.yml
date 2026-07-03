@@ -1,0 +1,126 @@
+id: exercise.library.memory_lifetime.a08
+kind: exercise
+version: 1
+language: python
+title: Sign Shop Interning Rules
+slug: memory-lifetime-a08
+difficulty: medium
+concepts:
+  - python.memory_model
+  - python.strings
+prerequisites:
+  - python.conditionals
+  - python.dictionaries
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.memory_lifetime.a08
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original string-interning prediction drill framed as a hand-carved sign shop that only shares name-shaped labels engraved at layout time.
+prompt_markdown: |
+  A hand-carved sign shop shares its engraved word-blocks to save wood, but only
+  under two conditions. First, the word must be carved at *layout time* from the
+  master plan, not glued together later on the floor from separate letters.
+  Second, the word must be *name-shaped*: made only of letters, digits, and
+  underscores (the empty label also counts). When both hold, every request for
+  that word reuses the one shared block. Otherwise the shop cuts a fresh block.
+
+  This models CPython's automatic interning of string constants. A string
+  *literal* that looks like an identifier (only letters, digits, underscores) is
+  interned at compile time, so two identical such literals are the same object
+  and satisfy `a is b`. A string assembled at runtime by joining pieces is not
+  auto-interned, and a literal containing spaces or punctuation is not either.
+
+  Write `string_literal_intern_predict(scenario)` taking one dict:
+
+  - `text`: the string in question
+  - `compile_time_literal`: `True` if it is a compile-time literal, `False` if
+    it was built at runtime by joining pieces
+
+  Return `True` if two occurrences of this string would be the **same object**
+  (auto-interned), else `False`. Apply this rule exactly: return `False`
+  whenever `compile_time_literal` is `False`. Otherwise return `True` when
+  `text` is the empty string or when every character of `text` is an ASCII
+  letter, digit, or underscore; return `False` if any character is a space,
+  punctuation mark, or other symbol.
+starter_code: |
+  def string_literal_intern_predict(scenario):
+      return False
+function_name: string_literal_intern_predict
+input_mode: function
+solution_sketch: Reject runtime-built strings outright, treat the empty literal as interned, and otherwise require every character to be an ASCII alphanumeric or an underscore.
+sample_solution: |
+  def string_literal_intern_predict(scenario):
+      text = scenario["text"]
+      if not scenario["compile_time_literal"]:
+          return False
+      if text == "":
+          return True
+      return all((ch.isalnum() and ch.isascii()) or ch == "_" for ch in text)
+hints:
+  - level: 1
+    text: A string glued together at runtime is never auto-interned, so that flag short-circuits the whole decision to False.
+  - level: 2
+    text: For a compile-time literal, the empty string counts as name-shaped, and every other character must be an ASCII letter, digit, or underscore.
+  - level: 3
+    text: Use all(...) over the characters, allowing ch.isalnum() and ch.isascii() together, or ch == '_', so spaces and punctuation fail the test.
+tests:
+  public:
+    - name: identifier_literal
+      input:
+        text: entrance
+        compile_time_literal: true
+      expected: true
+    - name: runtime_built
+      input:
+        text: entrance
+        compile_time_literal: false
+      expected: false
+    - name: has_space
+      input:
+        text: main hall
+        compile_time_literal: true
+      expected: false
+  validation:
+    - name: empty_literal
+      input:
+        text: ''
+        compile_time_literal: true
+      expected: true
+    - name: underscore_and_digits
+      input:
+        text: gate_07
+        compile_time_literal: true
+      expected: true
+    - name: punctuation
+      input:
+        text: a-b
+        compile_time_literal: true
+      expected: false
+    - name: digits_only_literal
+      input:
+        text: '2024'
+        compile_time_literal: true
+      expected: true
+    - name: runtime_name_shaped
+      input:
+        text: lobby
+        compile_time_literal: false
+      expected: false
+explanation_markdown: |
+  Interning lets the interpreter store one copy of a repeated string and hand
+  back the same object, which makes identity checks and dictionary lookups
+  faster. CPython does this automatically only for compile-time constants that
+  look like identifiers, which is why the runtime flag is decisive: strings you
+  build with `+` or `join` on the floor are fresh objects unless you call
+  `sys.intern` yourself. The character test captures the identifier shape: only
+  ASCII letters, digits, and underscores qualify, and the empty literal is a
+  special interned case. Real CPython's rule is version-specific around the
+  edges, so this exercise fixes one clean, predictable version of it.
+common_mistakes:
+  - Applying the name-shaped character test but forgetting that a runtime-built string is never auto-interned regardless of its characters.
+  - Treating spaces or hyphens as acceptable because the word still reads like a label.
+  - Letting non-ASCII letters through by using isalnum() alone without also checking isascii().

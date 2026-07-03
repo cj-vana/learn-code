@@ -1,0 +1,157 @@
+id: exercise.library.scripting_automation.a04
+kind: exercise
+version: 1
+language: python
+title: Flagging Duplicate Candidates in the Backup Vault
+slug: scripting-automation-a04
+difficulty: medium
+concepts:
+  - python.pathlib_os
+  - concepts.grouping_aggregation
+  - patterns.filtering
+prerequisites:
+  - python.lists
+  - python.dictionaries
+  - python.sorting
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.scripting_automation.a04
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original duplicate-candidate pre-scan themed around a backup vault grouping records by byte size before a deeper compare; pure record logic.
+prompt_markdown: |
+  A backup vault wants to hunt down duplicate files, but hashing every file is
+  expensive. The cheap first pass is to group files by their byte size: two files
+  can only be duplicates if they are the same size, so any size shared by two or more
+  files is worth a closer look, and any size held by a single file can be ruled out
+  immediately.
+
+  You receive a list of file records, one dict per file shaped like
+  `{"name": "vault-a.bin", "size": 50}`.
+
+  Write `find_duplicates_by_size(records)` that returns a dict mapping each **shared**
+  size to the sorted list of file names at that size.
+
+  - Only include sizes that are held by two or more files.
+  - Within each size bucket, list the file names in ascending (dictionary) order.
+  - Drop any size that only one file has.
+
+  An empty input returns an empty dict `{}`, and so does an input where every file
+  is a unique size. This is a planning scan over records; nothing on disk is read or
+  compared byte-for-byte.
+starter_code: |
+  def find_duplicates_by_size(records):
+      return {}
+function_name: find_duplicates_by_size
+input_mode: function
+solution_sketch: Bucket names by size with dict.setdefault, then build a result dict of only the buckets with two or more names, sorting each surviving bucket's names.
+sample_solution: |
+  def find_duplicates_by_size(records):
+      by_size = {}
+      for record in records:
+          by_size.setdefault(record["size"], []).append(record["name"])
+      return {
+          size: sorted(names)
+          for size, names in by_size.items()
+          if len(names) >= 2
+      }
+hints:
+  - level: 1
+    text: First group every file name under its size, then decide which groups are big enough to keep.
+  - level: 2
+    text: Use by_size.setdefault(size, []).append(name) in one pass to build the size buckets.
+  - level: 3
+    text: Build the answer with a dict comprehension over the buckets, keeping only those where len(names) >= 2 and wrapping each kept list in sorted().
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: {}
+    - name: all_unique_sizes
+      input:
+        - name: a.bin
+          size: 1
+        - name: b.bin
+          size: 2
+      expected: {}
+    - name: one_shared_size
+      input:
+        - name: b.bin
+          size: 10
+        - name: a.bin
+          size: 10
+      expected:
+        10:
+          - a.bin
+          - b.bin
+  validation:
+    - name: two_shared_groups_drop_singleton
+      input:
+        - name: c.dat
+          size: 5
+        - name: a.dat
+          size: 5
+        - name: z.dat
+          size: 9
+        - name: y.dat
+          size: 9
+        - name: solo.dat
+          size: 7
+      expected:
+        5:
+          - a.dat
+          - c.dat
+        9:
+          - y.dat
+          - z.dat
+    - name: triple_at_one_size
+      input:
+        - name: x.raw
+          size: 3
+        - name: m.raw
+          size: 3
+        - name: a.raw
+          size: 3
+      expected:
+        3:
+          - a.raw
+          - m.raw
+          - x.raw
+    - name: names_sorted_not_input_order
+      input:
+        - name: p.log
+          size: 8
+        - name: q.log
+          size: 8
+      expected:
+        8:
+          - p.log
+          - q.log
+    - name: singletons_excluded
+      input:
+        - name: big.iso
+          size: 100
+        - name: dup1.iso
+          size: 50
+        - name: dup2.iso
+          size: 50
+      expected:
+        50:
+          - dup1.iso
+          - dup2.iso
+explanation_markdown: |
+  This is a two-phase pattern that shows up all over automation: **group, then
+  filter the groups**. The first pass buckets every name under its size with
+  `setdefault`, an O(n) walk. The second pass keeps only the buckets that earned
+  their place — `len(names) >= 2` — because a size held by a single file can never
+  be a duplicate and only adds noise. Sorting each surviving bucket makes the output
+  deterministic so a rerun produces byte-identical results, and it keeps the report
+  easy to scan. Size-bucketing is the standard cheap prefilter before you spend real
+  effort (a hash or byte compare) confirming the true duplicates inside a bucket.
+common_mistakes:
+  - Returning every size bucket, including the singletons that can never be duplicates.
+  - Leaving each bucket's names in input order instead of sorting them, so the output is not deterministic.
+  - Comparing file names for equality instead of grouping by the size field the scan is meant to key on.

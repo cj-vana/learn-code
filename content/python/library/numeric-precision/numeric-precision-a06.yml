@@ -1,0 +1,142 @@
+id: exercise.library.numeric_precision.a06
+kind: exercise
+version: 1
+language: python
+title: The Cabinetmaker's Fractional Inches
+slug: numeric-precision-a06
+difficulty: medium
+concepts:
+  - python.numeric_precision
+  - concepts.number_theory
+prerequisites:
+  - python.dictionaries
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.numeric_precision.a06
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original exact-rational-arithmetic drill framed as a cabinetmaker combining fractional-inch measurements with fractions.Fraction.
+prompt_markdown: |
+  A cabinetmaker works in fractional inches — halves, quarters, thirds — and needs
+  exact answers when combining them. Floats would turn `1/3 + 1/6` into a fuzzy
+  `0.4999999999999999`, so you use `fractions.Fraction`, which stays exact and
+  always reports the result in lowest terms.
+
+  Write `fraction_arithmetic(request)` where `request` is a dict with three keys:
+
+  - `a`: the first measurement as a two-element list `[numerator, denominator]`
+  - `b`: the second measurement as a two-element list `[numerator, denominator]`
+  - `op`: one of the operation names (strings) `"add"`, `"sub"`, `"mul"`, `"div"`
+
+  Build a `Fraction` from each pair, apply the operation (`a op b`, so `"sub"` is
+  `a - b` and `"div"` is `a / b`), and return the exact result as a reduced
+  two-element list `[numerator, denominator]` with a positive denominator.
+
+  Examples:
+
+  - `{"a": [1, 2], "b": [1, 3], "op": "add"}` returns `[5, 6]`
+  - `{"a": [1, 3], "b": [1, 6], "op": "add"}` returns `[1, 2]` (exact, where floats
+    would drift)
+  - `{"a": [2, 3], "b": [3, 4], "op": "mul"}` returns `[1, 2]` (6/12 reduces)
+  - `{"a": [1, 2], "b": [3, 4], "op": "div"}` returns `[2, 3]`
+  - `{"a": [-1, 2], "b": [1, 2], "op": "add"}` returns `[0, 1]`
+
+  You may assume `b` is non-zero whenever `op` is `"div"`.
+starter_code: |
+  from fractions import Fraction
+
+
+  def fraction_arithmetic(request):
+      return [0, 1]
+function_name: fraction_arithmetic
+input_mode: function
+solution_sketch: Build Fraction(*a) and Fraction(*b), branch on the op name to add/subtract/multiply/divide them, then return the reduced result's numerator and denominator as a list.
+sample_solution: |
+  from fractions import Fraction
+
+
+  def fraction_arithmetic(request):
+      a = Fraction(request["a"][0], request["a"][1])
+      b = Fraction(request["b"][0], request["b"][1])
+      op = request["op"]
+      if op == "add":
+          result = a + b
+      elif op == "sub":
+          result = a - b
+      elif op == "mul":
+          result = a * b
+      else:
+          result = a / b
+      return [result.numerator, result.denominator]
+hints:
+  - level: 1
+    text: Turn each [num, den] pair into a Fraction so the arithmetic stays exact and self-reduces.
+  - level: 2
+    text: Branch on the op string to choose +, -, *, or / between the two Fractions.
+  - level: 3
+    text: The result is already in lowest terms; return [result.numerator, result.denominator] as a list.
+tests:
+  public:
+    - name: add_halves_and_thirds
+      input:
+        a: [1, 2]
+        b: [1, 3]
+        op: "add"
+      expected: [5, 6]
+    - name: multiply_reduces
+      input:
+        a: [2, 3]
+        b: [3, 4]
+        op: "mul"
+      expected: [1, 2]
+    - name: divide
+      input:
+        a: [1, 2]
+        b: [3, 4]
+        op: "div"
+      expected: [2, 3]
+  validation:
+    - name: exact_third_plus_sixth
+      input:
+        a: [1, 3]
+        b: [1, 6]
+        op: "add"
+      expected: [1, 2]
+    - name: subtract_to_zero
+      input:
+        a: [-1, 2]
+        b: [1, 2]
+        op: "add"
+      expected: [0, 1]
+    - name: subtract_whole_numbers
+      input:
+        a: [5, 1]
+        b: [3, 1]
+        op: "sub"
+      expected: [2, 1]
+    - name: divide_yields_whole
+      input:
+        a: [3, 4]
+        b: [1, 4]
+        op: "div"
+      expected: [3, 1]
+explanation_markdown: |
+  Fractions are the right tool whenever the exact value matters and the numbers are
+  rational. `1/3 + 1/6` is exactly `1/2`, but in floats it lands on
+  `0.4999999999999999`, because neither third nor sixth is representable in binary.
+  `fractions.Fraction` keeps a numerator and denominator as arbitrary-precision
+  integers, so every `+`, `-`, `*`, and `/` is computed exactly and the answer is
+  automatically reduced to lowest terms with a positive denominator.
+
+  Because Fraction overloads the arithmetic operators, the only real work is
+  dispatching on the operation name and reading `.numerator`/`.denominator` back
+  out. Subtracting equal fractions gives the canonical zero `0/1`, dividing
+  `3/4` by `1/4` gives the whole number `3/1`, and a product like `2/3 * 3/4`
+  reduces from `6/12` down to `1/2` on its own.
+common_mistakes:
+  - Converting the fractions to floats to do the math, which reintroduces rounding error the exercise is designed to avoid.
+  - Returning the result without reading .numerator/.denominator, so a Fraction object leaks out instead of a [num, den] list.
+  - Reversing operands for sub or div (computing b - a or b / a) instead of the specified a op b order.

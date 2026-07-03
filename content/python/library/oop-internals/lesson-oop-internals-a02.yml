@@ -1,0 +1,95 @@
+id: lesson.library.oop_internals.a02
+kind: lesson
+version: 1
+language: python
+title: 'The MRO: How Python Decides Whose Method Wins'
+slug: lesson-oop-internals-a02
+difficulty: hard
+concepts:
+  - python.descriptors_mro
+prerequisites:
+  - python.classes
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.oop_internals.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original MRO and C3 linearization walkthrough with a fresh brewery-equipment class hierarchy.
+body_markdown: |
+  Single inheritance is easy: look up the chain. Multiple inheritance asks
+  a harder question — in the classic diamond, when two parents both define
+  `report()`, whose runs? Python's answer is deterministic, published, and
+  worth understanding because `super()` makes no sense without it.
+
+  ### The linearization
+
+  A brewery's monitoring code:
+
+  ```python
+  class Vessel:                 def report(self): return "vessel"
+  class Heated(Vessel):         def report(self): return "heated"
+  class Pressurized(Vessel):    pass
+  class Fermenter(Heated, Pressurized):  pass
+  ```
+
+  `Fermenter().report()` → `"heated"`. Why? Every class has a **method
+  resolution order** — a single flattened list of itself and its
+  ancestors — computed by the **C3 linearization** algorithm:
+
+  ```python
+  Fermenter.__mro__
+  # (Fermenter, Heated, Pressurized, Vessel, object)
+  ```
+
+  Attribute lookup walks this list front to back and takes the first hit.
+  C3 guarantees three things: a class always precedes its parents;
+  parents appear in the order listed in the class statement (`Heated`
+  before `Pressurized`); and every class appears exactly once — the
+  diamond's shared base `Vessel` shows up *after both* branches, not
+  twice. Some hierarchies cannot satisfy those promises simultaneously
+  (inherit from `(A, B)` in one class and `(B, A)` in another), and Python
+  refuses to create the class at all — a loud error beating a silent
+  ambiguity.
+
+  ### super() is not "my parent"
+
+  The most useful reframe in Python OOP: `super()` means **"the next
+  class in the caller's MRO"** — which may be a *sibling*, not a parent.
+
+  ```python
+  class Heated(Vessel):
+      def setup(self):
+          print("heated")
+          super().setup()      # in Fermenter's MRO, this calls Pressurized!
+  ```
+
+  When `Fermenter().setup()` runs, the MRO is Fermenter → Heated →
+  Pressurized → Vessel. `super()` inside `Heated` follows *that* chain, so
+  it reaches `Pressurized.setup` — a class `Heated` has never heard of.
+  This is **cooperative multiple inheritance**: if every class in a
+  hierarchy calls `super().setup()`, each setup runs exactly once, in MRO
+  order, regardless of how classes get combined. It is the design behind
+  mixins that "just work" — and the reason a missing `super()` call in one
+  mixin silently breaks every class behind it in the chain.
+
+  ### Reading an MRO under pressure
+
+  The exercises have you compute linearizations and predict method winners
+  from hierarchy descriptions — by hand, the way you must in a code
+  review. The working method: start at the class, take parents left to
+  right, and place a shared ancestor only after every branch that leads to
+  it. When in doubt at runtime, `SomeClass.__mro__` prints the truth — one
+  of Python's most underused debugging tools.
+checkpoints:
+  - question: In class Fermenter(Heated, Pressurized) where both branches share Vessel, where does Vessel land in the MRO and why?
+    answer: 'After both Heated and Pressurized and before object — C3 places a shared ancestor only after every branch that leads to it, and each class appears exactly once, so the diamond''s base is visited last.'
+    explanation: This single placement rule resolves the diamond problem deterministically instead of ambiguously.
+  - question: Why can super() inside Heated.setup end up calling a method of Pressurized, a class Heated knows nothing about?
+    answer: super() follows the MRO of the RUNTIME instance's class, not the textual parent — in Fermenter's MRO, Pressurized comes after Heated, so Heated's super() steps sideways to the sibling.
+    explanation: '"Next in the MRO, not my parent" is the reframe that makes cooperative mixins comprehensible — and explains bugs where a forgotten super() call silently skips the rest of the chain.'
+  - question: Python refuses to create some multiple-inheritance hierarchies with a TypeError about MRO. What is it protecting you from?
+    answer: 'Hierarchies whose declared parent orders contradict each other (one class says A before B, another B before A) have no linearization satisfying everyone; Python fails loudly at class creation rather than picking an arbitrary winner silently.'
+    explanation: A consistent-or-refuse policy converts the worst kind of bug (silent ambiguous dispatch) into an immediate, explainable error.

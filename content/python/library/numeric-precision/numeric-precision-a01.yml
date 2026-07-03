@@ -1,0 +1,143 @@
+id: exercise.library.numeric_precision.a01
+kind: exercise
+version: 1
+language: python
+title: The Optics Bench Alignment Check
+slug: numeric-precision-a01
+difficulty: easy
+concepts:
+  - python.numeric_precision
+  - python.operators
+prerequisites:
+  - python.dictionaries
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.numeric_precision.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original float-tolerance drill framed as a lens-alignment bench comparing a measured reading against a reference.
+prompt_markdown: |
+  At an optics workshop, a laser rig reports the position of a lens as a floating
+  point number. Because floats carry tiny rounding error, you must never test two
+  readings with `==`. Instead you compare them with a tolerance.
+
+  Write `is_close_enough(reading)` where `reading` is a dict with four keys:
+
+  - `measured`: the reading the rig produced (float)
+  - `reference`: the target position (float)
+  - `rel_tol`: the relative tolerance (float, a fraction of the larger magnitude)
+  - `abs_tol`: the absolute tolerance (float, a fixed floor near zero)
+
+  Return `True` when the two values are within tolerance and `False` otherwise,
+  using exactly the rule that `math.isclose` implements:
+
+  `abs(measured - reference) <= max(rel_tol * max(abs(measured), abs(reference)), abs_tol)`
+
+  Example: `{"measured": 5.0, "reference": 5.0, "rel_tol": 1.0e-9, "abs_tol": 0.0}`
+  returns `True`.
+
+  Edge cases you must handle:
+
+  - Values that differ only by float rounding drift (e.g. `0.30000000000000004`
+    vs `0.3`) are close under a small `rel_tol`.
+  - Comparing against `0.0` with only a relative tolerance is effectively never
+    close, because `rel_tol` scales by the magnitude (which is near zero). Such a
+    case is only close when `abs_tol` is large enough to cover the gap.
+starter_code: |
+  import math
+
+
+  def is_close_enough(reading):
+      return False
+function_name: is_close_enough
+input_mode: function
+solution_sketch: Pull the four keys out of the dict and hand them to math.isclose with rel_tol and abs_tol as keyword arguments; return its boolean result.
+sample_solution: |
+  import math
+
+
+  def is_close_enough(reading):
+      return math.isclose(
+          reading["measured"],
+          reading["reference"],
+          rel_tol=reading["rel_tol"],
+          abs_tol=reading["abs_tol"],
+      )
+hints:
+  - level: 1
+    text: Never compare floats with ==; math.isclose exists precisely to fold rounding drift into an allowed tolerance band.
+  - level: 2
+    text: math.isclose takes the two values positionally, then rel_tol and abs_tol as keyword arguments.
+  - level: 3
+    text: Return math.isclose(reading["measured"], reading["reference"], rel_tol=reading["rel_tol"], abs_tol=reading["abs_tol"]).
+tests:
+  public:
+    - name: exact_equal
+      input:
+        measured: 5.0
+        reference: 5.0
+        rel_tol: 1.0e-9
+        abs_tol: 0.0
+      expected: true
+    - name: float_drift
+      input:
+        measured: 0.30000000000000004
+        reference: 0.3
+        rel_tol: 1.0e-9
+        abs_tol: 0.0
+      expected: true
+    - name: far_apart
+      input:
+        measured: 1.0
+        reference: 2.0
+        rel_tol: 1.0e-9
+        abs_tol: 0.0
+      expected: false
+  validation:
+    - name: near_zero_rel_only
+      input:
+        measured: 0.0
+        reference: 1.0e-12
+        rel_tol: 1.0e-9
+        abs_tol: 0.0
+      expected: false
+    - name: near_zero_with_abs_floor
+      input:
+        measured: 0.0
+        reference: 1.0e-12
+        rel_tol: 1.0e-9
+        abs_tol: 1.0e-9
+      expected: true
+    - name: loose_rel_tol
+      input:
+        measured: 100.0
+        reference: 101.0
+        rel_tol: 0.02
+        abs_tol: 0.0
+      expected: true
+    - name: tight_rel_tol
+      input:
+        measured: 100.0
+        reference: 101.0
+        rel_tol: 0.005
+        abs_tol: 0.0
+      expected: false
+explanation_markdown: |
+  Floating point stores most decimals as the nearest binary approximation, so two
+  computations that are "the same" mathematically can differ in their last bits.
+  Testing with `==` turns that harmless drift into a false mismatch. `math.isclose`
+  gives you a tolerance band instead: the values pass when their difference is no
+  bigger than the larger of a *relative* allowance (`rel_tol` times the bigger
+  magnitude) and an *absolute* allowance (`abs_tol`).
+
+  The relative term is what you usually want, but it collapses to almost nothing
+  when both values are near zero, since it scales by magnitude. That is why the
+  near-zero cases need an explicit `abs_tol` floor to ever count as close. Choosing
+  both tolerances deliberately is the whole skill here.
+common_mistakes:
+  - Comparing the two readings with == and reporting spurious mismatches from harmless rounding drift.
+  - Passing rel_tol positionally, which lands it in the wrong parameter slot; it must be a keyword argument.
+  - Expecting a value to be close to 0.0 using only rel_tol, forgetting that the relative band vanishes near zero and abs_tol is required.

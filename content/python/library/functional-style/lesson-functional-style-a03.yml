@@ -1,0 +1,97 @@
+id: lesson.library.functional_style.a03
+kind: lesson
+version: 1
+language: python
+title: 'Closures as Strategies and the Cost of State'
+slug: lesson-functional-style-a03
+difficulty: medium
+concepts:
+  - python.functional_style
+  - python.closures_decorators
+prerequisites:
+  - python.functional_style
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.functional_style.a03
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original walkthrough of closures as strategy objects and immutability tradeoffs, framed around a pricing engine, with fresh worked code.
+body_markdown: |
+  A closure — a function carrying variables from where it was created —
+  is often a *lighter object than a class*. When a "thing" is really
+  just "behavior plus a little configuration," a closure says so with
+  less ceremony, and this lesson is about that judgment plus the
+  immutability discipline that makes functional code safe.
+
+  ### Closures as strategy objects
+
+  A shipping calculator needs pluggable pricing rules. The OOP answer is
+  a Strategy class per rule; the functional answer is a closure per rule:
+
+  ```python
+  def flat_rate(amount):
+      def price(weight):
+          return amount
+      return price
+
+  def per_kg(rate, minimum):
+      def price(weight):
+          return max(rate * weight, minimum)
+      return price
+
+  rules = {"standard": per_kg(2.5, 5.0), "express": per_kg(6.0, 12.0),
+           "letter": flat_rate(1.5)}
+  rules["express"](3)        # 18.0
+  ```
+
+  Each `price` closure captures its own configuration and exposes one
+  clean call. No class, no `self`, no instantiation ceremony — a
+  function that remembers. This is a **strategy object**, and closures
+  are the idiomatic Python spelling when the strategy is a single method
+  with some fixed data. (When it grows multiple methods or needs
+  identity/inheritance, a class earns its keep — the same closure-versus-
+  class judgment as the decorators area.)
+
+  ### The state that hides in closures
+
+  Closures can also *hold mutable state* — a counter, an accumulator —
+  and here functional discipline earns its warning. A closure over a
+  mutable default or a captured list is a small pocket of shared,
+  invisible state: two callers of the same closure see each other's
+  mutations. That is occasionally the point (a memoization cache) and
+  frequently a bug (the classic late-binding loop closure, where every
+  closure captures the *same* loop variable and all see its final
+  value). Your exercises pin both the useful and the surprising cases.
+
+  ### Immutability as a default posture
+
+  The through-line of functional style: **prefer producing new values to
+  mutating existing ones.** A function that takes a list and returns a
+  *new* sorted list is safer than one that sorts in place, because the
+  caller's data is untouched — no spooky action where passing your list
+  to a function silently reorders it. Tuples over lists for fixed
+  records, `frozenset` for constant sets, returning new dicts from
+  transforms: each removes a class of "who mutated my data?" bug.
+
+  The cost is honest: copying has a price, and for large hot-path data,
+  in-place mutation (clearly localized, well-tested) is the right call —
+  the performance area weighs exactly this. But as a *default*,
+  immutability makes code easier to reason about, safe to parallelize,
+  and trivial to test — you cannot have a state bug in state that never
+  changes. Functional style, in the end, is less about `map` and
+  `reduce` than about this posture: values flowing through transforms,
+  state introduced only where it truly must be, and every function
+  honest about what it touches.
+checkpoints:
+  - question: When is a closure the better choice than a Strategy class, and when does the class earn its keep?
+    answer: 'A closure fits when the strategy is essentially one method plus some fixed configuration — it captures the data and exposes a clean call with no class ceremony; a class is warranted when the strategy needs multiple methods, identity, or inheritance.'
+    explanation: 'Closures are lightweight strategy objects; the closure-versus-class judgment turns on how much structure the behavior actually needs.'
+  - question: What is the risk of a closure that captures mutable state, and give the classic bug.
+    answer: 'The captured state is shared and invisible, so callers can affect each other; the classic bug is the late-binding loop closure, where closures created in a loop all capture the same variable and every one sees its final value.'
+    explanation: 'Hidden shared state is exactly what functional discipline warns against — sometimes intended (a cache), often a surprise.'
+  - question: State the immutability default and the honest exception.
+    answer: 'Prefer returning new values to mutating existing ones — a function returning a new sorted list never surprises its caller, and state that never changes cannot have a state bug; the exception is large hot-path data where localized, well-tested in-place mutation is worth the performance, as the performance area weighs.'
+    explanation: 'Immutability-by-default trades some copying cost for reasoning, testing, and parallelism safety — a posture, not an absolute.'

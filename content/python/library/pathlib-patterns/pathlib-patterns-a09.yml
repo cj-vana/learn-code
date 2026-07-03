@@ -1,0 +1,103 @@
+id: exercise.library.pathlib_patterns.a09
+kind: exercise
+version: 1
+language: python
+title: Cataloguing the Observatory's Path Segments
+slug: pathlib-patterns-a09
+difficulty: medium
+concepts:
+  - python.pathlib_os
+  - python.lists
+prerequisites:
+  - python.strings
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.pathlib_patterns.a09
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original path-splitting drill themed around an observatory instrument catalog, exercising PurePosixPath.parts and its anchor and normalization edge cases.
+prompt_markdown: |
+  An observatory catalogues each instrument reading by a POSIX-style path such
+  as `/observatory/dome/mirror.glass`. The indexer needs every path broken into
+  its ordered segments so it can nest them under folders in the catalog tree.
+
+  Write `split_path_components(path_str)` that returns a list of the path's
+  components, in order, exactly as `pathlib` reports them:
+
+  - For an **absolute** path the first component is the root anchor `/`. So
+    `split_path_components("/observatory/dome/mirror.glass")` returns
+    `["/", "observatory", "dome", "mirror.glass"]`.
+  - For a **relative** path there is no anchor element:
+    `split_path_components("kitchen/pantry/jar")` returns
+    `["kitchen", "pantry", "jar"]`.
+  - A **trailing slash carries no component**, so `recipes/soup/` splits the
+    same as `recipes/soup` into `["recipes", "soup"]`.
+  - The empty string `""` and the bare current directory `.` have no
+    components at all, so both return `[]`.
+
+  Parse the path as text with forward slashes; never read a real filesystem.
+starter_code: |
+  from pathlib import PurePosixPath
+
+
+  def split_path_components(path_str):
+      return []
+function_name: split_path_components
+input_mode: function
+solution_sketch: Wrap the string in PurePosixPath and return list(path.parts); the anchor, trailing-slash, and empty cases fall out of pathlib's own parsing.
+sample_solution: |
+  from pathlib import PurePosixPath
+
+
+  def split_path_components(path_str):
+      return list(PurePosixPath(path_str).parts)
+hints:
+  - level: 1
+    text: Splitting on "/" by hand invites trouble with anchors and trailing slashes. A pure path object already exposes its parsed segments.
+  - level: 2
+    text: Look at `PurePosixPath(path_str).parts`; it is a tuple that includes the root anchor for absolute paths and drops empty trailing segments.
+  - level: 3
+    text: Return `list(PurePosixPath(path_str).parts)`. The empty string and `.` both parse to no components, giving `[]` automatically.
+tests:
+  public:
+    - name: absolute
+      input: "/observatory/dome/mirror.glass"
+      expected: ["/", "observatory", "dome", "mirror.glass"]
+    - name: relative
+      input: "kitchen/pantry/jar"
+      expected: ["kitchen", "pantry", "jar"]
+    - name: single
+      input: "single"
+      expected: ["single"]
+  validation:
+    - name: empty
+      input: ""
+      expected: []
+    - name: root_only
+      input: "/"
+      expected: ["/"]
+    - name: trailing_slash
+      input: "recipes/soup/"
+      expected: ["recipes", "soup"]
+    - name: current_dir
+      input: "."
+      expected: []
+explanation_markdown: |
+  `PurePosixPath(path_str).parts` gives you the fully parsed segment tuple
+  without any string juggling. The library folds three edge cases into that one
+  attribute: it prepends the root anchor `/` as a distinct component for
+  absolute paths, it collapses redundant and trailing separators so
+  `recipes/soup/` and `recipes/soup` agree, and it treats `""` and `.` as the
+  current directory, which has no named parts.
+
+  Splitting on `"/"` by hand tends to leave stray empty strings from leading or
+  trailing slashes and loses the notion of an anchor entirely. Leaning on
+  `.parts` keeps the catalog indexer correct and short.
+common_mistakes:
+  - Using `path_str.split("/")`, which leaves an empty string at the front of absolute paths and at the end of trailing-slash paths.
+  - Expecting the empty string or `.` to produce `[""]` or `["."]` instead of an empty list.
+  - Returning the raw tuple from `.parts` when the caller compares against a list.

@@ -1,0 +1,108 @@
+id: exercise.library.sqlite_patterns.a03
+kind: exercise
+version: 1
+language: python
+title: Counting the Placeholders
+slug: sqlite-patterns-a03
+difficulty: easy
+concepts:
+  - python.sqlite_sql
+  - python.strings
+prerequisites:
+  - python.strings
+  - python.lists
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sqlite_patterns.a03
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original placeholder-arity check framed as a pre-flight lint that a query template's ? markers match the number of values supplied, mirroring the ProgrammingError SQLite raises on a mismatch.
+prompt_markdown: |
+  When you run a parameterised query, SQLite expects the number of `?` placeholders
+  in the statement to match the number of values you bind. If they disagree it
+  refuses the query with a `ProgrammingError`, so a careful author checks the pair
+  before ever touching the database.
+
+  Write `parameterized_query_safe(request)` where `request` is a single dictionary
+  with two keys:
+
+  - `"template"`: a SQL string that uses `?` only as bind placeholders (no `?`
+    ever appears inside a quoted literal)
+  - `"params"`: the list of values that would be bound, in order
+
+  Return `True` if the number of `?` placeholders in the template exactly equals
+  the length of `params`, and `False` otherwise. A template with no placeholders
+  paired with an empty list is a valid match and returns `True`; the same template
+  paired with one or more params returns `False`.
+starter_code: |
+  def parameterized_query_safe(request):
+      return False
+function_name: parameterized_query_safe
+input_mode: function
+solution_sketch: Count the ? characters in the template and compare that count to the length of the params list, returning the boolean result.
+sample_solution: |
+  def parameterized_query_safe(request):
+      template = request["template"]
+      params = request["params"]
+      return template.count("?") == len(params)
+hints:
+  - level: 1
+    text: The prompt guarantees every ? in the template is a placeholder, so you never have to worry about one hiding inside a string literal.
+  - level: 2
+    text: str.count("?") tells you how many placeholders the statement has, and len(params) tells you how many values you would bind.
+  - level: 3
+    text: Return the comparison of those two numbers directly; equal counts mean a safe call, anything else is a mismatch.
+tests:
+  public:
+    - name: one_placeholder_one_param
+      input:
+        template: 'SELECT * FROM crew WHERE badge = ?'
+        params: [7]
+      expected: true
+    - name: two_placeholders_two_params
+      input:
+        template: 'INSERT INTO crew (name, badge) VALUES (?, ?)'
+        params: [Ada, 7]
+      expected: true
+    - name: too_few_params
+      input:
+        template: 'SELECT * FROM crew WHERE badge = ? AND dock = ?'
+        params: [7]
+      expected: false
+  validation:
+    - name: no_placeholders_no_params
+      input:
+        template: 'SELECT * FROM crew'
+        params: []
+      expected: true
+    - name: no_placeholders_extra_param
+      input:
+        template: 'SELECT * FROM crew'
+        params: [north]
+      expected: false
+    - name: too_many_params
+      input:
+        template: 'SELECT * FROM crew WHERE badge = ?'
+        params: [7, 8]
+      expected: false
+    - name: three_placeholders_three_params
+      input:
+        template: 'INSERT INTO crew (name, badge, dock) VALUES (?, ?, ?)'
+        params: [Ada, 7, north]
+      expected: true
+explanation_markdown: |
+  A parameterised statement is a contract: each `?` is a slot, and the driver fills
+  the slots left to right from your params. Supply too few values and the trailing
+  slots are unbound; supply too many and the extras have nowhere to go. Either way
+  SQLite raises `sqlite3.ProgrammingError`, so a cheap `template.count("?") ==
+  len(params)` check up front catches the mistake before it reaches the database.
+  The prompt's guarantee that `?` never appears inside a quoted literal is what lets
+  a plain character count stand in for real SQL parsing here; in production code
+  with string literals you would lean on the driver itself to enforce the arity.
+common_mistakes:
+  - Returning True whenever the template contains any placeholder, ignoring whether the counts actually match.
+  - Comparing against a hard-coded number of parameters instead of len(params), which breaks for templates with a different placeholder count.
+  - Assuming an empty params list is always wrong, when a statement with no placeholders should pair with exactly zero values.

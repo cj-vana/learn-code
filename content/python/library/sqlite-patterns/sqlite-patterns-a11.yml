@@ -1,0 +1,157 @@
+id: exercise.library.sqlite_patterns.a11
+kind: exercise
+version: 1
+language: python
+title: Counting the Mountain Refuge Pantry
+slug: sqlite-patterns-a11
+difficulty: medium
+concepts:
+  - python.sqlite_sql
+  - concepts.grouping_aggregation
+prerequisites:
+  - python.dictionaries
+  - python.lists
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sqlite_patterns.a11
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original COUNT-with-WHERE drill framed as a mountain refuge tallying pantry stock against a saved developer-authored filter expression, emphasising that the filter is trusted schema logic rather than raw user input.
+prompt_markdown: |
+  A mountain refuge tracks its pantry as one row per item, a dict like
+  `{"item": "oats", "grams": 800, "shelf": "A3"}`. The warden keeps a handful of
+  **saved filters** — short SQL boolean expressions such as `grams >= 500` — and
+  wants to know how many pantry items match a given filter without listing them.
+
+  Write `count_rows_matching(request)` where `request` is a single dict:
+
+  - `"rows"`: the pantry, a list of dicts that all share the same keys.
+  - `"predicate"`: a SQL boolean expression written against those columns, for
+    example `"grams >= 500"` or `"shelf = 'A3' AND grams > 100"`.
+
+  Load the rows into an in-memory SQLite table, run a single
+  `SELECT COUNT(*) FROM ... WHERE <predicate>`, and return the resulting count as
+  an integer.
+
+  Rules:
+
+  - The predicate is a *trusted, warden-authored* filter — one of the refuge's
+    own saved expressions — so you splice it into the `WHERE` clause as query
+    text. (It is **not** raw text typed by a stranger; that would need a very
+    different, locked-down approach.)
+  - A predicate that matches nothing returns `0`.
+  - If `"rows"` is empty, return `0` without needing to consult the predicate.
+
+  Open `sqlite3.connect(":memory:")` inside the function and touch no files.
+starter_code: |
+  import sqlite3
+
+
+  def count_rows_matching(request):
+      return 0
+function_name: count_rows_matching
+input_mode: function
+solution_sketch: "Short-circuit to 0 on empty rows, otherwise build an in-memory table from the row keys, insert every row with parameterized values, run SELECT COUNT(*) FROM t WHERE <predicate> splicing the trusted predicate into the query text, and return the single integer from fetchone."
+sample_solution: |
+  import sqlite3
+
+
+  def count_rows_matching(request):
+      rows = request["rows"]
+      predicate = request["predicate"]
+      if not rows:
+          return 0
+      columns = list(rows[0].keys())
+      col_list = ", ".join('"%s"' % c for c in columns)
+      placeholders = ", ".join("?" for _ in columns)
+      conn = sqlite3.connect(":memory:")
+      conn.execute("CREATE TABLE pantry (%s)" % col_list)
+      conn.executemany(
+          "INSERT INTO pantry (%s) VALUES (%s)" % (col_list, placeholders),
+          [tuple(row[c] for c in columns) for row in rows],
+      )
+      query = "SELECT COUNT(*) FROM pantry WHERE %s" % predicate
+      (count,) = conn.execute(query).fetchone()
+      return count
+hints:
+  - level: 1
+    text: Seed the table from the row keys exactly as any insert would, then think of the count as one aggregate query on top of it.
+  - level: 2
+    text: COUNT(*) returns a single-row, single-column result, so fetchone gives you a one-element tuple to unpack.
+  - level: 3
+    text: The predicate is trusted schema logic, so place it directly into the WHERE clause text; only row values were bound with ? during the insert.
+tests:
+  public:
+    - name: numeric_threshold
+      input:
+        rows:
+          - {item: oats, grams: 800, shelf: A3}
+          - {item: salt, grams: 200, shelf: B1}
+          - {item: rice, grams: 500, shelf: A3}
+        predicate: "grams >= 500"
+      expected: 2
+    - name: string_equality
+      input:
+        rows:
+          - {item: oats, grams: 800, shelf: A3}
+          - {item: salt, grams: 200, shelf: B1}
+          - {item: rice, grams: 500, shelf: A3}
+        predicate: "shelf = 'A3'"
+      expected: 2
+    - name: matches_nothing
+      input:
+        rows:
+          - {item: oats, grams: 800, shelf: A3}
+          - {item: salt, grams: 200, shelf: B1}
+        predicate: "grams > 5000"
+      expected: 0
+  validation:
+    - name: compound_predicate
+      input:
+        rows:
+          - {item: oats, grams: 800, shelf: A3}
+          - {item: honey, grams: 300, shelf: A3}
+          - {item: rice, grams: 500, shelf: A3}
+        predicate: "shelf = 'A3' AND grams > 400"
+      expected: 2
+    - name: match_all
+      input:
+        rows:
+          - {item: oats, grams: 800, shelf: A3}
+          - {item: salt, grams: 200, shelf: B1}
+        predicate: "1 = 1"
+      expected: 2
+    - name: empty_pantry
+      input:
+        rows: []
+        predicate: "grams > 0"
+      expected: 0
+    - name: or_predicate
+      input:
+        rows:
+          - {item: oats, grams: 800, shelf: A3}
+          - {item: salt, grams: 200, shelf: B1}
+          - {item: cocoa, grams: 50, shelf: C2}
+        predicate: "grams < 100 OR shelf = 'A3'"
+      expected: 2
+explanation_markdown: |
+  `COUNT(*)` is the database answering "how many?" without shipping the rows
+  themselves back to your program — it evaluates the `WHERE` clause row by row and
+  returns a single number. Because the result is one row of one column, a single
+  `fetchone()` and a tuple unpack (`(count,) = ...`) is all you need.
+
+  There is a deliberate lesson in *what* is spliced versus bound. The row values
+  went in through `?` placeholders during the insert, because values are exactly
+  the thing you must never build by string concatenation. The predicate, by
+  contrast, is a fragment of SQL logic authored by the application itself — a
+  saved filter — so it becomes part of the query text. That is only safe because
+  it is trusted; if the expression ever came from an untrusted source you could
+  not drop it into a query this way, and you would restructure the feature to
+  offer a fixed menu of parameterized filters instead.
+common_mistakes:
+  - Fetching all rows and counting them in Python, which throws away the whole point of asking the database for an aggregate.
+  - Forgetting that fetchone returns a one-element tuple, then comparing that tuple to an integer.
+  - Trying to bind the predicate as a ? parameter; a WHERE expression is SQL text, not a single value, so it cannot be a placeholder.

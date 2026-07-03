@@ -1,0 +1,130 @@
+id: exercise.library.cli_parsing.a06
+kind: exercise
+version: 1
+language: python
+title: Collecting the Field Recorder's Tags
+slug: cli-parsing-a06
+difficulty: medium
+concepts:
+  - python.cli_args
+  - python.lists
+prerequisites:
+  - python.loops
+  - python.conditionals
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.cli_parsing.a06
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original birdsong field-recorder framing for a repeatable flag that accumulates every value into an ordered list.
+prompt_markdown: |
+  A birdsong field recorder lets an observer attach several tags to one take by
+  repeating the same flag: `--tag heron --tag egret --tag heron`. The runner needs
+  every value that each `--tag` introduced, in the order they were given.
+
+  Write `parse_repeated_flag(job)` where `job` is a dict with two keys:
+
+  - `job["argv"]`: the list of command-line tokens.
+  - `job["flag_name"]`: the flag that may repeat, such as `'--tag'`.
+
+  Return a list of values collected by these rules:
+
+  - Each time `flag_name` appears in `argv`, the token immediately after it is one
+    of its values. Take that next token exactly as it is, even if it happens to
+    look like another flag.
+  - Values are returned in the order the flags appeared. Duplicate values are all
+    kept.
+  - Tokens that belong to other flags are ignored.
+  - A `flag_name` at the very end of `argv` with no token after it contributes no
+    value and is skipped.
+  - If `flag_name` never appears, return an empty list.
+
+  Example: `argv = ['--tag', 'heron', '--rate', '5', '--tag', 'egret']` with
+  `flag_name = '--tag'` returns `['heron', 'egret']`.
+starter_code: |
+  def parse_repeated_flag(job):
+      argv = job["argv"]
+      flag_name = job["flag_name"]
+      values = []
+      # Each time flag_name appears, grab the token right after it.
+      return values
+function_name: parse_repeated_flag
+input_mode: function
+solution_sketch: Scan argv with an index; when the current token equals flag_name and a next token exists, append that next token and advance by two, otherwise advance by one.
+sample_solution: |
+  def parse_repeated_flag(job):
+      argv = job["argv"]
+      flag_name = job["flag_name"]
+      values = []
+      i = 0
+      while i < len(argv):
+          if argv[i] == flag_name and i + 1 < len(argv):
+              values.append(argv[i + 1])
+              i += 2
+          else:
+              i += 1
+      return values
+hints:
+  - level: 1
+    text: You need the token after each match, so track your own index rather than using a plain for-loop.
+  - level: 2
+    text: When argv[i] equals the flag and a token follows it, append argv[i + 1] and jump the index forward by two.
+  - level: 3
+    text: The `i + 1 < len(argv)` guard is what makes a trailing flag with no value safe; on any non-match just advance by one.
+tests:
+  public:
+    - name: two_values
+      input:
+        argv: ['--tag', 'heron', '--tag', 'egret']
+        flag_name: '--tag'
+      expected: ['heron', 'egret']
+    - name: never_appears
+      input:
+        argv: ['--rate', '5']
+        flag_name: '--tag'
+      expected: []
+    - name: single_value
+      input:
+        argv: ['--tag', 'heron']
+        flag_name: '--tag'
+      expected: ['heron']
+  validation:
+    - name: interleaved_with_other_flags
+      input:
+        argv: ['--tag', 'a', '--rate', '5', '--tag', 'b']
+        flag_name: '--tag'
+      expected: ['a', 'b']
+    - name: trailing_flag_no_value
+      input:
+        argv: ['--tag', 'a', '--tag']
+        flag_name: '--tag'
+      expected: ['a']
+    - name: duplicate_values_kept
+      input:
+        argv: ['--tag', 'owl', '--tag', 'owl']
+        flag_name: '--tag'
+      expected: ['owl', 'owl']
+    - name: empty_argv
+      input:
+        argv: []
+        flag_name: '--tag'
+      expected: []
+explanation_markdown: |
+  A repeatable flag turns one option name into a list, which is how tools let you
+  pass several tags, includes, or headers without inventing new syntax. Like the
+  single `--flag value` parser, a match and its value sit two positions apart, so
+  managing your own index and advancing by two after a hit is the natural loop
+  shape; the difference is that you append to a list instead of overwriting a dict
+  key, which is exactly what preserves order and keeps duplicates. The
+  specification deliberately says to take the very next token as the value even if
+  it looks like another flag, because a hand-rolled parser at this level has no
+  notion of "this looks like a flag, so it cannot be a value" -- it simply reads
+  the adjacent token. The `i + 1 < len(argv)` guard covers the trailing-flag case
+  so you never read past the end of the list.
+common_mistakes:
+  - Using a dict or overwriting a single variable, so only the last value survives instead of all of them.
+  - Forgetting the bounds check, so a trailing flag with no following token raises IndexError.
+  - Advancing the index by one after a match, which lets the value token be re-examined and can corrupt later matches.

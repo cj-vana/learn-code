@@ -1,0 +1,132 @@
+id: exercise.library.typing_runtime.a11
+kind: exercise
+version: 1
+language: python
+title: Judging the Sourdough Contest
+slug: typing-runtime-a11
+difficulty: hard
+concepts:
+  - python.type_hints
+  - python.functions
+prerequisites:
+  - python.dictionaries
+  - python.functions
+  - python.sorting
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.typing_runtime.a11
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original bakery-contest scenario for a generically-typed argmax utility graded purely on behavior.
+prompt_markdown: |
+  A bakery's sourdough contest needs one impartial judge function that picks the
+  winning entry. The utility is meant to be **generic**: it ranks entries by whatever
+  field the organizers choose, and the field's values might be numbers or strings, so
+  the code carries type hints like `dict[str, Any]` but is graded only on the winner
+  it returns -- the hints never run.
+
+  Write `best_entry(spec)`, where `spec` is a dict shaped like
+  `{"items": <list of dicts>, "key": <field name>, "on_tie": <field name or null>}`.
+  Return the single entry (the whole dict) that ranks first under these rules:
+
+  1. **Primary:** the entry with the largest value at `items[key]` wins. Values are
+     compared with Python's normal `<`/`>`, so this works for ints, floats, or
+     strings (lexicographic order).
+  2. **Tie on the primary key:** if `on_tie` is not `null`, break the tie by the
+     **smallest** value at that field (e.g. fewest faults wins). Every tied entry is
+     guaranteed to contain the `on_tie` field.
+  3. **Still tied, or `on_tie` is `null`:** keep the entry that appears **earliest**
+     in `items` (a stable choice).
+
+  If `items` is empty, return `None`.
+
+  For example, with entries scored 88, 95, and 91 and `key="score"`, `on_tie=null`,
+  the winner is the entry scoring 95. If two entries both score 90 and
+  `on_tie="faults"`, the one with fewer faults wins.
+starter_code: |
+  from typing import Any
+
+
+  def best_entry(spec: dict[str, Any]) -> dict[str, Any] | None:
+      # Return the entry maximizing spec["key"], breaking ties by the smallest
+      # spec["on_tie"] value, then by earliest position. Return None if empty.
+      return None
+function_name: best_entry
+input_mode: function
+solution_sketch: Walk the entries tracking a champion index; replace it only when an entry has a strictly larger key, or an equal key with a strictly smaller on_tie value.
+sample_solution: |
+  from typing import Any
+
+
+  def best_entry(spec: dict[str, Any]) -> dict[str, Any] | None:
+      items = spec["items"]
+      key = spec["key"]
+      on_tie = spec.get("on_tie")
+      if not items:
+          return None
+      best_index = 0
+      for idx in range(1, len(items)):
+          current = items[idx]
+          champ = items[best_index]
+          if current[key] > champ[key]:
+              best_index = idx
+          elif current[key] == champ[key] and on_tie is not None:
+              if current[on_tie] < champ[on_tie]:
+                  best_index = idx
+      return items[best_index]
+hints:
+  - level: 1
+    text: Track the index of the best entry seen so far and compare each new entry against it, rather than sorting the whole list.
+  - level: 2
+    text: Replace the champion when the new entry has a strictly larger key. On an exact tie, only consider on_tie when it is not null.
+  - level: 3
+    text: For the tie-break, swap to the new entry only when current[on_tie] < champ[on_tie]; equal on_tie values (or a null on_tie) keep the earlier entry because its index came first.
+tests:
+  public:
+    - name: clear_winner
+      input: {items: [{name: 'sunrise', score: 88}, {name: 'harvest', score: 95}, {name: 'midnight', score: 91}], key: 'score', on_tie: null}
+      expected: {name: 'harvest', score: 95}
+    - name: tie_broken_by_faults
+      input: {items: [{name: 'a', score: 90, faults: 3}, {name: 'b', score: 90, faults: 1}, {name: 'c', score: 80, faults: 0}], key: 'score', on_tie: 'faults'}
+      expected: {name: 'b', score: 90, faults: 1}
+    - name: empty_field
+      input: {items: [], key: 'score', on_tie: null}
+      expected: null
+  validation:
+    - name: single_entry
+      input: {items: [{name: 'solo', score: 50}], key: 'score', on_tie: null}
+      expected: {name: 'solo', score: 50}
+    - name: tie_keeps_earliest_without_tiebreak
+      input: {items: [{name: 'first', score: 70}, {name: 'second', score: 70}], key: 'score', on_tie: null}
+      expected: {name: 'first', score: 70}
+    - name: generic_over_strings
+      input: {items: [{name: 'zebra', tag: 'apple'}, {name: 'ant', tag: 'pear'}], key: 'tag', on_tie: null}
+      expected: {name: 'ant', tag: 'pear'}
+    - name: equal_tiebreak_keeps_earliest
+      input: {items: [{name: 'x', score: 60, faults: 2}, {name: 'y', score: 60, faults: 2}], key: 'score', on_tie: 'faults'}
+      expected: {name: 'x', score: 60, faults: 2}
+    - name: negative_scores
+      input: {items: [{name: 'p', score: -5}, {name: 'q', score: -2}, {name: 'r', score: -9}], key: 'score', on_tie: null}
+      expected: {name: 'q', score: -2}
+explanation_markdown: |
+  This is `argmax` with a documented tie-break, and it stays generic because it never
+  assumes what type the key holds. Comparing with `>` and `<` works for integers,
+  floats, and strings alike -- the `generic_over_strings` case ranks `"pear"` above
+  `"apple"` purely by lexicographic order, using the same code path as the numeric
+  cases. The `dict[str, Any]` hints in the signature document that intent but do
+  nothing at runtime; only the returned winner is graded.
+
+  Tracking a champion index in a single pass costs O(n) and makes the tie-break exact.
+  A new entry takes the crown only on a strictly larger key. On an equal key, the
+  challenger wins only when its `on_tie` value is strictly smaller; an equal `on_tie`
+  value falls through and the earlier entry stays, because its index was reached
+  first. That is why `tie_keeps_earliest_without_tiebreak` and
+  `equal_tiebreak_keeps_earliest` both return the first of the tied pair. Handling the
+  empty list up front avoids indexing into nothing.
+common_mistakes:
+  - Using >= for the primary comparison, which lets a later equal entry overwrite the earlier one and breaks stability.
+  - Applying the on_tie tie-break even when on_tie is null, or swapping on an equal on_tie value instead of only a strictly smaller one.
+  - Forgetting the empty-list case and indexing items[0] before checking whether any entries exist.

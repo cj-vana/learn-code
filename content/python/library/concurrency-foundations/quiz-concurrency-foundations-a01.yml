@@ -1,0 +1,103 @@
+id: quiz.library.concurrency_foundations.a01
+kind: quiz
+version: 1
+language: python
+title: Choosing and Diagnosing Concurrency
+slug: quiz-concurrency-foundations-a01
+difficulty: hard
+concepts:
+  - python.concurrency_model
+prerequisites:
+  - python.concurrency_model
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.concurrency_foundations.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pattern-recognition quiz on concurrency model selection, GIL reasoning, and coordination failures.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      A script must fetch 40 RSS feeds (network-bound) and then compute
+      similarity scores across all pairs (CPU-bound). Which combination fits?
+    choices:
+      - Threads or asyncio for the fetches, a process pool for the scoring
+      - Threads for both — the GIL releases during computation
+      - Processes for both — always safest
+      - asyncio for both — event loops parallelize CPU work
+    correct_choice: Threads or asyncio for the fetches, a process pool for the scoring
+    explanation: |
+      I/O waits release the GIL (threads/async overlap them); bytecode
+      execution does not, so parallel computation needs separate processes
+      with their own interpreters.
+    concepts:
+      - python.concurrency_model
+  - id: q2
+    prompt: |
+      An asyncio web server handles thousands of connections smoothly until
+      one endpoint starts computing image hashes inline, and ALL endpoints
+      become slow. Why?
+    choices:
+      - The event loop is cooperative — a coroutine that computes without awaiting blocks every other task on the loop
+      - The GIL blocks other processes during hashing
+      - asyncio limits servers to one endpoint at a time
+      - Hash computations disable the network stack
+    correct_choice: The event loop is cooperative — a coroutine that computes without awaiting blocks every other task on the loop
+    explanation: |
+      Nothing preempts a running coroutine; between awaits it owns the loop.
+      CPU work belongs in a thread/process pool via run_in_executor, not
+      inline in a coroutine.
+    concepts:
+      - python.concurrency_model
+  - id: q3
+    prompt: |
+      Two workers each hold one of two locks and wait forever for the other's.
+      What structure PROVES this is a deadlock, and what rule would have
+      prevented it?
+    choices:
+      - A cycle in the wait-for graph (A→L2→B→L1→A); acquiring locks in one global order makes such cycles impossible
+      - A negative semaphore count; using more locks
+      - Stack overflow in both workers; increasing recursion limits
+      - Priority inversion; renaming the locks
+    correct_choice: A cycle in the wait-for graph (A→L2→B→L1→A); acquiring locks in one global order makes such cycles impossible
+    explanation: |
+      Deadlock IS circular waiting — a graph cycle — and ordered acquisition
+      orients every edge consistently so no cycle can close.
+    concepts:
+      - python.concurrency_model
+  - id: q4
+    prompt: |
+      A pipeline's producer thread runs 10x faster than its consumer, and
+      memory climbs until the process dies. What is the standard fix?
+    choices:
+      - A bounded queue — put blocks when full, applying backpressure that slows the producer to the consumer's pace
+      - A bigger machine — more RAM absorbs the difference
+      - A second unbounded queue as overflow
+      - Calling gc.collect() between puts
+    correct_choice: A bounded queue — put blocks when full, applying backpressure that slows the producer to the consumer's pace
+    explanation: |
+      The unbounded buffer converts a rate mismatch into unbounded memory;
+      the bound converts it into flow control. Queue capacity is a design
+      decision, not a detail.
+    concepts:
+      - python.concurrency_model
+  - id: q5
+    prompt: |
+      With Python 3.13's experimental free-threaded (no-GIL) build, which
+      earlier decision changes and which stays?
+    choices:
+      - Threads become viable for CPU-bound parallelism; the I/O-vs-CPU analysis and all coordination discipline (queues, lock ordering) remain exactly as important
+      - Everything changes — locks are no longer needed
+      - Nothing changes — the build only affects startup time
+      - asyncio becomes obsolete
+    correct_choice: Threads become viable for CPU-bound parallelism; the I/O-vs-CPU analysis and all coordination discipline (queues, lock ordering) remain exactly as important
+    explanation: |
+      Removing the GIL moves one boundary in the decision table; races,
+      deadlocks, and backpressure are properties of concurrency itself, not
+      of the GIL.
+    concepts:
+      - python.concurrency_model

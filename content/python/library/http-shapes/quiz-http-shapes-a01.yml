@@ -1,0 +1,104 @@
+id: quiz.library.http_shapes.a01
+kind: quiz
+version: 1
+language: python
+title: HTTP Reasoning
+slug: quiz-http-shapes-a01
+difficulty: medium
+concepts:
+  - python.http_model
+prerequisites:
+  - python.http_model
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.http_shapes.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pattern-recognition quiz on HTTP semantics, retry policy, and client robustness.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      A payment API call times out — the client never saw a response. Why is
+      blindly retrying dangerous for POST /charges but safe for
+      PUT /orders/88/address?
+    choices:
+      - The POST may have succeeded server-side, so a retry double-charges; PUT is idempotent — replaying the same replacement converges to one state
+      - POST is slower than PUT
+      - PUT requests cannot time out
+      - The POST body is larger
+    correct_choice: The POST may have succeeded server-side, so a retry double-charges; PUT is idempotent — replaying the same replacement converges to one state
+    explanation: |
+      A timeout means unknown outcome; only idempotent methods make
+      retry-on-unknown safe, which is why payment APIs demand idempotency
+      keys for POST.
+    concepts:
+      - python.http_model
+  - id: q2
+    prompt: |
+      A client receives 422 Unprocessable Entity and retries the identical
+      request five times with backoff. What is wrong?
+    choices:
+      - 4xx means the REQUEST is defective — retrying it unchanged cannot succeed and just spams; backoff-retry is for 5xx and 429
+      - Five retries is too few for a 422
+      - The backoff should have been linear
+      - Nothing — all errors deserve retries
+    correct_choice: 4xx means the REQUEST is defective — retrying it unchanged cannot succeed and just spams; backoff-retry is for 5xx and 429
+    explanation: |
+      The first digit assigns fault: client errors need a fixed request,
+      server errors need patience. Wiring that branch is the core of retry
+      policy.
+    concepts:
+      - python.http_model
+  - id: q3
+    prompt: |
+      An integration iterates pages with offset pagination while another
+      service inserts records, and some records appear twice in the export.
+      Why?
+    choices:
+      - Insertions shift positions, so page N+1 re-serves items pushed past the offset boundary — the instability cursor pagination exists to fix
+      - The API is caching stale pages
+      - offset and limit were swapped
+      - Duplicate records exist server-side
+    correct_choice: Insertions shift positions, so page N+1 re-serves items pushed past the offset boundary — the instability cursor pagination exists to fix
+    explanation: |
+      Positional pagination under concurrent writes duplicates or skips;
+      cursors bookmark "after this item" and are immune.
+    concepts:
+      - python.http_model
+  - id: q4
+    prompt: |
+      During an outage, 10,000 clients all fail at 12:00:00 and all retry at
+      12:00:01, 12:00:03, 12:00:07... The server keeps collapsing at each
+      wave. What is missing?
+    choices:
+      - Jitter — randomizing each client's delay spreads the synchronized herd that identical schedules create
+      - Longer exponential bases
+      - More retries per client
+      - Shorter timeouts
+    correct_choice: Jitter — randomizing each client's delay spreads the synchronized herd that identical schedules create
+    explanation: |
+      Identical backoff schedules synchronize the fleet into waves; jitter
+      is the de-synchronizer, and every production retry spec includes it.
+    concepts:
+      - python.http_model
+  - id: q5
+    prompt: |
+      A response arrives: status 200, Content-Type text/html, body
+      "<html>Maintenance</html>". The client's next call is json.loads. What
+      discipline was skipped?
+    choices:
+      - The validation ladder — content type must be checked before parsing, since 200 certifies neither format nor shape
+      - Nothing — 200 guarantees valid JSON
+      - The client should have used XML parsing
+      - Status codes above 199 skip validation
+    correct_choice: The validation ladder — content type must be checked before parsing, since 200 certifies neither format nor shape
+    explanation: |
+      Responses are untrusted input; each layer (status, content type,
+      parse, shape) validates before the next proceeds — proxies and
+      maintenance pages make "200 with HTML" routine.
+    concepts:
+      - python.http_model

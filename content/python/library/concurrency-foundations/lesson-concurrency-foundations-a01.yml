@@ -1,0 +1,93 @@
+id: lesson.library.concurrency_foundations.a01
+kind: lesson
+version: 1
+language: python
+title: 'Threads, Processes, or an Event Loop? The Decision First'
+slug: lesson-concurrency-foundations-a01
+difficulty: hard
+concepts:
+  - python.concurrency_model
+prerequisites:
+  - python.functions
+  - python.memory_model
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.concurrency_foundations.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original concurrency decision-framework walkthrough framed around a photo lab's three workloads, with fresh examples.
+body_markdown: |
+  Python offers three concurrency stories — `threading`,
+  `multiprocessing`, and `asyncio` — and the internet is full of people
+  using the wrong one. The decision reduces to a single question about
+  your workload: **while a task runs, what is it waiting for?**
+
+  A photo lab's pipeline makes it concrete:
+
+  - **Downloading originals from cameras** — the program mostly *waits*
+    on the network. I/O-bound.
+  - **Rendering thumbnails** — the CPU grinds pixels flat-out. CPU-bound.
+  - **Serving 5,000 gallery viewers** — enormous numbers of connections,
+    each idle almost all the time. I/O-bound, at scale.
+
+  ### The GIL, stated precisely
+
+  CPython's Global Interpreter Lock allows only one thread to execute
+  Python *bytecode* at a time. Two clarifications do most of the work of
+  understanding it:
+
+  1. **Threads still help for waiting.** When a thread blocks on I/O —
+     network, disk — it *releases* the GIL, and another thread runs. Ten
+     downloader threads genuinely overlap their waits.
+  2. **Threads don't help for computing.** Ten threads rendering
+     thumbnails take turns holding the GIL; total time is single-core
+     time (plus switching overhead). Parallel *computation* needs
+     multiple **processes**, each with its own interpreter and GIL —
+     `multiprocessing` or a `ProcessPoolExecutor`. The cost: processes
+     share nothing, so work and results are *serialized* between them,
+     which is why the pattern is chunk → map across workers → reduce, and
+     why your exercises implement exactly those chunk/aggregate steps.
+
+  (Python 3.13+ ships an experimental free-threaded build that removes
+  the GIL; the decision framework survives — it just moves the boundary
+  for threads.)
+
+  ### And asyncio?
+
+  The event loop handles the third workload: *huge numbers of mostly-idle
+  I/O tasks in one thread*. No locks, no thread per connection — tasks
+  volunteer to pause at `await` points, and a scheduler interleaves them.
+  It is cooperative multitasking, and the next lesson opens the hood. Its
+  weakness mirrors its strength: one accidental CPU-heavy or blocking
+  call in a coroutine stalls *every* task on the loop, because nothing
+  can preempt it.
+
+  ### The table to keep
+
+  ```text
+  workload                          tool
+  ------------------------------    ---------------------------
+  a few I/O tasks                   threads
+  masses of I/O tasks               asyncio
+  CPU-bound work                    processes
+  mixed                             asyncio front + process pool
+  ```
+
+  One discipline the exercises enforce: concurrency *logic* — chunking,
+  scheduling, retry/backoff schedules, result aggregation — is pure
+  computation, testable without ever spawning a real thread. Real systems
+  are built exactly this way: deterministic decision logic surrounded by
+  a thin concurrent shell. You will write the deterministic core.
+checkpoints:
+  - question: Ten threads each download a file; ten threads each resize an image. Which team finishes ~10x faster than serial, and why?
+    answer: 'The downloaders — blocked I/O releases the GIL so their waits overlap; the resizers take turns executing bytecode under the GIL and finish in roughly single-core time.'
+    explanation: '"Threads help waiting, not computing" is the one-line GIL consequence that sorts nearly every threading decision.'
+  - question: Why does CPU-bound parallelism in Python require processes, and what cost does that design impose?
+    answer: 'Each process has its own interpreter and GIL, so bytecode truly runs in parallel; but processes share no memory, so inputs and results must be serialized across the boundary — favoring chunked map/reduce shapes over shared-state designs.'
+    explanation: The serialization cost is why multiprocessing suits coarse-grained work and why the chunk/aggregate helpers you implement are the real API shape.
+  - question: What single mistake can freeze every task on an asyncio event loop, and what makes it possible?
+    answer: 'Running a blocking or CPU-heavy call inside a coroutine — the loop is cooperative, tasks only yield at await points, and nothing can preempt a task that never awaits.'
+    explanation: 'Cooperative scheduling is the source of asyncio''s scale (no locks, no threads) and of its sharpest failure mode.'

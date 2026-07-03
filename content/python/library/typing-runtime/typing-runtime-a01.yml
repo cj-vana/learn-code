@@ -1,0 +1,136 @@
+id: exercise.library.typing_runtime.a01
+kind: exercise
+version: 1
+language: python
+title: Wiring the Observatory Instruments
+slug: typing-runtime-a01
+difficulty: medium
+concepts:
+  - python.type_hints
+  - patterns.filtering
+  - patterns.set_membership
+prerequisites:
+  - python.dictionaries
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.typing_runtime.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original drill on structural (@runtime_checkable Protocol) conformance, framed as an observatory deciding which instruments can be wired to a control bus.
+prompt_markdown: |
+  An observatory wires instruments to a shared control bus. Before an instrument
+  is accepted it must expose every method the bus protocol demands. This mirrors
+  how a `@runtime_checkable Protocol` works at runtime: `isinstance(obj, Proto)`
+  only checks that the **member names are present** — it never inspects argument
+  lists or return types.
+
+  Write `select_conforming_devices(spec)`. The single argument `spec` is a dict:
+
+  - `spec["protocol"]` is a list of required member names (strings).
+  - `spec["devices"]` is a dict mapping each device name to the list of member
+    names it exposes.
+
+  Return a list of the device names whose exposed members include **all** of the
+  required names, sorted alphabetically.
+
+  Rules and edge cases:
+
+  - Order of members does not matter; only presence counts.
+  - Duplicate names (in either the protocol list or a device's member list)
+    collapse — a device that lists `read` once satisfies a protocol asking for
+    `read` twice.
+  - An **empty** protocol is satisfied by every device (there is nothing to
+    require), so return every device name, sorted.
+  - If `spec["devices"]` is empty, return an empty list.
+
+  Example: `spec = {"protocol": ["read", "seek"], "devices": {"camera":
+  ["read", "seek", "focus"], "clock": ["read"]}}` returns `["camera"]`, because
+  only `camera` exposes both `read` and `seek`.
+starter_code: |
+  def select_conforming_devices(spec):
+      return []
+function_name: select_conforming_devices
+input_mode: function
+solution_sketch: Turn the required names into a set, then keep each device whose member set is a superset of that required set, and return the matching device names sorted.
+sample_solution: |
+  def select_conforming_devices(spec):
+      required = set(spec["protocol"])
+      devices = spec["devices"]
+      matches = [
+          name
+          for name, members in devices.items()
+          if required <= set(members)
+      ]
+      return sorted(matches)
+hints:
+  - level: 1
+    text: A runtime-checkable Protocol only asks "does this object have these names?" — so you are checking whether each device's member names cover the required names.
+  - level: 2
+    text: Convert the required names to a set once. A device conforms when required_set is a subset of set(that device's members).
+  - level: 3
+    text: Use required_set <= set(members) as the filter, collect the passing device names, and return sorted(names) so the order is deterministic.
+tests:
+  public:
+    - name: basic_match
+      input:
+        protocol: [read, seek]
+        devices:
+          camera: [read, seek, focus]
+          clock: [read]
+      expected: [camera]
+    - name: empty_protocol_all_pass
+      input:
+        protocol: []
+        devices:
+          alpha: [x]
+          beta: []
+      expected: [alpha, beta]
+    - name: none_conform
+      input:
+        protocol: [write]
+        devices:
+          reader: [read]
+          seeker: [seek]
+      expected: []
+  validation:
+    - name: order_irrelevant
+      input:
+        protocol: [open, close]
+        devices:
+          valve: [close, open]
+      expected: [valve]
+    - name: multiple_conform_sorted
+      input:
+        protocol: [read]
+        devices:
+          gamma: [read, extra]
+          alpha: [read]
+          delta: [other]
+      expected: [alpha, gamma]
+    - name: duplicate_required_names
+      input:
+        protocol: [read, read]
+        devices:
+          dish: [read]
+      expected: [dish]
+    - name: empty_devices
+      input:
+        protocol: [read]
+        devices: {}
+      expected: []
+explanation_markdown: |
+  A `@runtime_checkable Protocol` reduces `isinstance` to a name-presence check:
+  Python asks only whether the object carries every attribute the protocol
+  declares, not whether the signatures line up. Modelling that with sets makes
+  the logic exact — `required <= set(members)` is the subset test, so a device
+  passes precisely when it owns all the required names. Duplicates vanish because
+  a set stores each name once, and an empty required set is a subset of every
+  set, which is why an empty protocol accepts everyone. Sorting the survivors
+  keeps the result stable regardless of dict insertion order.
+common_mistakes:
+  - Checking that the member list equals the protocol list instead of containing it, which wrongly rejects devices that expose extra methods.
+  - Forgetting that an empty protocol is a subset of everything, so returning an empty list instead of every device.
+  - Returning the devices in dict order rather than sorting, giving nondeterministic output.

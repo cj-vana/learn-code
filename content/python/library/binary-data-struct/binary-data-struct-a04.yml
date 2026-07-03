@@ -1,0 +1,109 @@
+id: exercise.library.binary_data.a04
+kind: exercise
+version: 1
+language: python
+title: Bridging Two Instrument Buses
+slug: binary-data-struct-a04
+difficulty: medium
+concepts:
+  - python.binary_data
+  - python.lists
+prerequisites:
+  - python.lists
+  - python.functions
+  - python.tuples
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.binary_data.a04
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original endianness-conversion drill framed as a hardware bridge translating packed records between a big-endian and a little-endian instrument bus.
+prompt_markdown: |
+  An old seismograph writes its records big-endian; a new logging board expects
+  them little-endian. A small bridge board sits between them and re-serialises
+  each record so the numbers survive the crossing. Write `endian_convert(job)`
+  that receives a single dictionary with three keys:
+
+  - `data`: a list of integers (each 0-255), the packed bytes as they arrived.
+  - `fmt_from`: the `struct` format that produced those bytes, including its
+    byte-order marker (for example `">HI"`).
+  - `fmt_to`: the target `struct` format, differing only in the byte-order marker
+    (for example `"<HI"`). The field letters are always identical to `fmt_from`;
+    only the leading `>`/`<` changes.
+
+  Decode `data` with `fmt_from`, then re-encode the very same field values with
+  `fmt_to`, and return the resulting bytes as a **list of integers**. The numeric
+  values are unchanged; only their byte order on the wire flips.
+
+  For example, `{"data": [1, 2], "fmt_from": ">H", "fmt_to": "<H"}` returns
+  `[2, 1]`: the big-endian bytes decode to 258, which re-encodes little-endian as
+  `0x02 0x01`.
+
+  If `fmt_from` and `fmt_to` are identical, the bytes come back unchanged, so
+  `{"data": [1, 2], "fmt_from": ">H", "fmt_to": ">H"}` returns `[1, 2]`.
+starter_code: |
+  import struct
+
+
+  def endian_convert(job):
+      return []
+function_name: endian_convert
+input_mode: function
+solution_sketch: Unpack the incoming bytes with fmt_from to recover the field values, then pack those same values with fmt_to and return the new bytes as a list of integers.
+sample_solution: |
+  import struct
+
+
+  def endian_convert(job):
+      values = struct.unpack(job["fmt_from"], bytes(job["data"]))
+      repacked = struct.pack(job["fmt_to"], *values)
+      return list(repacked)
+hints:
+  - level: 1
+    text: Converting endianness is a decode-then-reencode round trip; the intermediate Python numbers are byte-order independent.
+  - level: 2
+    text: Recover the values with struct.unpack(job["fmt_from"], bytes(job["data"])), which gives you a tuple of ints.
+  - level: 3
+    text: Spread that tuple back into struct.pack(job["fmt_to"], *values), then convert the packed bytes to a list.
+tests:
+  public:
+    - name: short_big_to_little
+      input: {data: [1, 2], fmt_from: ">H", fmt_to: "<H"}
+      expected: [2, 1]
+    - name: int_big_to_little
+      input: {data: [0, 0, 0, 1], fmt_from: ">I", fmt_to: "<I"}
+      expected: [1, 0, 0, 0]
+    - name: identical_formats_noop
+      input: {data: [1, 2], fmt_from: ">H", fmt_to: ">H"}
+      expected: [1, 2]
+  validation:
+    - name: little_to_big
+      input: {data: [2, 1], fmt_from: "<H", fmt_to: ">H"}
+      expected: [1, 2]
+    - name: two_fields
+      input: {data: [1, 2, 0, 0, 0, 1], fmt_from: ">HI", fmt_to: "<HI"}
+      expected: [2, 1, 1, 0, 0, 0]
+    - name: two_shorts
+      input: {data: [0, 10, 0, 20], fmt_from: ">HH", fmt_to: "<HH"}
+      expected: [10, 0, 20, 0]
+    - name: realistic_record
+      input: {data: [16, 17, 0, 15, 66, 64], fmt_from: ">HI", fmt_to: "<HI"}
+      expected: [17, 16, 64, 66, 15, 0]
+explanation_markdown: |
+  Endianness is a property of the wire, not of the number. Once you decode bytes
+  into Python integers they carry no byte order at all, so the clean way to flip
+  endianness is to unpack with the source format and immediately repack with the
+  target format. You never touch individual bytes yourself; `struct` does the
+  reordering because you changed only the `>`/`<` marker.
+
+  Notice that a single-byte field would be unaffected either way, which is why the
+  interesting cases involve multi-byte `H` and `I` fields. Doing the round trip
+  through `struct` rather than reversing byte groups by hand keeps every field's
+  width correct even when a record mixes 2-byte and 4-byte fields.
+common_mistakes:
+  - Reversing the whole byte list instead of each field, which corrupts records that mix field widths such as ">HI".
+  - Forgetting to spread the unpacked tuple with * when calling struct.pack.
+  - Returning the bytes object rather than a list of integers.

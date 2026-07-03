@@ -1,0 +1,175 @@
+id: exercise.library.dataframe_thinking.a09
+kind: exercise
+version: 1
+language: python
+title: Broadcasting Across the Greenhouse
+slug: dataframe-thinking-a09
+difficulty: medium
+concepts:
+  - concepts.dataframe_thinking
+  - python.comprehensions
+prerequisites:
+  - python.dictionaries
+  - python.loops
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dataframe_thinking.a09
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original scalar-broadcast drill framed around calibrating greenhouse sensor readings, teaching the vectorized column-times-scalar mental model with explicit float rounding.
+prompt_markdown: |
+  A greenhouse controller stores each sensor reading as a row. To recalibrate a
+  whole column at once, the technician applies the same scalar to every value in
+  that column — the pure-Python version of a dataframe's *broadcast* (`column op
+  scalar` applied down the entire column without an explicit index).
+
+  Write `broadcast_scalar_op(payload)` that takes **one dictionary** with four
+  entries:
+
+  - `"rows"`: a list of dictionaries (the readings). Every row contains the target
+    column, whose value is a number.
+  - `"column"`: the string name of the column to transform.
+  - `"op"`: one of `"add"`, `"sub"`, or `"mul"`.
+  - `"scalar"`: the number to combine with each value.
+
+  Example call:
+
+  ```python
+  broadcast_scalar_op({
+      "rows": [{"plot": "p1", "celsius": 18}, {"plot": "p2", "celsius": 21}],
+      "column": "celsius",
+      "op": "add",
+      "scalar": 2,
+  })
+  # -> [{"plot": "p1", "celsius": 20}, {"plot": "p2", "celsius": 23}]
+  ```
+
+  Return a **new list of row dictionaries** in the original order:
+
+  - Each output row is a copy of its input row with the target column replaced by
+    the result of `value op scalar` (`"add"` -> `value + scalar`, `"sub"` ->
+    `value - scalar`, `"mul"` -> `value * scalar`).
+  - **Round each computed value to 4 decimal places.** Rounding an integer result
+    leaves it an integer (for example `round(20, 4)` is `20`), so add/sub/mul on
+    whole numbers stays whole.
+  - All other columns are left exactly as they were.
+  - Do not mutate the caller's rows; return fresh dictionaries.
+  - If `"rows"` is empty, return an empty list.
+starter_code: |
+  def broadcast_scalar_op(payload):
+      return []
+function_name: broadcast_scalar_op
+input_mode: function
+solution_sketch: Copy each row, compute value op scalar for the target column with a small op dispatch, round to 4 places, and collect the copies in order.
+sample_solution: |
+  def broadcast_scalar_op(payload):
+      rows = payload["rows"]
+      column = payload["column"]
+      op = payload["op"]
+      scalar = payload["scalar"]
+      result = []
+      for row in rows:
+          new_row = dict(row)
+          value = row[column]
+          if op == "add":
+              computed = value + scalar
+          elif op == "sub":
+              computed = value - scalar
+          else:
+              computed = value * scalar
+          new_row[column] = round(computed, 4)
+          result.append(new_row)
+      return result
+hints:
+  - level: 1
+    text: The same scalar hits every value in the column, so loop the rows once and transform only the target field.
+  - level: 2
+    text: Copy the row with dict(row) before changing the column so the caller's data is left alone and the other fields ride along untouched.
+  - level: 3
+    text: Pick the arithmetic by branching on op, then wrap the result in round(computed, 4) so float products like 3 * 1.1 collapse to 3.3 instead of 3.3000000000000003.
+tests:
+  public:
+    - name: add_whole
+      input:
+        rows:
+          - {plot: "p1", celsius: 18}
+          - {plot: "p2", celsius: 21}
+        column: celsius
+        op: add
+        scalar: 2
+      expected:
+        - {plot: "p1", celsius: 20}
+        - {plot: "p2", celsius: 23}
+    - name: mul_float_scalar
+      input:
+        rows:
+          - {plot: "p1", celsius: 10}
+          - {plot: "p2", celsius: 25}
+        column: celsius
+        op: mul
+        scalar: 1.8
+      expected:
+        - {plot: "p1", celsius: 18.0}
+        - {plot: "p2", celsius: 45.0}
+    - name: empty_rows
+      input:
+        rows: []
+        column: celsius
+        op: add
+        scalar: 5
+      expected: []
+  validation:
+    - name: subtract
+      input:
+        rows:
+          - {plot: "p1", celsius: 30}
+        column: celsius
+        op: sub
+        scalar: 4
+      expected:
+        - {plot: "p1", celsius: 26}
+    - name: negative_scalar
+      input:
+        rows:
+          - {plot: "p1", celsius: 5}
+        column: celsius
+        op: add
+        scalar: -8
+      expected:
+        - {plot: "p1", celsius: -3}
+    - name: other_columns_untouched
+      input:
+        rows:
+          - {plot: "p1", celsius: 20, humidity: 55}
+        column: celsius
+        op: mul
+        scalar: 2
+      expected:
+        - {plot: "p1", celsius: 40, humidity: 55}
+    - name: rounding_needed
+      input:
+        rows:
+          - {plot: "p1", celsius: 3}
+        column: celsius
+        op: mul
+        scalar: 1.1
+      expected:
+        - {plot: "p1", celsius: 3.3}
+explanation_markdown: |
+  Broadcasting is the idea that a single scalar can act on an entire column at once.
+  In a real dataframe the loop is hidden inside a vectorized C routine; here you
+  write the loop yourself, but the mental model is the same — one operation, applied
+  uniformly down the column, with the rest of each row carried along unchanged.
+
+  Two details matter. Copying each row keeps the transform non-destructive, which is
+  what lets you treat the result as a new column rather than an edit-in-place. And
+  rounding to 4 places tames binary floating point: `3 * 1.1` is stored as
+  `3.3000000000000003`, and `round(..., 4)` brings it back to the `3.3` a human
+  expects while leaving genuine integers as integers.
+common_mistakes:
+  - Mutating each input row directly, so the caller's original readings change under them.
+  - Forgetting to round, so float operations leak values like 3.3000000000000003 into the output.
+  - Accidentally transforming every column instead of only the named one.

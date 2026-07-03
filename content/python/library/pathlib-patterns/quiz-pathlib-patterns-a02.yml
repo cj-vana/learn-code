@@ -1,0 +1,94 @@
+id: quiz.library.pathlib_patterns.a02
+kind: quiz
+version: 1
+language: python
+title: pathlib Mechanics
+slug: quiz-pathlib-patterns-a02
+difficulty: medium
+concepts:
+  - python.pathlib_os
+prerequisites:
+  - python.pathlib_os
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.pathlib_patterns.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax quiz on PurePath accessors, with_ methods, relative_to, and normalization mechanics.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: 'For p = PurePosixPath("mixes/final.tar.gz"), what are p.suffix, p.suffixes, and p.stem?'
+    choices:
+      - '".gz", [".tar", ".gz"], and "final.tar"'
+      - '".tar.gz", [".tar.gz"], and "final"'
+      - '".gz", [".gz"], and "final"'
+      - '".tar", [".tar", ".gz"], and "final"'
+    correct_choice: '".gz", [".tar", ".gz"], and "final.tar"'
+    explanation: |
+      suffix is only the LAST extension and stem drops only that; suffixes
+      lists them all — the distinction that matters for every .tar.gz-style
+      name.
+    concepts:
+      - python.pathlib_os
+  - id: q2
+    prompt: What does PurePosixPath(".bashrc").suffix return?
+    choices:
+      - '"" — a leading dot marks a hidden file, not an extension'
+      - '".bashrc"'
+      - '"bashrc"'
+      - A ValueError — dotfiles have no valid name
+    correct_choice: '"" — a leading dot marks a hidden file, not an extension'
+    explanation: |
+      pathlib encodes the dotfile convention; naive rsplit(".") reports
+      "bashrc" as an extension — exactly the edge the accessors exist to
+      get right.
+    concepts:
+      - python.pathlib_os
+  - id: q3
+    prompt: 'PurePosixPath("a/b/c.txt").relative_to("a") returns what, and what does the same call with "x" do?'
+    choices:
+      - b/c.txt; raises ValueError since the path is not under x
+      - b/c.txt; returns ../a/b/c.txt for x
+      - /b/c.txt; returns None for x
+      - a/b/c.txt unchanged; raises TypeError
+    correct_choice: b/c.txt; raises ValueError since the path is not under x
+    explanation: |
+      relative_to strips a verified prefix and refuses otherwise (walk_up=True
+      opts into ../ computation since 3.12) — refusal-by-default keeps escape
+      segments deliberate.
+    concepts:
+      - python.pathlib_os
+  - id: q4
+    prompt: 'What does PurePosixPath("logs") / "/var/secrets" evaluate to?'
+    choices:
+      - PurePosixPath("/var/secrets") — joining an absolute path resets the base entirely
+      - PurePosixPath("logs/var/secrets")
+      - A ValueError — absolute paths cannot be joined
+      - PurePosixPath("logs") unchanged
+    correct_choice: PurePosixPath("/var/secrets") — joining an absolute path resets the base entirely
+    explanation: |
+      The reset rule is documented and security-critical: sandbox code must
+      verify containment after joining untrusted names, never assume it.
+    concepts:
+      - python.pathlib_os
+      - python.secure_coding
+  - id: q5
+    prompt: |
+      Lexically normalizing the relative path "a/../../b" — what must a
+      correct normalizer do with the second ".."?
+    choices:
+      - Preserve it (yielding "../b") or reject the path — it walks above the start, and silently dropping it changes meaning
+      - Drop it, yielding "b"
+      - Duplicate it for symmetry
+      - Convert it to an absolute path
+    correct_choice: Preserve it (yielding "../b") or reject the path — it walks above the start, and silently dropping it changes meaning
+    explanation: |
+      ".." beyond the top of a relative path refers to territory the path
+      cannot name; a normalizer that discards it turns an escape into a
+      local path — the exact bug containment checks exist to catch.
+    concepts:
+      - python.pathlib_os

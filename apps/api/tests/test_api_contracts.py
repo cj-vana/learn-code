@@ -629,7 +629,9 @@ def test_paths_list_shows_seed_paths(tmp_path):
     assert "path.career.algorithms_specialist" in ids
     assert "path.career.python_data_automation" in ids
     assert "path.career.ai_engineer_python" in ids
-    assert len(items) == 21
+    assert "path.career.python_software_engineer" in ids
+    assert "path.career.python_automation_engineer" in ids
+    assert len(items) == 30
     for item in items:
         assert item["enrolled"] is False
         assert item["percent_complete"] == 0

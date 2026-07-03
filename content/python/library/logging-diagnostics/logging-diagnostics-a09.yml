@@ -1,0 +1,121 @@
+id: exercise.library.logging_diagnostics.a09
+kind: exercise
+version: 1
+language: python
+title: Reading Severity Words at the Weather Mast
+slug: logging-diagnostics-a09
+difficulty: medium
+concepts:
+  - python.logging_diagnostics
+  - python.dictionaries
+  - python.strings
+prerequisites:
+  - python.dictionaries
+  - python.strings
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.logging_diagnostics.a09
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: >-
+    Original level-name parser framed as a remote weather mast reading severity
+    words from a hand-edited config line. Normalizes case and whitespace, honors the
+    real stdlib WARN and FATAL aliases, and returns a sentinel for anything unknown.
+prompt_markdown: |
+  A remote weather mast reads its alert threshold from a hand-edited config line, so
+  the severity word arrives with sloppy casing and stray spaces. Turn that word into
+  the numeric level the firmware compares against.
+
+  Write `log_level_from_string(name)`. The single argument is a string. Return the
+  matching integer level:
+
+  ```
+  NOTSET=0  DEBUG=10  INFO=20  WARNING=30  ERROR=40  CRITICAL=50
+  ```
+
+  Rules:
+
+  - Ignore surrounding whitespace and letter case: `"  info  "`, `"INFO"`, and
+    `"Info"` all mean `20`.
+  - Honor the two historical aliases, exactly as the standard library does:
+    `"WARN"` means the same as `"WARNING"` (`30`) and `"FATAL"` means the same as
+    `"CRITICAL"` (`50`).
+  - Any word that is not one of the six names or the two aliases -- including the
+    empty string -- returns the sentinel `-1`.
+starter_code: |
+  def log_level_from_string(name):
+      # Map a severity word to its numeric level, or -1 if unknown.
+      return -1
+function_name: log_level_from_string
+input_mode: function
+solution_sketch: >-
+  Strip and upper-case the input, then look it up in a dict that includes the six
+  canonical names plus WARN and FATAL as aliases, defaulting to -1 when absent.
+sample_solution: |
+  LEVELS = {
+      "NOTSET": 0,
+      "DEBUG": 10,
+      "INFO": 20,
+      "WARNING": 30,
+      "WARN": 30,
+      "ERROR": 40,
+      "CRITICAL": 50,
+      "FATAL": 50,
+  }
+
+
+  def log_level_from_string(name):
+      return LEVELS.get(name.strip().upper(), -1)
+hints:
+  - level: 1
+    text: Normalize first by stripping whitespace and upper-casing, so casing and stray spaces stop mattering before you look anything up.
+  - level: 2
+    text: A dict from normalized name to number is the whole lookup; put WARN and FATAL in that same dict pointing at 30 and 50.
+  - level: 3
+    text: Use dict.get with a default of -1 so unknown words and the empty string fall through to the sentinel without a special branch.
+tests:
+  public:
+    - name: canonical_info
+      input: INFO
+      expected: 20
+    - name: lower_with_spaces
+      input: '  warning  '
+      expected: 30
+    - name: unknown_word
+      input: verbose
+      expected: -1
+  validation:
+    - name: alias_warn
+      input: warn
+      expected: 30
+    - name: alias_fatal
+      input: FATAL
+      expected: 50
+    - name: notset_mixed_case
+      input: NoTSeT
+      expected: 0
+    - name: empty_string
+      input: ''
+      expected: -1
+    - name: critical_titlecase
+      input: Critical
+      expected: 50
+explanation_markdown: |
+  Level names are just labels for numbers, and the numbers are what a logger
+  actually compares. The two moves that make the parser robust are normalization and
+  a single lookup table. Stripping and upper-casing collapses `"  info  "`, `"INFO"`,
+  and `"Info"` into one key before you ever touch the map, so you never write a
+  branch per spelling.
+
+  Putting `WARN` and `FATAL` into the same dict -- pointing at `30` and `50` -- is
+  how the standard library treats those older spellings, and it keeps the alias logic
+  from leaking into your code as extra `if` statements. Finally, `dict.get(key, -1)`
+  turns "not a real level" into a plain sentinel, so unknown words and the empty
+  string are handled by the same line that handles everything else.
+common_mistakes:
+  - Comparing against raw input without stripping or upper-casing, so a stray space or lowercase word misses every branch.
+  - Leaving out the WARN and FATAL aliases, which are common in real configs and legitimately map to 30 and 50.
+  - Raising or returning None for an unknown word instead of the -1 the caller expects as a sentinel.

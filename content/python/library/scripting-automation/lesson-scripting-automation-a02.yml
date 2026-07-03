@@ -1,0 +1,89 @@
+id: lesson.library.scripting_automation.a02
+kind: lesson
+version: 1
+language: python
+title: 'Batch Transforms: Selection, Collision, and Ordering'
+slug: lesson-scripting-automation-a02
+difficulty: medium
+concepts:
+  - python.pathlib_os
+  - concepts.grouping_aggregation
+prerequisites:
+  - python.pathlib_os
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.scripting_automation.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original batch-operation walkthrough covering selection rules, collision handling, and operation ordering with a fresh archive framing.
+body_markdown: |
+  The plan/act split gives automation its skeleton. This lesson is about
+  the three problems every *batch* transform meets on the way to a
+  correct plan: choosing the right items, colliding outputs, and
+  operation order.
+
+  ### Selection: the rule is part of the spec
+
+  "Rename all the RAW files older than a year, except anything in
+  `keep/`" — selection rules stack includes, excludes, and conditions.
+  The professional habits:
+
+  - Make selection a **pure predicate** applied in the gather stage, so
+    it is testable apart from any action.
+  - **Excludes beat includes** — the safe precedence when rules
+    conflict, and worth stating explicitly in the code.
+  - Report the counts: "12,410 matched, 3,205 excluded". Selection bugs
+    (a glob matching too much) are the deadliest automation bugs, and
+    counts are how they get caught at the dry-run stage — before the
+    act stage makes them permanent.
+
+  ### Collisions: when two inputs want one output
+
+  Slugify `Harbor Dawn.RAW` and `harbor-dawn.raw` and both want
+  `harbor-dawn.raw`. Batch renames, exports, and imports all meet this.
+  There are only three honest policies:
+
+  ```text
+  fail     refuse the whole plan, list the collisions   (default!)
+  suffix   harbor-dawn-2.raw — deterministic, ordered
+  skip     first wins, rest reported as skipped
+  ```
+
+  The dishonest policy is the accidental one — last-write-wins
+  overwriting data silently. Your exercises implement collision
+  detection over a plan (a grouping problem: bucket by destination,
+  flag buckets larger than one) and the suffix policy with
+  deterministic numbering. Note *where* this check runs: on the plan,
+  before anything acts — data validation, not damage control.
+
+  ### Ordering: some plans must be sorted to be executable
+
+  Renaming `img_1 → img_2` while `img_2 → img_3` exists in the same
+  plan: execute in the wrong order and img_1 tramples img_2. Chained
+  moves must run **in reverse dependency order** (img_2 first, then
+  img_1) — and a genuine cycle (`a → b, b → a`) needs a temporary name
+  to break it. If this smells like your graphs unit, it is: operations
+  are nodes, "must run before" edges connect them, and the executable
+  plan is a topological order. Directory-ish operations have the same
+  flavor: create parents before children, delete children before
+  parents — depth ordering, both ways.
+
+  The composed picture: gather with counted selection, plan pure,
+  detect collisions on the plan, order the plan, dry-run it, act with a
+  failure ledger. Six steps, each individually small — and every one of
+  them is a pure function you will have implemented by the end of this
+  area. That is what "just a script" looks like when it is written by
+  someone the team trusts with 40,000 files.
+checkpoints:
+  - question: Why do batch tools report "matched N, excluded M" counts at the selection stage, and what class of bug does it catch?
+    answer: 'Selection bugs — a glob or predicate matching far too much or too little — are the most destructive automation errors; surfacing counts at dry-run time lets a human sanity-check the blast radius before any action is taken.'
+    explanation: 'The numbers are cheap to compute and are the operator''s first line of defense: 40,000 matched when you expected 200 is a bug caught in review, not in the archive.'
+  - question: Name the three honest collision policies for a batch transform, and the dishonest default they replace.
+    answer: 'Fail (refuse and list collisions — the safe default), suffix (deterministic numbered alternatives), and skip (first wins, rest reported); the dishonest one is accidental last-write-wins, which silently destroys data.'
+    explanation: 'Collision handling must be a chosen policy visible in the plan, because the accidental policy is data loss.'
+  - question: 'A plan contains rename chains like a→b where b→c also exists. What ordering makes it executable, and which unit''s machinery does this reuse?'
+    answer: 'Reverse dependency order — move b to c before a to b — which is a topological sort of operations connected by must-run-before edges (with a temp name breaking true cycles); the graphs unit''s machinery on operational data.'
+    explanation: 'Plans are little dependency graphs; recognizing that turns "mysterious clobbering" into a solved ordering problem.'

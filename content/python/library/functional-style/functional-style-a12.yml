@@ -1,0 +1,181 @@
+id: exercise.library.functional_style.a12
+kind: exercise
+version: 1
+language: python
+title: Picking a Tournament Scoring Rule
+slug: functional-style-a12
+difficulty: hard
+concepts:
+  - python.functional_style
+  - python.closures_decorators
+  - python.dictionaries
+prerequisites:
+  - python.functions
+  - python.lists
+estimated_time_minutes: 24
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.functional_style.a12
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original strategy-dispatch drill framed around a tournament desk selecting a scoring rule by name, taught as a table of closures that all capture the same scores and k, chosen at call time -- the closures-as-strategy-objects pattern.
+prompt_markdown: |
+  A tournament scoring desk supports several house rules for turning a player's
+  list of round scores into one final number. The desk picks a rule **by name** at
+  scoring time and applies it to that player's scores.
+
+  Write `score_tournament(payload)` that takes **one dictionary** with three
+  entries:
+
+  - `"scores"`: the player's round scores, a list of integers (possibly empty).
+  - `"k"`: an integer parameter used by some rules (ignored by others, but always
+    present).
+  - `"strategy"`: the rule name, one of the five below.
+
+  The five strategies:
+
+  - `"sum_all"`: total of every score. `k` is ignored.
+  - `"top_k"`: total of the `k` highest scores. If `k` is `0` or negative, the
+    total is `0`; if `k` exceeds the number of scores, use all of them.
+  - `"drop_k_lowest"`: total after removing the `k` lowest scores. If `k` is `0`
+    or negative, drop nothing; if `k` is at least the number of scores, the total
+    is `0`.
+  - `"cap_each"`: total after capping each score at `k` first, i.e. sum of
+    `min(score, k)` over every score.
+  - `"count_at_least"`: how many scores are greater than or equal to `k` (a count,
+    not a sum).
+
+  Return the resulting **integer**. For any strategy an empty `scores` list yields
+  `0`.
+
+  Example call:
+
+  ```python
+  score_tournament({"scores": [4, 9, 1, 7], "k": 2, "strategy": "top_k"})
+  # -> 9 + 7 -> 16
+  ```
+
+  Implement each rule as its own small function that **closes over** the shared
+  `scores` and `k`, collect them in a **dispatch table** keyed by name, and call
+  the one the `strategy` names -- the classic closures-as-strategy pattern.
+starter_code: |
+  def score_tournament(payload):
+      return 0
+function_name: score_tournament
+input_mode: function
+solution_sketch: Read scores and k once, then define one zero-argument closure per rule that captures them (sum_all, top_k using sorted-descending slice with k<=0 guard, drop_k_lowest using sorted-ascending slice with k<=0 guard, cap_each summing min(score,k), count_at_least counting score>=k). Put the closures in a dict keyed by strategy name and invoke the selected one.
+sample_solution: |
+  def score_tournament(payload):
+      scores = payload["scores"]
+      k = payload["k"]
+
+      def sum_all():
+          return sum(scores)
+
+      def top_k():
+          if k <= 0:
+              return 0
+          return sum(sorted(scores, reverse=True)[:k])
+
+      def drop_k_lowest():
+          if k <= 0:
+              return sum(scores)
+          return sum(sorted(scores)[k:])
+
+      def cap_each():
+          return sum(min(score, k) for score in scores)
+
+      def count_at_least():
+          return sum(1 for score in scores if score >= k)
+
+      strategies = {
+          "sum_all": sum_all,
+          "top_k": top_k,
+          "drop_k_lowest": drop_k_lowest,
+          "cap_each": cap_each,
+          "count_at_least": count_at_least,
+      }
+      return strategies[payload["strategy"]]()
+hints:
+  - level: 1
+    text: Define each rule as its own tiny function that reads scores and k from the enclosing scope, so all five share the same captured inputs and differ only in behavior.
+  - level: 2
+    text: Put the five functions in a dict keyed by name, then call strategies[payload['strategy']]() to run exactly the one the caller asked for -- that dict is the strategy dispatch table.
+  - level: 3
+    text: For top_k, sort descending and sum the first k (returning 0 when k <= 0); for drop_k_lowest, sort ascending and sum from index k onward (summing everything when k <= 0); a slice past the end is naturally empty.
+tests:
+  public:
+    - name: sum_all_basic
+      input:
+        scores: [10, 20, 30]
+        k: 0
+        strategy: "sum_all"
+      expected: 60
+    - name: top_two
+      input:
+        scores: [4, 9, 1, 7]
+        k: 2
+        strategy: "top_k"
+      expected: 16
+    - name: count_at_least_five
+      input:
+        scores: [3, 7, 5, 2, 9]
+        k: 5
+        strategy: "count_at_least"
+      expected: 3
+  validation:
+    - name: drop_two_lowest
+      input:
+        scores: [5, 1, 9, 3]
+        k: 2
+        strategy: "drop_k_lowest"
+      expected: 14
+    - name: cap_each_at_six
+      input:
+        scores: [4, 10, 7]
+        k: 6
+        strategy: "cap_each"
+      expected: 16
+    - name: top_k_exceeds_length
+      input:
+        scores: [2, 3]
+        k: 5
+        strategy: "top_k"
+      expected: 5
+    - name: top_k_zero_is_zero
+      input:
+        scores: [5, 6, 7]
+        k: 0
+        strategy: "top_k"
+      expected: 0
+    - name: empty_scores_yield_zero
+      input:
+        scores: []
+        k: 4
+        strategy: "sum_all"
+      expected: 0
+explanation_markdown: |
+  Every rule needs the same two inputs -- the player's `scores` and the parameter
+  `k` -- and differs only in what it does with them. Defining each rule as a nested
+  function lets it **capture** those inputs from the enclosing scope, so the five
+  closures are interchangeable, zero-argument behaviors. Collecting them in a dict
+  keyed by name turns rule selection into a single dictionary lookup:
+  `strategies[strategy]()`. That is the strategy pattern expressed with closures
+  instead of classes, and adding a sixth rule is one more function plus one more
+  table entry.
+
+  The care is all in the boundary cases, which is why this is a hard exercise.
+  `top_k` sorts descending and sums the first `k`, but a non-positive `k` must
+  short-circuit to `0`, while a `k` past the end is harmless because a slice never
+  raises. `drop_k_lowest` sorts ascending and sums from index `k` onward, so a `k`
+  at or beyond the length leaves an empty slice (total `0`), and a non-positive `k`
+  should drop nothing. `cap_each` and `count_at_least` are generator-driven
+  reductions -- one sums `min(score, k)`, the other counts a boolean condition with
+  `sum(1 for ...)`. Because `sum` of an empty iterable is `0`, every rule returns
+  `0` for an empty `scores` list with no extra guard.
+common_mistakes:
+  - Forgetting the k <= 0 guard on top_k, so a negative slice bound quietly grabs the wrong scores instead of returning 0.
+  - Using sorted(scores)[:k] for drop_k_lowest (keeping the lowest) instead of sorted(scores)[k:] (dropping them), inverting the rule.
+  - Writing a long if/elif ladder on the strategy name rather than a dispatch table, which works but abandons the closures-as-strategy pattern the exercise teaches.

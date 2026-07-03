@@ -1,0 +1,164 @@
+id: exercise.library.numeric_precision.a12
+kind: exercise
+version: 1
+language: python
+title: The Vintage Register at the Computing Museum
+slug: numeric-precision-a12
+difficulty: hard
+concepts:
+  - python.numeric_precision
+  - patterns.bit_manipulation
+prerequisites:
+  - python.dictionaries
+  - python.operators
+estimated_time_minutes: 24
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.numeric_precision.a12
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original arbitrary-precision demonstration contrasting Python's unbounded integers with simulated signed 64-bit two's-complement wraparound, framed around a computing museum exhibit comparing a modern language against a vintage register.
+prompt_markdown: |
+  A computing museum runs an exhibit that computes `base` raised to `exponent` two
+  ways at once: on a modern Python interpreter, whose integers grow without bound,
+  and on a vintage machine with a single **signed 64-bit register**, whose values
+  silently wrap around. The exhibit shows visitors exactly when the old hardware
+  would have produced a wrong (wrapped) answer.
+
+  A signed 64-bit register holds values in the range `-2**63` up to `2**63 - 1`.
+  When a true value falls outside that range, the hardware keeps only the value
+  modulo `2**64` and reinterprets it as a two's-complement signed number: if the
+  low 64 bits are `2**63` or larger, subtract `2**64` to land back in range.
+
+  Write `register_demo(job)` where `job` is a dictionary with two keys:
+
+  - `"base"`: an integer (which may be negative).
+  - `"exponent"`: a non-negative integer.
+
+  First compute the exact value `exact = base ** exponent` — a Python integer that
+  never overflows. Then compute what the vintage register would hold. Return a
+  dictionary with exactly these three keys:
+
+  - `"exact"`: the true Python integer `base ** exponent`.
+  - `"wrapped64"`: `exact` reduced into the signed 64-bit range as described above.
+  - `"overflowed"`: a boolean, `True` if `exact` did not fit in `-2**63 .. 2**63 - 1`,
+    otherwise `False`.
+
+  Example: `register_demo({"base": 2, "exponent": 63})` returns
+  `{"exact": 9223372036854775808, "wrapped64": -9223372036854775808, "overflowed": True}`,
+  because `2**63` is one larger than the biggest signed 64-bit value, so the
+  register wraps to the most negative value.
+starter_code: |
+  def register_demo(job):
+      return {}
+function_name: register_demo
+input_mode: function
+solution_sketch: Compute exact = base ** exponent, take exact modulo 2**64 to get the low 64 bits, subtract 2**64 when that is at least 2**63 to interpret it as signed, and flag overflow when exact lies outside the signed 64-bit range.
+sample_solution: |
+  def register_demo(job):
+      exact = job["base"] ** job["exponent"]
+      modulus = 1 << 64
+      half = 1 << 63
+      low_bits = exact % modulus
+      wrapped = low_bits - modulus if low_bits >= half else low_bits
+      overflowed = not (-half <= exact <= half - 1)
+      return {
+          "exact": exact,
+          "wrapped64": wrapped,
+          "overflowed": overflowed,
+      }
+hints:
+  - level: 1
+    text: Python's ** never overflows, so exact = base ** exponent is always the true value; the work is simulating what a fixed-width register would keep.
+  - level: 2
+    text: The low 64 bits are exact % (2**64), which Python makes non-negative even for negative exact; that is the unsigned view of the register.
+  - level: 3
+    text: To read those bits as signed two's complement, subtract 2**64 when they are 2**63 or larger; overflow is true whenever exact is outside -2**63 .. 2**63 - 1.
+tests:
+  public:
+    - name: small_no_overflow
+      input:
+        base: 2
+        exponent: 10
+      expected:
+        exact: 1024
+        wrapped64: 1024
+        overflowed: false
+    - name: overflow_flip
+      input:
+        base: 2
+        exponent: 63
+      expected:
+        exact: 9223372036854775808
+        wrapped64: -9223372036854775808
+        overflowed: true
+    - name: zero_exponent
+      input:
+        base: 7
+        exponent: 0
+      expected:
+        exact: 1
+        wrapped64: 1
+        overflowed: false
+  validation:
+    - name: huge_python_int
+      input:
+        base: 10
+        exponent: 30
+      expected:
+        exact: 1000000000000000000000000000000
+        wrapped64: 5076944270305263616
+        overflowed: true
+    - name: negative_base_even
+      input:
+        base: -3
+        exponent: 4
+      expected:
+        exact: 81
+        wrapped64: 81
+        overflowed: false
+    - name: negative_base_odd
+      input:
+        base: -2
+        exponent: 3
+      expected:
+        exact: -8
+        wrapped64: -8
+        overflowed: false
+    - name: most_negative_boundary
+      input:
+        base: -2
+        exponent: 63
+      expected:
+        exact: -9223372036854775808
+        wrapped64: -9223372036854775808
+        overflowed: false
+    - name: base_zero
+      input:
+        base: 0
+        exponent: 5
+      expected:
+        exact: 0
+        wrapped64: 0
+        overflowed: false
+explanation_markdown: |
+  Python integers are arbitrary precision: `10 ** 30` is stored exactly as a
+  thirty-one-digit number, no overflow, no rounding. That is the headline of the
+  exhibit and the reason the `"exact"` field can hold values far beyond any
+  hardware register.
+
+  Simulating the vintage register is a two's-complement exercise. Taking `exact %
+  (2**64)` keeps only the low 64 bits, and because Python's `%` returns a
+  non-negative result even for negative operands, that is precisely the register's
+  unsigned bit pattern. Reinterpreting it as signed means splitting the range in
+  half: patterns below `2**63` are their own value, while patterns from `2**63`
+  upward represent negatives and get `2**64` subtracted. The boundary cases are
+  the teachable ones: `2**63` overflows and flips to the most negative value, yet
+  `-2**63` fits exactly because the signed range is deliberately lopsided, running
+  from `-2**63` up to only `2**63 - 1`.
+common_mistakes:
+  - Masking to 64 bits before checking overflow, so you compare the wrapped value against the range instead of the true exact value and always report no overflow.
+  - Treating the range as symmetric (-2**63 .. 2**63), which wrongly flags -2**63 as an overflow; the maximum is 2**63 - 1 but the minimum is exactly -2**63.
+  - Assuming exact % (2**64) is negative for a negative base result; in Python the remainder takes the sign of the divisor, so it is already the non-negative unsigned pattern you want.

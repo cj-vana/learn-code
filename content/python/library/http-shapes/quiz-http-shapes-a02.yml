@@ -1,0 +1,96 @@
+id: quiz.library.http_shapes.a02
+kind: quiz
+version: 1
+language: python
+title: URL and Header Mechanics
+slug: quiz-http-shapes-a02
+difficulty: medium
+concepts:
+  - python.http_model
+prerequisites:
+  - python.http_model
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.http_shapes.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax quiz on urllib.parse mechanics, encoding rules, and header normalization.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: 'What does parse_qs("tag=fast&tag=cheap&limit=5") return?'
+    choices:
+      - "{'tag': ['fast', 'cheap'], 'limit': ['5']} — every value is a list, and repeated keys collect"
+      - "{'tag': 'cheap', 'limit': '5'} — last value wins"
+      - "{'tag': ('fast', 'cheap'), 'limit': 5} — typed tuples"
+      - A ValueError on the repeated key
+    correct_choice: "{'tag': ['fast', 'cheap'], 'limit': ['5']} — every value is a list, and repeated keys collect"
+    explanation: |
+      Query strings are multi-maps and all values arrive as strings;
+      list-of-strings is the honest parse, with typing your job afterward.
+    concepts:
+      - python.http_model
+  - id: q2
+    prompt: 'urlencode({"q": "salt & smoke", "page": 2}) produces what?'
+    choices:
+      - '"q=salt+%26+smoke&page=2" — spaces become +, the ampersand percent-encodes, structure stays raw'
+      - '"q=salt%20&%20smoke&page=2"'
+      - '"q=salt & smoke&page=2"'
+      - '"%71=salt+%26+smoke&%70age=2"'
+    correct_choice: '"q=salt+%26+smoke&page=2" — spaces become +, the ampersand percent-encodes, structure stays raw'
+    explanation: |
+      urlencode escapes values (query convention: + for space) while
+      emitting the = and & structure literally — exactly the
+      encode-values-not-structure rule.
+    concepts:
+      - python.http_model
+  - id: q3
+    prompt: |
+      urlparse("https://API.Ferry.Example/Sailings").hostname and .path
+      return what casing?
+    choices:
+      - '"api.ferry.example" (hosts normalize to lowercase) and "/Sailings" (paths preserve case)'
+      - Both lowercase
+      - Both preserved as written
+      - Both uppercase for canonical form
+    correct_choice: '"api.ferry.example" (hosts normalize to lowercase) and "/Sailings" (paths preserve case)'
+    explanation: |
+      DNS names are case-insensitive so hostname normalizes; paths are
+      server-defined and case may be meaningful — the asymmetry matters for
+      URL deduplication.
+    concepts:
+      - python.http_model
+  - id: q4
+    prompt: |
+      A header-lookup function must treat "content-type", "Content-Type",
+      and "CONTENT-TYPE" as the same header. What is the standard
+      implementation?
+    choices:
+      - Normalize keys (e.g. lowercase) at storage and lookup — headers are case-insensitive by spec
+      - Store all three variants
+      - Compare with regex per lookup
+      - Reject non-canonical casing as malformed
+    correct_choice: Normalize keys (e.g. lowercase) at storage and lookup — headers are case-insensitive by spec
+    explanation: |
+      Case-insensitive names with a case-normalized dict is the pattern
+      every HTTP library implements internally; forgetting it breaks on the
+      first proxy that lowercases.
+    concepts:
+      - python.http_model
+  - id: q5
+    prompt: In "https://shop.example/cart?item=7#checkout", what does the server receive of "#checkout"?
+    choices:
+      - Nothing — fragments are client-side only and never sent in the request
+      - The full fragment as a header
+      - It arrives appended to the path
+      - It becomes a query parameter
+    correct_choice: Nothing — fragments are client-side only and never sent in the request
+    explanation: |
+      The fragment addresses content within the fetched page (scroll
+      anchors, SPA routes); servers never see it — a routine surprise when
+      debugging redirects and analytics.
+    concepts:
+      - python.http_model

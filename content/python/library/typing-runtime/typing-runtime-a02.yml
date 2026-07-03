@@ -1,0 +1,182 @@
+id: exercise.library.typing_runtime.a02
+kind: exercise
+version: 1
+language: python
+title: Clearing the Harbor Manifest
+slug: typing-runtime-a02
+difficulty: medium
+concepts:
+  - python.type_hints
+  - python.dictionaries
+  - python.types
+prerequisites:
+  - python.dictionaries
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.typing_runtime.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original manual TypedDict-shape validator framed as a harbor clearing cargo manifests, including the isinstance(True, int) booleans-are-ints gotcha.
+prompt_markdown: |
+  A harbor clears a ship only when its cargo manifest matches the required shape.
+  A `TypedDict` describes that shape in your editor, but at runtime a TypedDict is
+  just a plain `dict` with **no enforcement** — so you check the shape by hand.
+
+  Write `validate_manifest(payload)`. The single argument `payload` is a dict:
+
+  - `payload["record"]` is the manifest dict being checked.
+  - `payload["schema"]` maps each required field name to a type name, one of
+    `"int"`, `"str"`, `"bool"`, `"list"`, or `"dict"`.
+
+  Return a report dict `{"ok": <bool>, "errors": [<problem strings>]}`:
+
+  - For each field in the schema, if the record is missing that key, add
+    `"<field>:missing"`.
+  - If the key is present but its value is not the required type, add
+    `"<field>:wrong_type"`.
+  - Sort the `errors` list alphabetically. `ok` is `True` exactly when `errors`
+    is empty.
+
+  Type rules (this is where runtime bites):
+
+  - `"int"` accepts a real integer but **rejects booleans**. In Python
+    `isinstance(True, int)` is `True`, yet a flag is not a count, so `True` fails
+    an `"int"` field.
+  - `"bool"` accepts only `True`/`False`.
+  - `"str"`, `"list"`, and `"dict"` accept exactly those types.
+  - Extra keys in the record that the schema does not mention are ignored (a
+    manifest may carry extra notes).
+
+  Example: `payload = {"record": {"port": "Kobe", "tonnage": "heavy"}, "schema":
+  {"port": "str", "tonnage": "int"}}` returns
+  `{"ok": False, "errors": ["tonnage:wrong_type"]}`.
+starter_code: |
+  def validate_manifest(payload):
+      return {"ok": True, "errors": []}
+function_name: validate_manifest
+input_mode: function
+solution_sketch: Map each schema type name to an isinstance-based predicate (guarding int against bool), walk the schema keys collecting missing/wrong_type problems, sort them, and report ok as the absence of problems.
+sample_solution: |
+  def validate_manifest(payload):
+      record = payload["record"]
+      schema = payload["schema"]
+      checks = {
+          "int": lambda v: isinstance(v, int) and not isinstance(v, bool),
+          "str": lambda v: isinstance(v, str),
+          "bool": lambda v: isinstance(v, bool),
+          "list": lambda v: isinstance(v, list),
+          "dict": lambda v: isinstance(v, dict),
+      }
+      errors = []
+      for field, type_name in schema.items():
+          if field not in record:
+              errors.append(field + ":missing")
+          elif not checks[type_name](record[field]):
+              errors.append(field + ":wrong_type")
+      errors.sort()
+      return {"ok": not errors, "errors": errors}
+hints:
+  - level: 1
+    text: TypedDict is not enforced at runtime, so you must loop over the schema yourself and check each required key against the record.
+  - level: 2
+    text: Build a small table of type-name to predicate. The int predicate needs an extra guard because isinstance(True, int) is True.
+  - level: 3
+    text: For each schema field append "field:missing" or "field:wrong_type", sort the list, and set ok to (not errors).
+tests:
+  public:
+    - name: all_valid
+      input:
+        record:
+          port: Rotterdam
+          tonnage: 5000
+          hazardous: false
+        schema:
+          port: str
+          tonnage: int
+          hazardous: bool
+      expected:
+        ok: true
+        errors: []
+    - name: missing_field
+      input:
+        record:
+          port: Kobe
+        schema:
+          port: str
+          tonnage: int
+      expected:
+        ok: false
+        errors:
+          - 'tonnage:missing'
+    - name: wrong_type_field
+      input:
+        record:
+          port: Kobe
+          tonnage: heavy
+        schema:
+          port: str
+          tonnage: int
+      expected:
+        ok: false
+        errors:
+          - 'tonnage:wrong_type'
+  validation:
+    - name: bool_is_not_int
+      input:
+        record:
+          count: true
+        schema:
+          count: int
+      expected:
+        ok: false
+        errors:
+          - 'count:wrong_type'
+    - name: extra_keys_ignored
+      input:
+        record:
+          port: Oslo
+          scribbles: 1
+        schema:
+          port: str
+      expected:
+        ok: true
+        errors: []
+    - name: multiple_problems_sorted
+      input:
+        record:
+          tonnage: big
+        schema:
+          port: str
+          tonnage: int
+      expected:
+        ok: false
+        errors:
+          - 'port:missing'
+          - 'tonnage:wrong_type'
+    - name: list_and_dict_ok
+      input:
+        record:
+          tags: [1, 2]
+          meta: {}
+        schema:
+          tags: list
+          meta: dict
+      expected:
+        ok: true
+        errors: []
+explanation_markdown: |
+  Type hints, including `TypedDict`, are erased to ordinary containers at runtime,
+  so nothing stops a caller from handing you a manifest of the wrong shape. A
+  hand-written validator closes that gap: iterate the declared fields, confirm
+  each is present, and confirm each value's type. The subtle case is `"int"`.
+  Because `bool` is a subclass of `int`, `isinstance(True, int)` returns `True`,
+  which would silently accept a flag where a count belongs — the extra
+  `not isinstance(v, bool)` guard rejects it. Sorting the error list makes the
+  report deterministic no matter what order the schema was written in.
+common_mistakes:
+  - Writing the int check as isinstance(v, int) alone, so True and False slip through as valid integers.
+  - Treating extra record keys as errors when the schema only defines the required shape.
+  - Returning errors in schema order instead of sorting, so equivalent inputs produce different reports.

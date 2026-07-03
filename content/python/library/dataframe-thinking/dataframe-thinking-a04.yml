@@ -1,0 +1,136 @@
+id: exercise.library.dataframe_thinking.a04
+kind: exercise
+version: 1
+language: python
+title: Weighing the Market Stalls
+slug: dataframe-thinking-a04
+difficulty: medium
+concepts:
+  - concepts.dataframe_thinking
+  - concepts.grouping_aggregation
+prerequisites:
+  - python.dictionaries
+  - python.loops
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dataframe_thinking.a04
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original group-by-aggregate drill framed around a farmers' market weigh station summarizing produce per stall, teaching the split-apply-combine mental model with a small aggregate-name vocabulary.
+prompt_markdown: |
+  A farmers' market weigh station records every basket as a row: which stall it
+  came from and how many kilos it held. The market office wants a per-stall
+  summary, the split-apply-combine move a data-frame library writes as
+  `frame.groupby("stall")["kilos"].sum()`.
+
+  Write `aggregate_by_group(payload)` that takes a single dictionary with four
+  keys:
+
+  - `"rows"`: a list of basket dictionaries.
+  - `"group_col"`: the column whose distinct values define the groups.
+  - `"agg_col"`: the numeric column to aggregate within each group.
+  - `"agg_func"`: one of these aggregate names (given as a string):
+    - `"sum"`: total of the group's values.
+    - `"count"`: number of rows in the group (the `agg_col` value is ignored,
+      but the column is still named).
+    - `"min"`: smallest value in the group.
+    - `"max"`: largest value in the group.
+    - `"mean"`: average of the group's values, **rounded to 2 decimal places**.
+
+  Return a dictionary mapping each distinct `group_col` value to its aggregated
+  result. You may assume both named columns are present in every row.
+
+  Edge cases the tests cover:
+
+  - An empty `"rows"` list returns an empty dictionary `{}`.
+  - `"count"` counts rows, so repeated values still each add one.
+  - `"mean"` is rounded to 2 decimals (for example `4.5`, not `4.500001`).
+
+  Example:
+
+  ```python
+  aggregate_by_group({
+      "rows": [{"stall": "A", "kilos": 4}, {"stall": "B", "kilos": 7}, {"stall": "A", "kilos": 6}],
+      "group_col": "stall",
+      "agg_col": "kilos",
+      "agg_func": "sum",
+  })
+  # -> {"A": 10, "B": 7}
+  ```
+starter_code: |
+  def aggregate_by_group(payload):
+      return {}
+function_name: aggregate_by_group
+input_mode: function
+solution_sketch: Collect each group's agg_col values into a bucket dictionary in one pass, then reduce each bucket with the chosen aggregate, rounding the mean to 2 decimals.
+sample_solution: |
+  def aggregate_by_group(payload):
+      rows = payload["rows"]
+      group_col = payload["group_col"]
+      agg_col = payload["agg_col"]
+      agg_func = payload["agg_func"]
+      buckets = {}
+      for row in rows:
+          buckets.setdefault(row[group_col], []).append(row[agg_col])
+      result = {}
+      for group, values in buckets.items():
+          if agg_func == "sum":
+              result[group] = sum(values)
+          elif agg_func == "count":
+              result[group] = len(values)
+          elif agg_func == "min":
+              result[group] = min(values)
+          elif agg_func == "max":
+              result[group] = max(values)
+          elif agg_func == "mean":
+              result[group] = round(sum(values) / len(values), 2)
+      return result
+hints:
+  - level: 1
+    text: Split-apply-combine - first split the rows into per-group buckets of values, then apply the aggregate to each bucket.
+  - level: 2
+    text: buckets.setdefault(group, []).append(value) gathers each group's numbers in a single pass without a separate initialization step.
+  - level: 3
+    text: After bucketing, branch on agg_func to reduce each list; count is len(values) and mean is round(sum(values) / len(values), 2).
+tests:
+  public:
+    - name: empty_station
+      input: {"rows": [], "group_col": "stall", "agg_col": "kilos", "agg_func": "sum"}
+      expected: {}
+    - name: sum_kilos
+      input: {"rows": [{"stall": "A", "kilos": 4}, {"stall": "B", "kilos": 7}, {"stall": "A", "kilos": 6}, {"stall": "B", "kilos": 2}, {"stall": "A", "kilos": 5}], "group_col": "stall", "agg_col": "kilos", "agg_func": "sum"}
+      expected: {"A": 15, "B": 9}
+    - name: count_rows
+      input: {"rows": [{"stall": "A", "kilos": 4}, {"stall": "B", "kilos": 7}, {"stall": "A", "kilos": 6}, {"stall": "B", "kilos": 2}, {"stall": "A", "kilos": 5}], "group_col": "stall", "agg_col": "kilos", "agg_func": "count"}
+      expected: {"A": 3, "B": 2}
+  validation:
+    - name: max_kilos
+      input: {"rows": [{"stall": "A", "kilos": 4}, {"stall": "B", "kilos": 7}, {"stall": "A", "kilos": 6}, {"stall": "B", "kilos": 2}], "group_col": "stall", "agg_col": "kilos", "agg_func": "max"}
+      expected: {"A": 6, "B": 7}
+    - name: min_kilos
+      input: {"rows": [{"stall": "A", "kilos": 4}, {"stall": "B", "kilos": 7}, {"stall": "A", "kilos": 6}, {"stall": "B", "kilos": 2}], "group_col": "stall", "agg_col": "kilos", "agg_func": "min"}
+      expected: {"A": 4, "B": 2}
+    - name: mean_kilos_rounded
+      input: {"rows": [{"stall": "A", "kilos": 4}, {"stall": "B", "kilos": 7}, {"stall": "A", "kilos": 6}, {"stall": "B", "kilos": 2}, {"stall": "A", "kilos": 5}], "group_col": "stall", "agg_col": "kilos", "agg_func": "mean"}
+      expected: {"A": 5.0, "B": 4.5}
+    - name: three_stalls_sum
+      input: {"rows": [{"stall": "C", "kilos": 10}, {"stall": "A", "kilos": 1}, {"stall": "C", "kilos": 10}, {"stall": "A", "kilos": 9}], "group_col": "stall", "agg_col": "kilos", "agg_func": "sum"}
+      expected: {"C": 20, "A": 10}
+explanation_markdown: |
+  Group-by is the split-apply-combine pattern. The split is one linear pass that
+  drops each row's `agg_col` value into a bucket keyed by its `group_col` value;
+  `setdefault(key, []).append(...)` folds "first time I have seen this group" into
+  the same line as the append. The apply-and-combine step then reduces each
+  bucket with the requested aggregate.
+
+  Counting is special: it ignores the actual values and just measures how many
+  rows landed in each bucket, so `len(values)` is the answer even when values
+  repeat. The mean is rounded to two decimals so that floating-point division
+  produces a stable, comparable result instead of a long binary-fraction tail.
+common_mistakes:
+  - Counting distinct values (len(set(values))) instead of rows (len(values)) for the "count" aggregate.
+  - Forgetting to round the mean, so a value like 4.5 arrives as 4.500000000001 and fails an exact comparison.
+  - Overwriting a group's bucket with the latest value instead of accumulating all of its values before aggregating.

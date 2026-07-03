@@ -1,0 +1,116 @@
+id: exercise.library.memory_lifetime.a05
+kind: exercise
+version: 1
+language: python
+title: A Safe Teardown Order
+slug: memory-lifetime-a05
+difficulty: medium
+concepts:
+  - python.memory_model
+  - patterns.graph_traversal
+prerequisites:
+  - python.dictionaries
+  - python.sorting
+estimated_time_minutes: 16
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.memory_lifetime.a05
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original plugin-teardown framing for deterministic topological sort returning None on a dependency cycle.
+prompt_markdown: |
+  A plugin host tears its plugins down in a fixed order. The plan is an adjacency
+  dict: each key is a plugin id, and its value lists the plugins that must come
+  *after* it in the teardown order. Write `topo_or_cycle(graph)` that returns a
+  valid teardown order as a list, or `None` if the dependencies form a cycle -- no
+  order can satisfy a loop, the same reason a reference cycle stumps plain
+  refcounting.
+
+  Many valid orders can exist, so use this exact tie-break to stay deterministic:
+  whenever more than one plugin is ready to be placed next (nothing still unplaced
+  is required to come before it), choose the one whose id sorts first in ascending
+  order.
+
+  Every id that appears in a value list is also a key. An empty graph returns an
+  empty list. A self-reference (`{"a": ["a"]}`) is a cycle, so it returns `None`.
+  For `{"a": ["b", "c"], "b": ["d"], "c": ["d"], "d": []}` the answer is
+  `["a", "b", "c", "d"]`.
+starter_code: |
+  def topo_or_cycle(graph):
+      return []
+function_name: topo_or_cycle
+input_mode: function
+solution_sketch: Compute in-degrees, repeatedly place the smallest-id node with in-degree zero and relax its targets, and return None if some step finds no ready node.
+sample_solution: |
+  def topo_or_cycle(graph):
+      indegree = {node: 0 for node in graph}
+      for node in graph:
+          for target in graph[node]:
+              indegree[target] += 1
+
+      order = []
+      placed = set()
+      while len(order) < len(graph):
+          ready = sorted(
+              node for node in graph
+              if node not in placed and indegree[node] == 0
+          )
+          if not ready:
+              return None
+          pick = ready[0]
+          order.append(pick)
+          placed.add(pick)
+          for target in graph[pick]:
+              indegree[target] -= 1
+      return order
+hints:
+  - level: 1
+    text: Count how many plugins must come before each one (its in-degree); the plugins with in-degree zero are the ones ready to place.
+  - level: 2
+    text: Place the smallest-id ready plugin, mark it placed, then lower the in-degree of every plugin it points to.
+  - level: 3
+    text: If a step finds no plugin with in-degree zero while some remain unplaced, the dependencies loop -- return None.
+tests:
+  public:
+    - name: linear_chain
+      input: {"a": ["b"], "b": ["c"], "c": []}
+      expected: ["a", "b", "c"]
+    - name: two_node_cycle
+      input: {"a": ["b"], "b": ["a"]}
+      expected: null
+    - name: tie_break_alphabetical
+      input: {"a": [], "b": [], "c": []}
+      expected: ["a", "b", "c"]
+  validation:
+    - name: empty_graph
+      input: {}
+      expected: []
+    - name: self_reference_cycle
+      input: {"a": ["a"]}
+      expected: null
+    - name: diamond_order
+      input: {"a": ["b", "c"], "b": ["d"], "c": ["d"], "d": []}
+      expected: ["a", "b", "c", "d"]
+    - name: shared_target_tie_break
+      input: {"x": ["z"], "y": ["z"], "z": []}
+      expected: ["x", "y", "z"]
+    - name: branch_into_cycle
+      input: {"a": ["b"], "b": ["c"], "c": ["b"]}
+      expected: null
+explanation_markdown: |
+  A topological sort answers "in what order can I release these so nothing is torn
+  down before its dependants?" -- and it is exactly the ordering a runtime needs when
+  it must finalize objects that reference one another. Kahn's algorithm tracks each
+  node's in-degree (how many must precede it), repeatedly removes a source with
+  in-degree zero, and relaxes its edges. The moment the graph is left with unplaced
+  nodes but no in-degree-zero source, a cycle is proven and there is no valid order,
+  so returning `None` is correct rather than an arbitrary guess. Sorting the ready
+  set before each pick is what makes the output deterministic; without a stated
+  tie-break, many equally valid orders would all be "right" and no test could pin
+  the answer down.
+common_mistakes:
+  - Returning any valid topological order without the ascending tie-break, so the output is non-deterministic.
+  - Reporting an empty or partial list on a cycle instead of returning None.
+  - Adjusting in-degrees for the wrong edge direction, producing an order that violates the "comes after" constraints.

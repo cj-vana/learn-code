@@ -1,0 +1,101 @@
+id: lesson.library.cli_parsing.a01
+kind: lesson
+version: 1
+language: python
+title: 'Anatomy of a Command Line'
+slug: lesson-cli-parsing-a01
+difficulty: medium
+concepts:
+  - python.cli_args
+prerequisites:
+  - python.lists
+  - python.dictionaries
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.cli_parsing.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original CLI-anatomy walkthrough framed around a print shop's job-submission tool, with fresh worked argument grammar.
+body_markdown: |
+  Command-line interfaces are the lingua franca of automation — every
+  tool you script, deploy, or ship gets driven by one. And a command
+  line is a tiny *language* with a real grammar. Learn the grammar once
+  and every CLI you meet (or build) parses the same way.
+
+  A print shop's job tool:
+
+  ```text
+  printq submit poster.pdf --copies 3 --paper a3 --rush -v
+  ```
+
+  ### The parts of speech
+
+  - **Positional arguments** (`poster.pdf`) — identified by *position*,
+    usually the essential nouns. What the command is about.
+  - **Options/flags** (`--copies 3`) — identified by *name*, order-free,
+    usually optional with defaults. The adverbs.
+  - **Boolean switches** (`--rush`) — present or absent, no value.
+  - **Short forms** (`-v` for `--verbose`) — one dash, one letter,
+    bundleable in Unix tradition (`-rv` = `-r -v`).
+  - **Subcommands** (`submit`) — a verb selecting a whole sub-grammar;
+    `git commit` and `git push` accept different options. The first
+    token routes; the rest parse under that verb's rules.
+
+  The value of knowing the parts: the roles encode *convention* about
+  meaning — positionals for required essentials, named options for
+  modifiers, switches for toggles. A tool that takes twelve positionals
+  is unusable; one that requires `--input-file` for its only argument is
+  noise. Design is choosing roles well.
+
+  ### Parsing by hand: one pass, explicit state
+
+  Before meeting the library, your exercises build the parser — because
+  the algorithm is simple and owning it demystifies every parser
+  configuration you will ever write. A single left-to-right pass:
+
+  ```python
+  def parse(tokens, spec):
+      result, positionals = dict(spec["defaults"]), []
+      i = 0
+      while i < len(tokens):
+          t = tokens[i]
+          if t in spec["switches"]:
+              result[t] = True
+          elif t in spec["options"]:
+              i += 1                      # consume the VALUE too
+              result[t] = tokens[i]
+          elif t.startswith("-"):
+              raise UnknownOption(t)
+          else:
+              positionals.append(t)
+          i += 1
+      return result, positionals
+  ```
+
+  The decisions this loop makes explicit — the ones every parser must
+  make somewhere: options consume the *next* token as their value
+  (`--copies` then `3`); unknown dashed tokens are errors, not
+  positionals (a typo like `--copeis` must fail loudly, not be filed as
+  a filename); and defaults pre-populate so absence has defined meaning.
+  Your exercises add the refinements real parsers have: `--copies=3`
+  single-token form, `--` as the "everything after is positional"
+  terminator (how you print a file literally named `--rush`), and
+  required-option validation with precise error strings.
+
+  Parsing produces a plain dict + list — configuration as data, feeding
+  the same pure decide-stage that files and env vars feed. The CLI is
+  just one more boundary where text becomes structure, and the next
+  lesson hands the boundary to `argparse`.
+checkpoints:
+  - question: 'Why must an unrecognized dashed token like --copeis be an error rather than collected as a positional?'
+    answer: 'It is almost certainly a typo of an option; filing it as a positional (a filename, say) silently changes the command''s meaning — the loud error converts a would-be data corruption into an immediate fix.'
+    explanation: 'The dash prefix is the user declaring "this is an option"; honoring that declaration in error handling is what makes CLIs debuggable.'
+  - question: What does the -- terminator convention mean, and what problem does it solve?
+    answer: 'Everything after -- is treated as positional, never as options — enabling commands to operate on values that begin with dashes (a file named --rush) that would otherwise parse as flags.'
+    explanation: 'Every argument grammar needs an escape hatch to say "literal value"; -- is the universal Unix answer, and parsers must implement it.'
+  - question: 'In the design grammar of CLIs, when should an input be a positional versus a named option?'
+    answer: 'Positionals for the essential nouns the command is about (usually required, few in number); named options for modifiers with sensible defaults — twelve positionals are unmemorizable, and a mandatory --input-file for the only argument is ceremony.'
+    explanation: 'The roles carry meaning by convention; matching them to your command''s semantics is most of CLI design.'

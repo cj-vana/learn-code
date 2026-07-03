@@ -1,0 +1,110 @@
+id: exercise.library.logging_diagnostics.a04
+kind: exercise
+version: 1
+language: python
+title: Assembling the Observatory Log Record
+slug: logging-diagnostics-a04
+difficulty: medium
+concepts:
+  - python.logging_diagnostics
+  - python.dictionaries
+  - python.strings
+prerequisites:
+  - python.dictionaries
+  - python.loops
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.logging_diagnostics.a04
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original structured-log-record builder themed around an astronomical observatory; models how logging's extra dict enriches a record but is forbidden from clobbering reserved fields.
+prompt_markdown: |
+  An observatory ships structured (JSON-style) log records so downstream tools can
+  query them by field. Write `build_structured_log_entry(entry)` where `entry` is
+  a dict with keys `level` (a severity name, in any letter case), `message` (a
+  string), and `extra` (a dict of caller-supplied fields to attach).
+
+  Return a single flat dict built like this:
+
+  - `level`: the severity name normalized to **uppercase** (`"info"` becomes
+    `"INFO"`).
+  - `levelno`: the numeric level for that name, using
+    `NOTSET=0 DEBUG=10 INFO=20 WARNING=30 ERROR=40 CRITICAL=50`.
+  - `message`: the message string unchanged.
+  - Every key/value pair from `extra`, merged in at the top level — **except** that
+    `extra` must never overwrite the three reserved keys above. If `extra`
+    contains `level`, `levelno`, or `message`, ignore that pair and keep the
+    computed value.
+
+  You may assume `level` (once uppercased) is one of the six names. `extra` may be
+  empty.
+starter_code: |
+  LEVELS = {"NOTSET": 0, "DEBUG": 10, "INFO": 20, "WARNING": 30, "ERROR": 40, "CRITICAL": 50}
+
+
+  def build_structured_log_entry(entry):
+      # Build the reserved fields, then merge extra without letting it clobber them.
+      return {}
+function_name: build_structured_log_entry
+input_mode: function
+solution_sketch: Compute level/levelno/message into the result, then loop extra adding only keys that are not one of the three reserved names.
+sample_solution: |
+  LEVELS = {"NOTSET": 0, "DEBUG": 10, "INFO": 20, "WARNING": 30, "ERROR": 40, "CRITICAL": 50}
+
+
+  def build_structured_log_entry(entry):
+      level = entry["level"].upper()
+      result = {"level": level, "levelno": LEVELS[level], "message": entry["message"]}
+      reserved = {"level", "levelno", "message"}
+      for key, value in entry["extra"].items():
+          if key not in reserved:
+              result[key] = value
+      return result
+hints:
+  - level: 1
+    text: Build the three reserved fields first, then decide which extra fields are allowed to join them.
+  - level: 2
+    text: Uppercase the level name before looking up its number so mixed-case input still resolves.
+  - level: 3
+    text: Keep a set of reserved names and skip any extra key that is in it, so a caller can never overwrite level, levelno, or message.
+tests:
+  public:
+    - name: no_extra
+      input: {level: warning, message: pump slow, extra: {}}
+      expected: {level: WARNING, levelno: 30, message: pump slow}
+    - name: with_extra_fields
+      input: {level: error, message: dome stuck, extra: {dome: 2, motor: left}}
+      expected: {level: ERROR, levelno: 40, message: dome stuck, dome: 2, motor: left}
+    - name: case_normalized
+      input: {level: info, message: slew complete, extra: {}}
+      expected: {level: INFO, levelno: 20, message: slew complete}
+  validation:
+    - name: extra_cannot_override_message
+      input: {level: debug, message: real target, extra: {message: spoofed, note: ok}}
+      expected: {level: DEBUG, levelno: 10, message: real target, note: ok}
+    - name: extra_cannot_override_levelno
+      input: {level: warning, message: drift, extra: {levelno: 999}}
+      expected: {level: WARNING, levelno: 30, message: drift}
+    - name: extra_cannot_override_level
+      input: {level: info, message: park scope, extra: {level: HACK, host: mount1}}
+      expected: {level: INFO, levelno: 20, message: park scope, host: mount1}
+    - name: already_uppercase
+      input: {level: CRITICAL, message: tracking lost, extra: {code: 500}}
+      expected: {level: CRITICAL, levelno: 50, message: tracking lost, code: 500}
+explanation_markdown: |
+  Structured logging keeps records queryable by giving every field a stable name
+  and type, which is why the reserved fields are computed rather than trusted from
+  the caller. The `extra` dict is genuinely useful — it is how you attach a request
+  id or a device number to a record — but if it could overwrite `message` or
+  `levelno`, a single careless caller (or a crafted input) could disguise the true
+  severity of an event. The standard library takes the same stance: `logging`
+  raises if `extra` collides with a reserved `LogRecord` attribute. Here you defend
+  the record by checking each incoming key against a reserved set and letting the
+  computed values win.
+common_mistakes:
+  - Merging extra first and the reserved fields second (or vice versa) without guarding, so one silently overwrites the other.
+  - Looking up the level number before uppercasing, so a lowercase name misses the mapping.
+  - Building levelno from the raw name instead of the normalized one, giving inconsistent level and levelno pairs.

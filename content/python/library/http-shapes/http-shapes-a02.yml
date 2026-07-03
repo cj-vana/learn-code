@@ -1,0 +1,132 @@
+id: exercise.library.http_shapes.a02
+kind: exercise
+version: 1
+language: python
+title: Reading Back the Slip Request
+slug: http-shapes-a02
+difficulty: medium
+concepts:
+  - python.http_model
+  - concepts.grouping_aggregation
+prerequisites:
+  - python.strings
+  - python.dictionaries
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.http_shapes.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original query-string parser (parse_qs-style) themed around a harbor slip request; pure string logic.
+prompt_markdown: |
+  The harbor's booking service receives the raw query string from an incoming
+  request and needs to turn it back into structured data. Write
+  `parse_query_string(qs)` that takes the query string (the text that would
+  follow the `?`, without the `?` itself) and returns a dict mapping each key to
+  a **list** of its values, in the order they appear.
+
+  A key can legitimately appear more than once (for example a repeated `tag`
+  filter), so every value is collected into a list even when there is only one.
+
+  Rules:
+
+  - Split the string on `&` into segments; skip any empty segment (as produced
+    by a stray `&&` or a leading/trailing `&`).
+  - Split each segment on the **first** `=` only. Text after later `=` signs
+    stays part of the value.
+  - A segment with no `=` at all is a bare key; its value is the empty string
+    `""`. A segment like `berth=` also gives the value `""`.
+  - Decode both the key and the value the way `urllib.parse.unquote_plus` does:
+    `+` becomes a space and `%NN` escapes turn back into their characters, so
+    `%26` becomes `&`.
+  - The empty string `""` returns an empty dict `{}`.
+
+  Examples:
+
+  - `"berth=A12"` returns `{"berth": ["A12"]}`.
+  - `"tag=sun&tag=sea"` returns `{"tag": ["sun", "sea"]}`.
+  - `"q=open+slip"` returns `{"q": ["open slip"]}`.
+starter_code: |
+  from urllib.parse import unquote_plus
+
+
+  def parse_query_string(qs):
+      return {}
+function_name: parse_query_string
+input_mode: function
+solution_sketch: Split on '&', split each non-empty segment on the first '=', unquote_plus both parts, and setdefault the key to a list you append to.
+sample_solution: |
+  from urllib.parse import unquote_plus
+
+
+  def parse_query_string(qs):
+      result = {}
+      if not qs:
+          return result
+      for segment in qs.split("&"):
+          if not segment:
+              continue
+          if "=" in segment:
+              raw_key, raw_value = segment.split("=", 1)
+          else:
+              raw_key, raw_value = segment, ""
+          key = unquote_plus(raw_key)
+          value = unquote_plus(raw_value)
+          result.setdefault(key, []).append(value)
+      return result
+hints:
+  - level: 1
+    text: Break the whole string into segments on `&` first, then deal with one `key=value` segment at a time.
+  - level: 2
+    text: Use segment.split("=", 1) so only the first `=` splits the pair; a segment with no `=` is a bare key with value "".
+  - level: 3
+    text: Call unquote_plus on both halves, then result.setdefault(key, []).append(value) so repeated keys accumulate into one list.
+tests:
+  public:
+    - name: empty_string
+      input: ''
+      expected: {}
+    - name: single_pair
+      input: 'berth=A12'
+      expected: {berth: ['A12']}
+    - name: repeated_key
+      input: 'tag=sun&tag=sea'
+      expected: {tag: ['sun', 'sea']}
+    - name: plus_decoded
+      input: 'q=open+slip'
+      expected: {q: ['open slip']}
+  validation:
+    - name: percent_decoded
+      input: 'note=sun+%26+sea'
+      expected: {note: ['sun & sea']}
+    - name: bare_key
+      input: 'active'
+      expected: {active: ['']}
+    - name: blank_value
+      input: 'berth='
+      expected: {berth: ['']}
+    - name: mixed_counts
+      input: 'free=1&max=3&free=2'
+      expected: {free: ['1', '2'], max: ['3']}
+    - name: empty_segments_skipped
+      input: 'a=1&&b=2'
+      expected: {a: ['1'], b: ['2']}
+explanation_markdown: |
+  Parsing a query string is the inverse of building one, and the tricky part is
+  that keys are not unique: a filter like `tag` can appear several times, so the
+  standard shape (what `urllib.parse.parse_qs` returns) maps each key to a list.
+  Using `setdefault(key, [])` before appending means the first sighting of a key
+  creates its list and every later sighting adds to it, which preserves order
+  and collapses the single-value and multi-value cases into one code path.
+
+  Two details keep the parser honest. Splitting on the first `=` only
+  (`split("=", 1)`) protects values that legitimately contain `=`. And
+  `unquote_plus` must run after you split, not before, because decoding earlier
+  could reintroduce a literal `&` or `=` that would then be mistaken for a
+  separator.
+common_mistakes:
+  - Using split("=") without the maxsplit of 1, which corrupts any value that itself contains an `=`.
+  - Storing a plain string instead of a list, so a repeated key silently overwrites its earlier value.
+  - Decoding with unquote_plus before splitting, letting a decoded `&` or `=` break the segmentation.

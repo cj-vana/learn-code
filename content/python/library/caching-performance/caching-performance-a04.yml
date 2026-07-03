@@ -1,0 +1,104 @@
+id: exercise.library.caching_performance.a04
+kind: exercise
+version: 1
+language: python
+title: The Conveyor's Two Tally Sheets
+slug: caching-performance-a04
+difficulty: easy
+concepts:
+  - concepts.performance
+  - python.iterators_generators
+  - python.comprehensions
+prerequisites:
+  - python.lists
+  - python.loops
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.caching_performance.a04
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original generator-versus-list drill framed as a cannery conveyor tagged with perfect squares, showing that an eager list and a drained lazy generator produce identical sequences.
+prompt_markdown: |
+  A cannery's conveyor is fed `n` crates, and an inspector wants the sequence of
+  perfect-square tags 1, 4, 9, 16, ... — the square of each crate's position,
+  counting positions from 1 up to `n`.
+
+  There are two honest ways to build this sequence: collect every value eagerly
+  into a list, or produce the values lazily one at a time from a generator and
+  then drain that generator into a list. Both must yield exactly the same
+  values.
+
+  Write `compare_stream_forms(n)` that builds the first `n` squares both ways and
+  returns a dict with exactly these keys:
+
+  - `"eager"`: the list `[1, 4, 9, ...]` built with a list comprehension (or an
+    explicit list-building loop).
+  - `"lazy"`: the same list, built by draining a generator that yields the values
+    one at a time.
+
+  `n` is an integer with `n >= 0`. When `n` is 0 both lists are empty, so the
+  result is `{"eager": [], "lazy": []}`.
+
+  Example: `compare_stream_forms(3)` returns
+  `{"eager": [1, 4, 9], "lazy": [1, 4, 9]}`.
+starter_code: |
+  def compare_stream_forms(n):
+      return {"eager": [], "lazy": []}
+function_name: compare_stream_forms
+input_mode: function
+solution_sketch: Build the eager list with a comprehension over positions 1..n squared, define a generator that yields the same squares one at a time, drain it with list(), and return both under the eager and lazy keys.
+sample_solution: |
+  def compare_stream_forms(n):
+      eager = [i * i for i in range(1, n + 1)]
+
+      def squares():
+          for i in range(1, n + 1):
+              yield i * i
+
+      lazy = list(squares())
+      return {"eager": eager, "lazy": lazy}
+hints:
+  - level: 1
+    text: The eager form is a single list comprehension — square each position from 1 through n.
+  - level: 2
+    text: For the lazy form, write a generator function that uses `yield i * i` inside the same loop, so it hands back one value at a time.
+  - level: 3
+    text: Turn the generator into a list with list(squares()); both forms should contain the identical values.
+tests:
+  public:
+    - name: zero
+      input: 0
+      expected: {eager: [], lazy: []}
+    - name: three
+      input: 3
+      expected: {eager: [1, 4, 9], lazy: [1, 4, 9]}
+    - name: one
+      input: 1
+      expected: {eager: [1], lazy: [1]}
+  validation:
+    - name: two
+      input: 2
+      expected: {eager: [1, 4], lazy: [1, 4]}
+    - name: five
+      input: 5
+      expected: {eager: [1, 4, 9, 16, 25], lazy: [1, 4, 9, 16, 25]}
+    - name: six
+      input: 6
+      expected: {eager: [1, 4, 9, 16, 25, 36], lazy: [1, 4, 9, 16, 25, 36]}
+explanation_markdown: |
+  A list comprehension materialises every value at once and hands you a finished
+  list. A generator does the same arithmetic but suspends after each `yield`,
+  producing values only as they are pulled. Calling `list()` on the generator
+  pulls all of them, which is why the two results are identical here. The
+  difference is not the values but the memory profile along the way: the eager
+  list holds all `n` numbers the whole time, while the generator holds only the
+  one value it is currently producing. For a short conveyor that is invisible,
+  but for a very long or unbounded stream the lazy form is what lets you process
+  it without ever holding the whole sequence in memory.
+common_mistakes:
+  - Starting the positions at 0 instead of 1, which produces a leading 0 and shifts every square.
+  - Returning the generator object itself under "lazy" instead of draining it with list(), so the two values are not comparable.
+  - Using range(1, n) instead of range(1, n + 1) and dropping the final square.

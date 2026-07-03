@@ -1,0 +1,101 @@
+id: exercise.library.logging_diagnostics.a03
+kind: exercise
+version: 1
+language: python
+title: The Greenhouse Alarm Threshold
+slug: logging-diagnostics-a03
+difficulty: easy
+concepts:
+  - python.logging_diagnostics
+  - python.conditionals
+  - python.dictionaries
+prerequisites:
+  - python.conditionals
+  - python.dictionaries
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.logging_diagnostics.a03
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original level-threshold comparison drill themed around a greenhouse climate monitor; models logging's isEnabledFor gate where a record passes only if its level is at or above the threshold.
+prompt_markdown: |
+  A greenhouse climate monitor decides whether a reading is worth logging. Each
+  message carries a severity, and the monitor only records messages at or above a
+  configured threshold. Write `should_emit(gate)` where `gate` is a dict with keys
+  `record` and `threshold`, each a severity name.
+
+  Convert both names to numbers with this fixed mapping and return `True` when the
+  record's number is **greater than or equal to** the threshold's number,
+  otherwise `False`:
+
+  ```
+  NOTSET=0  DEBUG=10  INFO=20  WARNING=30  ERROR=40  CRITICAL=50
+  ```
+
+  For example, a `WARNING` record against an `INFO` threshold is emitted
+  (`30 >= 20` is `True`), but a `DEBUG` record against a `WARNING` threshold is
+  suppressed (`10 >= 30` is `False`). A record exactly equal to the threshold is
+  emitted. You may assume both names are among the six above.
+starter_code: |
+  LEVELS = {"NOTSET": 0, "DEBUG": 10, "INFO": 20, "WARNING": 30, "ERROR": 40, "CRITICAL": 50}
+
+
+  def should_emit(gate):
+      # Return True when the record level is at or above the threshold level.
+      return False
+function_name: should_emit
+input_mode: function
+solution_sketch: Map both names to their numeric levels and return whether the record number is greater than or equal to the threshold number.
+sample_solution: |
+  LEVELS = {"NOTSET": 0, "DEBUG": 10, "INFO": 20, "WARNING": 30, "ERROR": 40, "CRITICAL": 50}
+
+
+  def should_emit(gate):
+      return LEVELS[gate["record"]] >= LEVELS[gate["threshold"]]
+hints:
+  - level: 1
+    text: Severity names are ordered, so translate each name into its number before comparing.
+  - level: 2
+    text: A message is emitted when it is at least as severe as the threshold, which is a >= comparison.
+  - level: 3
+    text: Look both names up in the LEVELS dict and return the boolean LEVELS[record] >= LEVELS[threshold] directly.
+tests:
+  public:
+    - name: above_threshold
+      input: {record: WARNING, threshold: INFO}
+      expected: true
+    - name: below_threshold
+      input: {record: DEBUG, threshold: WARNING}
+      expected: false
+    - name: equal_passes
+      input: {record: ERROR, threshold: ERROR}
+      expected: true
+  validation:
+    - name: critical_always_high
+      input: {record: CRITICAL, threshold: DEBUG}
+      expected: true
+    - name: notset_threshold_passes_all
+      input: {record: DEBUG, threshold: NOTSET}
+      expected: true
+    - name: info_below_error
+      input: {record: INFO, threshold: ERROR}
+      expected: false
+    - name: notset_record_only_passes_notset
+      input: {record: NOTSET, threshold: DEBUG}
+      expected: false
+explanation_markdown: |
+  Severity levels are just ordered numbers wearing names, which is why the whole
+  emit decision collapses to one comparison. Mapping the names first means the
+  logic never depends on the spelling of a level, only its rank. The `>=` (not
+  `>`) is the detail that matters: a record whose severity exactly equals the
+  threshold is emitted, matching how `logging.Logger.isEnabledFor` gates records.
+  A `NOTSET` threshold of `0` lets everything through because every real level is
+  at least `0`, which is why leaving a threshold unset behaves like "log
+  everything".
+common_mistakes:
+  - Using a strict > so a record exactly at the threshold is dropped instead of emitted.
+  - Comparing the level name strings directly, which orders them alphabetically rather than by severity.
+  - Swapping the operands and testing threshold >= record, which inverts the whole gate.

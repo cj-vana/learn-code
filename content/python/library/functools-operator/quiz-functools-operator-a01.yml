@@ -1,0 +1,109 @@
+id: quiz.library.functools_operator.a01
+kind: quiz
+version: 1
+language: python
+title: Picking the Functional Tool
+slug: quiz-functools-operator-a01
+difficulty: medium
+concepts:
+  - python.functools_operator
+prerequisites:
+  - python.functools_operator
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.functools_operator.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pattern-recognition quiz on choosing among partial, singledispatch, lru_cache, and itertools deep cuts.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      A callback API accepts a zero-config callable, but your handler needs a
+      database connection and a retry limit fixed in advance. Which tool
+      states that intent most directly?
+    choices:
+      - functools.partial(handler, conn, retries=3) — freeze the configuration into a new callable
+      - A global variable holding the connection
+      - A class with __call__ and two attributes
+      - Copy-pasting the handler per configuration
+    correct_choice: functools.partial(handler, conn, retries=3) — freeze the configuration into a new callable
+    explanation: |
+      partial is configuration-as-function: introspectable, picklable,
+      one line — the class works but is ceremony, and the global is a leak
+      of state into module scope.
+    concepts:
+      - python.functools_operator
+  - id: q2
+    prompt: |
+      A render() function has grown an isinstance ladder for eight types,
+      including three from libraries you cannot modify. What is the designed
+      replacement?
+    choices:
+      - '@singledispatch with per-type register()ed implementations and the original body as fallback'
+      - Adding a render() method to each of the eight types
+      - A dict mapping type names to lambdas
+      - match/case on type(x).__name__
+    correct_choice: '@singledispatch with per-type register()ed implementations and the original body as fallback'
+    explanation: |
+      You can't add methods to types you don't own; singledispatch gives
+      open, MRO-aware, per-type dispatch that other modules can extend
+      without touching the ladder.
+    concepts:
+      - python.functools_operator
+  - id: q3
+    prompt: |
+      After a day in production, an lru_cache'd function shows
+      CacheInfo(hits=12, misses=48210, maxsize=128, currsize=128). What is
+      the honest conclusion?
+    choices:
+      - The cache is nearly useless — argument diversity far exceeds capacity, so entries are evicted before they can be reused
+      - The cache is working perfectly
+      - maxsize should be lowered to raise the hit rate
+      - The function is being called too rarely
+    correct_choice: The cache is nearly useless — argument diversity far exceeds capacity, so entries are evicted before they can be reused
+    explanation: |
+      A 0.02% hit rate with a full cache is churn: keys rarely repeat within
+      any 128-call window. Either raise maxsize toward the working-set size
+      or accept that this workload doesn't memoize.
+    concepts:
+      - python.functools_operator
+  - id: q4
+    prompt: |
+      A report needs monthly subtotals from a list of transactions that is
+      NOT sorted by month. A colleague reaches for itertools.groupby
+      directly. What happens, and what should happen?
+    choices:
+      - Each month appears once per consecutive run — fragmented, silently wrong totals; sort by month first or use dict accumulation
+      - groupby raises ValueError on unsorted input
+      - It works — groupby sorts internally
+      - The totals are correct but unordered
+    correct_choice: Each month appears once per consecutive run — fragmented, silently wrong totals; sort by month first or use dict accumulation
+    explanation: |
+      groupby's consecutive-runs contract produces plausible-looking
+      fragments on unsorted data — the module's most-cited trap because
+      nothing errors.
+    concepts:
+      - python.functools_operator
+      - python.itertools_module
+  - id: q5
+    prompt: |
+      A risk model needs the running maximum drawdown over a price series —
+      a running fold with max, seeded by the first price. Which call shape
+      fits?
+    choices:
+      - itertools.accumulate(prices, max)
+      - functools.reduce(max, prices) — reduce keeps intermediate values
+      - map(max, prices)
+      - itertools.pairwise(prices)
+    correct_choice: itertools.accumulate(prices, max)
+    explanation: |
+      accumulate IS the fold-with-history: reduce collapses to one final
+      value, map applies max elementwise (wrongly), pairwise gives adjacent
+      pairs. Running-X problems are accumulate problems.
+    concepts:
+      - python.functools_operator
+      - python.itertools_module

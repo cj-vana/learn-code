@@ -1,0 +1,131 @@
+id: exercise.library.caching_performance.a02
+kind: exercise
+version: 1
+language: python
+title: The Print Shop's Render Cache
+slug: caching-performance-a02
+difficulty: medium
+concepts:
+  - concepts.performance
+  - concepts.memoization
+  - python.closures_decorators
+prerequisites:
+  - python.dictionaries
+  - python.functions
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.caching_performance.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original hand-rolled memoization drill framed as a poster print shop whose render cache reports hits and misses, mirroring the check-then-store logic inside a memoization decorator.
+prompt_markdown: |
+  A print shop renders large posters on demand. Rendering a design is slow, so
+  the shop keeps a cache: the first time a design is requested it is rendered
+  from scratch, and every later request for the same design is served instantly
+  from the cache.
+
+  Write `render_log(designs)` that takes a list of design names (strings) in the
+  order they are requested and reports how the cache behaved. Return a dict with
+  exactly these keys:
+
+  - `"labels"`: a list with one entry per request, in order — `"render"` if this
+    is the first time that design is seen, or `"cache"` if the design was
+    requested earlier and can be served from the cache.
+  - `"renders"`: how many requests were rendered from scratch (the number of
+    `"render"` labels).
+  - `"cached"`: how many requests were served from the cache (the number of
+    `"cache"` labels).
+
+  Design names are compared by exact, case-sensitive equality, so `"Sky"` and
+  `"sky"` are different designs. An empty request list returns
+  `{"labels": [], "renders": 0, "cached": 0}`.
+
+  For example, `render_log(["dawn", "dusk", "dawn"])` returns
+  `{"labels": ["render", "render", "cache"], "renders": 2, "cached": 1}`.
+starter_code: |
+  def render_log(designs):
+      return {"labels": [], "renders": 0, "cached": 0}
+function_name: render_log
+input_mode: function
+solution_sketch: Wrap a stand-in render function in a hand-written memoize decorator whose cache dict records which designs have been computed; label each request render or cache by whether the underlying work actually ran, then tally the two label counts.
+sample_solution: |
+  def render_log(designs):
+      computed = []
+
+      def memoize(func):
+          cache = {}
+
+          def wrapper(key):
+              if key not in cache:
+                  cache[key] = func(key)
+                  computed.append(key)
+              return cache[key]
+
+          return wrapper
+
+      @memoize
+      def render(design):
+          return design.upper()  # stand-in for slow rendering work
+
+      labels = []
+      done = 0
+      for design in designs:
+          render(design)
+          if len(computed) > done:
+              labels.append("render")
+              done = len(computed)
+          else:
+              labels.append("cache")
+      return {
+          "labels": labels,
+          "renders": labels.count("render"),
+          "cached": labels.count("cache"),
+      }
+hints:
+  - level: 1
+    text: Track which design names you have already seen. The first sighting of a name is a "render"; any repeat is a "cache".
+  - level: 2
+    text: A dictionary or set used as the cache lets you check `if design not in cache` before doing the work — that check-then-store step is the whole idea of a memoization decorator.
+  - level: 3
+    text: Build the labels list as you go, then compute renders and cached with labels.count("render") and labels.count("cache").
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: {labels: [], renders: 0, cached: 0}
+    - name: all_new
+      input: [alpha, beta, gamma]
+      expected: {labels: [render, render, render], renders: 3, cached: 0}
+    - name: example
+      input: [dawn, dusk, dawn]
+      expected: {labels: [render, render, cache], renders: 2, cached: 1}
+  validation:
+    - name: repeat_run
+      input: [dawn, dusk, dawn, dawn, noon]
+      expected: {labels: [render, render, cache, cache, render], renders: 3, cached: 2}
+    - name: case_sensitive
+      input: [Sky, sky, Sky]
+      expected: {labels: [render, render, cache], renders: 2, cached: 1}
+    - name: single
+      input: [solo]
+      expected: {labels: [render], renders: 1, cached: 0}
+    - name: all_same
+      input: [tide, tide, tide, tide]
+      expected: {labels: [render, cache, cache, cache], renders: 1, cached: 3}
+explanation_markdown: |
+  This is memoization done by hand. The cache is just a dictionary that maps an
+  input to the result of the expensive call. Before doing any work you check
+  whether the key is already present; if it is, you return the stored result (a
+  cache hit), and if it is not, you compute the result once and store it (a cache
+  miss). That check-then-store pattern is exactly what `functools.lru_cache`
+  automates for you, and the `renders` and `cached` counts here line up with the
+  misses and hits that `cache_info()` would report on a real cached function.
+  Because a stored design is never recomputed, the total work is proportional to
+  the number of distinct designs, not the number of requests.
+common_mistakes:
+  - Labelling every request as a render, so repeated designs are never recognised as cache hits.
+  - Storing results but forgetting to check the cache first, so the cache is populated yet never actually saves any work.
+  - Deriving renders and cached from separate ad-hoc counters that drift out of sync with the labels list instead of counting the labels directly.

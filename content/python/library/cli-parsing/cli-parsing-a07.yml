@@ -1,0 +1,147 @@
+id: exercise.library.cli_parsing.a07
+kind: exercise
+version: 1
+language: python
+title: Reading the Harbor Console
+slug: cli-parsing-a07
+difficulty: medium
+concepts:
+  - python.cli_args
+  - python.lists
+prerequisites:
+  - python.lists
+  - python.strings
+  - python.conditionals
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.cli_parsing.a07
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original subcommand-splitter framed as a harbor dockmaster console where global toggles precede a verb; no resemblance to argparse tutorial phrasing.
+prompt_markdown: |
+  A harbor's dockmaster drives every operation from one console. A typed command
+  looks like a verb (the subcommand) surrounded by two kinds of extras: global
+  toggles that come *before* the verb and tune the console itself, and the verb's
+  own arguments that follow it.
+
+  In this console every global toggle is a plain on/off switch that carries no
+  value, so it always begins with a dash and never swallows the token after it.
+  That gives one clean rule: the subcommand is the first token that does **not**
+  begin with `-`.
+
+  The grader calls your function with a single argument: `argv`, the list of
+  command tokens already split for you. Write `split_subcommand(argv)` that returns
+  a dict with exactly three keys:
+
+  - `"global_flags"`: every leading token that begins with `-`, in order, up to
+    (but not including) the subcommand.
+  - `"subcommand"`: the first token that does not begin with `-`, or `None` if no
+    such token exists.
+  - `"args"`: every token *after* the subcommand, in order, whatever they look
+    like (dashes or not).
+
+  Worked example:
+
+  ```python
+  ["--verbose", "dock", "--berth", "7", "ship-name"]
+  # -> {"global_flags": ["--verbose"],
+  #     "subcommand": "dock",
+  #     "args": ["--berth", "7", "ship-name"]}
+  ```
+
+  Edge cases you must handle:
+
+  - Empty `argv` returns `{"global_flags": [], "subcommand": None, "args": []}`.
+  - If every token begins with `-`, there is no subcommand: put them all in
+    `global_flags`, leave `subcommand` as `None`, and return an empty `args` list.
+  - Once the subcommand is found, tokens that follow it stay in `args` untouched
+    even if they begin with `-`.
+starter_code: |
+  def split_subcommand(argv):
+      return {"global_flags": [], "subcommand": None, "args": []}
+function_name: split_subcommand
+input_mode: function
+solution_sketch: Walk from the front collecting dash-prefixed tokens into global_flags until a bare token appears; that token is the subcommand and the remaining slice is args. If the walk reaches the end, there is no subcommand.
+sample_solution: |
+  def split_subcommand(argv):
+      global_flags = []
+      subcommand = None
+      args = []
+      i = 0
+      n = len(argv)
+      while i < n and argv[i].startswith("-"):
+          global_flags.append(argv[i])
+          i += 1
+      if i < n:
+          subcommand = argv[i]
+          args = argv[i + 1:]
+      return {"global_flags": global_flags, "subcommand": subcommand, "args": args}
+hints:
+  - level: 1
+    text: The split point is the first token that does not start with a dash. Everything before it is a global flag; everything after it belongs to the subcommand.
+  - level: 2
+    text: Advance an index while the current token startswith("-"), pushing each into global_flags. Stop at the first bare token.
+  - level: 3
+    text: After the loop, if the index is still inside the list that token is the subcommand and argv[index + 1:] is args; otherwise leave subcommand as None and args empty.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected:
+        global_flags: []
+        subcommand: null
+        args: []
+    - name: subcommand_only
+      input: ["status"]
+      expected:
+        global_flags: []
+        subcommand: "status"
+        args: []
+    - name: global_then_subcommand
+      input: ["--verbose", "dock", "--berth", "7"]
+      expected:
+        global_flags: ["--verbose"]
+        subcommand: "dock"
+        args: ["--berth", "7"]
+  validation:
+    - name: all_flags_no_subcommand
+      input: ["--verbose", "--quiet"]
+      expected:
+        global_flags: ["--verbose", "--quiet"]
+        subcommand: null
+        args: []
+    - name: subcommand_with_trailing_flags
+      input: ["deploy", "--force", "--tag", "v2"]
+      expected:
+        global_flags: []
+        subcommand: "deploy"
+        args: ["--force", "--tag", "v2"]
+    - name: multiple_globals
+      input: ["--config", "--verbose", "undock", "pier-3"]
+      expected:
+        global_flags: ["--config", "--verbose"]
+        subcommand: "undock"
+        args: ["pier-3"]
+    - name: bare_words_after_verb
+      input: ["list", "ships", "docked"]
+      expected:
+        global_flags: []
+        subcommand: "list"
+        args: ["ships", "docked"]
+explanation_markdown: |
+  Because every global toggle here is valueless, a single scan settles the whole
+  layout: collect leading dash tokens, then the next token (if any) is the verb and
+  the rest is its payload. This is exactly the shape real CLIs use before handing a
+  subcommand off to its own parser -- global options first, verb, then verb-local
+  arguments. The `None` subcommand result models the "bare invocation" case a real
+  tool would answer with a help message.
+
+  The scan is O(n) over the tokens, and slicing `argv[i + 1:]` copies the tail once,
+  so there is no need to build `args` element by element.
+common_mistakes:
+  - Treating tokens after the subcommand as more global flags, instead of stopping the flag scan the moment the verb is found.
+  - Forgetting the all-flags case, which must leave subcommand as None rather than crashing on a missing index.
+  - Returning a tuple for args, or slicing from the wrong index so the subcommand itself leaks into args.

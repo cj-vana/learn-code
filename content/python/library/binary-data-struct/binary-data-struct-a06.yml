@@ -1,0 +1,105 @@
+id: exercise.library.binary_data.a06
+kind: exercise
+version: 1
+language: python
+title: Weighing a Window of the Grain Buffer
+slug: binary-data-struct-a06
+difficulty: medium
+concepts:
+  - python.binary_data
+  - python.slicing
+prerequisites:
+  - python.lists
+  - python.slicing
+  - python.functions
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.binary_data.a06
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original memoryview drill framed as summing a contiguous window of a grain-silo weight buffer without copying the buffer.
+prompt_markdown: |
+  A grain silo streams one byte per sensor into a long buffer, and an auditor
+  wants the total weight over a contiguous window without copying the whole buffer
+  first. A `memoryview` gives a zero-copy window onto the bytes. Write
+  `memoryview_slice_sum(query)` that receives a single dictionary with three keys:
+
+  - `data`: a list of integers (each 0-255), the raw buffer.
+  - `start`: the start index of the window (inclusive).
+  - `end`: the end index of the window (exclusive).
+
+  Build a `bytes` (or `bytearray`) object from `data`, wrap it in a `memoryview`,
+  slice the view to `start:end`, and return the **sum of the bytes in that window
+  as an integer**. Slice the memoryview itself rather than the underlying bytes,
+  so no copy of the window is made.
+
+  For example, `{"data": [10, 20, 30, 40, 50], "start": 1, "end": 4}` returns
+  `90` (20 + 30 + 40).
+
+  Edge cases:
+  - An empty window (`start == end`) sums to `0`.
+  - `end` past the end of the buffer is clamped by normal slicing, so
+    `{"data": [1, 2, 3], "start": 0, "end": 10}` returns `6`.
+  - An empty buffer returns `0`.
+starter_code: |
+  def memoryview_slice_sum(query):
+      return 0
+function_name: memoryview_slice_sum
+input_mode: function
+solution_sketch: Wrap bytes(data) in a memoryview, slice the view with [start:end], and sum the window; iterating or summing a memoryview of bytes yields the byte integers directly.
+sample_solution: |
+  def memoryview_slice_sum(query):
+      view = memoryview(bytes(query["data"]))
+      window = view[query["start"]:query["end"]]
+      return sum(window)
+hints:
+  - level: 1
+    text: memoryview lets you slice a bytes object without copying it; the slice is another view onto the same underlying memory.
+  - level: 2
+    text: Wrap the buffer with memoryview(bytes(query["data"])), then take view[start:end] to get the window.
+  - level: 3
+    text: Summing a memoryview of a bytes object yields the integer of each byte, so sum(view[start:end]) is the total.
+tests:
+  public:
+    - name: middle_window
+      input: {data: [10, 20, 30, 40, 50], start: 1, end: 4}
+      expected: 90
+    - name: full_buffer
+      input: {data: [10, 20, 30, 40, 50], start: 0, end: 5}
+      expected: 150
+    - name: empty_window
+      input: {data: [10, 20, 30, 40, 50], start: 2, end: 2}
+      expected: 0
+  validation:
+    - name: end_past_buffer_is_clamped
+      input: {data: [1, 2, 3], start: 0, end: 10}
+      expected: 6
+    - name: two_max_bytes
+      input: {data: [255, 255], start: 0, end: 2}
+      expected: 510
+    - name: single_byte_window
+      input: {data: [5], start: 0, end: 1}
+      expected: 5
+    - name: empty_buffer
+      input: {data: [], start: 0, end: 0}
+      expected: 0
+explanation_markdown: |
+  A `memoryview` exposes the buffer protocol at the Python level: it is a window
+  onto another object's memory that supports slicing and indexing without copying.
+  Slicing `view[start:end]` produces a new view that still points into the same
+  underlying bytes, so summing a window of a megabyte buffer never duplicates the
+  window the way `data[start:end]` on a list or bytes would. For a single sum the
+  saving is invisible, but the habit matters when the buffer is large or when many
+  overlapping windows are read.
+
+  Iterating or summing a `memoryview` of a `bytes` object yields the integer value
+  of each byte, so `sum(...)` needs no conversion. Normal slice semantics apply,
+  which is why an out-of-range `end` is clamped and an empty window sums to the
+  additive identity, `0`.
+common_mistakes:
+  - Slicing the bytes first (bytes(data)[start:end]) and only then wrapping it, which copies the window and defeats the purpose of a memoryview.
+  - Expecting sum over a memoryview to fail or need conversion; a memoryview of bytes yields plain integers.
+  - Returning something other than 0 for an empty window; sum of an empty sequence is 0.

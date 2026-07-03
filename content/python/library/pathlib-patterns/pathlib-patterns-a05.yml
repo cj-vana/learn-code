@@ -1,0 +1,121 @@
+id: exercise.library.pathlib_patterns.a05
+kind: exercise
+version: 1
+language: python
+title: Directions Between Greenhouse Beds
+slug: pathlib-patterns-a05
+difficulty: medium
+concepts:
+  - python.pathlib_os
+  - python.strings
+prerequisites:
+  - python.strings
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.pathlib_patterns.a05
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original greenhouse watering-robot framing for computing a relative path with PurePosixPath.relative_to(walk_up=True).
+prompt_markdown: |
+  A botanical greenhouse gives every bed a path like `greenhouse/beds/row3`. A
+  watering robot standing at one bed needs directions to another: the **relative
+  path** from a base location to a target.
+
+  Write `relative_path(job)` where `job` is a single dict with two keys:
+
+      {"base": "greenhouse/beds", "target": "greenhouse/beds/row3/tomato.txt"}
+
+  Return the target expressed relative to `base`, as a string. The rules:
+
+  - When the target sits inside the base, you just descend: the example returns
+    `row3/tomato.txt`.
+  - When the target is a sibling, step up with `..`: base
+    `greenhouse/beds/north`, target `greenhouse/beds/south` returns `../south`.
+  - When base and target are the same location, return `'.'`.
+  - Climbing out entirely is allowed: base `greenhouse/beds/north`, target
+    `greenhouse` returns `../..`.
+  - `base` and `target` are always **both relative or both absolute**, so the
+    comparison is purely lexical.
+
+  Use `pathlib.PurePosixPath(target).relative_to(base, walk_up=True)`, which works
+  out the needed `..` steps for you and never touches the filesystem.
+starter_code: |
+  from pathlib import PurePosixPath
+
+
+  def relative_path(job):
+      return ""
+function_name: relative_path
+input_mode: function
+solution_sketch: Pull base and target from the dict, then return str(PurePosixPath(target).relative_to(base, walk_up=True)); walk_up lets the result include ".." when the target is not under the base.
+sample_solution: |
+  from pathlib import PurePosixPath
+
+
+  def relative_path(job):
+      base = job["base"]
+      target = job["target"]
+      return str(PurePosixPath(target).relative_to(base, walk_up=True))
+hints:
+  - level: 1
+    text: The single argument is a dict, so read job["base"] and job["target"] first.
+  - level: 2
+    text: PurePosixPath has a relative_to method that expresses one path relative to another using pure string logic.
+  - level: 3
+    text: Pass walk_up=True so relative_to may insert ".." steps, then wrap the result in str(); identical paths give ".".
+tests:
+  public:
+    - name: into_subtree
+      input:
+        base: "greenhouse/beds"
+        target: "greenhouse/beds/row3/tomato.txt"
+      expected: "row3/tomato.txt"
+    - name: same_place
+      input:
+        base: "greenhouse/beds"
+        target: "greenhouse/beds"
+      expected: "."
+    - name: sibling
+      input:
+        base: "greenhouse/beds/north"
+        target: "greenhouse/beds/south"
+      expected: "../south"
+  validation:
+    - name: one_level_down
+      input:
+        base: "greenhouse/beds"
+        target: "greenhouse/beds/basil.txt"
+      expected: "basil.txt"
+    - name: climb_out
+      input:
+        base: "greenhouse/beds/north"
+        target: "greenhouse"
+      expected: "../.."
+    - name: both_absolute
+      input:
+        base: "/var/log"
+        target: "/var/www/index.html"
+      expected: "../www/index.html"
+    - name: deep_detour
+      input:
+        base: "archive/2025/q1"
+        target: "archive/2026/q4/report.pdf"
+      expected: "../../2026/q4/report.pdf"
+explanation_markdown: |
+  `relative_to` answers "starting at `base`, how do I reach `target`?" Without
+  `walk_up`, it only succeeds when the target lives underneath the base and raises
+  `ValueError` otherwise. Passing `walk_up=True` (available since Python 3.12)
+  lets it emit `..` steps to first climb out of the base and then descend, which
+  is what you need for siblings and cousins. The computation is entirely lexical:
+  it compares the two paths as sequences of parts, so both must be the same kind —
+  both relative or both absolute — which the prompt guarantees. Identical paths
+  collapse to `.`. This keeps the whole operation deterministic and filesystem-free,
+  unlike `os.path.relpath`, which anchors relative inputs against the process's
+  current directory.
+common_mistakes:
+  - Calling relative_to without walk_up=True, which raises ValueError as soon as the target is not inside the base.
+  - Treating the input as two positional arguments instead of one dict with "base" and "target" keys.
+  - Returning the PurePosixPath object instead of str(...), so it never equals the expected string.

@@ -1,0 +1,107 @@
+id: exercise.library.secure_coding.a01
+kind: exercise
+version: 1
+language: python
+title: Vetting Sign-Up Addresses at the Makerspace
+slug: secure-coding-a01
+difficulty: easy
+concepts:
+  - python.secure_coding
+  - python.regex
+prerequisites:
+  - python.functions
+  - python.strings
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.secure_coding.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original input-validation drill framed around a community makerspace sign-up sheet, using an anchored full-match shape check rather than trusting raw user text.
+prompt_markdown: |
+  A community makerspace lets visitors type an email address on a sign-up tablet.
+  Before that address is trusted anywhere else, its *shape* must be validated at
+  the trust boundary. Write `validate_email_format(address)` that returns `True`
+  only when the whole string matches this deliberately strict shape and `False`
+  otherwise:
+
+  - one or more characters that are neither `@` nor whitespace (the local part),
+  - then a single `@`,
+  - then one or more characters that are neither `@` nor whitespace,
+  - then a literal `.`,
+  - then one or more characters that are neither `@` nor whitespace.
+
+  The match must cover the entire string end to end. That means:
+
+  - `alex@maker.org` is valid.
+  - A string with no `@`, or with two `@`, is rejected.
+  - A domain with no dot (like `alex@localhost`) is rejected.
+  - Any whitespace anywhere, including a trailing space, rejects the string.
+  - An empty string is rejected.
+
+  This is a format gate, not a proof the mailbox exists — but a strict format
+  gate stops most malformed and injected input before it spreads.
+starter_code: |
+  import re
+
+
+  def validate_email_format(address):
+      return False
+function_name: validate_email_format
+input_mode: function
+solution_sketch: Use re.fullmatch with an anchored pattern that forbids '@' and whitespace in each part and requires a dot in the domain.
+sample_solution: |
+  import re
+
+
+  def validate_email_format(address):
+      pattern = r"[^@\s]+@[^@\s]+\.[^@\s]+"
+      return re.fullmatch(pattern, address) is not None
+hints:
+  - level: 1
+    text: The whole string must match, not just part of it, so reach for re.fullmatch rather than re.search.
+  - level: 2
+    text: A character class like [^@\s] means "not an at-sign and not whitespace"; require one or more of those on each side.
+  - level: 3
+    text: The pattern r"[^@\s]+@[^@\s]+\.[^@\s]+" needs a local part, one @, a domain, a literal dot, and a top-level part; compare the result to None.
+tests:
+  public:
+    - name: valid_basic
+      input: alex@maker.org
+      expected: true
+    - name: missing_at
+      input: alexmaker.org
+      expected: false
+    - name: no_domain_dot
+      input: alex@localhost
+      expected: false
+  validation:
+    - name: empty
+      input: ''
+      expected: false
+    - name: double_at
+      input: guest@@maker.org
+      expected: false
+    - name: trailing_space
+      input: 'alex@maker.org '
+      expected: false
+    - name: subdomain_ok
+      input: alex@mail.maker.org
+      expected: true
+explanation_markdown: |
+  `re.fullmatch` only succeeds when the pattern accounts for every character from
+  start to end, which is exactly what a validation gate wants — no leftover
+  characters can sneak past. The class `[^@\s]` excludes both the `@` separator
+  and any whitespace, so `guest@@maker.org` fails (the second `@` cannot be
+  consumed) and `alex@maker.org ` fails (the trailing space cannot be consumed).
+  Requiring a literal `.` inside the domain rejects bare hosts like `localhost`.
+  Comparing the match object to `None` turns the result into the clean boolean the
+  caller expects. Strict-by-default validation like this is the first line of
+  defense: reject anything that does not fit the expected shape instead of trying
+  to guess what the user meant.
+common_mistakes:
+  - Using re.search instead of re.fullmatch, which accepts a valid fragment buried inside otherwise garbage input.
+  - Forgetting to require a dot in the domain, so alex@localhost is wrongly accepted.
+  - Allowing whitespace, which lets a trailing space or embedded space slip through the gate.

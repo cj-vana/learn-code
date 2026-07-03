@@ -1,0 +1,129 @@
+id: exercise.library.secure_coding.a10
+kind: exercise
+version: 1
+language: python
+title: Masking the Loyalty Card on the Receipt
+slug: secure-coding-a10
+difficulty: medium
+concepts:
+  - python.secure_coding
+  - python.slicing
+  - python.strings
+prerequisites:
+  - python.strings
+  - python.slicing
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.secure_coding.a10
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original data-masking drill themed around a bakery receipt printer that reveals only the last few characters of a loyalty card or key, with a defensive rule that never exposes the whole value.
+prompt_markdown: |
+  A neighbourhood bakery prints a receipt that shows a customer's loyalty-card
+  number so they can recognise it — but the printed copy must not reveal the whole
+  number, in case the receipt is dropped in the street. The convention is to show
+  only the last few characters and replace everything before them with asterisks.
+
+  Write `mask_secret(record)` where `record` is a dict with two keys:
+
+  - `"value"`: the string to mask (a card number, an API key, and so on).
+  - `"visible"`: an integer, how many trailing characters may be shown.
+
+  Return a masked string that is the **same length** as `value`, with the last
+  `visible` characters kept as-is and every earlier character replaced by `"*"`.
+  For example `{"value": "4111222233334444", "visible": 4}` returns
+  `"************4444"`.
+
+  The rules for the tricky inputs, all tested:
+
+  - If `visible` is `0` or negative, reveal nothing: return a string of `"*"` the
+    same length as `value`.
+  - If `visible` is greater than or **equal to** the length of `value`, revealing
+    "the last N" would expose the entire secret. A mask that shows everything
+    protects nothing, so refuse it defensively and return an all-asterisk string
+    the same length as `value`.
+  - An empty `value` returns `""` regardless of `visible`.
+
+  So the suffix is shown only when `0 < visible < len(value)`; in every other
+  case the whole value is masked.
+starter_code: |
+  def mask_secret(record):
+      # Show only the last `visible` characters; never reveal the whole value.
+      return ""
+function_name: mask_secret
+input_mode: function
+solution_sketch: Read value and visible; if visible <= 0 or visible >= len(value) return "*" * len(value); otherwise return "*" * (len(value) - visible) followed by the last visible characters.
+sample_solution: |
+  def mask_secret(record):
+      value = record["value"]
+      visible = record["visible"]
+      if visible <= 0 or visible >= len(value):
+          return "*" * len(value)
+      return "*" * (len(value) - visible) + value[-visible:]
+hints:
+  - level: 1
+    text: The result is always the same length as the input; you are swapping a prefix of characters for asterisks, not deleting anything.
+  - level: 2
+    text: Guard the extremes first — visible <= 0 and visible >= len(value) both mean mask everything, so return "*" * len(value).
+  - level: 3
+    text: Otherwise combine "*" * (len(value) - visible) with the trailing slice value[-visible:] to keep the last visible characters.
+tests:
+  public:
+    - name: card_last_four
+      input:
+        value: '4111222233334444'
+        visible: 4
+      expected: '************4444'
+    - name: visible_zero_masks_all
+      input:
+        value: 'abcd'
+        visible: 0
+      expected: '****'
+    - name: empty_value
+      input:
+        value: ''
+        visible: 3
+      expected: ''
+  validation:
+    - name: negative_visible_masks_all
+      input:
+        value: 'abcd'
+        visible: -2
+      expected: '****'
+    - name: visible_equals_length_masks_all
+      input:
+        value: 'abcd'
+        visible: 4
+      expected: '****'
+    - name: visible_exceeds_length_masks_all
+      input:
+        value: 'abcd'
+        visible: 9
+      expected: '****'
+    - name: api_key_last_two
+      input:
+        value: 'sk-LIVE-9931'
+        visible: 2
+      expected: '**********31'
+explanation_markdown: |
+  Masking is a display-layer defence: the full secret still lives in your data
+  store, but any copy a human might see — a receipt, a log line, a support-tool
+  screen — shows only enough to be recognisable, not enough to be reused. Keeping
+  the output the same length as the input matters too: a mask that collapses
+  `"4111222233334444"` to `"4444"` would leak the original length and hint at the
+  format, so we pad the front with one asterisk per hidden character.
+
+  The defensive rule is the `visible >= len(value)` branch. It is tempting to
+  clamp and simply show the whole string when someone asks to reveal more
+  characters than exist, but that turns the mask into a passthrough that exposes
+  the entire secret — exactly what masking exists to prevent. Refusing that case
+  and masking everything means a careless or malicious `visible` value can never
+  widen the window past the secret's own length.
+common_mistakes:
+  - Returning a result shorter than the input (for example just the visible suffix), which leaks the original length and format.
+  - Revealing the entire value when visible is greater than or equal to its length instead of masking everything.
+  - Using value[-visible:] without guarding visible <= 0, where a slice like value[-0:] or value[2:] reveals the wrong characters.
+  - Hard-coding four visible characters instead of honouring the visible field.

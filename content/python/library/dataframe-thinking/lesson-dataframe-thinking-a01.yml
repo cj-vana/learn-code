@@ -1,0 +1,113 @@
+id: lesson.library.dataframe_thinking.a01
+kind: lesson
+version: 1
+language: python
+title: 'Rows or Columns? Two Ways to Hold a Table'
+slug: lesson-dataframe-thinking-a01
+difficulty: medium
+concepts:
+  - concepts.dataframe_thinking
+prerequisites:
+  - python.dictionaries
+  - python.lists
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dataframe_thinking.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original columnar-thinking walkthrough framed around a vineyard's harvest records, with fresh worked layouts.
+body_markdown: |
+  Before pandas, before numpy, there is a *way of thinking* about tabular
+  data that makes both of those libraries click — and that you can
+  practice in pure Python. It starts with a choice of layout that most
+  people never realize they are making.
+
+  A vineyard's harvest records, held two ways:
+
+  ```python
+  # row-oriented: a list of records (dicts)
+  rows = [
+      {"block": "north", "tons": 4.2, "brix": 24.1},
+      {"block": "south", "tons": 3.8, "brix": 23.5},
+  ]
+
+  # column-oriented: a dict of columns (parallel lists)
+  cols = {
+      "block": ["north", "south"],
+      "tons":  [4.2, 3.8],
+      "brix":  [24.1, 23.5],
+  }
+  ```
+
+  Same data, transposed. And the layout you choose determines which
+  operations are natural.
+
+  ### What each layout is good at
+
+  **Row-oriented** (your data-wrangling area's default) suits
+  record-at-a-time work: appending an observation, filtering to matching
+  rows, processing one entity. It is how data *arrives* (a CSV line, a
+  JSON object, a database row) and how humans think about entities.
+
+  **Column-oriented** suits whole-column operations: "average all the
+  brix", "add a sugar-yield column = tons × brix", "which blocks are
+  above the mean". The column is already a list — the operation is one
+  pass over contiguous values, no per-row dict lookups. This is
+  **exactly how numpy and pandas store data** — by column, in packed
+  arrays — and it is *why* they are fast: a columnar sum touches one
+  tight array, where a row-wise sum chases a dict key across scattered
+  records.
+
+  ### The mental shift: operate on columns, not loops
+
+  The row-oriented instinct writes a loop:
+
+  ```python
+  total = 0
+  for r in rows:
+      total += r["tons"]
+  ```
+
+  The columnar instinct operates on the whole column at once:
+
+  ```python
+  total = sum(cols["tons"])                 # the column IS the thing
+  avg = total / len(cols["tons"])
+  yield_col = [t * b for t, b in zip(cols["tons"], cols["brix"])]   # new column
+  ```
+
+  That second style — *think in columns, express operations over entire
+  columns* — is the seed of **vectorization**. In pandas you would write
+  `df["tons"] * df["brix"]` and a whole column computes at once; the
+  pure-Python `[t*b for t,b in zip(...)]` is the same idea, same shape,
+  minus the C speed. Learning to *see* the column operation instead of
+  the row loop is the transferable skill — the libraries just make it
+  fast and terse.
+
+  ### Converting between the layouts
+
+  Real code moves between them: data arrives as rows, you pivot to
+  columns to compute, sometimes back to rows to emit. The conversions
+  are your exercises (and small marvels of `zip`):
+
+  ```python
+  cols = {k: [r[k] for r in rows] for k in rows[0]}          # rows -> cols
+  rows = [dict(zip(cols, vals)) for vals in zip(*cols.values())]  # cols -> rows
+  ```
+
+  Hold both layouts in mind, know which each operation wants, and you
+  have the dataframe mindset — the next lessons add the operations
+  (masking, grouping) that this columnar view makes natural.
+checkpoints:
+  - question: Why is column-oriented storage faster for whole-column operations like a sum or a column-times-column product?
+    answer: 'The column is already a contiguous list, so the operation is one pass over packed values; row-oriented storage scatters each field across separate dict records, forcing a key lookup per row — which is exactly why numpy and pandas store data by column.'
+    explanation: 'Columnar layout is the structural reason vectorized libraries are fast; the packed array is what a column operation traverses.'
+  - question: What is the mental shift from row-oriented to columnar thinking, and how does it seed vectorization?
+    answer: 'Instead of looping over rows and accessing one field at a time, you treat each column as a whole object and express operations over the entire column at once (sum(col), [t*b for t,b in zip(a,b)]); that whole-column expression is exactly what vectorized code like df["a"]*df["b"] does, minus the C speed.'
+    explanation: 'Seeing the column operation instead of the row loop is the transferable skill; the libraries make the same idea fast and terse.'
+  - question: Data arrives as a list of row-dicts but you need to average one field across all rows. What layout do you convert to and why?
+    answer: 'Convert to column-oriented (a dict of parallel lists); the field becomes a single list you can sum and divide in one pass, rather than looping and doing a dict lookup per row.'
+    explanation: 'Matching layout to operation — rows for record-at-a-time work, columns for whole-column aggregates — is the core dataframe judgment.'

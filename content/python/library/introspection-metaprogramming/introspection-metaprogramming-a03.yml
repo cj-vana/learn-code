@@ -1,0 +1,175 @@
+id: exercise.library.introspection_metaprogramming.a03
+kind: exercise
+version: 1
+language: python
+title: Which Handlers Carry Their Desk
+slug: introspection-metaprogramming-a03
+difficulty: easy
+concepts:
+  - python.introspection
+  - python.classes
+prerequisites:
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.introspection_metaprogramming.a03
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original inspect.ismethod drill framed as a museum audio-guide desk sorting bound methods from plain functions, static methods, and lambdas.
+prompt_markdown: |
+  A museum's audio-guide desk wires up handlers from several sources: methods bound
+  to a live desk, the same methods pulled off the class, a static helper, a
+  classmethod factory, a plain module function, and a lambda. Some of these carry a
+  `self`/`cls` already attached (they are **bound methods**); the rest are just
+  functions. The desk needs to know which is which.
+
+  Write `is_bound_method(handler)`. The single argument is the handler's name (a
+  string). Look the handler up in the desk's registry and return `True` if it is a
+  bound method and `False` otherwise, using `inspect.ismethod`.
+
+  The registry (already defined for you) maps these names:
+
+  - `"bound_announce"` -> `desk.announce` (an instance method reached through a live
+    instance) -> bound method
+  - `"class_factory"` -> `GuideDesk.from_config` (a classmethod) -> bound method
+    (bound to the class)
+  - `"unbound_announce"` -> `GuideDesk.announce` (the same method reached through
+    the class) -> a plain function, **not** bound
+  - `"static_format"` -> `desk.format_time` (a staticmethod) -> a plain function
+  - `"module_handler"` -> a top-level `def` function -> not bound
+  - `"lambda_handler"` -> a lambda -> not bound
+
+  So `is_bound_method("bound_announce")` returns `True` and
+  `is_bound_method("static_format")` returns `False`. An unknown handler name
+  returns `False`.
+starter_code: |
+  import inspect
+
+
+  class GuideDesk:
+      def announce(self):
+          return "welcome"
+
+      @staticmethod
+      def format_time(minutes):
+          return minutes
+
+      @classmethod
+      def from_config(cls, data):
+          return cls()
+
+
+  desk = GuideDesk()
+
+
+  def module_handler(payload):
+      return payload
+
+
+  lambda_handler = lambda value: value
+
+  REGISTRY = {
+      "bound_announce": desk.announce,
+      "class_factory": GuideDesk.from_config,
+      "unbound_announce": GuideDesk.announce,
+      "static_format": desk.format_time,
+      "module_handler": module_handler,
+      "lambda_handler": lambda_handler,
+  }
+
+
+  def is_bound_method(handler):
+      return False
+function_name: is_bound_method
+input_mode: function
+solution_sketch: Look the handler up in the registry and pass whatever you find to inspect.ismethod, which is True only for methods that already have an instance or class bound to them. An unknown name resolves to None, and inspect.ismethod(None) is False.
+sample_solution: |
+  import inspect
+
+
+  class GuideDesk:
+      def announce(self):
+          return "welcome"
+
+      @staticmethod
+      def format_time(minutes):
+          return minutes
+
+      @classmethod
+      def from_config(cls, data):
+          return cls()
+
+
+  desk = GuideDesk()
+
+
+  def module_handler(payload):
+      return payload
+
+
+  lambda_handler = lambda value: value
+
+  REGISTRY = {
+      "bound_announce": desk.announce,
+      "class_factory": GuideDesk.from_config,
+      "unbound_announce": GuideDesk.announce,
+      "static_format": desk.format_time,
+      "module_handler": module_handler,
+      "lambda_handler": lambda_handler,
+  }
+
+
+  def is_bound_method(handler):
+      target = REGISTRY.get(handler)
+      return inspect.ismethod(target)
+hints:
+  - level: 1
+    text: inspect.ismethod returns True only for bound methods — callables that already have an instance or a class attached to them.
+  - level: 2
+    text: Reaching a method through an instance (desk.announce) or a classmethod through its class binds it, but reaching the same def through the class (GuideDesk.announce) leaves it an ordinary function.
+  - level: 3
+    text: Look the name up with REGISTRY.get(handler) and hand the result straight to inspect.ismethod; when the name is missing you get None, and inspect.ismethod(None) is already False.
+tests:
+  public:
+    - name: instance_method_is_bound
+      input: bound_announce
+      expected: true
+    - name: staticmethod_is_not_bound
+      input: static_format
+      expected: false
+    - name: classmethod_is_bound
+      input: class_factory
+      expected: true
+  validation:
+    - name: unbound_class_access
+      input: unbound_announce
+      expected: false
+    - name: module_function
+      input: module_handler
+      expected: false
+    - name: lambda_is_not_bound
+      input: lambda_handler
+      expected: false
+    - name: unknown_handler
+      input: reset
+      expected: false
+explanation_markdown: |
+  A "bound method" is a function that has already captured the object it will run
+  against. When you write `desk.announce`, Python's descriptor machinery hands back
+  a bound method that remembers `desk` as `self`; `inspect.ismethod` reports `True`.
+  A classmethod behaves the same way but binds the class instead of an instance, so
+  `GuideDesk.from_config` is also bound.
+
+  The instructive contrast is the *unbound* cases. `GuideDesk.announce` reached
+  through the class is just the underlying function with nothing attached, and a
+  `@staticmethod` is deliberately a plain function even when reached through an
+  instance — that is the whole point of `staticmethod`. Module functions and lambdas
+  were never methods at all. `inspect.ismethod` draws exactly this line, which is
+  why it answers `False` for every one of them.
+common_mistakes:
+  - Assuming a staticmethod counts as a method; inspect.ismethod treats it as a plain function because it has no bound self or cls.
+  - Thinking GuideDesk.announce and desk.announce are the same object — only the instance access produces a bound method.
+  - Reaching for callable() instead of inspect.ismethod; callable() is True for every entry in the registry and cannot tell bound methods apart.

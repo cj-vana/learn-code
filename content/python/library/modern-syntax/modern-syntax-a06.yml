@@ -1,0 +1,140 @@
+id: exercise.library.modern_syntax.a06
+kind: exercise
+version: 1
+language: python
+title: Nightly Calibration Batch
+slug: modern-syntax-a06
+difficulty: medium
+concepts:
+  - python.modern_syntax
+  - python.exceptions
+prerequisites:
+  - python.loops
+estimated_time_minutes: 16
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.modern_syntax.a06
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original ExceptionGroup / except-star drill modeling an observatory's nightly calibration batch as a deterministic pure function over an explicit task list.
+prompt_markdown: |
+  An observatory runs a nightly batch of calibration subtasks and wants a single
+  report of what failed, grouped by cause. Each subtask is described by a dict with
+  an `"id"` string and an `"outcome"` string. Write
+  `run_calibration_batch(tasks)` that walks the list, running each subtask, and
+  returns a summary dict.
+
+  Simulate each subtask's outcome like this:
+
+  - `"ok"` — the subtask succeeds; append its `"id"` to the completed list
+  - `"bad_value"` — the subtask raises a `ValueError`
+  - `"missing_key"` — the subtask raises a `KeyError`
+  - `"boom"` — the subtask raises a `RuntimeError`
+
+  Collect every raised exception, and if there is at least one, bundle them into an
+  `ExceptionGroup` and split it with `except*` clauses to count each cause. Return:
+
+  ```
+  {
+      "completed": [<ids of ok subtasks, in order>],
+      "value_errors": <count of ValueError subtasks>,
+      "key_errors": <count of KeyError subtasks>,
+      "other_errors": <count of every other exception>,
+  }
+  ```
+
+  A `RuntimeError` counts under `"other_errors"`. If no subtask fails, all three
+  counts are `0`. An empty task list returns
+  `{"completed": [], "value_errors": 0, "key_errors": 0, "other_errors": 0}`.
+starter_code: |
+  def run_calibration_batch(tasks):
+      return {"completed": [], "value_errors": 0, "key_errors": 0, "other_errors": 0}
+function_name: run_calibration_batch
+input_mode: function
+solution_sketch: Run each task inside try/except, collecting successes and exceptions. If any exceptions were collected, raise ExceptionGroup(...) and handle it with except* ValueError, except* KeyError, and except* Exception clauses, reading len(group.exceptions) into each counter.
+sample_solution: |
+  def _run_subtask(task):
+      outcome = task["outcome"]
+      if outcome == "ok":
+          return task["id"]
+      if outcome == "bad_value":
+          raise ValueError(task["id"])
+      if outcome == "missing_key":
+          raise KeyError(task["id"])
+      raise RuntimeError(task["id"])
+
+
+  def run_calibration_batch(tasks):
+      completed = []
+      errors = []
+      for task in tasks:
+          try:
+              completed.append(_run_subtask(task))
+          except Exception as exc:
+              errors.append(exc)
+      summary = {
+          "completed": completed,
+          "value_errors": 0,
+          "key_errors": 0,
+          "other_errors": 0,
+      }
+      if errors:
+          try:
+              raise ExceptionGroup("nightly calibration failures", errors)
+          except* ValueError as group:
+              summary["value_errors"] = len(group.exceptions)
+          except* KeyError as group:
+              summary["key_errors"] = len(group.exceptions)
+          except* Exception as group:
+              summary["other_errors"] = len(group.exceptions)
+      return summary
+hints:
+  - level: 1
+    text: Run each subtask in its own try/except so one failure does not stop the batch. Append successes to completed and append raised exceptions to an errors list.
+  - level: 2
+    text: Only build an ExceptionGroup when errors is non-empty; an ExceptionGroup cannot be constructed from an empty list. Raise ExceptionGroup("...", errors) inside a try.
+  - level: 3
+    text: Handle the group with `except* ValueError as group:` then `except* KeyError as group:` then `except* Exception as group:`. Each group is itself an ExceptionGroup, so len(group.exceptions) is the count for that cause.
+tests:
+  public:
+    - name: empty_batch
+      input: []
+      expected: {"completed": [], "value_errors": 0, "key_errors": 0, "other_errors": 0}
+    - name: all_ok
+      input: [{"id": "cal-a", "outcome": "ok"}, {"id": "cal-b", "outcome": "ok"}]
+      expected: {"completed": ["cal-a", "cal-b"], "value_errors": 0, "key_errors": 0, "other_errors": 0}
+    - name: one_value_error
+      input: [{"id": "cal-a", "outcome": "ok"}, {"id": "cal-b", "outcome": "bad_value"}]
+      expected: {"completed": ["cal-a"], "value_errors": 1, "key_errors": 0, "other_errors": 0}
+  validation:
+    - name: two_value_one_key
+      input: [{"id": "x", "outcome": "bad_value"}, {"id": "y", "outcome": "bad_value"}, {"id": "z", "outcome": "missing_key"}]
+      expected: {"completed": [], "value_errors": 2, "key_errors": 1, "other_errors": 0}
+    - name: single_runtime_is_other
+      input: [{"id": "a", "outcome": "boom"}]
+      expected: {"completed": [], "value_errors": 0, "key_errors": 0, "other_errors": 1}
+    - name: one_of_each
+      input: [{"id": "1", "outcome": "ok"}, {"id": "2", "outcome": "bad_value"}, {"id": "3", "outcome": "missing_key"}, {"id": "4", "outcome": "boom"}]
+      expected: {"completed": ["1"], "value_errors": 1, "key_errors": 1, "other_errors": 1}
+    - name: two_key_errors
+      input: [{"id": "a", "outcome": "missing_key"}, {"id": "b", "outcome": "missing_key"}]
+      expected: {"completed": [], "value_errors": 0, "key_errors": 2, "other_errors": 0}
+explanation_markdown: |
+  `ExceptionGroup` lets you carry many independent failures as one object instead of
+  stopping at the first. The `except*` (star) syntax then *splits* that group by type:
+  each `except*` clause pulls out the sub-group of leaf exceptions whose type matches
+  and leaves the rest for the next clause. Because a leaf is claimed by the first
+  clause it matches, ordering `except* ValueError`, then `except* KeyError`, then the
+  broad `except* Exception` means each `RuntimeError` lands only in the final bucket,
+  even though it is also technically an `Exception`. The object handed to each clause
+  is itself an `ExceptionGroup`, so `len(group.exceptions)` counts the matches. The
+  one guard rail: an `ExceptionGroup` must hold at least one exception, so the clean
+  no-failure path skips the group entirely and leaves the counts at zero. This mirrors
+  how concurrent code reports several task failures at once, modeled here as a plain
+  deterministic pass over an explicit list.
+common_mistakes:
+  - Constructing `ExceptionGroup("...", errors)` even when errors is empty, which raises a ValueError because a group needs at least one exception.
+  - Mixing `except` and `except*` in the same try, which Python rejects; once you use the star form, every clause must use it.
+  - Ordering `except* Exception` before the specific clauses, so ValueError and KeyError get swept into other_errors and the specific counts stay at zero.

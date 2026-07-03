@@ -1,0 +1,109 @@
+id: exercise.library.numeric_precision.a04
+kind: exercise
+version: 1
+language: python
+title: The Market Stall Till
+slug: numeric-precision-a04
+difficulty: medium
+concepts:
+  - python.numeric_precision
+  - python.strings
+prerequisites:
+  - python.lists
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.numeric_precision.a04
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original exact-money summation drill framed as a farmers-market till tallying prices with decimal.Decimal.
+prompt_markdown: |
+  A farmers-market till adds up a basket of prices and must return an exact money
+  total — no float drift, no phantom fractions of a cent. Each price arrives as a
+  decimal string, so you sum them with `decimal.Decimal` and present the result
+  with exactly two decimal places.
+
+  Write `decimal_money_add(amounts)` where `amounts` is a list of price strings
+  such as `["0.10", "0.20", "0.30"]`. Add them as `Decimal` values and return the
+  total as a string rounded to two decimal places using **half-up** rounding (ties
+  go away from zero, the everyday cash-register rule).
+
+  Behaviour to handle:
+
+  - `["0.10", "0.20"]` returns `"0.30"` exactly — the sum a float would report as
+    `0.30000000000000004`.
+  - An empty list returns `"0.00"`.
+  - Prices may carry more than two decimals; round the final total, e.g.
+    `["0.125"]` returns `"0.13"`.
+  - Prices may be negative (refunds), e.g. `["10.00", "-3.50", "0.55"]` returns
+    `"7.05"`.
+  - Totals can be arbitrarily large without overflow, e.g.
+    `["999999999999.99", "0.01"]` returns `"1000000000000.00"`.
+starter_code: |
+  from decimal import Decimal
+
+
+  def decimal_money_add(amounts):
+      return ""
+function_name: decimal_money_add
+input_mode: function
+solution_sketch: Start from Decimal("0"), add each Decimal(price), then quantize the total to two places with ROUND_HALF_UP and return str.
+sample_solution: |
+  from decimal import Decimal, ROUND_HALF_UP
+
+
+  def decimal_money_add(amounts):
+      total = Decimal("0")
+      for price in amounts:
+          total += Decimal(price)
+      cents = total.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)
+      return str(cents)
+hints:
+  - level: 1
+    text: Build every price with Decimal(string) so the exact cents survive; never route money through a float.
+  - level: 2
+    text: Accumulate into a Decimal starting at Decimal("0"); an empty list should leave you at zero.
+  - level: 3
+    text: quantize the total to Decimal("0.01") with ROUND_HALF_UP and return str so it always shows two decimals.
+tests:
+  public:
+    - name: dime_and_two_dimes
+      input: ["0.10", "0.20"]
+      expected: "0.30"
+    - name: three_prices
+      input: ["0.10", "0.20", "0.30"]
+      expected: "0.60"
+    - name: empty_basket
+      input: []
+      expected: "0.00"
+  validation:
+    - name: rounds_third_decimal
+      input: ["0.125"]
+      expected: "0.13"
+    - name: with_refund
+      input: ["10.00", "-3.50", "0.55"]
+      expected: "7.05"
+    - name: big_total_no_overflow
+      input: ["999999999999.99", "0.01"]
+      expected: "1000000000000.00"
+    - name: carries_to_next_dollar
+      input: ["19.99", "0.01"]
+      expected: "20.00"
+explanation_markdown: |
+  Money is decimal by nature, but binary floats cannot represent most cents
+  exactly, so `0.10 + 0.20` drifts to `0.30000000000000004`. `decimal.Decimal`
+  built from strings stores the exact digits and adds them the way a cashier
+  would, with no drift and no silent overflow even at a trillion dollars.
+
+  Two habits make this correct. First, always construct each amount from its
+  string, never from a float — `Decimal(0.10)` would already be the corrupted
+  binary value. Second, `quantize` to `Decimal("0.01")` at the end so the total
+  always shows two places, and pick `ROUND_HALF_UP` for the familiar cash-register
+  tie rule. Starting the running total at `Decimal("0")` also gives the empty
+  basket a clean `"0.00"`.
+common_mistakes:
+  - Summing the prices as floats (or with the built-in float sum) and reintroducing sub-cent drift.
+  - Building Decimals from floats, e.g. Decimal(0.10), which carries the binary approximation into the total.
+  - Forgetting to quantize, so a value like 0.125 or an empty basket returns without the required two decimal places.

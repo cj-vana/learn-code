@@ -1,0 +1,106 @@
+id: exercise.library.cli_parsing.a01
+kind: exercise
+version: 1
+language: python
+title: The Dockmaster's Flag Table
+slug: cli-parsing-a01
+difficulty: easy
+concepts:
+  - python.cli_args
+  - python.dictionaries
+prerequisites:
+  - python.lists
+  - python.loops
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.cli_parsing.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original harbor dock-scheduler framing for a hand-rolled long-flag parser, ahead of argparse.
+prompt_markdown: |
+  The harbor's dock-scheduling tool, `dockctl`, receives its settings as one flat
+  list of command-line tokens, and it wants them as a lookup table before it can
+  assign a berth.
+
+  Write `parse_flags(argv)` where `argv` is a list of string tokens. Read it left
+  to right and build a dictionary of flag settings:
+
+  - A token that starts with `--` is a flag name. Strip the leading `--` and use
+    the remaining text as the dictionary key.
+  - The token immediately after a flag is that flag's value. Store the value
+    exactly as the string it is (do not convert numbers).
+  - If the same flag name appears more than once, the last value wins.
+  - A `--flag` token at the very end with no token after it has no value, so skip
+    it and record nothing for it.
+  - Any token that does not start with `--` and was not already claimed as a
+    value (for example a stray leading word) is ignored.
+  - An empty `argv` returns an empty dictionary.
+
+  Example: `['--berth', '7', '--tide', 'high']` becomes
+  `{'berth': '7', 'tide': 'high'}`.
+starter_code: |
+  def parse_flags(argv):
+      flags = {}
+      # Walk argv, pairing each --flag token with the value that follows it.
+      return flags
+function_name: parse_flags
+input_mode: function
+solution_sketch: Scan argv with an index; when a token starts with '--' and a next token exists, store name-without-dashes -> next token and advance by two, otherwise advance by one.
+sample_solution: |
+  def parse_flags(argv):
+      flags = {}
+      i = 0
+      while i < len(argv):
+          token = argv[i]
+          if token.startswith("--") and i + 1 < len(argv):
+              name = token[2:]
+              flags[name] = argv[i + 1]
+              i += 2
+          else:
+              i += 1
+      return flags
+hints:
+  - level: 1
+    text: A plain for-loop over the tokens is awkward here because a flag and its value are two positions apart. Track your own index instead.
+  - level: 2
+    text: When the current token starts with '--' and there is a token after it, record that pair and jump the index forward by two so you skip the value.
+  - level: 3
+    text: Use token[2:] to drop the leading dashes; assigning flags[name] again for a repeated flag naturally lets the last value win.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: {}
+    - name: single_pair
+      input: ['--berth', '7']
+      expected: {berth: '7'}
+    - name: two_pairs
+      input: ['--tide', 'high', '--berth', '7']
+      expected: {tide: high, berth: '7'}
+  validation:
+    - name: duplicate_last_wins
+      input: ['--mode', 'load', '--mode', 'unload']
+      expected: {mode: unload}
+    - name: trailing_flag_no_value
+      input: ['--tide', 'high', '--berth']
+      expected: {tide: high}
+    - name: stray_leading_word
+      input: ['schedule', '--berth', '3']
+      expected: {berth: '3'}
+explanation_markdown: |
+  Command-line tokens arrive as one flat list, but a `--flag value` convention
+  really encodes pairs whose two halves sit at adjacent positions. A `for` loop
+  hands you one token at a time with no easy way to consume the following token,
+  so managing your own index and advancing by two after a match is the natural
+  shape. Storing into a dict means a repeated flag simply overwrites its earlier
+  entry, which gives you last-wins precedence for free. Guarding on
+  `i + 1 < len(argv)` is what protects the trailing-flag case: a `--flag` with no
+  token after it has no value to bind, so you skip it rather than reading past the
+  end of the list.
+common_mistakes:
+  - Iterating with a plain for-loop and having no way to skip the value token, so values get misread as flags.
+  - Forgetting the bounds check, so a flag at the end of argv raises IndexError when you reach for a value that is not there.
+  - Converting values to int, when the parser is specified to keep every value as the original string.

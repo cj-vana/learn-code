@@ -1,0 +1,102 @@
+id: exercise.library.secure_coding.a05
+kind: exercise
+version: 1
+language: python
+title: Flagging Unsafe Queries in the Warehouse Console
+slug: secure-coding-a05
+difficulty: medium
+concepts:
+  - python.secure_coding
+  - python.strings
+prerequisites:
+  - python.functions
+  - python.strings
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.secure_coding.a05
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original SQL-injection linting drill framed around a warehouse query console, detecting interpolation markers that reveal a query built by string formatting instead of bound placeholders.
+prompt_markdown: |
+  A warehouse inventory console lets staff save SQL query strings. A reviewer wants
+  an automatic lint check that flags queries which look like they were built by
+  gluing untrusted values into the text instead of using bound placeholders. Write
+  `has_sql_injection_risk(query)` that returns `True` when the query string shows
+  any sign of value interpolation and `False` otherwise.
+
+  Flag the query (return `True`) when it contains ANY of these interpolation
+  tells:
+
+  - a `{` character (an f-string or `str.format` placeholder), or
+  - the substring `%s`, `%d`, or `%f` (printf-style formatting), or
+  - the substring `%(` (percent formatting with a named key).
+
+  Return `False` when none of those appear. A parameterized query that uses `?`
+  placeholders (as in `WHERE id = ?`) or named placeholders (as in `= :owner`) is
+  safe and returns `False`. Ordinary SQL arithmetic like `price + tax` is NOT a
+  tell and must not be flagged.
+starter_code: |
+  def has_sql_injection_risk(query):
+      return False
+function_name: has_sql_injection_risk
+input_mode: function
+solution_sketch: Return True if the query contains a "{" or any of the printf-style markers "%s", "%d", "%f", "%(".
+sample_solution: |
+  def has_sql_injection_risk(query):
+      if "{" in query:
+          return True
+      markers = ("%s", "%d", "%f", "%(")
+      return any(marker in query for marker in markers)
+hints:
+  - level: 1
+    text: You are scanning the string for specific tell-tale substrings, not parsing SQL.
+  - level: 2
+    text: A single "{" anywhere means an f-string or format placeholder built the query.
+  - level: 3
+    text: Check for "{" first, then test whether any of "%s", "%d", "%f", "%(" appears using `in`.
+tests:
+  public:
+    - name: parameterized_safe
+      input: SELECT * FROM crates WHERE id = ?
+      expected: false
+    - name: fstring_placeholder
+      input: SELECT * FROM crates WHERE id = {crate_id}
+      expected: true
+    - name: percent_s
+      input: "SELECT * FROM crates WHERE name = '%s'"
+      expected: true
+  validation:
+    - name: named_placeholder_safe
+      input: SELECT * FROM crates WHERE owner = :owner
+      expected: false
+    - name: percent_named
+      input: "INSERT INTO audit VALUES ('%(user)s')"
+      expected: true
+    - name: percent_d
+      input: SELECT * FROM crates WHERE qty > %d
+      expected: true
+    - name: plain_literal_safe
+      input: SELECT count(*) FROM crates
+      expected: false
+    - name: arithmetic_not_flagged
+      input: SELECT price + tax FROM crates WHERE id = ?
+      expected: false
+explanation_markdown: |
+  SQL injection happens when a value is concatenated or formatted straight into a
+  query, letting an attacker's input change the query's structure. The safe
+  alternative is a parameterized query: the SQL text carries a placeholder like
+  `?` or `:owner`, and the driver binds the value separately so it can never be
+  parsed as SQL. This lint check keys off that distinction. A brace or a
+  printf-style marker (`%s`, `%d`, `%f`, `%(`) is a strong sign the developer
+  interpolated a value into the string, so those are flagged. Crucially, the check
+  does not flag `+`, because `price + tax` is legitimate SQL arithmetic, not string
+  concatenation — flagging it would drown reviewers in false positives. Real
+  detectors are heuristic like this one; the durable fix is always to use bound
+  parameters so there is nothing to detect.
+common_mistakes:
+  - Flagging every "+" as concatenation, which false-positives on legitimate SQL arithmetic like price + tax.
+  - Missing the "%(" named-format case because you only checked for "%s".
+  - Treating "?" or ":owner" placeholders as risky when they are exactly the safe, parameterized form.

@@ -1,0 +1,124 @@
+id: exercise.library.modern_syntax.a11
+kind: exercise
+version: 1
+language: python
+title: Weather Console Debug Line
+slug: modern-syntax-a11
+difficulty: medium
+concepts:
+  - python.modern_syntax
+  - python.string_formatting
+prerequisites:
+  - python.strings
+  - python.lists
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.modern_syntax.a11
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original drill reproducing the self-documenting f-string form f"{name=}", which expands to name plus repr of the value, framed as a weather station's debug console line.
+prompt_markdown: |
+  A weather station prints a compact debug line for its current readings. It
+  mimics Python's self-documenting f-string form: writing `f"{temp=}"` produces
+  the text `temp=` followed by the **repr** of the value, e.g. `temp=21`. Your
+  job is to build that same line from a list of name/value pairs.
+
+  Write `debug_line(readings)`. The single argument is a list of `[name, value]`
+  pairs (each a two-element list), in the order they should appear. Return a
+  single string where each pair is rendered as `name=<repr of value>` and the
+  pairs are joined by `", "` (comma and one space).
+
+  Because the value is rendered with `repr`, not `str`:
+
+  - a string value keeps its surrounding quotes: `["site", "north"]` becomes
+    `site='north'`;
+  - a boolean renders as `True`/`False`: `["active", True]` becomes
+    `active=True`;
+  - numbers, and lists, render exactly as their `repr`: `["codes", [1, 2, 3]]`
+    becomes `codes=[1, 2, 3]`.
+
+  An empty input list returns the empty string `""`.
+starter_code: |
+  def debug_line(readings):
+      return ""
+function_name: debug_line
+input_mode: function
+solution_sketch: For each [name, value] pair build the fragment f"{name}={value!r}" — the !r conversion applies repr, matching what the f"{name=}" form emits — then join the fragments with ", ".
+sample_solution: |
+  def debug_line(readings):
+      return ", ".join(f"{name}={value!r}" for name, value in readings)
+hints:
+  - level: 1
+    text: The self-documenting form f"{x=}" is shorthand for the text "x=" followed by repr(x). You are reproducing that for arbitrary names held in variables.
+  - level: 2
+    text: For one pair, f"{name}={value!r}" writes the name, an equals sign, and the repr of the value. The !r conversion is what adds quotes around strings.
+  - level: 3
+    text: Build one fragment per pair with a generator expression and combine them with ", ".join(...). An empty list naturally joins to "".
+tests:
+  public:
+    - name: single_int
+      input:
+        - - temp
+          - 21
+      expected: temp=21
+    - name: string_is_quoted
+      input:
+        - - site
+          - north
+      expected: site='north'
+    - name: two_pairs
+      input:
+        - - temp
+          - 21
+        - - humidity
+          - 88
+      expected: temp=21, humidity=88
+  validation:
+    - name: empty
+      input: []
+      expected: ''
+    - name: boolean_value
+      input:
+        - - active
+          - true
+      expected: active=True
+    - name: float_value
+      input:
+        - - pressure
+          - 1013.2
+      expected: pressure=1013.2
+    - name: mixed_types
+      input:
+        - - site
+          - west
+        - - temp
+          - -3
+        - - ok
+          - false
+      expected: site='west', temp=-3, ok=False
+    - name: list_value
+      input:
+        - - codes
+          - - 1
+            - 2
+            - 3
+      expected: codes=[1, 2, 3]
+explanation_markdown: |
+  The `=` specifier in f-strings (added in Python 3.8) is a debugging
+  convenience: `f"{expr=}"` emits the source text of `expr`, an equals sign, and
+  the value rendered with `repr`. It saves you from typing the variable name
+  twice when scattering quick trace prints through code.
+
+  Here the names arrive as data rather than as literal source, so you reproduce
+  the behaviour explicitly with `f"{name}={value!r}"`. The load-bearing detail
+  is the `!r` conversion: it calls `repr` instead of `str`, which is why strings
+  come back quoted and a value like `True` (not `true`) or `[1, 2, 3]` renders
+  in its unambiguous Python form. Joining the fragments with `", "` gives the
+  same compact console line, and an empty reading list joins to `""`.
+common_mistakes:
+  - Using f"{name}={value}" without !r, so string values lose their quotes and the output no longer matches the self-documenting form.
+  - Calling str(value) instead of repr(value); the two differ for strings, and only repr matches what f"{x=}" produces.
+  - Joining with "," instead of ", ", producing a run-together line that fails the expected spacing.

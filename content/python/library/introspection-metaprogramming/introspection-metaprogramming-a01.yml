@@ -1,0 +1,201 @@
+id: exercise.library.introspection_metaprogramming.a01
+kind: exercise
+version: 1
+language: python
+title: Reading the Dome Console's Routines
+slug: introspection-metaprogramming-a01
+difficulty: easy
+concepts:
+  - python.introspection
+  - python.functions
+prerequisites:
+  - python.dictionaries
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.introspection_metaprogramming.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original inspect.signature drill framed as an observatory dome console reading its own pointing routines' parameters and defaults.
+prompt_markdown: |
+  An observatory's dome console ships with a small catalog of pointing routines.
+  Before the night shift the operator wants a read-out of each routine's
+  parameters: their names in declaration order, plus any default values baked in.
+
+  Write `signature_params(routine)`. The single argument is the routine's name (a
+  string). Use `inspect.signature` to read the **real function object** from the
+  console's catalog and return a dict shaped like:
+
+  ```python
+  {"names": [...parameter names in order...], "defaults": {name: default_value}}
+  ```
+
+  - `names` lists every parameter in declaration order.
+  - `defaults` maps **only** the parameters that have a default to that default
+    value. A parameter with no default is omitted from `defaults` but still
+    appears in `names`.
+
+  The catalog (already defined for you) contains:
+
+  - `park()` — no parameters
+  - `slew_to(target, speed=2)`
+  - `track(target, rate=1.0, duration=60)`
+  - `calibrate(sensor, offset=0, gain=1, verbose=False)`
+  - `expose(frames, seconds=1.5, dark=True)`
+
+  So `signature_params("slew_to")` returns
+  `{"names": ["target", "speed"], "defaults": {"speed": 2}}`, and
+  `signature_params("park")` returns `{"names": [], "defaults": {}}`. An unknown
+  routine name also returns `{"names": [], "defaults": {}}`.
+
+  Do not hard-code the answers — read them from the function objects with
+  `inspect.signature` so your code works for every routine in the catalog.
+starter_code: |
+  import inspect
+
+
+  def park():
+      ...
+
+
+  def slew_to(target, speed=2):
+      ...
+
+
+  def track(target, rate=1.0, duration=60):
+      ...
+
+
+  def calibrate(sensor, offset=0, gain=1, verbose=False):
+      ...
+
+
+  def expose(frames, seconds=1.5, dark=True):
+      ...
+
+
+  CATALOG = {
+      "park": park,
+      "slew_to": slew_to,
+      "track": track,
+      "calibrate": calibrate,
+      "expose": expose,
+  }
+
+
+  def signature_params(routine):
+      return {"names": [], "defaults": {}}
+function_name: signature_params
+input_mode: function
+solution_sketch: Look the routine up in the catalog; if missing return empty names/defaults. Otherwise iterate inspect.signature(fn).parameters, collecting every name in order and recording param.default only when it is not Parameter.empty.
+sample_solution: |
+  import inspect
+
+
+  def park():
+      ...
+
+
+  def slew_to(target, speed=2):
+      ...
+
+
+  def track(target, rate=1.0, duration=60):
+      ...
+
+
+  def calibrate(sensor, offset=0, gain=1, verbose=False):
+      ...
+
+
+  def expose(frames, seconds=1.5, dark=True):
+      ...
+
+
+  CATALOG = {
+      "park": park,
+      "slew_to": slew_to,
+      "track": track,
+      "calibrate": calibrate,
+      "expose": expose,
+  }
+
+
+  def signature_params(routine):
+      fn = CATALOG.get(routine)
+      if fn is None:
+          return {"names": [], "defaults": {}}
+      signature = inspect.signature(fn)
+      names = []
+      defaults = {}
+      for name, param in signature.parameters.items():
+          names.append(name)
+          if param.default is not inspect.Parameter.empty:
+              defaults[name] = param.default
+      return {"names": names, "defaults": defaults}
+hints:
+  - level: 1
+    text: inspect.signature(fn).parameters is an ordered mapping from parameter name to a Parameter object, so iterating it gives you the names in declaration order for free.
+  - level: 2
+    text: A Parameter's .default holds its default value, but when there is no default it is the sentinel inspect.Parameter.empty rather than None — compare against that sentinel with `is not`.
+  - level: 3
+    text: Append every name to your names list, but only add to the defaults dict when param.default is not inspect.Parameter.empty. Guard the catalog lookup so an unknown name returns empty structures instead of raising.
+tests:
+  public:
+    - name: no_parameters
+      input: park
+      expected:
+        names: []
+        defaults: {}
+    - name: one_default
+      input: slew_to
+      expected:
+        names: [target, speed]
+        defaults:
+          speed: 2
+    - name: mixed_defaults
+      input: calibrate
+      expected:
+        names: [sensor, offset, gain, verbose]
+        defaults:
+          offset: 0
+          gain: 1
+          verbose: false
+  validation:
+    - name: float_and_int_defaults
+      input: track
+      expected:
+        names: [target, rate, duration]
+        defaults:
+          rate: 1.0
+          duration: 60
+    - name: float_and_bool_defaults
+      input: expose
+      expected:
+        names: [frames, seconds, dark]
+        defaults:
+          seconds: 1.5
+          dark: true
+    - name: unknown_routine
+      input: focus
+      expected:
+        names: []
+        defaults: {}
+explanation_markdown: |
+  `inspect.signature` turns a live function object into a `Signature`, whose
+  `.parameters` is an ordered mapping keyed by parameter name. Iterating it in
+  order is the reliable way to recover declaration order without parsing source
+  text yourself.
+
+  The subtlety is how "no default" is represented. Python cannot use `None` as the
+  marker because `None` is a perfectly valid default, so `inspect` uses a dedicated
+  sentinel, `inspect.Parameter.empty`. Testing `param.default is not
+  inspect.Parameter.empty` is what separates `speed=2` from a bare positional
+  `target`. Because you read everything from the real object, the same handful of
+  lines works for any routine the console might add later.
+common_mistakes:
+  - Treating a default of None or 0 as "no default"; the only true marker of a missing default is inspect.Parameter.empty.
+  - Building the names list from the defaults dict, which silently drops every parameter that has no default.
+  - Letting an unknown routine name raise a KeyError instead of returning the empty names/defaults structure.

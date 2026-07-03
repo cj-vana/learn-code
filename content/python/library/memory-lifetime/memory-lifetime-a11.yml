@@ -1,0 +1,162 @@
+id: exercise.library.memory_lifetime.a11
+kind: exercise
+version: 1
+language: python
+title: Everything Holding the Vault Record
+slug: memory-lifetime-a11
+difficulty: hard
+concepts:
+  - python.memory_model
+  - patterns.graph_traversal
+prerequisites:
+  - python.dictionaries
+  - python.sets
+  - patterns.dfs
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.memory_lifetime.a11
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original transitive-referrers drill framed as an archive tracing every ledger that can reach a vault record through provenance links, modelling what keeps an object alive.
+prompt_markdown: |
+  An archive keeps ledgers that cite one another. When a memory leak makes a
+  single vault record impossible to discard, the archivist needs the complete
+  list of ledgers that can reach that record by following citation links, one or
+  more hops away. Those are precisely the ledgers keeping it referenced: remove
+  every one of them and the record would finally be free.
+
+  This models tracing *transitive referrers*. `gc.get_referrers(obj)` gives the
+  direct holders; here you want the full set of objects that can reach the target
+  along one or more reference edges, which is what determines whether an object
+  stays alive.
+
+  Write `gc_referrers_of(query)` taking one dict:
+
+  - `graph`: a dict mapping each ledger id (a string) to a list of the ledger ids
+    it directly points to (its outgoing citations)
+  - `node`: the target ledger id
+
+  Return a sorted list of the **distinct** ledger ids that can reach `node`
+  through a path of one or more edges. Follow the edges backwards from the
+  target. If the target sits on a reference cycle, then it can reach itself and
+  therefore belongs in its own result; otherwise it does not. A node that cannot
+  reach the target is excluded. If nothing reaches `node` (including when `node`
+  is absent from `graph`), return an empty list. Duplicate edges in the input
+  make no difference to the result.
+starter_code: |
+  def gc_referrers_of(query):
+      return []
+function_name: gc_referrers_of
+input_mode: function
+solution_sketch: Build a reverse adjacency mapping each target to the set of ids that point at it, then depth-first search backwards from the query node, collecting every id reached in one or more steps and returning them sorted.
+sample_solution: |
+  def gc_referrers_of(query):
+      graph = query["graph"]
+      target = query["node"]
+      reverse = {}
+      for src, outgoing in graph.items():
+          for dst in outgoing:
+              reverse.setdefault(dst, set()).add(src)
+      reached = set()
+      stack = list(reverse.get(target, set()))
+      while stack:
+          holder = stack.pop()
+          if holder in reached:
+              continue
+          reached.add(holder)
+          for parent in reverse.get(holder, ()):
+              if parent not in reached:
+                  stack.append(parent)
+      return sorted(reached)
+hints:
+  - level: 1
+    text: The holders are found by walking edges backwards, so first invert the graph into a map from each id to the ids that point at it.
+  - level: 2
+    text: Seed a search with the direct holders of the target (its entries in the reversed map) and keep expanding to their holders in turn.
+  - level: 3
+    text: Use a visited set so cycles terminate; a target on a cycle reaches itself and so ends up in its own reached set, which is correct.
+tests:
+  public:
+    - name: citation_chain
+      input:
+        graph:
+          A: [B]
+          B: [C]
+          C: [D]
+          D: []
+        node: D
+      expected: [A, B, C]
+    - name: direct_holders_only
+      input:
+        graph:
+          A: [B]
+          C: [B]
+          B: []
+        node: B
+      expected: [A, C]
+    - name: nothing_reaches
+      input:
+        graph:
+          A: [B]
+          D: []
+        node: D
+      expected: []
+  validation:
+    - name: cycle_includes_target
+      input:
+        graph:
+          A: [B]
+          B: [C]
+          C: [A]
+        node: A
+      expected: [A, B, C]
+    - name: self_loop
+      input:
+        graph:
+          X: [X]
+          Y: []
+        node: X
+      expected: [X]
+    - name: diamond_converges
+      input:
+        graph:
+          A: [B, C]
+          B: [D]
+          C: [D]
+          D: []
+        node: D
+      expected: [A, B, C]
+    - name: only_connected_side
+      input:
+        graph:
+          root: [a]
+          a: [b]
+          b: []
+          other: [c]
+          c: []
+        node: b
+      expected: [a, root]
+    - name: target_absent
+      input:
+        graph:
+          A: [B]
+        node: Z
+      expected: []
+explanation_markdown: |
+  Whether an object can be freed depends on the set of live objects that can
+  reach it, so this reverse-reachability walk is exactly the reasoning a leak
+  hunt performs. Inverting the graph turns "who does A point to" into "who points
+  to A", and a depth-first walk over those reversed edges gathers every direct
+  and indirect holder. The visited set does double duty: it terminates cycles and
+  it naturally lets the target appear in its own result when a cycle routes back
+  to it, which is the honest answer, because an object on a cycle really does
+  help hold itself alive. That self-holding is the precise situation plain
+  reference counting cannot resolve, which is why Python ships a separate cyclic
+  garbage collector.
+common_mistakes:
+  - Returning only the direct holders instead of following the reversed edges all the way out.
+  - Omitting a visited set, so a reference cycle sends the search into an infinite loop.
+  - Force-excluding the target in every case, which gives the wrong answer when the target lies on a cycle and genuinely reaches itself.

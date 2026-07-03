@@ -1,0 +1,110 @@
+id: exercise.library.http_shapes.a01
+kind: exercise
+version: 1
+language: python
+title: Booking the Harbor's Query String
+slug: http-shapes-a01
+difficulty: easy
+concepts:
+  - python.http_model
+  - python.dictionaries
+prerequisites:
+  - python.strings
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.http_shapes.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original query-string builder framed around a harbor booking API; no network calls.
+prompt_markdown: |
+  The harbor's booking service turns a dictionary of search filters into the
+  `?key=value&key=value` query string that rides on the end of a URL. Write
+  `build_query_string(params)` that takes a dict whose keys and values are all
+  strings and returns that query string.
+
+  Rules, matching how real HTTP clients encode a query:
+
+  - Join each key and its value with `=`, and join the resulting pairs with `&`.
+  - Emit the pairs in the dict's own insertion order.
+  - Percent-encode both keys and values the way `urllib.parse.quote_plus` does:
+    a space becomes `+`, and reserved characters are percent-escaped, so `&`
+    becomes `%26`, `=` becomes `%3D`, and `/` becomes `%2F`.
+  - An empty dict returns the empty string `""`.
+
+  Examples:
+
+  - `{"berth": "A12"}` returns `"berth=A12"`.
+  - `{"q": "open slip"}` returns `"q=open+slip"`.
+  - `{"free": "1", "max": "3"}` returns `"free=1&max=3"`.
+starter_code: |
+  from urllib.parse import quote_plus
+
+
+  def build_query_string(params):
+      return ""
+function_name: build_query_string
+input_mode: function
+solution_sketch: Encode each key and value with quote_plus, join them with '=', then join all pairs with '&'.
+sample_solution: |
+  from urllib.parse import quote_plus
+
+
+  def build_query_string(params):
+      pairs = []
+      for key, value in params.items():
+          pairs.append(f"{quote_plus(key)}={quote_plus(value)}")
+      return "&".join(pairs)
+hints:
+  - level: 1
+    text: A query string is just `key=value` pairs glued together with `&`, and each key and value must be URL-safe first.
+  - level: 2
+    text: Loop over params.items(); call quote_plus on the key and on the value so spaces and reserved characters get escaped.
+  - level: 3
+    text: Build a list of `f"{quote_plus(k)}={quote_plus(v)}"` strings, then return "&".join(pairs); an empty dict makes an empty list and "".join gives "".
+tests:
+  public:
+    - name: empty
+      input: {}
+      expected: ''
+    - name: single_pair
+      input: {berth: 'A12'}
+      expected: 'berth=A12'
+    - name: space_becomes_plus
+      input: {q: 'open slip'}
+      expected: 'q=open+slip'
+    - name: two_pairs
+      input: {free: '1', max: '3'}
+      expected: 'free=1&max=3'
+  validation:
+    - name: ampersand_escaped
+      input: {note: 'sun & sea'}
+      expected: 'note=sun+%26+sea'
+    - name: equals_escaped
+      input: {filter: 'depth=deep'}
+      expected: 'filter=depth%3Ddeep'
+    - name: slash_escaped
+      input: {path: 'docks/north'}
+      expected: 'path=docks%2Fnorth'
+    - name: insertion_order_preserved
+      input: {c: '3', a: '1', b: '2'}
+      expected: 'c=3&a=1&b=2'
+explanation_markdown: |
+  A query string is the part of a URL after the `?`. It is a flat list of
+  `key=value` pairs separated by `&`, but the keys and values may contain
+  characters that have special meaning inside a URL, so they must be
+  percent-encoded first. `quote_plus` handles that: it turns spaces into `+`
+  and escapes reserved bytes such as `&`, `=`, and `/` into `%NN` form so the
+  receiver can split the string back apart unambiguously.
+
+  Building the pieces into a list and calling `"&".join(pairs)` handles the
+  separators for free, including the empty case where an empty dict yields an
+  empty list and `"".join` returns `""`. The standard library's
+  `urllib.parse.urlencode` does exactly this for you, but writing it by hand
+  shows why encoding has to happen before you glue the pairs together.
+common_mistakes:
+  - Concatenating raw values without encoding, so a value containing `&` or `=` corrupts the query string.
+  - Adding a leading `?` to the result; that separator belongs to the URL, not to the query string itself.
+  - Joining with `,` or `;` instead of `&`, which no HTTP query parser will accept.

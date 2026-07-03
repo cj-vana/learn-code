@@ -1,0 +1,97 @@
+id: quiz.library.secure_coding.a02
+kind: quiz
+version: 1
+language: python
+title: Secure Coding Mechanics
+slug: quiz-secure-coding-a02
+difficulty: hard
+concepts:
+  - python.secure_coding
+prerequisites:
+  - python.secure_coding
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.secure_coding.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax quiz on parameterization, safe evaluation, path containment, and secure primitives.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: 'Which correctly and safely queries by a user-supplied name in sqlite3?'
+    choices:
+      - db.execute("SELECT * FROM users WHERE name = ?", (name,))
+      - db.execute(f"SELECT * FROM users WHERE name = '{name}'")
+      - db.execute("SELECT * FROM users WHERE name = '" + name + "'")
+      - db.execute("SELECT * FROM users WHERE name = %s" % name)
+    correct_choice: db.execute("SELECT * FROM users WHERE name = ?", (name,))
+    explanation: |
+      Only the parameterized form separates data from SQL structure; all
+      three string-building variants are injectable.
+    concepts:
+      - python.secure_coding
+  - id: q2
+    prompt: |
+      You must turn the string "[1, 2, 3]" from a config file into a Python
+      list. Which is safe?
+    choices:
+      - ast.literal_eval(text) — parses Python literals without executing code
+      - eval(text) — evaluates the expression
+      - exec(f"value = {text}") — assigns it
+      - compile(text, "<cfg>", "eval") then eval
+    correct_choice: ast.literal_eval(text) — parses Python literals without executing code
+    explanation: |
+      literal_eval accepts only literal structures (numbers, strings, lists,
+      dicts); eval/exec run arbitrary code, so hostile config becomes code
+      execution.
+    concepts:
+      - python.secure_coding
+  - id: q3
+    prompt: |
+      To confirm that base / user_name stays inside base before opening it,
+      what check works even against "../../etc/passwd"?
+    choices:
+      - Resolve the joined path and verify it is_relative_to(base.resolve())
+      - Check that user_name contains no ".." substring
+      - Verify the path exists
+      - Ensure user_name is lowercase
+    correct_choice: Resolve the joined path and verify it is_relative_to(base.resolve())
+    explanation: |
+      Substring checks miss encodings and symlinks; resolving to the real
+      absolute path then testing containment is the robust traversal
+      defense.
+    concepts:
+      - python.secure_coding
+      - python.pathlib_os
+  - id: q4
+    prompt: |
+      A constant-time comparison of two equal-length tokens must do what that
+      == does not?
+    choices:
+      - Examine every character (accumulating differences) instead of returning at the first mismatch
+      - Hash both sides first
+      - Compare them in reverse
+      - Sleep a random amount before returning
+    correct_choice: Examine every character (accumulating differences) instead of returning at the first mismatch
+    explanation: |
+      Constant-time means the running time does not depend on where the
+      inputs differ; folding all differences before deciding removes the
+      timing signal — exactly what hmac.compare_digest does.
+    concepts:
+      - python.secure_coding
+  - id: q5
+    prompt: 'For generating a 32-character session token, which call is appropriate?'
+    choices:
+      - secrets.token_hex(16) — cryptographically secure, 16 bytes as 32 hex chars
+      - str(random.random())[2:]
+      - '"".join(random.choices(string.hexdigits, k=32))'
+      - hash(time.time())
+    correct_choice: secrets.token_hex(16) — cryptographically secure, 16 bytes as 32 hex chars
+    explanation: |
+      Session tokens must be unpredictable; secrets draws from OS crypto
+      entropy, while every random-based or time-based option is forecastable.
+    concepts:
+      - python.secure_coding

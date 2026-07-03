@@ -1,0 +1,136 @@
+id: exercise.library.scripting_automation.a07
+kind: exercise
+version: 1
+language: python
+title: The Observatory Log Sweep
+slug: scripting-automation-a07
+difficulty: medium
+concepts:
+  - python.pathlib_os
+  - patterns.filtering
+prerequisites:
+  - python.lists
+  - python.strings
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.scripting_automation.a07
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original stale-file sweep drill framed around a mountaintop observatory rotating its nightly telescope logs.
+prompt_markdown: |
+  A mountaintop observatory writes a fresh telescope log every observing night,
+  and a nightly janitor script decides which old `.log` files are safe to sweep
+  into cold storage. Time is modelled as an integer "night number" so the puzzle
+  stays deterministic (no real clock).
+
+  Write `stale_log_candidates(request)` that takes a single dictionary:
+
+  - `"files"`: a list of record dictionaries, each with a `"path"` string and a
+    `"modified"` integer (the night the file was last written).
+  - `"cutoff"`: an integer night number.
+
+  Return a list of the `"path"` strings for every file that is **both**:
+
+  - a log file — its final path suffix is `.log`, compared case-insensitively so
+    `.LOG` also counts; and
+  - stale — its `"modified"` night is **strictly less** than `"cutoff"`.
+
+  The returned paths must be sorted in ascending (lexicographic) order.
+
+  Rules and edge cases the tests cover:
+
+  - An empty `"files"` list returns `[]`.
+  - A file whose `"modified"` equals `"cutoff"` is *not* stale and is excluded.
+  - Only the **final** suffix decides the type: `rotate.log.gz` has suffix
+    `.gz`, so it is not a log file. A path with no dot (like `README`) has no
+    suffix and is excluded.
+  - Match the suffix case-insensitively but return the original path unchanged.
+
+  Example:
+
+  ```python
+  stale_log_candidates({
+      "files": [
+          {"path": "logs/app.log", "modified": 50},
+          {"path": "logs/db.LOG", "modified": 30},
+          {"path": "logs/app.txt", "modified": 10},
+      ],
+      "cutoff": 60,
+  })
+  # -> ["logs/app.log", "logs/db.LOG"]
+  ```
+starter_code: |
+  from pathlib import PurePosixPath
+
+
+  def stale_log_candidates(request):
+      return []
+function_name: stale_log_candidates
+input_mode: function
+solution_sketch: Walk each record, keep those whose PurePosixPath suffix lowercases to ".log" and whose modified night is below the cutoff, then return the collected paths sorted.
+sample_solution: |
+  from pathlib import PurePosixPath
+
+
+  def stale_log_candidates(request):
+      files = request["files"]
+      cutoff = request["cutoff"]
+      candidates = []
+      for record in files:
+          path = record["path"]
+          if PurePosixPath(path).suffix.lower() == ".log" and record["modified"] < cutoff:
+              candidates.append(path)
+      return sorted(candidates)
+hints:
+  - level: 1
+    text: Two conditions must both hold before a file is a candidate, so filter on the suffix and on the modified night together.
+  - level: 2
+    text: PurePosixPath(path).suffix gives the final extension including the dot; lowercase it and compare to ".log" so ".LOG" is accepted too.
+  - level: 3
+    text: Collect the matching original path strings into a list, then return sorted(list) so the output is in ascending order.
+tests:
+  public:
+    - name: empty_directory
+      input: {"files": [], "cutoff": 100}
+      expected: []
+    - name: mixed_extensions
+      input: {"files": [{"path": "logs/app.log", "modified": 50}, {"path": "logs/app.txt", "modified": 10}, {"path": "logs/db.LOG", "modified": 30}], "cutoff": 60}
+      expected: ["logs/app.log", "logs/db.LOG"]
+    - name: cutoff_boundary_excludes_equal
+      input: {"files": [{"path": "a.log", "modified": 100}, {"path": "b.log", "modified": 99}], "cutoff": 100}
+      expected: ["b.log"]
+  validation:
+    - name: all_fresh
+      input: {"files": [{"path": "x.log", "modified": 200}], "cutoff": 100}
+      expected: []
+    - name: only_final_suffix_counts
+      input: {"files": [{"path": "rotate.log.gz", "modified": 1}, {"path": "keep.log", "modified": 1}], "cutoff": 10}
+      expected: ["keep.log"]
+    - name: no_extension_excluded
+      input: {"files": [{"path": "README", "modified": 1}, {"path": "trace.log", "modified": 5}], "cutoff": 10}
+      expected: ["trace.log"]
+    - name: sorted_output
+      input: {"files": [{"path": "z.log", "modified": 1}, {"path": "a.log", "modified": 2}, {"path": "m.log", "modified": 3}], "cutoff": 10}
+      expected: ["a.log", "m.log", "z.log"]
+    - name: uppercase_and_boundary
+      input: {"files": [{"path": "one.LOG", "modified": 5}, {"path": "two.Log", "modified": 20}, {"path": "three.log", "modified": 19}], "cutoff": 20}
+      expected: ["one.LOG", "three.log"]
+explanation_markdown: |
+  A sweep script is a filter with two independent predicates: the file must be
+  the right *kind* (a `.log`) and it must be old *enough* (modified before the
+  cutoff). Splitting the extension with `PurePosixPath(path).suffix` is the
+  pathlib idiom that reads the final component after the last dot — which is why
+  `rotate.log.gz` reports `.gz`, not `.log`. Lowercasing before the comparison
+  makes the type check case-insensitive without altering the path you return.
+
+  The strict `<` against the cutoff is the load-bearing detail: a file modified
+  *on* the cutoff night is not yet stale, so equality is excluded. Collecting the
+  survivors and returning `sorted(...)` gives a stable, predictable order for the
+  downstream archive step. The whole pass is O(n log n) because of the final sort.
+common_mistakes:
+  - Using `>=` or `<=` against the cutoff, which wrongly sweeps a file modified exactly on the cutoff night.
+  - Checking `path.endswith(".log")` without lowercasing, so `.LOG` files are missed.
+  - Treating `rotate.log.gz` as a log by searching for ".log" anywhere in the name instead of reading only the final suffix.

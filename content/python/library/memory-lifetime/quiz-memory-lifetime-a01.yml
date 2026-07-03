@@ -1,0 +1,103 @@
+id: quiz.library.memory_lifetime.a01
+kind: quiz
+version: 1
+language: python
+title: Lifetimes and Leaks, Diagnosed
+slug: quiz-memory-lifetime-a01
+difficulty: hard
+concepts:
+  - python.memory_model
+prerequisites:
+  - python.memory_model
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.memory_lifetime.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pattern-recognition quiz on diagnosing reference leaks, cycles, and cleanup strategy.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      A long-running API service's memory grows steadily. Profiling shows
+      millions of old request objects still alive. What is the Python-shaped
+      diagnosis?
+    choices:
+      - Something still references them — likely a module-level cache, log buffer, or handler registry that only ever grows
+      - The garbage collector is disabled by default in servers
+      - Python cannot free objects created inside functions
+      - The objects are too large for the collector to move
+    correct_choice: Something still references them — likely a module-level cache, log buffer, or handler registry that only ever grows
+    explanation: |
+      Reclaimed-when-unreachable means growth implies reachability: the leak
+      is a surviving reference, and the fix is finding and bounding the
+      structure that holds it.
+    concepts:
+      - python.memory_model
+  - id: q2
+    prompt: |
+      Parent objects hold children in a list; each child holds .parent back.
+      When the program drops a whole family, when is its memory reclaimed?
+    choices:
+      - At the next cyclic GC pass — the mutual references keep refcounts above zero, so only the cycle collector can free them
+      - Immediately — refcounting handles all unreachable objects
+      - Never — cycles are permanent leaks in Python
+      - Only if the parent defines __slots__
+    correct_choice: At the next cyclic GC pass — the mutual references keep refcounts above zero, so only the cycle collector can free them
+    explanation: |
+      Back-references form cycles that counting cannot free; the collector
+      finds them by reachability analysis, eventually. Making .parent a
+      weakref would restore prompt reclamation.
+    concepts:
+      - python.memory_model
+  - id: q3
+    prompt: |
+      A teammate scatters gc.collect() calls through ordinary request-handling
+      code "to keep memory down". What is the honest review comment?
+    choices:
+      - Acyclic objects are already freed instantly by refcounting; collect() only helps cyclic garbage and mostly adds pause time here
+      - Good practice — collect() should run after every request
+      - collect() is required before any large allocation
+      - collect() also closes open files, so keep it
+    correct_choice: Acyclic objects are already freed instantly by refcounting; collect() only helps cyclic garbage and mostly adds pause time here
+    explanation: |
+      Understanding the two-tier system prevents cargo-cult collect() calls:
+      refcounting is doing the routine work already, deterministically.
+    concepts:
+      - python.memory_model
+  - id: q4
+    prompt: |
+      An object index must let you look entries up without preventing their
+      reclamation elsewhere in the program. Which tool fits?
+    choices:
+      - A WeakValueDictionary — entries vanish automatically when the objects die
+      - A plain dict with periodic manual clearing
+      - A list of copies of each object
+      - A global registry updated in __del__
+    correct_choice: A WeakValueDictionary — entries vanish automatically when the objects die
+    explanation: |
+      Weak references separate "can find it" from "keeps it alive" — the
+      designed answer to caches and indexes that would otherwise pin every
+      object forever.
+    concepts:
+      - python.memory_model
+  - id: q5
+    prompt: |
+      Code guards an optional parameter with `if config is DEFAULT_CONFIG:`
+      where DEFAULT_CONFIG = object(). Why is `is` correct here when the
+      general rule prefers ==?
+    choices:
+      - The sentinel is a unique object compared by identity on purpose — no user value can ever be the same object, and __eq__ cannot spoof it
+      - is is faster, and speed matters for defaults
+      - object() instances support only identity comparison
+      - It is not correct — == should be used everywhere
+    correct_choice: The sentinel is a unique object compared by identity on purpose — no user value can ever be the same object, and __eq__ cannot spoof it
+    explanation: |
+      Sentinels are the deliberate use of identity semantics: uniqueness by
+      construction makes `is` exact where equality would be forgeable and
+      None might be legitimate data.
+    concepts:
+      - python.memory_model

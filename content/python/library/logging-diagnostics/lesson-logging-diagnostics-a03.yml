@@ -1,0 +1,90 @@
+id: lesson.library.logging_diagnostics.a03
+kind: lesson
+version: 1
+language: python
+title: 'Structured Diagnostics: Messages Worth Reading'
+slug: lesson-logging-diagnostics-a03
+difficulty: medium
+concepts:
+  - python.logging_diagnostics
+prerequisites:
+  - python.logging_diagnostics
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.logging_diagnostics.a03
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original walkthrough of log formatting, exception logging, and structured/contextual logging with fresh examples.
+body_markdown: |
+  A log is only as useful as it is *readable when it matters* — during an
+  incident, by someone who is not you, under time pressure. This lesson
+  is about making log records answer the questions incidents actually
+  ask.
+
+  ### Formatters: the anatomy of a line
+
+  A handler's **formatter** decides what each record shows. The
+  fields — attributes every record carries — that earn their place:
+
+  ```text
+  2026-07-04 02:41:07  WARNING  shop.orders  order 88 retried (attempt 2)
+  └── timestamp ──────┘ level    logger name  message
+  ```
+
+  `asctime` (when — non-negotiable; a log without timestamps is a
+  shuffled deck), `levelname` (how bad), `name` (which component — the
+  hierarchy paying off), and the message. Add `funcName`/`lineno` when
+  hunting, `process`/`thread` in concurrent systems. The format is set
+  once (`basicConfig(format=...)` or a Formatter on the handler); your
+  exercise assembles a record dict into a formatted line, which is
+  exactly what a Formatter does.
+
+  ### Logging exceptions: keep the traceback
+
+  When you catch an error, the traceback is the single most valuable
+  diagnostic — do not throw it away:
+
+  ```python
+  try:
+      settle(order)
+  except PaymentError:
+      log.exception("settlement failed for order %s", order.id)
+      # log.exception = log.error + the full traceback, automatically
+  ```
+
+  `log.exception` (only valid inside an except block) records the
+  message *and* the stack trace; `log.error("failed")` alone records a
+  message and discards the one piece of information that would locate
+  the bug. The difference between a 20-minute fix and a 2-day hunt is
+  frequently this one method name.
+
+  ### Context: the fields that make logs searchable
+
+  "Payment failed" is nearly useless; "payment failed, order=88
+  member=1042 amount=45.00 gateway=stripe attempt=2" is a diagnosis. The
+  discipline is to attach the **identifiers** that let a reader pivot —
+  filter every line for order 88, trace one request across components.
+  Modern systems make this structured (key-value or JSON per record) so
+  logs are queryable data, not prose; the `extra={...}` parameter and
+  `contextvars`-fed filters (your memory area's request-id, now feeding
+  logs) carry the context automatically.
+
+  The takeaway, and the shape of the exercises: a good log line is a
+  *record*, not a sentence — timestamped, leveled, attributed,
+  carrying the ids that answer "which one?" and, on failure, the
+  traceback that answers "where?". Instrument for the reader who has
+  the incident, not the developer who has the code — they are not the
+  same person, and only one of them is having a bad night.
+checkpoints:
+  - question: Why is log.exception (or exc_info=True) essential in an except block, versus log.error with a message?
+    answer: 'log.exception records the full traceback alongside the message, pinpointing where and why the failure occurred; a bare log.error discards the stack trace — the single most valuable piece of diagnostic information — leaving only that something failed.'
+    explanation: 'The traceback converts "it broke" into "it broke here, called from there" — the difference between a quick fix and a long hunt.'
+  - question: What makes "payment failed, order=88 member=1042 attempt=2" far more useful than "payment failed"?
+    answer: 'The identifiers let a reader pivot and correlate — filter all lines for order 88, trace one member across components, spot that it was the second attempt; context turns a log into queryable, searchable data.'
+    explanation: '"Which one?" is the first question of every incident, and only logged identifiers can answer it after the fact.'
+  - question: The lesson says a good log line is "a record, not a sentence." What does that phrasing prescribe?
+    answer: 'Structured fields — timestamp, level, component name, correlating ids, and on failure the traceback — rather than prose; records are filterable and machine-queryable, while sentences must be read one at a time.'
+    explanation: 'Designing log output for the incident reader (structured, searchable, id-carrying) is the operational payoff of the whole area.'

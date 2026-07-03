@@ -1,0 +1,149 @@
+id: exercise.library.introspection_metaprogramming.a06
+kind: exercise
+version: 1
+language: python
+title: Rope Enough for the Descent
+slug: introspection-metaprogramming-a06
+difficulty: medium
+concepts:
+  - python.introspection
+  - patterns.recursion
+  - python.exceptions
+prerequisites:
+  - python.functions
+  - python.conditionals
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.introspection_metaprogramming.a06
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original RecursionError-and-fallback drill framed as a cave-survey team whose recursive descent trips a rated depth guard; the limit is modelled explicitly for determinism rather than mutating the global recursion limit.
+prompt_markdown: |
+  A cave-survey team descends a vertical passage one segment at a time, and they
+  model the descent **recursively**: descending `target` segments means paying out
+  rope for segment `target`, then recursing on the remaining `target - 1`. The total
+  rope paid out for a clean descent of `n` segments is `n + (n - 1) + ... + 1`.
+
+  Their rig, though, is only rated for `limit` segments of depth. If a planned
+  descent needs to go **deeper than `limit` segments**, the recursion trips a guard
+  that raises `RecursionError`, and the team abandons the recursive plan and records
+  a `fallback` reading instead. This mirrors how CPython itself guards recursion:
+  because Python has no tail-call optimisation, every level consumes a real stack
+  frame, so the interpreter raises `RecursionError` once a call goes past its own
+  limit.
+
+  Write `recursion_with_fallback(descent)`. The single argument is a dict shaped
+  like:
+
+  ```python
+  {"target": 5, "limit": 8, "fallback": -1}
+  ```
+
+  Descend recursively, tracking how many segments deep you are. Raise
+  `RecursionError` from inside the recursion the moment the depth would exceed
+  `limit`, and wrap the whole descent in a `try`/`except RecursionError` that returns
+  `fallback`. Behaviour to implement exactly:
+
+  - When `target <= limit`, the descent completes: return the total rope paid out,
+    `target + (target - 1) + ... + 1`. For example `target = 5` returns `15`.
+  - When `target > limit`, the descent trips the guard: return `fallback` unchanged.
+  - `target = 0` completes trivially and returns `0` (as long as `limit >= 0`).
+
+  Use real recursion with a `try`/`except RecursionError`, not a closed-form
+  formula, so the fallback path is genuinely driven by the raised exception.
+starter_code: |
+  def recursion_with_fallback(descent):
+      return descent["fallback"]
+function_name: recursion_with_fallback
+input_mode: function
+solution_sketch: Define an inner recursive helper that carries the remaining segments and the current depth; raise RecursionError once depth would pass limit, return 0 at the base case, and otherwise add the current segment to the recursive result. Call it inside a try/except RecursionError that returns the fallback.
+sample_solution: |
+  def recursion_with_fallback(descent):
+      target = descent["target"]
+      limit = descent["limit"]
+      fallback = descent["fallback"]
+
+      def descend(remaining, depth):
+          if remaining <= 0:
+              return 0
+          if depth > limit:
+              raise RecursionError("descent exceeds rated depth")
+          return remaining + descend(remaining - 1, depth + 1)
+
+      try:
+          return descend(target, 1)
+      except RecursionError:
+          return fallback
+hints:
+  - level: 1
+    text: Write a helper that carries two things down the recursion — how many segments are left to descend and how deep you already are — so it can notice when depth passes the rated limit.
+  - level: 2
+    text: The base case is remaining <= 0, which returns 0. Otherwise add the current segment's rope to the result of recursing on remaining - 1 with depth + 1.
+  - level: 3
+    text: Before recursing further, raise RecursionError when depth would exceed limit, and wrap the very first call in try/except RecursionError so the caught exception returns the fallback value.
+tests:
+  public:
+    - name: shallow_completes
+      input:
+        target: 5
+        limit: 8
+        fallback: -1
+      expected: 15
+    - name: exceeds_falls_back
+      input:
+        target: 10
+        limit: 4
+        fallback: -1
+      expected: -1
+    - name: boundary_equal_completes
+      input:
+        target: 3
+        limit: 3
+        fallback: -1
+      expected: 6
+  validation:
+    - name: zero_segments
+      input:
+        target: 0
+        limit: 5
+        fallback: -1
+      expected: 0
+    - name: deep_target_short_rig
+      input:
+        target: 200
+        limit: 25
+        fallback: 0
+      expected: 0
+    - name: custom_fallback_value
+      input:
+        target: 12
+        limit: 2
+        fallback: 999
+      expected: 999
+    - name: larger_clean_descent
+      input:
+        target: 6
+        limit: 6
+        fallback: -1
+      expected: 21
+explanation_markdown: |
+  Each recursive call is one stack frame, and this exercise makes that cost explicit
+  by threading a `depth` counter alongside the work. When `depth` would pass the
+  rated `limit`, the helper raises `RecursionError` — the same exception type CPython
+  raises when a real recursion runs past its limit, because Python does not optimise
+  tail calls and cannot silently flatten deep recursion.
+
+  Wrapping the initial call in `try`/`except RecursionError` turns that raised
+  exception into a graceful fallback rather than a crash. Modelling the limit
+  explicitly, instead of lowering the interpreter's global recursion limit, keeps the
+  outcome deterministic and side-effect free: a descent of `target <= limit`
+  completes and returns the triangular total, while anything deeper trips the guard
+  at `depth = limit + 1` and returns the fallback — without ever recursing the full
+  `target` levels.
+common_mistakes:
+  - Returning a closed-form triangular number instead of real recursion, so the RecursionError fallback path is never actually exercised.
+  - Placing the depth check after the recursive call instead of before it, so the guard never fires in time to prevent going deeper.
+  - Catching a broad Exception (or forgetting the try/except entirely), which either hides unrelated bugs or lets the RecursionError escape instead of becoming the fallback.

@@ -1,0 +1,105 @@
+id: quiz.library.pathlib_patterns.a01
+kind: quiz
+version: 1
+language: python
+title: Path Reasoning
+slug: quiz-pathlib-patterns-a01
+difficulty: medium
+concepts:
+  - python.pathlib_os
+prerequisites:
+  - python.pathlib_os
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.pathlib_patterns.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pattern-recognition quiz on path structure, containment, and naming-scheme design.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      An upload handler computes dest = uploads_dir / filename where filename
+      comes from the client. Which input escapes, and what is the required
+      check?
+    choices:
+      - An absolute filename like /etc/cron.d/job resets the join entirely; normalize and verify dest.is_relative_to(uploads_dir)
+      - A filename with spaces breaks the join
+      - Nothing escapes — the / operator sandboxes automatically
+      - Only Windows drive letters are dangerous
+    correct_choice: An absolute filename like /etc/cron.d/job resets the join entirely; normalize and verify dest.is_relative_to(uploads_dir)
+    explanation: |
+      Joining with an absolute path replaces the base — documented behavior —
+      and ../ segments walk out; containment must be verified on the
+      normalized result, never assumed from the join.
+    concepts:
+      - python.pathlib_os
+      - python.secure_coding
+  - id: q2
+    prompt: |
+      A report must list exports so that alphabetical order equals
+      chronological order. Which naming prefix achieves it?
+    choices:
+      - The ISO date 2026-07-04 — big-to-small units make string order match time order
+      - The Unix timestamp in decimal
+      - The month name followed by the day
+      - DD-MM-YYYY, since days change fastest
+    correct_choice: The ISO date 2026-07-04 — big-to-small units make string order match time order
+    explanation: |
+      ISO's most-significant-first, zero-padded layout is the unique format
+      where lexicographic and chronological order coincide. (Timestamps sort
+      too but are unreadable; day-first fails across months.)
+    concepts:
+      - python.pathlib_os
+      - python.datetime_module
+  - id: q3
+    prompt: |
+      Backup names are backup1.txt ... backup12.txt and sorted() lists
+      backup10 before backup2. What is the cause and the standard fix?
+    choices:
+      - String comparison is character-wise ("1" < "2" decides before the second digit); use a natural-sort key that compares digit runs numerically — or zero-pad at generation time
+      - The filesystem returned them unsorted
+      - sorted() caps at 9 elements per digit
+      - Path objects sort by creation time
+    correct_choice: String comparison is character-wise ("1" < "2" decides before the second digit); use a natural-sort key that compares digit runs numerically — or zero-pad at generation time
+    explanation: |
+      Both remedies work; schemes that zero-pad from the start avoid needing
+      every consumer to natural-sort.
+    concepts:
+      - python.pathlib_os
+      - python.sorting
+  - id: q4
+    prompt: |
+      A slugify function turns "Harvest Moon (rough) / v2!" into
+      "harvest-moon-rough-v2". Which property makes runs of punctuation
+      collapse to ONE hyphen important?
+    choices:
+      - Determinism and cleanliness — without collapsing, similar titles produce different numbers of hyphens, breaking uniqueness expectations and readability
+      - Hyphens are illegal in filenames on Windows
+      - Single hyphens compress better
+      - Search engines penalize double hyphens
+    correct_choice: Determinism and cleanliness — without collapsing, similar titles produce different numbers of hyphens, breaking uniqueness expectations and readability
+    explanation: |
+      Slug rules (lowercase, collapse non-alphanumeric runs, trim, cap
+      length) exist so arbitrary human titles map predictably into the safe
+      filename alphabet.
+    concepts:
+      - python.pathlib_os
+  - id: q5
+    prompt: |
+      Why does next-version numbering use max(existing)+1 rather than
+      filling the first gap in the sequence?
+    choices:
+      - Reusing a freed number makes a new file impersonate a deleted one in history — gaps are records, not waste
+      - Gap-filling is slower to compute
+      - max+1 compresses the directory listing
+      - Filesystems forbid reusing names
+    correct_choice: Reusing a freed number makes a new file impersonate a deleted one in history — gaps are records, not waste
+    explanation: |
+      Monotonic identifiers preserve archival meaning; the same principle
+      governs database ids and API versions.
+    concepts:
+      - python.pathlib_os

@@ -1,0 +1,93 @@
+id: lesson.library.config_parsing.a03
+kind: lesson
+version: 1
+language: python
+title: 'Config in the Real World: Files, Env, and Secrets'
+slug: lesson-config-parsing-a03
+difficulty: medium
+concepts:
+  - python.config_parsing
+  - python.secure_coding
+prerequisites:
+  - python.config_parsing
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.config_parsing.a03
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original walkthrough of real config interaction — env vars, secrets, and the twelve-factor discipline — with fresh examples.
+body_markdown: |
+  The parsing and precedence logic is pure and testable. This lesson
+  tours the real-world layer — how config actually reaches a running
+  program — and the security discipline that governs it. (Lesson tour;
+  the exercises stay on the resolution logic you have built.)
+
+  ### Environment variables and os.environ
+
+  ```python
+  import os
+  interval = os.environ.get("STATION_INTERVAL", "60")   # str or default
+  os.environ["STATION_INTERVAL"]                         # KeyError if absent
+  ```
+
+  `os.environ` is a dict of strings — always strings, mapping through
+  your coercion layer. The conventions: prefix your vars
+  (`STATION_*`) to avoid collisions, `.get` with a default rather than
+  bracket-access-and-crash, and treat presence/absence as meaningful
+  (an unset var and an empty one may differ). Env vars are the standard
+  config channel for containers and CI precisely because they inject
+  per-deployment values without touching the image.
+
+  ### The twelve-factor idea
+
+  A widely-adopted discipline: **config that varies between deployments
+  lives in the environment, not the code or the repo.** Database URLs,
+  API endpoints, feature flags, and above all *secrets* differ between
+  dev, staging, and production — baking them into the code means
+  rebuilding to change them and, for secrets, committing them to
+  history. The rule that follows: code and config are separate, and the
+  same build runs everywhere, configured by its environment.
+
+  ### Secrets: the config that must not be config-in-a-file
+
+  ```text
+  NEVER          commit secrets to the repo (git history is forever)
+  NEVER          log them (the logging area's rule)
+  PREFER         inject via env vars or a secrets manager at runtime
+  ALWAYS         keep .env files out of version control (.gitignore)
+  ```
+
+  A password in a committed config file is compromised the moment the
+  repo is cloned, forked, or leaked — and rewriting git history rarely
+  fully removes it. The trust-boundary thinking from the security area
+  extends here: secrets enter at runtime, from a channel outside the
+  code, read but never written back out (not to logs, not to error
+  messages, not to `--show-config` output — mask them there). Your
+  provenance exercise from the last lesson gains a wrinkle in real
+  systems: show that a secret *came from* the environment, but show its
+  value as `********`.
+
+  ### The assembled loader
+
+  The professional config loader, composing this wave: read defaults
+  (code), parse the file (typed), overlay env vars (coerced,
+  prefixed), apply flags (from the CLI area), deep-merge by precedence,
+  validate into a typed settings object, track provenance, mask
+  secrets. Every piece is a pure function you have implemented or will;
+  the real-world layer is just choosing the channels. A program whose
+  config loads this way starts predictably, fails loudly on bad input,
+  explains its choices, and never leaks its secrets — which is the
+  entire job.
+checkpoints:
+  - question: What is the twelve-factor rule about configuration, and what problem does it solve?
+    answer: 'Config that varies between deployments (URLs, endpoints, secrets, flags) belongs in the environment, not in code or the repo — so the same build runs everywhere configured by its environment, without rebuilding to change a value or committing secrets to history.'
+    explanation: 'Separating config from code is what lets one artifact promote through dev/staging/prod, and it keeps deployment-specific secrets out of the source.'
+  - question: Why is committing a secret to a config file in the repo a serious problem even if later removed?
+    answer: 'Git history is effectively permanent and widely distributed — the secret exists in every clone, fork, and backup from the moment it is committed, and history rewrites rarely purge it everywhere; it must be considered compromised.'
+    explanation: 'Secrets must enter at runtime from a channel outside version control; a file in the repo is a public secret.'
+  - question: How should a --show-config feature treat a secret sourced from the environment?
+    answer: 'Show that the value came from the environment (its provenance) but mask the value itself as ******** — never printing the secret to output that may be logged, screenshotted, or shared.'
+    explanation: 'The read-but-never-emit discipline for secrets extends to every output channel, including diagnostics meant to be helpful.'

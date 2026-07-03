@@ -1,0 +1,96 @@
+id: quiz.library.scripting_automation.a02
+kind: quiz
+version: 1
+language: python
+title: The act Stage, Mechanically
+slug: quiz-scripting-automation-a02
+difficulty: medium
+concepts:
+  - python.pathlib_os
+prerequisites:
+  - python.pathlib_os
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.scripting_automation.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax quiz on shutil/os/tempfile mechanics, atomic writes, and safe subprocess calls.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: What distinguishes shutil.copy2 from shutil.copy?
+    choices:
+      - copy2 preserves metadata (timestamps and permissions) along with contents
+      - copy2 copies directories recursively
+      - copy2 is atomic while copy is not
+      - copy2 follows symlinks while copy copies them
+    correct_choice: copy2 preserves metadata (timestamps and permissions) along with contents
+    explanation: |
+      Archives and backups care about modification times; copy2 is copy plus
+      copystat, and choosing it deliberately is an archival habit.
+    concepts:
+      - python.pathlib_os
+  - id: q2
+    prompt: Why does the atomic-write idiom end with os.replace(tmp, dst) rather than os.rename?
+    choices:
+      - replace overwrites an existing destination atomically and portably; rename raises on Windows when dst exists
+      - replace is recursive
+      - rename cannot cross directories
+      - replace also fsyncs the file
+    correct_choice: replace overwrites an existing destination atomically and portably; rename raises on Windows when dst exists
+    explanation: |
+      Both are atomic within a filesystem on POSIX; replace's
+      overwrite-if-exists contract is what the swap-in-place idiom needs
+      everywhere.
+    concepts:
+      - python.pathlib_os
+  - id: q3
+    prompt: |
+      Path("data/../secrets").resolve() and why call it before any
+      destructive operation?
+    choices:
+      - It returns the real absolute path with .. and symlinks resolved — the truth about what you are about to touch
+      - It creates the directory if missing
+      - It checks read permissions
+      - It normalizes case on all platforms
+    correct_choice: It returns the real absolute path with .. and symlinks resolved — the truth about what you are about to touch
+    explanation: |
+      Apparent paths lie; resolve() canonicalizes so a containment check
+      (is this inside my sandbox root?) means what it says before rmtree
+      acts.
+    concepts:
+      - python.pathlib_os
+      - python.secure_coding
+  - id: q4
+    prompt: |
+      Which subprocess.run call is correct for running git status in a
+      script that must notice failures?
+    choices:
+      - subprocess.run(["git", "status"], capture_output=True, text=True, check=True)
+      - subprocess.run("git status", shell=True)
+      - os.system("git status")
+      - subprocess.run(["git status"], check=True)
+    correct_choice: subprocess.run(["git", "status"], capture_output=True, text=True, check=True)
+    explanation: |
+      List-form arguments avoid shell injection, text=True decodes output,
+      and check=True raises on nonzero exit — the three habits of safe
+      orchestration. ["git status"] is one unfindable program name.
+    concepts:
+      - python.pathlib_os
+      - python.secure_coding
+  - id: q5
+    prompt: Path("archive").glob("**/*.raw") does what?
+    choices:
+      - Lazily yields every .raw file at any depth under archive/ — the recursive gather stage in one call
+      - Returns a list of filename strings in archive/ only
+      - Matches only files exactly two levels deep
+      - Downloads matching files
+    correct_choice: Lazily yields every .raw file at any depth under archive/ — the recursive gather stage in one call
+    explanation: |
+      The ** pattern recurses; the result is a generator of Path objects —
+      feed it to a pure selection predicate and the gather stage is done.
+    concepts:
+      - python.pathlib_os

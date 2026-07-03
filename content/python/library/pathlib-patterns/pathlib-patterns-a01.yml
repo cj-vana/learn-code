@@ -1,0 +1,97 @@
+id: exercise.library.pathlib_patterns.a01
+kind: exercise
+version: 1
+language: python
+title: Sorting Exposures by Extension
+slug: pathlib-patterns-a01
+difficulty: easy
+concepts:
+  - python.pathlib_os
+  - python.strings
+prerequisites:
+  - python.strings
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.pathlib_patterns.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original ridge-top observatory framing for reading a file suffix with PurePosixPath.
+prompt_markdown: |
+  A ridge-top observatory files every exposure it captures under a path like
+  `logs/2026/aurora.raw`. The archivist needs each file's **extension** so the
+  pipeline can hand the frame to the right decoder.
+
+  Write `get_extension(path_str)` that returns the extension of the final path
+  component, **including the leading dot** (so `logs/2026/aurora.raw` returns
+  `.raw`). The rules:
+
+  - A name with no dot, such as `harbor/manifest`, has no extension: return `''`.
+  - Only the last extension counts: `field.tar.gz` returns `.gz`, not `.tar.gz`.
+  - A leading-dot name like `.seedlog` is a hidden file, not an extension, so it
+    returns `''`.
+  - The extension keeps its original case: `cam/night.MP4` returns `.MP4`.
+
+  Use `pathlib.PurePosixPath`, which parses the string as a pure path with no
+  access to any real disk.
+starter_code: |
+  from pathlib import PurePosixPath
+
+
+  def get_extension(path_str):
+      return ""
+function_name: get_extension
+input_mode: function
+solution_sketch: Wrap the string in PurePosixPath and return its .suffix attribute, which already includes the leading dot and is "" when there is no extension.
+sample_solution: |
+  from pathlib import PurePosixPath
+
+
+  def get_extension(path_str):
+      return PurePosixPath(path_str).suffix
+hints:
+  - level: 1
+    text: PurePosixPath parses a path string without touching the filesystem, and it exposes the parts you need as attributes.
+  - level: 2
+    text: The .suffix attribute gives the last extension with its leading dot, or an empty string when the name has none.
+  - level: 3
+    text: Return PurePosixPath(path_str).suffix directly; it already returns "" for names like "manifest" and ".seedlog".
+tests:
+  public:
+    - name: simple_raw
+      input: "logs/2026/aurora.raw"
+      expected: ".raw"
+    - name: no_extension
+      input: "harbor/manifest"
+      expected: ""
+    - name: only_last
+      input: "field.tar.gz"
+      expected: ".gz"
+  validation:
+    - name: hidden_dotfile
+      input: ".seedlog"
+      expected: ""
+    - name: keeps_case
+      input: "cam/night.MP4"
+      expected: ".MP4"
+    - name: double_extension
+      input: "backups/nightly.tar.bz2"
+      expected: ".bz2"
+    - name: single_component
+      input: "readme.md"
+      expected: ".md"
+explanation_markdown: |
+  `PurePosixPath` is the filesystem-free half of `pathlib`: it parses a path
+  string into components you can query, but never reads a disk, so it is safe and
+  deterministic. Its `.suffix` attribute returns the final extension **with** the
+  leading dot, and an empty string when there is none. Two edge cases trip people
+  up: a name like `field.tar.gz` has suffix `.gz` (only the last dot counts, use
+  `.suffixes` for the full list), and a leading-dot name like `.seedlog` is
+  treated as a hidden file with no extension rather than an extension of
+  `seedlog`. Reading the attribute directly beats slicing the string by hand.
+common_mistakes:
+  - Splitting on "." and taking the last piece, which wrongly turns ".seedlog" into "seedlog" and loses the leading dot.
+  - Returning the extension without the dot, so ".raw" comes back as "raw" and mismatches the expected value.
+  - Treating "field.tar.gz" as a two-part ".tar.gz" extension instead of just the final ".gz".

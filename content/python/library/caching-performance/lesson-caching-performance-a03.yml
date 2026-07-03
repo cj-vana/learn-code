@@ -1,0 +1,101 @@
+id: lesson.library.caching_performance.a03
+kind: lesson
+version: 1
+language: python
+title: 'Reading Big-O in Real Code'
+slug: lesson-caching-performance-a03
+difficulty: medium
+concepts:
+  - concepts.performance
+  - concepts.big_o
+prerequisites:
+  - concepts.performance
+  - concepts.big_o
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.caching_performance.a03
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original applied-Big-O walkthrough focused on spotting hidden costs in idiomatic Python, with fresh worked examples.
+body_markdown: |
+  You learned Big-O as theory. This lesson is Big-O as a *reading skill*
+  — spotting, in ordinary-looking Python, the accidental quadratic that
+  runs fine on your test data and dies in production. Nearly every real
+  performance bug is one of a handful of patterns.
+
+  ### The hidden costs of innocent operations
+
+  The single most important table in practical Python performance:
+
+  ```text
+  x in list          O(n)   — scans every element
+  x in set / dict    O(1)   — hashes straight to the answer
+  list.insert(0, x)  O(n)   — shifts everything right
+  deque.appendleft   O(1)   — the right tool for a front queue
+  "".join(parts)     O(n)   — one pass
+  s += piece (loop)  O(n²)  — rebuilds the whole string each time
+  ```
+
+  Each pairs an innocent-looking operation with its true cost. The
+  operations *look* the same; their scaling does not.
+
+  ### The accidental quadratic
+
+  The classic, and your central exercise to spot:
+
+  ```python
+  seen = []
+  for row in rows:
+      if row.id not in seen:        # O(n) membership, inside an O(n) loop
+          seen.append(row.id)       # => O(n²) total
+  ```
+
+  On 100 rows, instant. On 100,000, it runs for minutes — because the
+  `in` scans a list that grows with the loop. The fix is one word: make
+  `seen` a **set**, and O(n²) becomes O(n). The tell is structural — a
+  linear scan (`in list`, `.index`, a nested loop) *inside* another loop
+  over the same-scale data. Learn to see that nesting and you catch most
+  performance bugs before they ship.
+
+  The string cousin: `result += line` in a loop is O(n²) (strings are
+  immutable — each `+=` copies the whole accumulated string); collect
+  into a list and `"".join(parts)` once for O(n). Same shape, same fix:
+  the repeated operation secretly rebuilds a growing structure.
+
+  ### Choose the container for the access pattern
+
+  Most "make it faster" reduces to picking the right container:
+
+  - membership tests, dedup → **set** (O(1)) not list (O(n))
+  - lookup by key → **dict** (O(1)) not a list of pairs scanned
+  - front-and-back queue → **deque** not list (`pop(0)` is O(n))
+  - "top k" or "next smallest" repeatedly → **heap** not repeated sorting
+
+  Every one of these is a data-structure choice you already know from
+  the algorithms areas; performance work is applying that knowledge to
+  the *access pattern the code actually has*.
+
+  ### The discipline
+
+  Two rules close the area. **Measure before optimizing** — profile to
+  find the actual hot spot; intuition about what is slow is wrong often
+  enough that guessing wastes effort on code that runs once. And
+  **optimize complexity before constants** — an O(n) algorithm in
+  "slow" Python beats an O(n²) one hand-tuned in C for any n that
+  matters; getting the Big-O right is worth more than every micro-trick
+  combined. Read code for its scaling, fix the algorithm and the
+  container, measure to confirm — that, not cleverness, is how Python
+  gets fast.
+checkpoints:
+  - question: What is the structural "tell" of an accidental quadratic, and give the canonical example and fix.
+    answer: 'A linear-cost operation — `x in list`, `.index`, or a nested loop — placed INSIDE another loop over same-scale data; the canonical case is dedup with `if x not in seen_list`, fixed by making seen a set so membership is O(1) and the whole loop O(n).'
+    explanation: 'Spotting scan-inside-loop over growing data catches the majority of real performance bugs, which pass small tests and fail at scale.'
+  - question: Why is building a string with += in a loop O(n squared), and what is the O(n) replacement?
+    answer: 'Strings are immutable, so each += copies the entire accumulated string, and copying a growing string n times sums to O(n squared); collecting pieces into a list and calling "".join(parts) once builds the result in a single O(n) pass.'
+    explanation: 'The immutable-rebuild pattern is the string twin of the list-membership quadratic — same shape, same one-container fix.'
+  - question: State the two closing performance disciplines and why each matters.
+    answer: 'Measure before optimizing — profiling finds the real hot spot because intuition about slowness is frequently wrong; and optimize complexity before constants — a better Big-O beats any micro-optimization for inputs that matter, so fixing the algorithm and container outweighs clever tricks.'
+    explanation: 'Both rules direct effort where it pays: the actual bottleneck, and the asymptotic behavior that dominates at scale.'

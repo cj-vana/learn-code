@@ -1,0 +1,121 @@
+id: exercise.library.sqlite_patterns.a01
+kind: exercise
+version: 1
+language: python
+title: Logging the Morning Arrivals
+slug: sqlite-patterns-a01
+difficulty: easy
+concepts:
+  - python.sqlite_sql
+  - python.dictionaries
+prerequisites:
+  - python.lists
+  - python.dictionaries
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sqlite_patterns.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original create-table-and-insert drill framed as a harbormaster recording arriving vessels into a fresh in-memory table.
+prompt_markdown: |
+  A harbormaster starts every shift with an empty logbook and records each vessel
+  as it arrives. Model that logbook with a real SQLite database created fresh in
+  memory, so nothing touches the disk.
+
+  Write `create_and_insert(arrivals)` where `arrivals` is a list of dictionaries,
+  each with two keys:
+
+  - `"vessel"`: the ship's name, a string
+  - `"tonnage"`: its displacement, a non-negative integer
+
+  Inside the function, open an in-memory database with
+  `sqlite3.connect(":memory:")`, create a table with a `vessel` text column and a
+  `tonnage` integer column, insert one row per arrival using a parameterised
+  `INSERT`, and return the number of rows now stored in the table (obtained with a
+  `SELECT COUNT(*)`, not `len(arrivals)`).
+
+  An empty list creates the table but inserts nothing, so the count is `0`.
+  Duplicate vessel names are still separate arrivals and each counts once.
+starter_code: |
+  import sqlite3
+
+
+  def create_and_insert(arrivals):
+      return 0
+function_name: create_and_insert
+input_mode: function
+solution_sketch: Connect to an in-memory database, CREATE the arrivals table, executemany a parameterised INSERT over the records, then SELECT COUNT(*) and return the single integer.
+sample_solution: |
+  import sqlite3
+
+
+  def create_and_insert(arrivals):
+      conn = sqlite3.connect(":memory:")
+      try:
+          conn.execute("CREATE TABLE arrivals (vessel TEXT, tonnage INTEGER)")
+          conn.executemany(
+              "INSERT INTO arrivals (vessel, tonnage) VALUES (?, ?)",
+              [(row["vessel"], row["tonnage"]) for row in arrivals],
+          )
+          conn.commit()
+          (count,) = conn.execute("SELECT COUNT(*) FROM arrivals").fetchone()
+          return count
+      finally:
+          conn.close()
+hints:
+  - level: 1
+    text: Open the database with sqlite3.connect(":memory:") so the table lives only for the length of the call, then run a CREATE TABLE statement before inserting anything.
+  - level: 2
+    text: executemany lets you insert every record in one call; pass a list of (vessel, tonnage) tuples and use ? placeholders so the values are bound, never formatted into the SQL string.
+  - level: 3
+    text: After inserting, run SELECT COUNT(*) FROM arrivals and unpack the single cell from fetchone(); return that number so an empty input naturally yields 0.
+tests:
+  public:
+    - name: empty_logbook
+      input: []
+      expected: 0
+    - name: single_arrival
+      input:
+        - {vessel: Meridian, tonnage: 4200}
+      expected: 1
+    - name: three_arrivals
+      input:
+        - {vessel: Meridian, tonnage: 4200}
+        - {vessel: Halcyon, tonnage: 1875}
+        - {vessel: Tasman, tonnage: 9600}
+      expected: 3
+  validation:
+    - name: duplicate_names_count_separately
+      input:
+        - {vessel: Corsair, tonnage: 3300}
+        - {vessel: Corsair, tonnage: 3300}
+      expected: 2
+    - name: five_arrivals
+      input:
+        - {vessel: Meridian, tonnage: 4200}
+        - {vessel: Halcyon, tonnage: 1875}
+        - {vessel: Tasman, tonnage: 9600}
+        - {vessel: Corsair, tonnage: 3300}
+        - {vessel: Petrel, tonnage: 520}
+      expected: 5
+    - name: zero_tonnage_still_a_row
+      input:
+        - {vessel: Dinghy, tonnage: 0}
+      expected: 1
+explanation_markdown: |
+  `sqlite3.connect(":memory:")` gives you a genuine relational database that never
+  touches the filesystem and vanishes when the connection closes, which is exactly
+  what you want for a deterministic, sandbox-safe drill. The lifecycle here is the
+  one every SQLite program follows: create the schema once, insert rows with bound
+  `?` placeholders, commit, then query. Returning `SELECT COUNT(*)` rather than
+  `len(arrivals)` proves the rows actually landed in the table instead of trusting
+  the input, and it means an empty logbook and a five-vessel morning both report
+  the count the database itself holds. `executemany` binds each tuple in turn, so
+  parameterisation also protects you from any awkward characters in a vessel name.
+common_mistakes:
+  - Returning len(arrivals) instead of querying the table, which never verifies the inserts and defeats the point of using a database.
+  - Formatting values straight into the SQL string instead of binding them with ? placeholders, which is both unsafe and error-prone.
+  - Forgetting to create the table before inserting, so the first INSERT raises an OperationalError about a missing table.

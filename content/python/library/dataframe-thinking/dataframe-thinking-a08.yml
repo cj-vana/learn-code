@@ -1,0 +1,195 @@
+id: exercise.library.dataframe_thinking.a08
+kind: exercise
+version: 1
+language: python
+title: Enriching the Market Ledger
+slug: dataframe-thinking-a08
+difficulty: medium
+concepts:
+  - concepts.dataframe_thinking
+  - patterns.hash_map_counting
+  - python.dictionaries
+prerequisites:
+  - python.dictionaries
+  - python.loops
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dataframe_thinking.a08
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original left-join / lookup-enrichment drill framed around a farmers market attaching stall metadata to sales rows, with an explicit fill value for unmatched rows.
+prompt_markdown: |
+  A farmers market records a **sales** table (one row per sale) and keeps a small
+  **stall directory** used as a lookup. The clerk wants every sales row kept, with
+  the matching stall details attached — the shape of a *left join* against a lookup
+  table.
+
+  Write `left_join(payload)` that takes **one dictionary** with four entries:
+
+  - `"left"`: a list of dictionaries (the sales rows). Every row has the key field.
+  - `"right"`: a list of dictionaries (the stall directory). Every directory row
+    has the key field, and **all directory rows share the same set of columns**.
+  - `"key"`: the string name of the field to join on.
+  - `"fill"`: the value to use for a directory column when a sales row has no match.
+
+  Example call:
+
+  ```python
+  left_join({
+      "left": [{"stall": "A", "qty": 3}, {"stall": "Z", "qty": 9}],
+      "right": [{"stall": "A", "vendor": "Rosa"}],
+      "key": "stall",
+      "fill": "unknown",
+  })
+  # -> [{"stall": "A", "qty": 3, "vendor": "Rosa"},
+  #     {"stall": "Z", "qty": 9, "vendor": "unknown"}]
+  ```
+
+  Return a **list of merged dictionaries**, one per left row, in left-row order:
+
+  - The directory columns are every field on the directory rows **except** the key,
+    in the order they first appear while scanning the directory top to bottom.
+  - Build the lookup so that if a key value appears in several directory rows, the
+    **first** occurrence is the one used.
+  - For a left row whose key value is in the directory, attach each directory
+    column from the matched row; on any field the two rows share, the **right
+    (directory) value wins**.
+  - For a left row with no match, attach every directory column set to `"fill"`.
+  - Every left row is kept, even unmatched ones.
+  - If the directory is empty there are no directory columns, so each output row is
+    just a copy of its left row.
+  - If the left list is empty, return an empty list.
+starter_code: |
+  def left_join(payload):
+      return []
+function_name: left_join
+input_mode: function
+solution_sketch: Scan the directory once to record the first row per key and the ordered list of non-key columns, then copy each left row and, for every directory column, write the matched value or the fill when there is no match.
+sample_solution: |
+  def left_join(payload):
+      left = payload["left"]
+      right = payload["right"]
+      key = payload["key"]
+      fill = payload["fill"]
+      index = {}
+      columns = []
+      for row in right:
+          k = row[key]
+          if k not in index:
+              index[k] = row
+          for col in row:
+              if col != key and col not in columns:
+                  columns.append(col)
+      result = []
+      for row in left:
+          merged = dict(row)
+          match = index.get(row[key])
+          for col in columns:
+              if match is not None and col in match:
+                  merged[col] = match[col]
+              else:
+                  merged[col] = fill
+          result.append(merged)
+      return result
+hints:
+  - level: 1
+    text: Turn the directory into a key -> row lookup so each sales row resolves its match with one dictionary read instead of a scan.
+  - level: 2
+    text: Collect the directory's non-key column names once, in first-seen order, so matched and unmatched rows all gain the same columns in the same order.
+  - level: 3
+    text: Copy the left row, then for each directory column write the matched value when there is a match and the fill value otherwise; keep only the first directory row per key so duplicates do not overwrite it.
+tests:
+  public:
+    - name: all_match
+      input:
+        left:
+          - {stall: "A", qty: 3}
+          - {stall: "B", qty: 5}
+        right:
+          - {stall: "A", vendor: "Rosa"}
+          - {stall: "B", vendor: "Kai"}
+        key: stall
+        fill: "unknown"
+      expected:
+        - {stall: "A", qty: 3, vendor: "Rosa"}
+        - {stall: "B", qty: 5, vendor: "Kai"}
+    - name: unmatched_gets_fill
+      input:
+        left:
+          - {stall: "A", qty: 3}
+          - {stall: "Z", qty: 9}
+        right:
+          - {stall: "A", vendor: "Rosa", region: "north"}
+        key: stall
+        fill: "unknown"
+      expected:
+        - {stall: "A", qty: 3, vendor: "Rosa", region: "north"}
+        - {stall: "Z", qty: 9, vendor: "unknown", region: "unknown"}
+    - name: empty_left
+      input:
+        left: []
+        right:
+          - {stall: "A", vendor: "Rosa"}
+        key: stall
+        fill: "unknown"
+      expected: []
+  validation:
+    - name: duplicate_directory_first_wins
+      input:
+        left:
+          - {stall: "A", qty: 3}
+        right:
+          - {stall: "A", vendor: "Rosa"}
+          - {stall: "A", vendor: "Kai"}
+        key: stall
+        fill: "unknown"
+      expected:
+        - {stall: "A", qty: 3, vendor: "Rosa"}
+    - name: collision_right_wins
+      input:
+        left:
+          - {stall: "A", qty: 3, region: "south"}
+        right:
+          - {stall: "A", region: "north", vendor: "Rosa"}
+        key: stall
+        fill: "unknown"
+      expected:
+        - {stall: "A", qty: 3, region: "north", vendor: "Rosa"}
+    - name: empty_directory_copies_left
+      input:
+        left:
+          - {stall: "A", qty: 3}
+        right: []
+        key: stall
+        fill: "unknown"
+      expected:
+        - {stall: "A", qty: 3}
+    - name: numeric_fill_for_unmatched
+      input:
+        left:
+          - {stall: "X", qty: 1}
+        right:
+          - {stall: "A", vendor: "Rosa", region: "north"}
+        key: stall
+        fill: 0
+      expected:
+        - {stall: "X", qty: 1, vendor: 0, region: 0}
+explanation_markdown: |
+  A left join keeps the left table intact and decorates it with columns pulled from
+  a lookup. The clean implementation separates two concerns: which directory row
+  matches a key (a `key -> row` index, first occurrence wins), and which columns to
+  add (the directory's non-key fields, captured once in a stable order so every
+  output row — matched or not — has the same shape).
+
+  Copying the left row before writing keeps the caller's data untouched, and
+  writing the directory columns after the copy is what makes the right side win on
+  shared fields. Unmatched rows are not dropped; they simply receive the fill value
+  in every directory column, which is exactly how a dataframe left-merge marks the
+  gaps (there it would be `NaN`; here you choose the sentinel).
+common_mistakes:
+  - Dropping unmatched left rows, which turns the left join back into an inner join.
+  - Letting a later duplicate directory row overwrite the first, instead of keeping the first occurrence.
+  - Giving matched and unmatched rows different column sets, so the output table has ragged, inconsistent keys.

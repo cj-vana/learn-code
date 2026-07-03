@@ -1,0 +1,108 @@
+id: lesson.library.functools_operator.a01
+kind: lesson
+version: 1
+language: python
+title: 'functools: partial, singledispatch, and the Cache You Can Read'
+slug: lesson-functools-operator-a01
+difficulty: medium
+concepts:
+  - python.functools_operator
+prerequisites:
+  - python.closures_decorators
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.functools_operator.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original functools tour framed around a picture-framing workshop's pricing code, with fresh worked examples.
+body_markdown: |
+  The decorators unit taught you to build function machinery by hand.
+  `functools` is the standard library's box of the machinery everyone
+  builds — knowing it well is the difference between rewriting classics
+  and reaching for them.
+
+  ### partial: freeze some arguments
+
+  A framing workshop prices cuts with one general function, but three
+  materials dominate. `partial` builds the specialists:
+
+  ```python
+  from functools import partial
+
+  def price_cut(material_rate, waste_factor, length):
+      return round(material_rate * length * waste_factor, 2)
+
+  price_oak = partial(price_cut, 4.50, 1.15)
+  price_pine = partial(price_cut, 2.10, 1.05)
+  price_oak(30)     # price_cut(4.50, 1.15, 30)
+  ```
+
+  A partial is configuration-as-function: the frozen arguments travel
+  with the callable, so `map(price_oak, lengths)` and callback registries
+  just work. It replaces both the lambda that forwards arguments and the
+  tiny wrapper class — with introspectable attributes (`.func`, `.args`)
+  the alternatives lack.
+
+  ### singledispatch: polymorphism for functions
+
+  When behavior varies by the *type of the first argument*, the
+  OOP answer is methods. But when you cannot (or should not) add methods
+  to the types — built-ins, other people's classes — `singledispatch`
+  gives a function family with per-type implementations:
+
+  ```python
+  from functools import singledispatch
+
+  @singledispatch
+  def describe(item):
+      return f"unknown: {item!r}"        # the fallback
+
+  @describe.register
+  def _(item: int):
+      return f"{item} units"
+
+  @describe.register
+  def _(item: list):
+      return f"batch of {len(item)}"
+  ```
+
+  Dispatch follows the argument's type (respecting inheritance and the
+  MRO — your internals unit at work), falling back to the base
+  implementation for unregistered types. It is the clean replacement for
+  the isinstance ladder that grows a new elif every month.
+
+  ### lru_cache: memoization with a dashboard
+
+  You built memo dicts by hand in the DP unit; `@lru_cache(maxsize=128)`
+  is that pattern industrialized — with eviction (least-recently-used
+  beyond maxsize) and, crucially, **observability**:
+
+  ```python
+  @lru_cache(maxsize=64)
+  def veneer_area(width, height): ...
+
+  veneer_area.cache_info()   # CacheInfo(hits=812, misses=64, maxsize=64, currsize=64)
+  ```
+
+  `cache_info()` turns "is the cache helping?" from a guess into a
+  reading — hits versus misses is the whole story. Two contracts to
+  respect: arguments must be hashable (lists fail — convert to tuples),
+  and `typed=True` splits entries that compare equal but differ in type
+  (`1` vs `1.0`), which matters when behavior depends on the type. And
+  `maxsize=None` (spelled `@cache` since 3.9) means *unbounded* — the
+  right choice only when the argument space is provably small, otherwise
+  it is the memory leak from your memory-model unit with a decorator on
+  top.
+checkpoints:
+  - question: What does partial produce, and why does it beat a lambda for freezing configuration into a callable?
+    answer: 'A callable object that stores the original function plus frozen arguments and forwards calls with them prepended; unlike a lambda it is introspectable (.func, .args), picklable in many cases, and states its intent — configuration bound to a function.'
+    explanation: partial is configuration-as-function — the tool whenever an API wants a callable but your function needs extra arguments fixed first.
+  - question: When is singledispatch the right dispatch tool rather than methods on classes?
+    answer: 'When behavior varies by the type of a value you don''t own — built-ins, third-party or mixed types — so you cannot add methods; registered implementations dispatch on the first argument''s type with MRO-aware resolution and a base-function fallback.'
+    explanation: It converts the ever-growing isinstance ladder into open, per-type registrations that other modules can extend.
+  - question: A teammate replaces @lru_cache(maxsize=256) with @cache on a function keyed by user ids. What risk did they just introduce, and what tool reveals it?
+    answer: '@cache is unbounded — with an open-ended key space the cache grows forever, a decorator-shaped memory leak; cache_info()''s currsize (and hit/miss ratio) makes the growth and the benefit measurable.'
+    explanation: Bounded-versus-unbounded is a memory-model decision, and cache_info is the dashboard that keeps it honest.

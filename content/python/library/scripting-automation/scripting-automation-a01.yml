@@ -1,0 +1,152 @@
+id: exercise.library.scripting_automation.a01
+kind: exercise
+version: 1
+language: python
+title: Sorting the Observatory Export Bin
+slug: scripting-automation-a01
+difficulty: easy
+concepts:
+  - python.pathlib_os
+  - concepts.grouping_aggregation
+prerequisites:
+  - python.lists
+  - python.dictionaries
+  - python.strings
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.scripting_automation.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original file-bucketing drill framed around a night observatory's nightly capture-export folder; operates on record dicts, never real files.
+prompt_markdown: |
+  Each morning a mountaintop observatory dumps the night's captures into an export
+  bin. The overnight process hands you a list of file records, one dict per file
+  shaped like `{"name": "orion.fits", "size": 820}`. Before anything gets archived
+  you need to bucket the filenames by their extension.
+
+  Write `group_files_by_extension(records)` that returns a dict mapping each
+  extension to the list of file names that carry it, keeping names in the order
+  they appear in the input.
+
+  Rules for the extension key:
+
+  - The extension is the text after the final dot in the file name, lowercased and
+    written **without** the leading dot. So `orion.fits` and `M31.FITS` both group
+    under `"fits"`.
+  - A name with more than one dot uses only its last piece: `backup.tar.gz` groups
+    under `"gz"`.
+  - A name with no extension (`README`) or a dot-only name (`.env`) has an empty
+    extension, so it groups under the empty-string key `""`.
+
+  An empty input returns an empty dict `{}`. This is pure planning logic: you never
+  open a real file, you only read the record dicts.
+starter_code: |
+  from pathlib import PurePath
+
+
+  def group_files_by_extension(records):
+      return {}
+function_name: group_files_by_extension
+input_mode: function
+solution_sketch: For each record, take PurePath(name).suffix, drop the leading dot and lowercase it, then append the name to that key's list built with dict.setdefault.
+sample_solution: |
+  from pathlib import PurePath
+
+
+  def group_files_by_extension(records):
+      groups = {}
+      for record in records:
+          ext = PurePath(record["name"]).suffix[1:].lower()
+          groups.setdefault(ext, []).append(record["name"])
+      return groups
+hints:
+  - level: 1
+    text: PurePath(name).suffix gives you the last extension including its dot, or an empty string when there is none.
+  - level: 2
+    text: Turn ".FITS" into "fits" by slicing off the first character with suffix[1:] and calling .lower(); the empty string stays empty.
+  - level: 3
+    text: Use groups.setdefault(ext, []).append(record["name"]) so the first sighting of an extension creates its list and later ones extend it.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: {}
+    - name: single_file
+      input:
+        - name: orion.fits
+          size: 820
+      expected:
+        fits:
+          - orion.fits
+    - name: two_extensions
+      input:
+        - name: orion.fits
+          size: 820
+        - name: log.txt
+          size: 4
+        - name: M31.FITS
+          size: 910
+      expected:
+        fits:
+          - orion.fits
+          - M31.FITS
+        txt:
+          - log.txt
+  validation:
+    - name: no_extension
+      input:
+        - name: README
+          size: 2
+        - name: notes
+          size: 3
+      expected:
+        '':
+          - README
+          - notes
+    - name: dotfile_has_no_extension
+      input:
+        - name: ".env"
+          size: 1
+      expected:
+        '':
+          - ".env"
+    - name: multi_dot_uses_last
+      input:
+        - name: backup.tar.gz
+          size: 500
+        - name: data.csv
+          size: 30
+        - name: backup.tar.gz
+          size: 501
+      expected:
+        gz:
+          - backup.tar.gz
+          - backup.tar.gz
+        csv:
+          - data.csv
+    - name: case_folded
+      input:
+        - name: A.PNG
+          size: 10
+        - name: b.png
+          size: 11
+      expected:
+        png:
+          - A.PNG
+          - b.png
+explanation_markdown: |
+  `PurePath` parses path *strings* without ever touching a disk, which is exactly
+  what an automation pre-flight wants: it plans against records, not live files.
+  `.suffix` returns the final extension with its dot (`".fits"`) or `""` when there
+  is none, so `suffix[1:].lower()` normalizes every file to a bare, case-folded
+  bucket key. Building the dict with `setdefault(ext, [])` means the first file of a
+  kind creates its list and every later file of the same kind appends to it, so the
+  names inside each bucket stay in first-seen order. The whole pass is O(n) over the
+  records.
+common_mistakes:
+  - Splitting on the first dot instead of the last, so backup.tar.gz lands under "tar" rather than "gz".
+  - Forgetting to lowercase, which scatters orion.fits and M31.FITS into separate "fits" and "FITS" buckets.
+  - Leaving the leading dot on the key so groups look like ".fits" instead of "fits".

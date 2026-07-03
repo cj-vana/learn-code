@@ -1,0 +1,156 @@
+id: exercise.library.concurrency_foundations.a07
+kind: exercise
+version: 1
+language: python
+title: Sharing the Observatory Telescope
+slug: concurrency-foundations-a07
+difficulty: hard
+concepts:
+  - python.concurrency_model
+  - patterns.simulation
+prerequisites:
+  - python.lists
+  - python.loops
+estimated_time_minutes: 24
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.concurrency_foundations.a07
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original round-robin-with-quantum scheduler framed as observation programs time-slicing a shared telescope; models cooperative preemption deterministically without real threads.
+prompt_markdown: |
+  A mountaintop observatory lets several observation programs share one telescope.
+  A scheduler runs them in a fixed round-robin so the night is deterministic: no
+  real threads, no timers, just a repeatable interleave you can reason about.
+
+  Write `simulate_interleaving(payload)`. The single argument is a dict:
+
+  - `payload["threads"]`: a list of programs. Each program is a list of operation
+    labels (strings) that must run in the given order.
+  - `payload["quantum"]`: a positive integer, the number of operations a program
+    is allowed to run before the scheduler moves on to give the next program a turn.
+
+  Run the scheduler like this and return the flat list of executed operations:
+
+  - Start with program index 0. Run up to `quantum` of its remaining operations
+    (fewer if it has fewer left). Each executed operation is recorded as the string
+    `"T{i}:{op}"`, where `i` is the program's index and `op` is the label — for
+    example program 0 running label `a` records `"T0:a"`.
+  - After the current program takes its turn, hand control to the next program
+    (searching forward by index and wrapping around past the last program back to 0)
+    that still has operations left. That may be the same program again if it is the
+    only one with work remaining.
+  - Continue until every program is exhausted, then return the recorded list.
+
+  Programs that are empty from the start are simply skipped. If `threads` is empty,
+  return `[]`. A program keeps its remaining operations between turns — a turn never
+  restarts a program from its first operation.
+
+  Example: `{"threads": [["a", "b", "c"], ["x", "y"]], "quantum": 2}` returns
+  `["T0:a", "T0:b", "T1:x", "T1:y", "T0:c"]`.
+starter_code: |
+  def simulate_interleaving(payload):
+      return []
+function_name: simulate_interleaving
+input_mode: function
+solution_sketch: Track a cursor per program. Repeatedly run up to quantum ops from the current program, then scan forward (wrapping) for the next program that still has ops; stop when none remain.
+sample_solution: |
+  def simulate_interleaving(payload):
+      threads = [list(program) for program in payload["threads"]]
+      quantum = payload["quantum"]
+      n = len(threads)
+      if n == 0:
+          return []
+      cursor = [0] * n
+
+      def next_ready(start):
+          for step in range(n):
+              j = (start + step) % n
+              if cursor[j] < len(threads[j]):
+                  return j
+          return -1
+
+      result = []
+      current = next_ready(0)
+      while current != -1:
+          taken = 0
+          while taken < quantum and cursor[current] < len(threads[current]):
+              op = threads[current][cursor[current]]
+              result.append(f"T{current}:{op}")
+              cursor[current] += 1
+              taken += 1
+          current = next_ready((current + 1) % n)
+      return result
+hints:
+  - level: 1
+    text: Keep a per-program cursor (index of the next operation to run) rather than mutating the program lists, so you always know where each program left off.
+  - level: 2
+    text: One outer step runs up to quantum operations from the current program; then you must find the next program to schedule by scanning indices forward from current+1 and wrapping with modulo.
+  - level: 3
+    text: A helper next_ready(start) that checks (start+step) % n for step in range(n) returns the next program whose cursor is still inside its list, or -1 when all are exhausted. Loop the whole thing while it is not -1.
+tests:
+  public:
+    - name: single_thread
+      input:
+        threads:
+          - [a, b, c]
+        quantum: 2
+      expected: ["T0:a", "T0:b", "T0:c"]
+    - name: two_even_quantum1
+      input:
+        threads:
+          - [a, b]
+          - [x, y]
+        quantum: 1
+      expected: ["T0:a", "T1:x", "T0:b", "T1:y"]
+    - name: empty
+      input:
+        threads: []
+        quantum: 3
+      expected: []
+  validation:
+    - name: uneven_quantum2
+      input:
+        threads:
+          - [a, b, c]
+          - [x, y]
+        quantum: 2
+      expected: ["T0:a", "T0:b", "T1:x", "T1:y", "T0:c"]
+    - name: three_threads
+      input:
+        threads:
+          - [a]
+          - [b, c]
+          - [d]
+        quantum: 1
+      expected: ["T0:a", "T1:b", "T2:d", "T1:c"]
+    - name: empty_thread_skipped
+      input:
+        threads:
+          - []
+          - [p, q]
+          - []
+        quantum: 5
+      expected: ["T1:p", "T1:q"]
+    - name: large_quantum
+      input:
+        threads:
+          - [a, b]
+          - [x]
+        quantum: 10
+      expected: ["T0:a", "T0:b", "T1:x"]
+explanation_markdown: |
+  This is cooperative round-robin scheduling, the same shape as a preemptive
+  runtime that lets each task run for a fixed slice before switching. The quantum
+  is the slice: run at most that many operations, then yield. The wrap-around scan
+  is the fairness rule — control always moves forward and cycles, so no ready
+  program is starved. Storing a cursor per program (instead of popping from the
+  lists) is what lets a program resume exactly where it paused. Because the rule is
+  fully specified and there is no real timing, the interleave is identical on every
+  run, which is exactly the property that makes concurrent logic testable.
+common_mistakes:
+  - Restarting a program from its first operation each turn instead of resuming from a saved cursor.
+  - Forgetting to wrap the search with modulo, so the last program never hands control back to earlier ones with work left.
+  - Advancing past the quantum even when the current program still has operations, or running the whole program in one turn and ignoring the quantum entirely.

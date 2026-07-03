@@ -1,0 +1,143 @@
+id: exercise.library.functional_style.a03
+kind: exercise
+version: 1
+language: python
+title: Filtering the Night Sky
+slug: functional-style-a03
+difficulty: medium
+concepts:
+  - python.functional_style
+  - patterns.filtering
+prerequisites:
+  - python.functions
+  - python.lists
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.functional_style.a03
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original map-then-filter drill framed as an observatory that transforms raw star readings and then keeps only those passing a named predicate.
+prompt_markdown: |
+  An observatory logs raw integer readings from a sensor sweep. The reduction
+  pipeline first **transforms** every reading, then **keeps** only the transformed
+  values that pass a test. This is a classic map-then-filter chain: transform
+  first, judge the transformed value second.
+
+  Write `map_filter_chain(spec)`. The single argument `spec` is a dict:
+
+  - `spec["items"]`: a list of integer readings.
+  - `spec["transform"]`: the name of the transformation applied to each reading.
+  - `spec["predicate"]`: the name of the test applied to each *transformed* value.
+
+  Transformations, applied to a reading `x`:
+
+  - `"double"` -> `x * 2`
+  - `"negate"` -> `-x`
+  - `"add_one"` -> `x + 1`
+  - `"square"` -> `x * x`
+  - `"identity"` -> `x`
+
+  Predicates, applied to the transformed value `y` (keep it when the test is true):
+
+  - `"is_positive"` -> `y > 0`
+  - `"is_even"` -> `y % 2 == 0`
+  - `"is_nonzero"` -> `y != 0`
+  - `"gt_ten"` -> `y > 10`
+
+  Return a list of the surviving transformed values, in their original order.
+  The predicate always tests the value *after* transformation, never the raw
+  reading. An empty `spec["items"]` returns an empty list.
+
+  Example: `{"items": [1, 2, 3, 4, 5], "transform": "square", "predicate": "gt_ten"}`
+  squares to `[1, 4, 9, 16, 25]` and keeps `[16, 25]`.
+starter_code: |
+  def map_filter_chain(spec):
+      return []
+function_name: map_filter_chain
+input_mode: function
+solution_sketch: Resolve the named transform and predicate from two registries, map the transform across the items, then filter the mapped values by the predicate and return them as a list.
+sample_solution: |
+  def map_filter_chain(spec):
+      transforms = {
+          "double": lambda x: x * 2,
+          "negate": lambda x: -x,
+          "add_one": lambda x: x + 1,
+          "square": lambda x: x * x,
+          "identity": lambda x: x,
+      }
+      predicates = {
+          "is_positive": lambda y: y > 0,
+          "is_even": lambda y: y % 2 == 0,
+          "is_nonzero": lambda y: y != 0,
+          "gt_ten": lambda y: y > 10,
+      }
+      transform = transforms[spec["transform"]]
+      predicate = predicates[spec["predicate"]]
+      return list(filter(predicate, map(transform, spec["items"])))
+hints:
+  - level: 1
+    text: Do the two steps in order, transform every reading first, then decide which transformed values to keep.
+  - level: 2
+    text: Look the transform and predicate up by name in two dicts so you have the actual one-argument functions to pass to map and filter.
+  - level: 3
+    text: map(transform, items) produces the transformed values lazily; wrap that in filter(predicate, ...) and call list(...) once to materialize the survivors in order.
+tests:
+  public:
+    - name: double_keep_positive
+      input:
+        items: [1, 2, 3, 4]
+        transform: "double"
+        predicate: "is_positive"
+      expected: [2, 4, 6, 8]
+    - name: empty_items
+      input:
+        items: []
+        transform: "square"
+        predicate: "is_even"
+      expected: []
+    - name: identity_positive
+      input:
+        items: [-2, -1, 0, 1, 2]
+        transform: "identity"
+        predicate: "is_positive"
+      expected: [1, 2]
+  validation:
+    - name: square_then_gt_ten
+      input:
+        items: [1, 2, 3, 4, 5]
+        transform: "square"
+        predicate: "gt_ten"
+      expected: [16, 25]
+    - name: negate_then_even
+      input:
+        items: [-3, -2, -1, 0]
+        transform: "negate"
+        predicate: "is_even"
+      expected: [2, 0]
+    - name: add_one_nonzero
+      input:
+        items: [5, -5, 3, -3]
+        transform: "add_one"
+        predicate: "is_nonzero"
+      expected: [6, -4, 4, -2]
+    - name: double_drops_zero
+      input:
+        items: [0, 1, 2, 3]
+        transform: "double"
+        predicate: "is_nonzero"
+      expected: [2, 4, 6]
+explanation_markdown: |
+  A map-then-filter chain keeps each responsibility separate: `map` reshapes the
+  data uniformly, `filter` decides membership. Because the predicate always runs
+  on the transformed value, the order of the two stages is part of the contract,
+  swapping them would judge raw readings and give different survivors. Resolving
+  the transform and predicate from registries keeps the pipeline data-driven, and
+  wrapping `filter` around `map` means nothing materializes until the final
+  `list(...)`, so the two passes fuse into one walk over the data.
+common_mistakes:
+  - Filtering the raw readings and then transforming, which tests the wrong values.
+  - Returning the lazy map or filter object instead of calling list(...) to produce a real list.
+  - Assuming "is_even" excludes negatives; in Python -2 % 2 == 0, so negative even numbers pass.

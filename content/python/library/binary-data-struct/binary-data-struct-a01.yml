@@ -1,0 +1,106 @@
+id: exercise.library.binary_data.a01
+kind: exercise
+version: 1
+language: python
+title: Radioing the Tide Gauge
+slug: binary-data-struct-a01
+difficulty: easy
+concepts:
+  - python.binary_data
+  - python.lists
+prerequisites:
+  - python.lists
+  - python.functions
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.binary_data.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original struct.pack drill framed as a harbor tide gauge encoding fixed-width telemetry before a radio burst.
+prompt_markdown: |
+  A harbor tide gauge encodes each reading as a fixed-width binary record before
+  radioing it ashore. Write `pack_record(record)` that receives a single
+  dictionary with two keys:
+
+  - `fmt`: a `struct` format string that always begins with a byte-order marker
+    (`>` for big-endian or `<` for little-endian), for example `">H"` or `"<I"`.
+  - `values`: a list of integers to encode, in order.
+
+  Pack the values with `struct.pack` using that format, then return the packed
+  bytes as a **list of integers** (one integer per byte, each in the range
+  0-255). Do not return a `bytes` object.
+
+  For example, `{"fmt": ">H", "values": [258]}` returns `[1, 2]`, because 258
+  fits in an unsigned short and packs big-endian into the two bytes `0x01`,
+  `0x02`. The little-endian format `{"fmt": "<H", "values": [258]}` returns the
+  same two bytes reversed: `[2, 1]`.
+
+  Edge case: if the format encodes no fields and `values` is empty (input
+  `{"fmt": ">", "values": []}`), `struct.pack` returns no bytes, so return an
+  empty list `[]`.
+starter_code: |
+  import struct
+
+
+  def pack_record(record):
+      return []
+function_name: pack_record
+input_mode: function
+solution_sketch: Read fmt and values from the dict, call struct.pack(fmt, *values) to get a bytes object, then convert it to a list of integers with list().
+sample_solution: |
+  import struct
+
+
+  def pack_record(record):
+      packed = struct.pack(record["fmt"], *record["values"])
+      return list(packed)
+hints:
+  - level: 1
+    text: struct.pack takes the format string first, then each field value as a separate argument, so you will need to spread the values list with the * operator.
+  - level: 2
+    text: Call struct.pack(record["fmt"], *record["values"]); this returns a bytes object such as b'\x01\x02'.
+  - level: 3
+    text: Iterating over a bytes object yields integers, so list(packed) turns b'\x01\x02' into [1, 2]. Return that list.
+tests:
+  public:
+    - name: big_endian_short
+      input: {fmt: ">H", values: [258]}
+      expected: [1, 2]
+    - name: four_byte_int
+      input: {fmt: ">I", values: [1]}
+      expected: [0, 0, 0, 1]
+    - name: little_endian_short
+      input: {fmt: "<H", values: [258]}
+      expected: [2, 1]
+  validation:
+    - name: mixed_widths
+      input: {fmt: ">HB", values: [258, 255]}
+      expected: [1, 2, 255]
+    - name: three_single_bytes
+      input: {fmt: ">BBB", values: [10, 20, 30]}
+      expected: [10, 20, 30]
+    - name: short_then_int
+      input: {fmt: ">HI", values: [4113, 1000000]}
+      expected: [16, 17, 0, 15, 66, 64]
+    - name: no_fields
+      input: {fmt: ">", values: []}
+      expected: []
+explanation_markdown: |
+  `struct.pack` is the standard-library workhorse for turning Python numbers into
+  a fixed-width byte layout. The leading `>` or `<` in the format string pins the
+  byte order (and, as a side effect, disables the native alignment padding you
+  would get from `@`), so every field lands at a predictable offset. The format
+  letters name the field widths: `H` is a 2-byte unsigned short, `I` a 4-byte
+  unsigned int, `B` a single unsigned byte.
+
+  Because `struct.pack` returns a `bytes` object and the platform serialises test
+  values as plain JSON, you convert to a list with `list(...)`; iterating a
+  `bytes` value yields the integer of each byte, which is exactly the wire
+  representation a receiver would read back.
+common_mistakes:
+  - Passing the values list as one argument (struct.pack(fmt, values)) instead of spreading it with struct.pack(fmt, *values).
+  - Returning the raw bytes object instead of converting it to a list of integers.
+  - Assuming ">H" and "<H" produce the same bytes; the byte-order marker reverses the order for multi-byte fields.

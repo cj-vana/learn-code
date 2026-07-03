@@ -1,0 +1,153 @@
+id: exercise.library.oop_internals.a03
+kind: exercise
+version: 1
+language: python
+title: The Printmaker's Lineage
+slug: oop-internals-a03
+difficulty: medium
+concepts:
+  - python.descriptors_mro
+  - python.classes
+prerequisites:
+  - python.dictionaries
+  - python.loops
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.oop_internals.a03
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original C3-linearization drill framed as apprenticeship lineages in a printmaking workshop, resolved by building real classes.
+prompt_markdown: |
+  A printmaking workshop tracks its apprenticeship lineages: every workshop role
+  inherits techniques from one or more parent roles. When a role uses a technique,
+  Python's **method resolution order** (MRO) — its C3 linearization — decides which
+  ancestor is consulted first. Your job is to report that order.
+
+  Write `printmaker_lineage(job)`. The single argument is a dict shaped like:
+
+  ```python
+  {
+      "bases": {"A": [], "B": ["A"], "C": ["A"], "D": ["B", "C"]},
+      "start": "D",
+  }
+  ```
+
+  - `bases` maps each role name to the ordered list of its direct parent roles. A
+    role with an empty list inherits only from `object`.
+  - `start` is the role whose MRO you must return.
+
+  Build the actual Python classes described by `bases` (a role can only be built
+  once all of its parents exist), then return the MRO of the `start` role as a list
+  of names. Always include the trailing `"object"`.
+
+  For the diamond above the answer is `["D", "B", "C", "A", "object"]`. A role with
+  no parents, e.g. `{"bases": {"X": []}, "start": "X"}`, returns `["X", "object"]`.
+
+  You do not need to implement C3 yourself — construct each class with
+  `type(name, bases_tuple, {})` and read the real `__mro__` Python computes.
+starter_code: |
+  def printmaker_lineage(job):
+      return []
+function_name: printmaker_lineage
+input_mode: function
+solution_sketch: Build classes in an order where every role's parents already exist, using type(name, tuple_of_base_objects, {}); then return [cls.__name__ for cls in start_cls.__mro__], which is Python's own C3 linearization including object.
+sample_solution: |
+  def printmaker_lineage(job):
+      spec = job["bases"]
+      start = job["start"]
+
+      built = {}
+      remaining = dict(spec)
+      while remaining:
+          progressed = False
+          for name in list(remaining):
+              parent_names = remaining[name]
+              if all(parent in built for parent in parent_names):
+                  bases = tuple(built[parent] for parent in parent_names)
+                  built[name] = type(name, bases, {})
+                  del remaining[name]
+                  progressed = True
+          if not progressed:
+              raise ValueError("unresolvable lineage")
+
+      return [cls.__name__ for cls in built[start].__mro__]
+hints:
+  - level: 1
+    text: You can create a class at runtime with type(name, bases, namespace). Pass an empty tuple of bases and Python inserts object for you.
+  - level: 2
+    text: Build in dependency order — a role can only be created after every parent it names already exists. Loop over the still-unbuilt roles until each one's parents are ready.
+  - level: 3
+    text: Once the start role's class exists, its __mro__ attribute is the C3 order already computed. Map each class in it to __name__ and include the final object.
+tests:
+  public:
+    - name: diamond
+      input:
+        bases:
+          A: []
+          B: [A]
+          C: [A]
+          D: [B, C]
+        start: D
+      expected: [D, B, C, A, object]
+    - name: straight_chain
+      input:
+        bases:
+          A: []
+          B: [A]
+          C: [B]
+        start: C
+      expected: [C, B, A, object]
+    - name: no_parents
+      input:
+        bases:
+          X: []
+        start: X
+      expected: [X, object]
+  validation:
+    - name: nested_diamond
+      input:
+        bases:
+          Base: []
+          Left: [Base]
+          Right: [Base]
+          Mid: [Left]
+          Leaf: [Mid, Right]
+        start: Leaf
+      expected: [Leaf, Mid, Left, Right, Base, object]
+    - name: mixin_before_core
+      input:
+        bases:
+          Core: []
+          LogMixin: []
+          Service: [LogMixin, Core]
+        start: Service
+      expected: [Service, LogMixin, Core, object]
+    - name: three_way_diamond
+      input:
+        bases:
+          A: []
+          B: [A]
+          C: [A]
+          D: [A]
+          E: [B, C, D]
+        start: E
+      expected: [E, B, C, D, A, object]
+explanation_markdown: |
+  The MRO is the single flattened order Python walks when it looks up an attribute
+  or method on an instance. For anything beyond single inheritance it is computed by
+  the **C3 linearization** algorithm, which guarantees that a class always precedes
+  all of its parents and that the left-to-right order of bases is respected.
+
+  Rather than reimplement C3, this exercise leans on the interpreter: once you build
+  the real classes with `type(...)`, `__mro__` already holds the answer. The only
+  care needed is construction order — a subclass cannot be created before its bases
+  exist — so you build roles whose parents are all ready, repeating until the graph
+  is exhausted. The diamond result `[D, B, C, A, object]` is the classic case: `A`
+  appears once, after both `B` and `C`, never duplicated.
+common_mistakes:
+  - Trying to build a subclass before its base classes exist, which raises a NameError-style lookup failure or KeyError.
+  - Forgetting that every MRO ends with object, and omitting it from the returned list.
+  - Returning the class objects instead of their __name__ strings, which will not match the expected plain-value output.

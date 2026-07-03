@@ -1,0 +1,105 @@
+id: lesson.library.introspection_metaprogramming.a02
+kind: lesson
+version: 1
+language: python
+title: 'Recursion Limits: Why Python Has a Depth Gauge'
+slug: lesson-introspection-metaprogramming-a02
+difficulty: hard
+concepts:
+  - python.introspection
+  - patterns.recursion
+prerequisites:
+  - patterns.recursion
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.introspection_metaprogramming.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original recursion-limit walkthrough with fresh worked depth reasoning and conversion patterns.
+body_markdown: |
+  Your recursion unit taught elegant self-calling solutions. This lesson
+  covers the ceiling they run into — and why Python, unlike some
+  languages, *chooses* to have one.
+
+  ### The limit and what it protects
+
+  ```python
+  def countdown(n):
+      return "done" if n == 0 else countdown(n - 1)
+
+  countdown(100_000)     # RecursionError: maximum recursion depth exceeded
+  ```
+
+  Every active call needs a frame (locals, position, return address) on
+  the interpreter's call stack. CPython caps the depth — default ~1000,
+  readable via `sys.getrecursionlimit()` — and raises the *catchable*
+  `RecursionError` at the cap. The cap is a guard: blow past what the
+  underlying C stack can hold and the process would die with a
+  segmentation fault, uncatchable. A Python-level limit converts "crash"
+  into "exception with a traceback".
+
+  You can raise it — `sys.setrecursionlimit(5000)` — and it is
+  legitimate for algorithms with *known bounded* depth (a parser for
+  nesting 2000 deep). It is not a fix for unbounded recursion: setting
+  the limit above what the C stack tolerates trades the RecursionError
+  back for the segfault the limit existed to prevent.
+
+  ### No tail-call optimization, on purpose
+
+  `countdown` is tail-recursive — the recursive call is the very last
+  act — and languages like Scheme run such functions in constant stack.
+  Python **deliberately does not**: Guido's stated reasons are that TCO
+  destroys tracebacks (the eliminated frames vanish from error reports)
+  and encourages a style foreign to the language. The practical
+  consequence is a conversion skill. Tail recursion is a loop wearing a
+  costume, and the costume comes off mechanically — parameters become
+  loop variables:
+
+  ```python
+  def countdown(n):
+      while n:
+          n -= 1
+      return "done"
+  ```
+
+  For non-tail recursion (tree traversals where real work follows the
+  recursive call), the conversion keeps an **explicit stack** — a list
+  of pending work — which is the same algorithm with the call stack made
+  visible, bounded only by memory. Your DFS exercises did exactly this;
+  now you know *why* deep-tree code prefers it.
+
+  ### Handling the ceiling gracefully
+
+  Because RecursionError is an ordinary exception, boundary code can
+  catch it and fall back:
+
+  ```python
+  try:
+      return analyze_nested(structure)
+  except RecursionError:
+      return analyze_iterative(structure)     # the explicit-stack twin
+  ```
+
+  Your exercises probe safe depth deterministically and build exactly
+  this fallback shape. One caution for real code: catch it *at a clean
+  boundary* and prefer switching algorithms over retrying — the
+  exception may leave deep library state half-unwound.
+
+  The takeaway is a design sensibility: recursion in Python is a
+  clarity tool for *bounded* depth (parsers, trees of known height,
+  divide-and-conquer with log depth), and an explicit stack or loop is
+  the production tool when depth follows input size. Both are the same
+  algorithm; choosing consciously is the skill.
+checkpoints:
+  - question: What does the recursion limit protect against, and why is RecursionError better than the alternative?
+    answer: 'Unbounded recursion would overflow the interpreter''s C stack and kill the process with an uncatchable segfault; the Python-level cap raises a catchable RecursionError with a traceback before that point — converting a crash into a handleable exception.'
+    explanation: The limit is a safety valve, and raising it far beyond C-stack capacity re-imports the crash it prevents.
+  - question: Why does Python deliberately not implement tail-call optimization, and what does that imply for deeply recursive code?
+    answer: 'TCO erases frames, destroying the tracebacks Python treats as essential diagnostics (and promoting a non-idiomatic style); therefore even perfect tail recursion hits the depth limit, and depth-proportional-to-input algorithms should be written as loops or explicit-stack iterations.'
+    explanation: 'The absence is a documented design decision — the conversion skills (tail recursion to loop, tree recursion to explicit stack) are the working consequence.'
+  - question: When is sys.setrecursionlimit a legitimate tool versus a mistake?
+    answer: 'Legitimate when the maximum depth is KNOWN and bounded (a parser handling documented nesting of a few thousand) and modestly exceeds the default; a mistake as a "fix" for unbounded recursion, where it either delays the error or reintroduces the segfault.'
+    explanation: The limit encodes an assumption about depth; changing it is stating a new assumption, not removing the need for one.

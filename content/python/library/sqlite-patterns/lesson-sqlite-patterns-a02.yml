@@ -1,0 +1,101 @@
+id: lesson.library.sqlite_patterns.a02
+kind: lesson
+version: 1
+language: python
+title: 'Parameterized Queries: The Only Way to Put Data in SQL'
+slug: lesson-sqlite-patterns-a02
+difficulty: medium
+concepts:
+  - python.sqlite_sql
+  - python.secure_coding
+prerequisites:
+  - python.sqlite_sql
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sqlite_patterns.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original parameterization walkthrough demonstrating injection mechanics and the placeholder discipline, with fresh co-op examples.
+body_markdown: |
+  The co-op's search box takes a member name and someone builds the
+  query with an f-string:
+
+  ```python
+  name = input("member: ")
+  db.execute(f"SELECT * FROM members WHERE name = '{name}'")   # NEVER
+  ```
+
+  Type `Ada` and it works. Type this and it doesn't:
+
+  ```text
+  x' OR '1'='1
+  ```
+
+  The assembled SQL becomes `WHERE name = 'x' OR '1'='1'` — a condition
+  that is true for *every row*. The search box just returned the entire
+  member table. With `'; DROP TABLE members; --` the same mechanism
+  deletes it (the `--` comments out the trailing quote). This is **SQL
+  injection** — for over two decades the most damaging vulnerability
+  class on the internet — and its mechanism is precisely the one from
+  your URL lesson: *data concatenated into a structured language becomes
+  structure*.
+
+  ### The cure is structural, not cosmetic
+
+  ```python
+  db.execute("SELECT * FROM members WHERE name = ?", (name,))
+  ```
+
+  The `?` placeholder does not paste text. The SQL — with the
+  placeholder — is parsed and planned *first*; the value is then bound
+  to the finished statement as pure data. A name containing quotes,
+  keywords, or entire DROP statements is matched *literally* against
+  the column, because it never touches the parser. There is no string
+  the attacker can type, because there is no string assembly happening.
+
+  Contrast with escaping-based defenses (doubling quotes by hand):
+  those chase an open-ended list of dangerous characters and dialects,
+  and history is a graveyard of escapers that missed one. Parameters
+  are not "safer" — they are *categorically* different, and they are
+  also faster (prepared statements cache their plans) and cleaner to
+  read. There is no tradeoff to weigh.
+
+  The forms to know: positional `?` with a tuple (note `(name,)` — the
+  one-element tuple comma), named `:name` with a dict for many-column
+  statements, and `executemany` for bulk inserts:
+
+  ```python
+  db.executemany("INSERT INTO members (name, joined) VALUES (:name, :joined)",
+                 [{"name": "Kit", "joined": "2026-05-02"}, ...])
+  ```
+
+  ### The boundary parameters cannot cross
+
+  One honest limitation: placeholders bind *values* — not table names,
+  column names, or `ORDER BY` directions. `ORDER BY ?` binds a constant
+  (useless), so dynamic sorting must use an **allowlist**:
+
+  ```python
+  SORTABLE = {"name": "name", "joined": "joined"}
+  column = SORTABLE[requested]        # KeyError = rejected, by design
+  db.execute(f"SELECT * FROM members ORDER BY {column}")
+  ```
+
+  The f-string is safe *here* because `column` can only be one of your
+  own literals — the user's input chose a key, never became SQL. Values
+  through parameters, identifiers through allowlists: that pair of
+  rules covers every dynamic query you will ever need to write, and
+  the exercises drill both until they are reflex.
+checkpoints:
+  - question: Explain mechanically why a bound parameter cannot inject, where escaping might fail.
+    answer: 'The statement is parsed and planned with the placeholder BEFORE the value exists; the value binds to the compiled statement as data and never reaches the SQL parser — there is no assembly step to attack. Escaping edits the string and must anticipate every dangerous sequence in every dialect, an open-ended race.'
+    explanation: 'Parameters remove the vulnerable operation (string-building SQL) rather than guarding it — the structural cure versus the cosmetic one.'
+  - question: What did the input x' OR '1'='1 turn the f-string query into, and what is the general principle?
+    answer: 'WHERE name = ''x'' OR ''1''=''1'' — an always-true condition dumping every row; the principle: data concatenated into a structured language''s text becomes structure, exactly like & in URLs or shell metacharacters.'
+    explanation: 'Injection is one disease appearing wherever strings are assembled into languages — recognizing the shape matters more than memorizing this instance.'
+  - question: Why can ORDER BY not take a placeholder, and what is the safe pattern for user-chosen sort columns?
+    answer: 'Placeholders bind values, and identifiers (column names, directions) are part of the statement''s structure that must exist at parse time; the safe pattern maps user input through an allowlist dict of your own literal column names, rejecting anything else.'
+    explanation: 'Values via parameters, identifiers via allowlists — together they cover dynamic SQL completely, with the allowlist keeping user text from ever becoming syntax.'

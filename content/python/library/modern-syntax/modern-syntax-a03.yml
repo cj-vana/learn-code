@@ -1,0 +1,100 @@
+id: exercise.library.modern_syntax.a03
+kind: exercise
+version: 1
+language: python
+title: Bookending the Loading Manifest
+slug: modern-syntax-a03
+difficulty: medium
+concepts:
+  - python.modern_syntax
+  - python.lists
+prerequisites:
+  - python.slicing
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.modern_syntax.a03
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original sequence-capture drill themed around a harbor loading manifest, exercising the star-rest pattern and its empty/single edge cases.
+prompt_markdown: |
+  A dockside crew works through a loading manifest, a list of crate codes in the
+  order they will be lifted aboard. Write `bookend_manifest(crates)` that uses a
+  `match`/`case` statement with a **star-rest sequence pattern**
+  (`case [first, *middle, last]:`) and returns a summary dictionary with three
+  keys:
+
+  - `"first"` — the first crate in the manifest
+  - `"last"` — the last crate in the manifest
+  - `"middle_count"` — how many crates sit strictly between the first and last
+
+  Handle the short manifests explicitly:
+
+  - an empty list returns `{"first": None, "last": None, "middle_count": 0}`
+  - a single-crate list `[x]` returns `{"first": x, "last": x, "middle_count": 0}`
+  - a two-crate list `[a, b]` returns `{"first": a, "last": b, "middle_count": 0}`
+
+  For example, `bookend_manifest(["A", "B", "C", "D"])` returns
+  `{"first": "A", "last": "D", "middle_count": 2}`.
+starter_code: |
+  def bookend_manifest(crates):
+      return {"first": None, "last": None, "middle_count": 0}
+function_name: bookend_manifest
+input_mode: function
+solution_sketch: Match the empty list and the single-element list first, then let case [first, *middle, last] bind the ends and collect everything between into middle, whose length is the middle_count.
+sample_solution: |
+  def bookend_manifest(crates):
+      match crates:
+          case []:
+              return {"first": None, "last": None, "middle_count": 0}
+          case [only]:
+              return {"first": only, "last": only, "middle_count": 0}
+          case [first, *middle, last]:
+              return {"first": first, "last": last, "middle_count": len(middle)}
+hints:
+  - level: 1
+    text: A star pattern like `[first, *middle, last]` binds the ends to first and last and collects everything between them into a list called middle.
+  - level: 2
+    text: The star pattern needs at least two elements to have both a first and a last, so match the empty list and the one-element list with their own cases first.
+  - level: 3
+    text: For a two-element list the star target middle is simply an empty list, so len(middle) is 0. Return len(middle) as the middle_count in the general case.
+tests:
+  public:
+    - name: empty_manifest
+      input: []
+      expected: {"first": null, "last": null, "middle_count": 0}
+    - name: single_crate
+      input: ["A"]
+      expected: {"first": "A", "last": "A", "middle_count": 0}
+    - name: three_crates
+      input: ["A", "B", "C"]
+      expected: {"first": "A", "last": "C", "middle_count": 1}
+  validation:
+    - name: two_crates_empty_middle
+      input: ["A", "B"]
+      expected: {"first": "A", "last": "B", "middle_count": 0}
+    - name: five_numeric_crates
+      input: [1, 2, 3, 4, 5]
+      expected: {"first": 1, "last": 5, "middle_count": 3}
+    - name: four_crates
+      input: ["x", "y", "z", "w"]
+      expected: {"first": "x", "last": "w", "middle_count": 2}
+    - name: single_numeric_crate
+      input: [42]
+      expected: {"first": 42, "last": 42, "middle_count": 0}
+explanation_markdown: |
+  The star target in a sequence pattern soaks up "everything in between" after the
+  fixed positions are bound. In `[first, *middle, last]`, Python binds the first and
+  last elements and hands you the remainder as a real list, so `len(middle)` is the
+  count you want without any slicing arithmetic. The catch is that this pattern
+  requires at least two elements, because it must produce both a `first` and a
+  `last`. That is why the empty and single-element lists need their own cases: for
+  `[x]` there is no distinct last element, and for `[]` there is nothing to bind at
+  all. Ordering the shortest cases first keeps the star pattern responsible only for
+  the lengths it can actually satisfy.
+common_mistakes:
+  - Letting `[first, *middle, last]` handle a one-element list, which never matches and leaves the single-crate case unhandled.
+  - Computing middle_count as len(crates) - 2 without guarding against short lists, producing a negative count for empty or single inputs.
+  - Returning the middle list itself instead of its length under the middle_count key.

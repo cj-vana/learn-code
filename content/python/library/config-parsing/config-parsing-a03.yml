@@ -1,0 +1,193 @@
+id: exercise.library.config_parsing.a03
+kind: exercise
+version: 1
+language: python
+title: Stacking the Observatory's Config Layers
+slug: config-parsing-a03
+difficulty: medium
+concepts:
+  - python.config_parsing
+  - python.dictionaries
+  - patterns.recursion
+prerequisites:
+  - python.dictionaries
+  - patterns.recursion
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.config_parsing.a03
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original layered-config precedence merge with recursive deep-merge of nested sections, framed around a mountaintop observatory's built-in, file, and environment settings.
+prompt_markdown: |
+  The Cerro Alto observatory builds its runtime settings from three stacked
+  layers, from lowest priority to highest: built-in **defaults**, a settings
+  **file**, and **environment** overrides. Higher layers win. Write
+  `merge_config_layers(request)`, where `request` is a single dict with three
+  keys, each mapping to a settings dict:
+
+  - `"defaults"` — the built-in baseline.
+  - `"file"` — values read from the config file, layered on top of defaults.
+  - `"env"` — environment overrides, layered on top of everything.
+
+  Return one merged settings dict produced by folding the layers in the order
+  defaults, then file, then env, using this **deep-merge** rule when layering an
+  upper dict on top of the accumulated result:
+
+  - For each key in the upper layer: if that key already holds a dict in the
+    result **and** the upper value is also a dict, merge those two dicts
+    recursively (so nested sections combine instead of clobbering each other).
+  - Otherwise the upper layer's value replaces whatever was there. A dict
+    replaces a non-dict, and a non-dict replaces a dict, wholesale.
+  - Keys that appear in only one layer are carried through.
+
+  Do not mutate any of the three input dicts; build and return new dicts. All
+  three keys are always present, though any layer may be an empty dict.
+
+  Example: with `"defaults"` `{"db": {"host": "localhost", "port": 5432}}`,
+  `"file"` `{"db": {"port": 6000}}`, and `"env"` `{}`, the nested `db` sections
+  combine into `{"db": {"host": "localhost", "port": 6000}}`.
+starter_code: |
+  def merge_config_layers(request):
+      return {}
+function_name: merge_config_layers
+input_mode: function
+solution_sketch: Write a recursive deep-merge helper that copies the base dict and, for each override key, recurses when both sides are dicts and otherwise overwrites; fold defaults, file, then env through it.
+sample_solution: |
+  def merge_config_layers(request):
+      def deep_merge(base, upper):
+          result = dict(base)
+          for key, value in upper.items():
+              if key in result and isinstance(result[key], dict) and isinstance(value, dict):
+                  result[key] = deep_merge(result[key], value)
+              else:
+                  result[key] = value
+          return result
+
+      merged = {}
+      for layer in ("defaults", "file", "env"):
+          merged = deep_merge(merged, request[layer])
+      return merged
+hints:
+  - level: 1
+    text: Process the three layers in order defaults, file, env, each time merging the next layer on top of what you have so far so later layers win.
+  - level: 2
+    text: Write a helper that merges one upper dict onto a base dict; copy the base first so you never mutate the caller's dicts.
+  - level: 3
+    text: Inside the helper, when a key holds a dict on both sides, recurse to merge the nested sections; otherwise just assign the upper value over the base value.
+tests:
+  public:
+    - name: file_overrides_default
+      input:
+        defaults:
+          timeout: 30
+          retries: 3
+        file:
+          timeout: 60
+        env: {}
+      expected:
+        timeout: 60
+        retries: 3
+    - name: env_wins_over_all
+      input:
+        defaults:
+          level: "low"
+        file:
+          level: "medium"
+        env:
+          level: "high"
+      expected:
+        level: "high"
+    - name: nested_section_merged
+      input:
+        defaults:
+          db:
+            host: "localhost"
+            port: 5432
+        file:
+          db:
+            port: 6000
+        env: {}
+      expected:
+        db:
+          host: "localhost"
+          port: 6000
+  validation:
+    - name: all_layers_empty
+      input:
+        defaults: {}
+        file: {}
+        env: {}
+      expected: {}
+    - name: disjoint_keys_union
+      input:
+        defaults:
+          a: 1
+        file:
+          b: 2
+        env:
+          c: 3
+      expected:
+        a: 1
+        b: 2
+        c: 3
+    - name: deep_three_levels
+      input:
+        defaults:
+          server:
+            tls:
+              enabled: false
+        file:
+          server:
+            tls:
+              port: 443
+        env:
+          server:
+            tls:
+              enabled: true
+      expected:
+        server:
+          tls:
+            enabled: true
+            port: 443
+    - name: dict_replaces_scalar
+      input:
+        defaults:
+          opts: 5
+        file:
+          opts:
+            mode: "fast"
+        env: {}
+      expected:
+        opts:
+          mode: "fast"
+    - name: scalar_replaces_dict
+      input:
+        defaults:
+          opts:
+            mode: "fast"
+        file:
+          opts: 5
+        env: {}
+      expected:
+        opts: 5
+explanation_markdown: |
+  Layered configuration is the backbone of the 12-factor style: ship sensible
+  defaults, let a file override them for a deployment, and let environment
+  variables override the file for a single run. Folding the layers in a fixed
+  order — defaults, then file, then env — makes "higher layer wins" fall out of
+  the order you apply them.
+
+  The subtlety is *nested* sections. A shallow `dict.update` would let the `env`
+  layer's `{"db": {"host": ...}}` replace the entire `db` section, silently
+  dropping keys the lower layers set. Recursing when both sides are dicts keeps
+  each nested section additive, while still letting a scalar override a whole
+  subtree when that is what a layer actually specifies. Copying the base dict at
+  every level is what keeps the original layers untouched, so the same defaults
+  stay reusable for the next merge.
+common_mistakes:
+  - Using a single dict.update per layer, which clobbers entire nested sections instead of deep-merging them.
+  - Mutating the defaults or file dict in place, so a later merge sees already-modified baseline values.
+  - Recursing into every value instead of only when both the existing and incoming values are dicts, which crashes on scalars.

@@ -1,0 +1,137 @@
+id: exercise.library.cli_parsing.a08
+kind: exercise
+version: 1
+language: python
+title: Typing the Greenhouse Dials
+slug: cli-parsing-a08
+difficulty: medium
+concepts:
+  - python.cli_args
+  - python.types
+prerequisites:
+  - python.dictionaries
+  - python.strings
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.cli_parsing.a08
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original type-coercion drill framed as a greenhouse controller, deliberately spotlighting the bool("False") is truthy trap without echoing any known tutorial.
+prompt_markdown: |
+  A greenhouse controller reads every setting off the command line, so each dial
+  arrives as a **string** even when it means a number or a switch. Before the
+  controller can act it must coerce each string to its declared type.
+
+  The grader calls your function with one argument: a request dict shaped like
+
+  ```python
+  {
+      "parsed": {"port": "8080", "ratio": "0.5", "vent_open": "false", "zone": "north"},
+      "types":  {"port": "int", "ratio": "float", "vent_open": "bool"}
+  }
+  ```
+
+  Write `coerce_arg_types(request)` that returns a new dict with the same keys as
+  `parsed`, each value converted according to `types`:
+
+  - `"int"`: parse a whole number with `int(...)`; a leading `+` or `-` is allowed
+    (`"-42"` becomes `-42`).
+  - `"float"`: parse with `float(...)`, then round to 4 decimal places
+    (`"3.14159"` becomes `3.1416`).
+  - `"bool"`: this is the trap. A truthy string is any of `"true"`, `"1"`, `"yes"`,
+    or `"on"` compared case-insensitively; **every other string** -- including
+    `"false"`, `"0"`, `"no"`, `"off"`, and the empty string -- becomes `False`.
+    (Note `bool("false")` in raw Python is `True`, which is exactly the bug this
+    guards against.)
+  - Any key present in `parsed` but **missing from `types`** keeps its original
+    string value unchanged.
+  - Any key listed in `types` but absent from `parsed` is ignored -- you only ever
+    produce keys that appear in `parsed`.
+
+  An empty `parsed` returns an empty dict.
+starter_code: |
+  def coerce_arg_types(request):
+      return {}
+function_name: coerce_arg_types
+input_mode: function
+solution_sketch: Iterate the parsed items, look up each key's declared type, and dispatch to int, rounded float, or a truthy-set membership test for bool; leave anything without a declared type as its original string.
+sample_solution: |
+  def coerce_arg_types(request):
+      parsed = request["parsed"]
+      types = request["types"]
+      truthy = {"true", "1", "yes", "on"}
+      result = {}
+      for key, raw in parsed.items():
+          declared = types.get(key)
+          if declared == "int":
+              result[key] = int(raw)
+          elif declared == "float":
+              result[key] = round(float(raw), 4)
+          elif declared == "bool":
+              result[key] = raw.lower() in truthy
+          else:
+              result[key] = raw
+      return result
+hints:
+  - level: 1
+    text: Loop over the parsed dict, not the types dict, so you only ever emit keys the user actually supplied.
+  - level: 2
+    text: Use types.get(key) so a missing declaration falls through to the string-passthrough branch instead of raising KeyError.
+  - level: 3
+    text: For bool, do not call bool(raw). Instead test raw.lower() in {"true", "1", "yes", "on"} so "false" and "" correctly become False.
+tests:
+  public:
+    - name: mixed_types
+      input:
+        parsed: {port: "8080", ratio: "0.5", vent_open: "false", zone: "north"}
+        types: {port: "int", ratio: "float", vent_open: "bool"}
+      expected: {port: 8080, ratio: 0.5, vent_open: false, zone: "north"}
+    - name: empty
+      input:
+        parsed: {}
+        types: {}
+      expected: {}
+    - name: truthy_variety
+      input:
+        parsed: {a: "on", b: "1", c: "YES", d: "True"}
+        types: {a: "bool", b: "bool", c: "bool", d: "bool"}
+      expected: {a: true, b: true, c: true, d: true}
+  validation:
+    - name: falsy_variety
+      input:
+        parsed: {a: "off", b: "0", c: "no", d: "", e: "False", f: "maybe"}
+        types: {a: "bool", b: "bool", c: "bool", d: "bool", e: "bool", f: "bool"}
+      expected: {a: false, b: false, c: false, d: false, e: false, f: false}
+    - name: signed_ints
+      input:
+        parsed: {x: "-42", y: "+7", z: "0"}
+        types: {x: "int", y: "int", z: "int"}
+      expected: {x: -42, y: 7, z: 0}
+    - name: float_rounding
+      input:
+        parsed: {p: "3.14159", q: "12.25"}
+        types: {p: "float", q: "float"}
+      expected: {p: 3.1416, q: 12.25}
+    - name: missing_and_extra_declarations
+      input:
+        parsed: {a: "5", b: "keep-me"}
+        types: {a: "int", c: "float"}
+      expected: {a: 5, b: "keep-me"}
+explanation_markdown: |
+  The whole point of this drill is that `bool` cannot go through Python's builtin
+  `bool()`, because every non-empty string is truthy -- `bool("false")` is `True`.
+  Real argument parsers solve this by comparing against an explicit set of accepted
+  truthy spellings, which is what the membership test does here. Numbers are safer:
+  `int` and `float` already reject nonsense, and rounding the float keeps graded
+  output stable regardless of binary-representation noise.
+
+  Driving the loop from `parsed` (not `types`) means undeclared keys pass through as
+  strings and over-declared keys simply never fire, matching how a lenient config
+  layer treats unknown or unused options.
+common_mistakes:
+  - Using bool(raw) for the bool case, which turns "false", "0", and "off" into True because non-empty strings are always truthy.
+  - Iterating the types dict, which invents keys that were never parsed or drops keys that had no declared type.
+  - Skipping the round on floats, leaving representation noise that can make graded comparisons fail.

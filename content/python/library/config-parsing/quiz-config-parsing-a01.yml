@@ -1,0 +1,100 @@
+id: quiz.library.config_parsing.a01
+kind: quiz
+version: 1
+language: python
+title: Config Judgment
+slug: quiz-config-parsing-a01
+difficulty: medium
+concepts:
+  - python.config_parsing
+prerequisites:
+  - python.config_parsing
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.config_parsing.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pattern-recognition quiz on config formats, precedence, and secret handling.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      A config file has debug = false (INI), and `if cfg["debug"]:` runs the
+      debug path anyway. What is the cause?
+    choices:
+      - configparser returns strings, and the non-empty string "false" is truthy — use getboolean instead
+      - The file was not reloaded
+      - false must be capitalized False
+      - INI does not support booleans at all in any form
+    correct_choice: configparser returns strings, and the non-empty string "false" is truthy — use getboolean instead
+    explanation: |
+      String truthiness makes "false" true; getboolean parses the intended
+      value, and TOML avoids the trap by carrying real types.
+    concepts:
+      - python.config_parsing
+  - id: q2
+    prompt: |
+      workers is set to 4 in the config file, unset in the environment, and
+      not passed on the command line. Effective value?
+    choices:
+      - 4 — the file layer wins over the untouched env and CLI layers
+      - The built-in default, since env and CLI are higher priority
+      - None — unset layers override the file
+      - An error — all layers must agree
+    correct_choice: 4 — the file layer wins over the untouched env and CLI layers
+    explanation: |
+      Higher layers only override when they SPECIFY a value; absent (None)
+      layers must not clobber lower ones, so the file's 4 stands.
+    concepts:
+      - python.config_parsing
+  - id: q3
+    prompt: |
+      Merging defaults {"db": {"host": "h", "port": 5432}} with a file
+      {"db": {"port": 6000}} using flat dict.update yields what, and what
+      was wanted?
+    choices:
+      - 'Got {"db": {"port": 6000}} losing host; wanted a deep merge preserving host'
+      - Got the correct merged db; flat update is fine
+      - Got an error on the nested dict
+      - Got both ports in a list
+    correct_choice: 'Got {"db": {"port": 6000}} losing host; wanted a deep merge preserving host'
+    explanation: |
+      Flat update replaces whole sub-dicts; nested config needs recursive
+      merging to override leaves without dropping siblings.
+    concepts:
+      - python.config_parsing
+  - id: q4
+    prompt: |
+      A team debates where to put the production database password. Which
+      choice follows twelve-factor and security practice?
+    choices:
+      - Inject it via an environment variable (or secrets manager) at runtime, never committed to the repo
+      - In the committed config.toml, encrypted
+      - In the source code as a constant
+      - In a config file added to git with a warning comment
+    correct_choice: Inject it via an environment variable (or secrets manager) at runtime, never committed to the repo
+    explanation: |
+      Deployment-varying secrets belong in the environment; anything in the
+      repo is compromised on first clone, encryption-in-repo merely moving
+      the problem to the key.
+    concepts:
+      - python.config_parsing
+      - python.secure_coding
+  - id: q5
+    prompt: |
+      Operators keep asking "why is the service using timeout=5?" What
+      feature answers this instantly?
+    choices:
+      - A --show-config that prints resolved values WITH their source layer (default/file/env/flag)
+      - More verbose error messages
+      - A longer README
+      - Logging every config read
+    correct_choice: A --show-config that prints resolved values WITH their source layer (default/file/env/flag)
+    explanation: |
+      Provenance tracking makes precedence visible; "timeout=5 (from env
+      APP_TIMEOUT)" ends the debate that a bare value never could.
+    concepts:
+      - python.config_parsing

@@ -1,0 +1,103 @@
+id: quiz.library.cli_parsing.a01
+kind: quiz
+version: 1
+language: python
+title: CLI Grammar Judgment
+slug: quiz-cli-parsing-a01
+difficulty: medium
+concepts:
+  - python.cli_args
+prerequisites:
+  - python.cli_args
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.cli_parsing.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pattern-recognition quiz on CLI grammar design, repetition semantics, and precedence.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      A backup tool needs a source, a destination, an optional compression
+      level, and a dry-run toggle. Which grammar matches convention?
+    choices:
+      - Two positionals (source, dest), --level with a default, --dry-run as a switch
+      - Four positionals in a fixed order
+      - All four as required named options
+      - One positional taking a comma-joined string
+    correct_choice: Two positionals (source, dest), --level with a default, --dry-run as a switch
+    explanation: |
+      Essential nouns are positional, modifiers are defaulted options,
+      toggles are switches — matching the roles to the semantics is the
+      design.
+    concepts:
+      - python.cli_args
+  - id: q2
+    prompt: |
+      A deploy alias bakes in "--region eu-west" and users append
+      "--region us-east" to override. Which repetition semantics makes this
+      work?
+    choices:
+      - Last-wins for scalar options — the appended value overrides the baked-in one
+      - First-wins — aliases take priority
+      - Accumulate — both regions deploy
+      - Error on any repeated option
+    correct_choice: Last-wins for scalar options — the appended value overrides the baked-in one
+    explanation: |
+      Append-to-override is how wrappers and aliases compose in shells;
+      last-wins is the convention that enables it.
+    concepts:
+      - python.cli_args
+  - id: q3
+    prompt: |
+      A user's config file says workers=4, their shell exports
+      APP_WORKERS=8, and they run the tool with --workers 2. How many
+      workers, and why?
+    choices:
+      - 2 — CLI flags outrank env vars, which outrank config files, by specificity of intent
+      - 8 — the environment is authoritative
+      - 4 — files are the source of truth
+      - 14 — sources accumulate
+    correct_choice: 2 — CLI flags outrank env vars, which outrank config files, by specificity of intent
+    explanation: |
+      The precedence ladder (defaults < file < env < flags) orders sources
+      by how fresh and deliberate the intent is; the flag typed now wins.
+    concepts:
+      - python.cli_args
+      - python.config_parsing
+  - id: q4
+    prompt: |
+      A parser treats the mistyped --verbos as a positional filename and the
+      command "succeeds" doing the wrong thing. What rule was violated?
+    choices:
+      - Unknown dashed tokens must be errors — the dash declares option intent, and typos must fail loudly
+      - Positionals must always be validated as files
+      - Short options must come before long ones
+      - Filenames may not begin with dashes
+    correct_choice: Unknown dashed tokens must be errors — the dash declares option intent, and typos must fail loudly
+    explanation: |
+      Filing an unknown option as data silently changes the command's
+      meaning; the -- terminator exists for the rare legitimate dashed
+      value.
+    concepts:
+      - python.cli_args
+  - id: q5
+    prompt: |
+      grep-style tools accept -v, -vv, -vvv for rising verbosity. What
+      parsing rule implements this, including the bundled form?
+    choices:
+      - Counting occurrences of the switch across all tokens, with bundled short flags (-vv) contributing per letter
+      - Treating -vv as a separate option from -v
+      - Reading a numeric argument after -v
+      - Capping verbosity at one
+    correct_choice: Counting occurrences of the switch across all tokens, with bundled short flags (-vv) contributing per letter
+    explanation: |
+      Repetition-as-intensity is a counting fold over parsed switches —
+      argparse spells it action="count" — and short-flag bundles must
+      unbundle first.
+    concepts:
+      - python.cli_args

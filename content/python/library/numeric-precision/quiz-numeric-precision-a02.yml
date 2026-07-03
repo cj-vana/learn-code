@@ -1,0 +1,90 @@
+id: quiz.library.numeric_precision.a02
+kind: quiz
+version: 1
+language: python
+title: Precision Mechanics
+slug: quiz-numeric-precision-a02
+difficulty: medium
+concepts:
+  - python.numeric_precision
+prerequisites:
+  - python.numeric_precision
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.numeric_precision.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax quiz on Decimal construction, quantize, round(), fsum, and Fraction mechanics.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: What is the crucial difference between Decimal("0.1") and Decimal(0.1)?
+    choices:
+      - The string form stores exactly one tenth; the float form inherits the binary approximation 0.1000000000000000055...
+      - No difference — both normalize to 0.1
+      - The float form is faster and preferred
+      - The string form raises unless quantized first
+    correct_choice: The string form stores exactly one tenth; the float form inherits the binary approximation 0.1000000000000000055...
+    explanation: |
+      Decimal preserves whatever value it is given, and a float already
+      carries the error — construct from strings (or ints), never floats.
+    concepts:
+      - python.numeric_precision
+  - id: q2
+    prompt: What does builtin round(2.5) return, and what rule explains it?
+    choices:
+      - 2 — banker's rounding sends ties to the even neighbour
+      - 3 — ties round up as taught in school
+      - 2.5 — round() needs a digits argument
+      - It raises without a second argument
+    correct_choice: 2 — banker's rounding sends ties to the even neighbour
+    explanation: |
+      Python's round() is half-even: round(2.5) == 2 and round(3.5) == 4.
+      Code needing schoolbook half-up must say so via Decimal quantize with
+      ROUND_HALF_UP.
+    concepts:
+      - python.numeric_precision
+  - id: q3
+    prompt: 'What does Decimal("2.675").quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) return, and why would float round(2.675, 2) differ?'
+    choices:
+      - Decimal("2.68"); the float literal 2.675 is actually stored slightly BELOW 2.675, so float rounding gives 2.67
+      - Decimal("2.67") in both cases
+      - Decimal("2.68") and float also gives 2.68
+      - A rounding exception — 2.675 is a tie
+    correct_choice: Decimal("2.68"); the float literal 2.675 is actually stored slightly BELOW 2.675, so float rounding gives 2.67
+    explanation: |
+      The float 2.675 is really 2.67499999...; its "tie" never happens.
+      Decimal sees the true decimal digits, applies the named rule, and
+      returns what the ledger expects.
+    concepts:
+      - python.numeric_precision
+  - id: q4
+    prompt: 'Fraction(6, 8) evaluates to what, and by which mechanism?'
+    choices:
+      - Fraction(3, 4) — the constructor reduces by the gcd automatically
+      - Fraction(6, 8) — reduction requires .reduce()
+      - Fraction(0.75) — it converts to float internally
+      - An error — 6/8 shares a factor
+    correct_choice: Fraction(3, 4) — the constructor reduces by the gcd automatically
+    explanation: |
+      Every Fraction is normalized to lowest terms on construction (Euclid's
+      gcd at work), which keeps equality and hashing consistent: Fraction(6,8)
+      == Fraction(3,4) is identity of value.
+    concepts:
+      - python.numeric_precision
+  - id: q5
+    prompt: 'sum([0.1] * 10) != 1.0, yet math.fsum([0.1] * 10) == 1.0. What does fsum do differently?'
+    choices:
+      - It compensates — tracking the low-order bits ordinary addition discards and folding them into the final, correctly rounded result
+      - It converts everything to Decimal internally
+      - It sorts the values before adding
+      - It rounds each partial sum to 15 digits
+    correct_choice: It compensates — tracking the low-order bits ordinary addition discards and folding them into the final, correctly rounded result
+    explanation: |
+      Shewchuk-style compensated summation keeps the running error exactly;
+      when a float sum must be trustworthy, fsum is the one-word upgrade.
+    concepts:
+      - python.numeric_precision

@@ -1,0 +1,100 @@
+id: lesson.library.binary_data_struct.a01
+kind: lesson
+version: 1
+language: python
+title: 'bytes and bytearray: Text''s Tougher Siblings'
+slug: lesson-binary-data-struct-a01
+difficulty: medium
+concepts:
+  - python.binary_data
+prerequisites:
+  - python.strings
+  - python.lists
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.binary_data_struct.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original bytes/bytearray walkthrough framed around a dive-computer download cable, with fresh worked examples.
+body_markdown: |
+  Everything a computer stores or transmits — images, sensor dumps,
+  network packets — is ultimately a sequence of bytes: integers 0-255.
+  Python gives that sequence two types, and choosing between them is the
+  first binary-data decision.
+
+  A dive computer's download cable delivers:
+
+  ```python
+  frame = b"\x02DIVE\x1a\x00\x03"
+  ```
+
+  ### bytes: immutable, and not text
+
+  `bytes` looks string-like (the `b"..."` literal, slicing, `.find()`),
+  but one behavior announces the difference:
+
+  ```python
+  frame[1]        # 68 — an INTEGER, not b"D"
+  frame[1:2]      # b"D" — slicing returns bytes
+  ```
+
+  Indexing yields the raw number; only slicing preserves the type. That
+  is the honest model: bytes are a sequence of small integers wearing
+  ASCII makeup where possible (`\x02` for the unprintable ones).
+
+  The relationship with text is a *conversion*, never an identity:
+  `text.encode("utf-8")` → bytes; `data.decode("utf-8")` → str. Mixing
+  them (`b"a" + "a"`) is a TypeError by design — Python 3's founding
+  discipline. Decoding with the wrong codec, or decoding data that is
+  not text at all, raises or garbles; the rule from files-and-formats
+  applies verbatim: convert at the boundary, and know which side of it
+  you are on.
+
+  ### bytearray: the mutable workbench
+
+  `bytes` is immutable — every patch would copy the whole buffer. For
+  assembling or patching frames, `bytearray` is the mutable twin:
+
+  ```python
+  buf = bytearray(frame)
+  buf[6] = 0x04            # patch the frame counter in place
+  buf.extend(payload)      # grow it
+  bytes(buf)               # freeze when done
+  ```
+
+  Same indexing/slicing rules (integers in, integers out), plus list-like
+  mutation: item assignment, slice assignment, `.append(int)`,
+  `.extend()`. The workflow that serves nearly every protocol task:
+  *parse from immutable bytes, build in a bytearray, freeze to bytes to
+  ship.* Immutability at the edges (safe to share, hashable, usable as
+  dict keys) and mutability in the workshop.
+
+  ### Reading hex like a native
+
+  Two conversions appear in every debugging session:
+
+  ```python
+  frame.hex()                    # '024449564501a0003' — bytes → hex string
+  bytes.fromhex("02 44 49")      # back again; spaces ignored
+  ```
+
+  And for shipping binary through text-only channels (JSON, URLs,
+  email), `base64` encodes 3 bytes into 4 text characters — the standard
+  answer to "put this blob in a JSON field", and a round-trip
+  (`b64decode(b64encode(x)) == x`) your property-testing instincts
+  should already want to verify. The exercises do exactly that, plus the
+  index-versus-slice distinction and in-place patching — the finger
+  memory of binary work.
+checkpoints:
+  - question: Why does frame[1] return 68 while frame[1:2] returns b"D", and what does this reveal about what bytes really are?
+    answer: 'Indexing a bytes object yields the raw integer value of that byte; slicing returns a bytes subsequence — revealing that bytes are a sequence of small integers (0-255), with the ASCII rendering just a display convenience.'
+    explanation: 'The int-versus-slice asymmetry is the founding mental model of binary data: numbers first, characters only by interpretation.'
+  - question: Describe the bytes/bytearray workflow for receiving, patching, and shipping a protocol frame, and why each type is used at its stage.
+    answer: 'Parse from immutable bytes (safe to share, hashable), copy into a bytearray to mutate — item assignment, extend — then freeze back to bytes(buf) to ship; immutable at the edges, mutable in the workshop avoids whole-buffer copies per patch.'
+    explanation: The freeze-at-the-boundary pattern mirrors the str/list relationship and keeps mutation local and intentional.
+  - question: Your service must embed a binary sensor dump inside a JSON document. What is the standard tool and what property should a test assert?
+    answer: 'base64 encoding — binary becomes ASCII text safe for JSON; the test asserts the round trip: b64decode(b64encode(data)) == data for arbitrary bytes.'
+    explanation: 'Text-only channels need a binary-to-text bridge, and round-trip equality is the encoder''s entire correctness contract.'

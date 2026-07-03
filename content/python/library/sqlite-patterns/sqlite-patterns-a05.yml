@@ -1,0 +1,195 @@
+id: exercise.library.sqlite_patterns.a05
+kind: exercise
+version: 1
+language: python
+title: Pairing Vendors With Their Sales
+slug: sqlite-patterns-a05
+difficulty: medium
+concepts:
+  - python.sqlite_sql
+  - python.dictionaries
+prerequisites:
+  - python.dictionaries
+  - python.lists
+estimated_time_minutes: 16
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sqlite_patterns.a05
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original inner-join drill themed around a farmers market matching a vendor roster to a sales ledger on a shared stall number, seeding two in-memory tables from record lists.
+prompt_markdown: |
+  A farmers market keeps two ledgers. One lists each vendor by the stall they
+  rented; the other logs every crate sold, also tagged with a stall number. To
+  see who sold what, you join the two on the shared stall column.
+
+  Write `join_two_tables(request)` where `request` is a single dictionary with
+  three keys:
+
+  - `"table_a"`: a list of row dictionaries (the vendor roster)
+  - `"table_b"`: a list of row dictionaries (the sales log)
+  - `"join_key"`: the name of the column both tables share
+
+  Load each list into its own in-memory SQLite table and run an inner join on the
+  join key. Return the matched rows as a list of dictionaries whose keys, in
+  order, are: the join key first, then every other column of `table_a` in its
+  original order, then every other column of `table_b` in its original order.
+
+  Order the result the way a nested loop would produce it: walk `table_a` in
+  insertion order, and for each of its rows emit every matching `table_b` row in
+  insertion order. A row in one table with no partner in the other contributes
+  nothing. If either table is empty, return an empty list. You may assume every
+  row within a table shares the same columns and that the column names are plain
+  identifiers.
+starter_code: |
+  import sqlite3
+
+
+  def join_two_tables(request):
+      return []
+function_name: join_two_tables
+input_mode: function
+solution_sketch: Create two tables from the first row's keys, insert every row with parameterised INSERTs, then SELECT the join-key plus each table's remaining columns across an inner join ordered by a.rowid then b.rowid, and map each result tuple back to a dict.
+sample_solution: |
+  import sqlite3
+
+
+  def join_two_tables(request):
+      table_a = request["table_a"]
+      table_b = request["table_b"]
+      join_key = request["join_key"]
+      if not table_a or not table_b:
+          return []
+      a_cols = list(table_a[0].keys())
+      b_cols = list(table_b[0].keys())
+      conn = sqlite3.connect(":memory:")
+      a_defs = ", ".join(a_cols)
+      b_defs = ", ".join(b_cols)
+      conn.execute(f"CREATE TABLE a ({a_defs})")
+      conn.execute(f"CREATE TABLE b ({b_defs})")
+      a_marks = ", ".join(["?"] * len(a_cols))
+      b_marks = ", ".join(["?"] * len(b_cols))
+      conn.executemany(
+          f"INSERT INTO a ({a_defs}) VALUES ({a_marks})",
+          [tuple(row[c] for c in a_cols) for row in table_a],
+      )
+      conn.executemany(
+          f"INSERT INTO b ({b_defs}) VALUES ({b_marks})",
+          [tuple(row[c] for c in b_cols) for row in table_b],
+      )
+      result_cols = (
+          [join_key]
+          + [c for c in a_cols if c != join_key]
+          + [c for c in b_cols if c != join_key]
+      )
+      select_terms = (
+          [f"a.{join_key}"]
+          + [f"a.{c}" for c in a_cols if c != join_key]
+          + [f"b.{c}" for c in b_cols if c != join_key]
+      )
+      sql = (
+          f"SELECT {', '.join(select_terms)} FROM a "
+          f"JOIN b ON a.{join_key} = b.{join_key} "
+          "ORDER BY a.rowid, b.rowid"
+      )
+      rows = conn.execute(sql).fetchall()
+      conn.close()
+      return [dict(zip(result_cols, row)) for row in rows]
+hints:
+  - level: 1
+    text: Read the column names from the first row of each table, then build a CREATE TABLE and a parameterised INSERT for each one.
+  - level: 2
+    text: An inner join keeps only stall numbers that appear in both tables. Qualify columns as a.col or b.col so the shared join key is unambiguous.
+  - level: 3
+    text: SQLite gives every row an implicit rowid, so ORDER BY a.rowid, b.rowid reproduces the nested-loop order the prompt asks for.
+tests:
+  public:
+    - name: one_to_one
+      input:
+        table_a:
+          - {stall: 1, vendor: Rosewood}
+        table_b:
+          - {stall: 1, crates: 4}
+        join_key: stall
+      expected:
+        - {stall: 1, vendor: Rosewood, crates: 4}
+    - name: no_overlap
+      input:
+        table_a:
+          - {stall: 1, vendor: Rosewood}
+        table_b:
+          - {stall: 9, crates: 4}
+        join_key: stall
+      expected: []
+    - name: one_to_many
+      input:
+        table_a:
+          - {stall: 1, vendor: Rosewood}
+          - {stall: 2, vendor: Hillcrest}
+          - {stall: 3, vendor: Marsh}
+        table_b:
+          - {stall: 1, crates: 4}
+          - {stall: 1, crates: 2}
+          - {stall: 2, crates: 5}
+        join_key: stall
+      expected:
+        - {stall: 1, vendor: Rosewood, crates: 4}
+        - {stall: 1, vendor: Rosewood, crates: 2}
+        - {stall: 2, vendor: Hillcrest, crates: 5}
+  validation:
+    - name: empty_left
+      input:
+        table_a: []
+        table_b:
+          - {stall: 1, crates: 4}
+        join_key: stall
+      expected: []
+    - name: empty_right
+      input:
+        table_a:
+          - {stall: 1, vendor: Rosewood}
+        table_b: []
+        join_key: stall
+      expected: []
+    - name: many_to_many
+      input:
+        table_a:
+          - {stall: 1, vendor: Ashby}
+          - {stall: 1, vendor: Birch}
+        table_b:
+          - {stall: 1, crates: 2}
+          - {stall: 1, crates: 3}
+        join_key: stall
+      expected:
+        - {stall: 1, vendor: Ashby, crates: 2}
+        - {stall: 1, vendor: Ashby, crates: 3}
+        - {stall: 1, vendor: Birch, crates: 2}
+        - {stall: 1, vendor: Birch, crates: 3}
+    - name: three_columns_each
+      input:
+        table_a:
+          - {stall: 2, vendor: Hillcrest, region: north}
+        table_b:
+          - {stall: 2, crates: 5, day: sat}
+        join_key: stall
+      expected:
+        - {stall: 2, vendor: Hillcrest, region: north, crates: 5, day: sat}
+explanation_markdown: |
+  An inner join is the intersection of two tables over a shared key: only stall
+  numbers present in both the roster and the sales log survive, and every
+  matching pair becomes one output row. That is why a one-to-many relationship
+  fans out — stall 1 with two crate entries yields two joined rows — and why a
+  vendor with no sales simply disappears from the result.
+
+  The one place you cannot use a `?` placeholder is a column or table name;
+  identifiers have to be written into the SQL text itself. That is safe here
+  because the names come from your own schema, but it is also why the prompt
+  guarantees plain identifiers. Selecting `a.rowid` and `b.rowid` in the ORDER BY
+  turns SQLite's otherwise-unspecified row order into the deterministic
+  nested-loop sequence the tests expect.
+common_mistakes:
+  - Emitting the join key twice by copying every column from both tables instead of dropping the duplicate key from table_b.
+  - Leaving out the ORDER BY, so the row order depends on SQLite's internal choices and drifts from the expected nested-loop order.
+  - Trying to bind a table or column name with a ? placeholder, which SQLite rejects because placeholders stand in for values, not identifiers.

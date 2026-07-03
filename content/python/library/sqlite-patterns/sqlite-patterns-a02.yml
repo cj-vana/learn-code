@@ -1,0 +1,174 @@
+id: exercise.library.sqlite_patterns.a02
+kind: exercise
+version: 1
+language: python
+title: Pulling Rows From the Parts Bin
+slug: sqlite-patterns-a02
+difficulty: medium
+concepts:
+  - python.sqlite_sql
+  - patterns.filtering
+prerequisites:
+  - python.dictionaries
+  - python.lists
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sqlite_patterns.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original SELECT-WHERE drill framed as a workshop clerk pulling matching rows from an inventory table, teaching that a column name is whitelisted while the compared value is bound.
+prompt_markdown: |
+  A workshop clerk keeps inventory in a table where every part has a name, a
+  storage bin, and a quantity. Build that table fresh in memory and pull back just
+  the rows matching a lookup.
+
+  Write `select_where(request)` where `request` is a single dictionary with three
+  keys:
+
+  - `"records"`: a list of dictionaries, each with keys `"part"` (string),
+    `"bin"` (string), and `"quantity"` (integer)
+  - `"column"`: the column to filter on, always one of `"part"`, `"bin"`, or
+    `"quantity"`
+  - `"value"`: the value that column must equal
+
+  Insert every record into an in-memory SQLite table, then run a
+  `SELECT part, bin, quantity ... WHERE <column> = ?` that keeps only the rows
+  where the chosen column equals `value`. Return the matching rows as a list of
+  dictionaries with the same three keys, in the order they were inserted.
+
+  A column name cannot be a bound `?` parameter, so validate it against the three
+  allowed names and place it into the query text; the compared `value`, however,
+  must always be bound with a `?` placeholder. When nothing matches, or the record
+  list is empty, return an empty list.
+
+  Example: filtering `"part"` equal to `"bolt"` over rows for a bolt in bin `A1`,
+  a nut in bin `A1`, and a bolt in bin `B2` returns the two bolt rows.
+starter_code: |
+  import sqlite3
+
+
+  def select_where(request):
+      return []
+function_name: select_where
+input_mode: function
+solution_sketch: Seed an in-memory table from the records, confirm the column is one of the three allowed names, then run a SELECT that interpolates the validated column but binds the value with a ? placeholder, and rebuild each returned row into a dict.
+sample_solution: |
+  import sqlite3
+
+
+  def select_where(request):
+      records = request["records"]
+      column = request["column"]
+      value = request["value"]
+      allowed = {"part", "bin", "quantity"}
+      if column not in allowed:
+          raise ValueError(f"unknown column: {column}")
+      conn = sqlite3.connect(":memory:")
+      try:
+          conn.execute("CREATE TABLE inventory (part TEXT, bin TEXT, quantity INTEGER)")
+          conn.executemany(
+              "INSERT INTO inventory (part, bin, quantity) VALUES (?, ?, ?)",
+              [(r["part"], r["bin"], r["quantity"]) for r in records],
+          )
+          conn.commit()
+          rows = conn.execute(
+              f"SELECT part, bin, quantity FROM inventory WHERE {column} = ? ORDER BY rowid",
+              (value,),
+          ).fetchall()
+          return [{"part": p, "bin": b, "quantity": q} for (p, b, q) in rows]
+      finally:
+          conn.close()
+hints:
+  - level: 1
+    text: Seed the table exactly as you would for any insert, then think about the WHERE clause separately; a column identifier and a compared value are handled in two different ways.
+  - level: 2
+    text: Only the value can be a ? placeholder. Check that column is one of "part", "bin", or "quantity" and splice that trusted name into the query string, while binding value with ?.
+  - level: 3
+    text: Add ORDER BY rowid so results come back in insertion order, then turn each (part, bin, quantity) tuple from fetchall into a dictionary with those keys.
+tests:
+  public:
+    - name: filter_by_part
+      input:
+        records:
+          - {part: bolt, bin: A1, quantity: 40}
+          - {part: nut, bin: A1, quantity: 90}
+          - {part: bolt, bin: B2, quantity: 12}
+          - {part: washer, bin: B2, quantity: 5}
+        column: part
+        value: bolt
+      expected:
+        - {part: bolt, bin: A1, quantity: 40}
+        - {part: bolt, bin: B2, quantity: 12}
+    - name: filter_by_bin
+      input:
+        records:
+          - {part: bolt, bin: A1, quantity: 40}
+          - {part: nut, bin: A1, quantity: 90}
+          - {part: bolt, bin: B2, quantity: 12}
+          - {part: washer, bin: B2, quantity: 5}
+        column: bin
+        value: A1
+      expected:
+        - {part: bolt, bin: A1, quantity: 40}
+        - {part: nut, bin: A1, quantity: 90}
+    - name: no_match_returns_empty
+      input:
+        records:
+          - {part: bolt, bin: A1, quantity: 40}
+          - {part: nut, bin: A1, quantity: 90}
+        column: part
+        value: gasket
+      expected: []
+  validation:
+    - name: filter_by_quantity
+      input:
+        records:
+          - {part: bolt, bin: A1, quantity: 40}
+          - {part: nut, bin: A1, quantity: 90}
+          - {part: washer, bin: B2, quantity: 5}
+        column: quantity
+        value: 5
+      expected:
+        - {part: washer, bin: B2, quantity: 5}
+    - name: filter_by_bin_two_rows
+      input:
+        records:
+          - {part: bolt, bin: A1, quantity: 40}
+          - {part: bolt, bin: B2, quantity: 12}
+          - {part: washer, bin: B2, quantity: 5}
+        column: bin
+        value: B2
+      expected:
+        - {part: bolt, bin: B2, quantity: 12}
+        - {part: washer, bin: B2, quantity: 5}
+    - name: single_record_match
+      input:
+        records:
+          - {part: rivet, bin: C3, quantity: 200}
+        column: part
+        value: rivet
+      expected:
+        - {part: rivet, bin: C3, quantity: 200}
+    - name: empty_records
+      input:
+        records: []
+        column: part
+        value: bolt
+      expected: []
+explanation_markdown: |
+  This is the split every SQLite programmer has to internalise: a bound `?`
+  placeholder can stand in for a value, but never for a table or column name. The
+  database engine needs the identifier `bin` or `quantity` while it is parsing the
+  statement, long before your value is ever substituted, so the column has to be
+  part of the query text. That is precisely why you validate it against a fixed
+  allow-list first, splicing in only a name you already trust, while the
+  user-supplied `value` rides in safely on a `?`. `ORDER BY rowid` keeps results in
+  insertion order, since SQLite makes no ordering promise without it, and rebuilding
+  each returned tuple into a dictionary gives callers the same shape they handed in.
+common_mistakes:
+  - Trying to bind the column name with a ? placeholder, which filters on the literal string instead of the column and matches nothing.
+  - Formatting the value into the query string alongside the column, reopening the injection hole the allow-list was meant to close.
+  - Omitting ORDER BY, so the returned rows can drift out of insertion order and fail the exact-match comparison.

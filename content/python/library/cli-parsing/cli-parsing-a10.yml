@@ -1,0 +1,128 @@
+id: exercise.library.cli_parsing.a10
+kind: exercise
+version: 1
+language: python
+title: Settling the Weather Station's Settings
+slug: cli-parsing-a10
+difficulty: medium
+concepts:
+  - python.cli_args
+  - python.dictionaries
+prerequisites:
+  - python.conditionals
+  - python.strings
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.cli_parsing.a10
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original precedence-merge drill framed as a rooftop weather station, built around the None-means-unset rule so falsy-but-provided values still override.
+prompt_markdown: |
+  A rooftop weather station boots with a set of default settings, then lets an
+  operator override any of them from the command line. Your job is the merge step
+  that decides which value wins for each setting.
+
+  The grader calls your function with one argument: a request dict shaped like
+
+  ```python
+  {
+      "defaults": {"port": 8080, "verbose": True, "workers": 4},
+      "cli":      {"port": 9090, "verbose": False, "workers": None, "region": "west"}
+  }
+  ```
+
+  Here `cli` holds what the argument parser produced. A key's value is `None`
+  **only** when the operator did not supply that option -- the parser's way of
+  saying "left unset." Any other value, even a falsy one like `False`, `0`, or `""`,
+  means the operator explicitly chose it.
+
+  Write `merge_config_and_args(request)` that returns a single merged dict:
+
+  - Start from a copy of `defaults`.
+  - For each key in `cli` whose value is **not** `None`, that value overrides (or
+    adds) the key in the result.
+  - A `cli` value of `None` changes nothing -- the default stays, or the key simply
+    stays absent if it was never a default.
+
+  For the example above the result is
+  `{"port": 9090, "verbose": False, "workers": 4, "region": "west"}`: `port` is
+  overridden, `verbose` becomes `False` because the operator actually chose it,
+  `workers` keeps its default because the CLI value was unset, and `region` is a
+  brand-new key the CLI introduced.
+
+  Do not mutate the input `defaults` dict; build and return a fresh dict.
+starter_code: |
+  def merge_config_and_args(request):
+      return {}
+function_name: merge_config_and_args
+input_mode: function
+solution_sketch: Copy defaults into a new dict, then walk the cli items and overwrite for every value that is not None, which lets falsy-but-provided values win while genuinely unset (None) options fall through to the default.
+sample_solution: |
+  def merge_config_and_args(request):
+      merged = dict(request["defaults"])
+      for key, value in request["cli"].items():
+          if value is not None:
+              merged[key] = value
+      return merged
+hints:
+  - level: 1
+    text: The only value that means "not provided" is None. Everything else, including False and 0, is a real choice that must override.
+  - level: 2
+    text: Copy defaults first with dict(...), then loop the cli items so overrides and brand-new keys both land in the same result.
+  - level: 3
+    text: Guard the override with `if value is not None`, never with `if value`, because `if value` would wrongly discard False, 0, and empty strings.
+tests:
+  public:
+    - name: mixed_override
+      input:
+        defaults: {port: 8080, verbose: true, workers: 4}
+        cli: {port: 9090, verbose: false, workers: null, region: "west"}
+      expected: {port: 9090, verbose: false, workers: 4, region: "west"}
+    - name: empty_cli
+      input:
+        defaults: {a: 1, b: 2}
+        cli: {}
+      expected: {a: 1, b: 2}
+    - name: all_unset
+      input:
+        defaults: {x: 5}
+        cli: {x: null}
+      expected: {x: 5}
+  validation:
+    - name: falsy_zero_overrides
+      input:
+        defaults: {count: 5}
+        cli: {count: 0}
+      expected: {count: 0}
+    - name: adds_new_keys
+      input:
+        defaults: {}
+        cli: {name: "roof-1", enabled: true}
+      expected: {name: "roof-1", enabled: true}
+    - name: mix_add_skip_override
+      input:
+        defaults: {mode: "auto", retries: 3}
+        cli: {mode: "manual", retries: null, debug: false}
+      expected: {mode: "manual", retries: 3, debug: false}
+    - name: empty_string_overrides
+      input:
+        defaults: {label: "default"}
+        cli: {label: ""}
+      expected: {label: ""}
+explanation_markdown: |
+  This is the precedence rule at the heart of every real config system: command-line
+  input outranks defaults, but only where the user actually provided something. The
+  trap is writing `if value:` to detect "provided," which silently throws away the
+  legitimate falsy choices -- turning off `verbose`, setting `count` to `0`, or
+  clearing a label to `""`. Testing `value is not None` keeps the sentinel (unset)
+  distinct from a real falsy value.
+
+  Copying `defaults` before merging keeps the caller's dictionary intact, which
+  matters when the same defaults object feeds several merges.
+common_mistakes:
+  - Using `if value:` to decide whether to override, which drops legitimate False, 0, and "" choices.
+  - Mutating the passed-in defaults dict directly instead of copying it first.
+  - Treating None as a real value and copying it into the result, erasing the default it was meant to leave untouched.

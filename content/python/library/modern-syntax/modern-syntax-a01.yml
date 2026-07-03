@@ -1,0 +1,111 @@
+id: exercise.library.modern_syntax.a01
+kind: exercise
+version: 1
+language: python
+title: Tagging the Telemetry Firehose
+slug: modern-syntax-a01
+difficulty: easy
+concepts:
+  - python.modern_syntax
+  - python.conditionals
+prerequisites:
+  - python.types
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.modern_syntax.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original class-pattern drill themed around an observatory telemetry intake desk, built to surface the bool-before-int ordering gotcha.
+prompt_markdown: |
+  An observatory's intake desk receives one raw telemetry value at a time and
+  needs to tag it by its Python type. Write `tag_reading(value)` that uses a
+  `match`/`case` statement with **class patterns** (for example `case int():`)
+  and returns a tag string:
+
+  - `None` returns `"missing"`
+  - a `bool` (`True`/`False`) returns `"flag"`
+  - an `int` returns `"count"`
+  - a `float` returns `"measure"`
+  - a `str` returns `"label"`
+  - a `list` returns `"series"`
+  - a `dict` returns `"record"`
+  - anything else returns `"unknown"`
+
+  The trap: in Python `bool` is a subclass of `int`, so `case bool()` must appear
+  **before** `case int()`, otherwise every `True`/`False` would be tagged as a
+  count. Note that `0` is an ordinary `int` (not a `bool`), so `tag_reading(0)`
+  must return `"count"`.
+starter_code: |
+  def tag_reading(value):
+      return "unknown"
+function_name: tag_reading
+input_mode: function
+solution_sketch: Match the value against class patterns, listing bool() before int() so booleans are not swallowed by the int branch, and end with a wildcard case for anything unexpected.
+sample_solution: |
+  def tag_reading(value):
+      match value:
+          case None:
+              return "missing"
+          case bool():
+              return "flag"
+          case int():
+              return "count"
+          case float():
+              return "measure"
+          case str():
+              return "label"
+          case list():
+              return "series"
+          case dict():
+              return "record"
+          case _:
+              return "unknown"
+hints:
+  - level: 1
+    text: A class pattern like `case str():` matches by type using isinstance, so you can dispatch on the kind of value without calling type() yourself.
+  - level: 2
+    text: Because True and False are also ints, the order of your cases matters. Put the more specific type ahead of the more general one.
+  - level: 3
+    text: List `case bool():` before `case int():`, and handle `case None:` explicitly since None has no useful class pattern here. Finish with `case _:` returning "unknown".
+tests:
+  public:
+    - name: none_is_missing
+      input: null
+      expected: "missing"
+    - name: true_is_flag
+      input: true
+      expected: "flag"
+    - name: int_is_count
+      input: 7
+      expected: "count"
+  validation:
+    - name: zero_is_count_not_flag
+      input: 0
+      expected: "count"
+    - name: float_is_measure
+      input: 3.5
+      expected: "measure"
+    - name: str_is_label
+      input: "north-ridge"
+      expected: "label"
+    - name: list_is_series
+      input: [1, 2, 3]
+      expected: "series"
+    - name: dict_is_record
+      input: {"gain": 2, "offset": 5}
+      expected: "record"
+explanation_markdown: |
+  Class patterns match on `isinstance`, which is what makes `case int():` fire for
+  any integer. The subtlety is that `bool` inherits from `int`, so `isinstance(True,
+  int)` is `True`. If `case int():` came first it would capture `True` and `False`
+  before the boolean branch ever ran. Ordering cases from most specific to most
+  general is the same discipline you use when ordering `except` clauses. The `0`
+  case reinforces the point from the other direction: `0` is falsy but it is still
+  an `int`, not a `bool`, so it lands in the count branch.
+common_mistakes:
+  - Placing `case int():` before `case bool():`, which tags every True/False as "count".
+  - Writing `case bool:` (the class object) instead of `case bool():` (a class pattern); the former is treated as a capture name, not a type check.
+  - Forgetting the final `case _:` wildcard, so an unexpected type falls through with no branch matched.

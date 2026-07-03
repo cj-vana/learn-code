@@ -1,0 +1,183 @@
+id: exercise.library.scripting_automation.a05
+kind: exercise
+version: 1
+language: python
+title: Tallying Harbor Cargo by the Ton
+slug: scripting-automation-a05
+difficulty: medium
+concepts:
+  - python.pathlib_os
+  - concepts.grouping_aggregation
+  - patterns.running_total
+prerequisites:
+  - python.lists
+  - python.dictionaries
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.scripting_automation.a05
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original size-aggregation drill framed as a harbor manifest tally, with a pathlib-derived "extension" grouping mode; runner passes one request dict.
+prompt_markdown: |
+  A harbor keeps a manifest of every data export leaving its logging station, and
+  the dockmaster wants running totals of how many bytes each category ships. Because
+  the grader calls your function with a single argument, the request arrives as one
+  dict:
+
+  ```python
+  {
+      "files": [
+          {"name": "tides.csv", "size": 10, "crew": "mira"},
+          {"name": "wind.csv", "size": 5, "crew": "jon"}
+      ],
+      "group_key": "crew"
+  }
+  ```
+
+  Write `total_size_by_group(request)` that returns a dict mapping each group value to
+  the sum of the `size` fields of the files in that group.
+
+  The `group_key` decides how to bucket:
+
+  - If `group_key` is the special string `"extension"`, group each file by its file
+    extension — the text after the final dot, lowercased and without the dot (so
+    `tides.csv` and `WIND.CSV` both count toward `"csv"`). A file with no extension
+    groups under the empty-string key `""`.
+  - Otherwise `group_key` names a field present on every record (such as `"crew"` or
+    `"project"`), and files are grouped by that field's value.
+
+  An empty `files` list returns an empty dict `{}`. This is pure tallying over the
+  manifest records; no real file is opened.
+starter_code: |
+  from pathlib import PurePath
+
+
+  def total_size_by_group(request):
+      return {}
+function_name: total_size_by_group
+input_mode: function
+solution_sketch: Loop the files accumulating size into a totals dict; when group_key is "extension" derive the bucket from PurePath(name).suffix, otherwise read the named field, using dict.get(group, 0) as the running total.
+sample_solution: |
+  from pathlib import PurePath
+
+
+  def total_size_by_group(request):
+      group_key = request["group_key"]
+      totals = {}
+      for record in request["files"]:
+          if group_key == "extension":
+              group = PurePath(record["name"]).suffix[1:].lower()
+          else:
+              group = record[group_key]
+          totals[group] = totals.get(group, 0) + record["size"]
+      return totals
+hints:
+  - level: 1
+    text: Keep a totals dict and add each file's size into the entry for its group as you walk the list.
+  - level: 2
+    text: totals[group] = totals.get(group, 0) + record["size"] starts a group at zero the first time you see it and accumulates after that.
+  - level: 3
+    text: Decide the group before adding — when group_key == "extension" use PurePath(name).suffix[1:].lower(), otherwise use record[group_key].
+tests:
+  public:
+    - name: empty
+      input:
+        files: []
+        group_key: crew
+      expected: {}
+    - name: by_extension
+      input:
+        files:
+          - name: tides.csv
+            size: 10
+          - name: wind.csv
+            size: 5
+          - name: chart.json
+            size: 20
+        group_key: extension
+      expected:
+        csv: 15
+        json: 20
+    - name: by_field
+      input:
+        files:
+          - name: a.log
+            size: 10
+            crew: mira
+          - name: b.log
+            size: 4
+            crew: jon
+          - name: c.log
+            size: 6
+            crew: mira
+        group_key: crew
+      expected:
+        mira: 16
+        jon: 4
+  validation:
+    - name: single_extension_group
+      input:
+        files:
+          - name: x.log
+            size: 3
+          - name: y.log
+            size: 7
+        group_key: extension
+      expected:
+        log: 10
+    - name: extension_case_folded
+      input:
+        files:
+          - name: A.TXT
+            size: 2
+          - name: b.txt
+            size: 3
+        group_key: extension
+      expected:
+        txt: 5
+    - name: field_grouping_project
+      input:
+        files:
+          - name: f1.dat
+            size: 100
+            project: orion
+          - name: f2.dat
+            size: 50
+            project: vega
+          - name: f3.dat
+            size: 25
+            project: orion
+        group_key: project
+      expected:
+        orion: 125
+        vega: 50
+    - name: extension_missing_bucket
+      input:
+        files:
+          - name: README
+            size: 4
+          - name: LICENSE
+            size: 6
+          - name: notes.md
+            size: 2
+        group_key: extension
+      expected:
+        '': 10
+        md: 2
+explanation_markdown: |
+  A running total over groups is the accumulator pattern with a dict as the tally
+  sheet: `totals.get(group, 0)` treats a never-seen group as starting at zero, and
+  each file adds its `size` on top. The only branch is *how you name the bucket*.
+  When `group_key` is `"extension"` the bucket is computed from the path string with
+  `PurePath(name).suffix[1:].lower()`, the same normalization used to group by type
+  elsewhere; otherwise the bucket is just a field read off the record. Deciding the
+  group first and accumulating second keeps the loop a single clean O(n) pass, and
+  because addition is commutative the totals do not depend on the order the files
+  arrive in.
+common_mistakes:
+  - Overwriting totals[group] with the current size instead of adding to the accumulated value.
+  - Assuming records always carry the group field, then crashing when group_key is "extension" and no such field exists.
+  - Forgetting to lowercase the extension, so tides.csv and WIND.CSV land in separate buckets.

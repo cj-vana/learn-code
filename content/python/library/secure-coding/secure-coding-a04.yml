@@ -1,0 +1,154 @@
+id: exercise.library.secure_coding.a04
+kind: exercise
+version: 1
+language: python
+title: Clamping Telescope Requests at the Observatory
+slug: secure-coding-a04
+difficulty: medium
+concepts:
+  - python.secure_coding
+  - python.conditionals
+prerequisites:
+  - python.functions
+  - python.dictionaries
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.secure_coding.a04
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original numeric bounds-validation drill framed around an observatory's public exposure-request API, including the bool-is-an-int type-confusion gotcha and clamping to safe limits.
+prompt_markdown: |
+  An observatory exposes a public API where visitors request a telescope exposure
+  value. Untrusted numbers must be range-checked before they reach the hardware,
+  and out-of-range requests are clamped to the nearest safe limit rather than
+  rejected outright. Write `bounds_check_numeric(request)` where `request` is a
+  dict with three keys: `value`, `low`, and `high` (the inclusive allowed range).
+
+  Return a dict with two keys, `accepted` and `value`, following these rules in
+  order:
+
+  - If `value` is a Python `bool` (`True` or `False`), it is NOT a valid number —
+    even though Python treats booleans as a kind of integer. Return
+    `{"accepted": False, "value": low}`.
+  - Otherwise, if `low <= value <= high`, the request is in range. Return
+    `{"accepted": True, "value": value}`.
+  - Otherwise, if `value < low`, clamp up to the floor. Return
+    `{"accepted": False, "value": low}`.
+  - Otherwise the value is above the ceiling. Return
+    `{"accepted": False, "value": high}`.
+
+  Values exactly equal to `low` or `high` are accepted. The bool check must come
+  first, because `low <= True <= high` would otherwise sneak `True` through as the
+  number `1`.
+starter_code: |
+  def bounds_check_numeric(request):
+      value = request["value"]
+      low = request["low"]
+      high = request["high"]
+      return {"accepted": False, "value": low}
+function_name: bounds_check_numeric
+input_mode: function
+solution_sketch: Check isinstance(value, bool) first, then test the inclusive range, then clamp below to low and above to high.
+sample_solution: |
+  def bounds_check_numeric(request):
+      value = request["value"]
+      low = request["low"]
+      high = request["high"]
+      if isinstance(value, bool):
+          return {"accepted": False, "value": low}
+      if low <= value <= high:
+          return {"accepted": True, "value": value}
+      if value < low:
+          return {"accepted": False, "value": low}
+      return {"accepted": False, "value": high}
+hints:
+  - level: 1
+    text: There are four outcomes; write them as an ordered chain of if-checks and return as soon as one matches.
+  - level: 2
+    text: isinstance(value, bool) must be tested before any numeric comparison, because True behaves like 1 in "<=".
+  - level: 3
+    text: In range means low <= value <= high accepted; below range clamps to low, above range clamps to high, both rejected.
+tests:
+  public:
+    - name: in_range
+      input:
+        value: 50
+        low: 0
+        high: 100
+      expected:
+        accepted: true
+        value: 50
+    - name: below_range
+      input:
+        value: -5
+        low: 0
+        high: 100
+      expected:
+        accepted: false
+        value: 0
+    - name: above_range
+      input:
+        value: 250
+        low: 0
+        high: 100
+      expected:
+        accepted: false
+        value: 100
+  validation:
+    - name: at_low_bound
+      input:
+        value: 0
+        low: 0
+        high: 100
+      expected:
+        accepted: true
+        value: 0
+    - name: at_high_bound
+      input:
+        value: 100
+        low: 0
+        high: 100
+      expected:
+        accepted: true
+        value: 100
+    - name: bool_rejected
+      input:
+        value: true
+        low: 0
+        high: 100
+      expected:
+        accepted: false
+        value: 0
+    - name: negative_range
+      input:
+        value: -20
+        low: -50
+        high: -10
+      expected:
+        accepted: true
+        value: -20
+    - name: single_point_range
+      input:
+        value: 7
+        low: 5
+        high: 5
+      expected:
+        accepted: false
+        value: 5
+explanation_markdown: |
+  Range validation is a core input-hardening step: never let an untrusted number
+  reach a subsystem without confirming it sits inside the allowed window. Clamping
+  to the nearest bound keeps the device in a safe state while still signaling, via
+  `accepted: False`, that the request was altered. The subtle security bug here is
+  Python's type model: `bool` is a subclass of `int`, so `True == 1` and
+  `low <= True <= high` quietly succeeds. If you compared before checking the
+  type, a JSON `true` could pass a numeric gate and be treated as the value `1`.
+  Testing `isinstance(value, bool)` first closes that hole. Because the checks are
+  ordered and each returns immediately, exactly one branch fires per call.
+common_mistakes:
+  - Comparing the range before checking for bool, so True slips through as the number 1.
+  - Using isinstance(value, int) as the accept test, which wrongly accepts booleans and rejects valid floats.
+  - Rejecting out-of-range values entirely instead of clamping to low or high as specified.

@@ -1,0 +1,198 @@
+id: exercise.library.sqlite_patterns.a12
+kind: exercise
+version: 1
+language: python
+title: Drafting the Herbarium's Schema
+slug: sqlite-patterns-a12
+difficulty: hard
+concepts:
+  - python.sqlite_sql
+  - python.types
+prerequisites:
+  - python.dictionaries
+  - python.lists
+estimated_time_minutes: 24
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sqlite_patterns.a12
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original schema-inference drill framed as a herbarium deriving a SQLite table definition from specimen records, mapping Python value types to column affinities, then round-tripping through CREATE TABLE and PRAGMA table_info to read the declared schema back.
+prompt_markdown: |
+  A herbarium is digitising its specimen drawers. Each specimen is a record dict,
+  and a drawer is a list of those dicts that all share the same keys, for example:
+
+  ```
+  [
+    {"accession": 1, "height_cm": 12.5, "species": "fern", "notes": None},
+    {"accession": 2, "height_cm": 8.0,  "species": "moss", "notes": "brittle"},
+  ]
+  ```
+
+  Before the drawer can be stored, you must draft a table schema from the data
+  itself. Write `schema_from_records(request)` where `request` is a single dict
+  with one key, `"records"` (the list of specimen dicts).
+
+  Infer each column's SQLite type by scanning that column's values across every
+  record, ignoring `None` values while deciding the type:
+
+  - If any non-null value is a string, the column is `TEXT`.
+  - Otherwise, if any non-null value is a float, the column is `REAL`.
+  - Otherwise, if any non-null value is an int, the column is `INTEGER`.
+  - If the column has **no** non-null values at all, default it to `TEXT`.
+
+  A column is **nullable** when at least one record has `None` for it; otherwise
+  it is not nullable.
+
+  Prove the schema is real by using it: create an in-memory SQLite table whose
+  columns are declared with the inferred types (and `NOT NULL` where the column
+  is not nullable), insert every record with parameter placeholders, then read
+  the schema back with `PRAGMA table_info`. Return a list — in column order — of
+  dicts shaped `{"column": name, "type": TYPE, "nullable": bool}`, built from
+  what the pragma reports.
+
+  Edge cases:
+
+  - Column order follows the key order of the first record.
+  - An empty `"records"` list has no columns, so return an empty list.
+  - Because a not-nullable column never contains `None`, inserting the records
+    can never violate the `NOT NULL` you declared for it.
+
+  Open `sqlite3.connect(":memory:")` inside the function; touch no files.
+starter_code: |
+  import sqlite3
+
+
+  def schema_from_records(request):
+      return []
+function_name: schema_from_records
+input_mode: function
+solution_sketch: "For each column (in first-record key order) scan its values to pick TEXT/REAL/INTEGER by the stated precedence and mark nullable if any value is None; build a CREATE TABLE with those types plus NOT NULL where appropriate, insert every record with placeholders, then read PRAGMA table_info and return {column, type, nullable} per row using its name, type, and notnull flag."
+sample_solution: |
+  import sqlite3
+
+
+  def schema_from_records(request):
+      records = request["records"]
+      if not records:
+          return []
+      columns = list(records[0].keys())
+
+      def infer(values):
+          non_null = [v for v in values if v is not None]
+          if any(isinstance(v, str) for v in non_null):
+              return "TEXT"
+          if any(isinstance(v, float) for v in non_null):
+              return "REAL"
+          if any(isinstance(v, int) for v in non_null):
+              return "INTEGER"
+          return "TEXT"
+
+      col_types = {}
+      col_nullable = {}
+      for c in columns:
+          values = [r.get(c) for r in records]
+          col_types[c] = infer(values)
+          col_nullable[c] = any(v is None for v in values)
+
+      defs = []
+      for c in columns:
+          piece = '"%s" %s' % (c, col_types[c])
+          if not col_nullable[c]:
+              piece += " NOT NULL"
+          defs.append(piece)
+
+      conn = sqlite3.connect(":memory:")
+      conn.execute("CREATE TABLE specimens (%s)" % ", ".join(defs))
+      col_list = ", ".join('"%s"' % c for c in columns)
+      placeholders = ", ".join("?" for _ in columns)
+      conn.executemany(
+          "INSERT INTO specimens (%s) VALUES (%s)" % (col_list, placeholders),
+          [tuple(r.get(c) for c in columns) for r in records],
+      )
+      info = conn.execute("PRAGMA table_info(specimens)").fetchall()
+      return [
+          {"column": row[1], "type": row[2], "nullable": row[3] == 0}
+          for row in info
+      ]
+hints:
+  - level: 1
+    text: Decide each column's type from its non-null values first, checking string, then float, then int, in that order of precedence.
+  - level: 2
+    text: A column is nullable if any record holds None for it; declare NOT NULL only for the columns that never do, so your later inserts stay valid.
+  - level: 3
+    text: After CREATE TABLE and the inserts, PRAGMA table_info returns rows of (cid, name, type, notnull, dflt, pk); use index 1 for the name, index 2 for the declared type, and notnull == 0 for nullable.
+tests:
+  public:
+    - name: mixed_specimen_columns
+      input:
+        records:
+          - {accession: 1, height_cm: 12.5, species: fern, notes: null}
+          - {accession: 2, height_cm: 8.0, species: moss, notes: brittle}
+      expected:
+        - {column: accession, type: INTEGER, nullable: false}
+        - {column: height_cm, type: REAL, nullable: false}
+        - {column: species, type: TEXT, nullable: false}
+        - {column: notes, type: TEXT, nullable: true}
+    - name: all_integer_not_null
+      input:
+        records:
+          - {count: 3}
+          - {count: 7}
+      expected:
+        - {column: count, type: INTEGER, nullable: false}
+    - name: empty_records
+      input:
+        records: []
+      expected: []
+  validation:
+    - name: int_then_float_is_real
+      input:
+        records:
+          - {measure: 1}
+          - {measure: 2.5}
+      expected:
+        - {column: measure, type: REAL, nullable: false}
+    - name: all_null_defaults_text_nullable
+      input:
+        records:
+          - {tag: null}
+          - {tag: null}
+      expected:
+        - {column: tag, type: TEXT, nullable: true}
+    - name: string_wins_over_number
+      input:
+        records:
+          - {code: 100}
+          - {code: pending}
+      expected:
+        - {column: code, type: TEXT, nullable: false}
+    - name: nullable_only_when_none_present
+      input:
+        records:
+          - {a: 1, b: 2.0}
+          - {a: null, b: 4.0}
+      expected:
+        - {column: a, type: INTEGER, nullable: true}
+        - {column: b, type: REAL, nullable: false}
+explanation_markdown: |
+  SQLite is famously flexible about types, but a good schema still records your
+  *intent*: this column holds whole numbers, that one holds decimals, this other
+  one holds text. The inference walks each column's values and picks the most
+  accommodating type that fits — text swallows everything, `REAL` covers any
+  decimals, and `INTEGER` is reserved for columns that are purely whole numbers.
+  Ignoring `None` while deciding is what lets a mostly-integer column with one
+  missing value still be typed `INTEGER` rather than being dragged toward text.
+
+  The reason to round-trip through `CREATE TABLE` and `PRAGMA table_info` — rather
+  than just returning the dict you inferred — is that it *proves* the schema. If
+  the declared types and `NOT NULL` flags were inconsistent with the data, the
+  inserts would fail. Because they succeed and the pragma echoes back exactly the
+  column names, declared types, and `notnull` flags, you know the schema you
+  drafted is one SQLite will actually accept.
+common_mistakes:
+  - Letting a single None value force a column to TEXT; None should be skipped during type inference and only affects nullability.
+  - Checking int before float, so a column that mixes 1 and 2.5 is mistyped INTEGER instead of REAL.
+  - Reading PRAGMA table_info columns by the wrong index; the name is at index 1, the declared type at index 2, and the notnull flag at index 3.

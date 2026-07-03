@@ -1,0 +1,135 @@
+id: exercise.library.typing_runtime.a04
+kind: exercise
+version: 1
+language: python
+title: Driving the Parts Stack
+slug: typing-runtime-a04
+difficulty: medium
+concepts:
+  - python.type_hints
+  - patterns.stack
+prerequisites:
+  - python.lists
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.typing_runtime.a04
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original behavioral test of a generic Stack[T] container, framed as a workshop parts stack replaying a recorded op log, demonstrating that the type parameter is erased at runtime.
+prompt_markdown: |
+  A workshop keeps parts on a last-in-first-out stack. In code the container is a
+  generic `Stack[T]`, but the type parameter `T` is **erased at runtime** — the
+  stack behaves identically whether it holds integers, strings, or a mix. You test
+  a generic container by driving it with a sequence of operations and watching
+  what comes out.
+
+  Write `run_stack(ops)`. The single argument `ops` is a list of operations, each
+  itself a list:
+
+  - `["push", x]` puts `x` on top of the stack and produces no output.
+  - `["pop"]` removes and yields the top item. On an **empty** stack it yields
+    `None`.
+  - `["peek"]` yields the top item without removing it. On an empty stack it
+    yields `None`.
+
+  Return a list holding the yielded value of every `pop` and `peek`, in the order
+  the operations run. `push` operations contribute nothing to the output, so a
+  run with only pushes returns an empty list.
+
+  Because `T` is not enforced, a single run may push both numbers and strings; the
+  stack treats them all the same.
+
+  Example: `ops = [["push", 1], ["push", 2], ["pop"], ["pop"]]` returns `[2, 1]`.
+starter_code: |
+  def run_stack(ops):
+      return []
+function_name: run_stack
+input_mode: function
+solution_sketch: Back the stack with a list; for each op, push appends, pop pops or records None when empty, and peek reads the last item or None; collect pop/peek results in order.
+sample_solution: |
+  def run_stack(ops):
+      stack = []
+      output = []
+      for op in ops:
+          action = op[0]
+          if action == "push":
+              stack.append(op[1])
+          elif action == "pop":
+              output.append(stack.pop() if stack else None)
+          elif action == "peek":
+              output.append(stack[-1] if stack else None)
+      return output
+hints:
+  - level: 1
+    text: A generic container is graded on behavior, not on its declared T, so replay the ops against a plain list and record what each read returns.
+  - level: 2
+    text: Use a list as the stack. push appends op[1]; pop and peek must each check whether the stack is empty first.
+  - level: 3
+    text: For pop, append stack.pop() when non-empty else None; for peek, append stack[-1] when non-empty else None; ignore push in the output.
+tests:
+  public:
+    - name: lifo_basic
+      input:
+        - [push, 1]
+        - [push, 2]
+        - [pop]
+        - [pop]
+      expected: [2, 1]
+    - name: peek_then_pop
+      input:
+        - [push, 7]
+        - [peek]
+        - [pop]
+      expected: [7, 7]
+    - name: reads_on_empty
+      input:
+        - [pop]
+        - [peek]
+      expected: [null, null]
+  validation:
+    - name: mixed_types_erased
+      input:
+        - [push, 3]
+        - [push, gear]
+        - [pop]
+        - [pop]
+      expected: [gear, 3]
+    - name: interleaved
+      input:
+        - [push, 1]
+        - [pop]
+        - [push, 2]
+        - [push, 3]
+        - [peek]
+        - [pop]
+        - [pop]
+      expected: [1, 3, 3, 2]
+    - name: only_pushes
+      input:
+        - [push, 5]
+        - [push, 6]
+      expected: []
+    - name: refill_after_empty
+      input:
+        - [push, 1]
+        - [pop]
+        - [pop]
+        - [push, 9]
+        - [pop]
+      expected: [1, null, 9]
+explanation_markdown: |
+  A `class Stack[T]` (PEP 695 syntax) declares that a stack holds one element type,
+  but that `T` exists only for static analysis — at runtime the object is an
+  ordinary list-backed LIFO that never inspects what it stores. That is why you can
+  push a number and a string into the same instance and both round-trip fine. The
+  honest way to grade such a container is behavioral: feed it a recorded operation
+  log and compare the sequence of reads. Guarding `pop` and `peek` against an
+  empty stack keeps the run deterministic instead of raising, so the whole log
+  always produces a well-defined output list.
+common_mistakes:
+  - Recording an output for push operations, which pollutes the result list.
+  - Letting pop or peek raise on an empty stack instead of yielding None as specified.
+  - Using stack[0] or stack.pop(0) and building a FIFO queue rather than a LIFO stack.

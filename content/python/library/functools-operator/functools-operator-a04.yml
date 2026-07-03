@@ -1,0 +1,123 @@
+id: exercise.library.functools_operator.a04
+kind: exercise
+version: 1
+language: python
+title: Folding the Ferry Manifest
+slug: functools-operator-a04
+difficulty: medium
+concepts:
+  - python.functools_operator
+  - patterns.running_total
+prerequisites:
+  - python.functions
+  - python.lists
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.functools_operator.a04
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original functools.reduce drill themed around folding a ferry cargo manifest down to one running figure, focused on the initial-value edge cases.
+prompt_markdown: |
+  A ferry crew folds a manifest of cargo weights down to a single running figure,
+  always starting from a seed value the dispatcher provides. Write
+  `fold_manifest(job)` where `job` is a dict with:
+
+  - `"items"`: a list of integers to fold
+  - `"op"`: one of `"add"`, `"mul"`, `"max"`, `"min"`
+  - `"initial"`: the integer seed the fold starts from
+
+  Fold `items` left to right with `functools.reduce`, combining the running
+  result with each item using the chosen operation, seeded by `initial`. Return
+  the final integer.
+
+  The seed matters at the edges: if `items` is empty, `reduce` never calls the
+  combiner, so the result is exactly `initial`. With a non-empty list the first
+  combination is between `initial` and `items[0]`, so `initial` participates in
+  `max`/`min` too (a large seed can dominate a `min`, a small seed a `max`).
+
+  Use `operator.add` and `operator.mul` for the arithmetic operations and the
+  built-in `max`/`min` for the others — do not hand-roll the combiner with a
+  `lambda`.
+
+  Example: `{"items": [1, 2, 3], "op": "add", "initial": 10}` returns `16`
+  (`10 + 1 + 2 + 3`). `{"items": [], "op": "mul", "initial": 1}` returns `1`.
+starter_code: |
+  from functools import reduce
+  import operator
+
+
+  def fold_manifest(job):
+      return 0
+function_name: fold_manifest
+input_mode: function
+solution_sketch: |
+  Map the op name to operator.add / operator.mul / max / min, then call
+  reduce(combiner, job["items"], job["initial"]) and return it.
+sample_solution: |
+  from functools import reduce
+  import operator
+
+
+  def fold_manifest(job):
+      combiners = {
+          "add": operator.add,
+          "mul": operator.mul,
+          "max": max,
+          "min": min,
+      }
+      combiner = combiners[job["op"]]
+      return reduce(combiner, job["items"], job["initial"])
+hints:
+  - level: 1
+    text: functools.reduce(func, items, initial) starts from initial and folds each item in with func, carrying the running result forward.
+  - level: 2
+    text: Passing initial as the third argument is what makes an empty items list safe - reduce simply returns initial without ever calling func.
+  - level: 3
+    text: Build a dict mapping "add"/"mul"/"max"/"min" to operator.add, operator.mul, max, and min, then call reduce(that_func, job["items"], job["initial"]).
+tests:
+  public:
+    - name: add_with_seed
+      input: {items: [1, 2, 3], op: add, initial: 10}
+      expected: 16
+    - name: empty_returns_initial
+      input: {items: [], op: mul, initial: 1}
+      expected: 1
+    - name: max_seed_participates
+      input: {items: [4, 2, 7], op: max, initial: 5}
+      expected: 7
+  validation:
+    - name: min_seed_dominates
+      input: {items: [4, 2, 7], op: min, initial: 1}
+      expected: 1
+    - name: product_from_one
+      input: {items: [2, 3, 4], op: mul, initial: 1}
+      expected: 24
+    - name: single_item_add
+      input: {items: [10], op: add, initial: 0}
+      expected: 10
+    - name: large_seed_beats_max
+      input: {items: [3, 9, 2], op: max, initial: 100}
+      expected: 100
+    - name: min_over_negatives
+      input: {items: [-3, -8, -1], op: min, initial: 0}
+      expected: -8
+explanation_markdown: |
+  `functools.reduce` collapses a sequence into a single value by repeatedly
+  applying a two-argument combiner: it starts with the accumulator set to the
+  `initial` seed, then folds in `items[0]`, `items[1]`, and so on. Supplying the
+  `initial` argument is the safe, idiomatic form — without it, an empty sequence
+  raises `TypeError`, and even a non-empty one silently uses `items[0]` as the
+  seed, which changes the meaning for `max`/`min`.
+
+  Because the seed is the very first operand, it takes part in every kind of fold:
+  `min` with a seed of `1` can never exceed `1`, and `max` with a seed of `100`
+  can never drop below `100`. Pulling the arithmetic combiners from the `operator`
+  module keeps the fold expressed as named, reusable functions instead of inline
+  lambdas.
+common_mistakes:
+  - Calling reduce without the initial seed, so an empty items list raises TypeError instead of returning initial.
+  - Forgetting that initial is the first operand, so max/min results ignore how a dominant seed clamps the outcome.
+  - Reaching for a lambda combiner instead of operator.add / operator.mul, defeating the point of the operator module.

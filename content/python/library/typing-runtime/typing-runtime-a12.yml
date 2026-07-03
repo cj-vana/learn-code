@@ -1,0 +1,156 @@
+id: exercise.library.typing_runtime.a12
+kind: exercise
+version: 1
+language: python
+title: Certifying Pedals for the Effects Rack
+slug: typing-runtime-a12
+difficulty: hard
+concepts:
+  - python.type_hints
+  - python.introspection
+prerequisites:
+  - python.dictionaries
+  - python.introspection
+estimated_time_minutes: 24
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.typing_runtime.a12
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original effects-rack scenario doing structural Protocol conformance via inspect.Signature comparison.
+prompt_markdown: |
+  A recording studio's effects rack accepts any pedal that structurally matches its
+  driver **Protocol** -- it does not care about inheritance, only that the pedal
+  exposes the right methods with the right parameter lists. This is how
+  `typing.Protocol` works conceptually: conformance is structural. You will certify a
+  candidate pedal against the rack's protocol by comparing method signatures with
+  `inspect`.
+
+  Write `matches_protocol(spec)`, where `spec` is a dict shaped like:
+
+  ```
+  {
+    "protocol":  {"<method>": ["<param>", ...], ...},
+    "candidate": {"<method>": ["<param>", ...], ...}
+  }
+  ```
+
+  Each method maps to the ordered list of parameter names it declares (including
+  `"self"` when present). To compare a required method against the candidate's,
+  build an `inspect.Signature` from each parameter list -- one
+  `inspect.Parameter(name, inspect.Parameter.POSITIONAL_OR_KEYWORD)` per name -- and
+  compare the two `Signature` objects for equality. Parameter **order and names** must
+  match; a different order counts as a mismatch.
+
+  Return a dict:
+
+  - `"conforms"`: `True` only if there are no missing methods and no signature
+    mismatches.
+  - `"missing_methods"`: the sorted list of protocol methods absent from the
+    candidate.
+  - `"signature_mismatches"`: the sorted list of protocol methods that the candidate
+    *has* but whose signature differs.
+
+  The candidate may declare **extra** methods beyond the protocol; those are ignored
+  (structural typing only requires the protocol's methods to be present and matching).
+  An empty protocol always conforms.
+starter_code: |
+  import inspect
+
+
+  def matches_protocol(spec):
+      # For each protocol method, check the candidate has it with a matching
+      # inspect.Signature; collect missing methods and signature mismatches.
+      return {}
+function_name: matches_protocol
+input_mode: function
+solution_sketch: Build an inspect.Signature per parameter list, then for each protocol method record whether the candidate is missing it or has a non-equal signature.
+sample_solution: |
+  import inspect
+
+
+  def matches_protocol(spec):
+      protocol = spec["protocol"]
+      candidate = spec["candidate"]
+
+      def build(params):
+          return inspect.Signature(
+              [
+                  inspect.Parameter(name, inspect.Parameter.POSITIONAL_OR_KEYWORD)
+                  for name in params
+              ]
+          )
+
+      missing = []
+      mismatches = []
+      for method, params in protocol.items():
+          if method not in candidate:
+              missing.append(method)
+          elif build(candidate[method]) != build(params):
+              mismatches.append(method)
+
+      missing.sort()
+      mismatches.sort()
+      return {
+          "conforms": not missing and not mismatches,
+          "missing_methods": missing,
+          "signature_mismatches": mismatches,
+      }
+hints:
+  - level: 1
+    text: Turn each parameter-name list into an inspect.Signature by creating one POSITIONAL_OR_KEYWORD inspect.Parameter per name, in order.
+  - level: 2
+    text: Two Signature objects are equal only when their parameters match by name, order, and kind, so comparing them with == is your structural check.
+  - level: 3
+    text: Loop the protocol's methods; if the candidate lacks a method it is missing, else compare signatures and record a mismatch on inequality. Sort both lists and set conforms to True only when both are empty.
+tests:
+  public:
+    - name: exact_conformance
+      input: {protocol: {connect: ['self', 'port'], read: ['self']}, candidate: {connect: ['self', 'port'], read: ['self']}}
+      expected: {conforms: true, missing_methods: [], signature_mismatches: []}
+    - name: missing_method
+      input: {protocol: {connect: ['self', 'port'], read: ['self'], close: ['self']}, candidate: {connect: ['self', 'port'], read: ['self']}}
+      expected: {conforms: false, missing_methods: ['close'], signature_mismatches: []}
+    - name: signature_mismatch
+      input: {protocol: {connect: ['self', 'port']}, candidate: {connect: ['self', 'host']}}
+      expected: {conforms: false, missing_methods: [], signature_mismatches: ['connect']}
+  validation:
+    - name: extra_methods_ignored
+      input: {protocol: {read: ['self']}, candidate: {read: ['self'], reset: ['self'], flush: ['self', 'hard']}}
+      expected: {conforms: true, missing_methods: [], signature_mismatches: []}
+    - name: param_count_mismatch
+      input: {protocol: {send: ['self', 'data', 'retries']}, candidate: {send: ['self', 'data']}}
+      expected: {conforms: false, missing_methods: [], signature_mismatches: ['send']}
+    - name: missing_and_mismatch_sorted
+      input: {protocol: {beta: ['self'], alpha: ['self', 'x'], delta: ['self']}, candidate: {alpha: ['self', 'y']}}
+      expected: {conforms: false, missing_methods: ['beta', 'delta'], signature_mismatches: ['alpha']}
+    - name: empty_protocol_conforms
+      input: {protocol: {}, candidate: {anything: ['self']}}
+      expected: {conforms: true, missing_methods: [], signature_mismatches: []}
+    - name: param_order_matters
+      input: {protocol: {plot: ['self', 'x', 'y']}, candidate: {plot: ['self', 'y', 'x']}}
+      expected: {conforms: false, missing_methods: [], signature_mismatches: ['plot']}
+explanation_markdown: |
+  A `Protocol` describes a shape, not an ancestor: a pedal conforms if it *has* the
+  right methods with the right signatures, no matter what it inherits from. This
+  function checks that shape by turning each declared parameter list into an
+  `inspect.Signature` and comparing signatures with `==`. Two `Signature` objects are
+  equal only when their parameters agree on name, position, and kind, which is exactly
+  the structural contract you want -- and it is why `param_order_matters` fails:
+  `plot(self, x, y)` and `plot(self, y, x)` are different signatures even though they
+  use the same names.
+
+  Separating the two failure modes keeps the report actionable. A protocol method the
+  candidate never defines is *missing*; a method it defines with the wrong parameters
+  is a *signature mismatch*. Extra methods on the candidate are irrelevant, because
+  structural typing only asks that the required surface is present -- so
+  `extra_methods_ignored` still conforms. Sorting both lists makes the output stable
+  regardless of dict iteration order, and `conforms` is simply the statement that both
+  lists came back empty. An empty protocol imposes no requirements, so it conforms
+  vacuously.
+common_mistakes:
+  - Requiring the candidate's method set to equal the protocol's, which wrongly rejects a pedal that adds extra methods.
+  - Comparing parameter lists as unordered sets, so a reordered signature slips through instead of being flagged.
+  - Returning unsorted method lists, making the output depend on dict iteration order and flake across runs.

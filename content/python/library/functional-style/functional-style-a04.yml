@@ -1,0 +1,161 @@
+id: exercise.library.functional_style.a04
+kind: exercise
+version: 1
+language: python
+title: The Orchard Market Ledger
+slug: functional-style-a04
+difficulty: medium
+concepts:
+  - python.functional_style
+  - concepts.grouping_aggregation
+prerequisites:
+  - python.functions
+  - python.dictionaries
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.functional_style.a04
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original fold-into-dict drill framed as an orchard market ledger that reduces crate deliveries into per-group totals with a chosen key and value.
+prompt_markdown: |
+  An orchard market closes each day by folding its delivery slips into a summary
+  ledger. Every slip is a record of one delivery, and the closing clerk chooses a
+  grouping key and a value to accumulate, then reduces the whole list into a
+  single dict of running totals.
+
+  Write `reduce_to_dict(spec)`. The single argument `spec` is a dict:
+
+  - `spec["items"]`: a list of delivery records. Each record is a dict with fields
+    `"vendor"` (a string), `"fruit"` (a string), and `"crates"` (an integer).
+  - `spec["key"]`: which field names the group, either `"vendor"` or `"fruit"`.
+  - `spec["value"]`: what each record contributes, either `"crates"` (add that
+    record's crate count) or `"count"` (add 1 per record).
+
+  Fold the records left to right into a dict that maps each group to the sum of
+  its contributions. Build the dict with a reduce-style accumulation: start from
+  an empty dict, and for each record add its contribution to the entry for its
+  group, creating the entry at zero the first time a group appears.
+
+  Return the resulting dict. Key order does not matter. An empty `spec["items"]`
+  returns an empty dict `{}`.
+
+  Example: with records
+  `[{"vendor": "Ana", "fruit": "plum", "crates": 3}, {"vendor": "Ben", "fruit": "plum", "crates": 2}, {"vendor": "Ana", "fruit": "pear", "crates": 4}]`,
+  `key = "vendor"` and `value = "crates"` gives `{"Ana": 7, "Ben": 2}`.
+starter_code: |
+  from functools import reduce
+
+
+  def reduce_to_dict(spec):
+      return {}
+function_name: reduce_to_dict
+input_mode: function
+solution_sketch: Pick a key function and a value function from small registries, then fold the records with reduce into a dict, adding each record's value contribution to its group's running total.
+sample_solution: |
+  from functools import reduce
+
+
+  def reduce_to_dict(spec):
+      key_funcs = {
+          "vendor": lambda record: record["vendor"],
+          "fruit": lambda record: record["fruit"],
+      }
+      value_funcs = {
+          "crates": lambda record: record["crates"],
+          "count": lambda record: 1,
+      }
+      key_func = key_funcs[spec["key"]]
+      value_func = value_funcs[spec["value"]]
+
+      def accumulate(totals, record):
+          group = key_func(record)
+          totals[group] = totals.get(group, 0) + value_func(record)
+          return totals
+
+      return reduce(accumulate, spec["items"], {})
+hints:
+  - level: 1
+    text: Folding into a dict means carrying one accumulator dict through every record and updating it as you go.
+  - level: 2
+    text: Turn the "key" and "value" names into functions that pull the group and the contribution out of a record, so the accumulation logic stays generic.
+  - level: 3
+    text: Use reduce with an initial empty dict; in the step function, read the current total with totals.get(group, 0), add this record's contribution, store it back, and return the dict.
+tests:
+  public:
+    - name: empty_ledger
+      input:
+        items: []
+        key: "vendor"
+        value: "crates"
+      expected: {}
+    - name: vendor_crates
+      input:
+        items:
+          - {vendor: "Ana", fruit: "plum", crates: 3}
+          - {vendor: "Ben", fruit: "plum", crates: 2}
+          - {vendor: "Ana", fruit: "pear", crates: 4}
+        key: "vendor"
+        value: "crates"
+      expected: {Ana: 7, Ben: 2}
+    - name: fruit_count
+      input:
+        items:
+          - {vendor: "Ana", fruit: "plum", crates: 3}
+          - {vendor: "Ben", fruit: "plum", crates: 2}
+          - {vendor: "Ana", fruit: "pear", crates: 4}
+        key: "fruit"
+        value: "count"
+      expected: {plum: 2, pear: 1}
+  validation:
+    - name: vendor_count
+      input:
+        items:
+          - {vendor: "Ana", fruit: "plum", crates: 3}
+          - {vendor: "Ben", fruit: "plum", crates: 2}
+          - {vendor: "Ana", fruit: "pear", crates: 4}
+        key: "vendor"
+        value: "count"
+      expected: {Ana: 2, Ben: 1}
+    - name: fruit_crates
+      input:
+        items:
+          - {vendor: "Ana", fruit: "plum", crates: 3}
+          - {vendor: "Ben", fruit: "plum", crates: 2}
+          - {vendor: "Ana", fruit: "pear", crates: 4}
+        key: "fruit"
+        value: "crates"
+      expected: {plum: 5, pear: 4}
+    - name: single_record
+      input:
+        items:
+          - {vendor: "Cy", fruit: "fig", crates: 9}
+        key: "vendor"
+        value: "crates"
+      expected: {Cy: 9}
+    - name: many_vendors_crates
+      input:
+        items:
+          - {vendor: "Ana", fruit: "plum", crates: 5}
+          - {vendor: "Ben", fruit: "fig", crates: 1}
+          - {vendor: "Ana", fruit: "fig", crates: 2}
+          - {vendor: "Cy", fruit: "pear", crates: 8}
+          - {vendor: "Ben", fruit: "plum", crates: 4}
+        key: "vendor"
+        value: "crates"
+      expected: {Ana: 7, Ben: 5, Cy: 8}
+explanation_markdown: |
+  Reducing into a dict is the accumulation pattern behind group-by: the fold keeps
+  one dict of running totals and folds each record into it. Separating the key
+  function from the value function is the functional-style discipline, the shape
+  of the aggregation (group by X, sum Y) is expressed as data rather than hard
+  coded, so the same fold handles vendor-by-crates and fruit-by-count without
+  branching. Seeding a missing group with `totals.get(group, 0)` keeps the first
+  contribution correct, and returning the accumulator each step is what lets
+  `reduce` thread it through the whole list.
+common_mistakes:
+  - Forgetting to seed a new group at zero, so the first contribution raises a KeyError.
+  - Not returning the accumulator dict from the step function, which makes reduce pass None into the next call.
+  - Overwriting a group's total with the latest record instead of adding to the running sum.

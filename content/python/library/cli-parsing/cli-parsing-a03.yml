@@ -1,0 +1,122 @@
+id: exercise.library.cli_parsing.a03
+kind: exercise
+version: 1
+language: python
+title: Observatory Settings Over Defaults
+slug: cli-parsing-a03
+difficulty: medium
+concepts:
+  - python.cli_args
+  - python.dictionaries
+prerequisites:
+  - python.functions
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.cli_parsing.a03
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original observatory telescope-config framing for a defaults-then-overrides precedence merge that returns a fresh dict.
+prompt_markdown: |
+  Before the observatory points its telescope, it starts from a set of built-in
+  default settings and then lets the night's command-line choices override them.
+  A choice the observer actually typed should win, even if what they typed is an
+  empty string on purpose.
+
+  Write `apply_defaults(job)` where `job` is a dict with two keys:
+
+  - `job["defaults"]`: a dict of default setting names and values.
+  - `job["parsed"]`: a dict of settings the observer supplied on the command line.
+
+  Return a new dict with these rules:
+
+  - Every key from `defaults` appears in the result.
+  - For any key present in `parsed`, the parsed value replaces the default. A key
+    counts as "present" whenever it exists in `parsed`, so `''` (an empty string)
+    still overrides its default.
+  - Keys that appear only in `parsed` are kept as well.
+  - Do not modify the `defaults` or `parsed` dicts you were given; build and
+    return a fresh dictionary.
+
+  Example: `defaults = {'exposure': '30', 'filter': 'clear'}` with
+  `parsed = {'exposure': '60'}` returns
+  `{'exposure': '60', 'filter': 'clear'}`.
+starter_code: |
+  def apply_defaults(job):
+      defaults = job["defaults"]
+      parsed = job["parsed"]
+      # Start from a copy of the defaults, then let parsed settings win.
+      return {}
+function_name: apply_defaults
+input_mode: function
+solution_sketch: Copy defaults into a new dict, then write every key/value from parsed over it so supplied keys win even when their value is falsy.
+sample_solution: |
+  def apply_defaults(job):
+      defaults = job["defaults"]
+      parsed = job["parsed"]
+      result = dict(defaults)
+      for key, value in parsed.items():
+          result[key] = value
+      return result
+hints:
+  - level: 1
+    text: Precedence here means "later layer wins". Begin from the defaults and let the parsed layer overwrite on top.
+  - level: 2
+    text: dict(defaults) makes an independent copy, so writing into it never disturbs the caller's original dict.
+  - level: 3
+    text: Loop over parsed.items() and assign each pair; because you assign by key presence, an empty-string value still replaces the default.
+tests:
+  public:
+    - name: override_one
+      input:
+        defaults: {exposure: '30', filter: clear}
+        parsed: {exposure: '60'}
+      expected: {exposure: '60', filter: clear}
+    - name: fill_missing
+      input:
+        defaults: {retries: '3', mode: safe}
+        parsed: {}
+      expected: {retries: '3', mode: safe}
+    - name: extra_parsed_key
+      input:
+        defaults: {mode: safe}
+        parsed: {debug: 'on'}
+      expected: {mode: safe, debug: 'on'}
+  validation:
+    - name: empty_string_overrides
+      input:
+        defaults: {label: default}
+        parsed: {label: ''}
+      expected: {label: ''}
+    - name: both_empty
+      input:
+        defaults: {}
+        parsed: {}
+      expected: {}
+    - name: no_defaults
+      input:
+        defaults: {}
+        parsed: {only: '1'}
+      expected: {only: '1'}
+    - name: all_overridden
+      input:
+        defaults: {a: '9', b: '9'}
+        parsed: {a: '1', b: '2'}
+      expected: {a: '1', b: '2'}
+explanation_markdown: |
+  Configuration precedence is a layering story: a lower layer supplies fallbacks
+  and a higher layer overrides them. Copying `defaults` into a new dict and then
+  writing `parsed` on top expresses exactly that ordering, and equivalently you
+  could write `{**defaults, **parsed}`. The subtle rule is what "override" means.
+  Testing truthiness (`if value:`) would wrongly discard a deliberately empty
+  value, so a `--label ""` on the command line would silently fall back to the
+  default. The correct test is presence: a key that exists in `parsed` wins
+  regardless of whether its value is empty, zero, or blank. Copying first also
+  keeps the function pure, so callers that reuse their defaults dict across many
+  parses are never surprised by a mutation.
+common_mistakes:
+  - Only overriding when the parsed value is truthy, which drops legitimately empty overrides like an empty string.
+  - Mutating the defaults dict in place, so a caller who reuses it sees it corrupted after the first call.
+  - Merging in the wrong order so defaults overwrite the observer's supplied values instead of the other way around.

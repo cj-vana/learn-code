@@ -1,0 +1,97 @@
+id: exercise.library.memory_lifetime.a07
+kind: exercise
+version: 1
+language: python
+title: The Letterpress Number Drawer
+slug: memory-lifetime-a07
+difficulty: medium
+concepts:
+  - python.memory_model
+  - python.types
+prerequisites:
+  - python.lists
+  - python.conditionals
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.memory_lifetime.a07
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original identity-prediction drill themed on a letterpress shop's pre-cast small-number slug drawer, modelling CPython's small-integer cache.
+prompt_markdown: |
+  A letterpress print shop keeps a drawer of pre-cast metal slugs for every whole
+  number from -5 through 256 inclusive, the ones it reaches for constantly. When
+  two different jobs both ask for a number in that drawer, the shop hands each of
+  them the exact same physical slug, so the two jobs literally share one piece.
+  For any number outside the drawer the shop casts a brand-new slug on the spot,
+  so two jobs asking for 1000 walk away with two separate pieces.
+
+  This mirrors CPython's small-integer cache. Values from -5 to 256 are
+  pre-created singleton objects, so if you write `a = n` and `b = n` for such a
+  value, `a is b` is `True` (same object). Outside that range each `n` builds a
+  fresh object, so `a is b` is `False` even though `a == b` stays `True`.
+
+  Write `small_int_cache_hit(values)` that takes a list of integers. For each
+  value, imagine two variables were both set to that literal; return a list of
+  booleans where `True` means the two variables would be the **same object**
+  (the value is in the inclusive range -5 through 256) and `False` means they
+  would be distinct objects (outside that range). The endpoints -5 and 256 are
+  both inside the drawer. An empty list returns an empty list. The output list
+  has one boolean per input value, in the same order.
+starter_code: |
+  def small_int_cache_hit(values):
+      return []
+function_name: small_int_cache_hit
+input_mode: function
+solution_sketch: For each integer, test whether it lies in the inclusive range -5..256 with a chained comparison, collecting one boolean per value.
+sample_solution: |
+  def small_int_cache_hit(values):
+      return [-5 <= v <= 256 for v in values]
+hints:
+  - level: 1
+    text: The shared drawer holds exactly the integers from -5 through 256 inclusive; every other value is cast fresh and gives a distinct object.
+  - level: 2
+    text: For each value you only need a single membership test, and Python lets you write it as one chained comparison.
+  - level: 3
+    text: A comprehension like [-5 <= v <= 256 for v in values] produces one boolean per value while preserving order.
+tests:
+  public:
+    - name: inside_and_boundaries
+      input: [0, 7, 256]
+      expected: [true, true, true]
+    - name: just_outside
+      input: [-6, 257]
+      expected: [false, false]
+    - name: mixed_row
+      input: [-5, 255, 300]
+      expected: [true, true, false]
+  validation:
+    - name: empty
+      input: []
+      expected: []
+    - name: lower_boundary
+      input: [-5, -4, -100]
+      expected: [true, true, false]
+    - name: upper_boundary
+      input: [255, 256, 257]
+      expected: [true, true, false]
+    - name: all_inside
+      input: [-5, 0, 100, 256]
+      expected: [true, true, true, true]
+    - name: all_outside
+      input: [-1000, 1000]
+      expected: [false, false]
+explanation_markdown: |
+  CPython pre-allocates one shared object for each small integer in -5..256 and
+  hands the same object back every time that value is needed, so identity (`is`)
+  holds for those values. The chained comparison `-5 <= v <= 256` is the whole
+  test; it reads as a single range check and short-circuits naturally. The key
+  lesson is that identity and equality are different questions: two ints outside
+  the cache are always equal (`==`) but not the same object (`is`), which is why
+  you should compare numbers with `==` and never rely on `is` for value checks.
+common_mistakes:
+  - Using exclusive bounds such as v < 256 and dropping the endpoint 256, which is actually inside the cached range.
+  - Confusing equality with identity and assuming two equal large integers must be the same object.
+  - Returning the values or filtering the list instead of mapping exactly one boolean flag per input value.

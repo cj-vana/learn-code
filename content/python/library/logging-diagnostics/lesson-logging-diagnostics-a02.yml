@@ -1,0 +1,92 @@
+id: lesson.library.logging_diagnostics.a02
+kind: lesson
+version: 1
+language: python
+title: 'The Logger Hierarchy and Effective Levels'
+slug: lesson-logging-diagnostics-a02
+difficulty: medium
+concepts:
+  - python.logging_diagnostics
+prerequisites:
+  - python.logging_diagnostics
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.logging_diagnostics.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original walkthrough of the logger name hierarchy, effective-level resolution, and propagation, with fresh worked examples.
+body_markdown: |
+  A real system has dozens of components, each wanting its own volume:
+  crank the database layer to DEBUG while everything else stays at
+  WARNING. `logging` makes this possible through a **hierarchy** encoded
+  in logger *names* — dotted strings that form a tree.
+
+  ```python
+  logging.getLogger("shop")            # a node
+  logging.getLogger("shop.orders")     # its child
+  logging.getLogger("shop.orders.tax") # grandchild
+  ```
+
+  The dots are structure: `shop.orders.tax`'s ancestors are
+  `shop.orders`, `shop`, and the unnamed **root**. The universal idiom
+  `getLogger(__name__)` makes each module's logger name match its import
+  path automatically, so the logger tree mirrors your package tree for
+  free.
+
+  ### Effective level: inherited unless overridden
+
+  Here is the mechanism worth internalizing — and your central exercise.
+  Most loggers have **no level set** (`NOTSET`). To decide whether a
+  message passes, logging walks *up* the tree to the first ancestor with
+  an explicit level — the **effective level**:
+
+  ```python
+  logging.getLogger("shop").setLevel(logging.WARNING)      # set here
+  logging.getLogger("shop.orders.tax")                     # NOTSET
+  # effective level of shop.orders.tax = WARNING (inherited from shop)
+
+  logging.getLogger("shop.orders").setLevel(logging.DEBUG) # override subtree
+  # now shop.orders.tax's effective level = DEBUG
+  ```
+
+  This is exactly the config-precedence idea in a new guise: a specific
+  setting overrides a general one, resolved by walking toward the
+  specific. It means you tune whole subsystems from one line — set
+  `shop.orders` to DEBUG and every logger beneath it gets loud, while
+  `shop.inventory` stays quiet. Your exercise implements this walk:
+  given a dict of explicitly-set levels and a logger name, compute the
+  effective level by ascending the dotted path to root.
+
+  ### Propagation: where records flow
+
+  Levels decide *whether* a record is created; **propagation** decides
+  *where it goes*. A record, once past its logger's level, travels *up*
+  the tree to every ancestor's **handlers** (the objects that actually
+  write — to console, file, network). Normally you attach one handler
+  at the root, and every logger's records bubble up to it — configure
+  output *once*, centrally.
+
+  Two classic bugs live here: attaching a handler at both root and a
+  child yields **duplicate log lines** (the record hits both on its way
+  up); and `propagate = False` on a logger silences it at the root — the
+  right tool for "route audit logs to their own file and nowhere else",
+  a disaster when set by accident. Your exercise models propagation as
+  the record's upward walk collecting handlers.
+
+  Names as a tree, levels inherited by ascent, records propagating by
+  ascent to handlers — three mechanics, one shape (walk toward the
+  root), and together they explain every "why is this logger silent /
+  loud / doubled" mystery you will debug.
+checkpoints:
+  - question: A logger "api.auth.tokens" has no level set. How is its effective level determined?
+    answer: 'Logging walks up the dotted hierarchy — api.auth, api, root — to the first ancestor with an explicit level, and uses that; the NOTSET logger inherits the nearest set ancestor''s level.'
+    explanation: 'Effective-level resolution is ascent-to-the-first-explicit-setting — the same specific-overrides-general logic as config precedence.'
+  - question: Setting shop.orders to DEBUG makes shop.orders.tax verbose but leaves shop.inventory quiet. Why?
+    answer: 'tax inherits its effective level from the nearest explicit ancestor, now shop.orders at DEBUG; inventory is under shop (still WARNING) and unaffected — one line tunes a whole subtree without touching siblings.'
+    explanation: 'Subtree-scoped control is the payoff of the name hierarchy: components are addressable by dotted prefix.'
+  - question: Handlers attached at both the root and a child logger produce doubled log lines. What mechanism causes this?
+    answer: 'A record propagates UP the tree after passing its logger''s level, invoking every ancestor''s handlers; with a handler on the child and one on root, the record is written by both on its single upward journey.'
+    explanation: 'Levels gate record creation; propagation routes the created record to handlers by ascent — duplicates mean two handlers on one path.'

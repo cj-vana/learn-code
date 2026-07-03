@@ -1,0 +1,184 @@
+id: exercise.library.introspection_metaprogramming.a11
+kind: exercise
+version: 1
+language: python
+title: Reading a Projector's Captured Settings
+slug: introspection-metaprogramming-a11
+difficulty: medium
+concepts:
+  - python.introspection
+  - python.dictionaries
+prerequisites:
+  - python.closures_decorators
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.introspection_metaprogramming.a11
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: >-
+    Original planetarium framing that reads a closure's captured free variables
+    by pairing __code__.co_freevars names with __closure__ cell contents, exactly
+    the introspection the research plan describes for closure_variables.
+prompt_markdown: |
+  A planetarium stores projector presets as closures: an inner routine that has
+  captured a few fixed settings from the factory that made it. You want to read
+  back the settings a preset captured, straight off the function object.
+
+  Several presets are built and collected in a `_PRESETS` dictionary mapping each
+  preset name to its function object. Write `read_preset(name)`, which returns a
+  dictionary mapping every captured (free) variable name to its value.
+
+  How closures expose their captures:
+
+  - `func.__code__.co_freevars` is a tuple of the names the inner routine
+    captured from its enclosing scope.
+  - `func.__closure__` is a parallel tuple of cell objects; the value of the
+    `i`-th free variable is `func.__closure__[i].cell_contents`.
+  - A plain routine that captured nothing has `func.__closure__` equal to `None`;
+    in that case return an empty dictionary.
+
+  Pair the names with their cell contents to build the result, for example
+  `{"label": "orion", "tilt": 12}`. Only variables the inner routine actually
+  *uses* are captured, so a setting computed and used inside the factory can
+  appear even if it was never a parameter. The given `name` is always a key in
+  `_PRESETS`.
+starter_code: |
+  def make_dome(label, tilt, zoom):
+      span = tilt + zoom
+
+      def project(star):
+          return label, tilt, zoom, span, star
+      return project
+
+
+  def make_dimmer(level):
+      def dim():
+          return level
+      return dim
+
+
+  def fixed_beam(star):
+      return star
+
+
+  _PRESETS = {
+      "orion": make_dome("orion", 12, 3),
+      "draco": make_dome("draco", 20, 5),
+      "lyra": make_dome("lyra", 0, 0),
+      "soft": make_dimmer(7),
+      "fixed_beam": fixed_beam,
+  }
+
+
+  def read_preset(name):
+      return {}
+function_name: read_preset
+input_mode: function
+solution_sketch: >-
+  Look up the preset, treat __closure__ of None as no captures, otherwise zip
+  __code__.co_freevars with the cells and map each name to its cell_contents.
+sample_solution: |
+  def make_dome(label, tilt, zoom):
+      span = tilt + zoom
+
+      def project(star):
+          return label, tilt, zoom, span, star
+      return project
+
+
+  def make_dimmer(level):
+      def dim():
+          return level
+      return dim
+
+
+  def fixed_beam(star):
+      return star
+
+
+  _PRESETS = {
+      "orion": make_dome("orion", 12, 3),
+      "draco": make_dome("draco", 20, 5),
+      "lyra": make_dome("lyra", 0, 0),
+      "soft": make_dimmer(7),
+      "fixed_beam": fixed_beam,
+  }
+
+
+  def read_preset(name):
+      func = _PRESETS[name]
+      cells = func.__closure__
+      if cells is None:
+          return {}
+      names = func.__code__.co_freevars
+      return {var: cell.cell_contents for var, cell in zip(names, cells)}
+hints:
+  - level: 1
+    text: >-
+      The captured names live in func.__code__.co_freevars and the matching
+      values live in func.__closure__ as cell objects.
+  - level: 2
+    text: >-
+      Read a cell's value with cell.cell_contents, and remember that a routine
+      capturing nothing has __closure__ equal to None.
+  - level: 3
+    text: >-
+      zip co_freevars with __closure__ and build {name: cell.cell_contents ...};
+      return {} when __closure__ is None.
+tests:
+  public:
+    - name: three_settings
+      input: orion
+      expected:
+        label: orion
+        span: 15
+        tilt: 12
+        zoom: 3
+    - name: single_capture
+      input: soft
+      expected:
+        level: 7
+    - name: no_closure
+      input: fixed_beam
+      expected: {}
+  validation:
+    - name: another_dome
+      input: draco
+      expected:
+        label: draco
+        span: 25
+        tilt: 20
+        zoom: 5
+    - name: zeroed_dome
+      input: lyra
+      expected:
+        label: lyra
+        span: 0
+        tilt: 0
+        zoom: 0
+    - name: single_capture_again
+      input: soft
+      expected:
+        level: 7
+    - name: no_closure_again
+      input: fixed_beam
+      expected: {}
+explanation_markdown: |
+  A closure keeps its captured variables in cells so the inner routine can still
+  reach them after the factory has returned. Introspection splits that state
+  across two attributes: `__code__.co_freevars` names the captured variables, and
+  `__closure__` holds the live cells in the same order. Zipping them and reading
+  each `cell.cell_contents` reconstructs exactly what the preset remembers.
+
+  Two details matter. First, only variables the inner routine *uses* are
+  captured, which is why `span` — computed inside `make_dome` and used by
+  `project` — appears alongside the parameters. Second, a routine that captured
+  nothing has `__closure__` set to `None`, not an empty tuple, so `fixed_beam`
+  must be handled as the empty-dictionary case before you try to iterate.
+common_mistakes:
+  - Assuming __closure__ is an empty tuple for a non-closure and iterating it, when it is actually None.
+  - Reading the cells directly instead of their .cell_contents, returning cell objects rather than values.
+  - Expecting only parameters to be captured and being surprised that a computed local like span is included.

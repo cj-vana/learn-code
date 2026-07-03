@@ -1,0 +1,124 @@
+id: exercise.library.numeric_precision.a07
+kind: exercise
+version: 1
+language: python
+title: Threading the Loom in Lowest Terms
+slug: numeric-precision-a07
+difficulty: medium
+concepts:
+  - python.numeric_precision
+  - concepts.number_theory
+prerequisites:
+  - python.dictionaries
+  - python.operators
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.numeric_precision.a07
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original greatest-common-divisor drill that recovers the divisor from a reduced fractions.Fraction rather than running a hand-written Euclid loop, framed around a weaving loom's repeating colour block.
+prompt_markdown: |
+  A weaving loom threads two colours across the warp: `a` strands of one colour
+  and `b` strands of the other. The pattern repeats in equal blocks, and the
+  largest block that divides **both** strand counts evenly has a length equal to
+  the greatest common divisor of `a` and `b`.
+
+  Instead of writing Euclid's algorithm by hand, lean on Python's exact rational
+  type. When you build `Fraction(a, b)`, the `fractions` module immediately
+  reduces it to lowest terms by dividing the top and bottom by their greatest
+  common divisor. That means the reduced numerator is exactly `a // g`, so you can
+  recover the divisor as `g = a // reduced.numerator`.
+
+  Write `loom_block(job)` where `job` is a dictionary with two keys:
+
+  - `"a"`: a positive integer (at least 1).
+  - `"b"`: a positive integer (at least 1).
+
+  Build `Fraction(a, b)`, read its `.numerator`, and return `a` divided (using
+  integer division `//`) by that numerator. The result is the greatest common
+  divisor of `a` and `b`.
+
+  Example: `loom_block({"a": 12, "b": 8})` returns `4`, because `Fraction(12, 8)`
+  reduces to `3/2`, and `12 // 3` is `4`.
+starter_code: |
+  from fractions import Fraction
+
+
+  def loom_block(job):
+      return 0
+function_name: loom_block
+input_mode: function
+solution_sketch: Build Fraction(a, b) so it auto-reduces, then return a integer-divided by the reduced numerator, which equals the greatest common divisor.
+sample_solution: |
+  from fractions import Fraction
+
+
+  def loom_block(job):
+      a = job["a"]
+      b = job["b"]
+      reduced = Fraction(a, b)
+      return a // reduced.numerator
+hints:
+  - level: 1
+    text: Constructing a Fraction always stores it in lowest terms, so Fraction(12, 8) is kept internally as 3 over 2.
+  - level: 2
+    text: If the reduced numerator is a // g, then dividing a by that numerator hands back g, the greatest common divisor.
+  - level: 3
+    text: Read reduced.numerator from Fraction(a, b) and return a // reduced.numerator using integer division.
+tests:
+  public:
+    - name: coprime
+      input:
+        a: 7
+        b: 13
+      expected: 1
+    - name: shares_factor
+      input:
+        a: 12
+        b: 8
+      expected: 4
+    - name: equal_counts
+      input:
+        a: 9
+        b: 9
+      expected: 9
+  validation:
+    - name: one_divides_other
+      input:
+        a: 6
+        b: 3
+      expected: 3
+    - name: both_one
+      input:
+        a: 1
+        b: 1
+      expected: 1
+    - name: larger_pair
+      input:
+        a: 48
+        b: 36
+      expected: 12
+    - name: prime_pair
+      input:
+        a: 17
+        b: 5
+      expected: 1
+explanation_markdown: |
+  The `fractions.Fraction` constructor normalises every value the moment it is
+  built: it divides the numerator and denominator by their greatest common
+  divisor and keeps the denominator positive. So for `Fraction(48, 36)` the stored
+  form is `4/3`, where `4` is `48 // 12` and `12` is the divisor you are hunting
+  for. Dividing the original `a` by that reduced numerator inverts the scaling and
+  leaves exactly the greatest common divisor.
+
+  This works entirely in exact integer arithmetic, so it never touches floating
+  point and never rounds. It is a handy reminder that reaching for the right
+  standard-library type can replace a loop you might otherwise write by hand, and
+  that `Fraction` is doing a gcd reduction for you on every construction.
+common_mistakes:
+  - Dividing by reduced.denominator when a and b are swapped in your head; the divisor comes from a // numerator (or equivalently b // denominator), so keep the pairing straight.
+  - Using true division / instead of integer division //, which produces a float like 4.0 rather than the integer 4.
+  - Assuming Fraction leaves the value unreduced; it always stores lowest terms, so reduced.numerator is never the original a.

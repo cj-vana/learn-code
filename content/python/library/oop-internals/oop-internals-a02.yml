@@ -1,0 +1,162 @@
+id: exercise.library.oop_internals.a02
+kind: exercise
+version: 1
+language: python
+title: Cached Tide Levels
+slug: oop-internals-a02
+difficulty: medium
+concepts:
+  - python.descriptors_mro
+  - concepts.memoization
+prerequisites:
+  - python.classes
+  - python.dictionaries
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.oop_internals.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original cached-property drill themed around a harbor tide model that recomputes only after its cache is invalidated.
+prompt_markdown: |
+  A harbor's tide model derives a "mean level" from a list of raw readings. The
+  computation is treated as expensive, so it is exposed through a **non-data
+  descriptor** that behaves like `functools.cached_property`: the first read
+  computes and stores the answer directly in the instance's `__dict__`, and later
+  reads return that stored value without recomputing.
+
+  Write `cached_tide_levels(job)`. The single argument is a dict shaped like:
+
+  ```python
+  {"readings": [10, 20, 30], "events": ["read", "read", "invalidate", "read"]}
+  ```
+
+  Model an instance whose cached attribute computes `sum(readings)`. Process the
+  `events` list in order:
+
+  - `"read"` — return the mean level. If it is not currently cached, compute it
+    (this counts as one computation) and cache it; if it is already cached, return
+    the cached value with **no** new computation.
+  - `"invalidate"` — drop the cached value if present, so the next `"read"` must
+    recompute. Invalidating when nothing is cached does nothing.
+
+  Return a dict `{"value": <last value read>, "computations": <count>}` where
+  `value` is the result of the final `"read"` event (or `None` if no `"read"`
+  happened) and `computations` is how many times the sum was actually computed.
+
+  For the example above the result is `{"value": 60, "computations": 2}`: the first
+  read computes, the second read is cached, the invalidate clears it, and the final
+  read recomputes.
+
+  Implement caching by having the descriptor's `__get__` write the computed value
+  into `instance.__dict__` under its own name. Because the descriptor defines only
+  `__get__` (no `__set__`), a matching entry in the instance dict shadows it, so
+  cached reads skip `__get__` entirely.
+starter_code: |
+  def cached_tide_levels(job):
+      return {"value": None, "computations": 0}
+function_name: cached_tide_levels
+input_mode: function
+solution_sketch: A non-data descriptor computes sum(readings) on first access, stores it in the instance __dict__ under its own name (so later reads shadow the descriptor), increments a compute counter each real computation, and invalidation pops that key so the next read recomputes.
+sample_solution: |
+  def cached_tide_levels(job):
+      readings = job["readings"]
+      events = job["events"]
+
+      class CachedLevel:
+          def __set_name__(self, owner, name):
+              self.name = name
+
+          def __get__(self, obj, owner=None):
+              if obj is None:
+                  return self
+              obj.compute_count += 1
+              value = sum(obj.samples)
+              obj.__dict__[self.name] = value
+              return value
+
+      class TideModel:
+          mean_level = CachedLevel()
+
+          def __init__(self, samples):
+              self.samples = samples
+              self.compute_count = 0
+
+      model = TideModel(readings)
+      last = None
+      for event in events:
+          if event == "read":
+              last = model.mean_level
+          elif event == "invalidate":
+              model.__dict__.pop("mean_level", None)
+      return {"value": last, "computations": model.compute_count}
+hints:
+  - level: 1
+    text: A descriptor with only __get__ (no __set__) is a non-data descriptor, so a same-named key in the instance's __dict__ takes priority over it.
+  - level: 2
+    text: Have __get__ store its result in obj.__dict__[self.name]. The next attribute read finds that key first and never enters __get__ again — that is the whole caching trick.
+  - level: 3
+    text: To invalidate, pop the descriptor's name out of the instance __dict__. Count a computation only inside __get__, right before you cache.
+tests:
+  public:
+    - name: example_recompute
+      input:
+        readings: [10, 20, 30]
+        events: [read, read, invalidate, read]
+      expected:
+        value: 60
+        computations: 2
+    - name: repeated_reads_cached
+      input:
+        readings: [5]
+        events: [read, read, read]
+      expected:
+        value: 5
+        computations: 1
+    - name: no_reads
+      input:
+        readings: [1, 2, 3, 4]
+        events: []
+      expected:
+        value: null
+        computations: 0
+  validation:
+    - name: invalidate_before_first_read
+      input:
+        readings: [7, 7]
+        events: [invalidate, read, invalidate, invalidate, read, read]
+      expected:
+        value: 14
+        computations: 2
+    - name: only_invalidations
+      input:
+        readings: [3, 3, 3]
+        events: [invalidate, invalidate]
+      expected:
+        value: null
+        computations: 0
+    - name: empty_readings_sum_zero
+      input:
+        readings: []
+        events: [read, invalidate, read]
+      expected:
+        value: 0
+        computations: 2
+explanation_markdown: |
+  Attribute lookup checks the type's MRO for a **data** descriptor first, then the
+  instance's `__dict__`, then **non-data** descriptors and plain class attributes.
+  `CachedLevel` defines only `__get__`, so it is non-data. The first read misses the
+  instance dict, runs `__get__`, computes the sum, and stores it under `mean_level`
+  in `instance.__dict__`. Every later read finds that key before Python ever consults
+  the descriptor, so no recomputation happens.
+
+  Invalidation is just popping that key back out, which re-exposes the descriptor for
+  the next access. This is exactly how `functools.cached_property` works, and it is
+  why a cached property cannot live on a class with `__slots__` and no `__dict__` —
+  there would be nowhere to stash the memoized value.
+common_mistakes:
+  - Giving the descriptor a __set__ method, which turns it into a data descriptor that always runs and defeats the instance-dict cache.
+  - Caching on the descriptor object itself instead of per-instance, so separate models would share one value.
+  - Counting a computation on every read rather than only when the value is actually recomputed.

@@ -1,0 +1,94 @@
+id: lesson.library.memory_lifetime.a02
+kind: lesson
+version: 1
+language: python
+title: 'Cycles: When Counting Fails and the Collector Steps In'
+slug: lesson-memory-lifetime-a02
+difficulty: hard
+concepts:
+  - python.memory_model
+  - patterns.graph_traversal
+prerequisites:
+  - python.memory_model
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.memory_lifetime.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original cyclic-GC walkthrough framed around parent/child page objects in a zine-layout tool, with fresh worked examples.
+body_markdown: |
+  Reference counting has one blind spot, and it is structural. A zine-layout
+  tool models pages and their sections:
+
+  ```python
+  page.sections = [section]
+  section.page = page          # child points back at parent
+  ```
+
+  Drop every external reference to both objects and each *still* holds a
+  reference to the other. Counts sit at 1 forever; neither is reclaimed;
+  the pair is unreachable garbage that counting alone can never free. Any
+  back-reference, doubly-linked structure, or object graph with a loop
+  creates this shape — it is common, not exotic.
+
+  ### The cycle collector
+
+  CPython therefore runs a second mechanism: a **cyclic garbage
+  collector** that periodically hunts for groups of objects reachable only
+  from each other. Conceptually it is graph work you have done: treat
+  objects as nodes and references as edges; anything not reachable from
+  the *roots* (your live names, modules, the stack) is garbage regardless
+  of its refcount. Cycle detection in a directed graph — your graphs unit,
+  employed inside the interpreter. The exercises make this literal: you
+  implement reachability and cycle-finding over reference graphs given as
+  adjacency dicts, which is precisely the collector's problem in
+  miniature.
+
+  Practical consequences worth knowing:
+
+  - `gc.collect()` matters **only for cyclic garbage**. Acyclic objects
+    die instantly via refcounting; sprinkling collect() calls around
+    ordinary code does nothing but burn time.
+  - Collection timing is not deterministic — cycles die *eventually*, not
+    at a knowable moment. Resources (files, sockets, locks) must
+    therefore never rely on cycle collection: release them explicitly or
+    with `with`.
+  - Objects in a cycle that define `__del__` historically complicated
+    collection (destructor order inside a loop is undefined); modern
+    Python handles it, but the design advice stands — keep finalizers
+    trivial or absent.
+
+  ### Weak references: opting out of keeping-alive
+
+  Sometimes you want to *refer* to an object without *owning* it — a
+  cache, an index, a parent pointer. A **weak reference** points at an
+  object without raising its refcount; when the last strong reference
+  dies, the object dies and the weakref returns nothing:
+
+  ```python
+  import weakref
+  section_ref = weakref.ref(section)
+  section_ref()      # the object, or None once it has died
+  ```
+
+  `WeakValueDictionary` builds a whole cache on this: entries vanish
+  automatically when their values die elsewhere. That is the standard cure
+  for the "cache keeps everything alive forever" leak from the last
+  lesson — and using a weak back-reference (`section.page` as a weakref)
+  dissolves the parent/child cycle we started with, letting plain
+  refcounting reclaim both objects promptly. Ownership one way, weak
+  pointers the other: the design rule that prevents most cycles from
+  existing at all.
+checkpoints:
+  - question: Why can a parent/child pair with mutual references never be freed by reference counting alone, even when the program has forgotten both?
+    answer: 'Each holds a reference to the other, so both counts stay at 1 despite being unreachable from any live name; counting sees local counts, not global reachability, which is exactly the gap the cyclic collector fills with graph search from the roots.'
+    explanation: The blind spot is structural — any back-reference creates it — which is why a second, graph-based mechanism exists at all.
+  - question: Why must a file or socket never rely on the cycle collector for its release?
+    answer: 'Cyclic garbage is collected eventually at nondeterministic times, so the resource could stay open arbitrarily long; deterministic release needs an explicit close or a with block, which run at a known moment.'
+    explanation: 'The determinism split is the operational rule of Python memory: refcounting is prompt, cycle collection is not, and resources need prompt.'
+  - question: How does making a cache a WeakValueDictionary fix the classic "cache leaks everything" problem?
+    answer: 'Weak references do not increment refcounts, so cached objects die as soon as the rest of the program drops them — and their cache entries evaporate automatically instead of pinning objects alive forever.'
+    explanation: 'Weakrefs separate "can find it" from "keeps it alive" — the same ownership discipline that, applied to back-references, prevents cycles from forming.'

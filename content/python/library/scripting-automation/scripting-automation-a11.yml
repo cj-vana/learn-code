@@ -1,0 +1,144 @@
+id: exercise.library.scripting_automation.a11
+kind: exercise
+version: 1
+language: python
+title: Merging the Field Camera Cards
+slug: scripting-automation-a11
+difficulty: medium
+concepts:
+  - python.pathlib_os
+  - patterns.set_membership
+  - python.tuples
+prerequisites:
+  - python.lists
+  - python.dictionaries
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.scripting_automation.a11
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original deduplication drill framed around a field research team merging several camera memory cards into one manifest.
+prompt_markdown: |
+  A field research team pulls several camera memory cards into one shared manifest
+  after every expedition, and the same shot often lands on more than one card. A
+  file is treated as a duplicate of an earlier one when it shares the **same file
+  extension** (compared case-insensitively) **and** has identical values for every
+  field the team chose to compare on. The team keeps the first copy it sees and
+  drops the rest.
+
+  Write `dedupe_manifest(request)` that takes a single dictionary:
+
+  - `"files"`: a list of record dictionaries. Every record has a `"path"` string
+    and may carry extra scalar fields (like `"size"` or `"camera"`).
+  - `"key_fields"`: a list of field names to compare on, in the order given.
+
+  Build each record's dedupe key from its lowercased final suffix followed by the
+  value of each name in `"key_fields"`. Keep only the first record for each
+  distinct key and drop later duplicates. Return the `"path"` strings of the kept
+  records, in their original order.
+
+  Rules and edge cases the tests cover:
+
+  - An empty `"files"` list returns `[]`.
+  - The extension is always part of the key: two files with the same `"size"` but
+    different extensions are **not** duplicates.
+  - Extensions compare case-insensitively, so `one.JPG` and `two.jpg` share the
+    same extension key.
+  - If a record is missing one of the `"key_fields"`, treat that field's value as
+    `None` (all missing-field records share the `None`).
+  - An empty `"key_fields"` list means records are deduplicated by extension alone.
+  - The first occurrence of each key is kept; order is preserved.
+
+  Example:
+
+  ```python
+  dedupe_manifest({
+      "files": [
+          {"path": "cam1/a.jpg", "size": 100},
+          {"path": "cam2/b.jpg", "size": 100},
+          {"path": "cam1/c.jpg", "size": 200},
+      ],
+      "key_fields": ["size"],
+  })
+  # -> ["cam1/a.jpg", "cam1/c.jpg"]
+  ```
+starter_code: |
+  from pathlib import PurePosixPath
+
+
+  def dedupe_manifest(request):
+      return []
+function_name: dedupe_manifest
+input_mode: function
+solution_sketch: For each record build a hashable key of (lowercased suffix, then each key-field value via dict.get so missing fields become None); keep the record only when its key has not been seen, tracking seen keys in a set.
+sample_solution: |
+  from pathlib import PurePosixPath
+
+
+  def dedupe_manifest(request):
+      files = request["files"]
+      key_fields = request["key_fields"]
+      seen = set()
+      kept = []
+      for record in files:
+          suffix = PurePosixPath(record["path"]).suffix.lower()
+          key = (suffix,) + tuple(record.get(field) for field in key_fields)
+          if key not in seen:
+              seen.add(key)
+              kept.append(record["path"])
+      return kept
+hints:
+  - level: 1
+    text: Duplicates are decided by a composite key - the file extension plus the chosen fields - so build that key first for each record.
+  - level: 2
+    text: 'Use a tuple like (PurePosixPath(path).suffix.lower(),) + tuple(record.get(f) for f in key_fields) so it is hashable and missing fields become None.'
+  - level: 3
+    text: Track seen keys in a set; append the path only when the key is new, which keeps the first occurrence and preserves order.
+tests:
+  public:
+    - name: empty_files
+      input: {"files": [], "key_fields": ["size"]}
+      expected: []
+    - name: dedupe_by_size_same_ext
+      input: {"files": [{"path": "cam1/a.jpg", "size": 100}, {"path": "cam2/b.jpg", "size": 100}, {"path": "cam1/c.jpg", "size": 200}], "key_fields": ["size"]}
+      expected: ["cam1/a.jpg", "cam1/c.jpg"]
+    - name: different_ext_not_duplicate
+      input: {"files": [{"path": "x.png", "size": 50}, {"path": "y.jpg", "size": 50}], "key_fields": ["size"]}
+      expected: ["x.png", "y.jpg"]
+  validation:
+    - name: multi_field_key
+      input: {"files": [{"path": "a.raw", "size": 10, "camera": "A"}, {"path": "b.raw", "size": 10, "camera": "B"}, {"path": "c.raw", "size": 10, "camera": "A"}], "key_fields": ["size", "camera"]}
+      expected: ["a.raw", "b.raw"]
+    - name: case_insensitive_ext
+      input: {"files": [{"path": "one.JPG", "size": 5}, {"path": "two.jpg", "size": 5}], "key_fields": ["size"]}
+      expected: ["one.JPG"]
+    - name: missing_field_is_none
+      input: {"files": [{"path": "p.txt", "size": 1}, {"path": "q.txt", "size": 1, "tag": "x"}, {"path": "r.txt", "size": 1}], "key_fields": ["tag"]}
+      expected: ["p.txt", "q.txt"]
+    - name: empty_key_fields_dedupes_by_ext
+      input: {"files": [{"path": "a.log", "size": 1}, {"path": "b.log", "size": 2}, {"path": "c.txt", "size": 3}], "key_fields": []}
+      expected: ["a.log", "c.txt"]
+    - name: all_unique
+      input: {"files": [{"path": "f1.dat", "size": 1}, {"path": "f2.dat", "size": 2}, {"path": "f3.bin", "size": 1}], "key_fields": ["size"]}
+      expected: ["f1.dat", "f2.dat", "f3.bin"]
+explanation_markdown: |
+  Deduplication is a "seen set" scan, and the whole design lives in the key. Here
+  the key is a tuple that always starts with the lowercased extension from
+  `PurePosixPath(path).suffix.lower()` and then folds in each requested field. Two
+  choices make it robust: using a *tuple* keeps the key hashable so a `set` can
+  answer membership in O(1), and reading fields with `record.get(field)` means a
+  missing field contributes `None` instead of raising `KeyError` — so every
+  record with that field absent collapses onto the same key.
+
+  Because you add to `seen` only when a key is new and you append the path in the
+  same moment, the first copy of each key survives and later copies are silently
+  dropped, preserving the manifest's original order. The empty-`key_fields` case
+  falls out naturally: the key is just the one-element extension tuple, so files
+  are merged by type alone. One pass, O(n) membership checks.
+common_mistakes:
+  - Keying on the field values but forgetting the extension, so a 100-byte `.png` and a 100-byte `.jpg` wrongly merge.
+  - Indexing `record[field]` instead of `record.get(field)`, which crashes when a record lacks one of the key fields.
+  - Building the key as a list, which is unhashable and cannot be stored in a set.

@@ -1,0 +1,187 @@
+id: exercise.library.modern_syntax.a12
+kind: exercise
+version: 1
+language: python
+title: Capture-Ready Instrument Registry
+slug: modern-syntax-a12
+difficulty: hard
+concepts:
+  - python.modern_syntax
+  - python.type_hints
+prerequisites:
+  - python.classes
+  - python.dictionaries
+estimated_time_minutes: 24
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.modern_syntax.a12
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original drill on typing.Protocol with @runtime_checkable, where isinstance checks structural presence of members; framed as an observatory instrument-driver registry.
+prompt_markdown: |
+  An observatory keeps a registry of instrument drivers. A driver is
+  "capture-ready" only if it structurally matches the `Recorder` protocol, which
+  requires two members: `capture` and `save`. Python's `typing.Protocol` with
+  the `@runtime_checkable` decorator lets you test that at runtime with
+  `isinstance` — it checks that the object **has** every protocol member by
+  name.
+
+  Write `capture_ready(drivers)`. The single argument is a list of driver
+  descriptors, each a dict:
+
+  ```python
+  {"name": "cam-a", "members": ["capture", "save"]}
+  ```
+
+  For each driver, model an object that exposes exactly the member names listed
+  in `members`, then use `isinstance` against a `@runtime_checkable` `Recorder`
+  protocol (requiring `capture` and `save`) to decide if it qualifies. Return
+  the list of `name` values of the drivers that qualify, in the input order.
+
+  Details and edge cases:
+
+  - A driver qualifies only if `members` contains **both** `capture` and
+    `save`. Having just one of them does not qualify.
+  - Extra members beyond the two required ones are fine; the driver still
+    qualifies.
+  - `@runtime_checkable` only checks that the members are **present** by name —
+    it does not inspect their signatures — but for this drill every listed
+    member is present as a callable, so presence is what decides the outcome.
+  - An empty driver list returns an empty list.
+starter_code: |
+  from typing import Protocol, runtime_checkable
+
+
+  @runtime_checkable
+  class Recorder(Protocol):
+      def capture(self): ...
+      def save(self): ...
+
+
+  def capture_ready(drivers):
+      return []
+function_name: capture_ready
+input_mode: function
+solution_sketch: Define a @runtime_checkable Recorder Protocol requiring capture and save. For each driver, build a fresh empty object and setattr each listed member name to a callable, then isinstance(obj, Recorder). Collect the names that pass, preserving input order.
+sample_solution: |
+  from typing import Protocol, runtime_checkable
+
+
+  @runtime_checkable
+  class Recorder(Protocol):
+      def capture(self): ...
+      def save(self): ...
+
+
+  def capture_ready(drivers):
+      ready = []
+      for driver in drivers:
+          instrument = type("Instrument", (), {})()
+          for member in driver["members"]:
+              setattr(instrument, member, lambda: None)
+          if isinstance(instrument, Recorder):
+              ready.append(driver["name"])
+      return ready
+hints:
+  - level: 1
+    text: A @runtime_checkable Protocol lets isinstance succeed when the object has all of the protocol's member names, regardless of where they came from.
+  - level: 2
+    text: For each driver, create a fresh blank object (for example type("Instrument", (), {})()) and setattr each name in driver["members"] onto it as a callable.
+  - level: 3
+    text: Call isinstance(instrument, Recorder); it returns True only when both 'capture' and 'save' are present. Append driver["name"] when it does, keeping input order.
+tests:
+  public:
+    - name: has_both
+      input:
+        - name: cam-a
+          members:
+            - capture
+            - save
+      expected:
+        - cam-a
+    - name: only_capture
+      input:
+        - name: cam-b
+          members:
+            - capture
+      expected: []
+    - name: mixed_registry
+      input:
+        - name: cam-a
+          members:
+            - capture
+            - save
+        - name: cam-b
+          members:
+            - capture
+        - name: cam-c
+          members:
+            - save
+            - capture
+            - calibrate
+      expected:
+        - cam-a
+        - cam-c
+  validation:
+    - name: empty_registry
+      input: []
+      expected: []
+    - name: neither_member
+      input:
+        - name: cam-x
+          members:
+            - reset
+            - power
+      expected: []
+    - name: only_save
+      input:
+        - name: cam-y
+          members:
+            - save
+      expected: []
+    - name: extra_members_still_qualify
+      input:
+        - name: cam-z
+          members:
+            - capture
+            - save
+            - stream
+            - focus
+      expected:
+        - cam-z
+    - name: order_preserved
+      input:
+        - name: one
+          members:
+            - capture
+            - save
+        - name: two
+          members:
+            - capture
+        - name: three
+          members:
+            - capture
+            - save
+      expected:
+        - one
+        - three
+explanation_markdown: |
+  `typing.Protocol` describes a structural type — "anything with these members"
+  — instead of a nominal one tied to a base class. Normally Protocols exist only
+  for static checkers, but adding `@runtime_checkable` makes `isinstance` work
+  against them. That runtime check is deliberately shallow: it verifies that the
+  object **has** each protocol member by name, using ordinary attribute lookup.
+
+  This drill leans on exactly that behaviour. Each driver becomes a blank object
+  onto which the listed member names are attached with `setattr`, so
+  `isinstance(instrument, Recorder)` returns `True` precisely when both
+  `capture` and `save` are present. Extra members are irrelevant, and a missing
+  one disqualifies the driver. The important caveat to remember beyond this
+  exercise: `@runtime_checkable` checks presence, not call signatures or even
+  whether the member is callable — so it confirms shape, not full behaviour.
+common_mistakes:
+  - Forgetting the @runtime_checkable decorator; isinstance against a plain Protocol raises TypeError instead of performing the structural check.
+  - Reusing one shared object across drivers so members from an earlier driver leak into later checks; build a fresh object per driver.
+  - Assuming isinstance verifies the members are callable or have the right signature — @runtime_checkable only checks that the names exist.

@@ -1,0 +1,129 @@
+id: exercise.library.pathlib_patterns.a12
+kind: exercise
+version: 1
+language: python
+title: Tidying Names for the Bakery's Order Board
+slug: pathlib-patterns-a12
+difficulty: hard
+concepts:
+  - python.pathlib_os
+  - python.strings
+  - patterns.filtering
+prerequisites:
+  - python.strings
+  - python.loops
+estimated_time_minutes: 24
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.pathlib_patterns.a12
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original filename-sanitizing drill themed around a bakery order board, exercising a fixed reserved-character rule set, run collapsing, and edge stripping on pure strings.
+prompt_markdown: |
+  A neighbourhood bakery lets customers type a label for each custom order, and
+  those labels become file names on the pickup board. Raw input is messy, so it
+  has to be cleaned into a safe file name first.
+
+  Write `sanitize_filename(name)` that returns a cleaned name by applying these
+  rules **in order**:
+
+  1. Replace every character that is a path separator or reserved character —
+     any of `<`, `>`, `:`, `"`, `/`, `\`, `|`, `?`, `*` — or any ASCII control
+     character (code point below 32) with a single underscore `_`.
+  2. Collapse every run of consecutive underscores (including underscores that
+     were already in the text) down to a single underscore.
+  3. Strip any leading and trailing spaces, dots, and underscores.
+  4. Keep every other character exactly as-is, including letters with accents
+     and spaces in the middle of the name; preserve the original case.
+  5. If nothing survives the cleaning, return the literal `"untitled"`.
+
+  Worked examples:
+
+  - `sanitize_filename("my/photo:final.png")` returns `"my_photo_final.png"`.
+  - `sanitize_filename("  ..resume.doc.. ")` returns `"resume.doc"`.
+  - `sanitize_filename("///")` returns `"untitled"` (every character becomes an
+    underscore, they collapse to one, and stripping removes it).
+  - `sanitize_filename("my__file.txt")` returns `"my_file.txt"` (an existing
+    double underscore collapses too).
+  - `sanitize_filename("café münü.txt")` returns `"café münü.txt"` (accented
+    letters and internal spaces are not reserved, so they stay).
+
+  Operate purely on the string; never touch a real filesystem.
+starter_code: |
+  def sanitize_filename(name):
+      return ""
+function_name: sanitize_filename
+input_mode: function
+solution_sketch: Map each character to an underscore if it is reserved or a control code, else keep it; collapse consecutive underscores; strip spaces, dots, and underscores from both ends; fall back to "untitled" when empty.
+sample_solution: |
+  def sanitize_filename(name):
+      reserved = set('<>:"/\\|?*')
+      swapped = []
+      for ch in name:
+          if ch in reserved or ord(ch) < 32:
+              swapped.append("_")
+          else:
+              swapped.append(ch)
+      collapsed = []
+      for ch in swapped:
+          if ch == "_" and collapsed and collapsed[-1] == "_":
+              continue
+          collapsed.append(ch)
+      cleaned = "".join(collapsed).strip(" \t._")
+      return cleaned if cleaned else "untitled"
+hints:
+  - level: 1
+    text: Build the reserved set once, then walk the name character by character, swapping in an underscore whenever the character is reserved or has an ordinal below 32.
+  - level: 2
+    text: After swapping, collapse runs of underscores by skipping any underscore whose previous kept character was also an underscore. Then strip spaces, dots, and underscores off both ends.
+  - level: 3
+    text: Use `"".join(result).strip(" \t._")` for the final trim, and return "untitled" when that leaves an empty string.
+tests:
+  public:
+    - name: separators_and_colon
+      input: "my/photo:final.png"
+      expected: "my_photo_final.png"
+    - name: trim_dots_and_spaces
+      input: "  ..resume.doc.. "
+      expected: "resume.doc"
+    - name: only_illegal
+      input: "///"
+      expected: "untitled"
+  validation:
+    - name: empty_input
+      input: ""
+      expected: "untitled"
+    - name: many_reserved
+      input: 'log<2026>:"draft".txt'
+      expected: "log_2026_draft_.txt"
+    - name: accents_preserved
+      input: "café münü.txt"
+      expected: "café münü.txt"
+    - name: traversal_scrubbed
+      input: '..\..\etc\passwd'
+      expected: "etc_passwd"
+    - name: collapse_existing_underscores
+      input: "my__file.txt"
+      expected: "my_file.txt"
+explanation_markdown: |
+  The cleaning is a small pipeline. First a character-by-character pass swaps in
+  an underscore for anything dangerous: the fixed reserved set of separators and
+  shell/OS-hostile punctuation, plus every ASCII control character (ordinal
+  below 32). Everything else — ordinary letters, accented letters, digits,
+  hyphens, dots, and interior spaces — is copied through untouched, which is why
+  `café münü.txt` survives intact.
+
+  The second pass collapses underscore runs so a burst of reserved characters
+  does not leave a long `____` scar, and it folds pre-existing double
+  underscores too. The final `.strip(" \t._")` trims the noise that tends to
+  cluster at the ends: leading/trailing spaces, the dots that some systems
+  forbid at the edges, and leftover underscores. That single strip is what turns
+  the traversal attempt `..\..\etc\passwd` into `etc_passwd` after its
+  backslashes become underscores. When cleaning erases everything, the
+  `"untitled"` fallback guarantees a usable name.
+common_mistakes:
+  - Stripping accented or other non-ASCII letters as if they were illegal; only the fixed reserved set and control characters should be replaced.
+  - Skipping the run-collapse step, leaving multi-underscore scars like `log_2026___draft_`.
+  - Forgetting the empty-result fallback, so inputs made entirely of reserved characters return `""` instead of `"untitled"`.

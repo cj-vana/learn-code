@@ -1,0 +1,116 @@
+id: exercise.library.logging_diagnostics.a01
+kind: exercise
+version: 1
+language: python
+title: Stamping the Lighthouse Log
+slug: logging-diagnostics-a01
+difficulty: easy
+concepts:
+  - python.logging_diagnostics
+  - python.string_formatting
+  - python.dictionaries
+prerequisites:
+  - python.strings
+  - python.dictionaries
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.logging_diagnostics.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original log-formatter drill themed around a coastal lighthouse keeper's watch log; builds a single line from level, message, and a context dict with sorted keys for determinism.
+prompt_markdown: |
+  A lighthouse keeper records watch events to a single-line log. Write
+  `format_log_message(entry)` where `entry` is a dict with keys `level` (a string
+  such as `WARNING`), `message` (a string), and `context` (a dict of extra
+  key/value pairs describing the event).
+
+  Build and return one string in this exact shape:
+
+  - Start with the level in square brackets, a space, then the message:
+    `"[WARNING] fog rolling in"`.
+  - If `context` is non-empty, append one space, an opening parenthesis, the
+    context pairs, and a closing parenthesis. Each pair is written `key=value`,
+    the pairs are joined by single spaces, and the keys appear in **sorted
+    (alphabetical) order** so the output is deterministic:
+    `"[WARNING] fog rolling in (bearing=SW visibility=200)"`.
+  - If `context` is empty, append nothing after the message.
+
+  Values in `context` may be strings or numbers; convert each value with `str`.
+  You may assume `level` and `message` are always non-empty strings.
+starter_code: |
+  def format_log_message(entry):
+      # Build "[LEVEL] message" and append " (k=v k=v)" with sorted keys when context is present.
+      return ""
+function_name: format_log_message
+input_mode: function
+solution_sketch: Format the "[level] message" head, then if context is non-empty join sorted "key=value" pairs inside parentheses and append them.
+sample_solution: |
+  def format_log_message(entry):
+      head = "[" + entry["level"] + "] " + entry["message"]
+      context = entry["context"]
+      if not context:
+          return head
+      pairs = " ".join(f"{key}={context[key]}" for key in sorted(context))
+      return f"{head} ({pairs})"
+hints:
+  - level: 1
+    text: The head of the line is always "[" + level + "] " + message; only the context tail is conditional.
+  - level: 2
+    text: Iterate the context keys with sorted(context) so the pairs come out in alphabetical order every run.
+  - level: 3
+    text: Build each pair as f"{key}={context[key]}", join them with single spaces, and wrap the joined string in parentheses.
+tests:
+  public:
+    - name: with_context
+      input:
+        level: WARNING
+        message: fog rolling in
+        context: {bearing: SW, visibility: 200}
+      expected: '[WARNING] fog rolling in (bearing=SW visibility=200)'
+    - name: empty_context
+      input:
+        level: INFO
+        message: watch started
+        context: {}
+      expected: '[INFO] watch started'
+    - name: single_pair
+      input:
+        level: ERROR
+        message: lamp failed
+        context: {lamp: 3}
+      expected: '[ERROR] lamp failed (lamp=3)'
+  validation:
+    - name: keys_sorted
+      input:
+        level: DEBUG
+        message: sweep
+        context: {zone: north, angle: 45, arc: full}
+      expected: '[DEBUG] sweep (angle=45 arc=full zone=north)'
+    - name: numeric_values
+      input:
+        level: CRITICAL
+        message: power loss
+        context: {battery: 0, seconds: 12}
+      expected: '[CRITICAL] power loss (battery=0 seconds=12)'
+    - name: message_spaces_preserved
+      input:
+        level: INFO
+        message: tide is coming in fast
+        context: {}
+      expected: '[INFO] tide is coming in fast'
+explanation_markdown: |
+  A log formatter turns structured fields into one predictable line. The head is
+  unconditional, so it is built first. The context tail is where determinism
+  matters: dictionaries preserve insertion order, but a log line should not change
+  just because two callers happened to build the same dict in a different order.
+  Sorting the keys with `sorted(context)` pins the output so the same event always
+  renders identically, which is what makes logs greppable and diffable. Converting
+  each value inside the f-string (`{context[key]}`) coerces numbers to text for
+  free, so a mixed dict of strings and ints still formats cleanly.
+common_mistakes:
+  - Iterating the context in insertion order instead of sorted order, so equal events can render differently.
+  - Emitting the parentheses even when context is empty, leaving a stray " ()" at the end of the line.
+  - Forgetting to convert numeric values to text, which fails when concatenating rather than using an f-string.

@@ -1,0 +1,129 @@
+id: exercise.library.logging_diagnostics.a12
+kind: exercise
+version: 1
+language: python
+title: Stamping the Container-Gateway Log Line
+slug: logging-diagnostics-a12
+difficulty: medium
+concepts:
+  - python.logging_diagnostics
+  - python.string_formatting
+  - python.dictionaries
+prerequisites:
+  - python.dictionaries
+  - python.strings
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.logging_diagnostics.a12
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: >-
+    Original context-prefix builder framed as a shipping-container tracking gateway
+    that stamps every log line with a bracketed key/value context. Exercises stable
+    alphabetical ordering, bool/None rendering, and quoting of values that contain or
+    are missing text.
+prompt_markdown: |
+  Every log line the container-tracking gateway emits is stamped with a compact
+  context prefix so operators can tell which request produced it -- something like
+  `[req=abc user=1]`. Build that prefix from a dict of context fields.
+
+  Write `build_context_prefix(context)`. The single argument is a dict mapping field
+  names to values. Return the prefix string.
+
+  Rules:
+
+  - List the fields in **alphabetical order of their keys**, so the prefix is stable
+    no matter what order the dict was built in.
+  - Render each value into text:
+    - `True` becomes `true` and `False` becomes `false` (lowercase).
+    - `None` becomes `null`.
+    - Any other value uses its plain string form, e.g. `1` becomes `1` and `1.5`
+      becomes `1.5`.
+  - After rendering, if a value's text is **empty** or **contains a space**, wrap it
+    in double quotes. Otherwise leave it bare.
+  - Join the `key=value` pairs with single spaces and enclose the whole thing in
+    square brackets: `[key1=value1 key2=value2]`.
+  - An empty context dict returns `"[]"`.
+
+  Edge cases the tests cover: booleans and `None`; a value containing a space; an
+  empty-string value; a numeric value; and keys given out of order.
+starter_code: |
+  def build_context_prefix(context):
+      # Return a stable "[key=value ...]" prefix built from the context dict.
+      return "[]"
+function_name: build_context_prefix
+input_mode: function
+solution_sketch: >-
+  Sort the keys, render each value (bools and None as words, else str), quote the
+  rendered text when it is empty or contains a space, then join key=value pairs with
+  spaces inside square brackets.
+sample_solution: |
+  def _render(value):
+      if isinstance(value, bool):
+          text = "true" if value else "false"
+      elif value is None:
+          text = "null"
+      else:
+          text = str(value)
+      if text == "" or " " in text:
+          text = '"' + text + '"'
+      return text
+
+
+  def build_context_prefix(context):
+      pairs = [f"{key}={_render(context[key])}" for key in sorted(context)]
+      return "[" + " ".join(pairs) + "]"
+hints:
+  - level: 1
+    text: Sort the keys so the output order never depends on how the dict was built, then handle one key at a time.
+  - level: 2
+    text: Render bools as lowercase true/false and None as null before anything else, because a bool is also an int in Python and str would give True/False.
+  - level: 3
+    text: After rendering, wrap the text in double quotes when it is empty or has a space, then join the key=value pieces with single spaces inside square brackets.
+tests:
+  public:
+    - name: two_keys_sorted
+      input: {user: 1, req: abc}
+      expected: "[req=abc user=1]"
+    - name: empty_context
+      input: {}
+      expected: "[]"
+    - name: bool_and_none
+      input: {ok: true, cached: false, trace: null}
+      expected: "[cached=false ok=true trace=null]"
+  validation:
+    - name: value_with_space_quoted
+      input: {msg: cable tension high, id: 7}
+      expected: "[id=7 msg=\"cable tension high\"]"
+    - name: empty_string_quoted
+      input: {note: ''}
+      expected: "[note=\"\"]"
+    - name: numeric_float
+      input: {latency: 1.5}
+      expected: "[latency=1.5]"
+    - name: single_key
+      input: {req: abc123}
+      expected: "[req=abc123]"
+    - name: mixed_types_ordered
+      input: {zone: north dock, active: true, count: 0}
+      expected: "[active=true count=0 zone=\"north dock\"]"
+explanation_markdown: |
+  A context prefix is only useful if it is stable and unambiguous, and both
+  properties come from small, deliberate choices. Sorting the keys means the same
+  context always renders the same way, so operators can eyeball two lines and compare
+  them without the fields shuffling around.
+
+  The rendering order matters more than it looks. Because `bool` is a subclass of
+  `int` in Python, `str(True)` gives `"True"` -- so you must check for booleans
+  *before* falling back to `str`, and spell them `true`/`false` yourself. `None`
+  gets the same explicit treatment as `null`. The quoting rule is what keeps the
+  prefix parseable: a value with a space would otherwise look like two separate
+  fields, and an empty value would vanish entirely, so both get wrapped in double
+  quotes to mark their boundaries. Everything else stays bare to keep the line short.
+common_mistakes:
+  - Iterating the dict in insertion order instead of sorting the keys, so the prefix is unstable across runs.
+  - Letting str render booleans, producing True/False with capital letters instead of the lowercase true/false.
+  - Forgetting to quote an empty or space-containing value, which makes the prefix ambiguous or silently drops the field.

@@ -1,0 +1,120 @@
+id: exercise.library.sqlite_patterns.a04
+kind: exercise
+version: 1
+language: python
+title: Vetting the Ticket-Desk Queries
+slug: sqlite-patterns-a04
+difficulty: medium
+concepts:
+  - python.sqlite_sql
+  - python.secure_coding
+  - python.strings
+prerequisites:
+  - python.strings
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sqlite_patterns.a04
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original injection-smell linter framed as a museum ticket desk reviewing query templates, distinguishing printf/format markers from legitimate LIKE wildcards with a boundary rule rather than a naive percent check.
+prompt_markdown: |
+  A natural-history museum runs a ticket desk whose staff paste SQL query
+  templates into a review console before anything reaches the database. A
+  template is safe when every value it needs is bound through a `?` placeholder.
+  It is a risk when a value would instead be spliced in with Python string
+  formatting, because that is exactly how SQL injection sneaks in.
+
+  Write `detect_injection_risk(template)` where `template` is a single SQL
+  string. Return `True` when the template shows a string-formatting marker and
+  `False` otherwise. Treat these as markers:
+
+  - An opening brace `{` — the start of a `str.format()` field or an f-string
+    interpolation. So both `WHERE code = {}` and `WHERE code = {code}` are risky.
+  - A printf-style conversion `%s`, `%d`, or `%f` — a `%` immediately followed by
+    one of the letters `s`, `d`, or `f`, where that letter is the last character
+    of the string or is followed by a non-letter. A `LIKE '%sale%'` wildcard is
+    NOT a conversion, because the `s` right after the `%` is followed by another
+    letter, so that template stays safe. A `LIKE '%rain%'` wildcard is safe for
+    the same reason.
+
+  A template that binds its values only through `?` placeholders, or that carries
+  no markers at all, returns `False`.
+starter_code: |
+  def detect_injection_risk(template):
+      return False
+function_name: detect_injection_risk
+input_mode: function
+solution_sketch: An opening brace anywhere is an immediate risk. Otherwise scan for a percent sign followed by s, d, or f, and count it only when the letter after that is the end of the string or a non-letter.
+sample_solution: |
+  def detect_injection_risk(template):
+      if "{" in template:
+          return True
+      conversions = {"s", "d", "f"}
+      length = len(template)
+      for index, char in enumerate(template):
+          if char != "%":
+              continue
+          nxt = index + 1
+          if nxt < length and template[nxt] in conversions:
+              after = index + 2
+              if after >= length or not template[after].isalpha():
+                  return True
+      return False
+hints:
+  - level: 1
+    text: A template that only uses ? for its values is safe; the danger is a value pasted in with Python string formatting.
+  - level: 2
+    text: An opening { always signals a format field, so return True the moment you see one. For percent markers, look for % followed by s, d, or f.
+  - level: 3
+    text: A percent conversion counts only when the letter after % is the last character or is followed by a non-letter, which is what separates %s from a LIKE '%sale%' wildcard.
+tests:
+  public:
+    - name: safe_placeholder
+      input: "SELECT * FROM tickets WHERE code = ?"
+      expected: false
+    - name: printf_string
+      input: "SELECT * FROM tickets WHERE code = '%s'"
+      expected: true
+    - name: brace_field
+      input: "SELECT * FROM tickets WHERE code = {}"
+      expected: true
+    - name: like_wildcard_is_safe
+      input: "SELECT * FROM tickets WHERE title LIKE '%sale%'"
+      expected: false
+  validation:
+    - name: printf_numeric
+      input: "SELECT * FROM tickets WHERE tier = %d"
+      expected: true
+    - name: named_brace_field
+      input: "SELECT * FROM tickets WHERE code = {code}"
+      expected: true
+    - name: two_placeholders_safe
+      input: "SELECT * FROM tickets WHERE code = ? AND tier = ?"
+      expected: false
+    - name: float_conversion
+      input: "SELECT * FROM tickets WHERE price = %f"
+      expected: true
+    - name: like_wildcard_rain
+      input: "SELECT * FROM tickets WHERE note LIKE '%rain%'"
+      expected: false
+explanation_markdown: |
+  Parameterised queries defeat injection because the driver keeps your SQL and
+  your data on separate tracks: the `?` placeholders describe structure, and the
+  bound values are never parsed as SQL. Every string-formatting marker is a sign
+  the two tracks were about to be merged into one string, which is the crack an
+  attacker slips through.
+
+  The boundary rule is what keeps the check honest. A naive "does it contain `%`"
+  test would condemn a perfectly safe `LIKE '%rain%'` wildcard. By requiring the
+  conversion letter to sit at the end or before a non-letter, `%s` and `%d` are
+  flagged while `%sale%` and `%rain%` pass. Real linters such as Bandit lean on
+  the same kind of heuristic; it is not a full SQL parser, so a contrived pattern
+  like `LIKE '%d%'` could still trip it, which is one more reason production code
+  binds `LIKE` patterns as parameters rather than baking them into the template.
+common_mistakes:
+  - Flagging every percent sign, which wrongly condemns a legitimate LIKE '%rain%' wildcard.
+  - Missing the named-field form {code} by only checking for the empty {} pair.
+  - Treating a ? placeholder as a risk; it is the safe form the detector is meant to reward.

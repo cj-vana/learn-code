@@ -1,0 +1,129 @@
+id: exercise.library.dataframe_thinking.a05
+kind: exercise
+version: 1
+language: python
+title: Unrolling the Rainfall Almanac
+slug: dataframe-thinking-a05
+difficulty: medium
+concepts:
+  - concepts.dataframe_thinking
+  - python.dictionaries
+prerequisites:
+  - python.loops
+  - python.dictionaries
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dataframe_thinking.a05
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original wide-to-long reshape drill framed around unrolling a seasonal rainfall almanac, teaching the melt/pivot_longer mental model as nested iteration over id and value columns.
+prompt_markdown: |
+  A regional almanac stores rainfall in a wide table: one row per town, with a
+  separate column for each season's total. To feed a chart, an analyst needs the
+  same data in long form, one row per town-per-season, the reshape a data-frame
+  library calls `melt` or `pivot_longer`.
+
+  Write `melt_rows(payload)` that takes a single dictionary with three keys:
+
+  - `"rows"`: a list of wide town dictionaries.
+  - `"id_cols"`: the list of identifier columns to repeat on every output row.
+  - `"value_cols"`: the list of columns to unroll into rows.
+
+  For each input row, and for each column name in `"value_cols"` **in order**,
+  emit one output dictionary that contains:
+
+  - every `id_col` copied from the source row, then
+  - `"variable"`: the value-column's name, then
+  - `"value"`: that column's value in the source row.
+
+  Return the full list of these long-form dictionaries, grouped row by row and,
+  within each row, ordered by `value_cols`. You may assume all listed columns are
+  present in every row.
+
+  Edge cases the tests cover:
+
+  - An empty `"rows"` list returns an empty list `[]`.
+  - A single value column still produces one output row per input row.
+  - There may be more than one id column.
+
+  Example:
+
+  ```python
+  melt_rows({
+      "rows": [{"town": "Ada", "spring": 30, "summer": 12}],
+      "id_cols": ["town"],
+      "value_cols": ["spring", "summer"],
+  })
+  # -> [{"town": "Ada", "variable": "spring", "value": 30},
+  #     {"town": "Ada", "variable": "summer", "value": 12}]
+  ```
+starter_code: |
+  def melt_rows(payload):
+      return []
+function_name: melt_rows
+input_mode: function
+solution_sketch: For each row build the shared id-column base, then for each value column append a fresh copy of the base extended with variable and value keys.
+sample_solution: |
+  def melt_rows(payload):
+      rows = payload["rows"]
+      id_cols = payload["id_cols"]
+      value_cols = payload["value_cols"]
+      long_rows = []
+      for row in rows:
+          base = {col: row[col] for col in id_cols}
+          for col in value_cols:
+              record = dict(base)
+              record["variable"] = col
+              record["value"] = row[col]
+              long_rows.append(record)
+      return long_rows
+hints:
+  - level: 1
+    text: Melting turns one wide row into several tall rows - one per value column - each carrying the same id fields plus which column it came from and that column's value.
+  - level: 2
+    text: Use two nested loops - outer over rows, inner over value_cols - so each input row fans out into len(value_cols) output rows.
+  - level: 3
+    text: Build the id-only base once per row, then for each value column copy it with dict(base) and add record["variable"] = col and record["value"] = row[col]; copying keeps the records independent.
+tests:
+  public:
+    - name: empty_almanac
+      input: {"rows": [], "id_cols": ["town"], "value_cols": ["spring", "summer"]}
+      expected: []
+    - name: two_seasons
+      input: {"rows": [{"town": "Ada", "spring": 30, "summer": 12}, {"town": "Bly", "spring": 25, "summer": 18}], "id_cols": ["town"], "value_cols": ["spring", "summer"]}
+      expected: [{"town": "Ada", "variable": "spring", "value": 30}, {"town": "Ada", "variable": "summer", "value": 12}, {"town": "Bly", "variable": "spring", "value": 25}, {"town": "Bly", "variable": "summer", "value": 18}]
+    - name: single_value_column
+      input: {"rows": [{"town": "Ada", "spring": 30, "summer": 12}, {"town": "Bly", "spring": 25, "summer": 18}], "id_cols": ["town"], "value_cols": ["spring"]}
+      expected: [{"town": "Ada", "variable": "spring", "value": 30}, {"town": "Bly", "variable": "spring", "value": 25}]
+  validation:
+    - name: two_id_columns
+      input: {"rows": [{"town": "Ada", "zone": "N", "q1": 5, "q2": 8}], "id_cols": ["town", "zone"], "value_cols": ["q1", "q2"]}
+      expected: [{"town": "Ada", "zone": "N", "variable": "q1", "value": 5}, {"town": "Ada", "zone": "N", "variable": "q2", "value": 8}]
+    - name: three_value_columns
+      input: {"rows": [{"crop": "rye", "mon": 2, "tue": 4, "wed": 6}], "id_cols": ["crop"], "value_cols": ["mon", "tue", "wed"]}
+      expected: [{"crop": "rye", "variable": "mon", "value": 2}, {"crop": "rye", "variable": "tue", "value": 4}, {"crop": "rye", "variable": "wed", "value": 6}]
+    - name: single_row_two_values
+      input: {"rows": [{"id": "X", "a": 1, "b": 2}], "id_cols": ["id"], "value_cols": ["a", "b"]}
+      expected: [{"id": "X", "variable": "a", "value": 1}, {"id": "X", "variable": "b", "value": 2}]
+    - name: string_values
+      input: {"rows": [{"town": "Ada", "am": "clear", "pm": "rain"}], "id_cols": ["town"], "value_cols": ["am", "pm"]}
+      expected: [{"town": "Ada", "variable": "am", "value": "clear"}, {"town": "Ada", "variable": "pm", "value": "rain"}]
+explanation_markdown: |
+  Melting reshapes wide to long by fanning each row out into one record per value
+  column. The two nested loops carry the structure: the outer loop walks the towns
+  and the inner loop walks the value columns, so a row with three value columns
+  becomes three tall rows. Each tall row repeats the identifier fields and adds a
+  `variable`/`value` pair naming where the number came from.
+
+  Copying the id-only `base` for every emitted record is what keeps them
+  independent; if you reused one dictionary and mutated it, every record would end
+  up pointing at the same object and show only the last season. Long form is the
+  shape most plotting and grouping code prefers, which is why this reshape is such
+  a common first step.
+common_mistakes:
+  - Reusing a single record dictionary and overwriting its variable/value each pass, so every emitted row shows the last column.
+  - Producing one output row per input row instead of one per value column, collapsing the fan-out.
+  - Dropping the id columns from the long rows, so the values lose the town they belong to.

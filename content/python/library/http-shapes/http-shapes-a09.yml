@@ -1,0 +1,140 @@
+id: exercise.library.http_shapes.a09
+kind: exercise
+version: 1
+language: python
+title: Stamping the Authorization Header
+slug: http-shapes-a09
+difficulty: medium
+concepts:
+  - python.http_model
+  - python.strings
+prerequisites:
+  - python.strings
+  - python.dictionaries
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.http_shapes.a09
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original Authorization-header builder covering Bearer and Basic schemes with base64 encoding, framed around a museum archive API client.
+prompt_markdown: |
+  The Cartwright Archive exposes a catalog API, and your client must attach the
+  right `Authorization` header value to each request. Write
+  `build_auth_header(request)` where `request` is a single dict describing the
+  credential. Return the header **value** string. The `"scheme"` key names the
+  auth scheme and is matched **case-insensitively**.
+
+  - Bearer tokens: `request = {"scheme": "bearer", "token": "<token>"}`. Strip
+    surrounding whitespace from the token. If the token is empty after
+    stripping, the credential is unusable, so return `""`. Otherwise return
+    `"Bearer " + token`.
+  - Basic auth: `request = {"scheme": "basic", "username": "<u>",
+    "password": "<p>"}`. Join them as `"<u>:<p>"`, encode those bytes with
+    standard base64, and return `"Basic " + <encoded>`. Do not strip the
+    username or password; credentials are used exactly as given. Missing
+    `"username"` or `"password"` is treated as an empty string. You may assume
+    usernames never contain a colon.
+  - Any other scheme (unknown or unsupported) returns `""`.
+
+  Example: `{"scheme": "bearer", "token": "sky-9f2a"}` returns
+  `"Bearer sky-9f2a"`. `{"scheme": "basic", "username": "curator",
+  "password": "moonrise"}` returns `"Basic Y3VyYXRvcjptb29ucmlzZQ=="`.
+starter_code: |
+  import base64
+
+
+  def build_auth_header(request):
+      return ""
+function_name: build_auth_header
+input_mode: function
+solution_sketch: Lower-case the scheme, and for bearer strip the token and return a prefixed string (or empty if blank); for basic, base64-encode the "user:password" bytes and prefix with "Basic "; return empty for anything else.
+sample_solution: |
+  import base64
+
+
+  def build_auth_header(request):
+      scheme = request.get("scheme", "").lower()
+      if scheme == "bearer":
+          token = request.get("token", "").strip()
+          if not token:
+              return ""
+          return "Bearer " + token
+      if scheme == "basic":
+          username = request.get("username", "")
+          password = request.get("password", "")
+          raw = f"{username}:{password}".encode()
+          encoded = base64.b64encode(raw).decode()
+          return "Basic " + encoded
+      return ""
+hints:
+  - level: 1
+    text: Normalize the scheme with .lower() first so "Bearer", "bearer", and "BASIC" all route to the same branch.
+  - level: 2
+    text: For bearer, strip the token and short-circuit to "" when it is blank; otherwise prefix it with "Bearer ".
+  - level: 3
+    text: For basic, build the string "username:password", call base64.b64encode on its .encode() bytes, decode back to str, and prefix with "Basic ". Return "" for any unrecognized scheme.
+tests:
+  public:
+    - name: bearer_basic_token
+      input:
+        scheme: bearer
+        token: sky-9f2a
+      expected: Bearer sky-9f2a
+    - name: basic_credentials
+      input:
+        scheme: basic
+        username: curator
+        password: moonrise
+      expected: Basic Y3VyYXRvcjptb29ucmlzZQ==
+    - name: unknown_scheme
+      input:
+        scheme: digest
+        token: sky-9f2a
+      expected: ''
+  validation:
+    - name: bearer_whitespace_trimmed
+      input:
+        scheme: bearer
+        token: '   tok-123   '
+      expected: Bearer tok-123
+    - name: bearer_empty_token
+      input:
+        scheme: bearer
+        token: '   '
+      expected: ''
+    - name: basic_empty_password
+      input:
+        scheme: basic
+        username: keeper
+        password: ''
+      expected: Basic a2VlcGVyOg==
+    - name: scheme_case_insensitive
+      input:
+        scheme: BASIC
+        username: ada
+        password: '1832'
+      expected: Basic YWRhOjE4MzI=
+    - name: basic_missing_password_key
+      input:
+        scheme: basic
+        username: keeper
+      expected: Basic a2VlcGVyOg==
+explanation_markdown: |
+  The `Authorization` header carries the client's credential, and different
+  schemes shape that value differently. A Bearer token is passed through almost
+  verbatim behind the `Bearer ` label, so the only real work is trimming
+  accidental whitespace and refusing an empty token that would produce a
+  meaningless header. Basic auth is more mechanical: the username and password
+  are joined with a colon and base64-encoded, which is an encoding for transport,
+  not encryption, so it protects nothing on its own and is only safe over HTTPS.
+
+  Normalizing the scheme to lower-case up front keeps the branching honest, and
+  returning `""` for both blank tokens and unknown schemes gives the caller a
+  single, checkable "no header" signal instead of a malformed string.
+common_mistakes:
+  - Stripping the username or password before encoding, which corrupts credentials that legitimately contain spaces.
+  - Forgetting to `.decode()` the base64 bytes, leaving a `b'...'` bytes object in the header value.
+  - Comparing the scheme case-sensitively so `"BASIC"` or `"Bearer"` falls through to the unknown branch.

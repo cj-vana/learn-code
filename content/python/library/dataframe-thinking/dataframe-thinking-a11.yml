@@ -1,0 +1,194 @@
+id: exercise.library.dataframe_thinking.a11
+kind: exercise
+version: 1
+language: python
+title: Patching the Orchard Gaps
+slug: dataframe-thinking-a11
+difficulty: medium
+concepts:
+  - concepts.dataframe_thinking
+  - python.dictionaries
+prerequisites:
+  - python.dictionaries
+  - python.comprehensions
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dataframe_thinking.a11
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original missing-value fill drill framed around an orchard's dropped moisture readings, contrasting a constant fill with a mean-imputation strategy the way a dataframe fillna does.
+prompt_markdown: |
+  An orchard's soil probes occasionally drop a reading, leaving a `None` in the
+  moisture column. Before the data is charted, the gaps must be patched — the
+  pure-Python version of a dataframe `fillna`, offered here with two strategies.
+
+  Write `fillna_column(payload)` that takes **one dictionary** with four entries:
+
+  - `"rows"`: a list of dictionaries. Every row contains the target column, whose
+    value is either a number or `None`.
+  - `"column"`: the string name of the column to patch.
+  - `"strategy"`: either `"value"` or `"mean"`.
+  - `"fill"`: the constant used when the strategy is `"value"` (ignored for
+    `"mean"`, but always present).
+
+  Example call:
+
+  ```python
+  fillna_column({
+      "rows": [{"tree": "t1", "moisture": 40}, {"tree": "t2", "moisture": None}],
+      "column": "moisture",
+      "strategy": "value",
+      "fill": 0,
+  })
+  # -> [{"tree": "t1", "moisture": 40}, {"tree": "t2", "moisture": 0}]
+  ```
+
+  Return a **new list of row dictionaries** in the original order:
+
+  - A value is "missing" only when it is exactly `None`; a `0` is a real reading and
+    is left alone.
+  - With strategy `"value"`, replace each missing entry with `"fill"`.
+  - With strategy `"mean"`, replace each missing entry with the **mean of the
+    present (non-`None`) values in that column, rounded to 4 decimal places**. The
+    replacement is the same for every gap. If the column has no present values at
+    all, use `0.0`.
+  - Non-missing values, and every other column, are left unchanged.
+  - Do not mutate the caller's rows; return fresh dictionaries.
+  - If `"rows"` is empty, return an empty list.
+starter_code: |
+  def fillna_column(payload):
+      return []
+function_name: fillna_column
+input_mode: function
+solution_sketch: Decide the replacement once (the fill constant, or the rounded mean of present values with a 0.0 fallback), then copy each row and swap only the None entries in the target column.
+sample_solution: |
+  def fillna_column(payload):
+      rows = payload["rows"]
+      column = payload["column"]
+      strategy = payload["strategy"]
+      fill = payload["fill"]
+      if strategy == "mean":
+          present = [row[column] for row in rows if row[column] is not None]
+          if present:
+              replacement = round(sum(present) / len(present), 4)
+          else:
+              replacement = 0.0
+      else:
+          replacement = fill
+      result = []
+      for row in rows:
+          new_row = dict(row)
+          if new_row[column] is None:
+              new_row[column] = replacement
+          result.append(new_row)
+      return result
+hints:
+  - level: 1
+    text: Work out the single replacement value first, then make one pass swapping only the None entries.
+  - level: 2
+    text: For the mean strategy, gather the present values with a comprehension that filters out None, then average and round them; guard against an empty column with a 0.0 fallback.
+  - level: 3
+    text: Copy each row with dict(row) and replace the field only when it is exactly None, so real zeros and every other column survive untouched.
+tests:
+  public:
+    - name: value_fill
+      input:
+        rows:
+          - {tree: "t1", moisture: 40}
+          - {tree: "t2", moisture: null}
+          - {tree: "t3", moisture: 55}
+        column: moisture
+        strategy: value
+        fill: 0
+      expected:
+        - {tree: "t1", moisture: 40}
+        - {tree: "t2", moisture: 0}
+        - {tree: "t3", moisture: 55}
+    - name: mean_fill
+      input:
+        rows:
+          - {tree: "t1", moisture: 40}
+          - {tree: "t2", moisture: null}
+          - {tree: "t3", moisture: 60}
+        column: moisture
+        strategy: mean
+        fill: 0
+      expected:
+        - {tree: "t1", moisture: 40}
+        - {tree: "t2", moisture: 50.0}
+        - {tree: "t3", moisture: 60}
+    - name: no_missing
+      input:
+        rows:
+          - {tree: "t1", moisture: 40}
+        column: moisture
+        strategy: value
+        fill: 0
+      expected:
+        - {tree: "t1", moisture: 40}
+  validation:
+    - name: multiple_missing_value
+      input:
+        rows:
+          - {tree: "t1", moisture: null}
+          - {tree: "t2", moisture: null}
+        column: moisture
+        strategy: value
+        fill: 33
+      expected:
+        - {tree: "t1", moisture: 33}
+        - {tree: "t2", moisture: 33}
+    - name: mean_with_rounding
+      input:
+        rows:
+          - {tree: "t1", moisture: 10}
+          - {tree: "t2", moisture: 11}
+          - {tree: "t3", moisture: 13}
+          - {tree: "t4", moisture: null}
+        column: moisture
+        strategy: mean
+        fill: 0
+      expected:
+        - {tree: "t1", moisture: 10}
+        - {tree: "t2", moisture: 11}
+        - {tree: "t3", moisture: 13}
+        - {tree: "t4", moisture: 11.3333}
+    - name: mean_all_null_defaults_zero
+      input:
+        rows:
+          - {tree: "t1", moisture: null}
+        column: moisture
+        strategy: mean
+        fill: 0
+      expected:
+        - {tree: "t1", moisture: 0.0}
+    - name: zero_is_not_missing
+      input:
+        rows:
+          - {tree: "t1", moisture: 0}
+          - {tree: "t2", moisture: null}
+        column: moisture
+        strategy: value
+        fill: 99
+      expected:
+        - {tree: "t1", moisture: 0}
+        - {tree: "t2", moisture: 99}
+explanation_markdown: |
+  Filling gaps forces a question dataframes make you answer too: what counts as
+  missing, and what should stand in for it? Here missing means exactly `None`, which
+  is why a genuine `0` reading must survive — conflating the two is the classic
+  imputation bug. The constant strategy is a straight substitution; the mean
+  strategy computes one replacement from the values that *are* present and reuses it
+  for every gap, matching `df[col].fillna(df[col].mean())`.
+
+  Computing the mean once (rather than per gap) is both faster and correct: the
+  imputed value should reflect the observed data, not itself. The `0.0` fallback for
+  an all-missing column keeps the function total — it never divides by zero — which
+  is the kind of edge a production pipeline has to handle explicitly.
+common_mistakes:
+  - Treating 0 (or an empty string) as missing, so real zero readings get overwritten.
+  - Recomputing the mean while filling, letting already-imputed values pull the average around.
+  - Dividing by zero when every value is missing instead of falling back to a default.

@@ -1,0 +1,102 @@
+id: quiz.library.functional_style.a01
+kind: quiz
+version: 1
+language: python
+title: Style Judgment
+slug: quiz-functional-style-a01
+difficulty: medium
+concepts:
+  - python.functional_style
+prerequisites:
+  - python.functional_style
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.functional_style.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pattern-recognition quiz on choosing functional versus imperative style and composition tools.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      Transforming a list of records into a list of summary strings. Which is
+      the idiomatic Python?
+    choices:
+      - A list comprehension - [summarize(r) for r in records]
+      - 'list(map(lambda r: summarize(r), records))'
+      - A for loop appending to a fresh list
+      - 'reduce(lambda acc, r: acc + [summarize(r)], records, [])'
+    correct_choice: A list comprehension - [summarize(r) for r in records]
+    explanation: |
+      Comprehensions are Python's idiomatic map/filter; the map+lambda is
+      redundant, and the reduce rebuilds a list quadratically for no reason.
+    concepts:
+      - python.functional_style
+  - id: q2
+    prompt: |
+      A block must process each file, write a report, and stop at the first
+      corrupt file. Functional pipeline or explicit loop?
+    choices:
+      - Explicit loop - it has side effects (writing) and early exit (stop on corrupt), which loops express directly
+      - A comprehension for the side effects
+      - map with a break argument
+      - reduce with an accumulator flag
+    correct_choice: Explicit loop - it has side effects (writing) and early exit (stop on corrupt), which loops express directly
+    explanation: |
+      Side effects and break are control flow; forcing them into
+      transformations obscures rather than clarifies. Data flow gets
+      transforms, control flow gets loops.
+    concepts:
+      - python.functional_style
+  - id: q3
+    prompt: |
+      A cleaning pipeline needs stages strip, redact-card-numbers, and
+      truncate-to-200, composed into one callable. Which tools build it?
+    choices:
+      - partial to shape multi-arg functions into one-arg stages, then compose/pipe to chain them
+      - A single large function doing all three
+      - Three separate loops
+      - A class with three methods
+    correct_choice: partial to shape multi-arg functions into one-arg stages, then compose/pipe to chain them
+    explanation: |
+      partial adapts general functions to the pipeline's one-argument shape;
+      compose chains them into a reusable, testable callable.
+    concepts:
+      - python.functional_style
+  - id: q4
+    prompt: |
+      A pricing system needs pluggable rules, each essentially "one
+      calculation with some fixed parameters." What is the lightweight
+      Pythonic implementation?
+    choices:
+      - A closure per rule capturing its parameters and exposing one call
+      - A class hierarchy with an abstract Rule base
+      - A giant if/elif dispatching on rule name
+      - A dict of magic strings
+    correct_choice: A closure per rule capturing its parameters and exposing one call
+    explanation: |
+      A single-method strategy with fixed data is exactly a closure's
+      sweet spot; a class earns its place only when the strategy grows
+      multiple methods or needs identity.
+    concepts:
+      - python.functional_style
+  - id: q5
+    prompt: |
+      A utility sorts its argument list in place, and a caller is baffled
+      when their original list comes back reordered. What posture prevents
+      this?
+    choices:
+      - Immutability by default - return a new sorted list, leaving the caller's data untouched
+      - Documenting the mutation in a comment
+      - Copying the list inside every caller
+      - Making the list a global
+    correct_choice: Immutability by default - return a new sorted list, leaving the caller's data untouched
+    explanation: |
+      Producing new values instead of mutating inputs removes the
+      action-at-a-distance bug entirely — state that does not change cannot
+      surprise anyone.
+    concepts:
+      - python.functional_style
