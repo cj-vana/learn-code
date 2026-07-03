@@ -1,23 +1,11 @@
 @import './tokens.css';
 
 /*
- * Workbench Ledger — a tactile study-workshop skin.
- * Warm paper surfaces, blackboard ink panels, and stamped/receipt detailing.
- * No web fonts: the "hand of the workshop" is built from system stacks so the
- * app renders identically offline and inside the compose network.
+ * Night Study — the workshop after dark.
+ * A warm walnut desk lit by a single brass lamp: the chrome is deep wood and
+ * shadow, and the lesson cards are lit cream paper that lift off the surface.
+ * No web fonts: system stacks so the app renders identically offline.
  */
-
-:root {
-  --font-body: 'Iowan Old Style', 'Palatino Linotype', Palatino, 'Book Antiqua',
-    Georgia, serif;
-  --font-stamp: 'Futura', 'Trebuchet MS', 'Gill Sans', 'Segoe UI', system-ui,
-    sans-serif;
-  --font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', 'Cascadia Mono',
-    'Roboto Mono', Menlo, Consolas, monospace;
-
-  --paper-line: color-mix(in srgb, var(--rule) 55%, transparent);
-  --ink-soft: color-mix(in srgb, var(--ink) 70%, var(--paper));
-}
 
 * {
   box-sizing: border-box;
@@ -32,43 +20,87 @@ body,
 body {
   margin: 0;
   font-family: var(--font-body);
-  color: var(--ink);
-  background-color: var(--paper);
-  /* Faint ledger ruling + a grain wash so the paper reads as a physical desk. */
+  color: var(--paper);
+  background-color: var(--desk);
+  /* Lamp pool from upper-left, a warm walnut wash, and a fine grain so the
+   * desk reads as a physical, dimly-lit surface. */
   background-image:
-    linear-gradient(var(--paper-line) 1px, transparent 1px),
     radial-gradient(
-      circle at 12% 20%,
-      color-mix(in srgb, var(--paper-aged) 60%, transparent),
+      120% 90% at 18% -5%,
+      color-mix(in srgb, var(--brass) 16%, transparent),
+      transparent 55%
+    ),
+    radial-gradient(
+      100% 120% at 100% 100%,
+      color-mix(in srgb, #000 45%, transparent),
       transparent 60%
+    ),
+    repeating-linear-gradient(
+      92deg,
+      color-mix(in srgb, #000 8%, transparent) 0 2px,
+      transparent 2px 5px
     );
-  background-size:
-    100% 28px,
-    100% 100%;
   background-attachment: fixed;
-  line-height: 1.5;
+  line-height: 1.55;
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
 }
 
 a {
-  color: var(--rust);
+  color: var(--brass-bright);
   text-underline-offset: 3px;
+  text-decoration-color: color-mix(in srgb, var(--brass) 50%, transparent);
+}
+a:hover {
+  color: var(--paper);
+}
+
+/* One shared entrance: panels and cards drift up into the lamplight. */
+@keyframes lift-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .shell__main .panel,
+  .shell__main .index-card {
+    animation: lift-in 460ms cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  }
+  .shell__main .index-card:nth-child(2) {
+    animation-delay: 60ms;
+  }
+  .shell__main .index-card:nth-child(3) {
+    animation-delay: 120ms;
+  }
+  .shell__main .index-card:nth-child(4) {
+    animation-delay: 180ms;
+  }
+  .shell__main .index-card:nth-child(n + 5) {
+    animation-delay: 240ms;
+  }
 }
 
 h1,
 h2,
 h3 {
   font-family: var(--font-stamp);
-  letter-spacing: 0.04em;
+  letter-spacing: 0.01em;
   line-height: 1.15;
   margin: 0 0 var(--space-3);
+  color: var(--paper);
 }
 
-/* A single, deliberate focus treatment reused everywhere for keyboard users. */
+/* A single, deliberate focus treatment: a warm brass halo for keyboard users. */
 :where(a, button, input, textarea, select, summary, [tabindex]):focus-visible {
-  outline: 3px solid var(--focus);
+  outline: 2px solid var(--focus);
   outline-offset: 2px;
   border-radius: 3px;
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--brass) 28%, transparent);
 }
 
 /* ---- Shell ---------------------------------------------------------- */
@@ -85,81 +117,95 @@ h3 {
   align-items: baseline;
   justify-content: space-between;
   gap: var(--space-3);
-  padding: var(--space-4) var(--space-6);
-  background: var(--blackboard);
+  padding: var(--space-6) var(--space-6) var(--space-4);
+  background:
+    radial-gradient(
+      80% 200% at 8% 0%,
+      color-mix(in srgb, var(--brass) 20%, transparent),
+      transparent 60%
+    ),
+    var(--desk-deep);
   color: var(--paper);
-  border-bottom: 3px solid var(--ochre);
+  border-top: 2px solid var(--brass);
+  border-bottom: 1px solid var(--desk-line);
 }
 
 .shell__brand {
   font-family: var(--font-stamp);
-  font-size: 1.35rem;
-  font-weight: 800;
+  font-size: 1.5rem;
+  font-weight: 700;
   text-transform: uppercase;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.22em;
   margin: 0;
   color: var(--paper);
+  text-shadow: 0 0 22px color-mix(in srgb, var(--brass) 45%, transparent);
 }
 
 .shell__brand span {
-  color: var(--ochre);
+  color: var(--brass-bright);
+  margin: 0 0.1em;
 }
 
 .shell__tagline {
   font-family: var(--font-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
-  color: color-mix(in srgb, var(--paper) 70%, var(--panel));
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  color: color-mix(in srgb, var(--paper) 55%, var(--desk));
   text-transform: uppercase;
 }
 
 .shell__nav {
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-1);
-  padding: var(--space-2) var(--space-6);
-  background: var(--panel);
-  border-bottom: 1px solid color-mix(in srgb, var(--ochre) 40%, var(--panel));
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-6);
+  background: var(--desk-panel);
+  border-bottom: 1px solid var(--desk-line);
 }
 
 .shell__nav a {
   font-family: var(--font-stamp);
-  font-size: 0.8rem;
+  font-size: 0.76rem;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   text-decoration: none;
-  color: color-mix(in srgb, var(--paper) 78%, var(--panel));
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius);
+  color: color-mix(in srgb, var(--paper) 62%, var(--desk));
+  padding: var(--space-2) var(--space-4);
+  border-radius: 999px;
   border: 1px solid transparent;
+  transition:
+    color 140ms ease,
+    border-color 140ms ease,
+    background 140ms ease;
 }
 
 .shell__nav a:hover {
   color: var(--paper);
-  border-color: color-mix(in srgb, var(--ochre) 50%, transparent);
+  border-color: color-mix(in srgb, var(--brass) 55%, transparent);
 }
 
 .shell__nav a[aria-current='page'] {
-  color: var(--blackboard);
-  background: var(--ochre);
-  box-shadow: inset 0 -2px 0 color-mix(in srgb, var(--ink) 30%, transparent);
+  color: var(--desk-deep);
+  background: linear-gradient(var(--brass-bright), var(--brass));
+  border-color: var(--brass);
+  box-shadow: 0 0 18px color-mix(in srgb, var(--brass) 40%, transparent);
 }
 
 .shell__main {
-  padding: var(--space-6);
-  max-width: 1180px;
+  padding: var(--space-8) var(--space-6) var(--space-8);
+  max-width: 1200px;
   width: 100%;
   margin: 0 auto;
 }
 
 .shell__foot {
-  padding: var(--space-3) var(--space-6);
+  padding: var(--space-4) var(--space-6);
   font-family: var(--font-mono);
-  font-size: 0.7rem;
-  letter-spacing: 0.06em;
-  color: var(--graphite);
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  color: color-mix(in srgb, var(--paper) 40%, var(--desk));
   text-transform: uppercase;
-  border-top: 1px solid var(--rule);
+  border-top: 1px solid var(--desk-line);
 }
 
 .page-heading {
@@ -167,21 +213,35 @@ h3 {
   align-items: baseline;
   gap: var(--space-3);
   margin-bottom: var(--space-6);
-  border-bottom: 2px solid var(--ink);
-  padding-bottom: var(--space-2);
+  border-bottom: 1px solid var(--desk-line);
+  padding-bottom: var(--space-3);
+  position: relative;
+}
+
+/* A short brass meridian under the title. */
+.page-heading::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: -1px;
+  width: 64px;
+  height: 2px;
+  background: var(--brass);
+  box-shadow: 0 0 12px color-mix(in srgb, var(--brass) 60%, transparent);
 }
 
 .page-heading h1 {
-  font-size: 1.9rem;
+  font-size: 2.1rem;
   margin: 0;
+  letter-spacing: 0.005em;
 }
 
 .page-heading__kicker {
   font-family: var(--font-mono);
   font-size: 0.72rem;
-  letter-spacing: 0.12em;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
-  color: var(--rust);
+  color: var(--brass-bright);
 }
 
 .page-grid {
@@ -214,12 +274,12 @@ h3 {
   align-items: center;
   gap: var(--space-3);
   font-family: var(--font-mono);
-  font-size: 0.75rem;
-  letter-spacing: 0.06em;
+  font-size: 0.72rem;
+  letter-spacing: 0.1em;
   padding: var(--space-2) var(--space-6);
-  background: var(--blackboard);
-  color: color-mix(in srgb, var(--paper) 80%, var(--panel));
-  border-bottom: 1px solid var(--panel);
+  background: var(--desk);
+  color: color-mix(in srgb, var(--paper) 62%, var(--desk));
+  border-bottom: 1px solid var(--desk-line);
   text-transform: uppercase;
 }
 
@@ -258,18 +318,27 @@ h3 {
 /* ---- Panel ---------------------------------------------------------- */
 
 .panel {
-  background: var(--paper);
-  border: 1px solid var(--rule);
+  position: relative;
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, #fff 20%, var(--paper)),
+      var(--paper) 22%
+    );
+  color: var(--ink);
+  border: 1px solid color-mix(in srgb, var(--rule) 85%, var(--ink));
   border-radius: var(--radius);
+  /* Warm lamp glow lifts the page off the dark desk. */
   box-shadow:
-    0 1px 0 color-mix(in srgb, var(--ink) 8%, transparent),
-    0 10px 20px -18px color-mix(in srgb, var(--ink) 60%, transparent);
+    0 0 0 1px color-mix(in srgb, #000 25%, transparent),
+    0 18px 40px -22px color-mix(in srgb, #000 90%, transparent),
+    0 0 46px -20px var(--lamp-glow);
 }
 
 .panel--ink {
-  background: var(--panel);
+  background: linear-gradient(180deg, var(--desk-panel), var(--panel));
   color: var(--paper);
-  border-color: var(--blackboard);
+  border-color: var(--desk-line);
 }
 
 .panel__header {
@@ -313,12 +382,30 @@ h3 {
 
 .index-card {
   position: relative;
-  background: var(--paper);
-  border: 1px solid var(--rule);
-  border-left: 5px solid var(--blueprint);
+  background:
+    linear-gradient(
+      180deg,
+      color-mix(in srgb, #fff 22%, var(--paper)),
+      var(--paper) 30%
+    );
+  color: var(--ink);
+  border: 1px solid color-mix(in srgb, var(--rule) 85%, var(--ink));
+  border-left: 4px solid var(--blueprint);
   border-radius: 2px var(--radius) var(--radius) 2px;
   padding: var(--space-4);
-  box-shadow: 0 6px 14px -14px color-mix(in srgb, var(--ink) 70%, transparent);
+  box-shadow:
+    0 14px 30px -24px color-mix(in srgb, #000 90%, transparent),
+    0 0 30px -18px var(--lamp-glow);
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.index-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 20px 38px -22px color-mix(in srgb, #000 90%, transparent),
+    0 0 40px -14px var(--lamp-glow);
 }
 
 .index-card__title {
@@ -368,47 +455,71 @@ h3 {
 
 .command-btn {
   font-family: var(--font-stamp);
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   text-transform: uppercase;
-  letter-spacing: 0.08em;
+  letter-spacing: 0.1em;
   font-weight: 700;
-  color: var(--paper);
-  background: var(--rust);
-  border: 1px solid color-mix(in srgb, var(--ink) 40%, var(--rust));
+  color: var(--desk-deep);
+  background: linear-gradient(180deg, var(--brass-bright), var(--brass));
+  border: 1px solid color-mix(in srgb, var(--brass) 70%, #000);
   border-radius: var(--radius);
-  padding: var(--space-3) var(--space-4);
+  padding: var(--space-3) var(--space-6);
   cursor: pointer;
-  box-shadow: 0 2px 0 color-mix(in srgb, var(--ink) 45%, transparent);
-  transition: transform 60ms ease;
+  box-shadow:
+    0 6px 18px -8px color-mix(in srgb, var(--brass) 55%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #fff 45%, transparent);
+  transition:
+    transform 90ms ease,
+    box-shadow 160ms ease,
+    filter 160ms ease;
 }
 
 .command-btn:hover:not(:disabled) {
   transform: translateY(-1px);
+  filter: brightness(1.06);
+  box-shadow:
+    0 10px 24px -8px color-mix(in srgb, var(--brass) 65%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #fff 50%, transparent);
 }
 
 .command-btn:active:not(:disabled) {
   transform: translateY(1px);
-  box-shadow: none;
+  box-shadow: inset 0 2px 6px color-mix(in srgb, #000 30%, transparent);
 }
 
 .command-btn--pine {
-  background: var(--pine);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--pine) 80%, #fff),
+    var(--pine)
+  );
+  color: #fff;
+  border-color: color-mix(in srgb, var(--pine) 60%, #000);
+  box-shadow:
+    0 6px 18px -8px color-mix(in srgb, var(--pine) 55%, transparent),
+    inset 0 1px 0 color-mix(in srgb, #fff 30%, transparent);
 }
 .command-btn--ochre {
-  background: var(--ochre);
-  color: var(--blackboard);
+  background: linear-gradient(180deg, var(--ochre), color-mix(in srgb, var(--ochre) 80%, #000));
+  color: var(--desk-deep);
 }
 .command-btn--ghost {
   background: transparent;
-  color: var(--ink);
-  border-color: var(--ink);
+  color: inherit;
+  border-color: color-mix(in srgb, currentColor 45%, transparent);
   box-shadow: none;
+}
+.command-btn--ghost:hover:not(:disabled) {
+  border-color: var(--brass);
+  color: var(--brass-bright);
+  filter: none;
 }
 
 .command-btn:disabled {
-  opacity: 0.5;
+  opacity: 0.45;
   cursor: not-allowed;
   box-shadow: none;
+  filter: saturate(0.6);
 }
 
 .command-row {
