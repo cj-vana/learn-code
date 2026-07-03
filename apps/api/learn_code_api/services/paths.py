@@ -5,6 +5,7 @@ or exercise validation passed."""
 
 from __future__ import annotations
 
+from learn_code_api.content.concepts import concept_label
 from learn_code_api.content.models import ContentCatalog, PathContent
 from learn_code_api.contracts import (
     PathDetail,
@@ -47,6 +48,7 @@ def path_summary(
         slug=path_content.slug,
         description=path_content.description,
         outcomes=list(path_content.outcomes),
+        assumed_concepts=[concept_label(c) for c in path_content.assumed_concepts],
         estimated_hours=path_content.estimated_hours,
         units=len(path_content.units),
         items=len(item_ids),
@@ -123,6 +125,7 @@ def path_detail(
         slug=path_content.slug,
         description=path_content.description,
         outcomes=list(path_content.outcomes),
+        assumed_concepts=[concept_label(c) for c in path_content.assumed_concepts],
         estimated_hours=path_content.estimated_hours,
         enrolled=path_content.id == active_path_id,
         percent_complete=_percent(total_done, total),

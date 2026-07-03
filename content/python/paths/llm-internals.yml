@@ -5,44 +5,38 @@ version: 1
 language: python
 title: LLM Internals
 slug: llm-internals
-description: "What actually happens inside a language model: tokenization, n-gram probabilities, embeddings\
+description: "What actually happens inside a language model: n-gram probabilities, tokenization, embeddings\
   \ and retrieval, and the attention mechanism \u2014 all built by hand."
 outcomes:
 - Train BPE merges and tokenize unseen text with them
 - Compute sequence probabilities, perplexity, and temperature scaling
 - Implement cosine retrieval, BM25, and single-head attention
+assumed_concepts:
+- ai.classic_ml
+- concepts.grouping_aggregation
+- python.collections_module
+- python.comprehensions
+- python.conditionals
+- python.dictionaries
+- python.functions
+- python.lists
+- python.loops
+- python.operators
+- python.sets
+- python.slicing
+- python.sorting
+- python.strings
 estimated_hours: 15
 review_status: published
 source_status: original
 provenance:
   brief_id: brief.paths.v1
   author: agent
-  generated_at: '2026-07-02T18:00:00Z'
+  generated_at: '2026-07-03T16:00:00Z'
   inspiration_sources: []
   originality_notes: Curated ordering over the repository's original content bank; no external syllabus
     copied.
 units:
-- id: unit.tokenization_bpe
-  title: Tokenization & BPE
-  description: Lessons, drills, and quizzes for tokenization & bpe.
-  items:
-  - lesson.library.tokenization_bpe.a01
-  - lesson.library.tokenization_bpe.a02
-  - lesson.library.tokenization_bpe.a03
-  - exercise.library.tokenization_bpe.a01
-  - exercise.library.tokenization_bpe.a02
-  - exercise.library.tokenization_bpe.a03
-  - exercise.library.tokenization_bpe.a04
-  - quiz.library.tokenization_bpe.a01
-  - exercise.library.tokenization_bpe.a05
-  - exercise.library.tokenization_bpe.a06
-  - exercise.library.tokenization_bpe.a07
-  - exercise.library.tokenization_bpe.a08
-  - quiz.library.tokenization_bpe.a02
-  - exercise.library.tokenization_bpe.a09
-  - exercise.library.tokenization_bpe.a10
-  - exercise.library.tokenization_bpe.a11
-  - exercise.library.tokenization_bpe.a12
 - id: unit.language_models_from_scratch
   title: Language Models from Scratch
   description: Lessons, drills, and quizzes for language models from scratch.
@@ -64,6 +58,27 @@ units:
   - exercise.library.language_models_from_scratch.a10
   - exercise.library.language_models_from_scratch.a11
   - exercise.library.language_models_from_scratch.a12
+- id: unit.tokenization_bpe
+  title: Tokenization & BPE
+  description: Lessons, drills, and quizzes for tokenization & bpe.
+  items:
+  - lesson.library.tokenization_bpe.a01
+  - lesson.library.tokenization_bpe.a02
+  - lesson.library.tokenization_bpe.a03
+  - exercise.library.tokenization_bpe.a01
+  - exercise.library.tokenization_bpe.a02
+  - exercise.library.tokenization_bpe.a03
+  - exercise.library.tokenization_bpe.a04
+  - quiz.library.tokenization_bpe.a01
+  - exercise.library.tokenization_bpe.a05
+  - exercise.library.tokenization_bpe.a06
+  - exercise.library.tokenization_bpe.a07
+  - exercise.library.tokenization_bpe.a08
+  - quiz.library.tokenization_bpe.a02
+  - exercise.library.tokenization_bpe.a09
+  - exercise.library.tokenization_bpe.a10
+  - exercise.library.tokenization_bpe.a11
+  - exercise.library.tokenization_bpe.a12
 - id: unit.embeddings_similarity_search
   title: Embeddings & Retrieval
   description: Lessons, drills, and quizzes for embeddings & retrieval.

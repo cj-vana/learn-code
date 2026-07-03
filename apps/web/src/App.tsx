@@ -5,6 +5,7 @@ import { ExerciseRoute } from './routes/ExerciseRoute';
 import { LessonRoute } from './routes/LessonRoute';
 import { QuizRoute } from './routes/QuizRoute';
 import { PathsRoute } from './routes/PathsRoute';
+import { StartRoute } from './routes/StartRoute';
 import { PathRoute } from './routes/PathRoute';
 import { TimedRoute } from './routes/TimedRoute';
 import { PlaygroundRoute } from './routes/PlaygroundRoute';
@@ -22,6 +23,7 @@ export function App() {
         <Route path="/exercise/:id" element={<ExerciseRoute />} />
         <Route path="/lesson/:id" element={<LessonRoute />} />
         <Route path="/quiz/:id" element={<QuizRoute />} />
+        <Route path="/start" element={<StartRoute />} />
         <Route path="/paths" element={<PathsRoute />} />
         <Route path="/path/:id" element={<PathRoute />} />
         <Route path="/timed" element={<TimedRoute />} />

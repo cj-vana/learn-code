@@ -106,6 +106,78 @@ def test_validator_errors_on_unknown_path_item(tmp_path):
     assert any("unknown path item" in issue.message for issue in report.issues)
 
 
+def _lesson(**over) -> dict:
+    data = {
+        "id": "lesson.t.1",
+        "kind": "lesson",
+        "version": 1,
+        "language": "python",
+        "title": "Intro",
+        "slug": "intro",
+        "difficulty": "easy",
+        "concepts": ["python.loops"],
+        "prerequisites": [],
+        "estimated_time_minutes": 8,
+        "review_status": "published",
+        "source_status": "original",
+        "provenance": _provenance(),
+        "body_markdown": "Body.",
+        "checkpoints": [{"question": "q?", "answer": "a", "explanation": "e"}],
+    }
+    data.update(over)
+    return data
+
+
+def test_assumed_concepts_seed_prerequisite_ordering(tmp_path):
+    import yaml
+
+    from learn_code_api.content.validator import validate_content_tree
+
+    lesson = _lesson(prerequisites=["python.functions"])
+    path_data = _path(
+        units=[{"id": "unit.one", "title": "One", "description": "d", "items": ["lesson.t.1"]}]
+    )
+    (tmp_path / "lesson.yml").write_text(yaml.safe_dump(lesson), encoding="utf-8")
+    (tmp_path / "path.yml").write_text(yaml.safe_dump(path_data), encoding="utf-8")
+    report = validate_content_tree(tmp_path, profile="none", run_solutions=False)
+    assert any("before its prerequisite" in issue.message for issue in report.issues)
+
+    path_data = _path(assumed_concepts=["python.functions"], units=path_data["units"])
+    (tmp_path / "path.yml").write_text(yaml.safe_dump(path_data), encoding="utf-8")
+    report = validate_content_tree(tmp_path, profile="none", run_solutions=False)
+    assert not any("before its prerequisite" in issue.message for issue in report.issues)
+
+
+def test_unknown_assumed_concept_is_an_error(tmp_path):
+    import yaml
+
+    from learn_code_api.content.validator import validate_content_tree
+
+    (tmp_path / "lesson.yml").write_text(yaml.safe_dump(_lesson()), encoding="utf-8")
+    path_data = _path(
+        assumed_concepts=["python.not_a_real_concept"],
+        units=[{"id": "unit.one", "title": "One", "description": "d", "items": ["lesson.t.1"]}],
+    )
+    (tmp_path / "path.yml").write_text(yaml.safe_dump(path_data), encoding="utf-8")
+    report = validate_content_tree(tmp_path, profile="library", run_solutions=False)
+    assert any("unknown assumed concept" in issue.message for issue in report.issues)
+
+
+def test_shipped_paths_have_no_prerequisite_ordering_warnings():
+    """Every shipped path teaches (or declares assumed) each prerequisite
+    before the item that needs it. Regenerate with scripts/generate_paths.py
+    if this fails after adding content."""
+    from pathlib import Path as _Path
+
+    from learn_code_api.content.validator import validate_content_tree
+
+    content_root = _Path(__file__).resolve().parents[4] / "content" / "python"
+    report = validate_content_tree(content_root, profile="library", run_solutions=False)
+    ordering = [i for i in report.issues if "before its prerequisite" in i.message]
+    assert report.ok, [i.message for i in report.issues if i.severity == "error"][:5]
+    assert not ordering, [f"{i.path}: {i.message}" for i in ordering][:5]
+
+
 def test_validator_accepts_path_with_real_items(tmp_path):
     import yaml
 

@@ -10,13 +10,27 @@ description: 'Everything a robust script needs: plan-then-act architecture, path
 outcomes:
 - Build automation as testable plans separated from actions
 - Handle paths, CLI arguments, and config precedence correctly
+assumed_concepts:
+- patterns.recursion
+- python.conditionals
+- python.dictionaries
+- python.functions
+- python.json_csv
+- python.lists
+- python.loops
+- python.regex
+- python.sets
+- python.slicing
+- python.sorting
+- python.strings
+- python.types
 estimated_hours: 15
 review_status: published
 source_status: original
 provenance:
   brief_id: brief.paths.v1
   author: agent
-  generated_at: '2026-07-02T18:00:00Z'
+  generated_at: '2026-07-03T16:00:00Z'
   inspiration_sources: []
   originality_notes: Curated ordering over the repository's original content bank; no external syllabus
     copied.

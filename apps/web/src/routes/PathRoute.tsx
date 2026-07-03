@@ -50,6 +50,18 @@ export function PathRoute() {
               eyebrow={`${detail.path_type === 'career' ? 'Career path' : 'Skill path'} · ~${detail.estimated_hours}h · ${detail.percent_complete}% complete`}
             >
               <p>{detail.description}</p>
+              {detail.assumed_concepts.length > 0 ? (
+                <div style={{ marginTop: 'var(--space-3)' }}>
+                  <p className="index-card__meta">Before you start, you should know</p>
+                  <div className="chip-row">
+                    {detail.assumed_concepts.map((concept) => (
+                      <span key={concept} className="pattern-chip">
+                        {concept}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              ) : null}
               <div className="command-row" style={{ marginTop: 'var(--space-3)' }}>
                 {nextItem ? (
                   <Link

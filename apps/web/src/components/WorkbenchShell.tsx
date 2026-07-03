@@ -2,7 +2,7 @@ import { NavLink, Outlet, useLocation } from 'react-router-dom';
 import { RuntimeStatusStrip } from './RuntimeStatusStrip';
 import { useProgress } from '../api/queries';
 
-type IconName = 'home' | 'tree' | 'bolt' | 'refresh' | 'grid' | 'trophy' | 'code';
+type IconName = 'home' | 'tree' | 'bolt' | 'refresh' | 'grid' | 'trophy' | 'code' | 'flag';
 
 function Icon({ name }: { name: IconName }) {
   const paths: Record<IconName, string> = {
@@ -15,6 +15,7 @@ function Icon({ name }: { name: IconName }) {
     trophy:
       '<path d="M7 4h10v4a5 5 0 0 1-10 0z"/><path d="M7 6H4v1a3 3 0 0 0 3 3M17 6h3v1a3 3 0 0 1-3 3M9 15h6M10 15v4M14 15v4M8 21h8"/>',
     code: '<path d="m8 8-4 4 4 4M16 8l4 4-4 4M13 5l-2 14"/>',
+    flag: '<path d="M5 21V4"/><path d="M5 4h13l-2.5 4L18 12H5"/>',
   };
   return (
     <svg
@@ -31,6 +32,7 @@ function Icon({ name }: { name: IconName }) {
 
 const NAV: { to: string; label: string; icon: IconName; crumb: string }[] = [
   { to: '/learn', label: 'Home', icon: 'home', crumb: 'Your desk' },
+  { to: '/start', label: 'Start Here', icon: 'flag', crumb: 'Placement' },
   { to: '/paths', label: 'Skill Tree', icon: 'tree', crumb: 'Python · skill tree' },
   { to: '/timed', label: 'Challenge', icon: 'bolt', crumb: 'Boss bench' },
   { to: '/review', label: 'Review Pile', icon: 'refresh', crumb: 'Spaced review' },
@@ -68,8 +70,8 @@ export function WorkbenchShell() {
     '/path/': ['Skill tree', 'Path'],
   };
   const detailKey = Object.keys(detail).find((k) => pathname.startsWith(k));
-  const crumb = active ? active.crumb : detailKey ? detail[detailKey][0] : 'CodeQuest';
-  const title = active ? active.label : detailKey ? detail[detailKey][1] : 'CodeQuest';
+  const crumb = active ? active.crumb : detailKey ? detail[detailKey][0] : 'Learn Code';
+  const title = active ? active.label : detailKey ? detail[detailKey][1] : 'Learn Code';
 
   return (
     <div className="cq-shell">
@@ -77,7 +79,7 @@ export function WorkbenchShell() {
         <NavLink to="/learn" className="cq-brand">
           <span className="cq-logo">&lt;/&gt;</span>
           <span>
-            <span className="cq-brand__name">CodeQuest</span>
+            <span className="cq-brand__name">Learn Code</span>
             <span className="cq-brand__tag">learn python by playing</span>
           </span>
         </NavLink>

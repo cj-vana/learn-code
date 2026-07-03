@@ -22,6 +22,18 @@ function PathCard({ path }: { path: PathSummary }) {
           <li key={outcome}>{outcome}</li>
         ))}
       </ul>
+      {path.assumed_concepts.length > 0 ? (
+        <div style={{ marginTop: 'var(--space-2)' }}>
+          <p className="index-card__meta">Before you start, you should know</p>
+          <div className="chip-row">
+            {path.assumed_concepts.map((concept) => (
+              <span key={concept} className="pattern-chip">
+                {concept}
+              </span>
+            ))}
+          </div>
+        </div>
+      ) : null}
       <p className="index-card__meta">{path.percent_complete}% complete</p>
       <div className="command-row" style={{ marginTop: 'var(--space-3)' }}>
         {path.enrolled ? (

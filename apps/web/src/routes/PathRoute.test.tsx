@@ -15,6 +15,7 @@ const DETAIL: PathDetail = {
   slug: 'python-foundations',
   description: 'The ground floor.',
   outcomes: ['Use variables and conditionals'],
+  assumed_concepts: ['Loops'],
   estimated_hours: 9,
   enrolled: true,
   percent_complete: 33,
@@ -58,6 +59,9 @@ describe('PathRoute', () => {
     expect(await screen.findByText('Python Refresh')).toBeInTheDocument();
     expect(screen.getByText('Variables, gently')).toBeInTheDocument();
     expect(screen.getByText('Refresh check')).toBeInTheDocument();
+
+    expect(screen.getByText('Before you start, you should know')).toBeInTheDocument();
+    expect(screen.getByText('Loops')).toBeInTheDocument();
 
     const continueLink = screen.getByRole('link', { name: /continue/i });
     expect(continueLink).toHaveAttribute(

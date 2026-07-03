@@ -23,7 +23,7 @@ from learn_code_api.content.loader import load_catalog  # noqa: E402
 CONTENT_ROOT = REPO_ROOT / "content" / "python"
 PATHS_DIR = CONTENT_ROOT / "paths"
 
-GENERATED_AT = "2026-07-02T18:00:00Z"
+GENERATED_AT = "2026-07-03T16:00:00Z"
 
 AREA_TITLES = {
     "python_refresh": "Python Refresh",
@@ -435,6 +435,8 @@ PATHS = [
             "Write BPE tokenization, cosine retrieval, and attention by hand",
             "Evaluate models with precision/recall, BLEU-style overlap, and calibration",
         ],
+        # language_models comes before eval_metrics and tokenization: both the
+        # BLEU/perplexity lessons and the BPE lessons build on n-gram models.
         "areas": [
             ("python_refresh", 1),
             ("loops_lists_strings", 1),
@@ -442,8 +444,8 @@ PATHS = [
             ("collections_itertools", 1),
             ("classic_ml_from_scratch", 1),
             ("autodiff_scalar_engine", 1),
-            ("eval_metrics_for_models", 1),
             ("language_models_from_scratch", 1),
+            ("eval_metrics_for_models", 1),
             ("tokenization_bpe", 1),
             ("embeddings_similarity_search", 1),
             ("attention_mechanics", 1),
@@ -495,15 +497,17 @@ PATHS = [
         "path_type": "skill",
         "title": "LLM Internals",
         "slug": "llm-internals",
-        "description": "What actually happens inside a language model: tokenization, n-gram probabilities, embeddings and retrieval, and the attention mechanism — all built by hand.",
+        "description": "What actually happens inside a language model: n-gram probabilities, tokenization, embeddings and retrieval, and the attention mechanism — all built by hand.",
         "outcomes": [
             "Train BPE merges and tokenize unseen text with them",
             "Compute sequence probabilities, perplexity, and temperature scaling",
             "Implement cosine retrieval, BM25, and single-head attention",
         ],
+        # language_models first: the BPE tokenization lessons assume n-gram
+        # language models, not the other way around.
         "areas": [
-            ("tokenization_bpe", 1),
             ("language_models_from_scratch", 1),
+            ("tokenization_bpe", 1),
             ("embeddings_similarity_search", 1),
             ("attention_mechanics", 1),
         ],
@@ -719,7 +723,7 @@ MILESTONES = {
     },
     "path.career.ai_engineer_python": {
         "collections_itertools": "Python foundations locked in",
-        "eval_metrics_for_models": "Classic ML, autodiff, and evaluation — the ML core",
+        "eval_metrics_for_models": "Classic ML, autodiff, language models, and evaluation — the ML core",
         "tokenization_bpe": "You build and tokenize language models by hand",
         "attention_mechanics": "AI engineer: attention itself, implemented from scratch",
     },
@@ -742,6 +746,30 @@ MILESTONES = {
 
 def area_key(area: str, wave: int) -> str:
     return area if wave == 1 else f"{area}_w2"
+
+
+def order_lessons(lessons: list[str], concepts: dict[str, set], prereqs: dict[str, set]) -> list[str]:
+    """Stable topological sort: a lesson whose prerequisites are taught by a
+    sibling lesson in the same unit comes after that sibling. Ties keep id
+    order; a cycle falls back to id order for the remainder."""
+    remaining = list(lessons)
+    taught: set = set()
+    ordered: list[str] = []
+    while remaining:
+        taught_by_remaining = set().union(*(concepts[l] for l in remaining))
+        pick = None
+        for lesson in remaining:
+            unmet_here = prereqs[lesson] - taught
+            if not (unmet_here & (taught_by_remaining - concepts[lesson])):
+                pick = lesson
+                break
+        if pick is None:  # dependency cycle; keep deterministic id order
+            ordered.extend(remaining)
+            break
+        remaining.remove(pick)
+        ordered.append(pick)
+        taught |= concepts[pick]
+    return ordered
 
 
 def interleave_items(lessons: list[str], exercises: list[str], quizzes: list[str]) -> list[str]:
@@ -770,8 +798,15 @@ def main() -> None:
     catalog = load_catalog(CONTENT_ROOT)
     by_area: dict[str, dict[str, list]] = {}
     minutes: dict[str, int] = {}
+    concepts: dict[str, set] = {}
+    prereqs: dict[str, set] = {}
+    lesson_ids: set[str] = set()
     for pool, kind in ((catalog.lessons, "lesson"), (catalog.exercises, "exercise"), (catalog.quizzes, "quiz")):
         for item in pool:
+            concepts[item.id] = set(item.concepts)
+            prereqs[item.id] = set(item.prerequisites)
+            if kind == "lesson":
+                lesson_ids.add(item.id)
             parts = item.id.split(".")
             if parts[1] != "library":
                 continue
@@ -788,7 +823,7 @@ def main() -> None:
             if kinds is None:
                 raise SystemExit(f"no content found for area {key}")
             items = interleave_items(
-                sorted(kinds.get("lesson", [])),
+                order_lessons(sorted(kinds.get("lesson", [])), concepts, prereqs),
                 sorted(kinds.get("exercise", [])),
                 sorted(kinds.get("quiz", [])),
             )
@@ -803,6 +838,20 @@ def main() -> None:
             if milestone:
                 unit["milestone"] = milestone
             units.append(unit)
+
+        # Prior knowledge the path presumes: prerequisites of items that no
+        # LESSON at an earlier position in the path teaches. Exercises and
+        # quizzes tag concepts they practice, but only lessons teach, so
+        # assumed_concepts stays honest ("do this path knowing X") instead of
+        # crediting a late drill with teaching a fundamental.
+        assumed: set = set()
+        taught: set = set()
+        for unit in units:
+            for item_id in unit["items"]:
+                assumed |= prereqs[item_id] - taught - assumed
+                if item_id in lesson_ids:
+                    taught |= concepts[item_id]
+
         doc = {
             "id": spec["id"],
             "kind": "path",
@@ -813,6 +862,7 @@ def main() -> None:
             "slug": spec["slug"],
             "description": spec["description"],
             "outcomes": spec["outcomes"],
+            "assumed_concepts": sorted(assumed),
             "estimated_hours": max(1, math.ceil(total_minutes / 60)),
             "review_status": "published",
             "source_status": "original",

@@ -13,13 +13,15 @@ outcomes:
 - Model programs with classes, generators, and decorators
 - Handle errors deliberately and process real-world text and records
 - Finish with capstones that mix everything without hints
+assumed_concepts:
+- patterns.brute_force
 estimated_hours: 67
 review_status: published
 source_status: original
 provenance:
   brief_id: brief.paths.v1
   author: agent
-  generated_at: '2026-07-02T18:00:00Z'
+  generated_at: '2026-07-03T16:00:00Z'
   inspiration_sources: []
   originality_notes: Curated ordering over the repository's original content bank; no external syllabus
     copied.

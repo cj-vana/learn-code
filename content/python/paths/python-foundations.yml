@@ -9,13 +9,14 @@ description: "Variables, types, conditionals, and functions \u2014 the ground fl
 outcomes:
 - Use variables, types, and conditionals without second-guessing
 - Write and call functions with confidence
+assumed_concepts: []
 estimated_hours: 9
 review_status: published
 source_status: original
 provenance:
   brief_id: brief.paths.v1
   author: agent
-  generated_at: '2026-07-02T18:00:00Z'
+  generated_at: '2026-07-03T16:00:00Z'
   inspiration_sources: []
   originality_notes: Curated ordering over the repository's original content bank; no external syllabus
     copied.

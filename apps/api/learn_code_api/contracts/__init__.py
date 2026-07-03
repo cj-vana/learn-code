@@ -54,6 +54,14 @@ class HealthResponse(BaseModel):
     status: Literal["ok"] = "ok"
 
 
+class UpdateStatus(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    current_version: str
+    latest_version: str | None
+    update_available: bool
+
+
 class PublicTestCase(BaseModel):
     """A public example case; validation cases are never exposed (spec line 351)."""
 
@@ -202,6 +210,8 @@ class PathSummary(BaseModel):
     slug: str
     description: str
     outcomes: list[str]
+    # Human-readable "before you start" prior knowledge (may be empty).
+    assumed_concepts: list[str] = []
     estimated_hours: int
     units: int
     items: int
@@ -218,6 +228,8 @@ class PathDetail(BaseModel):
     slug: str
     description: str
     outcomes: list[str]
+    # Human-readable "before you start" prior knowledge (may be empty).
+    assumed_concepts: list[str] = []
     estimated_hours: int
     enrolled: bool
     percent_complete: int

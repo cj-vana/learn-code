@@ -12,13 +12,15 @@ outcomes:
 - Recognize the right algorithm pattern before you start coding
 - Solve original easy and easy-medium problems across all core patterns
 - Explain your solution and its Big-O out loud
+assumed_concepts:
+- python.heapq_bisect
 estimated_hours: 70
 review_status: published
 source_status: original
 provenance:
   brief_id: brief.paths.v1
   author: agent
-  generated_at: '2026-07-02T18:00:00Z'
+  generated_at: '2026-07-03T16:00:00Z'
   inspiration_sources: []
   originality_notes: Curated ordering over the repository's original content bank; no external syllabus
     copied.

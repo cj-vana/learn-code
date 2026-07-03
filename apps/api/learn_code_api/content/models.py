@@ -168,6 +168,10 @@ class PathContent(BaseModel):
     slug: str = Field(min_length=1)
     description: str = Field(min_length=1)
     outcomes: list[str] = Field(min_length=1)
+    # Concepts the learner is expected to know before starting: prerequisites
+    # of path items that the path itself never teaches. Surfaced in the UI as
+    # "before you start"; the validator seeds its taught-so-far set with these.
+    assumed_concepts: list[str] = Field(default_factory=list)
     estimated_hours: PositiveInt
     review_status: ReviewStatus
     source_status: Literal["original"]

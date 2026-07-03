@@ -31,6 +31,12 @@ export interface HealthResponse {
   status: 'ok';
 }
 
+export interface UpdateStatus {
+  current_version: string;
+  latest_version: string | null;
+  update_available: boolean;
+}
+
 export interface Rationale {
   reason: string;
   because: string[];
@@ -238,6 +244,7 @@ export interface PathSummary {
   slug: string;
   description: string;
   outcomes: string[];
+  assumed_concepts: string[];
   estimated_hours: number;
   units: number;
   items: number;
@@ -252,6 +259,7 @@ export interface PathDetail {
   slug: string;
   description: string;
   outcomes: string[];
+  assumed_concepts: string[];
   estimated_hours: number;
   enrolled: boolean;
   percent_complete: number;

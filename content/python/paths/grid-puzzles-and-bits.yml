@@ -10,13 +10,28 @@ description: Spatial reasoning on 2D grids and simulations, plus bitwise tricks 
 outcomes:
 - Flood-fill, rotate, and simulate on 2D grids
 - Use bitmasks, GCD, and modular arithmetic fluently
+assumed_concepts:
+- patterns.bit_manipulation
+- patterns.queue_bfs
+- patterns.recursion
+- python.comprehensions
+- python.conditionals
+- python.dictionaries
+- python.functions
+- python.lists
+- python.loops
+- python.operators
+- python.sets
+- python.slicing
+- python.strings
+- python.types
 estimated_hours: 9
 review_status: published
 source_status: original
 provenance:
   brief_id: brief.paths.v1
   author: agent
-  generated_at: '2026-07-02T18:00:00Z'
+  generated_at: '2026-07-03T16:00:00Z'
   inspiration_sources: []
   originality_notes: Curated ordering over the repository's original content bank; no external syllabus
     copied.
@@ -48,8 +63,8 @@ units:
   title: Bits & Number Theory
   description: Lessons, drills, and quizzes for bits & number theory.
   items:
-  - lesson.library.bit_number_theory.a01
   - lesson.library.bit_number_theory.a02
+  - lesson.library.bit_number_theory.a01
   - lesson.library.bit_number_theory.a03
   - exercise.library.bit_number_theory.a01
   - exercise.library.bit_number_theory.a02

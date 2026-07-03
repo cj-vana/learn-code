@@ -170,7 +170,7 @@ def validate_content_tree(
     for quiz in catalog.quizzes:
         _validate_quiz(quiz, issues, known_concepts, enforce_known_concepts)
     for path_item in catalog.paths:
-        _validate_path(path_item, catalog, issues)
+        _validate_path(path_item, catalog, issues, known_concepts, enforce_known_concepts)
 
     ok = not any(issue.severity == "error" for issue in issues)
     return ValidationReport(ok=ok, issues=issues, catalog=catalog)
@@ -308,16 +308,29 @@ def _validate_path(
     path_content: PathContent,
     catalog: ContentCatalog,
     issues: list[ValidationIssue],
+    known_concepts: set[str],
+    enforce_known_concepts: bool,
 ) -> None:
     """Path items must reference published catalog content; ordering that
-    puts an item before its prerequisite concepts is a warning, not an error."""
+    puts an item before its prerequisite concepts is a warning, not an error.
+    A path's declared assumed_concepts count as taught from the start."""
     items_by_id: dict[str, ExerciseContent | LessonContent | QuizContent] = {
         item.id: item
         for pool in (catalog.exercises, catalog.lessons, catalog.quizzes)
         for item in pool
     }
 
-    concepts_seen: set[str] = set()
+    if enforce_known_concepts:
+        for concept in path_content.assumed_concepts:
+            if concept not in known_concepts:
+                issues.append(
+                    ValidationIssue(
+                        path=path_content.id,
+                        message=f"unknown assumed concept: {concept}",
+                    )
+                )
+
+    concepts_seen: set[str] = set(path_content.assumed_concepts)
     for unit in path_content.units:
         for item_id in unit.items:
             item = items_by_id.get(item_id)

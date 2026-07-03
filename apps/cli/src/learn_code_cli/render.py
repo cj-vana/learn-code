@@ -114,6 +114,8 @@ def render_path_detail(detail: dict[str, Any]) -> str:
         f"{detail['percent_complete']}% complete)",
         detail["description"],
     ]
+    if detail.get("assumed_concepts"):
+        lines.append(f"before you start: {', '.join(detail['assumed_concepts'])}")
     for unit in detail.get("units", []):
         lines.append("")
         unit_status = unit.get("status", "available")
