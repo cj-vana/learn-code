@@ -4,7 +4,7 @@
 # (see vite.config.ts), so the browser only ever talks to relative paths. The
 # dev server is the runtime here because the `/api` proxy is a dev-server
 # feature; a static production build would move that proxy into a reverse proxy.
-FROM node:25-alpine
+FROM node:24-alpine
 
 WORKDIR /app
 
