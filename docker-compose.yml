@@ -23,8 +23,11 @@ services:
       - "127.0.0.1:5173:5173"
     environment:
       VITE_API_PROXY_TARGET: ${VITE_API_PROXY_TARGET:-http://api:8000}
+    # Wait for the API to pass its healthcheck before starting the dev server,
+    # so the browser never hits the proxy during the API's cold-start window.
     depends_on:
-      - api
+      api:
+        condition: service_healthy
 
   api:
     build:
@@ -53,6 +56,17 @@ services:
       - "host.docker.internal:host-gateway"
     depends_on:
       - runner-broker
+    # Readiness gate for dependents (web). Uses stdlib urllib so no curl needed.
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')"
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
     # SECURITY: the api must NOT mount /var/run/docker.sock.
 
   runner-broker:

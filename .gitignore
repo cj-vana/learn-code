@@ -30,3 +30,7 @@ coverage/
 .DS_Store
 .idea/
 .vscode/
+
+# Screenshot / browser-automation artifacts
+*.png
+.playwright-mcp/

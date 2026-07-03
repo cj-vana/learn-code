@@ -1,42 +1,62 @@
 :root {
-  /* ---- Night Study palette ------------------------------------------
-   * The room goes dark: a warm walnut desk after hours, lit by a single
-   * brass lamp. Lesson cards are lit cream paper that lift off the desk;
-   * the chrome (masthead, rails, footer) is deep wood and shadow. */
+  /* ---- CodeQuest — learn Python by playing --------------------------
+   * A gamified, neo-brutalist learning app: white cards with hard black
+   * borders and offset shadows, a lavender field, a bright quest palette,
+   * and playful XP/streak/level furniture. */
 
-  /* Desk & chrome (dark surfaces) */
-  --desk: #14110c;          /* body canvas — warm near-black walnut */
-  --desk-deep: #0d0b07;     /* deepest wells, masthead */
-  --desk-panel: #1d1811;    /* raised wood, nav bar */
-  --desk-line: #3a3021;     /* hairline on dark */
+  /* Core */
+  --bg: #ede9f7; /* lavender field */
+  --ink: #1b1830; /* near-black plum — text, borders, hard shadows */
+  --ink-soft: #3a3552; /* body copy on cards */
+  --muted: #8b84b0; /* meta / mono labels */
+  --muted-nav: #b9b3d8; /* sidebar inactive */
+  --card: #ffffff;
+  --card-border: #ece6fa; /* soft card hairline */
+  --lift: #faf8ff; /* inset wells (hints, examples) */
+  --lift-2: #f1edfb; /* code inline, tracks */
 
-  /* Lit paper (light surfaces — cards, panels, receipts) */
-  --paper: #efe7d4;         /* a lit page under the lamp */
-  --paper-aged: #e2d6bb;    /* shadowed paper, wells */
-  --ink: #1a160e;           /* text on paper */
-  --ink-soft: #4a4335;      /* secondary text on paper */
+  /* Quest palette */
+  --purple: #6d4aff; /* primary */
+  --purple-2: #8b5cff;
+  --purple-3: #b06bff;
+  --lime: #b9ee3a; /* CTA / XP / mastered */
+  --lime-2: #7be0a4;
+  --lime-ink: #5a8a12; /* green text on light */
+  --lime-wash: #f2fbdf; /* green success surface */
+  --coral: #ff6b5a; /* boss / alert / due */
+  --coral-ink: #d1452f;
+  --coral-wash: #ffe9e5;
+  --amber: #ffb020; /* trophies */
+  --amber-ink: #c98a12; /* quiz */
+  --amber-wash: #fff1d6;
+  --streak: #e8890c; /* flame count */
+  --blue: #35b8f0; /* lessons */
+  --blue-ink: #1f93c9;
+  --blue-wash: #e2f5fe;
 
-  /* Legacy names kept as aliases so every component resolves.
-   * "blackboard/panel" now mean the dark instrument surfaces. */
-  --blackboard: #17130d;
-  --panel: #221b12;
+  /* Dark surfaces (code, sidebar) */
+  --panel-dark: #1b1830;
+  --panel-dark-2: #242038;
+  --code-text: #e7e3ff;
 
-  /* Accents — warm brass lamp, banker's green, ember, cold moon */
-  --brass: #d4a13c;         /* the lamp — primary accent */
-  --brass-bright: #f0c766;  /* filament highlight */
-  --pine: #5c7f52;          /* banker's-lamp green — pass / mastery */
-  --rust: #c15637;          /* ember — action / alert */
-  --ochre: #c68a34;         /* aged brass — quizzes */
-  --blueprint: #6fa2b8;     /* cold moonlight — lessons / info */
-  --graphite: #8c8371;      /* muted ink on paper */
+  /* Legacy aliases so any stray token reference resolves sensibly */
+  --paper: var(--card);
+  --paper-aged: var(--lift-2);
+  --blackboard: var(--panel-dark);
+  --panel: var(--panel-dark);
+  --pine: var(--lime-ink);
+  --rust: var(--coral);
+  --ochre: var(--amber-ink);
+  --blueprint: var(--blue-ink);
+  --graphite: var(--muted);
+  --rule: var(--card-border);
+  --paper-line: var(--card-border);
+  --focus: var(--purple);
 
-  /* Structural */
-  --rule: #c3b795;          /* rule lines on paper */
-  --paper-line: color-mix(in srgb, var(--rule) 55%, transparent);
-  --focus: #f0c766;         /* brass focus glow */
-
-  /* Warm lamp glow used for lifting paper off the desk */
-  --lamp-glow: color-mix(in srgb, var(--brass) 22%, transparent);
+  /* Neo-brutalist offset shadows */
+  --shadow-hard: 5px 5px 0 var(--ink);
+  --shadow-hard-lg: 6px 8px 0 var(--ink);
+  --shadow-soft: 0 10px 26px -18px rgba(27, 24, 48, 0.5);
 
   --space-1: 4px;
   --space-2: 8px;
@@ -44,14 +64,14 @@
   --space-4: 16px;
   --space-6: 24px;
   --space-8: 32px;
-  --radius: 7px;
+  --radius: 16px;
+  --radius-sm: 12px;
+  --radius-lg: 22px;
 
-  /* Type — an editorial almanac serif for reading, a geometric sans for
-   * stamped labels, and a crisp mono for code and instrument readouts. */
-  --font-body: 'Iowan Old Style', 'Palatino Linotype', Palatino,
-    'Book Antiqua', Georgia, serif;
-  --font-stamp: 'Avenir Next', 'Futura', 'Century Gothic', 'Segoe UI',
-    system-ui, sans-serif;
-  --font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', 'Cascadia Mono',
-    'Roboto Mono', Menlo, Consolas, monospace;
+  /* Type */
+  --font-display: 'Bricolage Grotesque', system-ui, sans-serif;
+  --font-body: 'Space Grotesk', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+  /* Legacy font aliases */
+  --font-stamp: var(--font-display);
 }
