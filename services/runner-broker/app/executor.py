@@ -12,6 +12,7 @@ limits" (docs/superpowers/specs/2026-07-01-learn-code-design.md:267-299).
 from __future__ import annotations
 
 import json
+import os
 import shutil
 import tempfile
 from dataclasses import dataclass
@@ -172,6 +173,11 @@ class Executor:
 
     def execute(self, job: dict, limits: RunLimits) -> dict:
         workspace = Path(tempfile.mkdtemp(prefix="learn-code-run-", dir=self._workspace_root))
+        # mkdtemp yields 0700 owned by the broker's user, but the runner
+        # container runs as uid 1000 (build_container_options) and must write
+        # result.json into the bind-mounted workspace. Docker Desktop masks
+        # host ownership; Linux hosts enforce it, so open the dir explicitly.
+        os.chmod(workspace, 0o777)
         try:
             return self._run_in_workspace(workspace, job, limits)
         finally:
