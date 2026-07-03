@@ -13,6 +13,7 @@ const SUMMARIES: PathSummary[] = [
   {
     id: 'path.career.python_interview_prep',
     path_type: 'career',
+    level: 'beginner',
     title: 'Python Interview Prep',
     slug: 'python-interview-prep',
     description: 'The full arc.',
@@ -27,6 +28,7 @@ const SUMMARIES: PathSummary[] = [
   {
     id: 'path.skill.python_foundations',
     path_type: 'skill',
+    level: 'intermediate',
     title: 'Python Foundations',
     slug: 'python-foundations',
     description: 'The ground floor.',
@@ -54,7 +56,7 @@ describe('PathsRoute', () => {
 
     expect(await screen.findByText('Python Interview Prep')).toBeInTheDocument();
     expect(screen.getByText('Python Foundations')).toBeInTheDocument();
-    expect(screen.getByText('Career path · 13 units · ~41h')).toBeInTheDocument();
+    expect(screen.getByText('Career path · beginner · 13 units · ~41h')).toBeInTheDocument();
     expect(screen.getByText(/25% complete/)).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /^enroll$/i }));
@@ -63,5 +65,23 @@ describe('PathsRoute', () => {
       method: 'POST',
       url: '/api/v1/paths/path.career.python_interview_prep/enroll',
     });
+  });
+
+  it('filters the catalog by competence level', async () => {
+    const user = userEvent.setup();
+    mockApi({ 'GET /api/v1/paths': { json: SUMMARIES } });
+
+    renderWithProviders(<App />, { route: '/paths' });
+
+    expect(await screen.findByText('Python Interview Prep')).toBeInTheDocument();
+    expect(screen.getByText('Python Foundations')).toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'beginner' }));
+    expect(screen.getByText('Python Interview Prep')).toBeInTheDocument();
+    expect(screen.queryByText('Python Foundations')).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole('button', { name: 'intermediate' }));
+    expect(screen.queryByText('Python Interview Prep')).not.toBeInTheDocument();
+    expect(screen.getByText('Python Foundations')).toBeInTheDocument();
   });
 });

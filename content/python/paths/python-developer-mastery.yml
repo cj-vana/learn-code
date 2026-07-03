@@ -13,8 +13,7 @@ outcomes:
 - Model programs with classes, generators, and decorators
 - Handle errors deliberately and process real-world text and records
 - Finish with capstones that mix everything without hints
-assumed_concepts:
-- patterns.brute_force
+assumed_concepts: []
 estimated_hours: 67
 review_status: published
 source_status: original

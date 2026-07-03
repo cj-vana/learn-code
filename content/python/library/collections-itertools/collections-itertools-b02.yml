@@ -9,7 +9,6 @@ concepts:
   - python.itertools_module
 prerequisites:
   - python.sets
-  - patterns.brute_force
 estimated_time_minutes: 24
 review_status: published
 source_status: original

@@ -13,7 +13,6 @@ outcomes:
 - Group, join, pivot, and dedupe records with the standard library alone
 - Parse and transform messy text with regex confidently
 assumed_concepts:
-- patterns.brute_force
 - patterns.recursion
 - python.comprehensions
 - python.conditionals

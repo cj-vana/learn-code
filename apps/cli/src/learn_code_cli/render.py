@@ -100,9 +100,11 @@ def render_paths(items: list[dict[str, Any]]) -> str:
     lines = []
     for item in items:
         marker = "enrolled" if item.get("enrolled") else "       -"
+        level = item.get("level", "")
+        level_part = f"{level}, " if level else ""
         lines.append(
             f"[{marker}] {item['percent_complete']:>3}%  {item['id']}  "
-            f"({item['path_type']}, {item['units']} units, ~{item['estimated_hours']}h)  "
+            f"({item['path_type']}, {level_part}{item['units']} units, ~{item['estimated_hours']}h)  "
             f"{item['title']}"
         )
     return "\n".join(lines)

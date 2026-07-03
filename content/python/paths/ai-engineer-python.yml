@@ -18,7 +18,6 @@ outcomes:
 assumed_concepts:
 - concepts.probability
 - concepts.testing
-- patterns.brute_force
 - patterns.graph_traversal
 - patterns.hash_map_counting
 - patterns.recursion

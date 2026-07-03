@@ -237,9 +237,12 @@ export interface PathUnitDetail {
   milestone: string | null;
 }
 
+export type PathLevel = 'beginner' | 'intermediate' | 'advanced';
+
 export interface PathSummary {
   id: string;
   path_type: string;
+  level: PathLevel;
   title: string;
   slug: string;
   description: string;
@@ -255,6 +258,7 @@ export interface PathSummary {
 export interface PathDetail {
   id: string;
   path_type: string;
+  level: PathLevel;
   title: string;
   slug: string;
   description: string;

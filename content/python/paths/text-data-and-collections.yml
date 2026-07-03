@@ -11,7 +11,6 @@ outcomes:
 - Extract and rewrite structured text with regex
 - Group, join, and pivot records with stdlib tools
 assumed_concepts:
-- patterns.brute_force
 - python.conditionals
 - python.dictionaries
 - python.functions

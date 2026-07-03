@@ -47,7 +47,7 @@ export function PathRoute() {
           <div className="stack">
             <Panel
               title="The route"
-              eyebrow={`${detail.path_type === 'career' ? 'Career path' : 'Skill path'} · ~${detail.estimated_hours}h · ${detail.percent_complete}% complete`}
+              eyebrow={`${detail.path_type === 'career' ? 'Career path' : 'Skill path'} · ${detail.level} · ~${detail.estimated_hours}h · ${detail.percent_complete}% complete`}
             >
               <p>{detail.description}</p>
               {detail.assumed_concepts.length > 0 ? (

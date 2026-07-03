@@ -111,12 +111,13 @@ _ORIGINAL_AREAS = [
 ]
 
 # Interview prep now runs through the advanced pattern families before capstones.
+# Heaps come before graphs: the graphs unit's shortest-path lesson uses heapq.
 CAREER_UNIT_ORDER = [
     *_ORIGINAL_AREAS,
     "linked_lists_patterns",
     "trees_lite",
-    "graphs_lite",
     "heaps_topk",
+    "graphs_lite",
     "intervals_greedy",
     "dp_recognition",
     "mixed_capstones",
@@ -298,8 +299,8 @@ PATHS = [
             ("recursion_backtracking", 1),
             ("linked_lists_patterns", 1),
             ("trees_lite", 1),
-            ("graphs_lite", 1),
             ("heaps_topk", 1),
+            ("graphs_lite", 1),
             ("intervals_greedy", 1),
             ("dp_recognition", 1),
             ("bit_number_theory", 1),

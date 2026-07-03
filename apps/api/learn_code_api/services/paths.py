@@ -36,6 +36,18 @@ def _percent(done: int, total: int) -> int:
 MASTERY_THRESHOLD_PERCENT = 70
 
 
+def path_level(path_content: PathContent) -> str:
+    """Competence level derived from how much prior knowledge the path
+    assumes. Thresholds chosen against the shipped catalog: paths assuming
+    ≤2 concepts start from (near) zero; 10+ presume a working Python base."""
+    assumed = len(path_content.assumed_concepts)
+    if assumed <= 2:
+        return "beginner"
+    if assumed <= 9:
+        return "intermediate"
+    return "advanced"
+
+
 def path_summary(
     path_content: PathContent, *, completed: set[str], active_path_id: str | None
 ) -> PathSummary:
@@ -44,6 +56,7 @@ def path_summary(
     return PathSummary(
         id=path_content.id,
         path_type=path_content.path_type,
+        level=path_level(path_content),
         title=path_content.title,
         slug=path_content.slug,
         description=path_content.description,
@@ -121,6 +134,7 @@ def path_detail(
     return PathDetail(
         id=path_content.id,
         path_type=path_content.path_type,
+        level=path_level(path_content),
         title=path_content.title,
         slug=path_content.slug,
         description=path_content.description,

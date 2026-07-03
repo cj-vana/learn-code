@@ -18,7 +18,6 @@ assumed_concepts:
 - python.conditionals
 - python.dictionaries
 - python.functions
-- python.heapq_bisect
 - python.lists
 - python.loops
 - python.operators
@@ -242,6 +241,30 @@ units:
   - quiz.library.trees_lite.a03
   - exercise.library.trees_lite.b01
   - exercise.library.trees_lite.b02
+- id: unit.heaps_topk
+  title: Heaps & Top-K
+  description: Lessons, drills, and quizzes for heaps & top-k.
+  items:
+  - lesson.library.heaps_topk.a01
+  - lesson.library.heaps_topk.a02
+  - lesson.library.heaps_topk.a03
+  - exercise.library.heaps_topk.a01
+  - exercise.library.heaps_topk.a02
+  - exercise.library.heaps_topk.a03
+  - exercise.library.heaps_topk.a04
+  - exercise.library.heaps_topk.a05
+  - quiz.library.heaps_topk.a01
+  - exercise.library.heaps_topk.a06
+  - exercise.library.heaps_topk.a07
+  - exercise.library.heaps_topk.a08
+  - exercise.library.heaps_topk.a09
+  - exercise.library.heaps_topk.a10
+  - quiz.library.heaps_topk.a02
+  - exercise.library.heaps_topk.a11
+  - exercise.library.heaps_topk.a12
+  - exercise.library.heaps_topk.b01
+  - exercise.library.heaps_topk.b02
+  milestone: Linked, tree, graph, and heap structures conquered
 - id: unit.graphs_lite
   title: Graphs
   description: Lessons, drills, and quizzes for graphs.
@@ -267,30 +290,6 @@ units:
   - quiz.library.graphs_lite.a03
   - exercise.library.graphs_lite.b01
   - exercise.library.graphs_lite.b02
-- id: unit.heaps_topk
-  title: Heaps & Top-K
-  description: Lessons, drills, and quizzes for heaps & top-k.
-  items:
-  - lesson.library.heaps_topk.a01
-  - lesson.library.heaps_topk.a02
-  - lesson.library.heaps_topk.a03
-  - exercise.library.heaps_topk.a01
-  - exercise.library.heaps_topk.a02
-  - exercise.library.heaps_topk.a03
-  - exercise.library.heaps_topk.a04
-  - exercise.library.heaps_topk.a05
-  - quiz.library.heaps_topk.a01
-  - exercise.library.heaps_topk.a06
-  - exercise.library.heaps_topk.a07
-  - exercise.library.heaps_topk.a08
-  - exercise.library.heaps_topk.a09
-  - exercise.library.heaps_topk.a10
-  - quiz.library.heaps_topk.a02
-  - exercise.library.heaps_topk.a11
-  - exercise.library.heaps_topk.a12
-  - exercise.library.heaps_topk.b01
-  - exercise.library.heaps_topk.b02
-  milestone: Linked, tree, graph, and heap structures conquered
 - id: unit.intervals_greedy
   title: Intervals & Greedy
   description: Lessons, drills, and quizzes for intervals & greedy.

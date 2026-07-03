@@ -13,6 +13,7 @@ const SUMMARIES: PathSummary[] = [
   {
     id: 'path.skill.python_foundations',
     path_type: 'skill',
+    level: 'beginner',
     title: 'Python Foundations',
     slug: 'python-foundations',
     description: 'The ground floor.',
@@ -27,6 +28,7 @@ const SUMMARIES: PathSummary[] = [
   {
     id: 'path.skill.text_data_collections',
     path_type: 'skill',
+    level: 'intermediate',
     title: 'Text, Data & Collections',
     slug: 'text-data-and-collections',
     description: 'Regex and records.',

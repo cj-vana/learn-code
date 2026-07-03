@@ -206,6 +206,8 @@ class PathSummary(BaseModel):
 
     id: str
     path_type: str
+    # Derived from how many concepts the path assumes; drives catalog filters.
+    level: Literal["beginner", "intermediate", "advanced"] = "beginner"
     title: str
     slug: str
     description: str
@@ -224,6 +226,7 @@ class PathDetail(BaseModel):
 
     id: str
     path_type: str
+    level: Literal["beginner", "intermediate", "advanced"] = "beginner"
     title: str
     slug: str
     description: str

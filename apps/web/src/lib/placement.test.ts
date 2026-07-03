@@ -6,6 +6,7 @@ function summary(over: Partial<PathSummary>): PathSummary {
   return {
     id: 'path.skill.x',
     path_type: 'skill',
+    level: 'beginner',
     title: 'X',
     slug: 'x',
     description: 'd',

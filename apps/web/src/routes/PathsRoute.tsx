@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useEnrollPath, usePaths } from '../api/queries';
-import type { PathSummary } from '../contracts';
+import type { PathLevel, PathSummary } from '../contracts';
 import { PageHeading } from '../components/PageHeading';
 import { Panel } from '../components/Panel';
 import { QueryState } from '../components/QueryState';
@@ -10,8 +11,8 @@ function PathCard({ path }: { path: PathSummary }) {
   return (
     <article className={`index-card index-card--${path.path_type}`}>
       <p className="index-card__meta">
-        {path.path_type === 'career' ? 'Career path' : 'Skill path'} · {path.units} units ·{' '}
-        ~{path.estimated_hours}h
+        {path.path_type === 'career' ? 'Career path' : 'Skill path'} · {path.level} ·{' '}
+        {path.units} units · ~{path.estimated_hours}h
       </p>
       <h3 className="index-card__title">
         <Link to={`/path/${encodeURIComponent(path.id)}`}>{path.title}</Link>
@@ -55,9 +56,15 @@ function PathCard({ path }: { path: PathSummary }) {
   );
 }
 
+const LEVELS: PathLevel[] = ['beginner', 'intermediate', 'advanced'];
+const LEVEL_RANK: Record<PathLevel, number> = { beginner: 0, intermediate: 1, advanced: 2 };
+
 export function PathsRoute() {
   const paths = usePaths();
-  const items = paths.data ?? [];
+  const [level, setLevel] = useState<PathLevel | 'all'>('all');
+  const items = [...(paths.data ?? [])]
+    .filter((path) => level === 'all' || path.level === level)
+    .sort((a, b) => LEVEL_RANK[a.level] - LEVEL_RANK[b.level]);
   const careers = items.filter((path) => path.path_type === 'career');
   const skills = items.filter((path) => path.path_type === 'skill');
 
@@ -72,24 +79,59 @@ export function PathsRoute() {
         loadingLabel="Unrolling the maps…"
       >
         <div className="stack">
-          <Panel title="Career paths" eyebrow="The long road, end to end">
-            <ul className="card-list">
-              {careers.map((path) => (
-                <li key={path.id}>
-                  <PathCard path={path} />
-                </li>
+          <Panel
+            title="How much Python do you have?"
+            eyebrow="Filter by level — or take the placement check"
+            actions={
+              <Link className="command-btn" to="/start">
+                Not sure? Start Here
+              </Link>
+            }
+          >
+            <div className="chip-row">
+              <button
+                type="button"
+                className="pattern-chip"
+                aria-pressed={level === 'all'}
+                onClick={() => setLevel('all')}
+              >
+                all levels
+              </button>
+              {LEVELS.map((choice) => (
+                <button
+                  key={choice}
+                  type="button"
+                  className="pattern-chip"
+                  aria-pressed={level === choice}
+                  onClick={() => setLevel(choice)}
+                >
+                  {choice}
+                </button>
               ))}
-            </ul>
+            </div>
           </Panel>
-          <Panel title="Skill paths" eyebrow="Focused climbs">
-            <ul className="card-list">
-              {skills.map((path) => (
-                <li key={path.id}>
-                  <PathCard path={path} />
-                </li>
-              ))}
-            </ul>
-          </Panel>
+          {careers.length > 0 ? (
+            <Panel title="Career paths" eyebrow="The long road, end to end">
+              <ul className="card-list">
+                {careers.map((path) => (
+                  <li key={path.id}>
+                    <PathCard path={path} />
+                  </li>
+                ))}
+              </ul>
+            </Panel>
+          ) : null}
+          {skills.length > 0 ? (
+            <Panel title="Skill paths" eyebrow="Focused climbs">
+              <ul className="card-list">
+                {skills.map((path) => (
+                  <li key={path.id}>
+                    <PathCard path={path} />
+                  </li>
+                ))}
+              </ul>
+            </Panel>
+          ) : null}
         </div>
       </QueryState>
     </div>

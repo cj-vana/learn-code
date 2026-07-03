@@ -11,6 +11,7 @@ afterEach(() => {
 const DETAIL: PathDetail = {
   id: 'path.skill.python_foundations',
   path_type: 'skill',
+  level: 'beginner',
   title: 'Python Foundations',
   slug: 'python-foundations',
   description: 'The ground floor.',

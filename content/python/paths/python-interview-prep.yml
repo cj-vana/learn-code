@@ -12,8 +12,7 @@ outcomes:
 - Recognize the right algorithm pattern before you start coding
 - Solve original easy and easy-medium problems across all core patterns
 - Explain your solution and its Big-O out loud
-assumed_concepts:
-- python.heapq_bisect
+assumed_concepts: []
 estimated_hours: 70
 review_status: published
 source_status: original
@@ -345,6 +344,29 @@ units:
   - quiz.library.trees_lite.a03
   - exercise.library.trees_lite.b01
   - exercise.library.trees_lite.b02
+- id: unit.heaps_topk
+  title: Heaps & Top-K
+  description: Lessons, drills, and quizzes for heaps & top-k.
+  items:
+  - lesson.library.heaps_topk.a01
+  - lesson.library.heaps_topk.a02
+  - lesson.library.heaps_topk.a03
+  - exercise.library.heaps_topk.a01
+  - exercise.library.heaps_topk.a02
+  - exercise.library.heaps_topk.a03
+  - exercise.library.heaps_topk.a04
+  - exercise.library.heaps_topk.a05
+  - quiz.library.heaps_topk.a01
+  - exercise.library.heaps_topk.a06
+  - exercise.library.heaps_topk.a07
+  - exercise.library.heaps_topk.a08
+  - exercise.library.heaps_topk.a09
+  - exercise.library.heaps_topk.a10
+  - quiz.library.heaps_topk.a02
+  - exercise.library.heaps_topk.a11
+  - exercise.library.heaps_topk.a12
+  - exercise.library.heaps_topk.b01
+  - exercise.library.heaps_topk.b02
 - id: unit.graphs_lite
   title: Graphs
   description: Lessons, drills, and quizzes for graphs.
@@ -370,29 +392,6 @@ units:
   - quiz.library.graphs_lite.a03
   - exercise.library.graphs_lite.b01
   - exercise.library.graphs_lite.b02
-- id: unit.heaps_topk
-  title: Heaps & Top-K
-  description: Lessons, drills, and quizzes for heaps & top-k.
-  items:
-  - lesson.library.heaps_topk.a01
-  - lesson.library.heaps_topk.a02
-  - lesson.library.heaps_topk.a03
-  - exercise.library.heaps_topk.a01
-  - exercise.library.heaps_topk.a02
-  - exercise.library.heaps_topk.a03
-  - exercise.library.heaps_topk.a04
-  - exercise.library.heaps_topk.a05
-  - quiz.library.heaps_topk.a01
-  - exercise.library.heaps_topk.a06
-  - exercise.library.heaps_topk.a07
-  - exercise.library.heaps_topk.a08
-  - exercise.library.heaps_topk.a09
-  - exercise.library.heaps_topk.a10
-  - quiz.library.heaps_topk.a02
-  - exercise.library.heaps_topk.a11
-  - exercise.library.heaps_topk.a12
-  - exercise.library.heaps_topk.b01
-  - exercise.library.heaps_topk.b02
 - id: unit.intervals_greedy
   title: Intervals & Greedy
   description: Lessons, drills, and quizzes for intervals & greedy.
