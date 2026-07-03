@@ -1,0 +1,111 @@
+id: lesson.library.autodiff_scalar_engine.a03
+kind: lesson
+version: 1
+language: python
+title: 'The Backward Pass: Chain Rule Over a Whole Graph'
+slug: lesson-autodiff-scalar-engine-a03
+difficulty: hard
+concepts:
+  - ai.gradients_autodiff
+  - patterns.graph_traversal
+prerequisites:
+  - ai.gradients_autodiff
+  - patterns.graph_traversal
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.autodiff_scalar_engine.a03
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original walkthrough of topological ordering and the full backward pass with a fresh hand-traced example graph.
+body_markdown: |
+  You have local rules; now compose them over an entire graph. The backward
+  pass is three decisions, and each answers a question a careful reader
+  should ask.
+
+  ### Decision 1: what order?
+
+  Gradients flow from the loss backward, and a node cannot pass gradient to
+  its parents until it has received *all* the gradient coming to it. Process
+  a node too early and a later contribution arrives after you've already
+  passed yours along — silently wrong.
+
+  The fix is graph machinery you already own: a **topological order** puts
+  every node after everything it depends on. Run the forward pass in
+  topological order; run backward in *reverse* topological order. Reversed,
+  every node is processed only after every node *above* it (closer to the
+  loss) has finished — exactly the guarantee needed. This is why your graphs
+  unit taught topo sort: autodiff is its most famous customer.
+
+  ### Decision 2: what starts the flow?
+
+  The gradient of the loss with respect to *itself* is 1 — a definitional
+  seed, not a convention. Every other gradient is measured in "loss units
+  per unit of me", and the loss moves one-for-one with itself.
+
+  ### Decision 3: what does each node do?
+
+  Take its accumulated gradient, apply its local rule, *add* the results
+  into its parents. The whole algorithm:
+
+  ```python
+  def backward_pass(graph, output):
+      grads = {name: 0.0 for name in graph}
+      grads[output] = 1.0
+      for name in reversed(topo_order(graph)):
+          node = graph[name]
+          g = grads[name]
+          if node["op"] == "add":
+              for parent in node["inputs"]:
+                  grads[parent] += g
+          elif node["op"] == "mul":
+              a, b = node["inputs"]
+              grads[a] += g * value_of(graph, b)
+              grads[b] += g * value_of(graph, a)
+      return grads
+  ```
+
+  ### Trace it once by hand
+
+  `loss = (x + y) * y` with x = 2, y = 3: forward gives s = x + y = 5,
+  loss = s * y = 15.
+
+  Backward, in reverse topo order (loss, then s, then leaves):
+
+  1. `grads[loss] = 1`.
+  2. loss = s * y (mul): `grads[s] += 1 * y = 3`; `grads[y] += 1 * s = 5`.
+  3. s = x + y (add): `grads[x] += 3`; `grads[y] += 3` → y now totals **8**.
+
+  So d(loss)/dx = 3 and d(loss)/dy = 8. Note y's gradient came from *two
+  paths* — directly through the multiplication and again through the sum —
+  and the accumulation added them. Check: with y = 3.001,
+  loss = 5.001 × 3.001 ≈ 15.008 — moved ~8 per unit. It works.
+
+  ### Trust, but verify numerically
+
+  Every serious engine is tested against the dumb-but-honest method from
+  lesson one — central finite differences:
+
+  ```python
+  numeric = (f(x + eps) - f(x - eps)) / (2 * eps)
+  ```
+
+  If analytic and numeric disagree beyond tolerance, the analytic rule is
+  wrong. The final exercise builds this **gradient checker**, and the habit
+  generalizes far beyond ML: when you implement clever math, test it
+  against slow obvious math. When your backward_pass exercise returns
+  {x: 3, y: 8} for the graph above, you will have implemented — for real,
+  minus tensors — the algorithm that trains every neural network in
+  production today.
+checkpoints:
+  - question: Why must the backward pass visit nodes in reverse topological order rather than any convenient order?
+    answer: A node may receive gradient contributions from several consumers; reverse topo order guarantees all consumers were processed first, so the node's accumulated gradient is complete before it distributes to its parents.
+    explanation: Processing early with a partial gradient poisons everything upstream — the ordering requirement IS the correctness of backprop.
+  - question: In the traced example loss = (x+y)*y at x=2, y=3, why does y end with gradient 8 when the multiplication rule alone gives it 5?
+    answer: y influences the loss along two paths — directly in the product (contributing 5) and through the sum s (contributing 3) — and the chain rule sums path contributions, so 5 + 3 = 8.
+    explanation: Multi-path accumulation is where hand intuition most often fails and where the += discipline proves itself.
+  - question: Your analytic gradient for some operation disagrees with the central-difference estimate by far more than tolerance. Which do you distrust, and why?
+    answer: The analytic rule — the numeric estimate computes the definition of the derivative directly from the forward function and shares no code with the rule it checks, so a large disagreement almost always means the clever math is wrong.
+    explanation: An independent slow oracle beats a clever implementation in an argument; that testing principle extends well beyond autodiff.

@@ -1,0 +1,133 @@
+id: exercise.library.language_models_from_scratch.a10
+kind: exercise
+version: 1
+language: python
+title: Turning the Temperature Dial
+slug: language-models-from-scratch-a10
+difficulty: medium
+concepts:
+  - ai.language_models
+  - concepts.probability
+prerequisites:
+  - python.dictionaries
+  - python.comprehensions
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.language_models_from_scratch.a10
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original temperature-scaling drill operating directly on a probability distribution, framed around a tea-blend recommender.
+prompt_markdown: |
+  The **temperature** knob on a language model controls how adventurous its
+  sampling is. Turning it down (temperature below 1) makes the model sharper and
+  more confident in its favourite token; turning it up (above 1) flattens the
+  distribution toward uniform, giving rarer tokens a real chance. At exactly
+  `1.0` nothing changes.
+
+  A tea-blend recommender holds a probability distribution over its next
+  suggested ingredient. Write `temperature_scale(job)` that takes **one
+  dictionary**:
+
+  - `"distribution"`: a dictionary mapping each token (string) to a probability
+    (a positive number); the values sum to 1.
+  - `"temperature"`: a positive number `t`.
+
+  Rescale every probability by raising it to the power `1 / t`, then renormalize
+  so the new values sum to 1. For each token with original probability `p`:
+
+  ```
+  scaled[token] = p ** (1 / t)
+  new[token]    = scaled[token] / sum(all scaled values)
+  ```
+
+  Return a **new dictionary** with the same tokens mapping to their new
+  probabilities, each **rounded to 6 decimal places**.
+
+  Example call:
+
+  ```python
+  temperature_scale({"distribution": {"green": 0.9, "black": 0.1},
+                     "temperature": 2.0})
+  # -> {"green": 0.75, "black": 0.25}   (higher temperature -> flatter)
+  ```
+starter_code: |
+  def temperature_scale(job):
+      return {}
+function_name: temperature_scale
+input_mode: function
+solution_sketch: Raise each probability to the 1/t power into a temporary dict, sum those powered values, then build the result by dividing each powered value by the total and rounding to 6 decimals.
+sample_solution: |
+  def temperature_scale(job):
+      dist = job["distribution"]
+      t = job["temperature"]
+      powered = {token: p ** (1.0 / t) for token, p in dist.items()}
+      total = sum(powered.values())
+      return {token: round(v / total, 6) for token, v in powered.items()}
+hints:
+  - level: 1
+    text: Temperature scaling has two stages -- reshape every probability with p ** (1 / t), then renormalize so the results sum to 1 again.
+  - level: 2
+    text: Compute all the powered values first and keep their sum; you need that total as the denominator for every token.
+  - level: 3
+    text: Build the answer with a dict comprehension that maps each token to round(powered[token] / total, 6).
+tests:
+  public:
+    - name: temperature_one_unchanged
+      input:
+        distribution: {"a": 0.5, "b": 0.5}
+        temperature: 1.0
+      expected: {"a": 0.5, "b": 0.5}
+    - name: sharpen_below_one
+      input:
+        distribution: {"a": 0.6, "b": 0.4}
+        temperature: 0.5
+      expected: {"a": 0.692308, "b": 0.307692}
+    - name: flatten_above_one
+      input:
+        distribution: {"a": 0.9, "b": 0.1}
+        temperature: 2.0
+      expected: {"a": 0.75, "b": 0.25}
+  validation:
+    - name: three_tokens_unchanged
+      input:
+        distribution: {"x": 0.2, "y": 0.3, "z": 0.5}
+        temperature: 1.0
+      expected: {"x": 0.2, "y": 0.3, "z": 0.5}
+    - name: three_tokens_sharpened
+      input:
+        distribution: {"x": 0.2, "y": 0.3, "z": 0.5}
+        temperature: 0.5
+      expected: {"x": 0.105263, "y": 0.236842, "z": 0.657895}
+    - name: strong_flatten
+      input:
+        distribution: {"hot": 0.8, "mild": 0.15, "cold": 0.05}
+        temperature: 4.0
+      expected: {"hot": 0.463384, "mild": 0.304924, "cold": 0.231692}
+    - name: single_token_stays_one
+      input:
+        distribution: {"solo": 1.0}
+        temperature: 0.7
+      expected: {"solo": 1.0}
+explanation_markdown: |
+  Temperature scaling is usually described on raw model scores (logits), where
+  you divide each logit by `t` before the softmax. Working directly on
+  probabilities is the algebraically equivalent shortcut: dividing a logit by
+  `t` is the same as raising the corresponding probability to the power `1 / t`,
+  because `exp(logit / t) = (exp(logit)) ** (1 / t)`. That is why this exercise
+  reshapes with `p ** (1 / t)` and then renormalizes.
+
+  Reading the exponent explains the behaviour. When `t < 1`, `1 / t > 1`, so
+  large probabilities are amplified relative to small ones and the distribution
+  sharpens toward its peak. When `t > 1`, `1 / t < 1`, which compresses the gaps
+  and pushes everything toward uniform. At `t = 1` the exponent is `1` and the
+  distribution is unchanged. The renormalization step is essential: raising to a
+  power breaks the "sums to 1" property, and dividing by the new total restores a
+  valid probability distribution.
+common_mistakes:
+  - Raising probabilities to the power t instead of 1 / t, which inverts the effect of the temperature dial.
+  - Skipping renormalization, so the returned values no longer sum to 1.
+  - Using integer division or an int temperature in a way that makes 1 / t collapse to 0 or 1; keep the exponent a float.
+  - Rounding each value to something other than 6 decimals, breaking the exact test comparison.

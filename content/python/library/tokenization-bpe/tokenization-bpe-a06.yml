@@ -1,0 +1,143 @@
+id: exercise.library.tokenization_bpe.a06
+kind: exercise
+version: 1
+language: python
+title: Training a Byte-Pair Tokenizer
+slug: tokenization-bpe-a06
+difficulty: hard
+concepts:
+  - ai.tokenization
+  - patterns.hash_map_counting
+prerequisites:
+  - python.dictionaries
+  - python.loops
+estimated_time_minutes: 24
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.tokenization_bpe.a06
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original end-to-end BPE training loop that composes the earlier steps and records the ordered merge list.
+prompt_markdown: |
+  Now assemble the whole pipeline. Byte-pair encoding *learns* a tokenizer by
+  repeatedly counting adjacent symbol pairs, merging the most frequent one, and
+  recording that merge. The ordered list of merges it learns is the trained
+  tokenizer.
+
+  Write `train_bpe(job)` where `job` is a dict with two keys:
+
+  - `"words"`: a list of raw word strings, for example `["low", "low", "lower"]`
+  - `"num_merges"`: an integer `k`, the maximum number of merges to learn
+
+  Run this loop:
+
+  1. Turn each word into symbols: its characters in order followed by the marker
+     `"</w>"`. (Repeated words stay as separate entries, so their pairs are
+     counted multiple times.)
+  2. Repeat up to `k` times:
+     - Count every adjacent pair across all words, keyed as two symbols joined by
+       a single space (`"l o"`).
+     - If there are **no** pairs left, stop early.
+     - Pick the most frequent pair, breaking ties by taking the
+       alphabetically-smallest key. Split that key back into its two symbols
+       `x` and `y` and record the merge as the list `[x, y]`.
+     - Rewrite every word, gluing each non-overlapping left-to-right occurrence
+       of `x` then `y` into the single symbol `x + y`.
+  3. Return the ordered list of merges, for example
+     `[["l", "o"], ["lo", "w"], ["low", "</w>"]]`.
+
+  With `num_merges` of `0` (or when no pairs remain) the result is the empty
+  list `[]`.
+starter_code: |
+  def train_bpe(job):
+      return []
+function_name: train_bpe
+input_mode: function
+solution_sketch: Tokenize each word to characters plus "</w>", then loop k times counting adjacent pairs, selecting the max pair with an alphabetical tie-break, appending [x, y] to the merge list, and rewriting every word with the non-overlapping merge; stop early when no pairs remain.
+sample_solution: |
+  def train_bpe(job):
+      words = job["words"]
+      k = job["num_merges"]
+      corpus = [list(word) + ["</w>"] for word in words]
+      merges = []
+      for _ in range(k):
+          counts = {}
+          for symbols in corpus:
+              for i in range(len(symbols) - 1):
+                  key = symbols[i] + " " + symbols[i + 1]
+                  counts[key] = counts.get(key, 0) + 1
+          if not counts:
+              break
+          best_key = None
+          best_count = None
+          for key in sorted(counts):
+              count = counts[key]
+              if best_count is None or count > best_count:
+                  best_count = count
+                  best_key = key
+          x, y = best_key.split(" ")
+          merges.append([x, y])
+          new_corpus = []
+          for symbols in corpus:
+              result = []
+              i = 0
+              n = len(symbols)
+              while i < n:
+                  if i < n - 1 and symbols[i] == x and symbols[i + 1] == y:
+                      result.append(x + y)
+                      i += 2
+                  else:
+                      result.append(symbols[i])
+                      i += 1
+              new_corpus.append(result)
+          corpus = new_corpus
+      return merges
+hints:
+  - level: 1
+    text: This exercise stitches together the earlier steps -- tokenize, count pairs, pick the best pair, merge the corpus -- inside a loop that runs at most num_merges times.
+  - level: 2
+    text: Each iteration recounts pairs on the current corpus, so a merge from the previous round can create a brand-new pair (like "lo" then "w") that becomes the next winner.
+  - level: 3
+    text: Break ties by scanning sorted(counts) with a strict > comparison, split the winning key on its single space to recover x and y, record [x, y], and break out of the loop the moment counts is empty.
+tests:
+  public:
+    - name: three_rounds
+      input: {words: ["low", "low", "lower"], num_merges: 3}
+      expected: [["l", "o"], ["lo", "w"], ["low", "</w>"]]
+    - name: one_round
+      input: {words: ["low", "low", "lower"], num_merges: 1}
+      expected: [["l", "o"]]
+    - name: zero_merges
+      input: {words: ["cat", "dog"], num_merges: 0}
+      expected: []
+  validation:
+    - name: tea_leaf_two_rounds
+      input: {words: ["tea", "tea", "leaf"], num_merges: 2}
+      expected: [["e", "a"], ["ea", "</w>"]]
+    - name: stops_early_when_no_pairs
+      input: {words: ["a", "b"], num_merges: 5}
+      expected: [["a", "</w>"], ["b", "</w>"]]
+    - name: caps_at_available_merges
+      input: {words: ["ab", "ab"], num_merges: 10}
+      expected: [["a", "b"], ["ab", "</w>"]]
+    - name: overlap_then_marker
+      input: {words: ["aaa"], num_merges: 2}
+      expected: [["a", "a"], ["a", "</w>"]]
+explanation_markdown: |
+  This is the full BPE training algorithm. The subtle part is that the corpus
+  evolves between rounds: after `l` and `o` fuse into `lo`, the very next count
+  sees the new pair `lo w`, which is exactly how BPE grows longer and longer
+  subwords out of characters. Recounting from scratch each round keeps the logic
+  simple and correct, and the alphabetical tie-break makes the learned merge list
+  fully deterministic for a given corpus. Two stopping conditions matter: the
+  loop runs at most `num_merges` times, and it also breaks the moment no adjacent
+  pairs remain (every word has collapsed to a single symbol), so a large
+  `num_merges` never invents merges that do not exist. Each round costs about
+  `O(total symbols)` to recount, giving `O(k * total symbols)` overall.
+common_mistakes:
+  - Counting pairs once before the loop instead of recounting each round, so merges that create new pairs are never discovered.
+  - Recording the merge as the joined string "x y" instead of splitting it back into the two-element list [x, y].
+  - Forgetting the early stop, then crashing or looping when every word is already a single symbol and there are no pairs to pick.
+  - Reusing a mutated corpus reference so an in-place merge corrupts the counts for the same round.

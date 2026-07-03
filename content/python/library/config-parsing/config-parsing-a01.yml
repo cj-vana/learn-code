@@ -1,0 +1,178 @@
+id: exercise.library.config_parsing.a01
+kind: exercise
+version: 1
+language: python
+title: Reading the Lighthouse Keeper's INI Log
+slug: config-parsing-a01
+difficulty: medium
+concepts:
+  - python.config_parsing
+  - python.strings
+prerequisites:
+  - python.strings
+  - python.loops
+  - python.dictionaries
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.config_parsing.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original INI-parsing drill framed as a lighthouse keeper's plain-text settings log, hand-rolling the section/key/value grammar instead of leaning on configparser.
+prompt_markdown: |
+  A lighthouse keeper stores station settings in a plain-text `.ini` log and wants
+  to load it into nested dictionaries. Write `parse_ini_string(text)` that turns
+  the raw INI text into a dictionary mapping each **section name** to a dictionary
+  of its **key/value pairs**.
+
+  Process the text line by line (split on newlines) using these rules:
+
+  - Strip leading and trailing whitespace from every line before inspecting it.
+  - Skip blank lines.
+  - Skip full-line **comments**: any line whose first character is `#` or `;`.
+    Comments only ever occupy their own line, so `port = 5 # note` keeps
+    `5 # note` as the value.
+  - A line shaped like `[name]` (starts with `[`, ends with `]`) opens a section.
+    The section name is whatever sits between the brackets, stripped. Create an
+    entry for it even if no keys follow, and if the same section header appears
+    twice, keep merging into the one dictionary.
+  - A line containing `=` is a key/value pair. Split on the **first** `=` only, so
+    a value may itself contain `=`. Strip the key and the value. Every value stays
+    a **string** — no type conversion here. If the same key appears twice in a
+    section, the later value wins.
+  - Key/value pairs that appear **before** any section header belong to a section
+    named `"DEFAULT"`. That `"DEFAULT"` entry should exist only when such early
+    keys are present.
+  - Any other line (non-blank, not a comment, not a section, no `=`) is ignored.
+
+  Example call:
+
+  ```python
+  parse_ini_string("[beam]\ninterval = 4\ncolor = white")
+  # -> {"beam": {"interval": "4", "color": "white"}}
+  ```
+
+  An empty string returns an empty dictionary.
+starter_code: |
+  def parse_ini_string(text):
+      return {}
+function_name: parse_ini_string
+input_mode: function
+solution_sketch: Walk the lines, tracking the current section name; on a bracket line open/merge a section, on an equals line split once and store the stripped value, and route pre-section keys into a "DEFAULT" section.
+sample_solution: |
+  def parse_ini_string(text):
+      result = {}
+      current = None
+      for raw_line in text.splitlines():
+          line = raw_line.strip()
+          if not line:
+              continue
+          if line[0] in "#;":
+              continue
+          if line.startswith("[") and line.endswith("]"):
+              name = line[1:-1].strip()
+              current = name
+              result.setdefault(name, {})
+              continue
+          if "=" in line:
+              key, _, value = line.partition("=")
+              section = current if current is not None else "DEFAULT"
+              result.setdefault(section, {})[key.strip()] = value.strip()
+      return result
+hints:
+  - level: 1
+    text: Keep a variable for the section you are currently inside, updating it every time you meet a line wrapped in square brackets.
+  - level: 2
+    text: Use str.partition('=') so you split on the first equals sign only and the value can still contain more equals signs.
+  - level: 3
+    text: When a key line arrives before any section header, store it under the section name "DEFAULT"; use setdefault so the section dict exists before you assign into it.
+tests:
+  public:
+    - name: empty_text
+      input: ""
+      expected: {}
+    - name: single_section
+      input: |
+        [beam]
+        interval = 4
+        color = white
+      expected:
+        beam:
+          interval: "4"
+          color: "white"
+    - name: comments_and_blanks_skipped
+      input: |
+        ; station config
+
+        [power]
+        # main generator
+        volts = 240
+      expected:
+        power:
+          volts: "240"
+  validation:
+    - name: value_contains_equals
+      input: |
+        [network]
+        endpoint = https://buoy?id=7
+      expected:
+        network:
+          endpoint: "https://buoy?id=7"
+    - name: default_section_for_early_keys
+      input: |
+        owner = keeper
+        [beam]
+        interval = 8
+      expected:
+        DEFAULT:
+          owner: "keeper"
+        beam:
+          interval: "8"
+    - name: duplicate_key_last_wins
+      input: |
+        [beam]
+        interval = 4
+        interval = 6
+      expected:
+        beam:
+          interval: "6"
+    - name: empty_section_kept
+      input: |
+        [spare]
+        [beam]
+        color = red
+      expected:
+        spare: {}
+        beam:
+          color: "red"
+    - name: whitespace_and_repeated_header
+      input: |
+        [beam]
+           color   =   green
+        [beam]
+        interval = 3
+      expected:
+        beam:
+          color: "green"
+          interval: "3"
+explanation_markdown: |
+  A hand-rolled INI reader is a small state machine: as you scan the lines you
+  remember which section you are inside, and each key you meet lands in that
+  section's dictionary. Stripping every line first collapses the formatting noise
+  (indentation, stray spaces) so the structural checks — is this a comment, a
+  header, or a pair? — stay simple.
+
+  The two details that trip people up are both about *where the boundary is*.
+  Splitting with `str.partition('=')` cuts on the first equals sign, so a value
+  like a URL query string survives intact, whereas `str.split('=')` would shred
+  it. And routing pre-section keys into `"DEFAULT"` mirrors what the real
+  `configparser` does, giving global settings a home instead of dropping them.
+  Because assigning the same key twice just overwrites the dict entry, "last one
+  wins" falls out for free.
+common_mistakes:
+  - Splitting on every '=' with str.split('=') instead of partitioning on the first one, which corrupts values that contain an equals sign.
+  - Forgetting to strip the line before checking its first character, so indented comments or headers are misclassified.
+  - Dropping keys that appear before the first section header instead of collecting them under "DEFAULT".
+  - Coercing values to int or float here; INI values stay strings until a separate coercion step.

@@ -1,0 +1,87 @@
+id: exercise.library.iterators_generators.a03
+kind: exercise
+version: 1
+language: python
+title: Greenhouse Water Ledger
+slug: iterators-generators-a03
+difficulty: medium
+concepts:
+  - python.iterators_generators
+  - patterns.running_total
+prerequisites:
+  - python.functions
+  - python.loops
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.iterators_generators.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original greenhouse irrigation scenario drilling a generator that yields a running total.
+prompt_markdown: |
+  A greenhouse logs how many litres it pours into its tank each hour, and the
+  keeper wants a *running ledger*: after each pour, how much water has gone in so
+  far. Write `water_ledger(amounts)` that returns a **list** where each element is
+  the cumulative total up to and including that hour.
+
+  Build it with a **generator function**: use `yield` to hand back the running
+  total one step at a time, then wrap the generator in `list()` to collect the
+  ledger. An empty log returns an empty list.
+
+  For example, `water_ledger([2, 3, 5])` returns `[2, 5, 10]`.
+starter_code: |
+  def water_ledger(amounts):
+      # Write a generator that yields the running total, then return list(...) of it.
+      return []
+function_name: water_ledger
+input_mode: function
+solution_sketch: A generator keeps a total, adds each amount, and yields the total after every addition; list() collects them.
+sample_solution: |
+  def water_ledger(amounts):
+      def ledger(nums):
+          total = 0
+          for n in nums:
+              total += n
+              yield total
+      return list(ledger(amounts))
+hints:
+  - level: 1
+    text: Keep one running total variable and yield it again after each new amount is added.
+  - level: 2
+    text: Inside the generator, start total at 0, then for each amount do total += n and yield total.
+  - level: 3
+    text: Define ledger(nums) that accumulates total and yields it every iteration, then return list(ledger(amounts)).
+tests:
+  public:
+    - name: basic
+      input: [2, 3, 5]
+      expected: [2, 5, 10]
+    - name: single
+      input: [7]
+      expected: [7]
+    - name: empty
+      input: []
+      expected: []
+  validation:
+    - name: with_zero
+      input: [0, 4, 0, 6]
+      expected: [0, 4, 4, 10]
+    - name: negatives
+      input: [5, -2, -1]
+      expected: [5, 3, 2]
+    - name: longer
+      input: [1, 1, 1, 1]
+      expected: [1, 2, 3, 4]
+explanation_markdown: |
+  A running total needs *state that survives between values*, and that is exactly
+  what a generator gives you: the `total` variable persists across every `yield`.
+  Each iteration adds the current amount and then yields the new total, so the
+  generator emits the ledger one entry at a time. Wrapping it in `list()` exhausts
+  the generator into the concrete list the grader compares against. Because the
+  loop never runs for an empty input, the ledger comes back empty.
+common_mistakes:
+  - Yielding the raw amount instead of the accumulated total.
+  - Resetting total to 0 inside the loop, which discards the accumulation.
+  - Returning the generator object itself instead of wrapping it in list().

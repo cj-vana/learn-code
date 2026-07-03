@@ -1,0 +1,107 @@
+id: exercise.library.binary_data.a02
+kind: exercise
+version: 1
+language: python
+title: Decoding the Shore Station
+slug: binary-data-struct-a02
+difficulty: easy
+concepts:
+  - python.binary_data
+  - python.tuples
+prerequisites:
+  - python.lists
+  - python.functions
+  - python.tuples
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.binary_data.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original struct.unpack drill framed as a shore receiving station decoding the tide gauge's fixed-width records.
+prompt_markdown: |
+  The shore station receives the raw bytes that the tide gauge radioed out and
+  must decode them back into numbers. Write `unpack_record(record)` that receives
+  a single dictionary with two keys:
+
+  - `fmt`: a `struct` format string beginning with a byte-order marker (`>` or
+    `<`), for example `">HB"`.
+  - `data`: a list of integers (each 0-255), one per received byte.
+
+  Rebuild a `bytes` object from `data`, decode it with `struct.unpack` using
+  `fmt`, and return the decoded fields as a **list** (not the tuple that
+  `struct.unpack` returns). The number of bytes in `data` always matches exactly
+  what `fmt` describes.
+
+  For example, `{"fmt": ">H", "data": [1, 2]}` returns `[258]`, because the two
+  big-endian bytes `0x01`, `0x02` decode to the unsigned short 258.
+
+  Signed fields matter: lowercase format letters are signed. So
+  `{"fmt": ">hh", "data": [255, 255, 0, 10]}` returns `[-1, 10]`, because `h` is
+  a signed 2-byte short and the bytes `0xFF 0xFF` decode to -1, while `0x00 0x0A`
+  decode to 10.
+starter_code: |
+  import struct
+
+
+  def unpack_record(record):
+      return []
+function_name: unpack_record
+input_mode: function
+solution_sketch: Turn the data list into a bytes object with bytes(...), decode it with struct.unpack(fmt, raw), then wrap the resulting tuple in list() before returning.
+sample_solution: |
+  import struct
+
+
+  def unpack_record(record):
+      raw = bytes(record["data"])
+      fields = struct.unpack(record["fmt"], raw)
+      return list(fields)
+hints:
+  - level: 1
+    text: struct.unpack needs a bytes object, not a list, so first rebuild the raw bytes with bytes(record["data"]).
+  - level: 2
+    text: struct.unpack(fmt, raw) returns a tuple of decoded values even when there is only one field.
+  - level: 3
+    text: The platform expects a list, so return list(struct.unpack(record["fmt"], bytes(record["data"]))).
+tests:
+  public:
+    - name: big_endian_short
+      input: {fmt: ">H", data: [1, 2]}
+      expected: [258]
+    - name: four_byte_int
+      input: {fmt: ">I", data: [0, 0, 0, 1]}
+      expected: [1]
+    - name: little_endian_short
+      input: {fmt: "<H", data: [2, 1]}
+      expected: [258]
+  validation:
+    - name: mixed_widths
+      input: {fmt: ">HB", data: [1, 2, 255]}
+      expected: [258, 255]
+    - name: three_single_bytes
+      input: {fmt: ">BBB", data: [10, 20, 30]}
+      expected: [10, 20, 30]
+    - name: short_then_int
+      input: {fmt: ">HI", data: [16, 17, 0, 15, 66, 64]}
+      expected: [4113, 1000000]
+    - name: signed_shorts
+      input: {fmt: ">hh", data: [255, 255, 0, 10]}
+      expected: [-1, 10]
+explanation_markdown: |
+  `struct.unpack` is the inverse of `struct.pack`: hand it the same format string
+  and a `bytes` object of exactly the right length, and it returns a tuple of
+  Python values. It always returns a tuple, even for a single field, which is why
+  the one-field cases still come back as `[258]` rather than a bare `258`.
+
+  The signed case is the instructive one. An unsigned short `H` treats `0xFFFF`
+  as 65535, but a signed short `h` interprets the same two bytes as -1 using
+  two's-complement. Choosing the right format letter is how you honour the
+  protocol the sender used; the bytes alone do not tell you whether a field is
+  signed.
+common_mistakes:
+  - Passing the raw list straight to struct.unpack; it requires a bytes (or bytes-like) object, so wrap it with bytes(...) first.
+  - Returning the tuple from struct.unpack instead of converting it to a list.
+  - Reaching for an index like result[0] and returning a single value, which breaks whenever the format decodes more than one field.

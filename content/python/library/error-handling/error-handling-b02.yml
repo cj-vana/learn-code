@@ -1,0 +1,222 @@
+id: exercise.library.error_handling.b02
+kind: exercise
+version: 1
+language: python
+title: All-or-Nothing Tabs at the Boardgame Cafe
+slug: error-handling-b02
+difficulty: hard
+concepts:
+  - python.exceptions
+  - patterns.simulation
+prerequisites:
+  - python.dictionaries
+  - python.functions
+  - python.loops
+estimated_time_minutes: 24
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.error_handling.b02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original transactional block processor where any failing operation rolls back its whole block via snapshot-and-restore, themed around member tabs at a boardgame cafe.
+prompt_markdown: |
+  A boardgame cafe settles its member tabs in **blocks**. Each block is a small
+  batch of account operations that must go through **all-or-nothing**: if any
+  operation in a block fails, the entire block is undone and every account is left
+  exactly as it was before that block started. Blocks are independent, so a failed
+  block does not stop the later ones from running.
+
+  Write `transaction_batch(job)` that takes **one dictionary**:
+
+  - `"accounts"`: a dict mapping each member name to a starting balance (an int).
+  - `"blocks"`: a list of blocks; each block is a list of operation dicts, applied
+    in order.
+
+  An operation is one of:
+
+  - `{"type": "deposit", "account": a, "amount": x}` -- add `x` to account `a`.
+  - `{"type": "withdraw", "account": a, "amount": x}` -- subtract `x` from account
+    `a`. This **fails** if `a`'s balance is less than `x` (no overdraft allowed).
+  - `{"type": "transfer", "from": a, "to": b, "amount": x}` -- withdraw `x` from
+    `a` and deposit it into `b`, failing if `a`'s balance is less than `x`.
+
+  Amounts are non-negative. Any operation that names an account not present in
+  `accounts` **fails**. Model a failure by raising an exception inside the block
+  and catching it around the whole block, so that a failure part-way through undoes
+  the operations that already ran in that block too.
+
+  Process the blocks in order. If a block fails, restore the balances to the
+  snapshot taken before the block began and record that block's index. Return a
+  dictionary `{"balances": {...}, "rolled_back": [...]}` where `balances` is the
+  final balance of every account and `rolled_back` is the list of block indices
+  that were undone, in increasing order.
+
+  Example:
+
+  ```python
+  transaction_batch({
+      "accounts": {"alice": 100, "bob": 50},
+      "blocks": [
+          [{"type": "transfer", "from": "alice", "to": "bob", "amount": 30}],
+          [{"type": "withdraw", "account": "bob", "amount": 200}],
+          [{"type": "deposit", "account": "alice", "amount": 10},
+           {"type": "withdraw", "account": "alice", "amount": 5}],
+      ],
+  })
+  # block 0 commits (alice 70, bob 80); block 1 overdraws bob and rolls back;
+  # block 2 commits (alice 75)
+  # -> {"balances": {"alice": 75, "bob": 80}, "rolled_back": [1]}
+  ```
+
+  An empty `blocks` list returns the starting balances unchanged with an empty
+  `rolled_back` list.
+starter_code: |
+  def transaction_batch(job):
+      # For each block, snapshot balances, apply its operations, and on any
+      # failure restore the snapshot and record the block index.
+      return {"balances": dict(job["accounts"]), "rolled_back": []}
+function_name: transaction_batch
+input_mode: function
+solution_sketch: Copy the balances, then per block take a snapshot copy and apply each op inside a try; a raised failure is caught to restore the snapshot and append the block index.
+sample_solution: |
+  def transaction_batch(job):
+      balances = dict(job["accounts"])
+      blocks = job["blocks"]
+
+      class OpError(Exception):
+          pass
+
+      def apply(op, book):
+          kind = op["type"]
+          if kind == "deposit":
+              acct = op["account"]
+              if acct not in book:
+                  raise OpError("no such account")
+              book[acct] += op["amount"]
+          elif kind == "withdraw":
+              acct = op["account"]
+              if acct not in book:
+                  raise OpError("no such account")
+              if book[acct] < op["amount"]:
+                  raise OpError("insufficient funds")
+              book[acct] -= op["amount"]
+          elif kind == "transfer":
+              src = op["from"]
+              dst = op["to"]
+              if src not in book or dst not in book:
+                  raise OpError("no such account")
+              if book[src] < op["amount"]:
+                  raise OpError("insufficient funds")
+              book[src] -= op["amount"]
+              book[dst] += op["amount"]
+          else:
+              raise OpError("unknown op")
+
+      rolled_back = []
+      for index, block in enumerate(blocks):
+          snapshot = dict(balances)
+          try:
+              for op in block:
+                  apply(op, balances)
+          except OpError:
+              balances = snapshot
+              rolled_back.append(index)
+      return {"balances": balances, "rolled_back": rolled_back}
+hints:
+  - level: 1
+    text: The unit of atomicity is the block, so take a copy of the balances before each block and only keep the changes if the whole block gets through.
+  - level: 2
+    text: Wrap the loop over a block's operations in a try. Have each operation raise when it cannot proceed (unknown account, or a withdraw/transfer that would overdraw).
+  - level: 3
+    text: In the except, discard the partly-changed balances by reassigning them back to the snapshot copy, and append the block index to rolled_back. Because you snapshot before applying anything, earlier operations in the same block are undone too.
+tests:
+  public:
+    - name: commit_rollback_commit
+      input:
+        accounts: {alice: 100, bob: 50}
+        blocks:
+          - - {type: "transfer", from: "alice", to: "bob", amount: 30}
+          - - {type: "withdraw", account: "bob", amount: 200}
+          - - {type: "deposit", account: "alice", amount: 10}
+            - {type: "withdraw", account: "alice", amount: 5}
+      expected:
+        balances: {alice: 75, bob: 80}
+        rolled_back: [1]
+    - name: empty_blocks
+      input:
+        accounts: {a: 10}
+        blocks: []
+      expected:
+        balances: {a: 10}
+        rolled_back: []
+    - name: partial_block_fully_undone
+      input:
+        accounts: {a: 100}
+        blocks:
+          - - {type: "deposit", account: "a", amount: 50}
+            - {type: "withdraw", account: "a", amount: 999}
+      expected:
+        balances: {a: 100}
+        rolled_back: [0]
+  validation:
+    - name: unknown_account_rolls_back
+      input:
+        accounts: {a: 10}
+        blocks:
+          - - {type: "deposit", account: "ghost", amount: 5}
+          - - {type: "deposit", account: "a", amount: 5}
+      expected:
+        balances: {a: 15}
+        rolled_back: [0]
+    - name: transfer_to_missing_account
+      input:
+        accounts: {a: 40, b: 0}
+        blocks:
+          - - {type: "transfer", from: "a", to: "ghost", amount: 10}
+          - - {type: "transfer", from: "a", to: "b", amount: 10}
+      expected:
+        balances: {a: 30, b: 10}
+        rolled_back: [0]
+    - name: every_block_commits
+      input:
+        accounts: {x: 20, y: 5}
+        blocks:
+          - - {type: "deposit", account: "y", amount: 15}
+          - - {type: "transfer", from: "x", to: "y", amount: 20}
+      expected:
+        balances: {x: 0, y: 40}
+        rolled_back: []
+    - name: two_blocks_roll_back
+      input:
+        accounts: {a: 50, b: 50}
+        blocks:
+          - - {type: "withdraw", account: "a", amount: 60}
+          - - {type: "transfer", from: "b", to: "a", amount: 20}
+          - - {type: "withdraw", account: "b", amount: 100}
+      expected:
+        balances: {a: 70, b: 30}
+        rolled_back: [0, 2]
+explanation_markdown: |
+  This is a transaction in miniature, and the whole trick is choosing where the
+  `try` goes. Wrapping a single operation would let a block commit half its work;
+  wrapping the block is what makes it all-or-nothing. The snapshot -- a shallow
+  copy of the balances taken *before* the block runs -- is your rollback target.
+  Apply operations directly to the live balances, and if any of them raises, throw
+  the mutated version away by reassigning `balances` back to the snapshot. Every
+  earlier operation in that block vanishes with it, which is why depositing 50 and
+  then failing to withdraw 999 leaves the account at its original 100.
+
+  Each operation is responsible for detecting its own failure and raising: a
+  missing account or an overdraft is a hard stop. Validating a transfer's source
+  balance *before* moving any money means a transfer never leaves one side changed
+  when the other cannot complete. Because each block re-snapshots from the current
+  balances, committed blocks build on each other while rolled-back ones leave no
+  trace, and recording the index inside the `except` gives you the audit list in
+  the order the failures happened.
+common_mistakes:
+  - Wrapping each operation in its own try instead of the whole block, so a block can commit part of its work.
+  - Taking the snapshot after starting to apply operations, so a rollback restores an already-modified state.
+  - Mutating the snapshot copy by aliasing it, so restoring it does not actually undo anything.
+  - Moving money in a transfer before checking the source balance, leaving the destination credited when the withdraw should have failed.

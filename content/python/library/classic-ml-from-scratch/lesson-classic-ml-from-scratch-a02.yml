@@ -1,0 +1,92 @@
+id: lesson.library.classic_ml_from_scratch.a02
+kind: lesson
+version: 1
+language: python
+title: 'k-Means: Finding Groups Nobody Labeled'
+slug: lesson-classic-ml-from-scratch-a02
+difficulty: medium
+concepts:
+  - ai.classic_ml
+prerequisites:
+  - ai.classic_ml
+  - python.loops
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.classic_ml_from_scratch.a02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original k-means walkthrough framed around clustering a tea shop's customer orders, with fresh worked code.
+body_markdown: |
+  k-NN needed labels — someone had to mark each mushroom. But most data
+  arrives unlabeled. A tea shop's order log has two numbers per customer
+  (visits per month, average spend) and no categories at all; the owner just
+  suspects there are "types" of customer in there. Finding groups without
+  labels is **clustering**, and k-means is its classic algorithm.
+
+  ### The two-step dance
+
+  k-means represents each group by its **centroid** — the average point of
+  its members. The algorithm is a loop of two steps that feed each other:
+
+  1. **Assign**: give every point to its nearest centroid.
+  2. **Update**: move each centroid to the mean of the points assigned to it.
+
+  ```python
+  def assign(points, centroids):
+      return [nearest_index(p, centroids) for p in points]
+
+  def update(points, assignments, k):
+      new = []
+      for c in range(k):
+          members = [p for p, a in zip(points, assignments) if a == c]
+          new.append([sum(dim) / len(members) for dim in zip(*members)])
+      return new
+  ```
+
+  Repeat until the assignments stop changing. That's the whole algorithm —
+  and unlike k-NN, this one *does* compress: a thousand customers become
+  three centroids, and classifying a new customer is three distance checks.
+
+  ### Why it converges — and why that's not enough
+
+  Each step can only decrease (or hold) the total squared distance from
+  points to their centroids: assignment moves points to closer centroids by
+  definition, and the mean is the point minimizing squared distance to a
+  group. A quantity that only decreases and can't go below zero must settle.
+  So k-means **always converges** — but only to a *local* optimum. Start the
+  centroids somewhere unlucky and it settles into a worse grouping than the
+  best one. Real implementations run several starts and keep the best; the
+  exercises make initial centroids an explicit input, which is also what
+  makes the algorithm deterministic and testable.
+
+  ### The edges that bite
+
+  - **An empty cluster.** If no point lands on a centroid, the mean of
+    nothing is undefined — the mean formula divides by zero. Implementations
+    must choose a rule (keep the old centroid, respawn it); the exercises
+    specify one, because "undefined behavior" is not an answer.
+  - **Choosing k.** The algorithm cannot tell you how many groups exist —
+    k = number of customers gives zero error and zero insight. Picking k is
+    a judgment about the domain, aided by plots and elbow heuristics, not an
+    output of the algorithm.
+  - **Scale, again.** Same ruler, same trap as k-NN: unstandardized features
+    let one axis run the clustering.
+
+  What k-means teaches beyond clustering is a *shape of algorithm* you will
+  meet again immediately: alternate between "hold the model fixed, fit the
+  assignments" and "hold the assignments fixed, fit the model", descending
+  some measure of error each round. Gradient descent, in the next lesson, is
+  the same idea with calculus doing the descending.
+checkpoints:
+  - question: Walk through why k-means must converge, using the total squared distance as the argument.
+    answer: Assignment can only move points to nearer centroids and the mean is the least-squared-distance point for its members, so both steps can only lower (or keep) the total squared distance; a non-negative quantity that never increases must eventually stop changing.
+    explanation: The monotone-decrease argument is the template for reasoning about many iterative algorithms — find a quantity each step provably improves.
+  - question: k-means always converges. Why is that guarantee weaker than it sounds?
+    answer: It converges to a local optimum determined by the starting centroids — an unlucky start settles into a visibly worse grouping than the best possible one, which is why practice runs multiple initializations and keeps the best result.
+    explanation: Convergence means "stops changing", not "found the best answer"; the gap between the two is a recurring theme across all of optimization.
+  - question: During an update step, one centroid ends up with no assigned points. Why is this a real edge case and what must an implementation do?
+    answer: The update computes the mean of its members, and the mean of an empty set divides by zero; the implementation must apply a stated rule — such as keeping the previous centroid — rather than crashing or behaving unpredictably.
+    explanation: Textbook descriptions skip this case but real data hits it; deterministic edge rules are what make the algorithm implementable and testable.

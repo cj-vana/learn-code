@@ -1,0 +1,124 @@
+id: exercise.library.caching_performance.a07
+kind: exercise
+version: 1
+language: python
+title: The Observatory's Expiring Readings
+slug: caching-performance-a07
+difficulty: medium
+concepts:
+  - concepts.performance
+  - concepts.memoization
+prerequisites:
+  - python.dictionaries
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.caching_performance.a07
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original time-to-live cache drill themed around a mountaintop observatory re-reading atmospheric sensors, modelling TTL expiry as pure logic over an explicit event list rather than real clocks.
+prompt_markdown: |
+  A mountaintop observatory caches expensive atmospheric readings so it does not
+  recompute the same sensor twice in quick succession. Each cached reading stays
+  valid for a fixed **time-to-live** (`ttl`) measured in seconds from the moment
+  it was last computed. To keep the exercise deterministic there is no real
+  clock: you are handed the exact sequence of requests, each stamped with the
+  time it arrives.
+
+  Write `simulate_ttl_cache(request)` where `request` is a dict with this shape:
+
+  ```python
+  {
+      "ttl": 5,
+      "requests": [
+          {"key": "wind", "time": 0},
+          {"key": "wind", "time": 3},
+      ],
+  }
+  ```
+
+  The requests arrive in non-decreasing `time` order. Walk them left to right and
+  return a list of `"hit"` / `"miss"` strings, one per request, applying these
+  rules:
+
+  - A key is a **hit** only if it is already cached AND `time - last_computed <= ttl`,
+    where `last_computed` is the time of the most recent miss for that key.
+  - Otherwise it is a **miss**: record the value as freshly computed at this
+    `time` (so `last_computed` for that key becomes the current `time`).
+  - A **hit does not extend** the lifetime — the TTL is always measured from the
+    last miss, never refreshed by reads.
+  - The first request for any key is always a miss.
+  - `ttl` can be `0`, meaning a key is only valid for other requests arriving at
+    the exact same `time` as its last miss.
+
+  An empty request list returns an empty list.
+starter_code: |
+  def simulate_ttl_cache(request):
+      return []
+function_name: simulate_ttl_cache
+input_mode: function
+solution_sketch: Keep a dict mapping each key to the time of its last miss. For each event, a hit requires the key present and now - last_computed <= ttl; otherwise record a miss and store the current time as the new last_computed.
+sample_solution: |
+  def simulate_ttl_cache(request):
+      ttl = request["ttl"]
+      events = request["requests"]
+      last_computed = {}
+      outcomes = []
+      for event in events:
+          key = event["key"]
+          now = event["time"]
+          if key in last_computed and now - last_computed[key] <= ttl:
+              outcomes.append("hit")
+          else:
+              outcomes.append("miss")
+              last_computed[key] = now
+      return outcomes
+hints:
+  - level: 1
+    text: Track one number per key — the time of its most recent miss. That is the only state a write-based TTL needs.
+  - level: 2
+    text: A hit requires two conditions at once — the key is in your dict AND now minus its stored time is within the ttl. Use <= so the boundary second still counts as valid.
+  - level: 3
+    text: On a miss, overwrite the stored time with the current time so the countdown restarts. Never update the stored time on a hit, or lifetimes would drift.
+tests:
+  public:
+    - name: empty
+      input: {ttl: 5, requests: []}
+      expected: []
+    - name: all_first_time_misses
+      input: {ttl: 10, requests: [{key: a, time: 0}, {key: b, time: 1}, {key: c, time: 2}]}
+      expected: ['miss', 'miss', 'miss']
+    - name: hit_then_expire
+      input: {ttl: 5, requests: [{key: m1, time: 0}, {key: m1, time: 3}, {key: m1, time: 8}]}
+      expected: ['miss', 'hit', 'miss']
+  validation:
+    - name: expiry_boundary_is_inclusive
+      input: {ttl: 5, requests: [{key: m1, time: 0}, {key: m1, time: 5}, {key: m1, time: 6}]}
+      expected: ['miss', 'hit', 'miss']
+    - name: ttl_zero
+      input: {ttl: 0, requests: [{key: x, time: 0}, {key: x, time: 0}, {key: x, time: 1}]}
+      expected: ['miss', 'hit', 'miss']
+    - name: refresh_after_miss
+      input: {ttl: 3, requests: [{key: p, time: 0}, {key: p, time: 2}, {key: p, time: 6}, {key: p, time: 8}, {key: p, time: 10}]}
+      expected: ['miss', 'hit', 'miss', 'hit', 'miss']
+    - name: interleaved_keys
+      input: {ttl: 4, requests: [{key: a, time: 0}, {key: b, time: 1}, {key: a, time: 3}, {key: a, time: 5}, {key: b, time: 6}]}
+      expected: ['miss', 'miss', 'hit', 'miss', 'miss']
+explanation_markdown: |
+  A time-to-live cache trades correctness-of-freshness for speed: a value is
+  reused only while it is young enough. Because freshness is measured from the
+  last recompute, the only state you need per key is a single timestamp. The
+  whole simulation is O(n) over the request list with O(k) memory for k distinct
+  keys.
+
+  The subtle design choice is that reads never refresh the timer. A read-refreshing
+  policy (sometimes called sliding expiration) is a different cache — here a busy
+  key still expires on schedule, which is what most HTTP and DNS caches actually
+  do. Modelling it as a pure function over an explicit event list keeps it fully
+  deterministic, with no dependency on a real clock.
+common_mistakes:
+  - Refreshing the stored time on a hit, which turns a fixed TTL into sliding expiration and lets hot keys live forever.
+  - Using a strict < comparison so the exact boundary second is wrongly treated as expired.
+  - Forgetting that the first sighting of a key is always a miss because there is nothing cached yet.

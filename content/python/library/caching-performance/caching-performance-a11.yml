@@ -1,0 +1,112 @@
+id: exercise.library.caching_performance.a11
+kind: exercise
+version: 1
+language: python
+title: Rolling Windows Over the Tide Gauge
+slug: caching-performance-a11
+difficulty: medium
+concepts:
+  - concepts.performance
+  - patterns.sliding_window
+prerequisites:
+  - python.slicing
+  - python.iterators_generators
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.caching_performance.a11
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original fixed-width sliding-window drill framed as a coastal tide gauge emitting rolling groups of readings, produced lazily via a generator rather than nested-loop copies.
+prompt_markdown: |
+  A coastal tide gauge streams a run of readings, and the analysis needs every
+  contiguous **rolling window** of a fixed width so it can later average each
+  group. Write `windowed_generator(spec)` where `spec` is a dict:
+
+  ```python
+  {"items": [1, 2, 3, 4], "size": 2}
+  ```
+
+  Return a list of windows. Each window is a list of `size` consecutive items,
+  and the windows slide one position at a time from the start. For the example
+  above the result is `[[1, 2], [2, 3], [3, 4]]`.
+
+  Rules and edge cases:
+
+  - A window of `size` starting at index `i` is `items[i : i + size]`.
+  - There are `len(items) - size + 1` windows when `size` fits.
+  - If `size` is larger than the number of items, there are no full windows, so
+    return an empty list.
+  - If `size` is `0` or negative, return an empty list — a window must have at
+    least one element.
+  - Never emit a partial window shorter than `size`.
+starter_code: |
+  def windowed_generator(spec):
+      return []
+function_name: windowed_generator
+input_mode: function
+solution_sketch: Read items and size. If size is not a positive value that fits within the items, return an empty list. Otherwise loop start from 0 to len(items) - size inclusive, yielding items[start:start+size] from an inner generator, and materialise it into a list.
+sample_solution: |
+  def windowed_generator(spec):
+      items = spec["items"]
+      size = spec["size"]
+      if size <= 0 or size > len(items):
+          return []
+
+      def windows():
+          for start in range(len(items) - size + 1):
+              yield items[start:start + size]
+
+      return list(windows())
+hints:
+  - level: 1
+    text: The number of full windows is len(items) - size + 1. Iterate the start index over exactly that range.
+  - level: 2
+    text: Each window is a slice items[start:start+size]. Slicing already copies the right span, so you never build a window element by element.
+  - level: 3
+    text: Guard the invalid cases first — size <= 0 or size > len(items) both mean zero full windows, so return an empty list before the loop ever runs.
+tests:
+  public:
+    - name: pairs
+      input: {items: [1, 2, 3, 4], size: 2}
+      expected: [[1, 2], [2, 3], [3, 4]]
+    - name: singletons
+      input: {items: [5, 6, 7], size: 1}
+      expected: [[5], [6], [7]]
+    - name: whole_run_one_window
+      input: {items: [1, 2, 3], size: 3}
+      expected: [[1, 2, 3]]
+  validation:
+    - name: size_larger_than_items
+      input: {items: [1, 2], size: 5}
+      expected: []
+    - name: size_zero
+      input: {items: [1, 2, 3], size: 0}
+      expected: []
+    - name: width_three
+      input: {items: [10, 20, 30, 40, 50], size: 3}
+      expected: [[10, 20, 30], [20, 30, 40], [30, 40, 50]]
+    - name: empty_items
+      input: {items: [], size: 2}
+      expected: []
+    - name: negative_size
+      input: {items: [1, 2, 3], size: -1}
+      expected: []
+explanation_markdown: |
+  A sliding window turns a sequence of `n` readings into `n - size + 1`
+  overlapping groups, and doing it with slicing keeps the code both correct and
+  cheap to read: `items[start:start + size]` hands you exactly one window with no
+  off-by-one bookkeeping. The guard `size > len(items)` is what protects the
+  boundary — without it, `range(len(items) - size + 1)` would use a negative stop
+  and silently produce nothing, which happens to be right here but only by luck,
+  so stating the intent explicitly is clearer.
+
+  Producing windows from a generator matters at scale: a real gauge feed might be
+  millions of readings, and yielding one window at a time lets a downstream
+  average consume them without ever holding every window in memory at once.
+common_mistakes:
+  - Emitting a final short window when size does not divide evenly, instead of stopping once a full window no longer fits.
+  - Forgetting the size <= 0 guard, so a zero or negative width slips through and produces empty or nonsensical windows.
+  - Advancing the start by size instead of by 1, which yields non-overlapping chunks rather than a sliding window.

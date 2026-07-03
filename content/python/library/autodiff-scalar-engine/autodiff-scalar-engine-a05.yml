@@ -1,0 +1,108 @@
+id: exercise.library.autodiff_scalar_engine.a05
+kind: exercise
+version: 1
+language: python
+title: Multiplying Local Derivatives Down a Chain
+slug: autodiff-scalar-engine-a05
+difficulty: medium
+concepts:
+  - ai.gradients_autodiff
+prerequisites:
+  - python.lists
+  - python.loops
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.autodiff_scalar_engine.a05
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: >-
+    Original take on the chain rule as a running product over a path of local
+    derivatives, with the empty-path identity of 1.0 motivated as "no
+    transformation leaves the gradient unchanged".
+prompt_markdown: |
+  When operations are stacked one after another, the chain rule says their
+  gradients **multiply**. If a signal flows through a straight path of nodes and
+  each node `i` has local derivative `d_i` (the derivative of its output with
+  respect to its input), then the gradient at the start of the path is the product
+  of every local derivative along the way:
+
+  ```
+  chain gradient = d_1 * d_2 * ... * d_k
+  ```
+
+  Picture a moth-eye sensor whose reading passes through a sequence of tiny
+  transforms before reaching the loss. Each transform contributes one number, and
+  the overall sensitivity is what you get by multiplying them together.
+
+  The input `path` is a list of the local derivative values in order, for example
+  `[0.5, 4.0, -1.0]`. Write `chain_grad(path)` that returns their **product**,
+  **rounded to 6 decimal places** with `round(value, 6)`.
+
+  An **empty path returns `1.0`**: multiplying nothing together is the identity
+  for multiplication, which matches the idea that a path with no transforms leaves
+  the gradient unchanged.
+starter_code: |
+  def chain_grad(path):
+      # Multiply every local derivative together; empty path -> 1.0.
+      product = 1.0
+      return round(product, 6)
+function_name: chain_grad
+input_mode: function
+solution_sketch: Start a running product at 1.0, multiply in each element of path, then round to 6 decimals.
+sample_solution: |
+  def chain_grad(path):
+      product = 1.0
+      for d in path:
+          product *= d
+      return round(product, 6)
+hints:
+  - level: 1
+    text: The chain rule for a straight path multiplies the local derivatives together.
+  - level: 2
+    text: Initialize the running product to 1.0 so an empty path returns 1.0 automatically.
+  - level: 3
+    text: Loop over path multiplying each value into the running product, then return round(product, 6).
+tests:
+  public:
+    - name: empty_path
+      input: []
+      expected: 1.0
+    - name: single_node
+      input: [2.0]
+      expected: 2.0
+    - name: two_nodes
+      input: [2.0, 3.0]
+      expected: 6.0
+  validation:
+    - name: with_negative
+      input: [0.5, 4.0, -1.0]
+      expected: -2.0
+    - name: all_ones
+      input: [1.0, 1.0, 1.0]
+      expected: 1.0
+    - name: shrinking_factors
+      input: [0.1, 0.2, 0.3]
+      expected: 0.006
+    - name: contains_zero
+      input: [5.0, 0.0, 2.0]
+      expected: 0.0
+explanation_markdown: |
+  A deep network is, at heart, a long chain of functions, and backpropagation
+  moves a gradient from the loss to an early value by multiplying the local
+  derivative at every step. This exercise isolates that multiplication: the chain
+  gradient is just the running product of the numbers on the path.
+
+  Two behaviors fall out of the product and matter in practice. A single `0.0`
+  anywhere forces the whole product to `0.0` -- that node blocks the gradient
+  entirely. And a run of factors below `1` shrinks the product fast (here
+  `0.1 * 0.2 * 0.3 = 0.006`), which is precisely why gradients can vanish across
+  many layers. Starting the accumulator at `1.0` makes the empty path return
+  `1.0`, the multiplicative identity, so "no transforms" correctly means "no
+  change".
+common_mistakes:
+  - Initializing the running product at 0, which forces every result to zero.
+  - Summing the local derivatives instead of multiplying them.
+  - Returning an integer 1 for the empty path instead of the float 1.0, or forgetting to round the product.

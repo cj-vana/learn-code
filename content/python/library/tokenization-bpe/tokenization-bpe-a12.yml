@@ -1,0 +1,154 @@
+id: exercise.library.tokenization_bpe.a12
+kind: exercise
+version: 1
+language: python
+title: Unknown Glyphs in the Transmission
+slug: tokenization-bpe-a12
+difficulty: hard
+concepts:
+  - ai.tokenization
+  - python.sets
+  - python.loops
+prerequisites:
+  - python.lists
+  - python.strings
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.tokenization_bpe.a12
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original framing around decoding a noisy transmission with out-of-vocabulary glyphs; combines single-word BPE tokenization with an unknown-token fallback and adjacent-run collapsing, an invented policy over the standard <unk> mechanism.
+prompt_markdown: |
+  A byte-pair encoding (BPE) tokenizer can only emit symbols in its vocabulary.
+  When it meets a piece it never learned, it substitutes a special unknown token
+  `"<unk>"`. A radio operator decoding a noisy word wants that fallback, but with
+  one extra rule: a run of consecutive unknown pieces should collapse into a
+  single `"<unk>"` so the noise reads as one gap, not many.
+
+  Write `unknown_handling(job)` where `job` is a dict with:
+
+  - `"word"`: a single word, a string.
+  - `"merges"`: a list of learned merges, each a two-item list `[x, y]`.
+  - `"vocab"`: a list of the tokens the tokenizer knows.
+
+  Steps:
+
+  1. Tokenize the single word: build its symbols as `list(word) + ["</w>"]`, then
+     apply every merge in order. Each merge `[x, y]` replaces adjacent `x`-then-`y`
+     with `x + y`, scanned left to right, greedily and non-overlapping (advance
+     past both consumed symbols).
+  2. Walk the resulting tokens left to right. Keep each token that is in `vocab`;
+     replace any token that is not in `vocab` with `"<unk>"`.
+  3. Collapse adjacent unknowns: if replacing a token with `"<unk>"` would place it
+     immediately after a `"<unk>"` you already kept, drop it instead. A run of
+     several unknown tokens therefore becomes a single `"<unk>"`. Known tokens are
+     never collapsed, even identical ones.
+
+  Return the resulting token list.
+
+  Example: `job = {"word": "qrst", "merges": [], "vocab": ["t", "</w>"]}` tokenizes
+  to `["q", "r", "s", "t", "</w>"]`; `q`, `r`, `s` are all unknown and collapse to
+  one `"<unk>"`, giving `["<unk>", "t", "</w>"]`.
+starter_code: |
+  def unknown_handling(job):
+      symbols = list(job["word"]) + ["</w>"]
+      return symbols
+function_name: unknown_handling
+input_mode: function
+solution_sketch: Tokenize the single word with the end marker and the merge sweep, then map each token to itself or '<unk>', skipping an unknown when the previous kept token is already '<unk>'.
+sample_solution: |
+  def unknown_handling(job):
+      symbols = list(job["word"]) + ["</w>"]
+      for pair in job["merges"]:
+          left, right = pair[0], pair[1]
+          joined = left + right
+          rebuilt = []
+          i = 0
+          n = len(symbols)
+          while i < n:
+              if i < n - 1 and symbols[i] == left and symbols[i + 1] == right:
+                  rebuilt.append(joined)
+                  i += 2
+              else:
+                  rebuilt.append(symbols[i])
+                  i += 1
+          symbols = rebuilt
+
+      vocab = set(job["vocab"])
+      result = []
+      for token in symbols:
+          piece = token if token in vocab else "<unk>"
+          if piece == "<unk>" and result and result[-1] == "<unk>":
+              continue
+          result.append(piece)
+      return result
+hints:
+  - level: 1
+    text: This is a09-style tokenization of a single word (with the '</w>' marker) followed by a filtering pass over the resulting tokens.
+  - level: 2
+    text: Put the vocab in a set for fast membership tests; map each token to itself when it is known and to '<unk>' when it is not.
+  - level: 3
+    text: To collapse runs, before appending a '<unk>' check whether the last item you already appended is '<unk>'; if so, skip it. Known tokens are always appended, even back-to-back duplicates.
+tests:
+  public:
+    - name: all_known
+      input:
+        word: "low"
+        merges: [["l", "o"], ["lo", "w"]]
+        vocab: ["low", "</w>", "l", "o", "w"]
+      expected: ["low", "</w>"]
+    - name: single_unknown
+      input:
+        word: "lowx"
+        merges: [["l", "o"], ["lo", "w"]]
+        vocab: ["low", "</w>"]
+      expected: ["low", "<unk>", "</w>"]
+    - name: collapse_pair
+      input:
+        word: "xy"
+        merges: []
+        vocab: ["</w>"]
+      expected: ["<unk>", "</w>"]
+  validation:
+    - name: characters_all_known
+      input:
+        word: "cat"
+        merges: []
+        vocab: ["c", "a", "t", "</w>"]
+      expected: ["c", "a", "t", "</w>"]
+    - name: unknowns_stay_separate
+      input:
+        word: "dog"
+        merges: []
+        vocab: ["o", "</w>"]
+      expected: ["<unk>", "o", "<unk>", "</w>"]
+    - name: merge_then_unknown
+      input:
+        word: "zzz"
+        merges: [["z", "z"]]
+        vocab: ["zz", "</w>"]
+      expected: ["zz", "<unk>", "</w>"]
+    - name: collapse_run_then_known
+      input:
+        word: "qrst"
+        merges: []
+        vocab: ["t", "</w>"]
+      expected: ["<unk>", "t", "</w>"]
+explanation_markdown: |
+  Out-of-vocabulary handling is what lets a fixed tokenizer cope with text it was
+  never trained on. Two ideas combine here. First, tokenizing still runs
+  normally: the word is split, the marker is appended, and the merges fire, so a
+  piece the vocabulary does know (like the merged `"zz"`) is preserved even when
+  its neighbors are unknown. Second, the fallback replaces every unrecognized
+  piece with `"<unk>"`, and the collapse rule keeps a stretch of noise from
+  exploding into a long row of identical unknown tokens — a single check against
+  the last kept token turns any run into one gap. Note that the collapse only
+  applies to unknowns; two identical *known* tokens (as could happen with `"o"`
+  appearing twice) are both kept, because they carry real information.
+common_mistakes:
+  - Collapsing known tokens too, or collapsing an unknown against a known neighbor, instead of only merging consecutive '<unk>' tokens.
+  - Comparing against the original token rather than the last item already appended, so a '<unk>' following a known token gets wrongly dropped.
+  - Skipping the '</w>' marker or the merge pass, so tokens that should be known are misclassified as unknown.

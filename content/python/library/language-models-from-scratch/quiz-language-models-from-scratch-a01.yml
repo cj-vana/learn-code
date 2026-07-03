@@ -1,0 +1,106 @@
+id: quiz.library.language_models_from_scratch.a01
+kind: quiz
+version: 1
+language: python
+title: How Counting Models Think
+slug: quiz-language-models-from-scratch-a01
+difficulty: medium
+concepts:
+  - ai.language_models
+  - concepts.probability
+prerequisites:
+  - ai.language_models
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.language_models_from_scratch.a01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pattern-recognition quiz on n-gram reasoning, sparsity, smoothing, and perplexity interpretation.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      A corpus contains "north wind" 6 times, "north sea" 3 times, and "north
+      light" 1 time. What is the bigram model's P(sea | north)?
+    choices:
+      - '0.3'
+      - '0.5'
+      - '3'
+      - '0.1'
+    correct_choice: '0.3'
+    explanation: |
+      The context "north" occurs 10 times total; "sea" follows 3 of them:
+      3/10 = 0.3. The model is nothing more than these ratios.
+    concepts:
+      - ai.language_models
+      - concepts.probability
+  - id: q2
+    prompt: |
+      Upgrading from bigrams to 5-grams on the same small corpus makes
+      generated text initially look better, then the model constantly hits
+      contexts it has never seen. What is this tension called?
+    choices:
+      - The sparsity problem — context space grows exponentially while data stays fixed
+      - The saturation problem — probabilities converge to uniform
+      - Overflow — 5-gram counts exceed integer range
+      - Mode collapse — the model repeats one phrase
+    correct_choice: The sparsity problem — context space grows exponentially while data stays fixed
+    explanation: |
+      Contexts are 4-token tuples for a 5-gram model, so possible contexts grow
+      as vocabulary to the 4th power; a fixed corpus covers a vanishing
+      fraction, leaving most rows empty.
+    concepts:
+      - ai.language_models
+  - id: q3
+    prompt: |
+      Without smoothing, a single unseen bigram in a 50-token review gives the
+      whole review probability zero. Why?
+    choices:
+      - Sequence probability is a product of pair probabilities, and one zero factor zeroes the product
+      - The model's dictionary raises KeyError, which is treated as zero
+      - Fifty tokens exceeds the model's context window
+      - Probabilities are subtracted, and zero is the minimum
+    correct_choice: Sequence probability is a product of pair probabilities, and one zero factor zeroes the product
+    explanation: |
+      Multiplicative scoring turns any single impossible step into an
+      impossible whole — the reason smoothing must reserve probability for
+      unseen events.
+    concepts:
+      - ai.language_models
+      - concepts.probability
+  - id: q4
+    prompt: |
+      Model A has perplexity 30 and model B has perplexity 90 on the same
+      held-out text with the same tokenization. What is the correct reading?
+    choices:
+      - A is effectively choosing among ~30 next-tokens on average where B chooses among ~90 — A predicts this text much better
+      - A is three times more factually accurate than B
+      - B is better — higher perplexity means more expressive power
+      - The numbers cannot be compared without knowing the vocabulary size
+    correct_choice: A is effectively choosing among ~30 next-tokens on average where B chooses among ~90 — A predicts this text much better
+    explanation: |
+      Same text and tokenization makes the comparison fair; perplexity reads as
+      average branching factor, and it measures prediction, never factuality.
+    concepts:
+      - ai.language_models
+      - ai.model_evaluation
+  - id: q5
+    prompt: |
+      A greedy decoder with alphabetical tie-breaking generates the same text
+      every run, and a temperature-2.0 sampler generates different, wilder
+      text. Which statement about temperature is correct?
+    choices:
+      - It raises probabilities to the power 1/T and renormalizes — above 1 it flattens the distribution toward uniform
+      - It adds T random tokens to the vocabulary
+      - It truncates the distribution to the T most likely tokens
+      - It multiplies every probability by T
+    correct_choice: It raises probabilities to the power 1/T and renormalizes — above 1 it flattens the distribution toward uniform
+    explanation: |
+      Temperature is a single exponent reshaping the distribution: 1/T < 1
+      compresses differences between probabilities, making unlikely tokens
+      relatively more likely. (Truncation describes top-k, a different knob.)
+    concepts:
+      - ai.language_models

@@ -1,0 +1,161 @@
+id: exercise.library.autodiff_scalar_engine.a12
+kind: exercise
+version: 1
+language: python
+title: Gradient Checking with Finite Differences
+slug: autodiff-scalar-engine-a12
+difficulty: hard
+concepts:
+  - ai.gradients_autodiff
+prerequisites:
+  - python.lists
+  - python.functions
+  - python.operators
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.autodiff_scalar_engine.a12
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original central-difference gradient checker over a polynomial energy function, the standard test that catches bugs in a hand-written backward pass.
+prompt_markdown: |
+  How do you know your backward pass is correct? You **gradient-check** it: compare
+  the analytic gradient your engine produced against a numerical estimate from
+  nudging the input slightly. The reliable estimate is the **central difference**,
+  which cancels first-order error and is accurate to `O(eps^2)`.
+
+  Here the function is a polynomial (think of a smooth "energy" curve). Write
+  `numeric_gradient_check(job)` that takes **one dictionary**:
+
+  - `job["poly"]`: coefficients `[c0, c1, c2, ...]` defining
+    `f(x) = c0 + c1*x + c2*x**2 + c3*x**3 + ...` (coefficient `ck` multiplies
+    `x**k`).
+  - `job["x"]`: the point at which to check the gradient.
+  - `job["analytic"]`: the gradient your engine claims at `x`.
+  - `job["eps"]`: the small step for the numerical estimate.
+  - `job["tol"]`: the tolerance.
+
+  Compute the central-difference estimate
+
+  `estimate = (f(x + eps) - f(x - eps)) / (2 * eps)`
+
+  and return a **bool**: `True` if `abs(estimate - analytic) <= tol`, else `False`.
+
+  Example:
+
+  ```python
+  numeric_gradient_check({"poly": [2.0, 3.0, 4.0], "x": 1.0,
+                          "analytic": 11.0, "eps": 0.001, "tol": 1e-6})
+  # f(x) = 2 + 3x + 4x**2, so f'(x) = 3 + 8x, and f'(1) = 11
+  # the central difference of a quadratic is exact here, matching 11 within tol
+  # -> True
+  ```
+starter_code: |
+  def numeric_gradient_check(job):
+      return False
+function_name: numeric_gradient_check
+input_mode: function
+solution_sketch: Define f(t) by summing ck * t**k over the coefficients, form the central difference (f(x+eps) - f(x-eps)) / (2*eps), and return whether it lands within tol of the analytic gradient.
+sample_solution: |
+  def numeric_gradient_check(job):
+      poly = job["poly"]
+      x = job["x"]
+      eps = job["eps"]
+
+      def f(t):
+          total = 0.0
+          for power, coeff in enumerate(poly):
+              total += coeff * (t ** power)
+          return total
+
+      estimate = (f(x + eps) - f(x - eps)) / (2 * eps)
+      return abs(estimate - job["analytic"]) <= job["tol"]
+hints:
+  - level: 1
+    text: Write a helper f(t) that evaluates the polynomial. enumerate(poly) gives each coefficient with its power, and the term is coeff * t ** power.
+  - level: 2
+    text: The central difference evaluates f at x + eps and x - eps, subtracts, and divides by 2 * eps. It is more accurate than the one-sided (f(x+eps) - f(x)) / eps.
+  - level: 3
+    text: Compare abs(estimate - analytic) against tol with <=, and return that boolean directly. Do not round; just return the comparison result.
+tests:
+  public:
+    - name: quadratic_matches
+      input:
+        poly: [2.0, 3.0, 4.0]
+        x: 1.0
+        analytic: 11.0
+        eps: 0.001
+        tol: 1.0e-6
+      expected: true
+    - name: quadratic_wrong_claim
+      input:
+        poly: [2.0, 3.0, 4.0]
+        x: 1.0
+        analytic: 12.0
+        eps: 0.001
+        tol: 1.0e-6
+      expected: false
+    - name: cubic_tolerance_too_tight
+      input:
+        poly: [0.0, 0.0, 0.0, 1.0]
+        x: 2.0
+        analytic: 12.0
+        eps: 0.01
+        tol: 1.0e-6
+      expected: false
+  validation:
+    - name: cubic_tolerance_loosened
+      input:
+        poly: [0.0, 0.0, 0.0, 1.0]
+        x: 2.0
+        analytic: 12.0
+        eps: 0.01
+        tol: 1.0e-3
+      expected: true
+    - name: linear_exact
+      input:
+        poly: [5.0, 2.0]
+        x: 3.0
+        analytic: 2.0
+        eps: 0.5
+        tol: 1.0e-9
+      expected: true
+    - name: constant_zero_slope
+      input:
+        poly: [7.0]
+        x: 4.0
+        analytic: 0.0
+        eps: 0.1
+        tol: 1.0e-9
+      expected: true
+    - name: quartic_mismatch
+      input:
+        poly: [0.0, 0.0, 0.0, 0.0, 1.0]
+        x: 1.0
+        analytic: 4.0
+        eps: 0.1
+        tol: 1.0e-6
+      expected: false
+explanation_markdown: |
+  Central differences estimate a derivative by sampling the function just above and
+  just below `x`. Subtracting the two samples cancels the even part of the local
+  error, leaving an `O(eps^2)` approximation -- far better than a one-sided
+  difference. For linear and quadratic `f`, the estimate is essentially exact
+  (differing only by floating-point noise), which is why the linear and quadratic
+  checks pass under an extremely tight tolerance.
+
+  For higher-degree polynomials a real gap appears: for `f(x) = x**3` the central
+  difference equals `3*x**2 + eps**2`, so with `eps = 0.01` at `x = 2` it reads
+  `12.0001`, off by `1e-4`. That fails a `1e-6` tolerance but passes at `1e-3`.
+  The quartic case is subtler: the claimed analytic value `4` is actually correct
+  (the slope of `x**4` at `1` is `4`), yet the check still fails because with the
+  large step `eps = 0.1` the estimate lands near `4.04` -- the `O(eps**2)` error
+  alone exceeds a `1e-6` tolerance. The lesson is that the tolerance, not just the
+  claim, must fit the step size and curvature. Tuning that trade-off is exactly
+  what you do when gradient-checking a real engine.
+common_mistakes:
+  - Using a one-sided difference (f(x+eps) - f(x)) / eps, which is only O(eps) accurate and fails tight tolerances on curved functions.
+  - Comparing with < instead of <=, so a difference exactly equal to tol is rejected.
+  - Building the polynomial with the coefficients in reverse power order, so f evaluates a different function.

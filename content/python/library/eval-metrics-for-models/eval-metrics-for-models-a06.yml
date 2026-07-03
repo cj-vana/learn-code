@@ -1,0 +1,120 @@
+id: exercise.library.eval_metrics_for_models.a06
+kind: exercise
+version: 1
+language: python
+title: Sweeping the Detector's Decision Threshold
+slug: eval-metrics-for-models-a06
+difficulty: medium
+concepts:
+  - ai.model_evaluation
+prerequisites:
+  - python.lists
+  - python.loops
+  - python.comprehensions
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.eval_metrics_for_models.a06
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original threshold-sweep drill turning detector confidence scores into accuracy at several cutoffs.
+prompt_markdown: |
+  The warbler detector does not really emit a hard `0`/`1`; it emits a **confidence
+  score** between `0` and `1` for each clip. You turn that into a decision by
+  picking a **threshold**: predict `1` (warbler) when the score is at least the
+  threshold, and `0` otherwise. Where you set the threshold changes every metric, so
+  the lab sweeps several thresholds to see how accuracy responds.
+
+  Write `threshold_sweep(job)` that takes a single dictionary with three keys:
+
+  - `"scores"`: a list of confidence floats, one per clip.
+  - `"labels"`: a list of `0`/`1` ints of the same length, the ground truth.
+  - `"thresholds"`: a list of cutoff floats to try.
+
+  For each threshold `t`, form the predictions with the rule "predict `1` when
+  `score >= t`, else `0`", then compute the **accuracy** (fraction of clips whose
+  prediction matches its label) **rounded to 4 decimal places**. Return a list with
+  one `[threshold, accuracy]` pair per threshold, in the same order the thresholds
+  were given. You may assume `scores` and `labels` are non-empty.
+
+  Example:
+
+  ```python
+  threshold_sweep({
+      "scores": [0.3, 0.7, 0.55, 0.4],
+      "labels": [0, 1, 1, 0],
+      "thresholds": [0.5, 0.6],
+  })
+  # -> [[0.5, 1.0], [0.6, 0.75]]
+  ```
+starter_code: |
+  def threshold_sweep(job):
+      return []
+function_name: threshold_sweep
+input_mode: function
+solution_sketch: For each threshold, predict 1 where score >= threshold, count how many predictions match the labels, divide by the clip count, and collect [threshold, rounded accuracy].
+sample_solution: |
+  def threshold_sweep(job):
+      scores = job["scores"]
+      labels = job["labels"]
+      thresholds = job["thresholds"]
+      n = len(labels)
+      results = []
+      for t in thresholds:
+          correct = 0
+          for score, actual in zip(scores, labels):
+              pred = 1 if score >= t else 0
+              if pred == actual:
+                  correct += 1
+          results.append([t, round(correct / n, 4)])
+      return results
+hints:
+  - level: 1
+    text: Handle one threshold at a time; the same scores and labels are reused for every cutoff.
+  - level: 2
+    text: For a threshold t, the prediction for a clip is 1 if score >= t else 0; count how many predictions equal their label.
+  - level: 3
+    text: Accuracy is correct / len(labels) rounded to 4 places; append [t, that value] for each threshold in order.
+tests:
+  public:
+    - name: single_threshold_perfect
+      input: {"scores": [0.2, 0.8, 0.6, 0.1], "labels": [0, 1, 1, 0], "thresholds": [0.5]}
+      expected: [[0.5, 1.0]]
+    - name: two_thresholds
+      input: {"scores": [0.3, 0.7, 0.55, 0.4], "labels": [0, 1, 1, 0], "thresholds": [0.5, 0.6]}
+      expected: [[0.5, 1.0], [0.6, 0.75]]
+    - name: extreme_cutoffs
+      input: {"scores": [0.2, 0.9], "labels": [0, 1], "thresholds": [0.0, 1.0]}
+      expected: [[0.0, 0.5], [1.0, 0.5]]
+  validation:
+    - name: clean_split
+      input: {"scores": [0.1, 0.4, 0.6, 0.9, 0.5], "labels": [0, 0, 1, 1, 1], "thresholds": [0.5]}
+      expected: [[0.5, 1.0]]
+    - name: boundary_ties_predict_one
+      input: {"scores": [0.5, 0.5, 0.5], "labels": [1, 0, 1], "thresholds": [0.5]}
+      expected: [[0.5, 0.6667]]
+    - name: sweep_three
+      input: {"scores": [0.15, 0.35, 0.65, 0.85], "labels": [0, 1, 0, 1], "thresholds": [0.2, 0.5, 0.7]}
+      expected: [[0.2, 0.75], [0.5, 0.5], [0.7, 0.75]]
+    - name: repeating_decimal
+      input: {"scores": [0.9, 0.1, 0.8], "labels": [1, 1, 0], "thresholds": [0.5]}
+      expected: [[0.5, 0.3333]]
+explanation_markdown: |
+  A single confidence model is really a whole family of classifiers, one for every
+  threshold you might pick. Sweeping the cutoff shows the trade-off directly: a low
+  threshold labels almost everything a warbler (catching real calls but also many
+  false alarms), while a high threshold stays quiet (few false alarms but many
+  misses). Plotting accuracy against threshold is how labs choose an operating
+  point.
+
+  Two details are easy to get wrong. The comparison must be `>=`, so a score sitting
+  exactly on the threshold counts as a positive prediction, which is why the tied
+  case predicts `1` for every clip. And the accuracy for each threshold is computed
+  fresh against the *same* labels, so the inner loop recomputes predictions rather
+  than reusing an earlier threshold's results.
+common_mistakes:
+  - Using a strict score > t instead of score >= t, which flips predictions on clips that sit exactly at the threshold.
+  - Reusing predictions from a previous threshold instead of recomputing them for each cutoff.
+  - Returning accuracy without rounding, or dividing by the wrong count, so the reported fraction drifts from the expected value.

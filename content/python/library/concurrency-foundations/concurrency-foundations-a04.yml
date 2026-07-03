@@ -1,0 +1,148 @@
+id: exercise.library.concurrency_foundations.a04
+kind: exercise
+version: 1
+language: python
+title: Feeding the Weighbridge Coroutine
+slug: concurrency-foundations-a04
+difficulty: medium
+concepts:
+  - python.concurrency_model
+  - python.iterators_generators
+prerequisites:
+  - python.iterators_generators
+  - python.lists
+  - python.functions
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.concurrency_foundations.a04
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: >-
+    Original generator-coroutine .send() drill themed around a harbour
+    weighbridge tallying catch weights. Adapted from the research sketch, which
+    passed a live generator as input; a generator object cannot be a test value,
+    so the coroutine is defined inside the function and driven by a list of sent
+    readings, keeping it a deterministic pure function.
+prompt_markdown: |
+  Before generators became `async def` coroutines, Python people built
+  coroutines out of generators and the `.send()` method: you prime the generator
+  with `next(...)`, then push values into it, and each push resumes the
+  generator at its `yield` and hands you the next yielded value. A harbour
+  weighbridge works the same way — it keeps a running tally of the day's catch,
+  and every time you send it a reading it tells you the tally so far.
+
+  Write `run_tally_coroutine(readings)` and implement the weighbridge as a
+  generator-based coroutine that you drive with `.send()`. The single argument
+  `readings` is a list processed left to right; each element is either:
+
+  - an integer weight to add to the running tally, or
+  - the exact string `"reset"`, which zeroes the tally.
+
+  The running tally starts at `0`. For each reading, in order, update the tally
+  and record the tally *after* applying that reading. Return the list of these
+  after-each-reading tallies (so the returned list has the same length as
+  `readings`).
+
+  Concretely: sending `10` when the tally is `0` yields `10`; sending `5` next
+  yields `15`; sending `"reset"` yields `0`. Edge cases you must handle: an empty
+  `readings` list returns `[]`; a leading `"reset"` yields `0`; negative weights
+  are valid and simply subtract from the tally.
+starter_code: |
+  def run_tally_coroutine(readings):
+      return []
+function_name: run_tally_coroutine
+input_mode: function
+solution_sketch: >-
+  Define an inner generator that loops forever: `value = yield total`, then adds
+  the value or resets to 0 on "reset". Prime it with next(), then send each
+  reading and append the yielded tally to the output list.
+sample_solution: |
+  def run_tally_coroutine(readings):
+      def weighbridge():
+          total = 0
+          while True:
+              reading = yield total
+              if reading == "reset":
+                  total = 0
+              else:
+                  total += reading
+
+      machine = weighbridge()
+      next(machine)  # prime: run up to the first yield
+      output = []
+      for reading in readings:
+          output.append(machine.send(reading))
+      return output
+hints:
+  - level: 1
+    text: >-
+      A generator coroutine has the shape `value = yield current_state` inside a
+      `while True` loop. The value you get back is whatever the caller `.send()`s
+      in.
+  - level: 2
+    text: >-
+      You must `next(machine)` once before your first `.send()`. Priming runs the
+      generator up to its first `yield`; skipping it raises a TypeError on the
+      first send.
+  - level: 3
+    text: >-
+      Each `machine.send(reading)` resumes the generator, applies the reading
+      (add it, or set the tally to 0 when it equals "reset"), and returns the
+      newly yielded tally. Append that return value for every reading.
+tests:
+  public:
+    - name: running_total
+      input: [10, 20, 30]
+      expected: [10, 30, 60]
+    - name: with_reset
+      input: [5, 3, "reset", 4]
+      expected: [5, 8, 0, 4]
+    - name: empty
+      input: []
+      expected: []
+  validation:
+    - name: single
+      input: [7]
+      expected: [7]
+    - name: reset_first
+      input: ["reset", 2, 3]
+      expected: [0, 2, 5]
+    - name: negatives
+      input: [10, -4, -6, 5]
+      expected: [10, 6, 0, 5]
+    - name: multiple_resets
+      input: [1, 2, "reset", "reset", 9]
+      expected: [1, 3, 0, 0, 9]
+    - name: reset_only
+      input: ["reset"]
+      expected: [0]
+explanation_markdown: |
+  This is the generator-as-coroutine pattern that underpins Python's whole async
+  story. The line `reading = yield total` does two jobs at once: it *hands out*
+  the current tally to whoever resumed the generator, and it *receives* the next
+  value sent in. That two-way channel is what `.send()` drives, and it is the
+  direct ancestor of `await`, which also suspends a coroutine and later resumes
+  it with a value.
+
+  Priming is the step everyone forgets. A freshly created generator is paused
+  *before* its first line, so you cannot send it a value yet — there is no
+  suspended `yield` waiting to receive one. Calling `next(machine)` runs it up to
+  the first `yield total` (handing out the initial `0`, which we discard), and
+  only then is it ready to receive sent readings. Sending into an unprimed
+  generator raises `TypeError: can't send non-None value to a just-started
+  generator`.
+
+  The `"reset"` sentinel shows why a coroutine is more than a function: it holds
+  state between sends. The same machine remembers the running total across every
+  reading, so the interesting logic lives in how it reacts to each value rather
+  than in any single call.
+common_mistakes:
+  - Forgetting to prime the generator with `next(...)` before the first
+    `.send()`, which raises a TypeError.
+  - Recording the value that priming yields (the initial 0) as an extra leading
+    entry, making the output one longer than `readings`.
+  - Writing the coroutine without a `while True` loop, so it yields once and then
+    raises StopIteration on the second send.

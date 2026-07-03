@@ -1,0 +1,125 @@
+id: exercise.library.dataframe_thinking.a12
+kind: exercise
+version: 1
+language: python
+title: Describing the Rain Gauge
+slug: dataframe-thinking-a12
+difficulty: medium
+concepts:
+  - concepts.dataframe_thinking
+  - concepts.grouping_aggregation
+prerequisites:
+  - python.lists
+  - python.loops
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dataframe_thinking.a12
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original column-summary drill framed around a weather station describing a rainfall column, computing a five-number summary with population standard deviation and an explicit empty-column contract.
+prompt_markdown: |
+  A weather station wants a quick statistical profile of a single column of
+  readings — the pure-Python analogue of a dataframe's `describe()` on one numeric
+  column.
+
+  Write `describe_column(values)` that takes **one argument**: a list of numbers.
+
+  Example call:
+
+  ```python
+  describe_column([2, 4, 6])
+  # -> {"count": 3, "mean": 4.0, "std": 1.633, "min": 2, "max": 6}
+  ```
+
+  Return a **dictionary** with exactly these keys:
+
+  - `"count"`: how many values there are.
+  - `"mean"`: the arithmetic mean, **rounded to 4 decimal places**.
+  - `"std"`: the **population** standard deviation (divide the summed squared
+    deviations by `count`, not `count - 1`), **rounded to 4 decimal places**.
+  - `"min"`: the smallest value (returned as-is, not rounded).
+  - `"max"`: the largest value (returned as-is, not rounded).
+
+  Rules for the edges:
+
+  - A single value has a population standard deviation of `0.0`.
+  - If the list is **empty**, return
+    `{"count": 0, "mean": None, "std": None, "min": None, "max": None}`.
+starter_code: |
+  import math
+
+
+  def describe_column(values):
+      return {}
+function_name: describe_column
+input_mode: function
+solution_sketch: Handle the empty list as a special contract, otherwise compute the mean, the population variance from squared deviations, its square root, and the raw min/max, rounding mean and std to 4 places.
+sample_solution: |
+  import math
+
+
+  def describe_column(values):
+      n = len(values)
+      if n == 0:
+          return {"count": 0, "mean": None, "std": None, "min": None, "max": None}
+      mean = sum(values) / n
+      variance = sum((x - mean) ** 2 for x in values) / n
+      std = math.sqrt(variance)
+      return {
+          "count": n,
+          "mean": round(mean, 4),
+          "std": round(std, 4),
+          "min": min(values),
+          "max": max(values),
+      }
+hints:
+  - level: 1
+    text: Return the fixed empty-list dictionary first, so the rest of the function can assume at least one value.
+  - level: 2
+    text: The mean is sum(values) / count; the population variance is the average of (x - mean) ** 2 over every value.
+  - level: 3
+    text: Take math.sqrt of the variance for the standard deviation, round both mean and std to 4 places, and read min and max straight off the list.
+tests:
+  public:
+    - name: three_values
+      input: [2, 4, 6]
+      expected: {count: 3, mean: 4.0, std: 1.633, min: 2, max: 6}
+    - name: single_value
+      input: [9]
+      expected: {count: 1, mean: 9.0, std: 0.0, min: 9, max: 9}
+    - name: empty
+      input: []
+      expected: {count: 0, mean: null, std: null, min: null, max: null}
+  validation:
+    - name: with_negatives
+      input: [-3, 0, 3]
+      expected: {count: 3, mean: 0.0, std: 2.4495, min: -3, max: 3}
+    - name: float_inputs
+      input: [1.5, 2.5, 3.5]
+      expected: {count: 3, mean: 2.5, std: 0.8165, min: 1.5, max: 3.5}
+    - name: two_values
+      input: [10, 20]
+      expected: {count: 2, mean: 15.0, std: 5.0, min: 10, max: 20}
+    - name: all_identical
+      input: [4, 4, 4, 4]
+      expected: {count: 4, mean: 4.0, std: 0.0, min: 4, max: 4}
+explanation_markdown: |
+  A five-number-style summary is the first thing you reach for when meeting a new
+  column, and building it by hand pins down decisions a library hides. The mean and
+  the raw min/max are straightforward; the subtle choice is the standard deviation.
+  This exercise asks for the *population* deviation — squared deviations divided by
+  `count`. That is what NumPy's `.std()` returns by default, and it is why a single
+  value has deviation `0.0` (there is no spread) rather than being undefined.
+
+  Note the contrast worth remembering: pandas' `DataFrame.describe()` reports the
+  *sample* standard deviation (dividing by `count - 1`), so the two ecosystems give
+  different numbers on the same data. Handling the empty list as an explicit
+  contract — all-`None` with a count of `0` — keeps the function from dividing by
+  zero and mirrors how real tooling degrades gracefully on no data.
+common_mistakes:
+  - Using the sample standard deviation (dividing by count - 1) when the task asked for the population version.
+  - Rounding min and max, or forgetting to round mean and std, so the output does not match.
+  - Crashing on the empty list instead of returning the specified all-None summary.

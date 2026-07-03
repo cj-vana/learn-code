@@ -1,0 +1,132 @@
+id: exercise.library.autodiff_scalar_engine.a10
+kind: exercise
+version: 1
+language: python
+title: A Single tanh Neuron
+slug: autodiff-scalar-engine-a10
+difficulty: medium
+concepts:
+  - ai.gradients_autodiff
+prerequisites:
+  - python.lists
+  - python.functions
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.autodiff_scalar_engine.a10
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original single-neuron forward pass framed as a firefly-brightness sensor, pairing a weighted sum with a tanh squashing function.
+prompt_markdown: |
+  A neuron is the smallest learnable unit in a network, and it is just an
+  expression graph you can differentiate. Picture a tiny sensor that predicts how
+  brightly a firefly will glow from a few readings. It multiplies each reading by
+  a learned **weight**, adds a **bias**, and squashes the result through `tanh`
+  into the range `(-1, 1)`.
+
+  Write `neuron_forward(job)` that takes **one dictionary**:
+
+  - `job["weights"]`: a list of weights `w`.
+  - `job["inputs"]`: a list of inputs `x`, the same length as `weights`.
+  - `job["bias"]`: a single number `b`.
+
+  Compute the weighted sum (dot product) `z = w[0]*x[0] + w[1]*x[1] + ... + b`,
+  then return `tanh(z)` **rounded to 6 decimal places**. Use `math.tanh`. Recall
+  `tanh(0) = 0`, and `tanh` saturates toward `1` for large positive `z` and `-1`
+  for large negative `z`.
+
+  Example:
+
+  ```python
+  neuron_forward({"weights": [0.2, 0.3, 0.5], "bias": 0.0, "inputs": [1.0, 1.0, 1.0]})
+  # z = 0.2 + 0.3 + 0.5 + 0.0 = 1.0
+  # tanh(1.0) = 0.761594...
+  # -> 0.761594
+  ```
+starter_code: |
+  import math
+
+
+  def neuron_forward(job):
+      return 0.0
+function_name: neuron_forward
+input_mode: function
+solution_sketch: Sum the element-wise products of weights and inputs, add the bias, pass through math.tanh, and round to 6 places.
+sample_solution: |
+  import math
+
+
+  def neuron_forward(job):
+      total = job["bias"]
+      for w, x in zip(job["weights"], job["inputs"]):
+          total += w * x
+      return round(math.tanh(total), 6)
+hints:
+  - level: 1
+    text: The dot product pairs each weight with the input at the same index. Use zip(weights, inputs) to walk them together.
+  - level: 2
+    text: Start an accumulator at the bias value, then add w * x for each pair. That accumulator is z, the pre-activation.
+  - level: 3
+    text: Return round(math.tanh(z), 6). Do not round z before applying tanh; round only the final activation.
+tests:
+  public:
+    - name: all_zero
+      input:
+        weights: [0.0, 0.0]
+        bias: 0.0
+        inputs: [5.0, 5.0]
+      expected: 0.0
+    - name: identity_zero_input
+      input:
+        weights: [1.0]
+        bias: 0.0
+        inputs: [0.0]
+      expected: 0.0
+    - name: mixed_weights
+      input:
+        weights: [0.5, -0.25]
+        bias: 0.1
+        inputs: [2.0, 4.0]
+      expected: 0.099668
+  validation:
+    - name: saturates_high
+      input:
+        weights: [2.0, 2.0]
+        bias: 1.0
+        inputs: [3.0, 3.0]
+      expected: 1.0
+    - name: negative_pre_activation
+      input:
+        weights: [1.0, 1.0]
+        bias: -0.5
+        inputs: [-1.0, -2.0]
+      expected: -0.998178
+    - name: three_inputs
+      input:
+        weights: [0.2, 0.3, 0.5]
+        bias: 0.0
+        inputs: [1.0, 1.0, 1.0]
+      expected: 0.761594
+    - name: bias_only
+      input:
+        weights: [0.0]
+        bias: 0.75
+        inputs: [9.0]
+      expected: 0.635149
+explanation_markdown: |
+  A neuron composes two simple operations: a linear pre-activation
+  `z = w . x + b` and a nonlinear activation `tanh(z)`. The dot product is a
+  running total of `w[i] * x[i]`, seeded with the bias so it folds in cleanly. The
+  `tanh` keeps the output bounded, which is what makes stacked neurons stable.
+
+  Notice the saturating test: a large `z` like `13` gives `tanh` so close to `1`
+  that it rounds to exactly `1.0` at 6 places, even though it never truly reaches
+  `1`. This flat region is also where the neuron's gradient nearly vanishes -- a
+  detail that matters once you differentiate it -- but the forward value here is
+  simply the rounded activation.
+common_mistakes:
+  - Forgetting the bias, so z is only the dot product.
+  - Applying tanh to each term separately instead of to the single summed pre-activation.
+  - Rounding z before calling tanh, which distorts the activation instead of just trimming the final result.

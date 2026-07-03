@@ -1,0 +1,92 @@
+id: exercise.library.heaps_topk.a04
+kind: exercise
+version: 1
+language: python
+title: The K-th Longest Haul
+slug: heaps-topk-a04
+difficulty: medium
+concepts:
+  - patterns.heap_topk
+  - python.heapq_bisect
+prerequisites:
+  - python.heapq_bisect
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.heaps_topk.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original k-th-largest drill framed around a freight depot ranking route distances.
+prompt_markdown: |
+  A freight depot records the distance of every haul its trucks complete. A
+  dispatcher wants the `k`-th **longest** haul without sorting the whole log.
+
+  Write `kth_longest(data)` where `data` is a dict with keys `distances` (a
+  non-empty list of integers) and `k` (an integer with `1 <= k <= len(distances)`).
+  Return the single integer that is the `k`-th largest distance, counting
+  duplicates by position: in `[9, 9, 4]` the 1st longest is `9`, the 2nd longest
+  is also `9`, and the 3rd is `4`. Keep a **min-heap of size k** so its root is
+  exactly the answer once every distance has been considered.
+starter_code: |
+  import heapq
+
+
+  def kth_longest(data):
+      return 0
+function_name: kth_longest
+input_mode: function
+solution_sketch: Keep a size-k min-heap of the largest values seen; its root is the k-th largest after the pass.
+sample_solution: |
+  import heapq
+
+
+  def kth_longest(data):
+      distances = data["distances"]
+      k = data["k"]
+      heap = []
+      for value in distances:
+          if len(heap) < k:
+              heapq.heappush(heap, value)
+          elif value > heap[0]:
+              heapq.heapreplace(heap, value)
+      return heap[0]
+hints:
+  - level: 1
+    text: If a min-heap holds only the k largest values seen so far, its smallest element is the k-th largest overall.
+  - level: 2
+    text: Fill the heap to size k, then replace its root whenever a larger value appears.
+  - level: 3
+    text: After processing every distance, return heap[0]; duplicates are handled automatically because each occupies its own slot.
+tests:
+  public:
+    - name: second_largest
+      input: {distances: [3, 1, 4, 1, 5], k: 2}
+      expected: 4
+    - name: largest
+      input: {distances: [7, 2, 9, 4], k: 1}
+      expected: 9
+    - name: smallest_is_kth
+      input: {distances: [7, 2, 9, 4], k: 4}
+      expected: 2
+  validation:
+    - name: duplicates_positional
+      input: {distances: [9, 9, 4], k: 2}
+      expected: 9
+    - name: all_equal
+      input: {distances: [5, 5, 5], k: 3}
+      expected: 5
+    - name: negatives
+      input: {distances: [-1, -8, -3, -8], k: 2}
+      expected: -3
+explanation_markdown: |
+  A min-heap capped at size k always contains the k largest values seen so far,
+  and its root is the smallest of those, i.e. the k-th largest overall. Duplicates
+  simply occupy separate slots, so positional counting falls out for free. The
+  scan is O(n log k) with O(k) memory, beating a full O(n log n) sort whenever k is
+  much smaller than the log.
+common_mistakes:
+  - Sorting the whole list and indexing, which works but wastes time and misses the streaming pattern.
+  - Building a max-heap and popping k times, using O(n) memory instead of O(k).
+  - Returning the root before the loop finishes, when the heap has not yet seen every value.

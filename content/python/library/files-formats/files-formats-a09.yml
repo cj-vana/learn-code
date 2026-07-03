@@ -1,0 +1,151 @@
+id: exercise.library.files_formats.a09
+kind: exercise
+version: 1
+language: python
+title: Ledger Intake at the Food Co-op
+slug: files-formats-a09
+difficulty: medium
+concepts:
+  - python.json_csv
+  - python.strings
+prerequisites:
+  - python.strings
+  - python.conditionals
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.files_formats.a09
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original delimited-line validator framed around a food co-op accepting pipe-separated ledger entries at intake.
+prompt_markdown: |
+  A food co-op accepts each purchase as one pipe-separated line of text in the
+  form `date|vendor|amount`. The intake desk needs to validate a line before it is
+  filed. Write `validate_ledger_line(line)` that splits the line on `"|"` and
+  returns a result dictionary.
+
+  On success return:
+
+  ```python
+  {"ok": True, "record": {"date": <date>, "vendor": <vendor>, "amount": <float>}}
+  ```
+
+  where `amount` is the amount parsed with `float(...)`.
+
+  On failure return `{"ok": False, "error": <reason>}` using **exactly** one of
+  these reason strings, checked **in this order**:
+
+  1. `"bad field count"` — splitting on `"|"` does not yield exactly three fields.
+  2. `"empty vendor"` — the vendor field (the middle field) is the empty string.
+  3. `"bad amount"` — the amount field cannot be parsed by `float(...)`.
+
+  Fields are used exactly as they appear; do not trim surrounding spaces. The
+  first failing check wins, so a line with the wrong number of fields is reported
+  as `"bad field count"` even if other things also look wrong. Negative amounts
+  such as `-4.25` are valid.
+
+  Example calls:
+
+  ```python
+  validate_ledger_line("2026-01-05|Beans Co|12.50")
+  # -> {"ok": True, "record": {"date": "2026-01-05", "vendor": "Beans Co", "amount": 12.5}}
+  validate_ledger_line("2026-01-05||12.50")
+  # -> {"ok": False, "error": "empty vendor"}
+  ```
+starter_code: |
+  def validate_ledger_line(line):
+      return {"ok": False, "error": "bad field count"}
+function_name: validate_ledger_line
+input_mode: function
+solution_sketch: Split on "|"; if the piece count is not 3 return the field-count error, then if the middle piece is "" return the empty-vendor error, then try float(amount) and on ValueError return the bad-amount error, else build the record.
+sample_solution: |
+  def validate_ledger_line(line):
+      parts = line.split("|")
+      if len(parts) != 3:
+          return {"ok": False, "error": "bad field count"}
+      date, vendor, amount = parts
+      if vendor == "":
+          return {"ok": False, "error": "empty vendor"}
+      try:
+          value = float(amount)
+      except ValueError:
+          return {"ok": False, "error": "bad amount"}
+      return {"ok": True, "record": {"date": date, "vendor": vendor, "amount": value}}
+hints:
+  - level: 1
+    text: Start with parts = line.split("|") and check len(parts) before you touch any individual field.
+  - level: 2
+    text: Only after confirming three fields should you check the vendor for emptiness and then attempt to convert the amount.
+  - level: 3
+    text: Wrap float(amount) in try/except ValueError to detect a bad amount, and build the record dict only on the success path.
+tests:
+  public:
+    - name: valid_line
+      input: "2026-01-05|Beans Co|12.50"
+      expected:
+        ok: true
+        record:
+          date: "2026-01-05"
+          vendor: "Beans Co"
+          amount: 12.5
+    - name: too_few_fields
+      input: "2026-01-05|Beans Co"
+      expected:
+        ok: false
+        error: "bad field count"
+    - name: empty_vendor
+      input: "2026-01-05||12.50"
+      expected:
+        ok: false
+        error: "empty vendor"
+  validation:
+    - name: non_numeric_amount
+      input: "2026-01-05|Beans Co|lots"
+      expected:
+        ok: false
+        error: "bad amount"
+    - name: negative_amount_valid
+      input: "2026-02-01|Refund Depot|-4.25"
+      expected:
+        ok: true
+        record:
+          date: "2026-02-01"
+          vendor: "Refund Depot"
+          amount: -4.25
+    - name: integer_amount_valid
+      input: "2026-03-01|Seed Bank|8"
+      expected:
+        ok: true
+        record:
+          date: "2026-03-01"
+          vendor: "Seed Bank"
+          amount: 8.0
+    - name: too_many_fields
+      input: "2026-03-01|Seed Bank|8|extra"
+      expected:
+        ok: false
+        error: "bad field count"
+    - name: empty_amount
+      input: "2026-03-01|Seed Bank|"
+      expected:
+        ok: false
+        error: "bad amount"
+explanation_markdown: |
+  Validating a delimited line is a small pipeline of guards that must run in a
+  fixed order. Splitting first with `line.split("|")` gives you the field count,
+  which is the coarsest check: if it is not exactly three, nothing else can be
+  trusted, so you return `"bad field count"` immediately. Only once the shape is
+  known do the per-field checks make sense.
+
+  The amount check leans on `float(...)` raising `ValueError` for anything it
+  cannot parse, including the empty string, so a `try/except` cleanly separates a
+  good number from a bad one. Because `float` also accepts a leading minus sign,
+  refunds like `-4.25` validate for free, and an integer-looking `"8"` becomes the
+  float `8.0`. Returning early at each failing guard is what guarantees the "first
+  failing check wins" ordering the intake desk relies on.
+common_mistakes:
+  - Checking the vendor or amount before confirming there are exactly three fields, which can crash on unpacking or report the wrong reason.
+  - Using int(amount) instead of float(amount), which rejects perfectly valid decimal amounts like 12.50.
+  - Testing the amount with str.isdigit(), which wrongly rejects negatives and decimals that float() would accept.

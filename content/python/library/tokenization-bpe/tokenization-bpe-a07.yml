@@ -1,0 +1,127 @@
+id: exercise.library.tokenization_bpe.a07
+kind: exercise
+version: 1
+language: python
+title: Merging a Sea-Slug Nickname
+slug: tokenization-bpe-a07
+difficulty: medium
+concepts:
+  - ai.tokenization
+  - python.lists
+  - python.loops
+prerequisites:
+  - python.strings
+  - python.lists
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.tokenization_bpe.a07
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original framing around a tide-pool naturalist compressing sea-slug nicknames; the underlying byte-pair merge loop is a standard tokenizer building block presented with fresh data.
+prompt_markdown: |
+  A tide-pool naturalist writes each creature's nickname as a lowercase string
+  and compresses it by gluing together common letter pairs, exactly the way a
+  byte-pair encoding (BPE) tokenizer builds subword units.
+
+  Write `apply_merges(job)` where `job` is a dict with two keys:
+
+  - `"word"`: the nickname, a string.
+  - `"merges"`: a list of learned merge rules, each a two-item list `[x, y]`.
+
+  Start by splitting the word into a list of single-character **symbols**
+  (`list(word)`), then apply every merge rule in order.
+
+  To apply one merge `[x, y]`: scan the current symbol list from left to right
+  and, wherever the symbol `x` is immediately followed by the symbol `y`,
+  replace that adjacent pair with the single joined symbol `x + y`. Scanning is
+  greedy and **non-overlapping** — after joining a pair you continue past both
+  symbols you consumed. So `['a', 'a', 'a']` under merge `['a', 'a']` becomes
+  `['aa', 'a']`, not `['aa', 'aa']`. Apply the merges strictly in the given
+  order; each merge sees the result of all earlier merges.
+
+  Return the final list of symbols. An empty word returns an empty list.
+
+  Example: `job = {"word": "banana", "merges": [["a", "n"]]}` returns
+  `["b", "an", "an", "a"]`.
+starter_code: |
+  def apply_merges(job):
+      symbols = list(job["word"])
+      return symbols
+function_name: apply_merges
+input_mode: function
+solution_sketch: Split the word into characters, then for each merge rule rebuild the symbol list left to right, joining adjacent (x, y) pairs and skipping both consumed symbols.
+sample_solution: |
+  def apply_merges(job):
+      symbols = list(job["word"])
+      for pair in job["merges"]:
+          left, right = pair[0], pair[1]
+          joined = left + right
+          rebuilt = []
+          i = 0
+          n = len(symbols)
+          while i < n:
+              if i < n - 1 and symbols[i] == left and symbols[i + 1] == right:
+                  rebuilt.append(joined)
+                  i += 2
+              else:
+                  rebuilt.append(symbols[i])
+                  i += 1
+          symbols = rebuilt
+      return symbols
+hints:
+  - level: 1
+    text: First turn the word into a list of one-character symbols; every merge then rewrites that list into a new, possibly shorter list.
+  - level: 2
+    text: For each merge, walk an index i through the symbols and build a fresh list. When symbols[i] and symbols[i+1] match the pair, append the joined symbol and jump i by 2; otherwise append the single symbol and step i by 1.
+  - level: 3
+    text: Process merges in list order and reassign symbols after each one, so a later merge like ['lo', 'w'] can act on a token produced by an earlier merge.
+tests:
+  public:
+    - name: empty_word
+      input:
+        word: ""
+        merges: []
+      expected: []
+    - name: single_merge_repeats
+      input:
+        word: "banana"
+        merges: [["a", "n"]]
+      expected: ["b", "an", "an", "a"]
+    - name: non_overlapping
+      input:
+        word: "aaaa"
+        merges: [["a", "a"]]
+      expected: ["aa", "aa"]
+  validation:
+    - name: chained_merges
+      input:
+        word: "mississippi"
+        merges: [["s", "s"], ["i", "ss"]]
+      expected: ["m", "iss", "iss", "i", "p", "p", "i"]
+    - name: merge_on_merged
+      input:
+        word: "aabaab"
+        merges: [["a", "a"], ["aa", "b"]]
+      expected: ["aab", "aab"]
+    - name: three_letter_unit
+      input:
+        word: "abcabc"
+        merges: [["a", "b"], ["ab", "c"]]
+      expected: ["abc", "abc"]
+explanation_markdown: |
+  Byte-pair encoding grows subword tokens by repeatedly gluing the pair of
+  adjacent symbols the rules say to merge. The key subtlety is the greedy,
+  non-overlapping sweep: once you consume `symbols[i]` and `symbols[i+1]` into a
+  joined token you must advance the index by two, otherwise a run like `aaaa`
+  would double-count the middle `a`. Because merges run in order and each one
+  rebuilds the list, a later rule can operate on tokens an earlier rule created
+  (as in `['s','s'] -> 'ss'` then `['i','ss'] -> 'iss'`). Each merge is a single
+  left-to-right pass, so applying `m` merges to a word of length `n` costs
+  `O(m * n)`.
+common_mistakes:
+  - Stepping the index by 1 after a successful merge, which lets overlapping pairs double-count symbols in runs like 'aaaa'.
+  - Mutating the list in place while iterating instead of building a fresh list for each merge pass.
+  - Applying merges by frequency or all at once rather than strictly in the given learned order.

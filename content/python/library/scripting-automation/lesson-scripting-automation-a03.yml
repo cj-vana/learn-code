@@ -1,0 +1,102 @@
+id: lesson.library.scripting_automation.a03
+kind: lesson
+version: 1
+language: python
+title: 'Touching the Real World: os, shutil, and the Thin Shell'
+slug: lesson-scripting-automation-a03
+difficulty: medium
+concepts:
+  - python.pathlib_os
+prerequisites:
+  - python.pathlib_os
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.scripting_automation.a03
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original tour of the real-I/O layer — os, shutil, tempfile, subprocess concepts — and how the thin-shell discipline keeps it testable.
+body_markdown: |
+  Two lessons of pure planning logic earn this one: the tour of the act
+  stage's real tools, and the discipline that keeps them from
+  contaminating your testable core. (Lesson tour only — the sandboxed
+  exercises stay pure; these APIs are for your real machine.)
+
+  ### The act-stage vocabulary
+
+  ```python
+  from pathlib import Path
+  import shutil
+
+  p = Path("archive/2026/harbor-dawn.raw")
+  p.exists(), p.stat().st_size          # inspect
+  p.read_text(), p.write_text(data)     # whole-file I/O
+  p.mkdir(parents=True, exist_ok=True)  # idempotent create — note the flags!
+  p.rename(dst)                         # move within a filesystem
+  shutil.copy2(src, dst)                # copy WITH metadata
+  shutil.move(src, dst)                 # move across filesystems too
+  shutil.rmtree(tree)                   # recursive delete — the dangerous one
+  ```
+
+  Three details separate users from professionals here. `mkdir`'s two
+  flags make directory creation idempotent — the "ensure" phrasing from
+  lesson one, provided by the API. `copy2` versus `copy` preserves
+  timestamps — archives care. And `Path.iterdir()` / `glob("**/*.raw")`
+  are your gather stage against a real disk.
+
+  ### Deleting: the two-key protocol
+
+  `shutil.rmtree` is the table saw of the module. The habits that keep
+  fingers attached: **resolve then verify** — `target.resolve()` and
+  assert it is inside the root you believe you are cleaning (symlinks
+  and `..` make paths lie; `resolve()` tells the truth); prefer
+  **quarantine over delete** — move to a dated `trash/` directory,
+  reversible for a week, then empty; and the act loop's failure ledger
+  applies to deletes doubly.
+
+  ### Atomic writes: never leave a half-written file
+
+  A crash mid-`write_text` leaves a corrupt config for the next reader.
+  The professional idiom writes elsewhere and swaps:
+
+  ```python
+  import tempfile, os
+
+  fd, tmp = tempfile.mkstemp(dir=dst.parent)
+  os.write(fd, payload); os.close(fd)
+  os.replace(tmp, dst)          # atomic on POSIX: readers see old or new, never half
+  ```
+
+  `os.replace` is a rename — atomic within a filesystem — so the
+  destination transitions old→new in one step. Every serious tool that
+  writes state files works this way (that is also why `tempfile` beats
+  hand-rolled temp names: unique, secure, cleaned up).
+
+  ### Subprocess, in one paragraph
+
+  Scripts orchestrate other programs: `subprocess.run([...],
+  capture_output=True, text=True, check=True)`. The list-of-arguments
+  form (never a shell string with pasted input — the injection lesson
+  of the security area), `check=True` so failures raise, and the
+  returned `.stdout` as data. That is 90% of real usage.
+
+  ### The discipline, restated
+
+  Notice how little *logic* appeared in this lesson: flags, swaps,
+  verifications — all wrapping decisions your pure core already made.
+  Keep it that way in real scripts: the act stage should read like a
+  checklist executing a plan, because that is exactly what it is. When
+  an act stage grows an `if`, ask whether it is a decision that belongs
+  in the plan — the answer is nearly always yes.
+checkpoints:
+  - question: What makes mkdir(parents=True, exist_ok=True) the automation-grade way to create a directory?
+    answer: 'It is idempotent "ensure this path exists" — creating intermediate parents and succeeding silently when the directory already exists — so re-runs and races don''t raise; bare mkdir fails on both.'
+    explanation: 'The flags encode the ensure-state phrasing of idempotent automation directly into the API call.'
+  - question: Why does the atomic-write idiom write to a temp file and os.replace it rather than writing the destination directly?
+    answer: 'A crash mid-write would leave the destination half-written and corrupt for every reader; writing elsewhere and atomically renaming means the destination always contains either the complete old version or the complete new one.'
+    explanation: os.replace''s within-filesystem atomicity is the primitive; the idiom builds crash-safety from it, and every state-writing tool uses it.
+  - question: Before shutil.rmtree(target), what verification does the two-key protocol demand, and why resolve() first?
+    answer: 'Resolve the path and assert the result is inside the root you intend to clean — symlinks and .. segments make the apparent path lie about the real target, and resolve() returns the truth before the irreversible act.'
+    explanation: 'Recursive delete plus a lying path is how backup directories die; resolve-then-verify (plus quarantine-over-delete) is the discipline that prevents it.'

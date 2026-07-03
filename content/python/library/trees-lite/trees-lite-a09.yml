@@ -1,0 +1,102 @@
+id: exercise.library.trees_lite.a09
+kind: exercise
+version: 1
+language: python
+title: Certifying a Mobile Sculpture Hangs Level
+slug: trees-lite-a09
+difficulty: hard
+concepts:
+  - patterns.tree_traversal
+  - patterns.recursion
+  - python.trees_as_data
+prerequisites:
+  - patterns.dfs
+  - python.trees_as_data
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.trees_lite.a09
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original height-balance drill framed as certifying a hanging mobile sculpture, stressing the every-node requirement.
+prompt_markdown: |
+  A hanging mobile sculpture only balances if it is even *at every joint*, not
+  just at the top bar. A joint is level when the heights of its two hanging
+  subtrees differ by at most one. The sculpture is a binary tree of nested
+  dictionaries (`{"value", "left", "right"}`, empty branch is `None`), where a
+  subtree's height is the number of nodes on its longest downward path (empty
+  tree height `0`).
+
+  Write `hangs_level(tree)` returning `True` only if *every* node is balanced by
+  that rule, and `False` otherwise. An empty tree is balanced.
+
+  A tree can look even at the top yet hide a long unbalanced chain deep inside,
+  so a single check at the root is not enough.
+starter_code: |
+  def hangs_level(tree):
+      # Return True only if every node's two subtrees differ in height by <= 1.
+      return True
+function_name: hangs_level
+input_mode: function
+solution_sketch: Compute height bottom-up and report imbalance the moment any node's two subtree heights differ by more than one.
+sample_solution: |
+  def hangs_level(tree):
+      def check(node):
+          # Returns height if the subtree is balanced, else -1.
+          if node is None:
+              return 0
+          left = check(node["left"])
+          if left == -1:
+              return -1
+          right = check(node["right"])
+          if right == -1:
+              return -1
+          if abs(left - right) > 1:
+              return -1
+          return 1 + max(left, right)
+
+      return check(tree) != -1
+hints:
+  - level: 1
+    text: Balance is a property of every node, so a root that looks even can still sit above a lopsided joint.
+  - level: 2
+    text: Compute each subtree's height from the bottom up, and let a node report failure as soon as its two sides differ by more than one.
+  - level: 3
+    text: Have a helper return the height when balanced and a sentinel like -1 when not; propagate -1 upward so one bad joint fails the whole tree.
+tests:
+  public:
+    - name: empty
+      input: null
+      expected: true
+    - name: single
+      input: {value: 7, left: null, right: null}
+      expected: true
+    - name: left_chain_unbalanced
+      input: {value: 1, left: {value: 2, left: {value: 3, left: null, right: null}, right: null}, right: null}
+      expected: false
+  validation:
+    - name: balanced_search_tree
+      input: {value: 5, left: {value: 3, left: {value: 2, left: null, right: null}, right: {value: 4, left: null, right: null}}, right: {value: 8, left: null, right: {value: 9, left: null, right: null}}}
+      expected: true
+    - name: perfect_tree
+      input: {value: 1, left: {value: 2, left: {value: 4, left: null, right: null}, right: {value: 5, left: null, right: null}}, right: {value: 3, left: {value: 6, left: null, right: null}, right: {value: 7, left: null, right: null}}}
+      expected: true
+    - name: hidden_deep_imbalance
+      input: {value: 1, left: {value: 2, left: {value: 4, left: {value: 8, left: null, right: null}, right: null}, right: null}, right: {value: 3, left: {value: 6, left: null, right: null}, right: {value: 7, left: null, right: null}}}
+      expected: false
+explanation_markdown: |
+  The efficient balance check folds height and balance into one bottom-up pass. A
+  helper returns a real height while every visited node is balanced, but returns
+  a sentinel `-1` the instant it finds a node whose two subtree heights differ by
+  more than one. Because `-1` propagates straight back up, one bad joint fails the
+  entire sculpture. The `hidden_deep_imbalance` case is the payoff: the root's
+  two sides differ by only one, so a naive root-only check would pass it, yet node
+  2 hangs a height-2 chain (`4 -> 8`) against an empty right side and fails. This
+  short-circuiting keeps the work at O(n) instead of recomputing heights
+  repeatedly.
+common_mistakes:
+  - Checking balance only at the root instead of at every node.
+  - Calling a separate height function inside the balance check at every node, which degrades to O(n^2).
+  - Comparing heights with a strict difference of zero, rejecting legitimately balanced trees whose sides differ by one.

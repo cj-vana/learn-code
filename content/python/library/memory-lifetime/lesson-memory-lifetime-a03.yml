@@ -1,0 +1,99 @@
+id: lesson.library.memory_lifetime.a03
+kind: lesson
+version: 1
+language: python
+title: 'Lifetimes in Practice: Finalizers, Context, and Identity'
+slug: lesson-memory-lifetime-a03
+difficulty: hard
+concepts:
+  - python.memory_model
+prerequisites:
+  - python.memory_model
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.memory_lifetime.a03
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original walkthrough of finalization, contextvars isolation, and identity semantics with fresh examples.
+body_markdown: |
+  The first two lessons covered when objects die. This one covers the
+  practical machinery around lifetimes — running code at death, isolating
+  state per logical task, and the identity questions that trip up code
+  reviews.
+
+  ### Finalizers, done right
+
+  Running cleanup when an object dies is tempting via `__del__`, but its
+  timing hazards (cycles, interpreter shutdown, exceptions ignored) make
+  it a last resort. The robust tool is `weakref.finalize`:
+
+  ```python
+  import weakref
+
+  handle = open_connection()
+  weakref.finalize(session, close_connection, handle)
+  ```
+
+  It registers a callback that runs exactly once when the object is
+  reclaimed *or* at interpreter exit, whichever comes first — and unlike
+  `__del__`, finalizers are called in a defined order (most recently
+  registered first, like a stack of teardown actions). Your exercise
+  models that LIFO ordering as data. But note the hierarchy of virtue:
+  `with` blocks first, explicit close second, finalizers as the safety
+  net — never the primary plan.
+
+  ### contextvars: state scoped to a logical task
+
+  Globals leak state across everything; thread-locals leak across async
+  tasks sharing one thread. **`contextvars`** provides values scoped to a
+  *logical context* — each async task (or explicitly copied context) sees
+  its own value:
+
+  ```python
+  import contextvars
+
+  request_id = contextvars.ContextVar("request_id", default="-")
+
+  ctx = contextvars.copy_context()      # snapshot of current values
+  ctx.run(handler)                      # changes inside don't escape ctx
+  ```
+
+  The mental model is a **copy-on-write snapshot**: `copy_context()`
+  captures current values; sets inside the copy are invisible outside it.
+  This is how a web server keeps "the current request's id" available to
+  logging deep in the call stack — concurrently, without threading it
+  through every signature, and without tasks trampling each other. The
+  exercise version models snapshot isolation as a pure function, which is
+  the semantics minus the plumbing.
+
+  ### Identity, equality, and where objects come from
+
+  Two payoffs of understanding allocation close the area:
+
+  - **`is` versus `==`, finally settled.** `==` asks "equal values?" and
+    is overridable; `is` asks "the same object?" and never lies. Caches
+    (small ints, interned strings) make `is` *sometimes* true for equal
+    values — bait for code that works until it doesn't. Reserve `is` for
+    singletons: `None`, `True`/`False`, module-level sentinels you
+    created yourself.
+  - **Sentinel objects exploit identity on purpose.** When `None` is a
+    legitimate value, the idiom is `_MISSING = object()` and `if value is
+    _MISSING:` — a fresh `object()` is guaranteed unique, so identity
+    comparison is exact. Lifetime knowledge turning into API design.
+
+  None of this area's material appears in your first year of Python — and
+  all of it appears in your first year of *debugging other people's*
+  Python. That is what internals are for.
+checkpoints:
+  - question: Rank the tools for releasing a resource — __del__, weakref.finalize, with blocks — and justify the order.
+    answer: 'with blocks first (deterministic, visible, exception-safe), explicit close/finalize as the safety net for objects whose lifetime is genuinely dynamic, and __del__ last (undefined timing in cycles, fragile at shutdown, exceptions swallowed).'
+    explanation: The ordering follows determinism — the more precisely you can name the moment cleanup runs, the more trustworthy the mechanism.
+  - question: What problem do contextvars solve that both globals and thread-local storage fail at?
+    answer: 'Per-logical-task state under async concurrency: many tasks interleave on one thread, so thread-locals bleed between them and globals bleed between everything; a ContextVar gives each task its own value via copied contexts.'
+    explanation: The copy-on-write snapshot model (changes inside a copied context stay inside) is what makes request-scoped state possible in async servers.
+  - question: When None is a valid user value, how does the sentinel idiom distinguish "not provided", and why does it rely on is?
+    answer: 'Create _MISSING = object() as a module-level default and test `value is _MISSING` — every object() call yields a unique object, so identity comparison exactly identifies the one sentinel and can never collide with user data.'
+    explanation: 'The idiom is identity semantics used deliberately: uniqueness by construction plus a comparison that cannot be spoofed by __eq__.'

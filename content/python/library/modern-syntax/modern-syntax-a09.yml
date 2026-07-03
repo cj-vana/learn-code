@@ -1,0 +1,180 @@
+id: exercise.library.modern_syntax.a09
+kind: exercise
+version: 1
+language: python
+title: Feeding the Booklet Binder
+slug: modern-syntax-a09
+difficulty: medium
+concepts:
+  - python.modern_syntax
+  - python.itertools_module
+prerequisites:
+  - python.lists
+  - python.loops
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.modern_syntax.a09
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original walrus-in-while chunking drill using itertools.islice to pull fixed-size slices from an iterator, framed as a print shop's booklet binder.
+prompt_markdown: |
+  A print shop feeds a stack of pages into a binder that holds at most a fixed
+  number of sheets per booklet. Split the pages into consecutive booklets of
+  that size; the last booklet takes whatever is left over.
+
+  Write `split_booklets(job)`. The single argument is a dict:
+
+  ```python
+  {"pages": [1, 2, 3, 4, 5], "size": 2}
+  ```
+
+  Return a list of booklets (a list of lists), each containing up to `size`
+  pages in original order. `size` is always an integer that is at least 1.
+
+  Build it as a **walrus-driven while loop** over an iterator: turn `pages`
+  into an iterator once, then repeatedly pull the next `size` items with
+  `itertools.islice`, binding the slice with `:=` in the `while` condition and
+  stopping when the pulled slice is empty.
+
+  Edge cases:
+
+  - An empty `pages` list produces no booklets: return `[]`.
+  - When `size` is larger than the number of pages, you get one booklet holding
+    everything.
+  - When the count divides evenly, every booklet is full and there is no short
+    final booklet.
+  - Page values may be numbers or strings; keep them unchanged and in order.
+starter_code: |
+  from itertools import islice
+
+
+  def split_booklets(job):
+      return []
+function_name: split_booklets
+input_mode: function
+solution_sketch: Make one iterator from job["pages"]. In a while loop, bind batch := list(islice(pages_iter, size)); an empty batch ends the loop, otherwise append it. islice advances the shared iterator so each pass consumes the next size items.
+sample_solution: |
+  from itertools import islice
+
+
+  def split_booklets(job):
+      pages = iter(job["pages"])
+      size = job["size"]
+      booklets = []
+      while (batch := list(islice(pages, size))):
+          booklets.append(batch)
+      return booklets
+hints:
+  - level: 1
+    text: Convert job["pages"] to an iterator once with iter(...) so that each slice you take continues where the previous one stopped.
+  - level: 2
+    text: itertools.islice(pages_iter, size) yields the next size items (or fewer at the end). Wrap it in list(...) to get a booklet.
+  - level: 3
+    text: 'Use while (batch := list(islice(pages, size))): the walrus binds the slice, and the empty list at the end is falsy, ending the loop. Append batch each iteration.'
+tests:
+  public:
+    - name: even_split
+      input:
+        pages:
+          - 1
+          - 2
+          - 3
+          - 4
+        size: 2
+      expected:
+        - - 1
+          - 2
+        - - 3
+          - 4
+    - name: with_remainder
+      input:
+        pages:
+          - 1
+          - 2
+          - 3
+          - 4
+          - 5
+        size: 2
+      expected:
+        - - 1
+          - 2
+        - - 3
+          - 4
+        - - 5
+    - name: empty_pages
+      input:
+        pages: []
+        size: 3
+      expected: []
+  validation:
+    - name: size_one
+      input:
+        pages:
+          - a
+          - b
+          - c
+        size: 1
+      expected:
+        - - a
+        - - b
+        - - c
+    - name: size_larger_than_stack
+      input:
+        pages:
+          - 1
+          - 2
+        size: 5
+      expected:
+        - - 1
+          - 2
+    - name: exact_triples
+      input:
+        pages:
+          - 1
+          - 2
+          - 3
+          - 4
+          - 5
+          - 6
+        size: 3
+      expected:
+        - - 1
+          - 2
+          - 3
+        - - 4
+          - 5
+          - 6
+    - name: string_pages_remainder
+      input:
+        pages:
+          - p1
+          - p2
+          - p3
+          - p4
+          - p5
+        size: 2
+      expected:
+        - - p1
+          - p2
+        - - p3
+          - p4
+        - - p5
+explanation_markdown: |
+  Chunking an iterable is a classic place for the walrus operator. The naive
+  version needs a priming read before the loop and a second read at the bottom;
+  binding the slice inside the `while` condition folds both into one line:
+  `while (batch := list(islice(pages, size))):`.
+
+  The trick is that `pages` is a single iterator shared across every
+  `islice` call. `islice(pages, size)` consumes the next `size` items and
+  advances the iterator, so the following pass naturally starts where this one
+  left off. When the iterator is exhausted, `islice` yields nothing, `list(...)`
+  is empty and falsy, and the loop stops — which is why an empty input yields no
+  booklets and an evenly divisible input has no trailing short booklet.
+common_mistakes:
+  - Calling islice on the original list instead of a single iterator, so every pass re-reads from the start and loops forever.
+  - Forgetting to wrap islice in list(...), leaving an islice object in the condition — it is always truthy, causing an infinite loop.
+  - Building slices with manual index arithmetic that drops or duplicates the final short booklet.

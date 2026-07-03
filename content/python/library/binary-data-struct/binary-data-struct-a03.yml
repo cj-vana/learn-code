@@ -1,0 +1,117 @@
+id: exercise.library.binary_data.a03
+kind: exercise
+version: 1
+language: python
+title: Reading the Observatory Packet Header
+slug: binary-data-struct-a03
+difficulty: medium
+concepts:
+  - python.binary_data
+  - python.dictionaries
+prerequisites:
+  - python.dictionaries
+  - python.functions
+  - python.slicing
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.binary_data.a03
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original binary-protocol parsing drill framed as a radio observatory decoding an 8-byte packet header ahead of its payload.
+prompt_markdown: |
+  A radio observatory streams telemetry packets that each begin with a fixed
+  8-byte header, big-endian, laid out like this:
+
+  | Offset | Bytes | Field            | Format |
+  |--------|-------|------------------|--------|
+  | 0      | 2     | `magic`          | `H` (unsigned short) |
+  | 2      | 1     | `version`        | `B` (unsigned byte)  |
+  | 3      | 1     | `flags`          | `B` (unsigned byte)  |
+  | 4      | 4     | `payload_length` | `I` (unsigned int)   |
+
+  Write `parse_binary_header(data)` that receives a single list of integers (each
+  0-255) representing the received bytes. Decode the **first 8 bytes** as the
+  header and return a dictionary with exactly these keys and their decoded
+  integer values:
+
+  ```
+  {"magic": ..., "version": ..., "flags": ..., "payload_length": ...}
+  ```
+
+  The list may contain more than 8 bytes; anything after offset 8 is payload and
+  must be ignored. The list will always contain at least 8 bytes.
+
+  For example, `[192, 222, 1, 5, 0, 0, 0, 16]` decodes to
+  `{"magic": 49374, "version": 1, "flags": 5, "payload_length": 16}` (the bytes
+  `0xC0 0xDE` form the big-endian short 49374, and `0x00 0x00 0x00 0x10` form the
+  int 16).
+starter_code: |
+  import struct
+
+
+  def parse_binary_header(data):
+      return {}
+function_name: parse_binary_header
+input_mode: function
+solution_sketch: Slice the first 8 bytes, turn them into a bytes object, unpack them with the big-endian format ">HBBI", then assemble the four returned values into the named dictionary.
+sample_solution: |
+  import struct
+
+
+  def parse_binary_header(data):
+      header = bytes(data[:8])
+      magic, version, flags, payload_length = struct.unpack(">HBBI", header)
+      return {
+          "magic": magic,
+          "version": version,
+          "flags": flags,
+          "payload_length": payload_length,
+      }
+hints:
+  - level: 1
+    text: The whole header is a single struct format, ">HBBI", which totals 2 + 1 + 1 + 4 = 8 bytes. Byte-order prefixes disable padding, so the fields sit flush against each other.
+  - level: 2
+    text: Take only the first 8 bytes with data[:8], convert them to a bytes object, and unpack that with struct.unpack(">HBBI", ...).
+  - level: 3
+    text: struct.unpack returns the four values in header order; assign them to magic, version, flags, payload_length and build the dictionary with those keys.
+tests:
+  public:
+    - name: basic_header
+      input: [192, 222, 1, 5, 0, 0, 0, 16]
+      expected: {magic: 49374, version: 1, flags: 5, payload_length: 16}
+    - name: version_two
+      input: [192, 222, 2, 0, 0, 0, 1, 0]
+      expected: {magic: 49374, version: 2, flags: 0, payload_length: 256}
+    - name: trailing_payload_ignored
+      input: [192, 222, 3, 255, 0, 0, 0, 4, 9, 9, 9, 9]
+      expected: {magic: 49374, version: 3, flags: 255, payload_length: 4}
+  validation:
+    - name: max_payload_length
+      input: [0, 1, 10, 0, 255, 255, 255, 255]
+      expected: {magic: 1, version: 10, flags: 0, payload_length: 4294967295}
+    - name: alternate_magic
+      input: [171, 205, 7, 128, 0, 1, 0, 0]
+      expected: {magic: 43981, version: 7, flags: 128, payload_length: 65536}
+    - name: all_zero_header
+      input: [0, 0, 0, 0, 0, 0, 0, 0]
+      expected: {magic: 0, version: 0, flags: 0, payload_length: 0}
+explanation_markdown: |
+  Real binary protocols pack several fields of different widths into a compact
+  header, and the reader has to know the exact layout to make sense of them. The
+  key insight is that one `struct.unpack(">HBBI", ...)` call decodes the entire
+  header at once: the format string is a map of the byte layout, and because it
+  starts with `>` there is no alignment padding, so `H`, `B`, `B`, `I` occupy
+  bytes 0-1, 2, 3, and 4-7 respectively.
+
+  Slicing `data[:8]` before unpacking is what lets the same function tolerate a
+  full packet with a payload trailing the header. `struct.unpack` insists that
+  the buffer length match the format exactly, so handing it a longer buffer would
+  raise `struct.error`; trimming to the header width sidesteps that. Naming the
+  fields in a dictionary turns an anonymous tuple into a self-documenting result.
+common_mistakes:
+  - Passing the whole packet to struct.unpack; it requires the buffer length to match the format exactly, so you must slice the header off first.
+  - Using a native format like "HBBI" with no byte-order prefix, which reintroduces alignment padding and shifts the payload_length field.
+  - Mixing up the field order or the H/I widths, so magic and payload_length get swapped or truncated.

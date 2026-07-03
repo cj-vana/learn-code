@@ -1,0 +1,181 @@
+id: exercise.library.dataframe_thinking.a07
+kind: exercise
+version: 1
+language: python
+title: Cross-Matching the Star Logs
+slug: dataframe-thinking-a07
+difficulty: hard
+concepts:
+  - concepts.dataframe_thinking
+  - patterns.hash_map_counting
+  - python.dictionaries
+prerequisites:
+  - python.dictionaries
+  - python.loops
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dataframe_thinking.a07
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original relational inner-join drill framed around an observatory cross-matching a star catalogue with a nightly observation log; emphasises the full cartesian expansion that a real dataframe merge produces on duplicate keys.
+prompt_markdown: |
+  A hilltop observatory keeps two in-memory tables. One holds a row per catalogued
+  **star**; the other logs every **observation** taken across many nights. Both
+  tables carry the same key field, and the astronomer wants the combined table you
+  would get from a relational *inner join* (the same thing a dataframe `merge`
+  produces).
+
+  Write `inner_join(payload)` that takes **one dictionary** with three entries:
+
+  - `"left"`: a list of dictionaries (the star rows).
+  - `"right"`: a list of dictionaries (the observation rows).
+  - `"key"`: the string name of the field to join on. Every row in both tables
+    contains this field.
+
+  Example call:
+
+  ```python
+  inner_join({
+      "left": [{"star": "S1", "name": "Vega"}],
+      "right": [{"star": "S1", "mag": 0.03}],
+      "key": "star",
+  })
+  # -> [{"star": "S1", "name": "Vega", "mag": 0.03}]
+  ```
+
+  Return a **list of merged dictionaries**. The join is a true inner join, so when
+  a key value appears on both sides you emit **one merged row per matching pair**:
+
+  - For each left row in order, scan the right rows in order and, for every right
+    row whose key value equals the left row's key value, emit a merged dictionary.
+  - Because both sides may hold duplicate key values, a left row that matches three
+    right rows produces three output rows, and if two left rows each match those
+    three right rows you get six output rows (a cartesian expansion of the match).
+  - Merge by laying the matched right row on top of a copy of the left row, so on
+    any field the two rows share, the **right value wins**.
+  - Output order is: left rows in their original order, and within each left row,
+    its matches in right-row order.
+  - A left row whose key value appears in no right row contributes nothing.
+  - If either list is empty, return an empty list.
+starter_code: |
+  def inner_join(payload):
+      return []
+function_name: inner_join
+input_mode: function
+solution_sketch: Bucket the right rows into a dict mapping key value to the list of right rows with that value (preserving order), then walk the left rows in order and, for each, emit one merged copy per right row in its bucket.
+sample_solution: |
+  def inner_join(payload):
+      left = payload["left"]
+      right = payload["right"]
+      key = payload["key"]
+      buckets = {}
+      for row in right:
+          buckets.setdefault(row[key], []).append(row)
+      result = []
+      for row in left:
+          for match in buckets.get(row[key], []):
+              merged = dict(row)
+              merged.update(match)
+              result.append(merged)
+      return result
+hints:
+  - level: 1
+    text: Group the right rows by their key value first so each left row can find all of its matches without rescanning the whole right table.
+  - level: 2
+    text: A dict mapping key value to a list of right rows lets one left row expand into several output rows; append to the list so duplicate keys keep every right row in order.
+  - level: 3
+    text: For each left row, loop over its bucket and build dict(left_row) then .update(right_row) each time, so a fresh merged dict is produced per matching pair and right-side fields overwrite shared left ones.
+tests:
+  public:
+    - name: one_to_one
+      input:
+        left:
+          - {star: "S1", name: "Vega"}
+          - {star: "S2", name: "Rigel"}
+        right:
+          - {star: "S1", mag: 0.03}
+          - {star: "S2", mag: 0.13}
+        key: star
+      expected:
+        - {star: "S1", name: "Vega", mag: 0.03}
+        - {star: "S2", name: "Rigel", mag: 0.13}
+    - name: duplicate_right_expands
+      input:
+        left:
+          - {star: "S1", name: "Vega"}
+        right:
+          - {star: "S1", night: 1}
+          - {star: "S1", night: 2}
+        key: star
+      expected:
+        - {star: "S1", name: "Vega", night: 1}
+        - {star: "S1", name: "Vega", night: 2}
+    - name: empty_left
+      input:
+        left: []
+        right:
+          - {star: "S1", night: 1}
+        key: star
+      expected: []
+  validation:
+    - name: unmatched_left_dropped
+      input:
+        left:
+          - {star: "S1", name: "Vega"}
+          - {star: "S9", name: "Nova"}
+        right:
+          - {star: "S1", night: 1}
+        key: star
+      expected:
+        - {star: "S1", name: "Vega", night: 1}
+    - name: collision_right_wins
+      input:
+        left:
+          - {star: "S1", name: "Vega", band: "V"}
+        right:
+          - {star: "S1", band: "B", night: 1}
+        key: star
+      expected:
+        - {star: "S1", name: "Vega", band: "B", night: 1}
+    - name: both_duplicate_cartesian
+      input:
+        left:
+          - {star: "S1", obs: "a"}
+          - {star: "S1", obs: "b"}
+        right:
+          - {star: "S1", night: 1}
+          - {star: "S1", night: 2}
+        key: star
+      expected:
+        - {star: "S1", obs: "a", night: 1}
+        - {star: "S1", obs: "a", night: 2}
+        - {star: "S1", obs: "b", night: 1}
+        - {star: "S1", obs: "b", night: 2}
+    - name: empty_right
+      input:
+        left:
+          - {star: "S1", name: "Vega"}
+        right: []
+        key: star
+      expected: []
+explanation_markdown: |
+  A relational inner join keeps every *pair* of rows that agree on the key, not
+  just the first match. The efficient way to build it is to bucket one side once:
+  here the right rows become a `key -> [rows]` dictionary, so each left row can
+  reach all of its matches in a single lookup instead of rescanning the whole right
+  table.
+
+  Walking the left rows in order, and each bucket in insertion order, gives exactly
+  the requested ordering for free. For every matching pair we build a fresh
+  `dict(left_row)` and `update` it with the right row; because `update` overwrites
+  existing keys, any shared field takes the right value. The cartesian behaviour on
+  duplicate keys is what surprises people coming from a naive "look up one match"
+  join: two left rows that each match three right rows really do yield six output
+  rows, which is precisely what a dataframe `merge` would return.
+common_mistakes:
+  - Stopping at the first matching right row, which silently turns a real inner join into a lookup and drops the extra pairs.
+  - Merging left onto right so left values overwrite right, reversing the collision rule.
+  - Mutating the left row in place with .update instead of copying it first, corrupting the caller's table and merging later matches on top of earlier ones.

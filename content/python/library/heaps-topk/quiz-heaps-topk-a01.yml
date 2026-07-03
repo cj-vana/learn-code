@@ -1,0 +1,104 @@
+id: quiz.library.heaps_topk.a01
+kind: quiz
+version: 1
+language: python
+title: Choosing the Right Heap Shape
+slug: quiz-heaps-topk-a01
+difficulty: medium
+concepts:
+  - patterns.heap_topk
+  - python.heapq_bisect
+prerequisites:
+  - python.heapq_bisect
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.heaps_topk.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pattern-recognition quiz on heap direction, top-k sizing, merge cost, and bisect trade-offs.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      You must keep the 100 largest values from a stream of ten million numbers
+      using as little memory as possible. What structure do you maintain?
+    choices:
+      - A min-heap of size 100
+      - A max-heap of size 100
+      - A max-heap holding all ten million numbers
+      - A fully sorted list rebuilt after each number
+    correct_choice: A min-heap of size 100
+    explanation: |
+      A size-100 min-heap keeps only the current winners in O(100) memory; its root
+      is the weakest kept value, so a newcomer only enters if it beats that root.
+    concepts:
+      - patterns.heap_topk
+      - python.heapq_bisect
+  - id: q2
+    prompt: |
+      Python's heapq only builds min-heaps. To repeatedly retrieve the current
+      maximum of a set of integers, what is the standard trick?
+    choices:
+      - Push each value negated and negate again when you pop
+      - Call heapq.heappop twice and keep the second result
+      - Reverse the list before every heappush
+      - Use heapq.heapify with reverse=True
+    correct_choice: Push each value negated and negate again when you pop
+    explanation: |
+      Negating flips the ordering so the most negative stored value is the largest
+      real value, which the min-heap surfaces first. heapify has no reverse option.
+    concepts:
+      - patterns.heap_topk
+      - python.heapq_bisect
+  - id: q3
+    prompt: |
+      You merge k already-sorted lists holding n elements in total using one heap
+      entry per list. What is the time complexity?
+    choices:
+      - O(n log k)
+      - O(n log n)
+      - O(n times k)
+      - O(k log n)
+    correct_choice: O(n log k)
+    explanation: |
+      Every element is pushed and popped once, and the heap never holds more than k
+      entries, so each operation is O(log k), giving O(n log k) overall.
+    concepts:
+      - patterns.heap_topk
+      - python.heapq_bisect
+  - id: q4
+    prompt: |
+      In the two-heap running-median technique, which heap holds the smaller half
+      of the data, and what heap type is it?
+    choices:
+      - The lower half, kept as a max-heap
+      - The lower half, kept as a min-heap
+      - The upper half, kept as a max-heap
+      - The lower half, kept as a sorted list
+    correct_choice: The lower half, kept as a max-heap
+    explanation: |
+      The lower half is a max-heap so its top is the largest small value, sitting
+      right at the boundary where the median lives; the upper half is a min-heap.
+    concepts:
+      - patterns.heap_topk
+      - python.heapq_bisect
+  - id: q5
+    prompt: |
+      You keep a Python list sorted with bisect.insort so you can binary-search
+      arbitrary ranks. What is the cost of a single insertion, and why?
+    choices:
+      - O(n), because inserting shifts all later elements even though the search is O(log n)
+      - O(log n), because bisect finds the spot in logarithmic time
+      - O(1), because the list is already sorted
+      - O(n log n), because the list is re-sorted on each insert
+    correct_choice: O(n), because inserting shifts all later elements even though the search is O(log n)
+    explanation: |
+      The binary search for the position is O(log n), but a list stores elements
+      contiguously, so inserting in the middle must shift everything after it, and
+      that shift dominates at O(n).
+    concepts:
+      - python.heapq_bisect
+      - patterns.binary_search

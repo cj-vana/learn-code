@@ -1,0 +1,125 @@
+id: exercise.library.dp_recognition.a09
+kind: exercise
+version: 1
+language: python
+title: Correcting The Engraved Plaque
+slug: dp-recognition-a09
+difficulty: hard
+concepts:
+  - patterns.dynamic_programming
+prerequisites:
+  - python.strings
+  - python.lists
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dp_recognition.a09
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original plaque-engraving framing of the edit-distance recurrence with insert, delete, and replace each costing one.
+prompt_markdown: |
+  An engraver has cut the wrong text into a brass plaque and needs to fix it with
+  as few corrections as possible. Three corrections are available, each costing
+  exactly one operation:
+
+  - **insert** a single character at any position,
+  - **delete** a single character, or
+  - **replace** one character with another.
+
+  Write `plaque_corrections(job)` where `job` is a dict with two keys:
+
+  - `source`: the string currently engraved on the plaque
+  - `target`: the string it should read instead
+
+  Return a single integer: the minimum number of insert/delete/replace operations
+  that turn `source` into `target`.
+
+  Edges: if `source` is empty, every character of `target` must be inserted, so the
+  answer is `len(target)`; if `target` is empty, every character of `source` must
+  be deleted, so the answer is `len(source)`. Identical strings need `0`
+  corrections.
+
+  Example: with `source = "kitten"` and `target = "sitting"`, the answer is `3`
+  (replace k with s, replace e with i, insert g).
+starter_code: |
+  def plaque_corrections(job):
+      return 0
+function_name: plaque_corrections
+input_mode: function
+solution_sketch: Fill a table indexed by prefix lengths; equal characters copy the diagonal, otherwise take one plus the cheapest of insert, delete, or replace.
+sample_solution: |
+  def plaque_corrections(job):
+      source = job["source"]
+      target = job["target"]
+      m, n = len(source), len(target)
+      dp = [[0] * (n + 1) for _ in range(m + 1)]
+      for i in range(m + 1):
+          dp[i][0] = i
+      for j in range(n + 1):
+          dp[0][j] = j
+      for i in range(1, m + 1):
+          for j in range(1, n + 1):
+              if source[i - 1] == target[j - 1]:
+                  dp[i][j] = dp[i - 1][j - 1]
+              else:
+                  dp[i][j] = 1 + min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1])
+      return dp[m][n]
+hints:
+  - level: 1
+    text: Describe a subproblem by how many characters of source and target you have already aligned, then decide what to do with the current pair.
+  - level: 2
+    text: If the current characters match, they cost nothing and you move both prefixes forward diagonally; if they differ, you must pay for one of the three edits.
+  - level: 3
+    text: dp[i][j] = dp[i-1][j-1] on a match, else 1 + min(dp[i-1][j] delete, dp[i][j-1] insert, dp[i-1][j-1] replace). Seed dp[i][0]=i and dp[0][j]=j.
+tests:
+  public:
+    - name: kitten_sitting
+      input: {source: "kitten", target: "sitting"}
+      expected: 3
+    - name: empty_source
+      input: {source: "", target: "abc"}
+      expected: 3
+    - name: identical
+      input: {source: "plaque", target: "plaque"}
+      expected: 0
+  validation:
+    - name: empty_target
+      input: {source: "brass", target: ""}
+      expected: 5
+    - name: flaw_lawn
+      input: {source: "flaw", target: "lawn"}
+      expected: 2
+    - name: sunday_saturday
+      input: {source: "sunday", target: "saturday"}
+      expected: 3
+    - name: horse_ros
+      input: {source: "horse", target: "ros"}
+      expected: 3
+    - name: single_replace
+      input: {source: "cat", target: "cot"}
+      expected: 1
+explanation_markdown: |
+  This is edit distance (Levenshtein distance), a two-axis DP whose state is a pair
+  of prefix lengths. Let `dp[i][j]` be the fewest corrections that turn the first
+  `i` characters of `source` into the first `j` characters of `target`. The two
+  fully-known edges anchor everything: turning the first `i` characters into an
+  empty string costs `i` deletions, and building the first `j` characters from
+  nothing costs `j` insertions, so `dp[i][0] = i` and `dp[0][j] = j`.
+
+  For an interior cell, look at the current pair of characters. If they already
+  match, they cost nothing and the answer copies the diagonal `dp[i-1][j-1]`. If
+  they differ, you must pay one operation and then solve a smaller problem, choosing
+  the cheapest of three moves: delete a source character (`dp[i-1][j]`), insert a
+  target character (`dp[i][j-1]`), or replace one character with another
+  (`dp[i-1][j-1]`). Take `1 + min(...)` of those three.
+
+  Because each cell reads only its top, left, and diagonal neighbours, filling the
+  table in row order guarantees they are ready. The bottom-right entry is the
+  answer, in O(m*n) time and O(m*n) space.
+common_mistakes:
+  - Forgetting to seed the first row and column with 0..n and 0..m, which breaks every insertion-only or deletion-only case.
+  - Adding one in the match branch instead of copying the diagonal, overcounting characters that need no change.
+  - Taking the min over only two of the three neighbours, which forbids either replace or one of insert/delete.
+  - Swapping which neighbour means insert versus delete, giving wrong counts on unequal-length strings.

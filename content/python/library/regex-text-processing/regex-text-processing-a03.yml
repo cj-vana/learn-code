@@ -1,0 +1,81 @@
+id: exercise.library.regex_text_processing.a03
+kind: exercise
+version: 1
+language: python
+title: Does the Line Start With a Ticket Tag?
+slug: regex-text-processing-a03
+difficulty: easy
+concepts:
+  - python.regex
+  - python.strings
+prerequisites:
+  - python.functions
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.regex_text_processing.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original help-desk ticket-prefix check using an anchored match.
+prompt_markdown: |
+  A help desk stores log lines, and only some of them begin with a ticket tag of
+  the form `TKT-` followed by one or more digits, like `TKT-5567`. Write
+  `starts_with_ticket(line)` that returns `True` when `line` begins with such a
+  tag and `False` otherwise. The tag must be at the very start of the line, and
+  `TKT-` with no digits after it does not count.
+starter_code: |
+  import re
+
+
+  def starts_with_ticket(line):
+      return False
+function_name: starts_with_ticket
+input_mode: function
+solution_sketch: Use re.match to anchor the tag pattern at the start and return whether a match was found.
+sample_solution: |
+  import re
+
+
+  def starts_with_ticket(line):
+      return re.match(r"TKT-\d+", line) is not None
+hints:
+  - level: 1
+    text: The tag must appear at the very beginning, which is exactly what re.match checks.
+  - level: 2
+    text: re.match returns a match object when the pattern is found at the start, or None otherwise.
+  - level: 3
+    text: Return re.match(r"TKT-\d+", line) is not None so the result is a clean boolean.
+tests:
+  public:
+    - name: valid_at_start
+      input: TKT-5567 opened by user
+      expected: true
+    - name: tag_not_at_start
+      input: reopened TKT-1 today
+      expected: false
+    - name: missing_digits
+      input: TKT-abc is invalid
+      expected: false
+  validation:
+    - name: single_digit
+      input: TKT-9 escalated
+      expected: true
+    - name: lowercase_prefix
+      input: tkt-9 escalated
+      expected: false
+    - name: empty_line
+      input: ''
+      expected: false
+explanation_markdown: |
+  `re.match` only succeeds when the pattern is found at position 0, so it is the
+  right tool for "does this begin with...". The pattern `TKT-\d+` requires the
+  literal prefix followed by at least one digit, which rejects both `TKT-abc`
+  (no digit) and lines where the tag appears later. Comparing the result to
+  `None` with `is not None` turns the match object (or its absence) into the
+  boolean the caller expects.
+common_mistakes:
+  - Using re.search instead of re.match, which would return True even when the tag appears in the middle.
+  - Writing TKT-\d* so a bare "TKT-" with no digits matches.
+  - Returning the raw match object instead of a boolean.

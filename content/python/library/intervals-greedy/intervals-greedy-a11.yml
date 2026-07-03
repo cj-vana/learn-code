@@ -1,0 +1,118 @@
+id: exercise.library.intervals_greedy.a11
+kind: exercise
+version: 1
+language: python
+title: Overlap of Two Sorted Schedules
+slug: intervals-greedy-a11
+difficulty: medium
+concepts:
+  - patterns.intervals
+prerequisites:
+  - python.lists
+  - python.tuples
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.intervals_greedy.a11
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original two-radio-listener framing for a two-pointer intersection sweep over two sorted disjoint interval lists.
+prompt_markdown: |
+  Two friends each keep a list of the minute ranges during which they were
+  listening to the same live radio show. Each list is a series of `[start, end]`
+  blocks that are already sorted by `start` and never overlap one another (within
+  a single list). You want the minutes when they were BOTH listening.
+
+  Write `interval_intersection(data)` where `data` is a dict with:
+
+  - `"first"`: the first friend's sorted, pairwise-disjoint `[start, end]` blocks.
+  - `"second"`: the second friend's sorted, pairwise-disjoint `[start, end]` blocks.
+
+  Return the list of `[start, end]` overlap blocks, in order, where the two
+  friends' listening times intersect. Use a two-pointer sweep that walks both
+  lists at once. Two blocks that merely touch at a single endpoint DO count as an
+  intersection (a zero-width block like `[5, 5]`). If there is no overlap
+  anywhere, return `[]`. If either list is empty, return `[]`.
+
+  Example: `{"first": [[0, 2], [5, 10]], "second": [[1, 5], [8, 12]]}` returns
+  `[[1, 2], [5, 5], [8, 10]]`.
+starter_code: |
+  def interval_intersection(data):
+      return []
+function_name: interval_intersection
+input_mode: function
+solution_sketch: Walk both lists with two pointers; the overlap of the current pair is [max(starts), min(ends)] when that is non-empty, then advance whichever block ends first.
+sample_solution: |
+  def interval_intersection(data):
+      first = data["first"]
+      second = data["second"]
+      result = []
+      i = 0
+      j = 0
+      while i < len(first) and j < len(second):
+          lo = max(first[i][0], second[j][0])
+          hi = min(first[i][1], second[j][1])
+          if lo <= hi:
+              result.append([lo, hi])
+          if first[i][1] < second[j][1]:
+              i += 1
+          else:
+              j += 1
+      return result
+hints:
+  - level: 1
+    text: Keep one pointer into each list. At every step you only compare the two blocks the pointers currently point at.
+  - level: 2
+    text: The overlap of two blocks is [max of the two starts, min of the two ends]; it is a real block only when that low end is <= that high end.
+  - level: 3
+    text: After handling the current pair, advance the pointer of whichever block has the smaller end, since that block can never overlap anything later.
+tests:
+  public:
+    - name: example_from_prompt
+      input: {"first": [[0, 2], [5, 10]], "second": [[1, 5], [8, 12]]}
+      expected: [[1, 2], [5, 5], [8, 10]]
+    - name: no_overlap_anywhere
+      input: {"first": [[0, 1]], "second": [[2, 3]]}
+      expected: []
+    - name: both_empty
+      input: {"first": [], "second": []}
+      expected: []
+  validation:
+    - name: one_list_empty
+      input: {"first": [], "second": [[1, 5]]}
+      expected: []
+    - name: one_long_covers_several
+      input: {"first": [[1, 10]], "second": [[2, 3], [5, 6]]}
+      expected: [[2, 3], [5, 6]]
+    - name: touch_at_single_point
+      input: {"first": [[1, 3]], "second": [[3, 5]]}
+      expected: [[3, 3]]
+    - name: staggered_overlaps
+      input: {"first": [[0, 4], [7, 11]], "second": [[2, 9]]}
+      expected: [[2, 4], [7, 9]]
+    - name: identical_lists
+      input: {"first": [[1, 4], [6, 8]], "second": [[1, 4], [6, 8]]}
+      expected: [[1, 4], [6, 8]]
+explanation_markdown: |
+  Because each list is already sorted by start and internally disjoint, you never
+  need to compare a block against anything except the one the other pointer is on
+  right now. For the current pair, the overlap runs from the later of the two
+  starts, `max(first[i][0], second[j][0])`, to the earlier of the two ends,
+  `min(first[i][1], second[j][1])`. If that low value is less than or equal to the
+  high value, the pair overlaps and you record `[lo, hi]`; using `<=` (not `<`)
+  keeps zero-width touches like `[5, 5]`.
+
+  The key move is deciding which pointer to advance. The block with the smaller
+  end cannot possibly overlap any later block in the other list, since every later
+  block starts even further right. So you retire that block by advancing its
+  pointer, and the other block stays in play to be checked against the next one.
+  Each step advances exactly one pointer, so the sweep is O(m + n) and the results
+  come out already in order. When either list runs out (including the empty-input
+  case), the loop never starts or stops early and you return what you have.
+common_mistakes:
+  - Using lo < hi instead of lo <= hi, which drops single-point touches such as [3, 3] that should be included.
+  - Advancing both pointers every iteration, which skips over blocks that still had overlap left to contribute.
+  - Advancing the pointer with the larger end (or always advancing the same list), which loses valid later intersections.
+  - Assuming the two lists are already aligned index-for-index instead of sweeping them independently with two pointers.

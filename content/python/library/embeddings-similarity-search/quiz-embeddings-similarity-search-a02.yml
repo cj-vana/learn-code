@@ -1,0 +1,95 @@
+id: quiz.library.embeddings_similarity_search.a02
+kind: quiz
+version: 1
+language: python
+title: Vector Math Under the Hood
+slug: quiz-embeddings-similarity-search-a02
+difficulty: medium
+concepts:
+  - ai.embeddings_retrieval
+prerequisites:
+  - ai.embeddings_retrieval
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.embeddings_similarity_search.a02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax quiz on the numerical mechanics of similarity, normalization, BM25 terms, and softmax stability.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: 'What is the cosine similarity of a = [3, 0] and b = [0, 4]?'
+    choices:
+      - '0.0 — perpendicular vectors share no direction'
+      - '1.0 — both are positive vectors'
+      - '12.0 — the product of magnitudes'
+      - '0.5 — the average of the components'
+    correct_choice: '0.0 — perpendicular vectors share no direction'
+    explanation: |
+      The dot product is 3*0 + 0*4 = 0, and zero dot product means orthogonal:
+      maximally unrelated directions, cosine 0 regardless of magnitudes.
+    concepts:
+      - ai.embeddings_retrieval
+  - id: q2
+    prompt: After normalizing vectors to unit length, which pair of operations become interchangeable for RANKING results?
+    choices:
+      - Cosine similarity and the dot product — cosine's denominator is now 1
+      - BM25 and TF-IDF — normalization equates them
+      - Euclidean and Manhattan distance
+      - Softmax and argmax
+    correct_choice: Cosine similarity and the dot product — cosine's denominator is now 1
+    explanation: |
+      cosine = dot/(|a||b|), and unit vectors make both magnitudes 1 — the
+      reason vector stores normalize at index time and then use plain dot
+      products per query.
+    concepts:
+      - ai.embeddings_retrieval
+  - id: q3
+    prompt: |
+      naive_softmax([1000, 999]) crashes with OverflowError. What does the
+      stable version compute instead, and why is the result identical?
+    choices:
+      - exp([0, -1]) after subtracting the max — the common factor exp(1000) cancels from numerator and denominator
+      - exp([1, 0.999]) after dividing by the max — ratios are preserved
+      - log([1000, 999]) — logs avoid overflow
+      - It clips scores to 700 before exponentiating
+    correct_choice: exp([0, -1]) after subtracting the max — the common factor exp(1000) cancels from numerator and denominator
+    explanation: |
+      softmax(s) = softmax(s - c) for any constant c, algebraically; choosing
+      c = max(s) keeps every exponent non-positive so exp never overflows.
+    concepts:
+      - ai.embeddings_retrieval
+  - id: q4
+    prompt: |
+      In BM25, setting the length-correction knob b = 0 has what effect?
+    choices:
+      - Document length is ignored entirely — long documents lose their penalty
+      - Scores become negative for short documents
+      - The saturation ceiling k1+1 doubles
+      - idf switches to raw N/df
+    correct_choice: Document length is ignored entirely — long documents lose their penalty
+    explanation: |
+      The correction term is 1 - b + b*(len/avglen); at b = 0 it is constant 1,
+      removing the long-document penalty. b and k1 are independent dials.
+    concepts:
+      - ai.embeddings_retrieval
+  - id: q5
+    prompt: |
+      top_k must return [index, score] pairs sorted by score descending. Two
+      chunks score identically. What does the course convention require?
+    choices:
+      - Tie-break by lower index — sort by (-score, index) so results are deterministic
+      - Return them in random order — ties are equivalent
+      - Drop both — ambiguous results are unsafe
+      - Merge them into one combined entry
+    correct_choice: Tie-break by lower index — sort by (-score, index) so results are deterministic
+    explanation: |
+      Equal scores are common with quantized embeddings; a stated tie-break
+      keeps retrieval reproducible and testable, the same determinism
+      discipline as everywhere else in the course.
+    concepts:
+      - ai.embeddings_retrieval
+      - concepts.testing

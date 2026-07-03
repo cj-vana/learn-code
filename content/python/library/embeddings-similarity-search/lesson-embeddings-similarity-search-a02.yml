@@ -1,0 +1,97 @@
+id: lesson.library.embeddings_similarity_search.a02
+kind: lesson
+version: 1
+language: python
+title: 'Scoring Documents: TF-IDF and BM25'
+slug: lesson-embeddings-similarity-search-a02
+difficulty: medium
+concepts:
+  - ai.embeddings_retrieval
+  - concepts.grouping_aggregation
+prerequisites:
+  - ai.embeddings_retrieval
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.embeddings_similarity_search.a02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original TF-IDF and BM25 walkthrough framed around searching a harbor authority's incident reports, with fresh worked intuition.
+body_markdown: |
+  Before neural embeddings — and still, today, beside them — search engines
+  rank documents with weighted word counts. The two classic schemes, TF-IDF
+  and BM25, are worth building by hand for two reasons: they remain
+  production workhorses (BM25 is the default in Elasticsearch and the
+  "keyword half" of most RAG hybrid retrievers), and each of their terms
+  answers a failure of raw counting. Watch the repairs accumulate.
+
+  ### Failure 1: common words dominate
+
+  Searching a harbor authority's incident reports for "propeller fouling",
+  raw word-count matching ranks by the word "the" — it appears everywhere,
+  massively. **Term frequency (TF)** — a term's count in a document,
+  normalized by document length — still overweights ubiquitous words.
+
+  The repair is to ask: *in how many documents* does the term appear? A
+  term in every document carries no signal about any of them. **Inverse
+  document frequency**:
+
+  ```text
+  idf(term) = log(N / df(term))
+  ```
+
+  N documents total, df = documents containing the term. "the" appears in
+  all N: idf = log(1) = **0** — multiplied away entirely. "propeller" in 3
+  of 500 reports: idf = log(166.7) ≈ 5.1. TF-IDF (the product) reads as
+  *frequent here, rare elsewhere* — the definition of a distinguishing
+  term. Note the log: without it, a 1-in-500 term would outweigh a 1-in-50
+  term 10x; logged, the ratio is gentler — rarity matters, but not
+  linearly.
+
+  ### Failure 2: the tenth occurrence isn't the first
+
+  A report mentioning "fouling" ten times is about fouling; one mentioning
+  it twenty times is *not twice as much* about fouling. Relevance should
+  **saturate**. BM25's core term does this:
+
+  ```text
+  tf · (k1 + 1) / (tf + k1)
+  ```
+
+  As tf grows, this approaches its ceiling (k1 + 1) — each additional
+  occurrence buys less. The knob k1 (typically ~1.5) sets how fast the
+  ceiling arrives.
+
+  ### Failure 3: long documents win by surface area
+
+  Long reports contain more of everything, so they match every query a
+  little. BM25 divides tf's denominator contribution by a length
+  correction — `1 - b + b · (doclen / avg_doclen)` — penalizing documents
+  longer than the collection's average. The knob b (typically 0.75) sets
+  how hard; b = 0 ignores length entirely.
+
+  Assembled, BM25 sums over query terms: idf × saturated, length-corrected
+  tf. Every piece now has a *reason* — which is the difference between
+  implementing a formula and understanding one. The exercises hand you the
+  formula with explicit inputs and you build it term by term.
+
+  ### Keyword and semantic search disagree — usefully
+
+  BM25 matches *exact vocabulary*: ask about "propeller fouling" and a
+  report saying "screw entanglement" scores zero. Embeddings from the last
+  lesson match *meaning* and find it — but can drift on precise, rare
+  terms (part numbers, error codes) that BM25 nails exactly. Production
+  retrieval usually runs **both** and merges the rankings, which is why
+  this area teaches both halves. You now can build each from scratch.
+checkpoints:
+  - question: Why does idf use log(N/df) rather than the raw ratio N/df?
+    answer: The log compresses the rarity reward — without it a 1-in-500 term would count 10 times a 1-in-50 term, letting extreme rarity swamp every other signal; logged, rarity matters sublinearly.
+    explanation: 'Each TF-IDF component exists to correct an overweighting failure, and the log corrects overweighting of rarity itself.'
+  - question: 'What retrieval failure does BM25''s saturating term tf(k1+1)/(tf+k1) fix, and what does the curve look like as tf grows?'
+    answer: 'It stops relevance from growing linearly with repetition — the twentieth occurrence of a term proves little more than the tenth; the curve rises steeply at first and flattens toward the ceiling k1+1.'
+    explanation: Saturation encodes diminishing evidence — without it, keyword-stuffed documents dominate rankings.
+  - question: A maintenance log says "screw entanglement" but the query is "propeller fouling". How do BM25 and embedding search each treat this document, and what do production systems conclude?
+    answer: BM25 scores it near zero (no shared vocabulary) while embedding similarity finds it (same meaning, different words); production retrievers run both and merge, because exact-term precision and semantic recall fail in opposite cases.
+    explanation: The two methods' complementary blind spots are the entire argument for hybrid retrieval — and for learning both halves by hand.

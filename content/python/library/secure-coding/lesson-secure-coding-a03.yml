@@ -1,0 +1,106 @@
+id: lesson.library.secure_coding.a03
+kind: lesson
+version: 1
+language: python
+title: 'Secrets, Comparisons, and Randomness That Matters'
+slug: lesson-secure-coding-a03
+difficulty: hard
+concepts:
+  - python.secure_coding
+prerequisites:
+  - python.secure_coding
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.secure_coding.a03
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original walkthrough of secret handling, constant-time comparison, and secrets vs random, with fresh worked examples.
+body_markdown: |
+  The last lesson closed injection. This one covers three narrower but
+  sharp-edged topics where the *obvious* Python is the *wrong* Python —
+  the kind of subtlety that separates code that looks secure from code
+  that is.
+
+  ### The wrong random
+
+  Python has two random modules, and using the wrong one is a real
+  vulnerability:
+
+  ```python
+  import random     # FAST, PREDICTABLE — never for security
+  import secrets    # cryptographically secure — for anything secret
+
+  random.random()          # a Mersenne Twister — its future is predictable
+                           # from a few outputs. Fine for games, shuffles, sampling.
+  secrets.token_hex(16)    # a session token, password reset code, API key
+  secrets.choice(alphabet) # a secure random pick
+  ```
+
+  `random` is deterministic given its state, and an attacker who sees a
+  handful of outputs can predict the rest — catastrophic for a
+  password-reset token or session id. `secrets` draws from the OS's
+  cryptographic entropy. The rule is bright-line: **anything an attacker
+  benefits from guessing — tokens, codes, keys, salts — uses `secrets`;
+  everything else can use `random`.** Your exercise classifies uses to
+  the correct module, because the choice is judgment about consequence.
+
+  ### The timing side channel
+
+  Comparing a secret with `==` leaks information through *time*:
+
+  ```python
+  if provided_token == real_token:      # returns FASTER on an early mismatch
+  ```
+
+  String `==` stops at the first differing character, so a token whose
+  first byte is right takes microscopically longer to reject than one
+  whose first byte is wrong. An attacker measuring response times can
+  recover a secret one character at a time — a real, demonstrated attack.
+  The defense is a **constant-time comparison** that always examines
+  every character:
+
+  ```python
+  import hmac
+  hmac.compare_digest(provided_token, real_token)   # time independent of where they differ
+  ```
+
+  Your exercise implements the constant-time compare (accumulate
+  differences across the whole length with XOR, never early-return) —
+  the mechanic behind `compare_digest`. Use it for tokens, MACs, and
+  password hashes; never `==`.
+
+  ### Passwords are hashed, never stored (nor encrypted)
+
+  A conceptual pillar (the real hashing needs libraries the sandbox
+  lacks, so this is a lesson point): passwords are never stored in
+  readable form, and — the common mistake — **not encrypted either**,
+  because encryption is reversible and a leaked key exposes everything.
+  They are **hashed** with a deliberately *slow*, *salted* algorithm
+  (bcrypt, scrypt, argon2): slow to resist brute force, salted so
+  identical passwords hash differently and precomputed tables fail. To
+  check a login you hash the attempt and constant-time-compare to the
+  stored hash — the plaintext is never recovered because it is never
+  recoverable. "We can email you your password" is a confession that a
+  site did this wrong.
+
+  Three sharp edges — secure randomness, constant-time comparison,
+  proper password hashing — and a shared lesson: security-sensitive
+  operations have requirements (unpredictability, timing-independence,
+  irreversibility) that the naive idiom silently violates. The
+  defensive mindset is knowing these exist and reaching for the right
+  primitive. Combined with validate-at-the-boundary and
+  separate-data-from-code, that is the working core of secure Python —
+  not a bolt-on, but how careful code is written.
+checkpoints:
+  - question: When must you use secrets instead of random, and what makes random unsafe there?
+    answer: 'For anything an attacker benefits from guessing — session tokens, reset codes, API keys, salts; random is a deterministic Mersenne Twister whose future outputs are predictable from a few observed values, while secrets draws from cryptographic OS entropy.'
+    explanation: 'Predictability is fatal for secrets; the two-module split forces a conscious choice about whether an output must be unguessable.'
+  - question: How can comparing a token with == leak the secret, and what is the fix?
+    answer: 'String == short-circuits at the first differing character, so a partially-correct guess is rejected microscopically slower; an attacker timing responses recovers the secret character by character. hmac.compare_digest compares in constant time, examining the whole length regardless of where bytes differ.'
+    explanation: 'Timing side channels turn an early-return optimization into an information leak — constant-time comparison removes the signal.'
+  - question: Why are passwords hashed rather than encrypted, and why must the hash be slow and salted?
+    answer: 'Encryption is reversible, so a leaked key exposes every password; hashing is one-way, so the plaintext is never recoverable even from the database. Slowness resists brute-force guessing, and per-password salts make identical passwords hash differently, defeating precomputed lookup tables.'
+    explanation: 'Irreversibility, cost, and salting are deliberate properties the right password-hash algorithms provide and a plain or reversible scheme lacks.'

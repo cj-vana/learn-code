@@ -1,0 +1,99 @@
+id: lesson.library.iterators_generators.a04
+kind: lesson
+version: 1
+language: python
+title: Piping Generators Into Lazy Pipelines
+slug: lesson-iterators-generators-a04
+difficulty: medium
+concepts:
+  - python.iterators_generators
+  - patterns.filtering
+prerequisites:
+  - python.iterators_generators
+  - python.loops
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.iterators_generators.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original water-treatment pipeline framing for chaining generators and consuming infinite streams safely.
+body_markdown: |
+  Generators really shine when you connect several of them into a **pipeline**.
+  Each stage takes an iterable, transforms it, and yields values downstream. Because
+  every stage is lazy, a value flows all the way through the pipeline one item at
+  a time, and nothing accumulates in the middle.
+
+  Think of a water-treatment line: readings come in, out-of-range ones are
+  filtered out, and the survivors are rescaled. Two small generators, wired
+  together, do the whole job:
+
+  ```python
+  def in_range(readings, low, high):
+      for r in readings:
+          if low <= r <= high:
+              yield r
+
+  def rescale(readings, low):
+      for r in readings:
+          yield r - low
+
+  raw = [1, 5, 12, 8]
+  clean = rescale(in_range(raw, 4, 10), 4)
+  print(list(clean))   # [1, 4]
+  ```
+
+  The magic is in `rescale(in_range(raw, ...), ...)`. `in_range` hands its output
+  straight into `rescale` as an iterable. No intermediate list is built; each
+  reading is filtered and rescaled just in time. You can stack as many stages as
+  you like, and the shape stays readable: parse, then filter, then transform,
+  then group.
+
+  This composability makes it safe to work with **infinite** generators, as long
+  as some stage stops pulling. Here is an endless source of triangular numbers:
+
+  ```python
+  def triangulars():
+      total, k = 0, 1
+      while True:
+          total += k
+          yield total
+          k += 1
+  ```
+
+  That `while True` never ends on its own, so you must control consumption from
+  the outside. Pull a fixed number of values with `next`:
+
+  ```python
+  gen = triangulars()
+  first_four = [next(gen) for _ in range(4)]   # [1, 3, 6, 10]
+  ```
+
+  Or stop as soon as a condition is met, breaking out of the loop:
+
+  ```python
+  labels = []
+  for value in triangulars():
+      if value > 20:
+          break
+      labels.append(value)   # [1, 3, 6, 10, 15]
+  ```
+
+  The rule to internalize: an infinite generator is only dangerous if you try to
+  exhaust it with `list()` or a plain `for` that never breaks. Pair it with
+  `next`-in-a-range, an early `break`, or a slicing tool, and it becomes a clean
+  way to describe "as many as I need, computed only when I ask." A multi-stage
+  pipeline built from small generators, capped by controlled consumption at the
+  end, lets you process arbitrarily large or endless data in constant memory.
+checkpoints:
+  - question: When you write rescale(in_range(raw, 4, 10), 4), how much data sits in memory between the two stages at once?
+    answer: Essentially one value at a time; each reading flows through in_range and then rescale before the next is pulled, so no intermediate list is built.
+    explanation: Lazy stages pass single items downstream on demand, which is why chained generators process large inputs in constant memory.
+  - question: Why is it unsafe to call list() on the triangulars() generator, and what should you do instead?
+    answer: triangulars() never stops, so list() would loop forever; instead cap consumption with next() a fixed number of times, an early break, or a slicing tool.
+    explanation: Infinite generators are fine as long as some outer stage stops pulling values.
+  - question: What is the benefit of building a transform out of several small generator stages rather than one big loop?
+    answer: Each stage is lazy and composable, so items stream through one at a time in constant memory and the stages can be rearranged or reused independently.
+    explanation: Small piped generators keep memory flat and keep each transformation step readable and testable on its own.

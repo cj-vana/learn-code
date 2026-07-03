@@ -1,0 +1,136 @@
+id: exercise.library.intervals_greedy.b01
+kind: exercise
+version: 1
+language: python
+title: The Most Valuable Booking Sheet
+slug: intervals-greedy-b01
+difficulty: hard
+concepts:
+  - patterns.intervals
+  - patterns.dynamic_programming
+  - python.heapq_bisect
+prerequisites:
+  - python.sorting
+  - python.lists
+estimated_time_minutes: 26
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.intervals_greedy.b01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: >-
+    Original photography-studio framing for weighted interval scheduling. The
+    twist beyond the greedy "most bookings" exercises is that each booking carries
+    a revenue, so a pure count-greedy fails and the solver must sort by end,
+    binary-search the last compatible booking, and run a DP.
+prompt_markdown: |
+  A photography studio rents out its single shooting floor. Each booking request
+  names a start time, an end time, and the revenue it would bring in. Only one
+  shoot can use the floor at a time, so you must pick a set of bookings that never
+  overlap, and you want the set that earns the **most total revenue** -- which is
+  not always the set with the most bookings.
+
+  You are given `job` with this shape:
+
+  ```
+  {"bookings": [[1, 3, 50], [3, 5, 20], [1, 5, 60]]}
+  ```
+
+  Each booking is `[start, end, revenue]` with integer times and revenue, and each
+  occupies the half-open span from `start` up to `end`. Two bookings are compatible
+  when they do not overlap; because the spans are half-open, a booking ending at
+  time `t` and another starting exactly at `t` are compatible (the floor is free the
+  instant one ends).
+
+  Write `weighted_bookings(job)` that returns the maximum total revenue of any set
+  of pairwise-compatible bookings, as an integer.
+
+  Cases the tests cover: an empty sheet earns `0`; two overlapping bookings force a
+  choice of the richer one; back-to-back bookings that touch at a boundary can both
+  be taken; and a single long lucrative booking may beat several short ones or lose
+  to them.
+starter_code: |
+  def weighted_bookings(job):
+      # Return the maximum total revenue of a non-overlapping set of bookings.
+      return 0
+function_name: weighted_bookings
+input_mode: function
+solution_sketch: >-
+  Sort bookings by end time, then for each booking binary-search the latest earlier
+  booking that finishes at or before it starts; a DP where dp[i] is the best
+  revenue using the first i bookings takes max(skip this booking, its revenue plus
+  the best compatible prefix).
+sample_solution: |
+  import bisect
+
+
+  def weighted_bookings(job):
+      bookings = job["bookings"]
+      if not bookings:
+          return 0
+      bookings = sorted(bookings, key=lambda b: b[1])
+      ends = [b[1] for b in bookings]
+      n = len(bookings)
+      dp = [0] * (n + 1)
+      for i in range(1, n + 1):
+          start, end, revenue = bookings[i - 1]
+          compatible = bisect.bisect_right(ends, start, 0, i - 1)
+          dp[i] = max(dp[i - 1], revenue + dp[compatible])
+      return dp[n]
+hints:
+  - level: 1
+    text: Picking the most bookings can leave money on the table -- one pricey shoot may beat several cheap ones. You need to weigh revenue, which points at a DP rather than a simple greedy count.
+  - level: 2
+    text: Sort the bookings by end time. For each booking, the ones you could have taken before it are exactly those that end at or before its start; because the list is sorted by end, those form a prefix you can find with a binary search.
+  - level: 3
+    text: Let dp[i] be the best revenue using the first i sorted bookings. For booking i, dp[i] = max(dp[i-1], revenue_i + dp[p]) where p is how many earlier bookings end at or before booking i's start (use bisect_right on the ends).
+tests:
+  public:
+    - name: empty_sheet
+      input: {"bookings": []}
+      expected: 0
+    - name: single_booking
+      input: {"bookings": [[1, 4, 10]]}
+      expected: 10
+    - name: overlap_take_richer
+      input: {"bookings": [[1, 5, 10], [2, 6, 20]]}
+      expected: 20
+  validation:
+    - name: touching_boundary_both_fit
+      input: {"bookings": [[1, 3, 5], [3, 5, 6]]}
+      expected: 11
+    - name: two_shorts_beat_one_long
+      input: {"bookings": [[1, 3, 50], [3, 5, 20], [1, 5, 60]]}
+      expected: 70
+    - name: long_lucrative_wins
+      input: {"bookings": [[1, 2, 50], [3, 5, 20], [6, 19, 100], [2, 100, 200]]}
+      expected: 250
+    - name: all_overlap_take_max
+      input: {"bookings": [[1, 10, 5], [2, 9, 6], [3, 8, 7]]}
+      expected: 7
+explanation_markdown: |
+  This is weighted interval scheduling, and the weights are what rule out the
+  greedy tricks that work when every booking is worth the same. With revenue on the
+  line, "fit the most shoots" can be wrong: in `two_shorts_beat_one_long` the two
+  back-to-back shoots earn 70 together while the single overlapping shoot earns 60,
+  yet in `long_lucrative_wins` one long booking worth 200 plus a tiny one beats a
+  cluster of shorter ones.
+
+  The clean solution sorts bookings by **end time** and builds a DP. Define `dp[i]`
+  as the most revenue obtainable using only the first `i` bookings in that sorted
+  order. For the `i`-th booking you have two choices: skip it, keeping `dp[i-1]`; or
+  take it, earning its revenue plus the best you could do among bookings that finish
+  at or before it starts. Because the list is sorted by end, those compatible
+  bookings are a prefix, and `bisect_right(ends, start, 0, i-1)` counts exactly how
+  many there are -- call it `p` -- so the "take it" value is `revenue + dp[p]`. The
+  half-open spans are why `bisect_right` is right: a booking ending at `t` is
+  compatible with one starting at `t`.
+
+  Sorting is `O(n log n)` and each of the n steps does an `O(log n)` binary search,
+  so the whole thing is `O(n log n)`.
+common_mistakes:
+  - Greedily taking the most bookings or the earliest-ending ones, which ignores revenue and undercounts when a pricey booking is better.
+  - Treating the spans as closed so touching bookings are wrongly judged to overlap, using bisect_left where bisect_right is needed.
+  - Searching the whole ends list instead of only the prefix before the current booking, letting a booking pair with itself or a later one.

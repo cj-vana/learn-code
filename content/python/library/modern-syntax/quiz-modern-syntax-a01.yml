@@ -1,0 +1,103 @@
+id: quiz.library.modern_syntax.a01
+kind: quiz
+version: 1
+language: python
+title: Reading Patterns and Groups
+slug: quiz-modern-syntax-a01
+difficulty: medium
+concepts:
+  - python.modern_syntax
+prerequisites:
+  - python.modern_syntax
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.modern_syntax.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pattern-recognition quiz on match/case dispatch reading and exception-group semantics.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      match msg with cases in this order: (1) case {"kind": k}, (2) case
+      {"kind": "alarm", "zone": z}. A message {"kind": "alarm", "zone": 4}
+      arrives. Which case runs?
+    choices:
+      - Case 1 — patterns try top to bottom and the general mapping pattern matches first, making case 2 unreachable
+      - Case 2 — the more specific pattern always wins
+      - Both — match falls through like C switch
+      - Neither — ambiguity raises an error
+    correct_choice: Case 1 — patterns try top to bottom and the general mapping pattern matches first, making case 2 unreachable
+    explanation: |
+      First match wins with no specificity ranking and no warning for
+      shadowed cases — ordering specific-above-general is the author's job.
+    concepts:
+      - python.modern_syntax
+  - id: q2
+    prompt: |
+      A colleague writes `case RED:` where RED = "red" is a module constant,
+      and the case matches every subject. What happened?
+    choices:
+      - Bare names in patterns are captures — the case bound the subject to a new local RED instead of comparing; a dotted name like Colors.RED compares
+      - String constants cannot appear in patterns
+      - The match statement requires literals in quotes only
+      - RED was garbage-collected before matching
+    correct_choice: Bare names in patterns are captures — the case bound the subject to a new local RED instead of comparing; a dotted name like Colors.RED compares
+    explanation: |
+      "Bare names bind, dotted names compare" — the single most common
+      structural-matching bug, and the reason enum/namespace constants are
+      the idiom in patterns.
+    concepts:
+      - python.modern_syntax
+  - id: q3
+    prompt: |
+      Why does the mapping pattern {"cmd": "stop"} match the message
+      {"cmd": "stop", "source": "panel-3"}?
+    choices:
+      - Mapping patterns are subset tests — listed keys must match, extra keys are ignored
+      - Dicts compare equal when their first keys match
+      - The pattern compiler strips unknown keys
+      - It does not match — mapping patterns are exact
+    correct_choice: Mapping patterns are subset tests — listed keys must match, extra keys are ignored
+    explanation: |
+      Subset semantics make handlers robust to message growth — new fields
+      never break old cases, unlike exact-dict equality.
+    concepts:
+      - python.modern_syntax
+  - id: q4
+    prompt: |
+      Batch processing collects 4 validation failures. Which design surfaces
+      all four to the caller as one raise?
+    choices:
+      - raise ExceptionGroup("validation failed", errors) — a single exception containing all four, rendered as a tree in the traceback
+      - raise errors[0] and log the rest
+      - raise a ValueError whose message concatenates all four
+      - Four sequential raise statements
+    correct_choice: raise ExceptionGroup("validation failed", errors) — a single exception containing all four, rendered as a tree in the traceback
+    explanation: |
+      Groups make failure-in-plural first-class: types preserved,
+      tracebacks preserved, handleable by category with except* — string
+      concatenation loses all three.
+    concepts:
+      - python.modern_syntax
+      - python.exceptions
+  - id: q5
+    prompt: |
+      try: ... except* TimeoutError: handles a group containing 2 timeouts
+      and 1 KeyError. What is the complete outcome?
+    choices:
+      - The block runs with the 2-timeout subgroup, then the KeyError re-raises automatically as its own group
+      - The block runs and the KeyError is swallowed
+      - Nothing runs — the group needs an exact-type handler
+      - The block runs three times, once per exception
+    correct_choice: The block runs with the 2-timeout subgroup, then the KeyError re-raises automatically as its own group
+    explanation: |
+      except* dispatches matching subgroups and re-raises the remainder —
+      unanticipated failure kinds cannot be silently dropped by an
+      incomplete handler ladder.
+    concepts:
+      - python.modern_syntax
+      - python.exceptions

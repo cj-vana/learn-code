@@ -1,0 +1,102 @@
+id: exercise.library.grid_simulation.a02
+kind: exercise
+version: 1
+language: python
+title: Tallying the Seating Chart
+slug: grid-simulation-a02
+difficulty: easy
+concepts:
+  - patterns.grid_traversal
+prerequisites:
+  - python.lists
+  - python.loops
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.grid_simulation.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original row-and-column tally drill framed as counting attendees across a theatre seating chart.
+prompt_markdown: |
+  A theatre stores its seating chart as a rectangular grid of integers, where
+  `grid[r][c]` is the number of ticket-holders in row `r`, seat column `c`. The
+  house manager wants two running totals: how many people are in each row, and
+  how many are in each seat column across all rows.
+
+  Write `tally_chart(grid)` that takes the grid (a list of lists) and returns a
+  list of exactly two lists, `[row_sums, col_sums]`:
+
+  - `row_sums[r]` is the sum of the values in row `r`
+  - `col_sums[c]` is the sum of the values in column `c` across every row
+
+  Return real lists, not tuples. For an empty grid `[]`, return `[[], []]`.
+
+  Example: for `[[1, 2, 3], [4, 5, 6]]` the row sums are `[6, 15]` and the column
+  sums are `[5, 7, 9]`, so the result is `[[6, 15], [5, 7, 9]]`.
+starter_code: |
+  def tally_chart(grid):
+      return [[], []]
+function_name: tally_chart
+input_mode: function
+solution_sketch: Walk every cell once, adding its value into both the running total for its row and the running total for its column, then return the two lists together.
+sample_solution: |
+  def tally_chart(grid):
+      if not grid:
+          return [[], []]
+      rows, cols = len(grid), len(grid[0])
+      row_sums = [0] * rows
+      col_sums = [0] * cols
+      for r in range(rows):
+          for c in range(cols):
+              value = grid[r][c]
+              row_sums[r] += value
+              col_sums[c] += value
+      return [row_sums, col_sums]
+hints:
+  - level: 1
+    text: You need one accumulator per row and one per column, so start with two zero-filled lists sized to the grid.
+  - level: 2
+    text: A single nested loop over (r, c) can feed both totals at once, adding grid[r][c] to row_sums[r] and to col_sums[c].
+  - level: 3
+    text: Handle the empty grid up front by returning [[], []], since len(grid[0]) would fail on an empty list.
+tests:
+  public:
+    - name: two_by_three
+      input: [[1, 2, 3], [4, 5, 6]]
+      expected: [[6, 15], [5, 7, 9]]
+    - name: single_row
+      input: [[2, 5, 1]]
+      expected: [[8], [2, 5, 1]]
+    - name: single_column
+      input: [[4], [6], [10]]
+      expected: [[4, 6, 10], [20]]
+  validation:
+    - name: empty_grid
+      input: []
+      expected: [[], []]
+    - name: single_cell
+      input: [[9]]
+      expected: [[9], [9]]
+    - name: cancelling_negatives
+      input: [[3, -3], [10, -10]]
+      expected: [[0, 0], [13, -13]]
+    - name: three_by_two
+      input: [[1, 2], [3, 4], [5, 6]]
+      expected: [[3, 7, 11], [9, 12]]
+    - name: all_zeros
+      input: [[0, 0, 0], [0, 0, 0]]
+      expected: [[0, 0], [0, 0, 0]]
+explanation_markdown: |
+  The tidy trick is that a single pass over the grid can maintain both sets of
+  totals at the same time: each value belongs to exactly one row and one column,
+  so you add it to `row_sums[r]` and `col_sums[c]` in the same step. Sizing the
+  accumulator lists from `len(grid)` and `len(grid[0])` guarantees an entry for
+  every row and column, even when a total works out to zero. The empty-grid guard
+  matters because `grid[0]` does not exist when there are no rows. The routine
+  visits each cell once, so it runs in O(rows * cols) time.
+common_mistakes:
+  - Calling len(grid[0]) without first handling the empty grid, which raises an IndexError.
+  - Returning the row and column totals as a tuple, which will not compare equal to the expected list.
+  - Building column sums with a separate second pass and mis-indexing, instead of feeding both totals from one loop.

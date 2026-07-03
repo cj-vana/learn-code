@@ -1,0 +1,126 @@
+id: exercise.library.secure_coding.a07
+kind: exercise
+version: 1
+language: python
+title: Splitting the Cutting-Table Command Line
+slug: secure-coding-a07
+difficulty: medium
+concepts:
+  - python.secure_coding
+  - python.strings
+  - python.lists
+prerequisites:
+  - python.strings
+  - python.lists
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.secure_coding.a07
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original bookbindery plotter-console drill that tokenizes an operator command line with shlex.split instead of naive str.split, themed around a cutting table.
+prompt_markdown: |
+  A bookbindery drives its computer-controlled cutting table from a small console
+  where an operator types a single command line, like `cut design.svg 3`. The
+  first word is the verb, the rest are its arguments. Naively calling
+  `command_line.split()` looks fine until a filename has a space in it: splitting
+  on whitespace shatters `winter menu.svg` into two broken arguments, and the
+  table cuts the wrong job.
+
+  The right tool is `shlex.split`, which tokenizes a command line the way a shell
+  would — honouring quotes — **without** handing the string to a real shell (so
+  nothing gets executed or interpreted). Write `tokenize_command(command_line)`
+  that returns the list of argument tokens.
+
+  Rules, all of which are tested:
+
+  - Split on runs of whitespace, so `a   b    c` becomes `['a', 'b', 'c']` — runs
+    of spaces collapse, they do not create empty tokens.
+  - A single- or double-quoted span becomes **one** token with its inner spaces
+    intact: `cut 'winter menu.svg' 3` becomes `['cut', 'winter menu.svg', '3']`.
+  - Quotes are consumed, not kept: the surrounding quote characters do not appear
+    in the token. An apostrophe inside a double-quoted span is an ordinary
+    character, so `score "it's ready"` becomes `['score', "it's ready"]`.
+  - An empty string or a string of only whitespace returns `[]`.
+  - If the command line has an **unbalanced quote** (a quote that is never
+    closed), the input is ambiguous, so reject it defensively and return `[]`
+    rather than guessing where the token ends.
+
+  Example: `tokenize_command('plot "batch 12" --fast')` returns
+  `['plot', 'batch 12', '--fast']`.
+starter_code: |
+  import shlex
+
+
+  def tokenize_command(command_line):
+      # Tokenize like a shell would, but without running a shell.
+      return []
+function_name: tokenize_command
+input_mode: function
+solution_sketch: Return shlex.split(command_line); wrap it in try/except ValueError to catch an unbalanced quote and return an empty list.
+sample_solution: |
+  import shlex
+
+
+  def tokenize_command(command_line):
+      try:
+          return shlex.split(command_line)
+      except ValueError:
+          return []
+hints:
+  - level: 1
+    text: str.split() cannot tell that a quoted filename with a space is a single argument; the standard library already solves shell-style tokenizing for you.
+  - level: 2
+    text: shlex.split honours single and double quotes and collapses whitespace runs, returning a list of tokens without the surrounding quote characters.
+  - level: 3
+    text: shlex.split raises ValueError when a quote is never closed, so wrap the call in try/except ValueError and return [] for that ambiguous case.
+tests:
+  public:
+    - name: plain_words
+      input: 'cut design.svg 3'
+      expected: ['cut', 'design.svg', '3']
+    - name: quoted_filename_with_space
+      input: "cut 'winter menu.svg' 3"
+      expected: ['cut', 'winter menu.svg', '3']
+    - name: empty_line
+      input: ''
+      expected: []
+  validation:
+    - name: whitespace_runs_collapse
+      input: 'a   b    c'
+      expected: ['a', 'b', 'c']
+    - name: double_quoted_span
+      input: 'plot "batch 12" --fast'
+      expected: ['plot', 'batch 12', '--fast']
+    - name: apostrophe_inside_double_quotes
+      input: 'score "it''s ready"'
+      expected: ['score', "it's ready"]
+    - name: whitespace_only
+      input: '   '
+      expected: []
+    - name: unbalanced_quote_rejected
+      input: 'cut "unterminated'
+      expected: []
+explanation_markdown: |
+  The vulnerability being avoided here is twofold. First, `str.split()` has no
+  concept of quoting, so any argument that legitimately contains a space is
+  silently torn into pieces — a correctness bug that becomes a security bug the
+  moment those pieces are treated as separate filenames or flags. Second, the
+  tempting "just hand the whole string to the shell" approach (`shell=True`)
+  invites shell-injection: metacharacters like `;`, `|`, and `$()` in the input
+  would be interpreted as commands. `shlex.split` threads the needle: it applies
+  shell **quoting** rules to produce a clean argument list, but it never executes
+  anything, so a malicious argument stays inert data.
+
+  Handling the unbalanced-quote case is the defensive touch. `shlex.split` raises
+  `ValueError` when a quote is opened and never closed, because it genuinely
+  cannot know where the token was meant to end. Returning `[]` refuses the
+  ambiguous input instead of quietly producing a token list the operator never
+  intended.
+common_mistakes:
+  - Using command_line.split() instead of shlex.split, which breaks any quoted argument that contains a space.
+  - Leaving the surrounding quote characters in the tokens instead of letting shlex consume them.
+  - Letting the ValueError from an unbalanced quote propagate and crash instead of returning an empty list.
+  - Reaching for a real shell (shell=True) to honour the quotes, which reintroduces the injection risk shlex is meant to avoid.

@@ -1,0 +1,117 @@
+id: exercise.library.files_formats.a06
+kind: exercise
+version: 1
+language: python
+title: Layering Stage-Lighting Presets
+slug: files-formats-a06
+difficulty: medium
+concepts:
+  - python.json_csv
+  - python.dictionaries
+prerequisites:
+  - python.loops
+  - python.conditionals
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.files_formats.a06
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original JSON-patch merge drill themed around a lighting desk layering preset overrides where a null field removes a channel.
+prompt_markdown: |
+  A theatre lighting desk starts from a base preset and layers overrides on top of
+  it during a show. Each override arrives as a small JSON document. Write
+  `merge_json_patches(job)` that applies the overrides in order and returns the
+  final preset.
+
+  `job` is a dict with two keys:
+
+  - `base`: the starting preset, an already-parsed dict.
+  - `patches`: a list of JSON **strings**, each an object of overrides, applied
+    left to right.
+
+  Merge rules (a shallow, top-level merge):
+
+  - For each key in a patch, if its value is **not** `null`, set that key in the
+    result to the value (adding the key if it was absent, overwriting it if it
+    was present).
+  - If a patch value **is** `null` (which becomes Python `None` after parsing),
+    **delete** that key from the result. Deleting a key that is not present is
+    simply ignored.
+  - Later patches see the effect of earlier ones, so order matters.
+
+  Do not mutate the caller's `base` dict; build and return a new dict. With an
+  empty `patches` list, return a copy of `base` unchanged.
+starter_code: |
+  import json
+
+
+  def merge_json_patches(job):
+      return {}
+function_name: merge_json_patches
+input_mode: function
+solution_sketch: Copy base into a result dict, then for each patch string json.loads it and apply each key, deleting keys whose value is None and otherwise assigning the value.
+sample_solution: |
+  import json
+
+
+  def merge_json_patches(job):
+      result = dict(job["base"])
+      for patch_str in job["patches"]:
+          patch = json.loads(patch_str)
+          for key, value in patch.items():
+              if value is None:
+                  result.pop(key, None)
+              else:
+                  result[key] = value
+      return result
+hints:
+  - level: 1
+    text: Start from a copy so you never change the caller's base; dict(job["base"]) makes a fresh shallow copy.
+  - level: 2
+    text: Each patch is text, so json.loads(patch_str) turns it into a dict of overrides you can iterate.
+  - level: 3
+    text: For each key/value in a patch, delete the key when the value is None (result.pop(key, None) ignores a missing key), otherwise assign result[key] = value.
+tests:
+  public:
+    - name: override_existing_value
+      input: {base: {intensity: 50, color: "amber"}, patches: ['{"intensity": 80}']}
+      expected: {intensity: 80, color: "amber"}
+    - name: add_new_key
+      input: {base: {intensity: 50}, patches: ['{"gobo": "leaves"}']}
+      expected: {intensity: 50, gobo: "leaves"}
+    - name: null_deletes_key
+      input: {base: {intensity: 50, strobe: true}, patches: ['{"strobe": null}']}
+      expected: {intensity: 50}
+  validation:
+    - name: later_patch_wins
+      input: {base: {level: 10}, patches: ['{"level": 20}', '{"level": 35}']}
+      expected: {level: 35}
+    - name: delete_then_readd
+      input: {base: {haze: 5}, patches: ['{"haze": null}', '{"haze": 12}']}
+      expected: {haze: 12}
+    - name: delete_missing_key_ignored
+      input: {base: {focus: 3}, patches: ['{"pan": null}']}
+      expected: {focus: 3}
+    - name: multi_key_patch_with_delete
+      input: {base: {r: 0, g: 0, b: 0}, patches: ['{"r": 255, "g": 128}', '{"b": null}']}
+      expected: {r: 255, g: 128}
+    - name: empty_patches_returns_base
+      input: {base: {cue: 1}, patches: []}
+      expected: {cue: 1}
+explanation_markdown: |
+  This is a shallow merge with one twist: `null` is overloaded to mean "remove",
+  which is a common convention in configuration and patch formats. Because each
+  patch is a JSON string, `json.loads` is what turns it into a dict you can loop
+  over, and a JSON `null` becomes Python `None`, which is how you detect a
+  deletion. Working on a copy (`dict(job["base"])`) protects the caller's preset
+  from being changed underneath them. Applying patches left to right is what makes
+  order meaningful: a value overwritten by a later patch, or a key deleted and
+  then re-added, both fall out naturally from processing the list in sequence.
+  Using `result.pop(key, None)` keeps a deletion of an absent key harmless.
+common_mistakes:
+  - Mutating job["base"] directly, so the caller's preset is altered as a side effect.
+  - Treating a null value as the literal value None to store instead of a signal to delete the key.
+  - Applying patches without json.loads, trying to merge the raw strings as if they were dicts.

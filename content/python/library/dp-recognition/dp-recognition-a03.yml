@@ -1,0 +1,112 @@
+id: exercise.library.dp_recognition.a03
+kind: exercise
+version: 1
+language: python
+title: Skip-a-Stall Market Haul
+slug: dp-recognition-a03
+difficulty: medium
+concepts:
+  - patterns.dynamic_programming
+prerequisites:
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dp_recognition.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original street-market stall framing of the classic no-two-adjacent maximum-sum recurrence.
+prompt_markdown: |
+  You are walking down a single row of street-market stalls, each showing a
+  prize value you could claim there. There is one catch enforced by the market
+  rules: if you claim a prize at some stall, you are not allowed to claim at
+  either stall immediately next to it. You may skip freely otherwise, and you
+  want to walk away with the largest possible total.
+
+  Write `max_non_adjacent_sum(values)` where `values` is a list of
+  non-negative integers (the prize at each stall, in walking order). Return a
+  single integer: the maximum total you can collect such that no two chosen
+  stalls are adjacent in the list.
+
+  Rules and edges:
+  - You may choose any subset of stalls as long as no two picked positions are
+    next to each other.
+  - Choosing nothing is allowed, so the answer is never negative.
+  - For an empty list `[]`, return `0`.
+  - For a single stall like `[5]`, return that stall's value, `5`.
+
+  Example: `[2, 7, 9, 3, 1]` returns `12` (take the 2, the 9, and the 1).
+starter_code: |
+  def max_non_adjacent_sum(values):
+      return 0
+function_name: max_non_adjacent_sum
+input_mode: function
+solution_sketch: Track best totals with and without taking the current stall, rolling the two states forward across the list.
+sample_solution: |
+  def max_non_adjacent_sum(values):
+      take = 0      # best total if we take the current stall
+      skip = 0      # best total if we skip the current stall
+      for v in values:
+          # If we take v, we must have skipped the previous stall.
+          new_take = skip + v
+          # If we skip v, carry the best of the previous two states.
+          new_skip = max(skip, take)
+          take, skip = new_take, new_skip
+      return max(take, skip)
+hints:
+  - level: 1
+    text: At each stall you face exactly two choices, take it or skip it, and taking it forbids the stall right before it.
+  - level: 2
+    text: Keep two running totals as you walk, one assuming you take the current stall and one assuming you skip it, updating both each step.
+  - level: 3
+    text: new_take is skip_prev + value, new_skip is max(take_prev, skip_prev); after the loop return the larger of the two.
+tests:
+  public:
+    - name: example_case
+      input: [2, 7, 9, 3, 1]
+      expected: 12
+    - name: empty_list
+      input: []
+      expected: 0
+    - name: single_stall
+      input: [5]
+      expected: 5
+  validation:
+    - name: two_stalls_pick_larger
+      input: [4, 9]
+      expected: 9
+    - name: all_zeros
+      input: [0, 0, 0, 0]
+      expected: 0
+    - name: alternating_best
+      input: [5, 1, 1, 5]
+      expected: 10
+    - name: adjacent_pair_beats_single
+      input: [3, 2, 5, 10, 7]
+      expected: 15
+    - name: three_stalls_middle_small
+      input: [6, 1, 6]
+      expected: 12
+explanation_markdown: |
+  This is the classic no-two-adjacent maximum-sum problem, and the key
+  recognition step is that every stall is a small either/or decision that
+  depends only on what happened just before it. If you decide to take the
+  current stall, you could not have taken the one immediately before it, so the
+  best total ending in a take is the best "skip" total from the previous step
+  plus the current value. If you decide to skip the current stall, you are free
+  to carry whichever previous state was larger, take or skip.
+
+  Because each new answer depends only on the previous two states, you do not
+  need a full table. Two rolling variables, `take` and `skip`, capture
+  everything: at each stall you compute `new_take = skip + value` and
+  `new_skip = max(take, skip)`, then advance. Starting both at 0 handles the
+  empty list for free (the loop never runs and `max(0, 0)` is 0) and a single
+  stall naturally becomes `max(value, 0)`. The final answer is the larger of the
+  two states, and the whole scan is O(n) time with O(1) extra space.
+common_mistakes:
+  - Returning only the take state instead of max(take, skip), which misses cases where skipping the last stall is better.
+  - Adding the current value to the previous take state, which illegally chains two adjacent stalls.
+  - Assuming the best pick is always every other stall, which fails on inputs like [3, 2, 5, 10, 7].
+  - Forgetting the empty list must return 0 rather than erroring on an empty scan.

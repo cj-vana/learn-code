@@ -1,0 +1,97 @@
+id: quiz.library.caching_performance.a02
+kind: quiz
+version: 1
+language: python
+title: Performance Mechanics
+slug: quiz-caching-performance-a02
+difficulty: medium
+concepts:
+  - concepts.performance
+prerequisites:
+  - concepts.performance
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.caching_performance.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax quiz on container costs, generator semantics, cache keys, and LRU eviction.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: 'Ranked by the cost of `x in container` for a large container, which is right?'
+    choices:
+      - set and dict are O(1) average; list and tuple are O(n)
+      - all four are O(1)
+      - list is O(1); set is O(n)
+      - all four are O(log n)
+    correct_choice: set and dict are O(1) average; list and tuple are O(n)
+    explanation: |
+      Hash-based containers answer membership without scanning; sequences
+      must check each element. Choosing set/dict for membership is the most
+      common real speedup.
+    concepts:
+      - concepts.performance
+  - id: q2
+    prompt: 'A generator g is consumed by list(g). What does a second list(g) return?'
+    choices:
+      - "[] — generators are single-use and exhausted after the first pass"
+      - The same list again
+      - A TypeError
+      - Every other element
+    correct_choice: "[] — generators are single-use and exhausted after the first pass"
+    explanation: |
+      Generators hold no data, only a position; once consumed they yield
+      nothing, which is why multi-pass needs a materialized list or tee.
+    concepts:
+      - concepts.performance
+      - python.iterators_generators
+  - id: q3
+    prompt: |
+      An lru_cache key must be hashable. A function memoized on a list
+      argument does what?
+    choices:
+      - Raises TypeError — pass a tuple instead of a list
+      - Hashes the list by identity
+      - Silently skips caching
+      - Converts the list to a tuple automatically
+    correct_choice: Raises TypeError — pass a tuple instead of a list
+    explanation: |
+      Cache keys go into a dict; unhashable arguments fail at lookup, so
+      cacheable APIs take hashable inputs (tuples, frozensets).
+    concepts:
+      - concepts.performance
+      - concepts.memoization
+  - id: q4
+    prompt: |
+      An LRU cache of size 3 holds keys [a, b, c] (a least recently used).
+      A miss on d arrives. What is evicted?
+    choices:
+      - a — the least recently used entry is discarded to make room
+      - c — the most recent is dropped
+      - d — the new entry is rejected when full
+      - a random entry
+    correct_choice: a — the least recently used entry is discarded to make room
+    explanation: |
+      LRU bets recent access predicts future access, so it evicts the
+      coldest entry — the mechanic your exercise implements.
+    concepts:
+      - concepts.performance
+  - id: q5
+    prompt: |
+      Which counts matching rows in constant memory?
+    choices:
+      - sum(1 for r in rows if p(r))
+      - len([r for r in rows if p(r)])
+      - len(list(filter(p, rows)))
+      - count = 0; matches = [r for r in rows if p(r)]; len(matches)
+    correct_choice: sum(1 for r in rows if p(r))
+    explanation: |
+      The generator expression yields ones without storing rows; the
+      list-based variants materialize the whole matching collection only to
+      measure it.
+    concepts:
+      - concepts.performance
+      - python.iterators_generators

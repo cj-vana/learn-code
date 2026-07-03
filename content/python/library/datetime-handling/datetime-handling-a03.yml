@@ -1,0 +1,124 @@
+id: exercise.library.datetime_handling.a03
+kind: exercise
+version: 1
+language: python
+title: Frame Shop Turnaround
+slug: datetime-handling-a03
+difficulty: medium
+concepts:
+  - python.datetime_module
+prerequisites:
+  - python.dictionaries
+  - python.loops
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.datetime_handling.a03
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original picture-framing framing for advancing a date by a count of weekday-only business days.
+prompt_markdown: |
+  A picture-framing shop promises turnaround in a number of *business days*,
+  counting only Monday through Friday. Write `add_business_days(job)` that takes a
+  start date and a whole number of business days to advance, and returns the
+  resulting date as an ISO `"YYYY-MM-DD"` string.
+
+  The input is a single dictionary shaped like:
+
+  ```python
+  {"start": "2026-07-03", "days": 1}
+  ```
+
+  Advance the calendar one day at a time from the start date, counting a step
+  only when it lands on a weekday (Saturday and Sunday do not count). Stop once
+  you have counted `days` business days.
+
+  Rules the tests rely on:
+
+  - `days` is always zero or positive.
+  - When `days` is `0`, return the start date unchanged, even if it is a weekend.
+  - The start date itself is never counted; counting begins with the day after it.
+  - A Friday start plus 1 business day lands on the following Monday, skipping the
+    weekend.
+starter_code: |
+  from datetime import date, timedelta
+
+
+  def add_business_days(job):
+      return ""
+function_name: add_business_days
+input_mode: function
+solution_sketch: Parse the start date, then step forward one day at a time with timedelta(days=1), decrementing the remaining count only on weekdays, and return the ISO string.
+sample_solution: |
+  from datetime import date, timedelta
+
+
+  def add_business_days(job):
+      current = date.fromisoformat(job["start"])
+      remaining = job["days"]
+      while remaining > 0:
+          current += timedelta(days=1)
+          if current.weekday() < 5:
+              remaining -= 1
+      return current.isoformat()
+hints:
+  - level: 1
+    text: timedelta(days=1) lets you move a date forward exactly one calendar day at a time.
+  - level: 2
+    text: weekday() returns 0-4 for Monday through Friday and 5 or 6 for the weekend, so only decrement your counter when weekday() < 5.
+  - level: 3
+    text: Loop while remaining > 0, always step the date first, then subtract from remaining only on a weekday; finish with current.isoformat().
+tests:
+  public:
+    - name: friday_plus_one_is_monday
+      input:
+        start: '2026-07-03'
+        days: 1
+      expected: '2026-07-06'
+    - name: zero_days_unchanged
+      input:
+        start: '2026-07-06'
+        days: 0
+      expected: '2026-07-06'
+    - name: full_working_week
+      input:
+        start: '2026-07-06'
+        days: 5
+      expected: '2026-07-13'
+  validation:
+    - name: saturday_start_plus_one
+      input:
+        start: '2026-07-04'
+        days: 1
+      expected: '2026-07-06'
+    - name: thursday_across_weekend
+      input:
+        start: '2026-07-02'
+        days: 3
+      expected: '2026-07-07'
+    - name: across_month_end
+      input:
+        start: '2026-07-31'
+        days: 1
+      expected: '2026-08-03'
+    - name: across_year_end
+      input:
+        start: '2026-12-31'
+        days: 2
+      expected: '2027-01-04'
+explanation_markdown: |
+  Business-day math cannot be done with a single addition because weekends do not
+  count, so the reliable approach is to walk the calendar one day at a time. Each
+  `timedelta(days=1)` step moves to the next real date — automatically rolling
+  over month and year boundaries — and you only spend one of your `days` when the
+  new date's `weekday()` is 0 through 4. Stepping *before* you test the weekday is
+  what makes the start day itself never count, and it is why a Friday plus one
+  business day skips Saturday and Sunday to land on Monday. When `days` is `0` the
+  loop never runs, so the start date is returned untouched even if it falls on a
+  weekend.
+common_mistakes:
+  - Checking the weekday before stepping the date, which incorrectly counts the start day itself.
+  - Using weekday() <= 5, which wrongly treats Saturday as a business day.
+  - Trying to add days in one shot with timedelta(days=job["days"]) and never skipping weekends.

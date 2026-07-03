@@ -1,0 +1,87 @@
+id: lesson.library.heaps_topk.a01
+kind: lesson
+version: 1
+language: python
+title: The Min-Heap, Python's Built-In Priority Queue
+slug: lesson-heaps-topk-a01
+difficulty: medium
+concepts:
+  - python.heapq_bisect
+  - patterns.heap_topk
+prerequisites:
+  - python.lists
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.heaps_topk.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original min-heap walkthrough framed around a workshop repair bench with its own worked code.
+body_markdown: |
+  Imagine a repair bench at a bicycle workshop. Tickets pile up all day, but the
+  mechanic never wants to hunt through the whole stack to find the most urgent
+  job. A *heap* solves exactly this: it keeps a collection loosely ordered so the
+  smallest item is always instantly available, without paying to fully sort every
+  time something arrives.
+
+  Python ships this in the `heapq` module. There is no heap *class*; instead,
+  `heapq` treats an ordinary list as a **binary min-heap**. The one rule you must
+  remember: `heap[0]` is always the smallest element. The rest of the list is
+  only partially ordered, so never assume `heap[1]` is the second smallest.
+
+  ```python
+  import heapq
+
+  bench = []
+  heapq.heappush(bench, 5)     # ticket priorities
+  heapq.heappush(bench, 1)
+  heapq.heappush(bench, 3)
+  print(bench[0])              # 1  -> most urgent, O(1) to peek
+  print(heapq.heappop(bench))  # 1  -> remove and return the smallest
+  print(heapq.heappop(bench))  # 3
+  ```
+
+  Both `heappush` and `heappop` run in O(log n) time because the heap only has to
+  repair one root-to-leaf path, not re-sort everything. If you already hold a full
+  list, `heapq.heapify(data)` rearranges it into heap order in place in O(n),
+  which is cheaper than sorting.
+
+  Two fused operations are worth knowing. `heapq.heappushpop(heap, x)` pushes `x`
+  then pops the smallest in a single step, and `heapq.heapreplace(heap, x)` pops
+  first then pushes. They save a rebalancing pass and become the backbone of the
+  top-k trick you will see next.
+
+  ### Faking a max-heap
+
+  `heapq` only offers a *min*-heap. To always retrieve the **largest** value,
+  store negated numbers and negate again on the way out:
+
+  ```python
+  import heapq
+
+  temps = [18, 25, 21]
+  max_heap = [-t for t in temps]
+  heapq.heapify(max_heap)
+  hottest = -heapq.heappop(max_heap)   # 25
+  ```
+
+  Negation flips the ordering, so the "smallest" negated value corresponds to the
+  largest real value. For tuples or objects you cannot negate, you would instead
+  push `(-key, item)` and sort by the negated key.
+
+  The mental model to carry forward: a heap is not a sorted list, it is a machine
+  that makes "give me the extreme element" cheap while insertions stay cheap too.
+  Whenever a problem repeatedly asks for the current minimum or maximum of a
+  changing collection, reach for `heapq` before you reach for `sorted`.
+checkpoints:
+  - question: After several heappush calls, which index of the list is guaranteed to hold the smallest element, and what can you assume about the element right after it?
+    answer: heap[0] is always the smallest; the element at heap[1] is not guaranteed to be the second smallest, only that it is one of the children of the root.
+    explanation: A binary min-heap only enforces that each parent is <= its children, which pins the global minimum to index 0 but leaves the rest merely partially ordered.
+  - question: You have a max-heap simulated by pushing negated numbers. You pop and get -25 back. What was the real value, and why does negation work?
+    answer: The real value is 25; negating flips the number line so the most negative stored value corresponds to the largest original value, which the min-heap surfaces first.
+    explanation: Because -25 is the smallest stored number, heappop returns it first, and negating once more recovers 25 as the maximum.
+  - question: Why is calling heapq.heapify on an existing list of n items cheaper than sorting it when you only need repeated access to the minimum?
+    answer: heapify runs in O(n) and gives O(1) peeks at the minimum with O(log n) updates, whereas a full sort costs O(n log n) and must be redone whenever the data changes.
+    explanation: A heap never fully orders the data; it only maintains the parent-child invariant, so building and maintaining it is asymptotically cheaper than sorting when you just need the extreme element.

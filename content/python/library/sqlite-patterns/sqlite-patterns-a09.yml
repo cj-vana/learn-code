@@ -1,0 +1,205 @@
+id: exercise.library.sqlite_patterns.a09
+kind: exercise
+version: 1
+language: python
+title: Posting the Bakery's Order Batch
+slug: sqlite-patterns-a09
+difficulty: hard
+concepts:
+  - python.sqlite_sql
+  - python.exceptions
+prerequisites:
+  - python.dictionaries
+  - python.lists
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sqlite_patterns.a09
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original transaction atomicity drill framed around a cooperative bakery posting a batch of orders all-or-nothing, using explicit BEGIN/COMMIT/ROLLBACK against an in-memory SQLite table with a UNIQUE ticket column.
+prompt_markdown: |
+  A cooperative bakery keeps its order book in a table: one row per order, a dict
+  shaped like `{"ticket": 101, "item": "rye", "qty": 6}`. Every morning a runner
+  posts a whole **batch** of the night's new orders at once, and the rule is
+  strict: either the entire batch lands on the books or none of it does. If any
+  order in the batch reuses a ticket number that is already taken — whether by an
+  order already on the books or by an earlier order in the same batch — the runner
+  tears up the whole batch and posts nothing.
+
+  Write `post_order_batch(request)` where `request` is a single dict:
+
+  - `"committed"`: the orders already safely on the books, a list of order dicts.
+    Their `key_col` values are already unique. Every row shares the same keys.
+  - `"batch"`: the list of new order dicts to post together in one transaction.
+  - `"key_col"`: the name of the unique identifying column, for example `"ticket"`.
+
+  Build an in-memory SQLite table whose `key_col` carries a `UNIQUE` constraint,
+  insert and commit the `committed` rows as the baseline, then open **one**
+  transaction and try to insert every `batch` row. Commit only if all of them
+  succeed; if any insert raises a uniqueness violation, roll the whole
+  transaction back so none of the batch survives. Return the final table as a
+  list of dicts sorted ascending by `key_col`.
+
+  Guarantees to honour:
+
+  - A single duplicate anywhere in the batch discards the **entire** batch, not
+    just the offending row.
+  - An empty `batch` leaves the books exactly as the committed rows.
+  - If both `committed` and `batch` are empty, return an empty list.
+  - When `committed` is empty but the batch is clean, the result is the batch.
+
+  This is real SQL run atomically: open `sqlite3.connect(":memory:")` inside the
+  function and manage the batch with explicit `BEGIN`/`COMMIT`/`ROLLBACK`. Touch
+  no files on disk.
+starter_code: |
+  import sqlite3
+
+
+  def post_order_batch(request):
+      return []
+function_name: post_order_batch
+input_mode: function
+solution_sketch: "Create an in-memory table with UNIQUE on the key column, insert and commit the baseline rows, then switch to manual transaction control and BEGIN a single transaction around inserting every batch row; on sqlite3.IntegrityError ROLLBACK the whole batch, otherwise COMMIT, and finally SELECT everything ordered by the key column."
+sample_solution: |
+  import sqlite3
+
+
+  def post_order_batch(request):
+      committed = request["committed"]
+      batch = request["batch"]
+      key_col = request["key_col"]
+      seed = committed if committed else batch
+      if not seed:
+          return []
+      columns = list(seed[0].keys())
+      col_list = ", ".join('"%s"' % c for c in columns)
+      placeholders = ", ".join("?" for _ in columns)
+      defs = ", ".join(
+          '"%s" UNIQUE' % c if c == key_col else '"%s"' % c for c in columns
+      )
+      conn = sqlite3.connect(":memory:")
+      conn.isolation_level = None
+      conn.execute("CREATE TABLE orders (%s)" % defs)
+      insert = "INSERT INTO orders (%s) VALUES (%s)" % (col_list, placeholders)
+      if committed:
+          conn.executemany(
+              insert, [tuple(row[c] for c in columns) for row in committed]
+          )
+      if batch:
+          conn.execute("BEGIN")
+          try:
+              for row in batch:
+                  conn.execute(insert, tuple(row[c] for c in columns))
+              conn.execute("COMMIT")
+          except sqlite3.IntegrityError:
+              conn.execute("ROLLBACK")
+      fetched = conn.execute(
+          'SELECT %s FROM orders ORDER BY "%s" ASC' % (col_list, key_col)
+      ).fetchall()
+      return [dict(zip(columns, row)) for row in fetched]
+hints:
+  - level: 1
+    text: Commit the baseline rows first, then wrap only the batch inserts in a single transaction so they share one all-or-nothing fate.
+  - level: 2
+    text: Set conn.isolation_level = None and drive the batch yourself with conn.execute("BEGIN") then a loop of inserts, so you control exactly when COMMIT or ROLLBACK happens.
+  - level: 3
+    text: Catch sqlite3.IntegrityError around the whole insert loop; on that error run ROLLBACK to erase every batch row inserted so far, otherwise run COMMIT, then SELECT ordered by the key column.
+tests:
+  public:
+    - name: clean_batch_commits
+      input:
+        committed:
+          - {ticket: 101, item: rye, qty: 6}
+          - {ticket: 102, item: baguette, qty: 12}
+        batch:
+          - {ticket: 103, item: scone, qty: 24}
+        key_col: ticket
+      expected:
+        - {ticket: 101, item: rye, qty: 6}
+        - {ticket: 102, item: baguette, qty: 12}
+        - {ticket: 103, item: scone, qty: 24}
+    - name: duplicate_against_committed_rolls_back
+      input:
+        committed:
+          - {ticket: 101, item: rye, qty: 6}
+          - {ticket: 102, item: baguette, qty: 12}
+        batch:
+          - {ticket: 103, item: scone, qty: 24}
+          - {ticket: 101, item: brioche, qty: 3}
+        key_col: ticket
+      expected:
+        - {ticket: 101, item: rye, qty: 6}
+        - {ticket: 102, item: baguette, qty: 12}
+    - name: empty_batch_keeps_books
+      input:
+        committed:
+          - {ticket: 101, item: rye, qty: 6}
+          - {ticket: 102, item: baguette, qty: 12}
+        batch: []
+        key_col: ticket
+      expected:
+        - {ticket: 101, item: rye, qty: 6}
+        - {ticket: 102, item: baguette, qty: 12}
+  validation:
+    - name: duplicate_within_batch_rolls_back
+      input:
+        committed:
+          - {ticket: 101, item: rye, qty: 6}
+          - {ticket: 102, item: baguette, qty: 12}
+        batch:
+          - {ticket: 200, item: tart, qty: 8}
+          - {ticket: 200, item: pie, qty: 2}
+        key_col: ticket
+      expected:
+        - {ticket: 101, item: rye, qty: 6}
+        - {ticket: 102, item: baguette, qty: 12}
+    - name: empty_committed_clean_batch_sorted
+      input:
+        committed: []
+        batch:
+          - {ticket: 5, item: muffin, qty: 4}
+          - {ticket: 3, item: loaf, qty: 1}
+        key_col: ticket
+      expected:
+        - {ticket: 3, item: loaf, qty: 1}
+        - {ticket: 5, item: muffin, qty: 4}
+    - name: both_empty
+      input:
+        committed: []
+        batch: []
+        key_col: ticket
+      expected: []
+    - name: multi_row_clean_batch
+      input:
+        committed:
+          - {ticket: 101, item: rye, qty: 6}
+        batch:
+          - {ticket: 104, item: pretzel, qty: 10}
+          - {ticket: 102, item: bun, qty: 9}
+        key_col: ticket
+      expected:
+        - {ticket: 101, item: rye, qty: 6}
+        - {ticket: 102, item: bun, qty: 9}
+        - {ticket: 104, item: pretzel, qty: 10}
+explanation_markdown: |
+  A transaction is the database's promise of *atomicity*: the statements between
+  `BEGIN` and `COMMIT` are treated as one indivisible move. By committing the
+  baseline first and then wrapping only the batch inserts in a single
+  transaction, you give the whole batch a shared fate. When the fifth insert
+  trips the `UNIQUE` constraint and raises `IntegrityError`, `ROLLBACK` rewinds
+  the table to exactly where `BEGIN` found it — the four rows that already
+  inserted cleanly vanish too, because they were never committed.
+
+  The reason the sample sets `conn.isolation_level = None` is control. In that
+  mode SQLite does not silently open transactions for you, so `BEGIN`, `COMMIT`,
+  and `ROLLBACK` mean precisely what they say and the batch boundary is
+  unambiguous. Catching the error around the *entire* loop — not around each
+  individual insert — is what makes one bad ticket discard the whole batch
+  rather than just skipping itself.
+common_mistakes:
+  - Catching IntegrityError inside the loop and continuing, which posts the good rows and drops only the duplicate instead of rolling the whole batch back.
+  - Committing after every insert, so a later failure can no longer undo the earlier rows and atomicity is lost.
+  - Leaving isolation_level at its default and mixing implicit and explicit transactions, which can raise "cannot start a transaction within a transaction" or leave rows half-committed.

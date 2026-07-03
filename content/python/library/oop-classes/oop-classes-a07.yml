@@ -1,0 +1,93 @@
+id: exercise.library.oop_classes.a07
+kind: exercise
+version: 1
+language: python
+title: A Dataclass Summary of Greenhouse Readings
+slug: oop-classes-a07
+difficulty: medium
+concepts:
+  - python.dataclasses_dunder
+  - python.classes
+prerequisites:
+  - python.classes
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.oop_classes.a07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original greenhouse-sensor scenario building a dataclass value object and returning it as a plain dict.
+prompt_markdown: |
+  A greenhouse logs temperature readings (whole degrees) from a sensor across a day.
+  You want a tidy summary value object holding the lowest reading, the highest
+  reading, and how many readings were taken.
+
+  Complete `summarise_readings(readings)`, where `readings` is a list of integer
+  temperatures. Inside the function, use the `dataclasses` module to define a
+  `@dataclass` called `Summary` with three integer fields: `low`, `high`, and
+  `count`. Build one `Summary` from the data, then return it as a plain dictionary
+  using `dataclasses.asdict`. For an empty list, return `{"low": 0, "high": 0,
+  "count": 0}`.
+starter_code: |
+  def summarise_readings(readings):
+      # Define a @dataclass Summary(low, high, count), build one from the
+      # readings, and return dataclasses.asdict(summary).
+      return {}
+function_name: summarise_readings
+input_mode: function
+solution_sketch: Define a dataclass Summary(low, high, count), construct it from min/max/len, and return asdict of it.
+sample_solution: |
+  from dataclasses import dataclass, asdict
+
+
+  def summarise_readings(readings):
+      @dataclass
+      class Summary:
+          low: int
+          high: int
+          count: int
+
+      if not readings:
+          return asdict(Summary(0, 0, 0))
+      return asdict(Summary(min(readings), max(readings), len(readings)))
+hints:
+  - level: 1
+    text: Import dataclass and asdict from the dataclasses module, and annotate the three fields with int.
+  - level: 2
+    text: The low is min(readings), the high is max(readings), and the count is len(readings) -- but handle the empty list separately.
+  - level: 3
+    text: Build Summary(min(readings), max(readings), len(readings)) and return asdict(that); for an empty list return asdict(Summary(0, 0, 0)).
+tests:
+  public:
+    - name: typical_day
+      input: [18, 22, 20, 25, 19]
+      expected: {low: 18, high: 25, count: 5}
+    - name: empty
+      input: []
+      expected: {low: 0, high: 0, count: 0}
+    - name: single
+      input: [21]
+      expected: {low: 21, high: 21, count: 1}
+  validation:
+    - name: negatives
+      input: [-4, -1, -9, 0]
+      expected: {low: -9, high: 0, count: 4}
+    - name: all_equal
+      input: [15, 15, 15]
+      expected: {low: 15, high: 15, count: 3}
+    - name: two_values
+      input: [30, 10]
+      expected: {low: 10, high: 30, count: 2}
+explanation_markdown: |
+  A dataclass is the cleanest way to bundle a few related values. Annotating the
+  fields `low`, `high`, and `count` makes `@dataclass` write `__init__`, `__repr__`,
+  and `__eq__` for you, so `Summary(min, max, len)` just works. Because the grading
+  harness compares against a plain dictionary, `dataclasses.asdict` converts the
+  value object into `{"low": ..., "high": ..., "count": ...}` on the way out. The
+  empty case is handled first so `min`/`max` are never called on an empty list.
+common_mistakes:
+  - Calling min or max on an empty list, which raises ValueError instead of returning the zero summary.
+  - Returning the Summary instance itself, which will not equal the expected dictionary.
+  - Forgetting the int annotations, so the fields are treated as class attributes and no __init__ is generated.

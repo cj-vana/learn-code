@@ -1,0 +1,101 @@
+id: exercise.library.testing_concepts.a08
+kind: exercise
+version: 1
+language: python
+title: Archive-and-Restore Roundtrip Drill
+slug: testing-concepts-a08
+difficulty: medium
+concepts:
+  - concepts.testing
+  - python.lists
+prerequisites:
+  - python.loops
+  - python.conditionals
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.testing_concepts.a08
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original roundtrip-property drill framed around a records archive-and-restore rehearsal; encode/decode invariant expressed as a diff of parallel lists.
+prompt_markdown: |
+  A records office is rehearsing its disaster plan: every document is **archived**
+  (encoded to a compact form) and then **restored** (decoded back). The property
+  that must hold is a *roundtrip*: whatever you archive should come back byte-for-byte
+  when you restore it. If a restored record does not match the original, that slot
+  was corrupted somewhere in the pipeline and needs investigating.
+
+  Write `roundtrip_ok(job)` where `job` is a dict with two parallel, equal-length
+  lists:
+
+  - `records`: the original documents, in order.
+  - `decoded`: what came back after archiving then restoring each one, in the same
+    order.
+
+  Return a list of the **indices** where the roundtrip failed -- that is, every
+  position `i` where `decoded[i]` is not equal to `records[i]` -- in ascending
+  order. A perfect roundtrip returns an empty list. The two lists always have the
+  same length, so an empty pair of lists returns an empty list too.
+
+  For example, `{"records": [1, 2, 3], "decoded": [1, 9, 3]}` returns `[1]`, because
+  only position 1 differs.
+starter_code: |
+  def roundtrip_ok(job):
+      # Return the ascending indices where decoded[i] != records[i].
+      return []
+function_name: roundtrip_ok
+input_mode: function
+solution_sketch: Walk the shared index range and collect each i where decoded[i] differs from records[i]; iterating in range order already yields ascending indices.
+sample_solution: |
+  def roundtrip_ok(job):
+      records = job["records"]
+      decoded = job["decoded"]
+      return [i for i in range(len(records)) if decoded[i] != records[i]]
+hints:
+  - level: 1
+    text: The roundtrip property is per position, so compare records[i] with decoded[i] one index at a time.
+  - level: 2
+    text: Collect the index i whenever the two values disagree; skip the ones that match.
+  - level: 3
+    text: Iterate i over range(len(records)) so the indices you append are already in ascending order, and return the collected list.
+tests:
+  public:
+    - name: all_match_empty
+      input: {records: ['a', 'b', 'c'], decoded: ['a', 'b', 'c']}
+      expected: []
+    - name: single_mismatch
+      input: {records: [1, 2, 3], decoded: [1, 9, 3]}
+      expected: [1]
+    - name: two_mismatches
+      input: {records: ['x', 'y', 'z', 'w'], decoded: ['x', 'Y', 'z', 'W']}
+      expected: [1, 3]
+  validation:
+    - name: empty_pair
+      input: {records: [], decoded: []}
+      expected: []
+    - name: all_mismatch
+      input: {records: [1, 2], decoded: [3, 4]}
+      expected: [0, 1]
+    - name: first_only
+      input: {records: [7, 8, 9], decoded: [0, 8, 9]}
+      expected: [0]
+    - name: last_only
+      input: {records: ['p', 'q'], decoded: ['p', 'z']}
+      expected: [1]
+explanation_markdown: |
+  A roundtrip test asserts an invariant -- `decode(encode(x)) == x` -- rather than
+  checking a single expected answer, which makes it a strong, reusable property:
+  it holds for *any* record, so you can throw many inputs at it. Here the encode
+  and decode have already run, so the check reduces to a position-by-position
+  comparison of two parallel lists. Iterating the index range and keeping only the
+  mismatches gives you a precise failure report: not just "something broke" but
+  exactly which slots to investigate. Iterating with `range(len(records))` keeps the
+  result ascending for free, and an empty input naturally yields an empty report
+  because there is nothing to compare. Returning the offending indices, instead of
+  a bare `True`/`False`, is what turns a pass/fail check into an actionable one.
+common_mistakes:
+  - Returning a boolean or the mismatched values instead of the list of indices the prompt asks for.
+  - Comparing the lists with `==` as a whole, which tells you *that* they differ but not *where*.
+  - Building the indices out of order (for example by scanning from the end) so the returned list is not ascending.

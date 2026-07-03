@@ -1,0 +1,79 @@
+id: exercise.library.collections_itertools.a03
+kind: exercise
+version: 1
+language: python
+title: Carousel Rotation
+slug: collections-itertools-a03
+difficulty: easy
+concepts:
+  - python.collections_module
+  - patterns.simulation
+prerequisites:
+  - python.lists
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.collections_itertools.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original baggage-carousel rotation task drilling deque.rotate.
+prompt_markdown: |
+  An airport baggage carousel is a ring of numbered slots. Each tick the whole
+  ring shifts: a positive shift moves every bag toward the front (to the right),
+  wrapping the last bags around to the head. Write `rotate_carousel(payload)`
+  where `payload` is a dict with keys `items` (a list) and `shift` (an integer,
+  possibly negative). Return the list after rotating it by `shift` positions.
+starter_code: |
+  def rotate_carousel(payload):
+      return []
+function_name: rotate_carousel
+input_mode: function
+solution_sketch: Load the items into a deque, call rotate(shift), and return list(deque).
+sample_solution: |
+  from collections import deque
+
+
+  def rotate_carousel(payload):
+      ring = deque(payload["items"])
+      ring.rotate(payload["shift"])
+      return list(ring)
+hints:
+  - level: 1
+    text: A deque has a built-in method for shifting all elements around a ring.
+  - level: 2
+    text: deque.rotate(n) moves items right by n (negative n moves them left) and wraps automatically.
+  - level: 3
+    text: Build deque(payload["items"]), call .rotate(payload["shift"]), then return list(...).
+tests:
+  public:
+    - name: shift_right_one
+      input: {items: [10, 20, 30, 40], shift: 1}
+      expected: [40, 10, 20, 30]
+    - name: shift_zero
+      input: {items: [1, 2, 3], shift: 0}
+      expected: [1, 2, 3]
+    - name: shift_left
+      input: {items: [1, 2, 3, 4], shift: -1}
+      expected: [2, 3, 4, 1]
+  validation:
+    - name: shift_larger_than_len
+      input: {items: [1, 2, 3], shift: 4}
+      expected: [3, 1, 2]
+    - name: full_wrap
+      input: {items: [5, 6, 7], shift: 3}
+      expected: [5, 6, 7]
+    - name: empty
+      input: {items: [], shift: 2}
+      expected: []
+explanation_markdown: |
+  `deque.rotate(n)` is a constant-time-per-step ring shift: a positive `n` pops
+  from the right and pushes onto the left, so the tail wraps to the head. It also
+  handles a shift larger than the length (it takes the shift modulo the length)
+  and an empty deque without any special-casing on your part. Converting back
+  with `list(...)` gives the plain list the tests compare against.
+common_mistakes:
+  - Rotating the wrong direction by forgetting that a positive argument shifts toward the right/front.
+  - Manually slicing with the wrong modulo and mishandling shifts larger than the length.
+  - Returning the deque object instead of a list.

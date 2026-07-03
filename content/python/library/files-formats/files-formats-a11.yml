@@ -1,0 +1,181 @@
+id: exercise.library.files_formats.a11
+kind: exercise
+version: 1
+language: python
+title: Reconciling Two Nursery Snapshots
+slug: files-formats-a11
+difficulty: hard
+concepts:
+  - python.json_csv
+  - python.sets
+prerequisites:
+  - python.dictionaries
+  - python.sorting
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.files_formats.a11
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original record-diff drill framed around a plant nursery comparing an old and new inventory snapshot by a shared key.
+prompt_markdown: |
+  A plant nursery exports its inventory twice and wants to know what moved between
+  the two snapshots. Write `diff_records(job)` that takes **one dictionary** with
+  three entries:
+
+  - `"old"`: a list of record dictionaries (the earlier snapshot).
+  - `"new"`: a list of record dictionaries (the later snapshot).
+  - `"key"`: the field name whose value uniquely identifies a record in each
+    snapshot.
+
+  Example call:
+
+  ```python
+  diff_records({
+      "old": [{"id": "P1", "qty": 10}, {"id": "P2", "qty": 5}],
+      "new": [{"id": "P2", "qty": 5}, {"id": "P3", "qty": 4}],
+      "key": "id",
+  })
+  # -> {"added": ["P3"], "removed": ["P1"], "changed": []}
+  ```
+
+  Return a dictionary with three lists of **key values**:
+
+  - `"added"`: keys present in `new` but not in `old`.
+  - `"removed"`: keys present in `old` but not in `new`.
+  - `"changed"`: keys present in **both** whose record differs in **any** field
+    between the two snapshots (records that are identical are not listed).
+
+  Each of the three lists must be **sorted** in ascending order. Within a snapshot
+  every key value is unique. If a snapshot is empty, treat it as having no keys.
+starter_code: |
+  def diff_records(job):
+      return {"added": [], "removed": [], "changed": []}
+function_name: diff_records
+input_mode: function
+solution_sketch: Index each snapshot as key -> record, take set differences of the key sets for added and removed, and for keys in both compare the two records for equality to find changed; sort all three lists.
+sample_solution: |
+  def diff_records(job):
+      key = job["key"]
+      old_index = {row[key]: row for row in job["old"]}
+      new_index = {row[key]: row for row in job["new"]}
+      old_keys = set(old_index)
+      new_keys = set(new_index)
+      added = sorted(new_keys - old_keys)
+      removed = sorted(old_keys - new_keys)
+      changed = sorted(
+          k for k in old_keys & new_keys if old_index[k] != new_index[k]
+      )
+      return {"added": added, "removed": removed, "changed": changed}
+hints:
+  - level: 1
+    text: Turn each snapshot into a dictionary mapping its key value to the whole record so you can look records up by key.
+  - level: 2
+    text: With the two key sets, new_keys - old_keys is added and old_keys - new_keys is removed; the intersection is where a record might have changed.
+  - level: 3
+    text: For each key in the intersection, compare the two full record dicts with != to decide if it changed, then sort all three result lists.
+tests:
+  public:
+    - name: added_removed_changed
+      input:
+        old:
+          - {id: "P1", qty: 10}
+          - {id: "P2", qty: 5}
+          - {id: "P3", qty: 7}
+        new:
+          - {id: "P2", qty: 5}
+          - {id: "P3", qty: 9}
+          - {id: "P4", qty: 2}
+        key: "id"
+      expected:
+        added: ["P4"]
+        removed: ["P1"]
+        changed: ["P3"]
+    - name: all_identical
+      input:
+        old:
+          - {id: "P1", qty: 1}
+        new:
+          - {id: "P1", qty: 1}
+        key: "id"
+      expected:
+        added: []
+        removed: []
+        changed: []
+    - name: empty_old_all_added
+      input:
+        old: []
+        new:
+          - {id: "P1", qty: 1}
+          - {id: "P2", qty: 2}
+        key: "id"
+      expected:
+        added: ["P1", "P2"]
+        removed: []
+        changed: []
+  validation:
+    - name: empty_new_all_removed
+      input:
+        old:
+          - {id: "P1", qty: 1}
+          - {id: "P2", qty: 2}
+        new: []
+        key: "id"
+      expected:
+        added: []
+        removed: ["P1", "P2"]
+        changed: []
+    - name: results_are_sorted
+      input:
+        old:
+          - {id: "m3", qty: 1}
+          - {id: "m1", qty: 1}
+        new:
+          - {id: "m1", qty: 1}
+          - {id: "m4", qty: 1}
+          - {id: "m2", qty: 1}
+        key: "id"
+      expected:
+        added: ["m2", "m4"]
+        removed: ["m3"]
+        changed: []
+    - name: extra_field_counts_as_changed
+      input:
+        old:
+          - {id: "x", qty: 3}
+        new:
+          - {id: "x", qty: 3, shelf: "A"}
+        key: "id"
+      expected:
+        added: []
+        removed: []
+        changed: ["x"]
+    - name: both_empty
+      input:
+        old: []
+        new: []
+        key: "id"
+      expected:
+        added: []
+        removed: []
+        changed: []
+explanation_markdown: |
+  Diffing two collections by a key is cleanest when you stop thinking in lists and
+  start thinking in sets. Indexing each snapshot as `key -> record` gives you two
+  key sets whose differences answer "added" and "removed" directly: a set
+  difference is exactly "in one side, not the other". The intersection is the set
+  of keys that survived, and those are the only candidates that could have
+  changed.
+
+  For each surviving key you compare the two full record dictionaries with `!=`.
+  Because Python compares dicts by contents, this catches any difference at all: a
+  changed value, an added field, or a removed one. Sorting each of the three
+  result lists at the end gives a stable, predictable report. The whole diff is
+  linear in the number of records plus the sort, far cheaper than comparing every
+  old record against every new one.
+common_mistakes:
+  - Comparing only one field (like qty) instead of the whole record, so a differing extra field is missed.
+  - Returning the differences unsorted, which fails the ascending-order requirement even when the sets are right.
+  - Scanning the new list for each old record (a nested loop), which is quadratic and easy to get wrong versus set differences.

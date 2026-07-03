@@ -1,0 +1,80 @@
+id: exercise.library.regex_text_processing.a01
+kind: exercise
+version: 1
+language: python
+title: Count the Hashtags
+slug: regex-text-processing-a01
+difficulty: easy
+concepts:
+  - python.regex
+  - python.strings
+prerequisites:
+  - python.functions
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.regex_text_processing.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original community-bulletin hashtag-counting task with its own prompt and tests.
+prompt_markdown: |
+  A neighbourhood message board lets people tag posts with hashtags such as
+  `#cleanup` or `#bay7`. A hashtag is a `#` followed by one or more word
+  characters (letters, digits, or underscores). Write `count_hashtags(text)` that
+  returns how many hashtags appear in `text`. A `#` with no word character after
+  it does not count.
+starter_code: |
+  import re
+
+
+  def count_hashtags(text):
+      return 0
+function_name: count_hashtags
+input_mode: function
+solution_sketch: Use re.findall with the pattern for a hashtag and return the length of the resulting list.
+sample_solution: |
+  import re
+
+
+  def count_hashtags(text):
+      return len(re.findall(r"#\w+", text))
+hints:
+  - level: 1
+    text: A hashtag is the character # immediately followed by one or more word characters.
+  - level: 2
+    text: re.findall returns a list of every non-overlapping match, and len() of that list is the count.
+  - level: 3
+    text: Return len(re.findall(r"#\w+", text)); the \w+ ensures a bare # with nothing after it is skipped.
+tests:
+  public:
+    - name: two_tags
+      input: 'Meet at #dawn near #gate7 today'
+      expected: 2
+    - name: no_tags
+      input: no tags here at all
+      expected: 0
+    - name: hyphen_stops_word
+      input: '#a #b #c-d'
+      expected: 3
+  validation:
+    - name: empty_string
+      input: ''
+      expected: 0
+    - name: bare_hash_skipped
+      input: '### triple #real'
+      expected: 1
+    - name: digits_and_underscore
+      input: 'tags #bay_7 and #zone42 up'
+      expected: 2
+explanation_markdown: |
+  `re.findall(r"#\w+", text)` scans the whole string and collects every place a
+  `#` is followed by at least one word character. Because `findall` always
+  returns a list, wrapping it in `len(...)` gives the count directly, with no
+  loop and no `None` check. The `\w+` requirement is what makes a lone `#` (or a
+  run of them) count as zero hashtags.
+common_mistakes:
+  - Using the pattern "#" alone, which counts every hash symbol even when no word follows.
+  - Reaching for re.search, which finds only the first hashtag instead of all of them.
+  - Forgetting that \w already covers digits and underscores, then over-complicating the pattern.

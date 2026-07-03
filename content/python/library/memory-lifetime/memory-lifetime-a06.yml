@@ -1,0 +1,113 @@
+id: exercise.library.memory_lifetime.a06
+kind: exercise
+version: 1
+language: python
+title: One Context Per Broadcast
+slug: memory-lifetime-a06
+difficulty: medium
+concepts:
+  - python.memory_model
+  - python.dictionaries
+prerequisites:
+  - python.loops
+  - python.conditionals
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.memory_lifetime.a06
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original broadcast-control-room framing for contextvars.copy_context() per-task isolation modelled as pure dict copies.
+prompt_markdown: |
+  A broadcast control room runs several segments at once. Each segment gets its own
+  *copy* of the studio settings, exactly like `contextvars.copy_context()` hands a
+  task an isolated snapshot: a segment can change its own settings freely, and those
+  changes never leak to a sibling segment or back to the shared baseline.
+
+  Write `context_var_isolated_values(payload)` that takes a single dict:
+
+  ```
+  {
+      "base": {"lang": "en", "user": "guest"},
+      "tasks": [
+          [{"op": "set", "var": "user", "value": "alice"}, {"op": "set", "var": "lang", "value": "fr"}],
+          [{"op": "set", "var": "user", "value": "bob"}]
+      ]
+  }
+  ```
+
+  Each entry in `tasks` is a list of `set` operations for one segment. Every segment
+  starts from a fresh copy of `base` (never from another segment's changes) and
+  applies its operations in order: a later `set` on the same var overwrites the
+  earlier one, and setting a brand-new var adds it to that segment's context only.
+
+  Return a dict `{"contexts": [...], "base_after": {...}}`, where `contexts` is the
+  list of each segment's final settings in task order, and `base_after` is `base`
+  itself, which must come back unchanged. For the example, `contexts` is
+  `[{"lang": "fr", "user": "alice"}, {"lang": "en", "user": "bob"}]` -- note the
+  second segment still sees `lang` as `en` -- and `base_after` is
+  `{"lang": "en", "user": "guest"}`.
+starter_code: |
+  def context_var_isolated_values(payload):
+      return {"contexts": [], "base_after": {}}
+function_name: context_var_isolated_values
+input_mode: function
+solution_sketch: Give each task a fresh copy of base, apply its set operations to that copy only, collect the copies, and return base unchanged alongside them.
+sample_solution: |
+  def context_var_isolated_values(payload):
+      base = payload["base"]
+      contexts = []
+      for task in payload["tasks"]:
+          context = dict(base)
+          for op in task:
+              if op["op"] == "set":
+                  context[op["var"]] = op["value"]
+          contexts.append(context)
+      return {"contexts": contexts, "base_after": dict(base)}
+hints:
+  - level: 1
+    text: copy_context() gives each task its own snapshot, so start every task from a fresh copy of base rather than from the previous task.
+  - level: 2
+    text: Apply each `set` to the task's own copy so the shared base is never touched.
+  - level: 3
+    text: Collect the per-task copies in order and return base unchanged under "base_after".
+tests:
+  public:
+    - name: isolation_between_tasks
+      input: {"base": {"lang": "en", "user": "guest"}, "tasks": [[{"op": "set", "var": "user", "value": "alice"}, {"op": "set", "var": "lang", "value": "fr"}], [{"op": "set", "var": "user", "value": "bob"}]]}
+      expected: {"contexts": [{"lang": "fr", "user": "alice"}, {"lang": "en", "user": "bob"}], "base_after": {"lang": "en", "user": "guest"}}
+    - name: new_var_stays_local
+      input: {"base": {"theme": "dark"}, "tasks": [[{"op": "set", "var": "volume", "value": 8}]]}
+      expected: {"contexts": [{"theme": "dark", "volume": 8}], "base_after": {"theme": "dark"}}
+    - name: no_tasks
+      input: {"base": {"x": 1}, "tasks": []}
+      expected: {"contexts": [], "base_after": {"x": 1}}
+  validation:
+    - name: empty_ops_task
+      input: {"base": {"a": 1, "b": 2}, "tasks": [[]]}
+      expected: {"contexts": [{"a": 1, "b": 2}], "base_after": {"a": 1, "b": 2}}
+    - name: sibling_sees_base_not_override
+      input: {"base": {"level": 5}, "tasks": [[{"op": "set", "var": "level", "value": 99}], [], [{"op": "set", "var": "level", "value": 0}]]}
+      expected: {"contexts": [{"level": 99}, {"level": 5}, {"level": 0}], "base_after": {"level": 5}}
+    - name: repeated_set_last_wins
+      input: {"base": {"n": 0}, "tasks": [[{"op": "set", "var": "n", "value": 1}, {"op": "set", "var": "n", "value": 2}, {"op": "set", "var": "n", "value": 3}]]}
+      expected: {"contexts": [{"n": 3}], "base_after": {"n": 0}}
+    - name: new_vars_do_not_leak
+      input: {"base": {"k": "v"}, "tasks": [[{"op": "set", "var": "extra", "value": "hi"}], [{"op": "set", "var": "other", "value": "yo"}]]}
+      expected: {"contexts": [{"k": "v", "extra": "hi"}, {"k": "v", "other": "yo"}], "base_after": {"k": "v"}}
+explanation_markdown: |
+  `contextvars` exists so that concurrent tasks -- async coroutines, threads -- can
+  each carry their own request id, locale, or user without stepping on one another.
+  `copy_context()` is the key move: it snapshots the current values, and setting a
+  variable inside that copy rebinds it only within that context. Modelling each task
+  as `dict(base)` captures the essential lifetime property: the copy shares no
+  mutable state with the baseline, so a `set` in one segment cannot reach a sibling
+  or the parent. The tests lean on that isolation -- the second segment still reads
+  the original `lang`, and `base_after` comes back untouched -- which is exactly what
+  breaks if you accidentally share one dict across every task.
+common_mistakes:
+  - Reusing one shared dict across tasks, so a later segment sees an earlier segment's changes.
+  - Mutating base directly, so base_after comes back altered.
+  - Carrying a task's copy forward as the next task's starting point instead of copying base again.

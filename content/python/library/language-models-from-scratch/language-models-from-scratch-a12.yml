@@ -1,0 +1,150 @@
+id: exercise.library.language_models_from_scratch.a12
+kind: exercise
+version: 1
+language: python
+title: Blending Two Language Models
+slug: language-models-from-scratch-a12
+difficulty: hard
+concepts:
+  - ai.language_models
+  - concepts.probability
+prerequisites:
+  - python.dictionaries
+  - python.sets
+estimated_time_minutes: 20
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.language_models_from_scratch.a12
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original linear-interpolation (mixture) drill over the union of two model vocabularies with missing-key backoff to zero, framed as blending a specialist and a general recipe model.
+prompt_markdown: |
+  A common trick for building a better language model is to **interpolate** two
+  weaker ones: a specialist model trained on a narrow menu and a general model
+  trained on broad text. Mixing them lets the specialist supply sharp
+  predictions where it is confident while the general model covers tokens the
+  specialist never saw. This is the core idea behind interpolation and backoff
+  smoothing.
+
+  Write `interpolate_models(job)` that takes **one dictionary**:
+
+  - `"p1"`: a dictionary mapping tokens (strings) to probabilities (numbers) —
+    the first model's distribution.
+  - `"p2"`: the second model's distribution, in the same shape.
+  - `"lam"`: the mixing weight `lambda`, a number between 0 and 1.
+
+  Form the blended distribution over the **union** of the two models' tokens.
+  For every token that appears in either model:
+
+  ```
+  blended[token] = lam * p1[token] + (1 - lam) * p2[token]
+  ```
+
+  If a token is present in one model but **missing** from the other, treat its
+  probability in the missing model as `0` (that model simply never predicts it).
+
+  Return a **new dictionary** mapping every token in the union to its blended
+  probability, each **rounded to 6 decimal places**.
+
+  Example call:
+
+  ```python
+  interpolate_models({
+      "p1": {"stew": 0.6, "soup": 0.4},
+      "p2": {"stew": 0.2, "soup": 0.8},
+      "lam": 0.5,
+  })
+  # -> {"stew": 0.4, "soup": 0.6}
+  ```
+starter_code: |
+  def interpolate_models(job):
+      return {}
+function_name: interpolate_models
+input_mode: function
+solution_sketch: Take the set union of both models' keys, and for each key combine lam * p1.get(key, 0) with (1 - lam) * p2.get(key, 0), rounding each blended value to 6 decimals.
+sample_solution: |
+  def interpolate_models(job):
+      p1 = job["p1"]
+      p2 = job["p2"]
+      lam = job["lam"]
+      keys = set(p1) | set(p2)
+      result = {}
+      for k in keys:
+          v = lam * p1.get(k, 0.0) + (1 - lam) * p2.get(k, 0.0)
+          result[k] = round(v, 6)
+      return result
+hints:
+  - level: 1
+    text: The output vocabulary is the union of both models' tokens, so start by combining their keys with set(p1) | set(p2).
+  - level: 2
+    text: Use dict.get(token, 0.0) so a token missing from one model contributes 0 there instead of raising a KeyError.
+  - level: 3
+    text: For each token compute lam * p1.get(k, 0.0) + (1 - lam) * p2.get(k, 0.0) and store round(v, 6) in the result dictionary.
+tests:
+  public:
+    - name: even_blend
+      input:
+        p1: {"a": 0.6, "b": 0.4}
+        p2: {"a": 0.2, "b": 0.8}
+        lam: 0.5
+      expected: {"a": 0.4, "b": 0.6}
+    - name: disjoint_vocabularies
+      input:
+        p1: {"a": 1.0}
+        p2: {"b": 1.0}
+        lam: 0.5
+      expected: {"a": 0.5, "b": 0.5}
+    - name: lambda_one_takes_first
+      input:
+        p1: {"x": 0.7, "y": 0.3}
+        p2: {"z": 1.0}
+        lam: 1.0
+      expected: {"x": 0.7, "y": 0.3, "z": 0.0}
+  validation:
+    - name: lambda_zero_takes_second
+      input:
+        p1: {"a": 0.9, "b": 0.1}
+        p2: {"a": 0.5, "c": 0.5}
+        lam: 0.0
+      expected: {"a": 0.5, "b": 0.0, "c": 0.5}
+    - name: partial_overlap
+      input:
+        p1: {"a": 0.5, "b": 0.5}
+        p2: {"b": 0.3, "c": 0.7}
+        lam: 0.5
+      expected: {"a": 0.25, "b": 0.4, "c": 0.35}
+    - name: uneven_weight
+      input:
+        p1: {"a": 0.6, "b": 0.4}
+        p2: {"a": 0.1, "b": 0.9}
+        lam: 0.3
+      expected: {"a": 0.25, "b": 0.75}
+    - name: identical_models
+      input:
+        p1: {"a": 0.5, "b": 0.5}
+        p2: {"a": 0.5, "b": 0.5}
+        lam: 0.5
+      expected: {"a": 0.5, "b": 0.5}
+explanation_markdown: |
+  Linear interpolation is a weighted average of two distributions, token by
+  token: `lam` controls how much you trust the first model and `1 - lam` the
+  second. Because both inputs are valid probability distributions and the weights
+  add to 1, the blend is automatically a valid distribution too — the mixed
+  values still sum to 1 across the union of tokens, with no extra normalization
+  needed.
+
+  The `.get(token, 0.0)` default is what makes the mixture a genuine backoff.
+  When the specialist model has never seen a token, contributing `0` from that
+  side means the blended probability falls back entirely to the other model's
+  estimate (scaled by its weight), so the combined model can still assign that
+  token a non-zero probability. Iterating over the **union** of keys is essential
+  for the same reason: restricting to the intersection would silently discard
+  every token that only one model knows, which are exactly the cases backoff is
+  meant to rescue.
+common_mistakes:
+  - Iterating over only one model's keys (or the intersection), which drops tokens that appear in just one of the two models.
+  - Indexing p1[token] and p2[token] directly, so a token missing from one model raises KeyError instead of backing off to 0.
+  - Weighting the second model by lam instead of 1 - lam, swapping the two models' influence.
+  - Rounding to a precision other than 6 decimals and breaking the exact test comparison.

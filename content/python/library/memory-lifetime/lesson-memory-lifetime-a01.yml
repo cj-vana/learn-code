@@ -1,0 +1,86 @@
+id: lesson.library.memory_lifetime.a01
+kind: lesson
+version: 1
+language: python
+title: 'Reference Counting: Who Is Keeping This Object Alive?'
+slug: lesson-memory-lifetime-a01
+difficulty: hard
+concepts:
+  - python.memory_model
+prerequisites:
+  - python.classes
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.memory_lifetime.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original reference-counting walkthrough framed around a print shop's job objects, with fresh worked examples.
+body_markdown: |
+  Python programmers rarely think about memory — until a long-running
+  service grows without bound, and suddenly "when do objects actually go
+  away?" is the only question that matters. The answer starts with one
+  mechanism: every CPython object carries a **reference count** — how many
+  names, containers, and internals currently point at it. Bind a new
+  reference and it rises; drop one and it falls; hit zero and the object is
+  reclaimed *immediately*.
+
+  ```python
+  job = PrintJob("poster")     # 1 reference: the name job
+  queue.append(job)            # 2: the list holds one too
+  job = None                   # 1: the name released its claim
+  queue.clear()                # 0: reclaimed right now, deterministically
+  ```
+
+  Three things follow from "immediately" that are worth owning:
+
+  - **Deterministic cleanup.** When the last reference drops, `__del__`
+    (if any) and memory release happen at that moment — not at some future
+    garbage-collection pause. This is why CPython file objects close
+    promptly when they go out of scope (though `with` remains the
+    *contract*; other Python implementations defer).
+  - **del deletes a name, not an object.** `del job` removes one
+    reference. The object dies only if that was the last one — a mental
+    model that dissolves a whole family of beginner confusions.
+  - **A leak in Python is almost never "forgot to free"** — it is a
+    *surviving reference you forgot about*: the cache that never evicts,
+    the list that only appends, the handler holding the last request.
+    Hunting leaks means hunting referrers.
+
+  ### The off-by-one everyone meets
+
+  `sys.getrefcount(x)` reports one *more* than you expect — the act of
+  passing `x` to the function creates a temporary reference of its own.
+  Fresh objects typically report 2 (your name + the argument). The lesson
+  generalizes: observing reference counts perturbs them, so treat
+  `getrefcount` as a curiosity and diagnostic hint, never as an exact
+  oracle to build logic on.
+
+  ### Two cheap facts that look like magic
+
+  CPython pre-creates the small integers -5..256 and interns many
+  compile-time strings. So:
+
+  ```python
+  a = 256; b = 256; a is b       # True  — same cached object
+  a = 257; b = 257; a is b       # implementation-dependent!
+  ```
+
+  This is why the rule is **`is` for identity (None, sentinels), `==` for
+  values** — code that "worked" because of the small-int cache breaks the
+  day a value crosses 256. In the exercises you will predict these cases,
+  model reference graphs as data, and reason about reachability — because
+  one question remains that counting cannot answer: what if two objects
+  point at *each other*? That is the next lesson.
+checkpoints:
+  - question: A service's memory grows forever. In reference-counting terms, what is the leak, and where do you hunt?
+    answer: Some reference is surviving unintentionally — an append-only list, an unevicted cache, a handler pinning old objects; the hunt is for referrers keeping the count above zero, not for a missing free().
+    explanation: 'Python leaks are liveness bugs: objects stay reachable, so the collector correctly keeps them — the fix is dropping the forgotten reference.'
+  - question: Why does sys.getrefcount(x) report one more than the references you can see in your code?
+    answer: Passing x as the function argument creates a temporary reference for the duration of the call, so the count includes it — a reminder that measuring references perturbs them.
+    explanation: The off-by-one makes getrefcount a diagnostic hint rather than an exact oracle, and the observer effect generalizes to most runtime introspection.
+  - question: a = 256; b = 256 gives a is b == True, but 257 may not. What explains this, and what coding rule does it justify?
+    answer: 'CPython caches the small integers -5..256 as shared singletons, so equal small ints are literally the same object, while larger ones may or may not be; hence the rule: use == for value comparison and reserve is for true identity like None.'
+    explanation: 'Identity behavior for numbers and strings is an implementation detail that varies by value and version — correct code never depends on it.'

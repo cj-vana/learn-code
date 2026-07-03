@@ -1,0 +1,84 @@
+id: exercise.library.collections_itertools.a04
+kind: exercise
+version: 1
+language: python
+title: Brightest Star in the Catalogue
+slug: collections-itertools-a04
+difficulty: easy
+concepts:
+  - python.collections_module
+  - python.tuples
+prerequisites:
+  - python.lists
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.collections_itertools.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original observatory catalogue task turning raw rows into namedtuple records before selecting a minimum.
+prompt_markdown: |
+  An observatory stores each star as a raw row `[name, magnitude, distance]`,
+  where a *smaller* magnitude means a *brighter* star. Reading `row[1]`
+  everywhere is error-prone, so wrap each row in a `namedtuple` with named
+  fields first. Write `brightest_star(rows)` where `rows` is a list of such
+  rows. Return the `name` of the brightest star (the one with the smallest
+  magnitude). An empty catalogue returns the empty string `""`. Assume no two
+  stars share the exact same magnitude.
+starter_code: |
+  def brightest_star(rows):
+      return ""
+function_name: brightest_star
+input_mode: function
+solution_sketch: Build a Star namedtuple for each row, then pick the record with the smallest magnitude field.
+sample_solution: |
+  from collections import namedtuple
+
+
+  def brightest_star(rows):
+      Star = namedtuple("Star", ["name", "magnitude", "distance"])
+      stars = [Star(*row) for row in rows]
+      if not stars:
+          return ""
+      return min(stars, key=lambda s: s.magnitude).name
+hints:
+  - level: 1
+    text: Give each row named fields so you can compare stars by magnitude instead of by a bare index.
+  - level: 2
+    text: Define Star = namedtuple("Star", ["name", "magnitude", "distance"]) and build one with Star(*row) per row.
+  - level: 3
+    text: 'Use min(stars, key=lambda s: s.magnitude) to find the brightest, then return its .name; handle the empty list up front.'
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: ''
+    - name: single
+      input: [[Vega, 0.03, 25]]
+      expected: Vega
+    - name: three_stars
+      input: [[Vega, 0.03, 25], [Rigel, 0.13, 860], [Sirius, -1.46, 9]]
+      expected: Sirius
+  validation:
+    - name: two_stars
+      input: [[Deneb, 1.25, 2600], [Altair, 0.77, 17]]
+      expected: Altair
+    - name: both_negative
+      input: [[Canopus, -0.74, 310], [Arcturus, -0.05, 37]]
+      expected: Canopus
+    - name: brightest_is_last
+      input: [[Alpha, 2.0, 1], [Beta, 1.0, 1], [Gamma, 0.5, 1]]
+      expected: Gamma
+explanation_markdown: |
+  Turning each `[name, magnitude, distance]` row into `Star(*row)` gives you
+  attribute access, so `s.magnitude` reads like English and never depends on
+  remembering that magnitude lives at index 1. `min(..., key=lambda s:
+  s.magnitude)` then scans once and returns the whole record with the smallest
+  magnitude, from which you pull `.name`. Because a namedtuple is still a tuple,
+  building and unpacking it is cheap.
+common_mistakes:
+  - Returning the magnitude or the whole record instead of just the star's name.
+  - Using max instead of min and reporting the faintest star, since brighter means a smaller magnitude.
+  - Forgetting the empty-catalogue case, which makes min raise a ValueError.

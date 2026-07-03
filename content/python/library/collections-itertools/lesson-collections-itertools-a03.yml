@@ -1,0 +1,87 @@
+id: lesson.library.collections_itertools.a03
+kind: lesson
+version: 1
+language: python
+title: Lightweight Records With namedtuple
+slug: lesson-collections-itertools-a03
+difficulty: easy
+concepts:
+  - python.collections_module
+  - python.tuples
+prerequisites:
+  - python.lists
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.collections_itertools.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original star-catalogue record scenario contrasting positional tuples with named fields.
+body_markdown: |
+  Suppose an observatory hands you star records as plain tuples:
+  `("Vega", 0.03, 25)`. The code that reads them fills up with mystery indices:
+
+  ```python
+  star = ("Vega", 0.03, 25)
+  name = star[0]
+  magnitude = star[1]     # was that index 1 or 2? who remembers
+  ```
+
+  `star[1]` tells a reader nothing. A `namedtuple` keeps the compactness and
+  speed of a tuple but gives each position a name, so the code documents itself:
+
+  ```python
+  from collections import namedtuple
+
+  Star = namedtuple("Star", ["name", "magnitude", "distance"])
+  vega = Star("Vega", 0.03, 25)
+
+  vega.name          # "Vega"
+  vega.magnitude     # 0.03  -- reads like English
+  vega[0]            # still works: "Vega"
+  ```
+
+  A namedtuple is a real tuple: it is immutable, it unpacks
+  (`name, mag, dist = vega`), and you can still index it. You just gain
+  attribute access. Building one from a raw row is a one-liner with `*`:
+  `Star(*row)`. That makes namedtuples a clean landing spot for parsed data --
+  turn each list-of-fields into a labelled record and the rest of your program
+  reads much better.
+
+  Modern Python offers a class-based form through `typing.NamedTuple` that many
+  people find even clearer, because the fields and their types sit right in the
+  body:
+
+  ```python
+  from typing import NamedTuple
+
+  class Star(NamedTuple):
+      name: str
+      magnitude: float
+      distance: int
+
+  sirius = Star("Sirius", -1.46, 9)
+  ```
+
+  Both forms produce the same kind of object; the `typing.NamedTuple` version is
+  just a nicer place to declare it when you have several fields. Because the
+  result is still a tuple, sorting is effortless: `min(stars, key=lambda s:
+  s.magnitude)` finds the brightest star (smallest magnitude) while the
+  `key=lambda` names exactly which field you are comparing.
+
+  Reach for a namedtuple whenever you have a small, fixed bundle of related
+  values -- a point, a row, a record -- and you want readable field names
+  without the weight of a full class. It costs almost nothing and erases a whole
+  category of "wait, which index was that?" bugs.
+checkpoints:
+  - question: What advantage does `star.magnitude` have over `star[1]` when both return the same value?
+    answer: The named-field access documents intent, so a reader immediately knows which quantity is being used without counting positions.
+    explanation: namedtuples keep tuple speed and immutability while adding self-describing attribute names, which removes error-prone positional indexing.
+  - question: How do you build a `Star` namedtuple from a list `row = ["Rigel", 0.13, 860]`?
+    answer: Unpack it with the star operator, `Star(*row)`, which passes each element as a positional field.
+    explanation: '`*row` spreads the list into the three constructor arguments in order, a common way to turn parsed rows into labelled records.'
+  - question: Is a namedtuple mutable -- can you reassign `vega.magnitude = 0.1`?
+    answer: No; a namedtuple is immutable just like an ordinary tuple, so field assignment raises an error.
+    explanation: namedtuples inherit tuple immutability, which is why they are safe to use as dictionary keys or set members.

@@ -1,0 +1,103 @@
+id: exercise.library.regex_text_processing.a08
+kind: exercise
+version: 1
+language: python
+title: Keep the Valid Inventory Codes
+slug: regex-text-processing-a08
+difficulty: medium
+concepts:
+  - python.regex
+  - python.lists
+prerequisites:
+  - python.regex
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.regex_text_processing.a08
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original warehouse inventory-code validation task exercising re.fullmatch as a list filter.
+prompt_markdown: |
+  A warehouse scanner produces inventory codes, but some scans are garbled. A
+  **valid** code is exactly two uppercase letters, a hyphen, then four digits, for
+  example `QT-0042`. Nothing may come before or after it. Write
+  `keep_valid_codes(codes)` where `codes` is a list of strings; return a new list
+  containing only the entries that are valid codes, in their original order.
+starter_code: |
+  import re
+
+
+  def keep_valid_codes(codes):
+      return []
+function_name: keep_valid_codes
+input_mode: function
+solution_sketch: Filter the list, keeping only strings where re.fullmatch of the code pattern succeeds.
+sample_solution: |
+  import re
+
+
+  def keep_valid_codes(codes):
+      return [c for c in codes if re.fullmatch(r"[A-Z]{2}-\d{4}", c)]
+hints:
+  - level: 1
+    text: 'A valid code means the whole string fits the shape with nothing extra, which is what re.fullmatch checks.'
+  - level: 2
+    text: Build the result with a list comprehension that keeps each code only when fullmatch returns a match.
+  - level: 3
+    text: Return [c for c in codes if re.fullmatch(r"[A-Z]{2}-\d{4}", c)]; fullmatch rejects extra characters at either end.
+tests:
+  public:
+    - name: mixed_list
+      input:
+        - QT-0042
+        - xx-0042
+        - QT-42
+        - AB-1234
+      expected:
+        - QT-0042
+        - AB-1234
+    - name: all_valid
+      input:
+        - AB-1234
+        - CD-5678
+      expected:
+        - AB-1234
+        - CD-5678
+    - name: empty_list
+      input: []
+      expected: []
+  validation:
+    - name: wrong_shapes
+      input:
+        - ABC-1234
+        - A-1234
+        - ab-1234
+        - AB-12345
+      expected: []
+    - name: trailing_space_rejected
+      input:
+        - 'ZZ-0000'
+        - 'ZZ-0000 '
+      expected:
+        - 'ZZ-0000'
+    - name: keeps_order
+      input:
+        - MN-1111
+        - bad
+        - OP-2222
+      expected:
+        - MN-1111
+        - OP-2222
+explanation_markdown: |
+  `re.fullmatch` succeeds only when the pattern accounts for the *entire* string,
+  so a code with an extra letter (`ABC-1234`), too many digits (`AB-12345`), or a
+  trailing space all fail. Using it as the condition of a list comprehension keeps
+  exactly the entries that fit `[A-Z]{2}-\d{4}` and preserves their order. This is
+  the standard way to validate a batch: filter with `fullmatch` rather than
+  `search`, which would wrongly accept a valid code buried inside junk.
+common_mistakes:
+  - Using re.search or re.match, which accept a valid code even when surrounded by extra characters.
+  - Forgetting that a trailing space makes the string invalid under fullmatch.
+  - Returning booleans or match objects instead of the original code strings.

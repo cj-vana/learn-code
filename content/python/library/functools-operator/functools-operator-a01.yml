@@ -1,0 +1,128 @@
+id: exercise.library.functools_operator.a01
+kind: exercise
+version: 1
+language: python
+title: Sorting the Observatory Log
+slug: functools-operator-a01
+difficulty: easy
+concepts:
+  - python.functools_operator
+  - python.functions
+prerequisites:
+  - python.lists
+  - python.types
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.functools_operator.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original singledispatch drill themed around a night-sky observatory logging mixed-type readings.
+prompt_markdown: |
+  A mountaintop observatory records each night's readings in a single mixed list.
+  A reading can be one of three shapes, and each shape is written to the log
+  differently:
+
+  - an **integer** star count `n` becomes the string `"stars:n"`
+  - a **string** label `s` becomes the string `"label:s"`
+  - a **list** of coordinates becomes `"coords:k"`, where `k` is how many
+    coordinates it holds
+
+  Anything else (for example a float or `None`) becomes the literal string
+  `"unknown"`.
+
+  Write `describe_readings(readings)` that takes the list of readings and returns
+  a new list with each reading turned into its log string, in the original order.
+  An empty input returns an empty list.
+
+  Build this with `functools.singledispatch`: register one handler per type and
+  let the dispatcher route each value by its runtime type, rather than writing a
+  chain of `isinstance` checks by hand.
+
+  Example: `describe_readings([7, "north", [[1, 2], [3, 4]], 3.5])` returns
+  `["stars:7", "label:north", "coords:2", "unknown"]`.
+starter_code: |
+  from functools import singledispatch
+
+
+  def describe_readings(readings):
+      return []
+function_name: describe_readings
+input_mode: function
+solution_sketch: |
+  Define a singledispatch base function returning "unknown", then register
+  handlers for int, str, and list. Map each reading through the dispatcher.
+sample_solution: |
+  from functools import singledispatch
+
+
+  @singledispatch
+  def _describe(reading):
+      return "unknown"
+
+
+  @_describe.register
+  def _(reading: int):
+      return f"stars:{reading}"
+
+
+  @_describe.register
+  def _(reading: str):
+      return f"label:{reading}"
+
+
+  @_describe.register
+  def _(reading: list):
+      return f"coords:{len(reading)}"
+
+
+  def describe_readings(readings):
+      return [_describe(reading) for reading in readings]
+hints:
+  - level: 1
+    text: singledispatch picks a handler based on the type of the FIRST argument, so you register one function per type you care about.
+  - level: 2
+    text: Decorate a base function with @singledispatch (it handles the "unknown" fallback), then use @base.register with a typed parameter for int, str, and list.
+  - level: 3
+    text: Register int -> f"stars:{n}", str -> f"label:{s}", list -> f"coords:{len(reading)}"; the undecorated base returns "unknown". Then map every reading through the dispatcher.
+tests:
+  public:
+    - name: mixed_shapes
+      input: [7, "north", [[1, 2], [3, 4]], 3.5]
+      expected: ["stars:7", "label:north", "coords:2", "unknown"]
+    - name: empty
+      input: []
+      expected: []
+    - name: all_integers
+      input: [1, 20, 300]
+      expected: ["stars:1", "stars:20", "stars:300"]
+  validation:
+    - name: empty_coord_list
+      input: [[]]
+      expected: ["coords:0"]
+    - name: none_is_unknown
+      input: [null, "dawn"]
+      expected: ["unknown", "label:dawn"]
+    - name: nested_lists_counted
+      input: [[[0, 0]], "zenith", 42]
+      expected: ["coords:1", "label:zenith", "stars:42"]
+    - name: float_only
+      input: [1.5, 2.5]
+      expected: ["unknown", "unknown"]
+explanation_markdown: |
+  `functools.singledispatch` turns a plain function into a generic function whose
+  behavior is chosen by the type of its first argument. The function you decorate
+  becomes the default (here, the `"unknown"` branch), and each `@_describe.register`
+  attaches a specialized implementation for one type. At call time the dispatcher
+  inspects `type(reading)` and calls the most specific registered handler, so you
+  never write the `if isinstance(...)` ladder yourself.
+
+  Because dispatch is by exact/most-specific type, a `float` and `None` both fall
+  through to the default. Note that `bool` would dispatch to the `int` handler if
+  it appeared, since `bool` is a subclass of `int` — a detail worth remembering.
+common_mistakes:
+  - Registering handlers on the wrong function; you must decorate with @base.register, where base is the singledispatch-wrapped function.
+  - Forgetting the default branch, so unexpected types raise instead of returning "unknown".
+  - Returning tuples or mutating the input list instead of building a fresh list of strings in order.

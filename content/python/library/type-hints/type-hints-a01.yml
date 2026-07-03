@@ -1,0 +1,115 @@
+id: exercise.library.type_hints.a01
+kind: exercise
+version: 1
+language: python
+title: Tallying the Handwritten Scorecards
+slug: type-hints-a01
+difficulty: easy
+concepts:
+  - python.type_hints
+  - python.types
+prerequisites:
+  - python.lists
+  - python.loops
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.type_hints.a01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original type-coercion drill framed around transcribing a darts league's handwritten scorecards into clean integers.
+prompt_markdown: |
+  A darts league collects handwritten scorecards, and by the time the numbers
+  reach the spreadsheet they are a mess of runtime types: some scores are already
+  whole numbers, some were typed as text like `"17"`, and some arrived as decimals
+  such as `20.0` from a averaging tool. You need one clean list of integers.
+
+  Read the signature carefully:
+
+  ```python
+  def coerce_to_int(values: list[int | str | float]) -> list[int]:
+  ```
+
+  The parameter annotation `list[int | str | float]` tells you each element is one
+  of three types, and the return annotation `list[int]` promises the caller a list
+  of plain integers. Convert each value in order:
+
+  - An `int` is kept as-is.
+  - A `str` holds a whole number written as text (for example `"42"`); parse it to
+    an `int`.
+  - A `float` is **truncated toward zero**, so `20.9` becomes `20` and `-2.9`
+    becomes `-2` (not `-3`).
+
+  Return a **new list** of ints in the same order. An empty input returns an empty
+  list.
+
+  Example:
+
+  ```python
+  coerce_to_int(["17", 20.9, 5])  # -> [17, 20, 5]
+  ```
+starter_code: |
+  def coerce_to_int(values: list[int | str | float]) -> list[int]:
+      return []
+function_name: coerce_to_int
+input_mode: function
+solution_sketch: Loop over the values, branch on isinstance for str vs float, and build a new list where each element is converted to int (int() truncates floats toward zero).
+sample_solution: |
+  def coerce_to_int(values: list[int | str | float]) -> list[int]:
+      result: list[int] = []
+      for value in values:
+          if isinstance(value, str):
+              result.append(int(value))
+          elif isinstance(value, float):
+              result.append(int(value))
+          else:
+              result.append(value)
+      return result
+hints:
+  - level: 1
+    text: The annotation list[int | str | float] means you must handle three possible runtime types, so check each element's type before converting.
+  - level: 2
+    text: Use isinstance(value, str) to detect text you must parse, and isinstance(value, float) for decimals; a plain int needs no conversion.
+  - level: 3
+    text: int("42") parses text and int(20.9) truncates toward zero (giving 20), so calling int() on both str and float produces the integer you want.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: parse_strings
+      input: ["12", "0", "8"]
+      expected: [12, 0, 8]
+    - name: truncate_floats
+      input: [3.9, 2.1, 20.0]
+      expected: [3, 2, 20]
+  validation:
+    - name: mixed_types
+      input: ["17", 20.9, 5]
+      expected: [17, 20, 5]
+    - name: negative_float_toward_zero
+      input: [-2.9, -0.5]
+      expected: [-2, 0]
+    - name: negative_string
+      input: ["-15", "3"]
+      expected: [-15, 3]
+    - name: single_int
+      input: [42]
+      expected: [42]
+explanation_markdown: |
+  Type hints describe what a function accepts and returns, but they do not convert
+  anything at runtime, that is your job. The union `int | str | float` is a promise
+  about the possible types, and `isinstance` lets you narrow to the exact branch
+  you are in so you know which conversion applies.
+
+  The one detail to get right is truncation direction. `int()` on a float drops the
+  fractional part toward zero, so `20.9` becomes `20` and `-2.9` becomes `-2`. That
+  differs from `math.floor`, which would push `-2.9` down to `-3`. Because `int()`
+  also parses whole-number text, both the `str` and `float` branches funnel through
+  the same call, and the `int` branch just keeps the value unchanged.
+common_mistakes:
+  - Returning the raw values unchanged, so the result still contains strings and floats instead of the promised list[int].
+  - Using math.floor for the float case, which rounds -2.9 down to -3 instead of truncating toward zero to -2.
+  - Assuming type hints coerce values automatically; the annotation list[int] does not convert anything, you must build the ints yourself.

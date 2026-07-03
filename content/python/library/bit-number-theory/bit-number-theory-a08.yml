@@ -1,0 +1,106 @@
+id: exercise.library.bit_number_theory.a08
+kind: exercise
+version: 1
+language: python
+title: Prime-Numbered Seed Trays
+slug: bit-number-theory-a08
+difficulty: medium
+concepts:
+  - concepts.number_theory
+prerequisites:
+  - python.lists
+  - python.loops
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.bit_number_theory.a08
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original sieve-of-Eratosthenes drill framed as labelling greenhouse seed trays whose numbers are prime.
+prompt_markdown: |
+  A greenhouse numbers its seed trays `2, 3, 4, ...` up to some limit `n`. The head
+  grower wants to flag every tray whose number is **prime** so those trays get the
+  rare heirloom seeds.
+
+  Write `prime_trays(n)` that returns a list, in ascending order, of every prime
+  number that is less than or equal to `n`. Build it with the sieve of
+  Eratosthenes: assume all numbers are prime, then repeatedly cross off the
+  multiples of each prime you find.
+
+  Rules:
+
+  - The input `n` is a single non-negative integer.
+  - If `n` is less than 2 there are no primes, so return an empty list `[]`.
+  - The returned primes must be in increasing order.
+
+  Example: `prime_trays(10)` returns `[2, 3, 5, 7]`.
+starter_code: |
+  def prime_trays(n):
+      return []
+function_name: prime_trays
+input_mode: function
+solution_sketch: Build a boolean is_prime table, cross off multiples of each prime starting at its square, then collect the surviving indices.
+sample_solution: |
+  def prime_trays(n):
+      if n < 2:
+          return []
+      is_prime = [True] * (n + 1)
+      is_prime[0] = False
+      is_prime[1] = False
+      p = 2
+      while p * p <= n:
+          if is_prime[p]:
+              for multiple in range(p * p, n + 1, p):
+                  is_prime[multiple] = False
+          p += 1
+      primes = []
+      for i in range(2, n + 1):
+          if is_prime[i]:
+              primes.append(i)
+      return primes
+hints:
+  - level: 1
+    text: Start by assuming every number from 2 to n is prime, then eliminate the ones that have a smaller factor.
+  - level: 2
+    text: Keep a boolean list of length n + 1; for each number still marked prime, mark all of its multiples as not prime.
+  - level: 3
+    text: You only need to start crossing off at p * p and only need to test p while p * p <= n; afterwards collect every index still marked True.
+tests:
+  public:
+    - name: below_two
+      input: 1
+      expected: []
+    - name: up_to_ten
+      input: 10
+      expected: [2, 3, 5, 7]
+    - name: exactly_two
+      input: 2
+      expected: [2]
+  validation:
+    - name: zero
+      input: 0
+      expected: []
+    - name: prime_endpoint
+      input: 13
+      expected: [2, 3, 5, 7, 11, 13]
+    - name: twenty
+      input: 20
+      expected: [2, 3, 5, 7, 11, 13, 17, 19]
+    - name: thirty
+      input: 30
+      expected: [2, 3, 5, 7, 11, 13, 17, 19, 23, 29]
+explanation_markdown: |
+  The sieve of Eratosthenes marks composites instead of testing each number for
+  primality. Once you know `p` is prime, every multiple of `p` is composite, so you
+  cross them off in one sweep. Two optimisations keep it fast: you can begin
+  crossing off at `p * p` (smaller multiples like `2 * p` were already handled by
+  smaller primes), and you can stop looking for new primes once `p * p > n`,
+  because any composite `<= n` has a factor no larger than its square root. The
+  `n < 2` guard matters because 0 and 1 are not prime and the tray list should be
+  empty there.
+common_mistakes:
+  - Forgetting to mark 0 and 1 as non-prime (or indexing a list that is too short).
+  - Starting the inner cross-off loop at 2 * p, which is correct but slower; starting it above p * p by mistake skips real composites.
+  - Returning the boolean table itself instead of collecting the indices that stayed True.

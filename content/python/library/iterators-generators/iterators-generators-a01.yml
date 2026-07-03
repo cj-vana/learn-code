@@ -1,0 +1,85 @@
+id: exercise.library.iterators_generators.a01
+kind: exercise
+version: 1
+language: python
+title: Dome Countdown
+slug: iterators-generators-a01
+difficulty: easy
+concepts:
+  - python.iterators_generators
+  - python.functions
+prerequisites:
+  - python.functions
+  - python.loops
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.iterators_generators.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original observatory-countdown generator drill graded by materializing the yielded values.
+prompt_markdown: |
+  Before an observatory opens its dome, it counts down out loud. Write
+  `countdown_frames(seconds)` that builds and returns a **list** of the countdown
+  numbers from `seconds` down to `1`.
+
+  Do it with a *generator*: write a small generator (using `yield`) that produces
+  each number one at a time, then hand it to `list()` to collect the results. If
+  `seconds` is `0` or negative, the list should be empty.
+
+  For example, `countdown_frames(3)` returns `[3, 2, 1]`.
+starter_code: |
+  def countdown_frames(seconds):
+      # Write a generator with yield, then return list(...) of it.
+      return []
+function_name: countdown_frames
+input_mode: function
+solution_sketch: A generator yields seconds, seconds-1, ... down to 1; list() exhausts it into the result.
+sample_solution: |
+  def countdown_frames(seconds):
+      def ticks(n):
+          while n > 0:
+              yield n
+              n -= 1
+      return list(ticks(seconds))
+hints:
+  - level: 1
+    text: A generator function looks like a normal function but uses yield instead of return to hand back each value.
+  - level: 2
+    text: Inside a while loop that runs while n > 0, yield n and then decrement n by one.
+  - level: 3
+    text: Define ticks(n) that yields n, n-1, ... while n > 0, then return list(ticks(seconds)) to materialize it.
+tests:
+  public:
+    - name: three
+      input: 3
+      expected: [3, 2, 1]
+    - name: one
+      input: 1
+      expected: [1]
+    - name: zero
+      input: 0
+      expected: []
+  validation:
+    - name: five
+      input: 5
+      expected: [5, 4, 3, 2, 1]
+    - name: two
+      input: 2
+      expected: [2, 1]
+    - name: negative
+      input: -2
+      expected: []
+explanation_markdown: |
+  The generator `ticks` pauses at each `yield`, handing back one number and
+  resuming only when the next value is requested. Wrapping it in `list()`
+  *exhausts* the generator, pulling every yielded value into a real list. Because
+  the `while n > 0` guard is false from the start when `seconds` is zero or
+  negative, no values are yielded and the list comes back empty, exactly what we
+  want.
+common_mistakes:
+  - Using return inside the loop, which stops after a single value instead of yielding many.
+  - Forgetting to wrap the generator in list(), so the function returns a generator object that never equals the expected list.
+  - Counting up instead of down, or including 0 in the output.

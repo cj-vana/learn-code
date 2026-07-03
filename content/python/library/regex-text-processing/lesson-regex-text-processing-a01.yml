@@ -1,0 +1,84 @@
+id: lesson.library.regex_text_processing.a01
+kind: lesson
+version: 1
+language: python
+title: 'Finding Text With re: match, search, and findall'
+slug: lesson-regex-text-processing-a01
+difficulty: medium
+concepts:
+  - python.regex
+prerequisites:
+  - python.strings
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.regex_text_processing.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original greenhouse-log framing for introducing the three core re entry points.
+body_markdown: |
+  A regular expression is a small pattern language for describing shapes of text.
+  Python exposes it through the `re` module, and three functions do most of the
+  everyday work: `re.match`, `re.search`, and `re.findall`. Imagine a greenhouse
+  controller that writes status lines like `"07:15 BAY-3 temp 24"`. You rarely
+  want the whole line; you want the pieces, and each function reaches into the
+  text a little differently.
+
+  Start with the building blocks of a pattern. `\d` matches a single digit,
+  `\w` matches a word character (letters, digits, or underscore), and `\s`
+  matches whitespace. A `+` after any of these means "one or more", so `\d+`
+  matches a run of digits. Put a pattern in a raw string (`r"..."`) so Python
+  leaves the backslashes alone for `re` to interpret.
+
+  ```python
+  import re
+
+  line = "07:15 BAY-3 temp 24"
+
+  # match: only succeeds if the pattern is found at the very START of the string
+  print(re.match(r"\d+", line))        # matches "07"
+  print(re.match(r"temp", line))       # None -- not at the start
+
+  # search: scans the whole string and returns the FIRST match anywhere
+  hit = re.search(r"BAY-\d+", line)
+  print(hit.group())                   # "BAY-3"
+
+  # findall: returns EVERY non-overlapping match as a list of strings
+  print(re.findall(r"\d+", line))      # ['07', '15', '3', '24']
+  ```
+
+  Notice the return types, because mixing them up is the most common early
+  mistake. `re.match` and `re.search` return a *match object* when they succeed
+  and `None` when they fail. A match object is truthy, and calling `.group()` on
+  it gives you the matched text. Because a failed search returns `None`, you must
+  check before calling `.group()`:
+
+  ```python
+  m = re.search(r"BAY-\d+", "no bay here")
+  print(m)                 # None
+  bay = m.group() if m else "unknown"
+  print(bay)               # "unknown"
+  ```
+
+  `re.findall` is different: it always returns a list, empty when nothing
+  matches, so you never have to guard it. That makes it perfect for counting.
+  `len(re.findall(r"#\w+", text))` tells you how many hashtags a bulletin
+  contains without a single loop.
+
+  The mental model to carry forward: `match` is anchored at the start, `search`
+  roams the whole string for the first hit, and `findall` collects them all.
+  Reach for `search` when you expect one interesting value, `findall` when you
+  expect several, and `match` only when the pattern truly must sit at the very
+  beginning of the input.
+checkpoints:
+  - question: 'For the string "temp 24 now", what does re.match(r"\d+", ...) return, and why?'
+    answer: It returns None, because re.match only succeeds when the pattern is found at the very start of the string, and this string starts with the letter t.
+    explanation: The first digit run appears after "temp ", so an anchored match at position 0 fails even though the digits exist later in the string.
+  - question: Why can you call len() directly on the result of re.findall but not always call .group() directly on the result of re.search?
+    answer: re.findall always returns a list (possibly empty), while re.search returns None on failure, and None has no .group() method.
+    explanation: Guarding a search result with an if-check or a default avoids an AttributeError when the pattern is absent.
+  - question: Which function would you choose to collect every digit-run in a line, and what type do you get back?
+    answer: Use re.findall, which returns a list of the matched substrings (here, a list of strings).
+    explanation: findall gathers all non-overlapping matches at once, so it is the natural tool for counting or extracting repeated values.

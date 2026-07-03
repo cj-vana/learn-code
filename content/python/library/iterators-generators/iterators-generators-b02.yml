@@ -1,0 +1,116 @@
+id: exercise.library.iterators_generators.b02
+kind: exercise
+version: 1
+language: python
+title: Rolling Extremes on the Tide Gauge
+slug: iterators-generators-b02
+difficulty: hard
+concepts:
+  - python.iterators_generators
+  - patterns.sliding_window
+prerequisites:
+  - python.iterators_generators
+  - python.lists
+estimated_time_minutes: 20
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.iterators_generators.b02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original tide-gauge scenario where a generator lazily yields the min and max of each fixed sliding window over a reading series.
+prompt_markdown: |
+  A harbour tide gauge logs a long series of water-level readings, and the
+  forecasters want the lowest and highest reading within every fixed-width window
+  as the window slides one step at a time. Write `windowed_stats(job)` where `job`
+  is a dictionary with keys:
+
+  - `"readings"`: a list of numbers, and
+  - `"size"`: the window width `n`.
+
+  Return a **list** where each element is the two-item list `[min, max]` for one
+  window, in left-to-right order. The windows are consecutive slices of length `n`
+  sliding by one, so a series of length `L` yields `L - n + 1` windows.
+
+  Compute the windows with a **generator defined inside the function** that yields
+  one `[min, max]` pair per window, and finish by wrapping it with `list()`, so the
+  windows are produced lazily rather than all at once.
+
+  Edge rules: if `size` is `0` or negative, or larger than the number of readings,
+  or the readings list is empty, return an empty list. When `size` is `1`, every
+  window is a single reading, so each pair is `[x, x]`.
+
+  For example, `windowed_stats({"readings": [4, 2, 7, 3], "size": 2})` looks at the
+  windows `[4, 2]`, `[2, 7]`, `[7, 3]` and returns `[[2, 4], [2, 7], [3, 7]]`.
+starter_code: |
+  def windowed_stats(job):
+      # Define a generator that yields [min, max] for each sliding window,
+      # then return list(...) of its output.
+      return []
+function_name: windowed_stats
+input_mode: function
+solution_sketch: An inner generator guards the degenerate sizes, then walks the start index from 0 to len(readings) - size, slices each window, and yields [min(window), max(window)]. The outer function returns list() of that generator.
+sample_solution: |
+  def windowed_stats(job):
+      readings = job["readings"]
+      size = job["size"]
+
+      def windows(seq, width):
+          if width <= 0 or width > len(seq):
+              return
+          for start in range(len(seq) - width + 1):
+              window = seq[start:start + width]
+              yield [min(window), max(window)]
+
+      return list(windows(readings, size))
+hints:
+  - level: 1
+    text: There are len(readings) - size + 1 windows when size fits. Let the window's starting index run over range(len(readings) - size + 1).
+  - level: 2
+    text: For each start index, take the slice readings[start:start + size] and yield [min(slice), max(slice)]. Using yield makes the function a generator that produces windows lazily.
+  - level: 3
+    text: Guard the degenerate cases first by returning from the generator (yielding nothing) when size is 0 or negative or larger than the list, then wrap the generator in list() in the outer function.
+tests:
+  public:
+    - name: width_two
+      input: {"readings": [4, 2, 7, 3], "size": 2}
+      expected: [[2, 4], [2, 7], [3, 7]]
+    - name: width_equals_length
+      input: {"readings": [5, 1, 9], "size": 3}
+      expected: [[1, 9]]
+    - name: width_larger_than_series
+      input: {"readings": [1, 2], "size": 5}
+      expected: []
+  validation:
+    - name: width_one
+      input: {"readings": [3, 3, 1], "size": 1}
+      expected: [[3, 3], [3, 3], [1, 1]]
+    - name: negatives_span
+      input: {"readings": [-1, -5, 2, 0], "size": 3}
+      expected: [[-5, 2], [-5, 2]]
+    - name: empty_readings
+      input: {"readings": [], "size": 2}
+      expected: []
+    - name: repeated_values
+      input: {"readings": [2, 2, 2, 2], "size": 2}
+      expected: [[2, 2], [2, 2], [2, 2]]
+    - name: size_zero
+      input: {"readings": [1, 2, 3], "size": 0}
+      expected: []
+explanation_markdown: |
+  A sliding window of fixed width has a predictable count -- `L - n + 1` positions --
+  so the whole job is walking a start index across that range and summarising each
+  slice. Writing it as a generator with `yield` means the pairs are produced one at a
+  time, which is the lazy style you would want if the reading series were huge or
+  arriving as a stream; calling `list()` on it simply materialises them all here.
+
+  The guards matter as much as the loop. A width of zero or a width larger than the
+  series has no valid window, and an empty series has nothing to summarise, so the
+  generator returns immediately and `list()` collects nothing. Slicing plus `min`
+  and `max` per window is straightforward but does O(n) work per window; that is fine
+  for this exercise, and it keeps the intent obvious.
+common_mistakes:
+  - Looping the start index over the full length instead of stopping at len(readings) - size, which runs off the end and yields short final windows.
+  - Returning tuples like (min, max) when the prompt asks for two-item lists, so the compared values differ in type.
+  - Forgetting the guards, so a size of 0 or a size larger than the series raises or produces bogus windows instead of an empty list.

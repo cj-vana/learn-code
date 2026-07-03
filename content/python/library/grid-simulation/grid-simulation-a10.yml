@@ -1,0 +1,117 @@
+id: exercise.library.grid_simulation.a10
+kind: exercise
+version: 1
+language: python
+title: The Parcel Chute
+slug: grid-simulation-a10
+difficulty: hard
+concepts:
+  - patterns.simulation
+prerequisites:
+  - python.lists
+  - python.loops
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.grid_simulation.a10
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original stacking simulation with a single-step roll rule, themed around a parcel sorting depot's drop chute.
+prompt_markdown: |
+  A sorting depot drops parcels down a chute onto a row of `width` collection
+  columns, numbered `0` to `width - 1`. Every column starts empty, and you track
+  how many parcels are stacked in each as a list of heights.
+
+  Parcels arrive one at a time. Each drop names a column. Normally the parcel
+  lands in that column and its height grows by one. But the chute has a quirk on
+  peaks:
+
+  - If the named column is an **interior** column (it has a neighbour on both the
+    left and the right) **and** its current height is strictly greater than
+    *both* neighbours' current heights, the parcel is unstable and **rolls one
+    step** to the **lower** of the two neighbours before landing there.
+  - If the two neighbours are the same height (a tie), it rolls to the **left**
+    neighbour.
+  - The roll happens at most **once**: after rolling one column over, the parcel
+    lands and stacks even if the new column now looks like a peak.
+
+  The first and last columns are edges (they lack a neighbour on one side), so a
+  parcel dropped on an edge column **never rolls** and always lands where it fell.
+
+  Write `stack_parcels(job)` where `job` is a single dictionary with keys
+  `"width"` (the number of columns) and `"drops"` (a list of column indices, in
+  arrival order). Process every drop and **return the final list of column
+  heights**. An empty drop list returns a list of `width` zeros.
+
+  For example, `stack_parcels({"width": 3, "drops": [1, 1]})`: the first parcel
+  lands in column `1` (heights `[0, 1, 0]`); the second finds column `1` taller
+  than both neighbours, ties `0 == 0`, so it rolls left into column `0`, giving
+  `[1, 1, 0]`.
+starter_code: |
+  def stack_parcels(job):
+      return []
+function_name: stack_parcels
+input_mode: function
+solution_sketch: Keep a heights list. For each dropped column, if it is interior and strictly taller than both neighbours, redirect the landing column to the lower neighbour (left on a tie); then increment whichever column the parcel finally lands in.
+sample_solution: |
+  def stack_parcels(job):
+      width = job["width"]
+      heights = [0] * width
+      for col in job["drops"]:
+          target = col
+          if 0 < col < width - 1:
+              left, right = heights[col - 1], heights[col + 1]
+              if heights[col] > left and heights[col] > right:
+                  target = col - 1 if left <= right else col + 1
+          heights[target] += 1
+      return heights
+hints:
+  - level: 1
+    text: Track the heights in a list and decide, for each drop, which column the parcel finally lands in before you increment anything.
+  - level: 2
+    text: A roll only applies when the column is interior (`0 < col < width - 1`) and its height is strictly greater than both `heights[col - 1]` and `heights[col + 1]`.
+  - level: 3
+    text: "On a roll, pick the lower neighbour: `col - 1 if heights[col - 1] <= heights[col + 1] else col + 1`. The `<=` sends ties to the left. Then do a single `heights[target] += 1`."
+tests:
+  public:
+    - name: plain_stacking
+      input: {width: 3, drops: [0, 0, 1, 2]}
+      expected: [2, 1, 1]
+    - name: tie_rolls_left
+      input: {width: 3, drops: [1, 1]}
+      expected: [1, 1, 0]
+    - name: rolls_to_lower_right
+      input: {width: 3, drops: [0, 1, 1, 1]}
+      expected: [1, 2, 1]
+  validation:
+    - name: no_drops
+      input: {width: 4, drops: []}
+      expected: [0, 0, 0, 0]
+    - name: edges_never_roll
+      input: {width: 3, drops: [0, 0, 0, 2, 2]}
+      expected: [3, 0, 2]
+    - name: spreads_from_center
+      input: {width: 5, drops: [2, 2, 2, 2, 2]}
+      expected: [0, 2, 2, 1, 0]
+    - name: mixed_columns
+      input: {width: 4, drops: [1, 1, 1, 2]}
+      expected: [1, 2, 1, 0]
+explanation_markdown: |
+  The subtle part is deciding the landing column *before* mutating anything, so
+  the roll test reads consistent "before this parcel" heights. The condition has
+  three gates that must all hold for a roll: the column is interior, and it is
+  strictly taller than the left neighbour, and strictly taller than the right
+  neighbour. `strictly` matters: a column merely tied with a neighbour is not a
+  peak, so it does not roll.
+
+  Choosing the destination reduces to one comparison. `heights[col - 1] <=
+  heights[col + 1]` picks the left neighbour whenever it is lower *or equal*,
+  which folds the tie-goes-left rule into the same expression. Because the roll
+  fires at most once, you never loop or cascade; each drop is O(1) work, so the
+  whole run is O(number of drops) time and O(width) space.
+common_mistakes:
+  - Letting edge columns roll, or reading a non-existent neighbour at index -1 or width, instead of guarding with `0 < col < width - 1`.
+  - Using `>=` so a column merely tied with a neighbour is wrongly treated as a peak and rolls.
+  - Sending ties to the right, or letting the parcel keep rolling until it settles instead of stopping after a single step.

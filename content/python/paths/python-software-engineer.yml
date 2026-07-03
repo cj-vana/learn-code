@@ -1,0 +1,295 @@
+id: path.career.python_software_engineer
+kind: path
+path_type: career
+version: 1
+language: python
+title: Python Software Engineer
+slug: python-software-engineer
+description: "The deep-internals arc that separates a Python user from a Python engineer: the object model\
+  \ and descriptors, the memory system, concurrency, modern syntax, the functools/itertools toolbox, binary\
+  \ data, numeric precision, introspection, and runtime typing \u2014 the knowledge you reach for when\
+  \ other people's code misbehaves."
+outcomes:
+- Reason about descriptors, the MRO, and __slots__ from first principles
+- Explain reference counting, cycles, and the GIL under pressure
+- Choose threads, processes, or asyncio by workload with confidence
+- Wield modern syntax, functools, struct, Decimal, and inspect fluently
+- Understand where type hints act at runtime and where they don't
+estimated_hours: 44
+review_status: published
+source_status: original
+provenance:
+  brief_id: brief.paths.v1
+  author: agent
+  generated_at: '2026-07-02T18:00:00Z'
+  inspiration_sources: []
+  originality_notes: Curated ordering over the repository's original content bank; no external syllabus
+    copied.
+units:
+- id: unit.python_refresh
+  title: Python Refresh
+  description: Lessons, drills, and quizzes for python refresh.
+  items:
+  - lesson.library.python_refresh.a01
+  - lesson.library.python_refresh.a02
+  - lesson.library.python_refresh.a03
+  - lesson.library.python_refresh.a04
+  - lesson.library.python_refresh.a05
+  - lesson.library.python_refresh.a06
+  - exercise.library.python_refresh.a01
+  - exercise.library.python_refresh.a02
+  - exercise.library.python_refresh.a03
+  - exercise.library.python_refresh.a04
+  - quiz.library.python_refresh.a01
+  - exercise.library.python_refresh.a05
+  - exercise.library.python_refresh.a06
+  - exercise.library.python_refresh.a07
+  - exercise.library.python_refresh.a08
+  - quiz.library.python_refresh.a02
+  - exercise.library.python_refresh.b01
+  - exercise.library.python_refresh.b02
+  - exercise.library.python_refresh.b03
+  - exercise.library.python_refresh.b04
+  - quiz.library.python_refresh.a03
+  - exercise.library.python_refresh.b05
+  - exercise.library.python_refresh.b06
+  - exercise.library.python_refresh.b07
+  - exercise.library.python_refresh.b08
+  - quiz.library.python_refresh.a04
+  - exercise.library.python_refresh.c01
+  - exercise.library.python_refresh.c02
+- id: unit.oop_classes
+  title: Object-Oriented Python
+  description: Lessons, drills, and quizzes for object-oriented python.
+  items:
+  - lesson.library.oop_classes.a01
+  - lesson.library.oop_classes.a02
+  - lesson.library.oop_classes.a03
+  - lesson.library.oop_classes.a04
+  - exercise.library.oop_classes.a01
+  - exercise.library.oop_classes.a02
+  - exercise.library.oop_classes.a03
+  - exercise.library.oop_classes.a04
+  - quiz.library.oop_classes.a01
+  - exercise.library.oop_classes.a05
+  - exercise.library.oop_classes.a06
+  - exercise.library.oop_classes.a07
+  - exercise.library.oop_classes.a08
+  - quiz.library.oop_classes.a02
+  - exercise.library.oop_classes.a09
+  - exercise.library.oop_classes.a10
+  - exercise.library.oop_classes.a11
+  - exercise.library.oop_classes.a12
+  - quiz.library.oop_classes.a03
+  - exercise.library.oop_classes.b01
+  - exercise.library.oop_classes.b02
+  milestone: Object-oriented foundations set
+- id: unit.modern_syntax
+  title: Modern Python Syntax
+  description: Lessons, drills, and quizzes for modern python syntax.
+  items:
+  - lesson.library.modern_syntax.a01
+  - lesson.library.modern_syntax.a02
+  - lesson.library.modern_syntax.a03
+  - exercise.library.modern_syntax.a01
+  - exercise.library.modern_syntax.a02
+  - exercise.library.modern_syntax.a03
+  - exercise.library.modern_syntax.a04
+  - quiz.library.modern_syntax.a01
+  - exercise.library.modern_syntax.a05
+  - exercise.library.modern_syntax.a06
+  - exercise.library.modern_syntax.a07
+  - exercise.library.modern_syntax.a08
+  - quiz.library.modern_syntax.a02
+  - exercise.library.modern_syntax.a09
+  - exercise.library.modern_syntax.a10
+  - exercise.library.modern_syntax.a11
+  - exercise.library.modern_syntax.a12
+- id: unit.oop_internals
+  title: 'OOP Internals: Descriptors & MRO'
+  description: 'Lessons, drills, and quizzes for oop internals: descriptors & mro.'
+  items:
+  - lesson.library.oop_internals.a01
+  - lesson.library.oop_internals.a02
+  - lesson.library.oop_internals.a03
+  - exercise.library.oop_internals.a01
+  - exercise.library.oop_internals.a02
+  - exercise.library.oop_internals.a03
+  - exercise.library.oop_internals.a04
+  - quiz.library.oop_internals.a01
+  - exercise.library.oop_internals.a05
+  - exercise.library.oop_internals.a06
+  - exercise.library.oop_internals.a07
+  - exercise.library.oop_internals.a08
+  - quiz.library.oop_internals.a02
+  - exercise.library.oop_internals.a09
+  - exercise.library.oop_internals.a10
+  - exercise.library.oop_internals.a11
+  - exercise.library.oop_internals.a12
+- id: unit.functools_operator
+  title: functools, operator & itertools
+  description: Lessons, drills, and quizzes for functools, operator & itertools.
+  items:
+  - lesson.library.functools_operator.a01
+  - lesson.library.functools_operator.a02
+  - lesson.library.functools_operator.a03
+  - exercise.library.functools_operator.a01
+  - exercise.library.functools_operator.a02
+  - exercise.library.functools_operator.a03
+  - exercise.library.functools_operator.a04
+  - quiz.library.functools_operator.a01
+  - exercise.library.functools_operator.a05
+  - exercise.library.functools_operator.a06
+  - exercise.library.functools_operator.a07
+  - exercise.library.functools_operator.a08
+  - quiz.library.functools_operator.a02
+  - exercise.library.functools_operator.a09
+  - exercise.library.functools_operator.a10
+  - exercise.library.functools_operator.a11
+  - exercise.library.functools_operator.a12
+- id: unit.typing_runtime
+  title: Typing at the Runtime Boundary
+  description: Lessons, drills, and quizzes for typing at the runtime boundary.
+  items:
+  - lesson.library.typing_runtime.a01
+  - lesson.library.typing_runtime.a02
+  - lesson.library.typing_runtime.a03
+  - exercise.library.typing_runtime.a01
+  - exercise.library.typing_runtime.a02
+  - exercise.library.typing_runtime.a03
+  - exercise.library.typing_runtime.a04
+  - quiz.library.typing_runtime.a01
+  - exercise.library.typing_runtime.a05
+  - exercise.library.typing_runtime.a06
+  - exercise.library.typing_runtime.a07
+  - exercise.library.typing_runtime.a08
+  - quiz.library.typing_runtime.a02
+  - exercise.library.typing_runtime.a09
+  - exercise.library.typing_runtime.a10
+  - exercise.library.typing_runtime.a11
+  - exercise.library.typing_runtime.a12
+  milestone: Modern syntax, functools, and typing mastered
+- id: unit.numeric_precision
+  title: Numeric Precision
+  description: Lessons, drills, and quizzes for numeric precision.
+  items:
+  - lesson.library.numeric_precision.a01
+  - lesson.library.numeric_precision.a02
+  - lesson.library.numeric_precision.a03
+  - exercise.library.numeric_precision.a01
+  - exercise.library.numeric_precision.a02
+  - exercise.library.numeric_precision.a03
+  - exercise.library.numeric_precision.a04
+  - quiz.library.numeric_precision.a01
+  - exercise.library.numeric_precision.a05
+  - exercise.library.numeric_precision.a06
+  - exercise.library.numeric_precision.a07
+  - exercise.library.numeric_precision.a08
+  - quiz.library.numeric_precision.a02
+  - exercise.library.numeric_precision.a09
+  - exercise.library.numeric_precision.a10
+  - exercise.library.numeric_precision.a11
+  - exercise.library.numeric_precision.a12
+- id: unit.binary_data_struct
+  title: Bytes, Buffers & struct
+  description: Lessons, drills, and quizzes for bytes, buffers & struct.
+  items:
+  - lesson.library.binary_data_struct.a01
+  - lesson.library.binary_data_struct.a02
+  - lesson.library.binary_data_struct.a03
+  - exercise.library.binary_data_struct.a07
+  - exercise.library.binary_data_struct.a08
+  - quiz.library.binary_data_struct.a01
+  - exercise.library.binary_data_struct.a09
+  - exercise.library.binary_data_struct.a10
+  - quiz.library.binary_data_struct.a02
+  - exercise.library.binary_data_struct.a11
+  - exercise.library.binary_data_struct.a12
+  milestone: Down to bytes and exact numbers
+- id: unit.memory_lifetime
+  title: Memory Model & Object Lifetime
+  description: Lessons, drills, and quizzes for memory model & object lifetime.
+  items:
+  - lesson.library.memory_lifetime.a01
+  - lesson.library.memory_lifetime.a02
+  - lesson.library.memory_lifetime.a03
+  - exercise.library.memory_lifetime.a01
+  - exercise.library.memory_lifetime.a02
+  - exercise.library.memory_lifetime.a03
+  - exercise.library.memory_lifetime.a04
+  - quiz.library.memory_lifetime.a01
+  - exercise.library.memory_lifetime.a05
+  - exercise.library.memory_lifetime.a06
+  - exercise.library.memory_lifetime.a07
+  - exercise.library.memory_lifetime.a08
+  - quiz.library.memory_lifetime.a02
+  - exercise.library.memory_lifetime.a09
+  - exercise.library.memory_lifetime.a10
+  - exercise.library.memory_lifetime.a11
+  - exercise.library.memory_lifetime.a12
+- id: unit.introspection_metaprogramming
+  title: Introspection & Metaprogramming
+  description: Lessons, drills, and quizzes for introspection & metaprogramming.
+  items:
+  - lesson.library.introspection_metaprogramming.a01
+  - lesson.library.introspection_metaprogramming.a02
+  - lesson.library.introspection_metaprogramming.a03
+  - exercise.library.introspection_metaprogramming.a01
+  - exercise.library.introspection_metaprogramming.a02
+  - exercise.library.introspection_metaprogramming.a03
+  - exercise.library.introspection_metaprogramming.a04
+  - quiz.library.introspection_metaprogramming.a01
+  - exercise.library.introspection_metaprogramming.a05
+  - exercise.library.introspection_metaprogramming.a06
+  - exercise.library.introspection_metaprogramming.a07
+  - exercise.library.introspection_metaprogramming.a08
+  - quiz.library.introspection_metaprogramming.a02
+  - exercise.library.introspection_metaprogramming.a09
+  - exercise.library.introspection_metaprogramming.a10
+  - exercise.library.introspection_metaprogramming.a11
+  - exercise.library.introspection_metaprogramming.a12
+- id: unit.concurrency_foundations
+  title: Concurrency Foundations
+  description: Lessons, drills, and quizzes for concurrency foundations.
+  items:
+  - lesson.library.concurrency_foundations.a01
+  - lesson.library.concurrency_foundations.a02
+  - lesson.library.concurrency_foundations.a03
+  - exercise.library.concurrency_foundations.a01
+  - exercise.library.concurrency_foundations.a02
+  - exercise.library.concurrency_foundations.a03
+  - exercise.library.concurrency_foundations.a04
+  - quiz.library.concurrency_foundations.a01
+  - exercise.library.concurrency_foundations.a05
+  - exercise.library.concurrency_foundations.a06
+  - exercise.library.concurrency_foundations.a07
+  - exercise.library.concurrency_foundations.a08
+  - quiz.library.concurrency_foundations.a02
+  - exercise.library.concurrency_foundations.a09
+  - exercise.library.concurrency_foundations.a10
+  - exercise.library.concurrency_foundations.a11
+  - exercise.library.concurrency_foundations.a12
+  milestone: Internals, memory, and concurrency conquered
+- id: unit.mixed_capstones
+  title: Mixed Capstones
+  description: Lessons, drills, and quizzes for mixed capstones.
+  items:
+  - exercise.library.mixed_capstones.a01
+  - exercise.library.mixed_capstones.a02
+  - quiz.library.mixed_capstones.a01
+  - exercise.library.mixed_capstones.a03
+  - exercise.library.mixed_capstones.a04
+  - quiz.library.mixed_capstones.a02
+  - exercise.library.mixed_capstones.a05
+  - exercise.library.mixed_capstones.a06
+  - quiz.library.mixed_capstones.a03
+  - exercise.library.mixed_capstones.a07
+  - exercise.library.mixed_capstones.a08
+  - quiz.library.mixed_capstones.a04
+  - exercise.library.mixed_capstones.b01
+  - exercise.library.mixed_capstones.b02
+  - quiz.library.mixed_capstones.a05
+  - exercise.library.mixed_capstones.b03
+  - exercise.library.mixed_capstones.b04
+  - quiz.library.mixed_capstones.a06
+  milestone: 'Engineer: you reason about Python from the inside out'

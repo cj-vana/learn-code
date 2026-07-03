@@ -1,0 +1,103 @@
+id: exercise.library.attention_mechanics.a03
+kind: exercise
+version: 1
+language: python
+title: Softmax the Attention Weights
+slug: attention-mechanics-a03
+difficulty: medium
+concepts:
+  - ai.attention_transformers
+  - concepts.probability
+prerequisites:
+  - python.lists
+  - concepts.probability
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.attention_mechanics.a03
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original numerically-stable softmax drill framed as distributing a curator's attention across archive photos.
+prompt_markdown: |
+  Softmax turns a list of scaled scores into **attention weights**: non-negative
+  numbers that add up to 1, like a curator deciding what fraction of their
+  attention each archive photo deserves. For a list of scores `s`, the softmax
+  weight of position `i` is
+
+      weight[i] = exp(s[i]) / sum_j exp(s[j])
+
+  Computing `exp` on large scores can overflow, so use the **numerically stable**
+  form: subtract the maximum score from every score first. Because the same
+  constant cancels in the numerator and denominator, the weights are unchanged:
+
+      m = max(s)
+      weight[i] = exp(s[i] - m) / sum_j exp(s[j] - m)
+
+  Write `softmax_weights(scores)` where `scores` is the list of scores itself
+  (for example `[2.0, 1.0, 0.0]`). Return a new list of the softmax weights in
+  the same order, each rounded to 6 decimal places. You may assume `scores` has
+  at least one element.
+starter_code: |
+  import math
+
+
+  def softmax_weights(scores):
+      return []
+function_name: softmax_weights
+input_mode: function
+solution_sketch: Subtract the max score from each score, exponentiate, divide each by the total of the exponentials, and round to 6 decimals.
+sample_solution: |
+  import math
+
+
+  def softmax_weights(scores):
+      m = max(scores)
+      exps = [math.exp(s - m) for s in scores]
+      total = sum(exps)
+      return [round(e / total, 6) for e in exps]
+hints:
+  - level: 1
+    text: First find max(scores); subtracting it from every score keeps the weights identical but prevents exp from overflowing.
+  - level: 2
+    text: Build a list of exp(s - m) values, then sum them to get the normaliser.
+  - level: 3
+    text: Divide each exponential by the total and round to 6 decimals; the results should sum to about 1.
+tests:
+  public:
+    - name: uniform
+      input: [0.0, 0.0, 0.0]
+      expected: [0.333333, 0.333333, 0.333333]
+    - name: two
+      input: [1.0, 0.0]
+      expected: [0.731059, 0.268941]
+    - name: peak
+      input: [2.0, 1.0, 0.0]
+      expected: [0.665241, 0.244728, 0.090031]
+  validation:
+    - name: negatives
+      input: [-1.0, -2.0, -3.0]
+      expected: [0.665241, 0.244728, 0.090031]
+    - name: large
+      input: [100.0, 100.0, 99.0]
+      expected: [0.422319, 0.422319, 0.155362]
+    - name: single
+      input: [5.0]
+      expected: [1.0]
+    - name: spread
+      input: [0.5, 1.5, 2.5, 3.5]
+      expected: [0.032059, 0.087144, 0.236883, 0.643914]
+explanation_markdown: |
+  Softmax is what makes attention a weighted average: after this step the weights
+  are all positive and sum to 1, so multiplying value vectors by them produces a
+  genuine blend. Two details matter. First, softmax depends only on the
+  **differences** between scores, which is why the all-equal input yields a flat
+  distribution and why shifting every score by the same constant leaves the
+  weights unchanged. That constant-shift invariance is exactly what lets us
+  subtract `max(s)` for stability: with scores like 100 and 99 the naive `exp`
+  would blow up, but `exp(0)` and `exp(-1)` are perfectly tame.
+common_mistakes:
+  - Skipping the max subtraction, so exp overflows on large scores and returns inf.
+  - Normalising by the count of scores instead of by the sum of the exponentials.
+  - Subtracting the max from the numerator but forgetting it in the denominator, which breaks the cancellation.

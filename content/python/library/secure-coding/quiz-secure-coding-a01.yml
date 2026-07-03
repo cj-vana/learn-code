@@ -1,0 +1,100 @@
+id: quiz.library.secure_coding.a01
+kind: quiz
+version: 1
+language: python
+title: Spotting the Vulnerability
+slug: quiz-secure-coding-a01
+difficulty: hard
+concepts:
+  - python.secure_coding
+prerequisites:
+  - python.secure_coding
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.secure_coding.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pattern-recognition quiz on identifying injection, validation, and secret-handling flaws and their structural cures.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      A code review sees os.system(f"gzip {user_path}"). What is the flaw and
+      the correct fix?
+    choices:
+      - Command injection — a path like "x; rm -rf ~" runs the rm; use subprocess.run(["gzip", user_path]) with no shell
+      - Slow performance — use a faster compressor
+      - Missing error handling — wrap in try/except
+      - Nothing wrong — gzip is safe
+    correct_choice: Command injection — a path like "x; rm -rf ~" runs the rm; use subprocess.run(["gzip", user_path]) with no shell
+    explanation: |
+      The shell string lets metacharacters in the path become commands; the
+      argument-list form removes the shell, so the path stays one literal
+      argument.
+    concepts:
+      - python.secure_coding
+  - id: q2
+    prompt: |
+      A validator rejects inputs containing "<script>", "javascript:", and
+      "onerror=". Why is this approach fundamentally weak?
+    choices:
+      - It is a deny-list — attackers find encodings and variants it misses; an allow-list of permitted characters/patterns is the robust choice
+      - It should also reject "<img>"
+      - Regular expressions are too slow for this
+      - Denylists must be case-sensitive
+    correct_choice: It is a deny-list — attackers find encodings and variants it misses; an allow-list of permitted characters/patterns is the robust choice
+    explanation: |
+      Enumerating bad inputs is an unwinnable race; specify what is valid
+      and reject everything else.
+    concepts:
+      - python.secure_coding
+  - id: q3
+    prompt: |
+      A password-reset feature generates codes with random.choice over
+      digits. A security audit flags it. Why?
+    choices:
+      - random is predictable — an attacker observing outputs can forecast future codes; use secrets.choice
+      - Digits are too few characters
+      - choice is deprecated
+      - The codes should be hashed
+    correct_choice: random is predictable — an attacker observing outputs can forecast future codes; use secrets.choice
+    explanation: |
+      Reset codes are secrets an attacker benefits from guessing; the
+      Mersenne Twister behind random is forecastable, so secrets is
+      mandatory.
+    concepts:
+      - python.secure_coding
+  - id: q4
+    prompt: |
+      An auth check does `if token == stored_token`. A researcher recovers
+      valid tokens by measuring response times. What class of flaw is this?
+    choices:
+      - A timing side channel — == short-circuits at the first mismatch; use hmac.compare_digest for constant-time comparison
+      - A race condition — add a lock
+      - An injection — parameterize the token
+      - A replay attack — add a nonce
+    correct_choice: A timing side channel — == short-circuits at the first mismatch; use hmac.compare_digest for constant-time comparison
+    explanation: |
+      Early-return comparison leaks how many leading characters matched;
+      constant-time comparison examines the full length regardless.
+    concepts:
+      - python.secure_coding
+  - id: q5
+    prompt: |
+      A login endpoint returns "user 'ada' exists but password is wrong" on
+      failure. What does this leak, and what should it return?
+    choices:
+      - It confirms which usernames exist (aiding targeted attacks); return a generic "invalid credentials" and log detail internally
+      - Nothing sensitive — it is helpful UX
+      - The password hash — return the salt instead
+      - The session id — rotate it
+    correct_choice: It confirms which usernames exist (aiding targeted attacks); return a generic "invalid credentials" and log detail internally
+    explanation: |
+      Distinguishing "no such user" from "wrong password" is username
+      enumeration; fail closed with a generic message, keep specifics in
+      internal logs.
+    concepts:
+      - python.secure_coding

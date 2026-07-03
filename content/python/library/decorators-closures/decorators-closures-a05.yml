@@ -1,0 +1,115 @@
+id: exercise.library.decorators_closures.a05
+kind: exercise
+version: 1
+language: python
+title: A Decorator That Takes an Argument
+slug: decorators-closures-a05
+difficulty: medium
+concepts:
+  - python.closures_decorators
+  - python.functions
+prerequisites:
+  - python.closures_decorators
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.decorators_closures.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original dye-vat scenario requiring a three-layer decorator factory that scales a wrapped function's result.
+prompt_markdown: |
+  A dye vat scales recipe outputs by a configurable batch factor. Write a
+  **decorator factory** named `scale_by(factor)` so that decorating a function
+  with `@scale_by(factor)` multiplies its return value by `factor`.
+
+  Then finish `apply_scaled(data)`, where `data` is a dict with keys `"factor"`
+  (an int) and `"values"` (a list of ints). It decorates an identity function
+  with `scale_by(factor)` and returns each scaled value.
+
+  For `{"factor": 3, "values": [1, 2, 3]}` the result is `[3, 6, 9]`.
+starter_code: |
+  import functools
+
+
+  def scale_by(factor):
+      # Return a decorator that multiplies the wrapped function's result by factor.
+      def decorator(func):
+          return func
+      return decorator
+
+
+  def apply_scaled(data):
+      factor = data["factor"]
+      values = data["values"]
+
+      @scale_by(factor)
+      def identity(x):
+          return x
+
+      return [identity(v) for v in values]
+function_name: apply_scaled
+input_mode: function
+solution_sketch: scale_by returns a decorator whose wrapper multiplies func's result by the captured factor; three nested functions.
+sample_solution: |
+  import functools
+
+
+  def scale_by(factor):
+      def decorator(func):
+          @functools.wraps(func)
+          def wrapper(*args, **kwargs):
+              return func(*args, **kwargs) * factor
+          return wrapper
+      return decorator
+
+
+  def apply_scaled(data):
+      factor = data["factor"]
+      values = data["values"]
+
+      @scale_by(factor)
+      def identity(x):
+          return x
+
+      return [identity(v) for v in values]
+hints:
+  - level: 1
+    text: A decorator that takes an argument needs one extra layer, so you end up with three nested functions.
+  - level: 2
+    text: scale_by(factor) returns decorator(func), which returns wrapper; the wrapper captures both func and factor.
+  - level: 3
+    text: In wrapper, return func(*args, **kwargs) * factor, and remember to return wrapper from decorator and decorator from scale_by.
+tests:
+  public:
+    - name: triple
+      input: {"factor": 3, "values": [1, 2, 3]}
+      expected: [3, 6, 9]
+    - name: double
+      input: {"factor": 2, "values": [10, 0, 5]}
+      expected: [20, 0, 10]
+    - name: empty_values
+      input: {"factor": 4, "values": []}
+      expected: []
+  validation:
+    - name: factor_one
+      input: {"factor": 1, "values": [7, 8]}
+      expected: [7, 8]
+    - name: factor_zero
+      input: {"factor": 0, "values": [5, 9]}
+      expected: [0, 0]
+    - name: negative_factor
+      input: {"factor": -2, "values": [3, -4]}
+      expected: [-6, 8]
+explanation_markdown: |
+  A decorator that accepts arguments is a factory that *returns* a decorator.
+  Reading `@scale_by(factor)`, Python first evaluates `scale_by(factor)` to get
+  the real decorator, then applies it to `identity`. The innermost `wrapper`
+  closes over both the wrapped `func` and the captured `factor`, so it can
+  multiply the result on every call. Three nested `def`s is the tell-tale shape
+  of an argument-taking decorator.
+common_mistakes:
+  - Writing only two layers, so @scale_by(factor) fails because scale_by returns a wrapper instead of a decorator.
+  - Capturing the wrong variable and multiplying by the value instead of the factor.
+  - Forgetting to return decorator from scale_by, leaving the decoration as None.

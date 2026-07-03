@@ -1,0 +1,105 @@
+id: quiz.library.scripting_automation.a01
+kind: quiz
+version: 1
+language: python
+title: Automation Judgment
+slug: quiz-scripting-automation-a01
+difficulty: medium
+concepts:
+  - python.pathlib_os
+prerequisites:
+  - python.pathlib_os
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.scripting_automation.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pattern-recognition quiz on automation architecture, idempotence, dry runs, and collision policy.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      A migration script intermixes its decisions (which records to move)
+      with its actions (moving them), and the team cannot test it without a
+      production copy. What is the architectural fix?
+    choices:
+      - Split into a pure decide stage that returns a plan (testable data) and a thin act loop that executes it
+      - Add more logging around each action
+      - Run it only during maintenance windows
+      - Convert it to a class with mocked methods
+    correct_choice: Split into a pure decide stage that returns a plan (testable data) and a thin act loop that executes it
+    explanation: |
+      Plan-as-data is the move that makes automation testable, reviewable,
+      and dry-runnable at once — the other options manage the symptom.
+    concepts:
+      - python.pathlib_os
+      - concepts.testing
+  - id: q2
+    prompt: |
+      A cron job that appends a summary row crashed after writing, then ran
+      again and wrote a duplicate. Which property was missing, and what
+      phrasing provides it?
+    choices:
+      - Idempotence — "ensure today's row exists" (check before append) makes re-runs no-ops
+      - Speed — a faster job would finish before crashing
+      - Logging — duplicates would be visible sooner
+      - Locking — only one run at a time
+    correct_choice: Idempotence — "ensure today's row exists" (check before append) makes re-runs no-ops
+    explanation: |
+      Re-runs are a certainty; ensure-state phrasing makes f(f(x)) == f(x)
+      so recovery is safe by construction. (Locking prevents concurrent
+      runs, not sequential re-runs.)
+    concepts:
+      - python.pathlib_os
+      - concepts.testing
+  - id: q3
+    prompt: |
+      A batch rename plan sends both "Dawn Run.raw" and "dawn_run.raw" to
+      "dawn-run.raw". What should the tool do by default?
+    choices:
+      - Refuse the plan and list the collisions — silent last-write-wins destroys one input
+      - Proceed — the second write wins deterministically
+      - Randomize suffixes to avoid the clash
+      - Skip the whole directory
+    correct_choice: Refuse the plan and list the collisions — silent last-write-wins destroys one input
+    explanation: |
+      Collision policy must be explicit; fail-and-report is the safe default,
+      with deterministic suffixing or skip-and-report as opt-in
+      alternatives.
+    concepts:
+      - python.pathlib_os
+  - id: q4
+    prompt: |
+      Before a destructive cleanup runs against 12,000 files, what should an
+      operator be able to see, and which design makes it nearly free?
+    choices:
+      - The full intended operation list via --dry-run — nearly free because the decide stage already returns the plan as data
+      - The script's source code, well commented
+      - A progress bar during deletion
+      - The disk-space savings estimate
+    correct_choice: The full intended operation list via --dry-run — nearly free because the decide stage already returns the plan as data
+    explanation: |
+      Dry-run is just printing the plan instead of executing it; tools
+      earn destructive privileges by showing intentions first.
+    concepts:
+      - python.pathlib_os
+  - id: q5
+    prompt: |
+      An ops script processes 5,000 items and hits errors on 3. The
+      professional behavior is:
+    choices:
+      - Finish the remaining items, collect the 3 failures with reasons, and exit reporting both counts (nonzero status)
+      - Stop at the first error to avoid further damage
+      - Retry each failure forever
+      - Log the errors and report success
+    correct_choice: Finish the remaining items, collect the 3 failures with reasons, and exit reporting both counts (nonzero status)
+    explanation: |
+      Per-item isolation with a failure ledger matches the unit of failure
+      to the unit of work; reporting success while hiding failures is the
+      one unforgivable option.
+    concepts:
+      - python.pathlib_os
+      - python.exceptions

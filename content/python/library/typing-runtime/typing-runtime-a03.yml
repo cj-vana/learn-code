@@ -1,0 +1,122 @@
+id: exercise.library.typing_runtime.a03
+kind: exercise
+version: 1
+language: python
+title: Locking In the Bakery Size
+slug: typing-runtime-a03
+difficulty: easy
+concepts:
+  - python.type_hints
+  - patterns.set_membership
+prerequisites:
+  - python.conditionals
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.typing_runtime.a03
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original Literal-enforcement drill framed as a bakery order ticket coercing an unknown size to a safe default.
+prompt_markdown: |
+  A bakery's order ticket has a `size` field that a type hint declares as
+  `Literal["small", "medium", "large"]`. That annotation documents intent, but at
+  runtime Python happily accepts a typo like `"jumbo"` — a `Literal` is never
+  enforced unless you check it yourself.
+
+  Write `enforce_size_choice(ticket)`. The single argument `ticket` is a dict:
+
+  - `ticket["value"]` is the size the customer typed.
+  - `ticket["allowed"]` is the list of allowed literal values.
+  - `ticket["default"]` is the value to fall back to.
+
+  Return `ticket["value"]` when it appears **exactly** in `ticket["allowed"]`;
+  otherwise return `ticket["default"]`.
+
+  Rules and edge cases:
+
+  - Matching is exact and case-sensitive: `"Large"` is not `"large"`.
+  - The empty string is only valid if it literally appears in `allowed`.
+  - The default is returned as-is even if it is not itself one of the allowed
+    values.
+
+  Example: `ticket = {"value": "jumbo", "allowed": ["small", "medium", "large"],
+  "default": "medium"}` returns `"medium"`.
+starter_code: |
+  def enforce_size_choice(ticket):
+      return ticket["default"]
+function_name: enforce_size_choice
+input_mode: function
+solution_sketch: Return the value when it is a member of the allowed list, otherwise return the default.
+sample_solution: |
+  def enforce_size_choice(ticket):
+      value = ticket["value"]
+      allowed = ticket["allowed"]
+      if value in allowed:
+          return value
+      return ticket["default"]
+hints:
+  - level: 1
+    text: A Literal type is not checked at runtime, so you decide validity by testing membership in the allowed list.
+  - level: 2
+    text: Use the in operator to ask whether ticket["value"] is one of ticket["allowed"].
+  - level: 3
+    text: Return the value when the membership test passes, and return ticket["default"] otherwise.
+tests:
+  public:
+    - name: valid_large
+      input:
+        value: large
+        allowed: [small, medium, large]
+        default: medium
+      expected: large
+    - name: invalid_falls_back
+      input:
+        value: jumbo
+        allowed: [small, medium, large]
+        default: medium
+      expected: medium
+    - name: valid_small
+      input:
+        value: small
+        allowed: [small, medium, large]
+        default: medium
+      expected: small
+  validation:
+    - name: case_sensitive
+      input:
+        value: Large
+        allowed: [small, medium, large]
+        default: medium
+      expected: medium
+    - name: single_allowed
+      input:
+        value: only
+        allowed: [only]
+        default: only
+      expected: only
+    - name: empty_string_not_allowed
+      input:
+        value: ""
+        allowed: [a, b]
+        default: a
+      expected: a
+    - name: default_need_not_be_allowed
+      input:
+        value: x
+        allowed: [a, b]
+        default: fallback
+      expected: fallback
+explanation_markdown: |
+  `Literal[...]` narrows a value to a fixed menu of options for a static type
+  checker, but the annotation evaporates at runtime — nothing rejects an
+  out-of-menu string on its own. Enforcing the literal is a one-line membership
+  test: if the value is in the allowed list, it is a legal literal and you keep
+  it; otherwise you substitute a safe default. Because Python compares strings by
+  exact value, the check is naturally case-sensitive, which is exactly the
+  strictness a `Literal` implies.
+common_mistakes:
+  - Assuming the Literal annotation blocks invalid values by itself and skipping the runtime check.
+  - Lowercasing or trimming the value before comparing, which quietly accepts inputs a strict Literal would reject.
+  - Returning the default only when the value is empty instead of whenever it is not in the allowed list.

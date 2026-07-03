@@ -1,0 +1,100 @@
+id: exercise.library.iterators_generators.a05
+kind: exercise
+version: 1
+language: python
+title: Conveyor Spot Check
+slug: iterators-generators-a05
+difficulty: medium
+concepts:
+  - python.iterators_generators
+  - python.classes
+prerequisites:
+  - python.classes
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.iterators_generators.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original conveyor-sampling scenario building a stride iterator with __iter__ and __next__.
+prompt_markdown: |
+  On a bottling line, a quality inspector does not check every bottle. Standing at
+  the belt, they grab the `k`-th bottle, then the `2k`-th, then the `3k`-th, and
+  so on. Write `spot_check(spec)` where `spec` is a dict with keys `"items"` (the
+  list of bottles in belt order) and `"k"` (the sampling stride, a positive
+  integer). Return a **list** of the sampled bottles.
+
+  Build a custom **iterator class** (with `__iter__` and `__next__`) that walks
+  the list in strides of `k`, starting at the `k`-th item (index `k - 1`). Let
+  `list()` drive it. If the stride steps past the end, iteration stops.
+
+  For example, `spot_check({"items": [10, 20, 30, 40, 50, 60], "k": 2})` returns
+  `[20, 40, 60]`.
+starter_code: |
+  def spot_check(spec):
+      # Build an iterator class that steps by k, starting at index k - 1.
+      return []
+function_name: spot_check
+input_mode: function
+solution_sketch: An iterator holds a position starting at k-1 and advances by k each step, raising StopIteration once the position passes the end.
+sample_solution: |
+  def spot_check(spec):
+      class Stride:
+          def __init__(self, items, k):
+              self.items = items
+              self.k = k
+              self.pos = k - 1
+
+          def __iter__(self):
+              return self
+
+          def __next__(self):
+              if self.pos >= len(self.items):
+                  raise StopIteration
+              value = self.items[self.pos]
+              self.pos += self.k
+              return value
+
+      return list(Stride(spec["items"], spec["k"]))
+hints:
+  - level: 1
+    text: The first sampled index is k - 1 (the k-th item), and each step adds k to the index.
+  - level: 2
+    text: In __next__, stop with StopIteration once the position is past the last index; otherwise read the item and advance the position by k.
+  - level: 3
+    text: Store pos = k - 1 in __init__; each __next__ checks pos >= len(items), returns items[pos], then does pos += k.
+tests:
+  public:
+    - name: every_second
+      input: {items: [10, 20, 30, 40, 50, 60], k: 2}
+      expected: [20, 40, 60]
+    - name: every_third
+      input: {items: [10, 20, 30, 40, 50, 60], k: 3}
+      expected: [30, 60]
+    - name: stride_one
+      input: {items: [1, 2, 3], k: 1}
+      expected: [1, 2, 3]
+  validation:
+    - name: stride_past_end
+      input: {items: [5, 6, 7], k: 5}
+      expected: []
+    - name: exact_fit
+      input: {items: [1, 2, 3, 4], k: 4}
+      expected: [4]
+    - name: empty_items
+      input: {items: [], k: 2}
+      expected: []
+explanation_markdown: |
+  The iterator carries one piece of state, the current index `pos`, and every call
+  to `__next__` reads `items[pos]` then jumps ahead by `k`. Starting `pos` at
+  `k - 1` lands on the k-th element (lists are zero-indexed), and the
+  `pos >= len(items)` guard raises `StopIteration` the moment the stride would
+  step off the end. Because `list()` keeps calling `next()` until that signal, it
+  collects exactly the sampled items with no bounds errors.
+common_mistakes:
+  - Starting pos at k instead of k - 1, which skips the first sample.
+  - Checking the bound with > instead of >=, causing an index error on the item just past the end.
+  - Advancing pos by 1 instead of by k, sampling every item.

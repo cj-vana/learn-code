@@ -1,0 +1,107 @@
+id: exercise.library.dp_recognition.a07
+kind: exercise
+version: 1
+language: python
+title: Best Stretch Of Cart Days
+slug: dp-recognition-a07
+difficulty: medium
+concepts:
+  - patterns.dynamic_programming
+prerequisites:
+  - python.lists
+  - python.loops
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dp_recognition.a07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original food-cart daily-ledger framing of the maximum contiguous-sum recurrence with a rolling running best.
+prompt_markdown: |
+  A street food cart keeps a ledger of daily results, one integer per day: a
+  positive number is that day's profit, a negative number is a loss. The owner
+  wants to know the single best *unbroken stretch* of days to point to, meaning
+  the largest total you can get by summing a run of consecutive days.
+
+  Write `best_daily_stretch(profits)` where `profits` is a list of integers with
+  **at least one element**. Return a single integer: the maximum sum over every
+  contiguous, non-empty run of days.
+
+  Rules and edges:
+  - The stretch must be contiguous (a slice of adjacent days) and must contain at
+    least one day, so you can never report an empty stretch worth `0`.
+  - If every day is a loss, the best you can do is the single least-bad day, so a
+    ledger like `[-8, -3, -6, -2, -5]` returns `-2`.
+
+  Example: `[-2, 1, -3, 4, -1, 2, 1, -5, 4]` returns `6`, the run `4, -1, 2, 1`.
+starter_code: |
+  def best_daily_stretch(profits):
+      return 0
+function_name: best_daily_stretch
+input_mode: function
+solution_sketch: Roll one running total forward, resetting to the current day whenever carrying the past would only hurt, and track the best total seen.
+sample_solution: |
+  def best_daily_stretch(profits):
+      best = current = profits[0]
+      for value in profits[1:]:
+          current = max(value, current + value)
+          best = max(best, current)
+      return best
+hints:
+  - level: 1
+    text: Walk day by day and ask a single question at each day, is it better to extend the stretch you were building or to start fresh from today?
+  - level: 2
+    text: Keep a running total for the best stretch that ends at the current day. If that total ever drops below the current day's own value, restarting from today is better.
+  - level: 3
+    text: current = max(value, current + value) updates the best stretch ending here; keep a separate best = max(best, current). Seed both from the first element so all-negative inputs still work.
+tests:
+  public:
+    - name: mixed_example
+      input: [-2, 1, -3, 4, -1, 2, 1, -5, 4]
+      expected: 6
+    - name: single_day
+      input: [7]
+      expected: 7
+    - name: all_losses
+      input: [-8, -3, -6, -2, -5]
+      expected: -2
+  validation:
+    - name: all_profit
+      input: [1, 2, 3, 4]
+      expected: 10
+    - name: two_losses
+      input: [-4, -1]
+      expected: -1
+    - name: dip_then_recover
+      input: [5, -2, 3]
+      expected: 6
+    - name: best_at_tail
+      input: [-1, -2, 4, 5]
+      expected: 9
+    - name: best_at_head
+      input: [8, -10, 1]
+      expected: 8
+explanation_markdown: |
+  This is the maximum contiguous-sum problem, and the recognition step is that the
+  best stretch *ending at a given day* depends only on the best stretch ending the
+  day before. At each day you have two choices: glue today onto the run you were
+  already building, or throw that run away and start a brand-new stretch at today.
+  You pick whichever is larger with `current = max(value, current + value)`.
+
+  Whenever the running total would go negative, carrying it into the next day can
+  only drag that day down, so the `max` naturally restarts the stretch. Alongside
+  the running total we keep a separate `best`, updated every step, because the
+  winning stretch might end anywhere in the ledger, not necessarily on the last
+  day.
+
+  Seeding both `best` and `current` from the first element is what makes the
+  all-negative case correct: there is no empty stretch worth `0` to fall back on,
+  so the answer is simply the largest single day. The scan is O(n) time and O(1)
+  extra space.
+common_mistakes:
+  - Initializing best or current to 0, which wrongly reports 0 on an all-negative ledger instead of the least-bad single day.
+  - Returning current at the end instead of a separately tracked best, missing stretches that end before the last day.
+  - Letting a negative running total carry forward instead of restarting the stretch at the current day.
+  - Allowing an empty stretch, which changes the problem and breaks the all-losses requirement.

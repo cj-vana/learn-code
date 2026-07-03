@@ -1,0 +1,85 @@
+id: lesson.library.capstone_observatory.a01
+kind: lesson
+version: 1
+language: python
+title: 'Capstone Brief: The Observatory Night Logs'
+slug: lesson-capstone-observatory-a01
+difficulty: hard
+concepts:
+  - python.regex
+  - python.datetime_module
+  - concepts.grouping_aggregation
+prerequisites:
+  - python.regex
+  - python.datetime_module
+  - concepts.grouping_aggregation
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.capstone_observatory.a01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original capstone project brief for a mountaintop observatory log-processing pipeline, defining the six-stage build and its data contracts.
+body_markdown: |
+  The **Observatory Night Logs capstone** closes the Python Data & Automation
+  path with the job data engineers actually do: turning a messy instrument
+  log into a trustworthy report. A mountaintop observatory's telescope
+  control system appends one line per observation, all night, every night:
+
+  ```text
+  [2026-07-04 02:41] TELESCOPE target=M81 mag=6.94 seeing=1.20
+  ```
+
+  Some lines are corrupted by power dips. Sessions are separated by cloud
+  gaps. The astronomers want per-night summaries, anomaly alerts, and
+  catalog cross-matches — and they want to trust every number.
+
+  ### The six stages
+
+  1. **parse_log_line** — regex-extract timestamp, target, magnitude, and
+     seeing from one line; malformed lines return nothing rather than
+     garbage. Your regex lessons, doing real work.
+  2. **sessionize** — split the night's timestamps into observing sessions
+     wherever the gap exceeds a threshold. Time as data.
+  3. **nightly_summary** — per (date, target): observation count, best
+     magnitude, average seeing. The group-by machinery.
+  4. **detect_events** — flag readings that spike above the rolling mean of
+     the previous window. A real anomaly detector in a dozen lines.
+  5. **cross_match** — match observed targets against a reference catalog
+     within a coordinate tolerance, nearest-wins with deterministic
+     tie-breaks. The trickiest logic in the project.
+  6. **night_report** — assemble everything into an exactly specified
+     multi-line report string. Data becomes deliverable.
+
+  ### Contracts to hold throughout
+
+  - **Malformed input never becomes fabricated data.** Stage 1 returns null
+    for lines it cannot parse; every later stage's counts stay honest
+    because of it.
+  - **Time is data, not strings.** Parse timestamps once at the boundary;
+    compare and subtract as datetimes; format only in the final report.
+  - **Determinism everywhere.** Rolling windows fire on precisely defined
+    indices; ties in cross-matching break by catalog order; report lines
+    sort by specified keys. Two runs on the same log must produce identical
+    bytes.
+
+  ### Why this project
+
+  Parsing, sessionizing, aggregating, anomaly detection, entity matching,
+  reporting — that pipeline *is* the daily shape of data work, whether the
+  input is telescopes, tills, or server logs. Every stage uses a skill from a
+  different unit of this path; the capstone's real lesson is watching them
+  compose. Do the stages in order, hold the contracts, and keep the
+  astronomers' trust.
+checkpoints:
+  - question: Why must stage 1 return null for a corrupted line instead of extracting whatever fields it can salvage?
+    answer: Partial salvage fabricates data — a half-parsed line could inject a wrong magnitude or timestamp into every downstream statistic; returning null keeps later counts honest and the loss visible.
+    explanation: The whole pipeline's trustworthiness rests on the boundary refusing to guess; skipped-and-counted beats salvaged-and-wrong.
+  - question: The rolling anomaly detector in stage 4 cannot fire on the first N readings. Why is that a contract rather than a limitation to engineer around?
+    answer: The detector compares each reading to the mean of the previous N; before N readings exist there is no baseline, so any alert would be statistically meaningless — the contract makes the warm-up explicit and testable.
+    explanation: Defining exactly when a windowed computation is valid is the difference between an anomaly detector and a random-number generator at the start of every night.
+  - question: Stage 5 breaks cross-match ties by catalog order. What property does that arbitrary-seeming rule protect?
+    answer: Determinism — two equally-near catalog entries must resolve the same way on every run, so reports are reproducible and diffs between nights reflect the sky, not dict iteration order.
+    explanation: When correctness admits ties, a stated tie-break rule is what keeps output byte-identical across runs — a requirement of any pipeline someone audits.

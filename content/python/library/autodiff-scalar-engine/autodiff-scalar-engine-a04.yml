@@ -1,0 +1,114 @@
+id: exercise.library.autodiff_scalar_engine.a04
+kind: exercise
+version: 1
+language: python
+title: Tanh Forward and Backward in One Pass
+slug: autodiff-scalar-engine-a04
+difficulty: medium
+concepts:
+  - ai.gradients_autodiff
+prerequisites:
+  - python.functions
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.autodiff_scalar_engine.a04
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: >-
+    Original neuron-activation framing that returns both the tanh value and its
+    local derivative together, highlighting the 1 - tanh(x)**2 identity that lets
+    the backward pass reuse the forward result.
+prompt_markdown: |
+  Real networks squash a neuron's raw score through an activation function so it
+  stays in a bounded range. A classic choice is the hyperbolic tangent,
+  `tanh(x)`, which maps any input into `(-1, 1)`.
+
+  Your scalar engine wants both halves of this node at once: the **forward**
+  value it will pass on, and the **local derivative** it will need on the way
+  back. The neat fact about tanh is that its derivative is expressible from its
+  own output:
+
+  ```
+  d(tanh(x))/dx = 1 - tanh(x) ** 2
+  ```
+
+  So the backward pass can reuse the forward result instead of recomputing
+  anything.
+
+  The input is a single number `x` (the neuron's pre-activation score), not a
+  dictionary. Write `tanh_pair(x)` that returns a two-element list
+
+  ```
+  [tanh(x), 1 - tanh(x) ** 2]
+  ```
+
+  Use `math.tanh` for the forward value. **Round each of the two returned numbers
+  to 6 decimal places** with `round(value, 6)`.
+starter_code: |
+  import math
+
+
+  def tanh_pair(x):
+      # Return [forward value, local derivative], both rounded to 6 decimals.
+      return []
+function_name: tanh_pair
+input_mode: function
+solution_sketch: Compute t = math.tanh(x) once, then return [round(t, 6), round(1 - t ** 2, 6)].
+sample_solution: |
+  import math
+
+
+  def tanh_pair(x):
+      t = math.tanh(x)
+      return [round(t, 6), round(1 - t ** 2, 6)]
+hints:
+  - level: 1
+    text: math.tanh(x) gives the forward value; store it so you can reuse it for the derivative.
+  - level: 2
+    text: The local derivative is 1 - t ** 2 where t is the forward tanh value.
+  - level: 3
+    text: Return [round(t, 6), round(1 - t ** 2, 6)] using the single computed t.
+tests:
+  public:
+    - name: zero
+      input: 0
+      expected: [0.0, 1.0]
+    - name: positive_one
+      input: 1.0
+      expected: [0.761594, 0.419974]
+    - name: negative_one
+      input: -1.0
+      expected: [-0.761594, 0.419974]
+  validation:
+    - name: two
+      input: 2.0
+      expected: [0.964028, 0.070651]
+    - name: half
+      input: 0.5
+      expected: [0.462117, 0.786448]
+    - name: negative_half
+      input: -0.5
+      expected: [-0.462117, 0.786448]
+    - name: quarter
+      input: 0.25
+      expected: [0.244919, 0.940015]
+explanation_markdown: |
+  Bundling the forward value and its derivative is the core trick behind
+  efficient autodiff: during the forward pass you already know `tanh(x)`, and the
+  identity `d(tanh(x))/dx = 1 - tanh(x) ** 2` means the backward pass costs almost
+  nothing extra -- no exponentials, no second call, just one subtraction and a
+  square of a value you already have.
+
+  The derivative peaks at `1` when `x = 0` (the curve is steepest there) and
+  shrinks toward `0` for large positive or negative `x`, where tanh flattens out.
+  That flattening is exactly the "vanishing gradient" you may have heard about:
+  once a neuron saturates, `1 - tanh(x)**2` is tiny, so very little gradient flows
+  back through it.
+common_mistakes:
+  - Calling math.tanh twice with slightly different code paths instead of reusing one stored value.
+  - Writing the derivative as 1 - tanh(x) (forgetting the square) or as tanh(x) ** 2 - 1 (wrong sign).
+  - Rounding only one of the two list entries, so the other keeps a floating-point tail.

@@ -1,0 +1,187 @@
+id: exercise.library.http_shapes.a07
+kind: exercise
+version: 1
+language: python
+title: Vetting the Observatory Booking Response
+slug: http-shapes-a07
+difficulty: medium
+concepts:
+  - python.http_model
+  - python.dictionaries
+prerequisites:
+  - python.dictionaries
+  - python.lists
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.http_shapes.a07
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original response-shape validator themed around a night-sky observatory booking API, focused on required-key presence with a null-value twist.
+prompt_markdown: |
+  The Meridian Observatory hands out viewing slots through a small JSON API.
+  Before your client code trusts a booking response, it checks that the response
+  body carries every field the caller needs. Write
+  `validate_response_shape(request)` where `request` is a single dict with two
+  keys:
+
+  - `"response"`: the decoded response body, a dict of field name to value.
+  - `"required_keys"`: a list of field names the caller depends on.
+
+  Return a dict `{"ok": <bool>, "missing": <list>}` using these rules:
+
+  - A required key is **satisfied** only when it is present in `"response"` **and**
+    its value is not `None`. A real API sometimes includes a key but sets it to
+    JSON `null`; treat that as missing data.
+  - A value that is falsy but not `None` (for example `0`, `""`, `[]`, or
+    `False`) still counts as present and satisfied.
+  - `"missing"` is the sorted (ascending) list of the required keys that are
+    absent or `None`. Report each missing key at most once, even if
+    `"required_keys"` lists it twice.
+  - `"ok"` is `True` exactly when `"missing"` is empty.
+  - Extra keys in `"response"` that are not required are ignored.
+  - An empty `"required_keys"` list means every response passes: return
+    `{"ok": True, "missing": []}`.
+
+  Example: for a response `{"booking_id": 88, "slot": "north-ridge",
+  "observer": None}` with required keys `["booking_id", "slot", "observer"]`,
+  the answer is `{"ok": False, "missing": ["observer"]}`.
+starter_code: |
+  def validate_response_shape(request):
+      return {"ok": True, "missing": []}
+function_name: validate_response_shape
+input_mode: function
+solution_sketch: Read the response dict and required keys, collect any required key that is absent or maps to None into a set, then return the sorted missing list plus an ok flag.
+sample_solution: |
+  def validate_response_shape(request):
+      response = request["response"]
+      required = request["required_keys"]
+      missing = set()
+      for key in required:
+          if key not in response or response[key] is None:
+              missing.add(key)
+      ordered = sorted(missing)
+      return {"ok": not ordered, "missing": ordered}
+hints:
+  - level: 1
+    text: A field only counts as present when the key exists AND its value is not None, so check both conditions for every required key.
+  - level: 2
+    text: Collect missing keys in a set to fold away duplicate entries in required_keys, then sort the set into a list.
+  - level: 3
+    text: For each key, if key not in response or response[key] is None, add it to the missing set; ok is True when the sorted missing list is empty.
+tests:
+  public:
+    - name: all_present
+      input:
+        response:
+          booking_id: 88
+          slot: north-ridge
+          telescope: Dobson-18
+        required_keys:
+          - booking_id
+          - slot
+          - telescope
+      expected:
+        ok: true
+        missing: []
+    - name: one_absent
+      input:
+        response:
+          booking_id: 88
+          slot: north-ridge
+        required_keys:
+          - booking_id
+          - slot
+          - telescope
+      expected:
+        ok: false
+        missing:
+          - telescope
+    - name: no_requirements
+      input:
+        response:
+          booking_id: 88
+        required_keys: []
+      expected:
+        ok: true
+        missing: []
+  validation:
+    - name: null_value_counts_missing
+      input:
+        response:
+          booking_id: 88
+          slot: north-ridge
+          observer: null
+        required_keys:
+          - booking_id
+          - slot
+          - observer
+      expected:
+        ok: false
+        missing:
+          - observer
+    - name: falsy_but_present_is_ok
+      input:
+        response:
+          queue_position: 0
+          note: ''
+        required_keys:
+          - queue_position
+          - note
+      expected:
+        ok: true
+        missing: []
+    - name: several_missing_sorted
+      input:
+        response:
+          slot: north-ridge
+        required_keys:
+          - telescope
+          - observer
+          - booking_id
+      expected:
+        ok: false
+        missing:
+          - booking_id
+          - observer
+          - telescope
+    - name: duplicate_requirement_reported_once
+      input:
+        response:
+          booking_id: 88
+        required_keys:
+          - observer
+          - observer
+      expected:
+        ok: false
+        missing:
+          - observer
+    - name: extra_keys_ignored
+      input:
+        response:
+          booking_id: 88
+          slot: north-ridge
+          weather: clear
+        required_keys:
+          - booking_id
+          - slot
+      expected:
+        ok: true
+        missing: []
+explanation_markdown: |
+  Response-shape validation is the boundary check that keeps bad data from
+  flowing deeper into your program. The subtle part is that JSON `null` (Python
+  `None`) is a value, so a naive `key in response` test would wrongly accept a
+  field the server explicitly left empty. Treating `None` as missing captures
+  the real intent: the caller needs usable data, not just a key.
+
+  Using a set for the missing keys means a duplicated requirement collapses to a
+  single entry, and sorting at the end gives a stable, order-independent report
+  that is easy to assert against. The `ok` flag is derived from the missing list
+  rather than tracked separately, so the two can never disagree.
+common_mistakes:
+  - Using only `key in response` and accepting fields whose value is `None`.
+  - Treating falsy values like `0` or `""` as missing when only `None` should fail.
+  - Returning the missing keys in the order encountered instead of sorted, or letting duplicates through.

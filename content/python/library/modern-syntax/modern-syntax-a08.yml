@@ -1,0 +1,140 @@
+id: exercise.library.modern_syntax.a08
+kind: exercise
+version: 1
+language: python
+title: The Bakery Order Sheet
+slug: modern-syntax-a08
+difficulty: medium
+concepts:
+  - python.modern_syntax
+  - python.comprehensions
+prerequisites:
+  - python.sets
+  - python.strings
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.modern_syntax.a08
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original walrus-operator drill that computes a normalised key once inside a comprehension filter, themed around a bakery order sheet typed by many hands.
+prompt_markdown: |
+  A bakery's morning order sheet is typed by several staff, so the same
+  ingredient shows up with stray spaces and mixed casing: `"Flour"`,
+  `" flour "`, `"FLOUR"`. You want a clean list where each ingredient appears
+  once, in the order it was first written, using its normalised spelling.
+
+  Write `dedupe_orders(entries)`. The single argument is a list of strings.
+  For each entry compute its normalised form by stripping leading/trailing
+  whitespace and lower-casing it. Keep an entry only the first time its
+  normalised form is seen, and return the list of normalised forms in
+  first-seen order.
+
+  The catch: normalise each entry exactly **once** and reuse that value for
+  both the membership test and the output. Do it with the walrus operator
+  (`:=`) inside a single list comprehension so the normalised value is captured
+  as it is tested.
+
+  Edge cases:
+
+  - An empty input list returns an empty list.
+  - Entries that differ only by surrounding whitespace or letter case collapse
+    to one entry.
+  - The value kept is the normalised (stripped, lower-cased) string, not the
+    original raw text.
+starter_code: |
+  def dedupe_orders(entries):
+      return []
+function_name: dedupe_orders
+input_mode: function
+solution_sketch: Track a seen set. In one comprehension, use the walrus operator to bind name = raw.strip().lower(), include the row when name is not yet in seen, and add it to seen as part of the same condition so each name is computed once.
+sample_solution: |
+  def dedupe_orders(entries):
+      seen = set()
+      return [
+          name
+          for raw in entries
+          if (name := raw.strip().lower()) not in seen and (seen.add(name) or True)
+      ]
+hints:
+  - level: 1
+    text: Keep a set called seen so you can tell whether a normalised name has already been emitted.
+  - level: 2
+    text: Inside the comprehension's if clause, bind the normalised value with (name := raw.strip().lower()) so it is computed a single time and then reused.
+  - level: 3
+    text: The filter is (name := raw.strip().lower()) not in seen and (seen.add(name) or True). set.add returns None, so 'or True' keeps the clause truthy while still recording the name.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: casing_duplicates
+      input:
+        - Flour
+        - flour
+        - FLOUR
+      expected:
+        - flour
+    - name: whitespace_variants
+      input:
+        - '  sugar'
+        - 'sugar  '
+        - salt
+      expected:
+        - sugar
+        - salt
+  validation:
+    - name: all_unique
+      input:
+        - yeast
+        - butter
+        - eggs
+      expected:
+        - yeast
+        - butter
+        - eggs
+    - name: mixed_space_and_case
+      input:
+        - ' Milk '
+        - milk
+        - Honey
+        - HONEY
+        - milk
+      expected:
+        - milk
+        - honey
+    - name: first_seen_order
+      input:
+        - b
+        - a
+        - b
+        - c
+        - a
+      expected:
+        - b
+        - a
+        - c
+    - name: single_padded
+      input:
+        - '  OATS  '
+      expected:
+        - oats
+explanation_markdown: |
+  The walrus operator (`:=`, PEP 572) assigns a value as part of an expression,
+  which is exactly what you need when a comprehension has to both test a value
+  and keep it. Without it you would either compute `raw.strip().lower()` twice
+  (once in the filter, once in the output) or fall back to a plain loop.
+
+  The filter reads as one short-circuiting expression:
+  `(name := raw.strip().lower()) not in seen and (seen.add(name) or True)`. If
+  `name` is already in `seen`, the left side is `False` and Python skips the
+  `add`, leaving `seen` untouched. If it is new, `seen.add(name)` records it and
+  returns `None`, so `(None or True)` keeps the row. The result is
+  order-preserving deduplication in a single pass, O(n) with the set doing the
+  membership work.
+common_mistakes:
+  - Calling raw.strip().lower() twice — once to test, once to emit — instead of binding it once with the walrus operator.
+  - Writing 'if seen.add(name)' as the whole filter; set.add returns None, so every row would be dropped.
+  - Returning the original raw strings instead of the normalised forms, so whitespace and casing leak into the output.

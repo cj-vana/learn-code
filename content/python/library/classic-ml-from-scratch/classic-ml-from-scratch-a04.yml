@@ -1,0 +1,120 @@
+id: exercise.library.classic_ml_from_scratch.a04
+kind: exercise
+version: 1
+language: python
+title: Assign Every Reading to a Cluster
+slug: classic-ml-from-scratch-a04
+difficulty: medium
+concepts:
+  - ai.classic_ml
+prerequisites:
+  - python.lists
+  - python.loops
+  - python.conditionals
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.classic_ml_from_scratch.a04
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original cluster-assignment drill framed around routing weather-buoy readings to their nearest cluster centre.
+prompt_markdown: |
+  The k-means clustering algorithm alternates between two steps. This exercise is
+  the **assignment** step run over a whole dataset at once: label every point with
+  the cluster whose centre it is closest to.
+
+  A network of drifting weather buoys reports readings such as
+  `[surface_temp, salinity]`, and an analyst has `k` candidate cluster centres.
+  Write `assign_clusters(job)` that takes a single dictionary with two keys:
+
+  - `"points"`: a list of point vectors (each a list of numbers). May be empty.
+  - `"centroids"`: a non-empty list of centroid vectors, each the same length as a
+    point.
+
+  Return a list of integers the **same length as** `"points"`, where position `i`
+  holds the index of the centroid nearest to `points[i]` by Euclidean distance.
+  Break ties toward the **lower** centroid index. An empty `"points"` list returns
+  an empty list.
+
+  As in nearest-centroid classification, you can compare the sum of squared
+  differences instead of the true distance, since the square root does not change
+  which centroid is closest.
+
+  Example:
+
+  ```python
+  assign_clusters({
+      "points": [[1.0, 1.0], [8.0, 8.0], [0.0, 1.0], [9.0, 7.0]],
+      "centroids": [[0.0, 0.0], [10.0, 10.0]],
+  })
+  # -> [0, 1, 0, 1]
+  ```
+starter_code: |
+  def assign_clusters(job):
+      return []
+function_name: assign_clusters
+input_mode: function
+solution_sketch: For each point scan the centroids for the smallest squared distance (strict < for ties) and append that index to the result list.
+sample_solution: |
+  def assign_clusters(job):
+      points = job["points"]
+      centroids = job["centroids"]
+      assignments = []
+      for point in points:
+          best_index = 0
+          best_dist = None
+          for i, centroid in enumerate(centroids):
+              dist = 0.0
+              for x, y in zip(point, centroid):
+                  dist += (x - y) ** 2
+              if best_dist is None or dist < best_dist:
+                  best_dist = dist
+                  best_index = i
+          assignments.append(best_index)
+      return assignments
+hints:
+  - level: 1
+    text: This is the previous nearest-centroid search wrapped in an outer loop over every point.
+  - level: 2
+    text: For each point find the index of the centroid with the smallest sum of squared coordinate differences, then append that index.
+  - level: 3
+    text: Reset best_index and best_dist inside the per-point loop, and use strict < so tied distances keep the lower centroid index.
+tests:
+  public:
+    - name: empty_points
+      input: {"points": [], "centroids": [[0.0, 0.0]]}
+      expected: []
+    - name: two_clusters
+      input: {"points": [[1.0, 1.0], [8.0, 8.0], [0.0, 1.0], [9.0, 7.0]], "centroids": [[0.0, 0.0], [10.0, 10.0]]}
+      expected: [0, 1, 0, 1]
+    - name: tie_keeps_lower
+      input: {"points": [[5.0, 0.0]], "centroids": [[0.0, 0.0], [10.0, 0.0]]}
+      expected: [0]
+  validation:
+    - name: single_centroid_all_zero
+      input: {"points": [[1.0, 1.0], [9.0, 9.0]], "centroids": [[0.0, 0.0]]}
+      expected: [0, 0]
+    - name: three_clusters
+      input: {"points": [[0.0, 0.0], [5.0, 5.0], [9.0, 1.0], [4.5, 4.5]], "centroids": [[0.0, 0.0], [5.0, 5.0], [9.0, 1.0]]}
+      expected: [0, 1, 2, 1]
+    - name: one_dimensional
+      input: {"points": [[1.0], [7.0], [2.0], [8.0]], "centroids": [[0.0], [9.0]]}
+      expected: [0, 1, 0, 1]
+explanation_markdown: |
+  The outer loop walks the dataset and the inner loop is exactly the
+  nearest-centroid search: for each point it finds the centroid with the smallest
+  squared distance and records that index. The two crucial resets, `best_index`
+  and `best_dist` back to their starting values at the top of every point, keep
+  one point's winner from leaking into the next.
+
+  Because the result list is built by appending one label per point in order, it
+  automatically matches the length and ordering of `"points"`, and an empty input
+  yields an empty list without any special case. This labelling is what a full
+  k-means iteration feeds into the update step, where each cluster's points are
+  averaged to move its centre.
+common_mistakes:
+  - Declaring best_index or best_dist outside the point loop, so a stale winner carries over between points.
+  - Returning a list of distances or centroid vectors instead of centroid indices.
+  - Using <= for the update, which shifts tied points to a higher centroid index than required.

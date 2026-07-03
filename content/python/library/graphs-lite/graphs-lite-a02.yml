@@ -1,0 +1,98 @@
+id: exercise.library.graphs_lite.a02
+kind: exercise
+version: 1
+language: python
+title: Gallery Walk-Through
+slug: graphs-lite-a02
+difficulty: medium
+concepts:
+  - patterns.dfs
+  - patterns.graph_traversal
+  - python.dictionaries
+prerequisites:
+  - python.functions
+  - python.dictionaries
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.graphs_lite.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original museum-gallery scenario producing a deterministic depth-first visitation order.
+prompt_markdown: |
+  A museum guide always tours connected gallery rooms the same way: from the
+  current room she steps into the first unvisited doorway in alphabetical order,
+  goes as deep as she can, and only backtracks when a room has no new doorways
+  left. That is a depth-first search.
+
+  You are given `data` with two keys: `adj`, an adjacency dictionary mapping each
+  room to a list of adjacent rooms, and `start`, the room she begins in. Write
+  `dfs_order(data)` that returns the list of rooms in the order she first enters
+  them. When a room has several unvisited neighbours, always descend into the
+  alphabetically smallest one first.
+starter_code: |
+  def dfs_order(data):
+      order = []
+      return order
+function_name: dfs_order
+input_mode: function
+solution_sketch: Recurse from the start, marking rooms visited and iterating neighbours in sorted order, appending each room when first entered.
+sample_solution: |
+  def dfs_order(data):
+      adjacency = data["adj"]
+      start = data["start"]
+      visited = set()
+      order = []
+
+      def visit(room):
+          visited.add(room)
+          order.append(room)
+          for neighbour in sorted(adjacency.get(room, [])):
+              if neighbour not in visited:
+                  visit(neighbour)
+
+      visit(start)
+      return order
+hints:
+  - level: 1
+    text: Record a room the moment you first enter it, before looking at its neighbours.
+  - level: 2
+    text: Keep a visited set so you never re-enter a room, and iterate neighbours with sorted() to fix the tie-break order.
+  - level: 3
+    text: A recursive helper visit(room) that appends room, then recurses into each sorted unvisited neighbour, produces the preorder listing directly.
+tests:
+  public:
+    - name: fan_out
+      input: {"adj": {"a": [b, c], "b": [a], "c": [a]}, "start": a}
+      expected: [a, b, c]
+    - name: path
+      input: {"adj": {"a": [b], "b": [a, c], "c": [b, d], "d": [c]}, "start": a}
+      expected: [a, b, c, d]
+    - name: lone_room
+      input: {"adj": {"m": []}, "start": m}
+      expected: [m]
+  validation:
+    - name: star
+      input: {"adj": {"a": [b, c, d], "b": [a], "c": [a], "d": [a]}, "start": a}
+      expected: [a, b, c, d]
+    - name: deep_before_wide
+      input: {"adj": {"e": [f, g], "f": [e, h], "g": [e], "h": [f]}, "start": e}
+      expected: [e, f, h, g]
+    - name: start_in_middle
+      input: {"adj": {"a": [c, b], "b": [a, c], "c": [a, b]}, "start": b}
+      expected: [b, a, c]
+explanation_markdown: |
+  Depth-first search commits to one branch fully before considering alternatives.
+  The `visited` set is what stops the walk from looping forever on cycles, and
+  appending a room the instant you enter it produces the *preorder* sequence. The
+  `sorted(...)` call is the only reason the answer is deterministic: without it,
+  the order would depend on however the neighbour list happened to be arranged.
+  Notice in `deep_before_wide` that `h` is visited before `g` even though `g` is a
+  direct neighbour of the start -- DFS dives through `f` to `h` first and only
+  returns to `g` after that branch is exhausted.
+common_mistakes:
+  - Appending a room when you finish it rather than when you first enter it, which yields a different order.
+  - Forgetting the visited set, so a cycle sends the recursion into infinite loops.
+  - Iterating the raw neighbour list instead of a sorted copy, breaking the required tie-break.

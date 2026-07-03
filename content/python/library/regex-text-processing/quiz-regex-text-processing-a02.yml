@@ -1,0 +1,99 @@
+id: quiz.library.regex_text_processing.a02
+kind: quiz
+version: 1
+language: python
+title: Pattern and Substitution Syntax
+slug: quiz-regex-text-processing-a02
+difficulty: medium
+concepts:
+  - python.regex
+prerequisites:
+  - python.regex
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.regex_text_processing.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax questions on quantifiers, character classes, named groups, and backreferences with hand-picked distractors.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: |
+      What does the pattern `\d{2,4}` match?
+    choices:
+      - between two and four digits in a row
+      - exactly the four characters 2, comma, 4
+      - a digit repeated exactly 24 times
+      - two to four of any character at all
+    correct_choice: between two and four digits in a row
+    explanation: |
+      The quantifier {min,max} repeats the preceding item, so \d{2,4} means "a
+      digit, at least two times and at most four times". The braces are a count,
+      not literal characters.
+    concepts:
+      - python.regex
+  - id: q2
+    prompt: |
+      Which pattern matches exactly three uppercase letters and nothing else in
+      that span?
+    choices:
+      - '[A-Z]{3}'
+      - '[a-z]{3}'
+      - '\w{3}'
+      - '[A-Z]+'
+    correct_choice: '[A-Z]{3}'
+    explanation: |
+      [A-Z] is the class of uppercase letters and {3} pins the count to exactly
+      three. [a-z] is lowercase, \w also allows digits and underscores, and + means
+      "one or more" rather than exactly three.
+    concepts:
+      - python.regex
+  - id: q3
+    prompt: |
+      What is the result of `re.sub(r"(\w+)@(\w+)", r"\2 at \1", "sam@depot")`?
+    choices:
+      - depot at sam
+      - sam at depot
+      - '\2 at \1'
+      - sam@depot
+    correct_choice: depot at sam
+    explanation: |
+      Group 1 captures "sam" and group 2 captures "depot". In the replacement,
+      \2 replays "depot" and \1 replays "sam", producing "depot at sam". The
+      backreferences reorder the captured pieces.
+    concepts:
+      - python.regex
+  - id: q4
+    prompt: |
+      Which is the correct Python syntax for a named capture group called `id`
+      that matches one or more digits?
+    choices:
+      - '(?P<id>\d+)'
+      - '(?<id>\d+)'
+      - '(?name=id:\d+)'
+      - '(\d+ as id)'
+    correct_choice: '(?P<id>\d+)'
+    explanation: |
+      Python uses the (?P<name>...) syntax for named groups, so (?P<id>\d+) captures
+      the digits under the name "id", read back with m.group("id"). The other forms
+      are not valid Python regex syntax.
+    concepts:
+      - python.regex
+  - id: q5
+    prompt: |
+      What does `re.findall(r"\d+", "a12b3")` return?
+    choices:
+      - "['12', '3']"
+      - "['1', '2', '3']"
+      - "['12b3']"
+      - "'123'"
+    correct_choice: "['12', '3']"
+    explanation: |
+      \d+ matches each maximal run of digits, so it finds "12" and then "3".
+      findall returns those matches as a list of strings; it neither splits the
+      runs into single digits nor merges them into one number.
+    concepts:
+      - python.regex

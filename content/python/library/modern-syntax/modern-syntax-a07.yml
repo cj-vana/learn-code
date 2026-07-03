@@ -1,0 +1,154 @@
+id: exercise.library.modern_syntax.a07
+kind: exercise
+version: 1
+language: python
+title: The Harbour Rejection Notice
+slug: modern-syntax-a07
+difficulty: medium
+concepts:
+  - python.modern_syntax
+  - python.exceptions
+prerequisites:
+  - python.dictionaries
+  - python.lists
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.modern_syntax.a07
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original drill on Exception.add_note() (Python 3.11+) framed as a harbour berth-desk rejection notice, emphasising that str(exc) never contains the attached notes.
+prompt_markdown: |
+  A harbour's berth desk turns away a docking request by building a single
+  rejection and then pinning extra context to it. Python 3.11 added
+  `Exception.add_note(text)`, which appends a line to the exception's
+  `__notes__` list. Those notes ride along with the exception (a traceback
+  prints them) but `str(exc)` still returns only the original message.
+
+  Write `annotate_rejection(request)`. The single argument is a dict of the
+  shape:
+
+  ```python
+  {"reason": "Berth occupied", "notes": ["Occupied until 14:00 tide"]}
+  ```
+
+  - Build one exception whose message is `request["reason"]` (use any built-in
+    exception type — only its message and notes are observed).
+  - For each string in `request["notes"]`, in order, call `add_note` on that
+    exception.
+  - Return a list of report lines: element 0 is `str(exc)` (the reason alone),
+    followed by every attached note in the order they were added.
+
+  Rules and edge cases:
+
+  - The `"notes"` key may be **absent** or an empty list; then return a
+    one-element list containing just the reason.
+  - Notes are never deduplicated: if the same note text is added twice, it
+    appears twice.
+  - The reason string is returned verbatim, including any punctuation such as a
+    colon or a currency amount.
+starter_code: |
+  def annotate_rejection(request):
+      return []
+function_name: annotate_rejection
+input_mode: function
+solution_sketch: Construct one exception from the reason, loop over the notes calling add_note on each, then return [str(exc)] extended by exc.__notes__ (defaulting to an empty list when no note was added).
+sample_solution: |
+  def annotate_rejection(request):
+      reason = request["reason"]
+      notes = request.get("notes", [])
+      error = ValueError(reason)
+      for note in notes:
+          error.add_note(note)
+      report = [str(error)]
+      report.extend(getattr(error, "__notes__", []))
+      return report
+hints:
+  - level: 1
+    text: Create the exception once, for example error = ValueError(request["reason"]). Do not raise it; you only need to read its message and notes.
+  - level: 2
+    text: Loop over request.get("notes", []) and call error.add_note(note) for each. Using .get with a default handles the missing-key case cleanly.
+  - level: 3
+    text: str(error) gives only the reason. The notes live on error.__notes__, which does not exist until the first add_note call, so read it with getattr(error, "__notes__", []).
+tests:
+  public:
+    - name: no_notes
+      input:
+        reason: Berth too shallow for draft
+        notes: []
+      expected:
+        - Berth too shallow for draft
+    - name: single_note
+      input:
+        reason: Berth occupied
+        notes:
+          - Occupied until 14:00 tide
+      expected:
+        - Berth occupied
+        - Occupied until 14:00 tide
+    - name: two_notes
+      input:
+        reason: Draft exceeds channel
+        notes:
+          - Vessel draft 9.2m
+          - Channel depth 8.0m
+      expected:
+        - Draft exceeds channel
+        - Vessel draft 9.2m
+        - Channel depth 8.0m
+  validation:
+    - name: notes_key_missing
+      input:
+        reason: Permit expired
+      expected:
+        - Permit expired
+    - name: duplicate_notes_kept
+      input:
+        reason: Wind over limit
+        notes:
+          - Gust 42kn
+          - Gust 42kn
+      expected:
+        - Wind over limit
+        - Gust 42kn
+        - Gust 42kn
+    - name: order_preserved
+      input:
+        reason: Multiple faults
+        notes:
+          - A
+          - B
+          - C
+          - D
+      expected:
+        - Multiple faults
+        - A
+        - B
+        - C
+        - D
+    - name: reason_with_colon
+      input:
+        reason: 'Fee unpaid: 320 EUR'
+        notes:
+          - Invoice 7781
+      expected:
+        - 'Fee unpaid: 320 EUR'
+        - Invoice 7781
+explanation_markdown: |
+  `add_note` (PEP 678, Python 3.11) solves a real problem: you want to enrich a
+  failure with context discovered far from where it was raised, without losing
+  the original message or wrapping it in a new exception. Each call appends to
+  `exc.__notes__`, a plain list that starts out absent and is created on first
+  use — which is why `getattr(exc, "__notes__", [])` is the safe way to read it.
+
+  The key distinction this drill drives home: `str(exc)` reports only the
+  constructor message. The notes are a separate channel, surfaced by the
+  traceback machinery, not by string conversion. Returning the reason followed
+  by the notes lets you see both halves and confirm that order is preserved and
+  duplicates survive.
+common_mistakes:
+  - Expecting the notes to appear inside str(exc); string conversion returns only the original message, never the notes.
+  - Reading exc.__notes__ directly when no note was added, which raises AttributeError because the attribute is created lazily on the first add_note call.
+  - Deduplicating or sorting the notes; add_note appends in call order and keeps every duplicate.

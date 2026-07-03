@@ -1,0 +1,149 @@
+id: exercise.library.type_hints.a11
+kind: exercise
+version: 1
+language: python
+title: The Pocket Calculator's Op Registry
+slug: type-hints-a11
+difficulty: hard
+concepts:
+  - python.type_hints
+prerequisites:
+  - python.dictionaries
+  - python.functions
+estimated_time_minutes: 21
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.type_hints.a11
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original callable-dispatch drill framed around a pocket calculator that looks up each operation in a registry of small functions.
+prompt_markdown: |
+  A pocket calculator does not use a long chain of if-statements to decide what to
+  do. Instead it keeps a **registry**: a dictionary that maps each operation name
+  to a small function. To run an instruction it looks up the name and calls the
+  function it finds. This exercise builds that registry, and the starter code
+  shows the `Callable` type hint that describes "a function from an args
+  dictionary to a result".
+
+  Write `callable_table(job)` that takes **one dictionary** with two entries:
+
+  - `"op"`: the operation name, one of `"add"`, `"mul"`, or `"clamp"`
+  - `"args"`: a dictionary of arguments for that operation
+
+  Dispatch through a registry of small functions and return the result:
+
+  - `"add"` reads `"x"` and `"y"` from args and returns `x + y`.
+  - `"mul"` reads `"x"` and `"y"` from args and returns `x * y`.
+  - `"clamp"` reads `"value"`, `"low"`, and `"high"` from args and returns
+    `value` pulled back into the range: the result is `low` if `value` is below
+    `low`, `high` if `value` is above `high`, and `value` otherwise.
+  - Any **other** `"op"` (a name not in the registry) returns `None`.
+
+  Example call:
+
+  ```python
+  callable_table({"op": "clamp", "args": {"value": 42, "low": 0, "high": 10}})
+  # -> 10
+  ```
+
+  Build a dictionary of functions and look the operation up in it rather than
+  writing a separate if-branch for each case.
+starter_code: |
+  from typing import Any, Callable
+
+
+  def callable_table(job: dict[str, Any]) -> Any:
+      registry: dict[str, Callable[[dict[str, Any]], Any]] = {}
+      return None
+function_name: callable_table
+input_mode: function
+solution_sketch: Build a dict mapping each op name to a small function that takes the args dict and returns a result; look up job["op"], return None when it is absent, otherwise call the found function with job["args"].
+sample_solution: |
+  from typing import Any, Callable
+
+
+  def callable_table(job: dict[str, Any]) -> Any:
+      registry: dict[str, Callable[[dict[str, Any]], Any]] = {
+          "add": lambda args: args["x"] + args["y"],
+          "mul": lambda args: args["x"] * args["y"],
+          "clamp": lambda args: max(args["low"], min(args["value"], args["high"])),
+      }
+      operation = registry.get(job["op"])
+      if operation is None:
+          return None
+      return operation(job["args"])
+hints:
+  - level: 1
+    text: Make a dictionary whose keys are the operation names and whose values are small functions that each take the args dictionary.
+  - level: 2
+    text: Use registry.get(job["op"]) so a missing operation name gives None instead of raising a KeyError.
+  - level: 3
+    text: Clamp is max(low, min(value, high)); if the lookup returned a function, call it with job["args"] and return the result.
+tests:
+  public:
+    - name: add
+      input:
+        op: "add"
+        args: {"x": 2, "y": 3}
+      expected: 5
+    - name: mul
+      input:
+        op: "mul"
+        args: {"x": 4, "y": 5}
+      expected: 20
+    - name: clamp_within_range
+      input:
+        op: "clamp"
+        args: {"value": 5, "low": 0, "high": 10}
+      expected: 5
+    - name: unknown_op
+      input:
+        op: "pow"
+        args: {"x": 2, "y": 3}
+      expected: null
+  validation:
+    - name: clamp_below_low
+      input:
+        op: "clamp"
+        args: {"value": -3, "low": 0, "high": 10}
+      expected: 0
+    - name: clamp_above_high
+      input:
+        op: "clamp"
+        args: {"value": 42, "low": 0, "high": 10}
+      expected: 10
+    - name: add_negatives
+      input:
+        op: "add"
+        args: {"x": -5, "y": 2}
+      expected: -3
+    - name: mul_by_zero
+      input:
+        op: "mul"
+        args: {"x": 7, "y": 0}
+      expected: 0
+    - name: empty_op_name
+      input:
+        op: ""
+        args: {}
+      expected: null
+explanation_markdown: |
+  A dispatch table replaces a growing `if/elif` ladder with a dictionary lookup.
+  Each operation is a value in the registry -- here small lambdas, but named
+  functions would work identically -- and the `Callable[[dict[str, Any]], Any]`
+  annotation documents the contract every entry must honour: take one args
+  dictionary, return one result. That uniform signature is what lets the caller
+  treat every operation the same way.
+
+  Using `registry.get(job["op"])` rather than `registry[job["op"]]` is the key
+  safety move: an unknown operation returns `None` from the lookup, which the
+  function passes straight back, so a bad instruction never raises. The clamp
+  operation folds two guards into one expression, `max(low, min(value, high))`,
+  which first caps the value at `high` and then floors it at `low`. Adding a new
+  operation later means adding one registry entry, not editing control flow.
+common_mistakes:
+  - Indexing the registry with square brackets, which raises a KeyError on an unknown op instead of returning None.
+  - Writing clamp as min(high, value) without also applying max(low, ...), so values below the floor are not pulled up.
+  - Calling the looked-up function with the whole job instead of job["args"], so the argument keys cannot be found.

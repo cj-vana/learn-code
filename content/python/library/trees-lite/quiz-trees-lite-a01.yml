@@ -1,0 +1,99 @@
+id: quiz.library.trees_lite.a01
+kind: quiz
+version: 1
+language: python
+title: Trees as Data and Choosing a Traversal
+slug: quiz-trees-lite-a01
+difficulty: medium
+concepts:
+  - python.trees_as_data
+  - patterns.tree_traversal
+  - patterns.queue_bfs
+prerequisites: []
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.trees_lite.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original recognition quiz on the nested-dict node convention and picking the right traversal for a goal.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      Using the module's convention, how is an empty tree represented?
+    choices:
+      - "None"
+      - "{}"
+      - "{\"value\": None, \"left\": None, \"right\": None}"
+      - "[]"
+    correct_choice: "None"
+    explanation: |
+      Every node is a three-key dictionary, and the absence of a node - whether
+      the whole tree or a missing branch - is represented by None.
+    concepts:
+      - python.trees_as_data
+  - id: q2
+    prompt: |
+      You need to copy a tree top-down, creating each parent before its children.
+      Which traversal order fits naturally?
+    choices:
+      - Pre-order (node, left, right)
+      - In-order (left, node, right)
+      - Post-order (left, right, node)
+      - Level-order by a queue
+    correct_choice: Pre-order (node, left, right)
+    explanation: |
+      Pre-order records a node before descending into its children, so each parent
+      is available before the children that reference it - ideal for a top-down copy.
+    concepts:
+      - patterns.tree_traversal
+  - id: q3
+    prompt: |
+      A node's result must be computed only after both of its subtrees are fully
+      processed (for example, summing a subtree). Which order should you use?
+    choices:
+      - Post-order (left, right, node)
+      - Pre-order (node, left, right)
+      - In-order (left, node, right)
+      - Reverse level-order
+    correct_choice: Post-order (left, right, node)
+    explanation: |
+      Post-order visits both children before the node itself, which is exactly when
+      a parent's answer depends on results already gathered from its subtrees.
+    concepts:
+      - patterns.tree_traversal
+  - id: q4
+    prompt: |
+      You want to report tree nodes grouped by their distance from the root, one
+      row per level. Which approach is the right tool?
+    choices:
+      - Breadth-first traversal driven by a queue
+      - Depth-first recursion with no extra structure
+      - In-order traversal
+      - Sorting all node values first
+    correct_choice: Breadth-first traversal driven by a queue
+    explanation: |
+      A queue processes nodes in discovery order, which is level by level. Freezing
+      the queue length each round lets you emit one row of nodes at a time.
+    concepts:
+      - patterns.queue_bfs
+      - patterns.tree_traversal
+  - id: q5
+    prompt: |
+      For the tree {"value": 5, "left": {"value": 3, "left": None, "right": None},
+      "right": None}, which expression reads the value 3?
+    choices:
+      - tree["left"]["value"]
+      - tree["value"]["left"]
+      - tree["left"]
+      - tree["right"]["value"]
+    correct_choice: tree["left"]["value"]
+    explanation: |
+      The left child is itself a node dictionary, so you index "left" to reach that
+      node and then "value" to read its payload of 3.
+    concepts:
+      - python.trees_as_data
+      - python.dictionaries

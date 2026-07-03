@@ -1,0 +1,104 @@
+id: quiz.library.typing_runtime.a01
+kind: quiz
+version: 1
+language: python
+title: The Static/Runtime Boundary, Navigated
+slug: quiz-typing-runtime-a01
+difficulty: hard
+concepts:
+  - python.type_hints
+prerequisites:
+  - python.type_hints
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.typing_runtime.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pattern-recognition quiz on runtime typing decisions — validators, protocols, literals, and generics.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      A service deserializes JSON into typed records and must reject
+      malformed payloads. Where does annotation-driven runtime validation
+      belong, per typed-Python practice?
+    choices:
+      - At the deserialization boundary only — the interior trusts the static checker afterward
+      - On every function call, via a validating decorator everywhere
+      - Nowhere — annotations must never be read at runtime
+      - Only in tests
+    correct_choice: At the deserialization boundary only — the interior trusts the static checker afterward
+    explanation: |
+      Validate where untrusted data enters; inside the boundary the checker
+      has already proven type consistency, and re-validating every call
+      duplicates that proof at runtime cost.
+    concepts:
+      - python.type_hints
+  - id: q2
+    prompt: |
+      A router must send objects that offer .render() one way and everything
+      else another, including third-party objects. Which runtime check?
+    choices:
+      - isinstance against a @runtime_checkable Protocol with render — presence-based role dispatch
+      - isinstance against a base class all renderables must inherit
+      - Checking type(obj).__name__ against a list
+      - Calling obj.render() and catching AttributeError
+    correct_choice: isinstance against a @runtime_checkable Protocol with render — presence-based role dispatch
+    explanation: |
+      Structural presence-checking handles types you don't own without
+      inheritance; the try/call approach executes side effects to answer a
+      routing question.
+    concepts:
+      - python.type_hints
+  - id: q3
+    prompt: |
+      A config field accepts exactly "debug", "info", or "warn", enforced in
+      signatures AND validated at runtime from one definition. What is the
+      idiom?
+    choices:
+      - Level = Literal["debug", "info", "warn"]; checker enforces call sites, set(get_args(Level)) validates at runtime
+      - Three module constants and a docstring
+      - An Enum converted to strings at every call
+      - A regex matching the three words
+    correct_choice: Level = Literal["debug", "info", "warn"]; checker enforces call sites, set(get_args(Level)) validates at runtime
+    explanation: |
+      One Literal definition serves both worlds — static rejection of bad
+      constants and a derived runtime vocabulary that can never drift from
+      the type.
+    concepts:
+      - python.type_hints
+  - id: q4
+    prompt: |
+      A codebase keeps confusing account ids with invoice ids — both ints.
+      The fix must cost nothing at runtime. Which construct?
+    choices:
+      - NewType("AccountId", int) and NewType("InvoiceId", int) — checker-level distinctness, runtime identity function
+      - Wrapper dataclasses around each int
+      - Renaming variables more carefully
+      - Switching ids to strings
+    correct_choice: NewType("AccountId", int) and NewType("InvoiceId", int) — checker-level distinctness, runtime identity function
+    explanation: |
+      NewType makes swaps a checker error while evaporating at runtime —
+      exactly the zero-cost domain-scalar protection wrapper classes buy
+      expensively.
+    concepts:
+      - python.type_hints
+  - id: q5
+    prompt: |
+      def merge(a: list, b: list) -> list loses element types for every
+      caller. What is the signature that preserves them?
+    choices:
+      - 'def merge[T](a: list[T], b: list[T]) -> list[T] — one type variable relating inputs and output'
+      - 'def merge(a: list[object], b: list[object]) -> list[object]'
+      - 'def merge(a: Any, b: Any) -> Any'
+      - 'def merge(a: list, b: list) -> "list"'
+    correct_choice: 'def merge[T](a: list[T], b: list[T]) -> list[T] — one type variable relating inputs and output'
+    explanation: |
+      The generic signature promises output elements are the input element
+      type, solved per call site; object and Any both discard exactly the
+      relationship callers need.
+    concepts:
+      - python.type_hints

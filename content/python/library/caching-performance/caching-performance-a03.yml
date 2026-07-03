@@ -1,0 +1,127 @@
+id: exercise.library.caching_performance.a03
+kind: exercise
+version: 1
+language: python
+title: The Workshop Tool Wall
+slug: caching-performance-a03
+difficulty: medium
+concepts:
+  - concepts.performance
+  - concepts.space_complexity
+  - patterns.simulation
+prerequisites:
+  - python.lists
+  - python.loops
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.caching_performance.a03
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original least-recently-used eviction simulation framed as a furniture workshop's limited tool wall, modelling the exact recency-and-evict rule of an LRU cache as a pure function.
+prompt_markdown: |
+  A furniture workshop hangs its hand tools on a wall that has only `slots`
+  hooks. Every time a tool is used it is moved to the front hook, the
+  most-recently-used position. When a tool that is not on the wall is used, it is
+  fetched from storage and hung on the front hook; if that pushes the number of
+  tools past `slots`, the least-recently-used tool (the one at the back) is put
+  back into storage to make room. This is exactly the eviction rule of an LRU
+  cache with a fixed capacity.
+
+  Write `tool_wall(request)` where `request` is a dict with:
+
+  - `"slots"`: the number of hooks, an integer `>= 1`.
+  - `"uses"`: a list of tool names (strings) in the order they are used.
+
+  Return the tools currently on the wall as a list ordered from
+  most-recently-used (front, index 0) to least-recently-used (back).
+
+  Rules:
+
+  - Using a tool already on the wall moves it to the front; nothing is evicted.
+  - Using a tool that is not on the wall adds it at the front, and if the wall
+    now holds more than `slots` tools, the back (least-recently-used) tool is
+    evicted.
+  - An empty `"uses"` list returns an empty list.
+
+  Example: with `{"slots": 2, "uses": ["saw", "drill", "saw", "plane"]}` the wall
+  ends as `["plane", "saw"]` — `"drill"` was the least-recently-used tool and was
+  evicted when `"plane"` was hung up.
+starter_code: |
+  def tool_wall(request):
+      return []
+function_name: tool_wall
+input_mode: function
+solution_sketch: Keep a list with the most-recently-used tool at index 0; for each use, remove the tool if already present, insert it at the front, and pop the last element whenever the list grows past slots.
+sample_solution: |
+  def tool_wall(request):
+      slots = request["slots"]
+      wall = []  # index 0 is most recently used, last index is least
+      for tool in request["uses"]:
+          if tool in wall:
+              wall.remove(tool)
+          wall.insert(0, tool)
+          if len(wall) > slots:
+              wall.pop()
+      return wall
+hints:
+  - level: 1
+    text: Represent the wall as a list where index 0 is the most-recently-used tool and the last index is the one due to be evicted next.
+  - level: 2
+    text: On every use, first remove the tool if it is already on the wall, then insert it at the front so recency is always up to date.
+  - level: 3
+    text: After inserting, if len(wall) is greater than slots, pop the last element — that is the least-recently-used tool being sent back to storage.
+tests:
+  public:
+    - name: example
+      input:
+        slots: 2
+        uses: [saw, drill, saw, plane]
+      expected: [plane, saw]
+    - name: empty_uses
+      input:
+        slots: 3
+        uses: []
+      expected: []
+    - name: no_eviction
+      input:
+        slots: 3
+        uses: [awl, brace, chisel]
+      expected: [chisel, brace, awl]
+  validation:
+    - name: reuse_keeps
+      input:
+        slots: 2
+        uses: [awl, brace, awl, chisel]
+      expected: [chisel, awl]
+    - name: single_slot
+      input:
+        slots: 1
+        uses: [file, gouge, hammer]
+      expected: [hammer]
+    - name: all_same
+      input:
+        slots: 2
+        uses: [knife, knife, knife]
+      expected: [knife]
+    - name: churn
+      input:
+        slots: 2
+        uses: [awl, brace, chisel, brace]
+      expected: [brace, chisel]
+explanation_markdown: |
+  An LRU cache is defined by two moves: promote on use, evict from the back when
+  full. Modelling it as an ordered list makes both moves visible — removing then
+  re-inserting at the front is the "promote", and popping the tail once the list
+  overflows is the "evict least-recently-used". Because the wall never holds more
+  than `slots` tools, the memory used is bounded no matter how long the sequence
+  of uses is; that fixed ceiling is the whole point of a bounded cache and is why
+  its space complexity is O(slots) rather than O(number of uses). The real
+  `functools.lru_cache` and `collections.OrderedDict.move_to_end` implement this
+  same recency bookkeeping with a doubly linked list so each step is O(1).
+common_mistakes:
+  - Evicting the front (most-recently-used) tool instead of the back when the wall overflows.
+  - Forgetting to move an already-present tool to the front, so its recency never updates and it can be evicted too early.
+  - Using `>=` instead of `>` when comparing against slots, which evicts a tool one use too soon and leaves the wall under-filled.

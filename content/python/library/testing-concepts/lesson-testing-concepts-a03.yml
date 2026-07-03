@@ -1,0 +1,95 @@
+id: lesson.library.testing_concepts.a03
+kind: lesson
+version: 1
+language: python
+title: 'Properties and Invariants: Tests That Write Themselves'
+slug: lesson-testing-concepts-a03
+difficulty: medium
+concepts:
+  - concepts.testing
+prerequisites:
+  - concepts.testing
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.testing_concepts.a03
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original property-based-thinking walkthrough framed around auditing a mystery sorting machine, with fresh worked oracle code.
+body_markdown: |
+  Example-based tests check specific answers: `sort([3,1,2]) == [1,2,3]`. But
+  suppose a crate-sorting machine at the docks is a black box — you feed it
+  crates, it hands them back "in order", and you must audit it without knowing
+  its insides. You cannot enumerate every manifest it might see. What you *can*
+  do is state what must be true of **every** correct output:
+
+  1. The result is in non-decreasing order.
+  2. The result contains exactly the same crates as the input — nothing lost,
+     nothing invented, duplicates preserved.
+
+  Together these two form a complete **oracle** for sorting: any output
+  satisfying both is a correct sort, for any input whatsoever.
+
+  ```python
+  def is_sorted(xs):
+      return all(a <= b for a, b in zip(xs, xs[1:]))
+
+  def same_multiset(xs, ys):
+      from collections import Counter
+      return Counter(xs) == Counter(ys)
+
+  def audit(machine_input, machine_output):
+      return is_sorted(machine_output) and same_multiset(machine_input, machine_output)
+  ```
+
+  Notice what just happened: instead of one test per example, you wrote one
+  check that works for *all* examples. Properties are tests quantified over
+  the whole input space. (Checking only `is_sorted` is the classic incomplete
+  oracle — a machine that returns an empty list passes it every time.)
+
+  ### The recurring properties
+
+  A handful of properties cover a remarkable share of real functions:
+
+  - **Round-trip**: decode(encode(x)) == x. Serializers, parsers,
+    compressors — anything with an inverse. If your CSV writer and reader
+    disagree, this catches it with any data.
+  - **Idempotence**: f(f(x)) == f(x). Normalizers, cleaners, formatters —
+    running twice must change nothing more. A whitespace-collapser that keeps
+    shrinking "a  b" on each pass fails this loudly.
+  - **Invariants**: something preserved — length, total, membership. A
+    shuffling function keeps the multiset; a fee calculation never produces a
+    negative balance.
+  - **Commutativity / order-independence**: merge(a, b) == merge(b, a) when
+    the spec claims order doesn't matter.
+
+  ### Shrinking: make the failure small
+
+  When a property fails on a 300-crate manifest, the failing case is true but
+  useless. Property-testing tools *shrink*: they seek the smallest input that
+  still fails — three crates, not three hundred — because small failures are
+  diagnoses and big ones are noise. The exercises have you implement a
+  simplified shrinker, which is the best way to understand why tools like
+  `hypothesis` feel magical.
+
+  ### Where this lands in real work
+
+  In pytest, a property is just an assertion inside a loop over generated
+  inputs; the `hypothesis` library automates generation and shrinking. But
+  the skill is not the tooling — it is the habit of asking, for every function
+  you write: *what must always be true of my output?* Functions with clean
+  answers to that question tend to be well-designed; functions without them
+  are telling you something too.
+checkpoints:
+  - question: Why is is_sorted(output) alone an incomplete oracle for a sorting machine, and what second property completes it?
+    answer: An empty or truncated output is perfectly sorted, so the machine could discard crates and pass; requiring the output to be the same multiset as the input (nothing lost, invented, or duplicated) closes the hole.
+    explanation: Complete oracles usually pair a shape property (ordered) with a conservation property (same elements) — either alone admits degenerate cheats.
+  - question: A text normalizer claims collapsing runs of spaces is its only job. Which property tests that claim with any input, and what failure does it expose?
+    answer: Idempotence — normalize(normalize(s)) must equal normalize(s); if applying it twice changes the result again, the function is still transforming already-clean text and its spec is wrong.
+    explanation: Idempotence quantifies "running twice is harmless" over the whole input space, catching cases no hand-picked example anticipated.
+  - question: A property fails on a 300-element input. Why do property-testing tools shrink it before reporting, and what do they look for?
+    answer: They search for the smallest input that still fails — a three-element case pinpoints the bug, while the 300-element one buries it in noise.
+    explanation: Shrinking converts "there exists a failure" into a minimal reproduction, which is the form a human can actually debug.

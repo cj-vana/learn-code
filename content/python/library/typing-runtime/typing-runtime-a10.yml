@@ -1,0 +1,140 @@
+id: exercise.library.typing_runtime.a10
+kind: exercise
+version: 1
+language: python
+title: Read-Only Crates at the Nursery Dock
+slug: typing-runtime-a10
+difficulty: medium
+concepts:
+  - python.type_hints
+  - python.classes
+prerequisites:
+  - python.classes
+  - python.lists
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.typing_runtime.a10
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original plant-nursery scenario demonstrating why covariance is only sound for read-only containers.
+prompt_markdown: |
+  A plant nursery ships crates down a dock. Typed code would like to treat a crate of
+  tulips as a crate of flowers -- that substitution (a container of a subtype standing
+  in for a container of a supertype) is called **covariance**, and it is only safe
+  when the container is **read-only**. If a crate could be written to, someone holding
+  it as a "crate of flowers" could drop a rose into what is really a tulip crate. Make
+  a crate that only permits reading and prove writes are refused.
+
+  Write `read_only_crate(spec)`, where `spec` is a dict shaped like
+  `{"items": <list>, "index": <int or null>, "attempt_write": <bool>}`. Inside the
+  function, define a `Crate` class that stores a private copy of the items and exposes
+  reads only: a `get(i)` method and an `all()` method that returns a fresh list copy.
+  It must have **no** method for adding or replacing items. Then return a dict:
+
+  - `"items"`: the crate's full contents as a list (via `all()`), preserving order.
+  - `"picked"`: `crate.get(index)` when `index` is not `null` and is a valid position
+    with `0 <= index < len(items)`; otherwise `None`. A negative index counts as out
+    of range here and yields `None`.
+  - `"write_refused"`: only meaningful when `attempt_write` is `True`. In that case,
+    try to call a mutating method (`crate.append(...)`) inside a `try`/`except
+    AttributeError`; set this to `True` because the read-only crate has no such
+    method. When `attempt_write` is `False`, do not attempt a write and set it to
+    `False`.
+
+  For example, `read_only_crate({"items": ["tulip", "tulip"], "index": 0, "attempt_write": True})`
+  returns `{"items": ["tulip", "tulip"], "picked": "tulip", "write_refused": True}`.
+starter_code: |
+  def read_only_crate(spec):
+      # Build a read-only Crate (get/all only, no writer), then read from it and
+      # confirm a write attempt is refused.
+      return {}
+function_name: read_only_crate
+input_mode: function
+solution_sketch: Define a Crate exposing only get and all, read the requested index defensively, and catch AttributeError when a write is attempted.
+sample_solution: |
+  def read_only_crate(spec):
+      items = spec["items"]
+      index = spec.get("index")
+      attempt_write = spec.get("attempt_write", False)
+
+      class Crate:
+          def __init__(self, contents):
+              self._contents = list(contents)
+
+          def get(self, i):
+              return self._contents[i]
+
+          def all(self):
+              return list(self._contents)
+
+      crate = Crate(items)
+
+      picked = None
+      if index is not None and 0 <= index < len(items):
+          picked = crate.get(index)
+
+      write_refused = False
+      if attempt_write:
+          try:
+              crate.append("intruder")
+          except AttributeError:
+              write_refused = True
+
+      return {
+          "items": crate.all(),
+          "picked": picked,
+          "write_refused": write_refused,
+      }
+hints:
+  - level: 1
+    text: A read-only container is what makes covariance sound; give Crate get and all methods but deliberately no append or __setitem__.
+  - level: 2
+    text: Guard the index read with index is not None and 0 <= index < len(items) so out-of-range and negative indices return None.
+  - level: 3
+    text: To prove the write is refused, call crate.append(...) inside try/except AttributeError; the missing method triggers AttributeError, so set write_refused True only when attempt_write asked you to try.
+tests:
+  public:
+    - name: read_and_block_write
+      input: {items: ['tulip', 'tulip'], index: 0, attempt_write: true}
+      expected: {items: ['tulip', 'tulip'], picked: 'tulip', write_refused: true}
+    - name: empty_crate
+      input: {items: [], index: null, attempt_write: false}
+      expected: {items: [], picked: null, write_refused: false}
+    - name: peek_last
+      input: {items: ['rose', 'lily', 'fern'], index: 2, attempt_write: false}
+      expected: {items: ['rose', 'lily', 'fern'], picked: 'fern', write_refused: false}
+  validation:
+    - name: index_out_of_range
+      input: {items: ['oak'], index: 5, attempt_write: true}
+      expected: {items: ['oak'], picked: null, write_refused: true}
+    - name: numeric_items
+      input: {items: [1, 2, 3], index: 1, attempt_write: true}
+      expected: {items: [1, 2, 3], picked: 2, write_refused: true}
+    - name: no_write_attempt
+      input: {items: ['a', 'b'], index: 0, attempt_write: false}
+      expected: {items: ['a', 'b'], picked: 'a', write_refused: false}
+    - name: negative_index_ignored
+      input: {items: ['x', 'y'], index: -1, attempt_write: false}
+      expected: {items: ['x', 'y'], picked: null, write_refused: false}
+explanation_markdown: |
+  Covariance -- letting a `Crate[Tulip]` be used as a `Crate[Flower]` -- is only sound
+  when the container never lets you put anything in. If a "crate of flowers" view
+  could append, it could store a rose in a crate that other code still trusts to hold
+  only tulips. By giving `Crate` only `get` and `all`, and no writer at all, the type
+  is safe to treat covariantly, and the `write_refused` flag proves it: calling the
+  absent `append` raises `AttributeError`, which the handler turns into a clean
+  signal.
+
+  The defensive index read models the other half of a good read-only API: `get`
+  itself would raise `IndexError` on a bad position, so the wrapper checks
+  `0 <= index < len(items)` first and returns `None` for anything out of range,
+  including negatives. `all()` returns a fresh `list(...)` copy rather than the
+  internal list, so a caller cannot reach through the return value to mutate the
+  crate's storage -- the read-only guarantee holds all the way out.
+common_mistakes:
+  - Giving Crate an append or __setitem__ method, which breaks the read-only guarantee that makes covariance safe.
+  - Returning the internal list directly from all() so callers can mutate the crate's storage.
+  - Letting get raise IndexError on an out-of-range or negative index instead of returning None.

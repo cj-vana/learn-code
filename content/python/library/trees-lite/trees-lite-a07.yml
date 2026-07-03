@@ -1,0 +1,97 @@
+id: exercise.library.trees_lite.a07
+kind: exercise
+version: 1
+language: python
+title: Looking Up a Part Number in a Sorted Bin Tree
+slug: trees-lite-a07
+difficulty: medium
+concepts:
+  - patterns.binary_search
+  - python.trees_as_data
+  - python.conditionals
+prerequisites:
+  - python.trees_as_data
+  - python.conditionals
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.trees_lite.a07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original BST-search drill themed as a warehouse bin lookup, with the input packed into a single dict.
+prompt_markdown: |
+  A warehouse stores part numbers in a binary *search* tree: at every node, all
+  smaller numbers live in the left subtree and all larger ones in the right. The
+  tree uses nested dictionaries (`{"value", "left", "right"}`, empty branch is
+  `None`).
+
+  Write `bin_contains(data)` where `data` is a dict with two keys:
+
+  - `data["tree"]` - the search tree (or `None`)
+  - `data["target"]` - the part number to find
+
+  Return `True` if the target appears in the tree and `False` otherwise. Use the
+  ordering to walk *one* path down the tree rather than scanning every node.
+starter_code: |
+  def bin_contains(data):
+      # data = {"tree": <node or None>, "target": <int>}
+      # Walk left or right using the search-tree ordering.
+      return False
+function_name: bin_contains
+input_mode: function
+solution_sketch: Compare the target to the current value and step left when smaller or right when larger until you match or fall off the tree.
+sample_solution: |
+  def bin_contains(data):
+      node = data["tree"]
+      target = data["target"]
+      while node is not None:
+          if target == node["value"]:
+              return True
+          if target < node["value"]:
+              node = node["left"]
+          else:
+              node = node["right"]
+      return False
+hints:
+  - level: 1
+    text: You never need to look at both children - the ordering tells you which way to go.
+  - level: 2
+    text: If the target is smaller than the current value, only the left subtree can hold it; if larger, only the right.
+  - level: 3
+    text: Loop while the node is not None, return True on a match, else move to node["left"] or node["right"] by comparison; return False when you run off the tree.
+tests:
+  public:
+    - name: root_hit
+      input: {tree: {value: 5, left: {value: 3, left: {value: 2, left: null, right: null}, right: {value: 4, left: null, right: null}}, right: {value: 8, left: null, right: {value: 9, left: null, right: null}}}, target: 5}
+      expected: true
+    - name: deep_hit
+      input: {tree: {value: 5, left: {value: 3, left: {value: 2, left: null, right: null}, right: {value: 4, left: null, right: null}}, right: {value: 8, left: null, right: {value: 9, left: null, right: null}}}, target: 9}
+      expected: true
+    - name: miss_between
+      input: {tree: {value: 5, left: {value: 3, left: {value: 2, left: null, right: null}, right: {value: 4, left: null, right: null}}, right: {value: 8, left: null, right: {value: 9, left: null, right: null}}}, target: 6}
+      expected: false
+  validation:
+    - name: empty_tree
+      input: {tree: null, target: 3}
+      expected: false
+    - name: leaf_hit
+      input: {tree: {value: 5, left: {value: 3, left: {value: 2, left: null, right: null}, right: {value: 4, left: null, right: null}}, right: {value: 8, left: null, right: {value: 9, left: null, right: null}}}, target: 4}
+      expected: true
+    - name: smallest_hit
+      input: {tree: {value: 5, left: {value: 3, left: {value: 2, left: null, right: null}, right: {value: 4, left: null, right: null}}, right: {value: 8, left: null, right: {value: 9, left: null, right: null}}}, target: 2}
+      expected: true
+explanation_markdown: |
+  A binary search tree turns lookup into a series of yes/no decisions. Each
+  comparison discards an entire subtree: if the target is smaller than the
+  current value, everything on the right is irrelevant, and vice versa. So you
+  follow a single root-to-leaf path and stop the moment you match or step onto
+  `None`. The `miss_between` case is the instructive one - 6 is larger than 5 so
+  you go right to 8, then smaller than 8 so you go left into an empty branch and
+  correctly report `False` without ever touching the left half of the tree. The
+  walk costs O(height), far better than scanning all n nodes.
+common_mistakes:
+  - Recursing into both children like a plain traversal, which throws away the search-tree advantage.
+  - Forgetting the empty-tree and fell-off-the-tree case, so a missing target never returns False.
+  - Reversing the comparison and stepping the wrong direction.

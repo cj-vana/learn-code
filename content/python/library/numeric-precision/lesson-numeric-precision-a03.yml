@@ -1,0 +1,104 @@
+id: lesson.library.numeric_precision.a03
+kind: lesson
+version: 1
+language: python
+title: 'Fractions, Big Integers, and the Exact-Math Toolbox'
+slug: lesson-numeric-precision-a03
+difficulty: medium
+concepts:
+  - python.numeric_precision
+  - concepts.number_theory
+prerequisites:
+  - python.numeric_precision
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.numeric_precision.a03
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original Fraction and big-integer walkthrough framed around a luthier's fret-spacing ratios, with fresh worked examples.
+body_markdown: |
+  Decimal fixed base ten. For values that are *ratios by nature* — musical
+  intervals, gear trains, probabilities of dice — the exact tool is
+  `fractions.Fraction`, and behind both stands the quiet superpower that
+  makes them possible: Python integers never overflow.
+
+  ### Fraction: arithmetic that never rounds
+
+  A luthier spacing frets works in ratios — a fifth is 3/2, a fourth 4/3:
+
+  ```python
+  from fractions import Fraction
+
+  fifth = Fraction(3, 2)
+  fourth = Fraction(4, 3)
+  fifth * fourth              # Fraction(2, 1) — an octave, exactly
+  Fraction(6, 8)              # Fraction(3, 4): auto-reduced via gcd
+  ```
+
+  Every result is automatically reduced to lowest terms (the Euclid gcd
+  from your number-theory unit, employed by the constructor), and *no
+  operation ever rounds*: sums, products, and powers of fractions are
+  exact forever. `Fraction("0.1")` and even `Fraction(0.1)` work — the
+  latter faithfully exposing the float's true value as
+  3602879701896397/36028797018963968, which makes Fraction a wonderful
+  *inspection* tool for float mysteries.
+
+  Compare the three exact-math tools' domains once more: Decimal is
+  exact for base-ten values (money), Fraction for any ratio (1/3 stays
+  1/3), floats for speed. Fraction's cost is growth: denominators
+  compound under addition (1/3 + 1/7 = 10/21), and long computations
+  carry ever-larger integers — exactness paid for in digits.
+
+  ### Integers without ceilings
+
+  Which brings us to the floor everything stands on. In C, an int has 32
+  or 64 bits and `2**63` wraps or traps. In Python:
+
+  ```python
+  2 ** 200
+  # 1606938044258990275541962092341162602522202993782792835301376
+  ```
+
+  Just... the answer. Python ints are arbitrary-precision — internally a
+  sequence of digit chunks that grows as needed — so **integer overflow
+  does not exist**. Factorials, combinatorics, cryptographic moduli,
+  Fraction's giant denominators: all safe by construction. (The costs:
+  big ints get slower as they grow, and this is a *Python int* property —
+  `array.array` typecodes and `struct` fields are machine-width and do
+  range-check, as you saw in the binary unit.)
+
+  ### The exact corners of math
+
+  Three functions close the toolbox, each replacing a float-tainted
+  idiom:
+
+  ```python
+  import math
+  math.isqrt(10**30)      # exact integer sqrt — int(math.sqrt(x)) lies at scale
+  math.comb(52, 5)        # 2598960 — exact n-choose-k, any size
+  math.perm(10, 3)        # 720 — exact orderings
+  ```
+
+  `int(math.sqrt(n))` fails on large perfect squares because the float
+  sqrt rounds *before* the truncation; `isqrt` computes in integers and
+  is exact at any magnitude. `comb` and `perm` do combinatorics without
+  the overflow (impossible) or the float factorial (inexact) — counting
+  problems answered in the integers they live in.
+
+  The area's arc, complete: floats for speed with `isclose`/`fsum`
+  discipline, Decimal for base-ten exactness with chosen rounding,
+  Fraction for ratios, and limitless integers underneath — four tools,
+  four domains, no more fear.
+checkpoints:
+  - question: 'Why is Fraction the right type for compounding musical ratios where Decimal is not?'
+    answer: 'Ratios like 3/2 and 4/3 have no finite decimal expansion in general (1/3 repeats), so Decimal rounds them at context precision; Fraction stores numerator and denominator as exact integers and every operation stays exact, with auto-reduction keeping lowest terms.'
+    explanation: 'Exactness domain follows representation: base-ten strings for Decimal, integer ratios for Fraction.'
+  - question: What does "Python integers are arbitrary precision" make impossible, and what two costs replace the danger?
+    answer: 'Integer overflow — 2**200 simply computes; the costs are speed (arithmetic slows as digit counts grow) and the caveat that machine-width contexts (struct fields, array typecodes) still enforce ranges at their boundaries.'
+    explanation: The no-overflow guarantee is why Python suits combinatorics and cryptography, while the boundaries with packed binary formats remain range-checked.
+  - question: Why does int(math.sqrt(n)) give the wrong answer for some huge perfect squares while math.isqrt(n) never does?
+    answer: 'math.sqrt converts through a 64-bit float, which cannot represent every large integer, so the rounded float truncates to the wrong integer; isqrt computes entirely in arbitrary-precision integer arithmetic and is exact at any size.'
+    explanation: 'The float round-trip is the hidden lie in many "integer" idioms — the exact toolbox (isqrt, comb, perm) exists to remove it.'

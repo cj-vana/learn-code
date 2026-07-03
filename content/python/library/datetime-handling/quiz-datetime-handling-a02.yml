@@ -1,0 +1,94 @@
+id: quiz.library.datetime_handling.a02
+kind: quiz
+version: 1
+language: python
+title: strptime, strftime, and timedelta Mechanics
+slug: quiz-datetime-handling-a02
+difficulty: medium
+concepts:
+  - python.datetime_module
+prerequisites:
+  - python.datetime_module
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.datetime_handling.a02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax quiz on datetime parsing, formatting, and timedelta attribute mechanics.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: Which call parses the string "25/12/2026" into a date correctly?
+    choices:
+      - datetime.strptime("25/12/2026", "%d/%m/%Y").date()
+      - datetime.strftime("25/12/2026", "%d/%m/%Y")
+      - date.fromisoformat("25/12/2026")
+      - datetime.strptime("25/12/2026", "%m/%d/%Y").date()
+    correct_choice: datetime.strptime("25/12/2026", "%d/%m/%Y").date()
+    explanation: |
+      strptime parses (strftime formats), the pattern must match day-first, and
+      fromisoformat accepts only ISO "YYYY-MM-DD". The %m/%d pattern raises
+      ValueError since there is no month 25.
+    concepts:
+      - python.datetime_module
+  - id: q2
+    prompt: For td = timedelta(hours=26), what does td.seconds return?
+    choices:
+      - 7200 — the leftover beyond the full day, not the total
+      - 93600 — the whole duration in seconds
+      - 26 — the hours attribute is mirrored
+      - 0 — timedelta stores only whole days
+    correct_choice: 7200 — the leftover beyond the full day, not the total
+    explanation: |
+      timedelta normalizes to days + leftover seconds: 26 hours is 1 day plus
+      7200 seconds. The whole duration needs total_seconds(), returning 93600.0.
+    concepts:
+      - python.datetime_module
+  - id: q3
+    prompt: |
+      A format string uses %M where the author meant %m. What happens when
+      parsing "2026-30-01 12:05" style timestamps?
+    choices:
+      - It can parse without error and silently produce wrong datetimes
+      - strptime always raises for swapped codes
+      - Python warns about ambiguous format codes
+      - "%M and %m are aliases, so nothing changes"
+    correct_choice: It can parse without error and silently produce wrong datetimes
+    explanation: |
+      "%M is minutes, %m is month; for many inputs both parse cleanly, so the"
+      corruption is silent — the classic argument for round-trip testing your
+      formats.
+    concepts:
+      - python.datetime_module
+      - concepts.testing
+  - id: q4
+    prompt: Why do ISO 8601 timestamps sort chronologically when sorted as plain strings?
+    choices:
+      - Fields run from largest unit to smallest, zero-padded, so lexicographic order matches time order
+      - Python special-cases ISO strings during comparison
+      - They contain no separators that affect string ordering
+      - They do not — string sorting only approximates time order
+    correct_choice: Fields run from largest unit to smallest, zero-padded, so lexicographic order matches time order
+    explanation: |
+      Year, then month, then day, each fixed-width: comparing characters
+      left-to-right compares the most significant time unit first, exactly like
+      comparing the moments.
+    concepts:
+      - python.datetime_module
+  - id: q5
+    prompt: What does date(2028, 2, 28) + timedelta(days=1) evaluate to?
+    choices:
+      - date(2028, 2, 29) — 2028 is a leap year
+      - date(2028, 3, 1) — February always has 28 days
+      - A ValueError — the day would overflow the month
+      - date(2028, 2, 28) — adding within the same month only
+    correct_choice: date(2028, 2, 29) — 2028 is a leap year
+    explanation: |
+      2028 is divisible by 4 (and not a century), so February has 29 days;
+      timedelta arithmetic applies the full calendar rules including leap
+      years.
+    concepts:
+      - python.datetime_module

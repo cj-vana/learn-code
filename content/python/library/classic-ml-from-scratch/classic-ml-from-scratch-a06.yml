@@ -1,0 +1,172 @@
+id: exercise.library.classic_ml_from_scratch.a06
+kind: exercise
+version: 1
+language: python
+title: Run K-Means Until It Settles
+slug: classic-ml-from-scratch-a06
+difficulty: hard
+concepts:
+  - ai.classic_ml
+prerequisites:
+  - python.lists
+  - python.loops
+  - python.conditionals
+  - python.functions
+estimated_time_minutes: 24
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.classic_ml_from_scratch.a06
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original full k-means convergence loop framed around clustering soil-nutrient samples from given centroids.
+prompt_markdown: |
+  Now assemble the whole thing. Lloyd's algorithm for k-means repeats two steps,
+  **assign** then **update**, until the cluster labels stop changing. Because the
+  starting centroids are handed to you, the run is fully deterministic, so there is
+  no randomness anywhere.
+
+  A soil lab clusters field samples described by vectors like
+  `[nitrogen, phosphorus]`. Write `kmeans_converged(job)` that takes a single
+  dictionary with three keys:
+
+  - `"points"`: a list of point vectors (each a list of numbers).
+  - `"centroids"`: the initial list of `k` centroid vectors.
+  - `"max_iters"`: an integer cap on how many update steps to perform.
+
+  Run this exact loop, keeping a running `centroids` list that starts as the given
+  one and a running `iterations` count that starts at 0. Repeat up to `max_iters`
+  times:
+
+  1. **Assign**: label each point with the index of its nearest centroid
+     (Euclidean distance, lower index wins ties), producing an assignment list.
+  2. **Check**: if this assignment list is identical to the assignment list from
+     the previous round, stop immediately without updating again; the clustering
+     has converged.
+  3. **Update**: otherwise move each centroid to the element-wise mean of its
+     assigned points, rounding every coordinate to **6 decimal places**. An empty
+     cluster keeps its current centroid unchanged. Then add 1 to `iterations`.
+
+  Return a dictionary with two keys:
+
+  - `"centroids"`: the running centroid list at the end (already rounded by the
+    update step).
+  - `"iterations"`: the number of update steps actually performed.
+
+  Because the very first round has no previous assignment to compare against, it
+  always performs at least one update (unless `max_iters` is 0). Reaching
+  `max_iters` stops the loop even if the labels are still moving.
+
+  Example:
+
+  ```python
+  kmeans_converged({
+      "points": [[1.0], [2.0], [10.0], [11.0]],
+      "centroids": [[1.0], [10.0]],
+      "max_iters": 10,
+  })
+  # -> {"centroids": [[1.5], [10.5]], "iterations": 1}
+  ```
+starter_code: |
+  def kmeans_converged(job):
+      return {"centroids": [], "iterations": 0}
+function_name: kmeans_converged
+input_mode: function
+solution_sketch: Loop up to max_iters, assign labels by nearest centroid, break when the labels match the previous round, otherwise recompute centroids as per-cluster means (empty keeps current) and count the update.
+sample_solution: |
+  def kmeans_converged(job):
+      points = job["points"]
+      centroids = [list(c) for c in job["centroids"]]
+      max_iters = job["max_iters"]
+
+      def assign(cents):
+          labels = []
+          for point in points:
+              best_index = 0
+              best_dist = None
+              for i, centroid in enumerate(cents):
+                  dist = 0.0
+                  for x, y in zip(point, centroid):
+                      dist += (x - y) ** 2
+                  if best_dist is None or dist < best_dist:
+                      best_dist = dist
+                      best_index = i
+              labels.append(best_index)
+          return labels
+
+      def update(labels, cents):
+          new_cents = []
+          for j in range(len(cents)):
+              members = [points[i] for i in range(len(points)) if labels[i] == j]
+              if not members:
+                  new_cents.append(cents[j])
+              else:
+                  centroid = []
+                  for d in range(len(members[0])):
+                      total = 0.0
+                      for member in members:
+                          total += member[d]
+                      centroid.append(round(total / len(members), 6))
+                  new_cents.append(centroid)
+          return new_cents
+
+      previous = None
+      iterations = 0
+      for _ in range(max_iters):
+          labels = assign(centroids)
+          if labels == previous:
+              break
+          centroids = update(labels, centroids)
+          previous = labels
+          iterations += 1
+      return {"centroids": centroids, "iterations": iterations}
+hints:
+  - level: 1
+    text: Reuse your earlier assign and update logic as two helpers, then drive them from one loop that runs at most max_iters times.
+  - level: 2
+    text: Remember the previous round's assignment list; when a fresh assignment equals it, break before updating instead of counting another iteration.
+  - level: 3
+    text: Only increment iterations when you actually perform an update, and copy the initial centroids (list(c)) so you never mutate the caller's input.
+tests:
+  public:
+    - name: one_dim_two_clusters
+      input: {"points": [[1.0], [2.0], [10.0], [11.0]], "centroids": [[1.0], [10.0]], "max_iters": 10}
+      expected: {"centroids": [[1.5], [10.5]], "iterations": 1}
+    - name: two_updates_to_settle
+      input: {"points": [[0.0, 0.0], [0.0, 1.0], [8.0, 8.0], [8.0, 9.0], [0.0, 2.0]], "centroids": [[0.0, 0.0], [0.0, 1.0]], "max_iters": 10}
+      expected: {"centroids": [[0.0, 1.0], [8.0, 8.5]], "iterations": 2}
+    - name: capped_at_one
+      input: {"points": [[0.0, 0.0], [0.0, 1.0], [8.0, 8.0], [8.0, 9.0], [0.0, 2.0]], "centroids": [[0.0, 0.0], [0.0, 1.0]], "max_iters": 1}
+      expected: {"centroids": [[0.0, 0.0], [4.0, 5.0]], "iterations": 1}
+  validation:
+    - name: empty_cluster_stays_put
+      input: {"points": [[0.0, 0.0], [1.0, 0.0], [2.0, 0.0]], "centroids": [[0.0, 0.0], [100.0, 100.0]], "max_iters": 5}
+      expected: {"centroids": [[1.0, 0.0], [100.0, 100.0]], "iterations": 1}
+    - name: two_singletons
+      input: {"points": [[0.0, 0.0], [10.0, 10.0]], "centroids": [[0.0, 0.0], [10.0, 10.0]], "max_iters": 5}
+      expected: {"centroids": [[0.0, 0.0], [10.0, 10.0]], "iterations": 1}
+    - name: three_clusters_1d
+      input: {"points": [[0.0], [1.0], [5.0], [6.0], [11.0], [12.0]], "centroids": [[0.0], [5.0], [11.0]], "max_iters": 8}
+      expected: {"centroids": [[0.5], [5.5], [11.5]], "iterations": 1}
+explanation_markdown: |
+  Lloyd's algorithm is a fixed-point iteration: assign, update, repeat. The
+  convergence test is the whole reason it terminates, once a full pass produces the
+  same labels as the pass before it, another update would only recompute the same
+  means, so the centroids have reached a fixed point and you can stop. Comparing
+  the assignment lists (cheap integer lists) is the standard way to detect this,
+  and it is exact even though the centroids are floats.
+
+  Two details keep the count honest. First, `previous` starts as `None`, so the
+  opening round can never match and always runs one update; that is why a
+  seemingly already-settled input still reports one iteration. Second,
+  `iterations` is bumped only when an update actually happens, so a run that hits
+  `max_iters` reports exactly that many updates while a run that converges early
+  reports fewer. Copying the incoming centroids with `list(c)` protects the
+  caller's data, since the loop reassigns `centroids` each round rather than
+  editing the originals in place.
+common_mistakes:
+  - Counting an iteration on the round where you detect convergence, overstating the number of updates by one.
+  - Comparing centroid floats instead of the integer assignment lists to test for convergence, which is fragile against rounding.
+  - Forgetting the empty-cluster rule and dropping a centroid, which changes k and corrupts later assignments.
+  - Mutating the input centroids in place so the returned data and the caller's list become entangled.

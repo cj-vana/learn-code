@@ -1,0 +1,139 @@
+id: exercise.library.intervals_greedy.b02
+kind: exercise
+version: 1
+language: python
+title: Fewest Fuel Drops for the Cargo Airship
+slug: intervals-greedy-b02
+difficulty: hard
+concepts:
+  - patterns.greedy
+  - patterns.heap_topk
+  - python.heapq_bisect
+prerequisites:
+  - python.lists
+  - python.sorting
+estimated_time_minutes: 25
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.intervals_greedy.b02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: >-
+    Original cargo-airship framing for the minimum-refuel-stops problem. The
+    greedy twist is a max-heap of the fuel available at every station already
+    passed, tapped only when the airship would otherwise stall, so each refuel
+    decision is deferred to the largest reserve seen so far.
+prompt_markdown: |
+  A cargo airship must cross a strait to a landing mast `target` units away. It
+  starts with `start_fuel` units of fuel, and one unit of fuel carries it exactly
+  one unit of distance. Along the way float refuelling stations, each at a known
+  distance from the launch point and each holding a fixed amount of fuel the airship
+  can take on in full if it stops there.
+
+  You are given `job` with this shape:
+
+  ```
+  {"target": 100, "start_fuel": 10, "stations": [[10, 60], [20, 30], [60, 40]]}
+  ```
+
+  Each station is `[position, fuel]`: its distance from launch and the fuel it
+  offers. The airship can only take a station's fuel if it can actually reach that
+  station with the fuel it currently has (reaching a station's exact position
+  counts). Stopping at a station is optional.
+
+  Write `min_fuel_stops(job)` that returns the **minimum number of refuelling stops**
+  needed to reach `target`, or `-1` if no sequence of stops gets the airship there.
+
+  Cases the tests cover: enough starting fuel means `0` stops; an unreachable target
+  with no usable station returns `-1`; and stations may be passed without stopping
+  and revisited in memory later when fuel runs low.
+starter_code: |
+  def min_fuel_stops(job):
+      # Return the fewest stops to reach target, or -1 if impossible.
+      return -1
+function_name: min_fuel_stops
+input_mode: function
+solution_sketch: >-
+  Sort stations by position and sweep forward tracking the farthest distance
+  reachable; whenever that falls short of the next station or the target, take the
+  single largest fuel reserve among all stations already passed (a max-heap),
+  counting one stop each time, and report -1 if the heap is empty when you stall.
+sample_solution: |
+  import heapq
+
+
+  def min_fuel_stops(job):
+      target = job["target"]
+      fuel = job["start_fuel"]
+      stations = sorted(job["stations"])
+      passed = []  # max-heap via negated fuel amounts
+      stops = 0
+      index = 0
+      count = len(stations)
+      while fuel < target:
+          while index < count and stations[index][0] <= fuel:
+              heapq.heappush(passed, -stations[index][1])
+              index += 1
+          if not passed:
+              return -1
+          fuel += -heapq.heappop(passed)
+          stops += 1
+      return stops
+hints:
+  - level: 1
+    text: You do not have to decide to refuel the moment you pass a station. Remember every reserve you have flown over, and only cash one in when you would otherwise stall.
+  - level: 2
+    text: Track the farthest distance you can currently reach. Add every station within that reach into a max-heap of available fuel. If your reach is still short of the target, take the biggest reserve from the heap and add it to your fuel.
+  - level: 3
+    text: Each time you pop the largest reserve, count one stop. If your reach falls short and the heap is empty, no station can help, so return -1. Stop as soon as your reach meets or exceeds the target.
+tests:
+  public:
+    - name: enough_to_start
+      input: {"target": 5, "start_fuel": 10, "stations": []}
+      expected: 0
+    - name: no_stations_unreachable
+      input: {"target": 100, "start_fuel": 1, "stations": []}
+      expected: -1
+    - name: single_stop_suffices
+      input: {"target": 10, "start_fuel": 5, "stations": [[3, 6]]}
+      expected: 1
+  validation:
+    - name: classic_two_stops
+      input: {"target": 100, "start_fuel": 10, "stations": [[10, 60], [20, 30], [30, 30], [60, 40]]}
+      expected: 2
+    - name: stalls_short
+      input: {"target": 100, "start_fuel": 10, "stations": [[10, 10]]}
+      expected: -1
+    - name: even_spacing
+      input: {"target": 100, "start_fuel": 50, "stations": [[25, 25], [50, 25], [75, 25]]}
+      expected: 2
+    - name: one_big_reserve
+      input: {"target": 100, "start_fuel": 50, "stations": [[10, 20], [40, 60]]}
+      expected: 1
+explanation_markdown: |
+  The clever part is that you defer every refuelling decision. As the airship flies,
+  it keeps `fuel` equal to the farthest distance it can currently reach. Every
+  station whose position is within that reach gets dropped into a **max-heap** of
+  available reserves -- but you do not spend any of them yet. Only when the reach
+  falls short of the target do you actually stop, and then you greedily take the
+  single largest reserve you have flown over so far. Adding the biggest available
+  reserve extends your reach the most per stop, which is exactly what minimises the
+  number of stops.
+
+  Each stop pops one reserve and increments the counter, and popping may bring new,
+  farther stations into reach, which you then add to the heap. If the reach is short
+  of the target and the heap is empty, every reachable station has already been used
+  and none carries you farther, so the crossing is impossible and you return `-1`.
+  When the start fuel already covers the target, the loop never runs and the answer
+  is `0`.
+
+  Sorting the stations is `O(n log n)` and each is pushed and popped at most once, so
+  the whole sweep is `O(n log n)`. Note `even_spacing` needs two stops even though
+  three stations exist, because greedily banking the reserves lets the airship skip
+  paying for one it does not need.
+common_mistakes:
+  - Refuelling at a station the instant you reach it, which stops more often than necessary instead of banking reserves for when they are needed.
+  - Taking the nearest or first available reserve rather than the largest, so each stop buys less reach and the count comes out too high.
+  - Forgetting the impossible case, so an empty heap while still short of the target returns a stop count instead of -1.

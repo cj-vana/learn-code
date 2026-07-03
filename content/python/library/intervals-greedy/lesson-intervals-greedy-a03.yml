@@ -1,0 +1,82 @@
+id: lesson.library.intervals_greedy.a03
+kind: lesson
+version: 1
+language: python
+title: The Greedy Choice — Earliest Finish Wins
+slug: lesson-intervals-greedy-a03
+difficulty: medium
+concepts:
+  - patterns.greedy
+  - patterns.intervals
+prerequisites:
+  - python.sorting
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.intervals_greedy.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original planetarium-show framing with an exchange-argument proof of the earliest-finish greedy rule.
+body_markdown: |
+  A planetarium has one dome and a stack of proposed shows, each with a fixed
+  `[start, end]`. Shows cannot overlap the dome, and the director wants to run
+  the *largest number* of shows possible. Which ones should she pick?
+
+  A few intuitions feel reasonable and are all wrong. Picking the shortest show
+  first can strand two others it happens to straddle. Picking the show that
+  starts earliest can burn the whole evening on one long feature. The rule that
+  actually works is almost suspiciously simple: **always take the show that
+  finishes earliest among those that still fit.**
+
+  ```python
+  def most_shows(shows):
+      ordered = sorted(shows, key=lambda s: s[1])   # sort by END time
+      count = 0
+      last_end = None
+      for start, end in ordered:
+          if last_end is None or start >= last_end:
+              count += 1
+              last_end = end                        # commit to this show
+      return count
+  ```
+
+  Sort by end time, then walk the list keeping only `last_end`, the finish time
+  of the most recent show we committed to. A show fits if it starts at or after
+  `last_end` (equal is fine — back-to-back shows are allowed). Every time one
+  fits, we take it and advance `last_end`.
+
+  **Why is earliest-finish optimal?** Here is the exchange argument, the
+  standard way to prove a greedy rule. Suppose some perfect schedule `P` books
+  the maximum number of shows, and suppose its first show is not the one that
+  finishes earliest overall. Call the earliest-finishing show `g`. Because `g`
+  finishes no later than `P`'s first show, we can swap `P`'s first show out and
+  `g` in: `g` ends sooner, so it cannot collide with anything `P` scheduled
+  afterward. The swapped schedule books the same number of shows, so it is still
+  optimal — and now it begins with `g`. Repeat the argument on the rest of the
+  evening after `g` ends, and you conclude a schedule that always grabs the
+  earliest finisher is optimal too. Greedy never has to look ahead because each
+  earliest-finish pick leaves the maximum room for everything that follows.
+
+  This one idea powers a family of problems. "How many meetings can one room
+  hold?" is this exact count. "What is the fewest cancellations that make a
+  schedule conflict-free?" is the total minus this count. "How few inspection
+  points cover every interval?" flips the same sort-by-end scan around. The
+  engine never changes: sort by the finish line, then greedily commit to
+  whatever clears it soonest.
+
+  Contrast this with sorting by *start*, which is right for merging but wrong
+  here — sorting by start would let a single sprawling show block the greedy
+  scan. Choosing the sort key is the real decision in interval problems, and end
+  time is the key whenever you are counting how many fit.
+checkpoints:
+  - question: To select the maximum number of non-overlapping shows, do you sort by start time or by end time, and why?
+    answer: Sort by end time, because committing to the show that finishes earliest leaves the largest possible amount of the timeline free for the remaining shows.
+    explanation: Sorting by start can trap the scan behind one long early show, which is why start-time order is right for merging but wrong for maximizing the count.
+  - question: In the exchange-argument proof, why can we always swap the greedy earliest-finishing show into an optimal schedule without losing any shows?
+    answer: Because the earliest finisher ends no later than the show it replaces, so it cannot conflict with anything scheduled after it, keeping the total count the same while making the schedule start with the greedy pick.
+    explanation: Repeating the swap across the timeline shows the fully greedy schedule matches the optimum, which is what proves the rule correct.
+  - question: A show starts at exactly last_end. Does the condition start >= last_end include it, and is that correct here?
+    answer: Yes, the >= includes it, and that is correct because a show beginning exactly when the previous one ends is back to back rather than overlapping under this module's convention.
+    explanation: Using a strict > would wrongly reject legal back-to-back shows and undercount the schedule.

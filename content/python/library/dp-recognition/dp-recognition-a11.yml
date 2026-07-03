@@ -1,0 +1,118 @@
+id: exercise.library.dp_recognition.a11
+kind: exercise
+version: 1
+language: python
+title: Packing The Balloon Expedition Basket
+slug: dp-recognition-a11
+difficulty: hard
+concepts:
+  - patterns.dynamic_programming
+  - concepts.space_complexity
+prerequisites:
+  - python.lists
+  - python.loops
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dp_recognition.a11
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original hot-air-balloon basket framing of the 0/1 knapsack solved with a single downward-swept rolling array.
+prompt_markdown: |
+  A hot-air-balloon crew is loading the basket for an expedition. The balloon can
+  lift a fixed total weight, and each piece of gear has a weight and a usefulness
+  value. Every item is unique: you either pack it or leave it behind, never a
+  fraction and never two copies. The crew wants the most total usefulness the
+  basket can carry without going over the weight limit.
+
+  Write `pack_basket(manifest)` where `manifest` is a dict with two keys:
+
+  - `capacity`: a non-negative integer, the maximum total weight the basket holds
+  - `items`: a list of dicts, each with integer keys `weight` and `value`
+
+  Return a single integer: the maximum total value of a subset of items whose
+  combined weight is at most `capacity`, using each item at most once.
+
+  Edges: if `items` is empty or `capacity` is `0`, nothing can be packed and the
+  answer is `0`. An item heavier than `capacity` simply cannot be chosen.
+
+  Example: with `capacity = 5` and items of `(weight, value)` `(2, 3)`, `(3, 4)`,
+  `(4, 5)`, `(5, 6)`, the answer is `7` (pack the weight-2 and weight-3 items).
+starter_code: |
+  def pack_basket(manifest):
+      return 0
+function_name: pack_basket
+input_mode: function
+solution_sketch: Keep a 1-D array of best value per capacity and sweep it from high capacity down to the item's weight for each item, so each item is counted at most once.
+sample_solution: |
+  def pack_basket(manifest):
+      capacity = manifest["capacity"]
+      items = manifest["items"]
+      best = [0] * (capacity + 1)
+      for item in items:
+          weight = item["weight"]
+          value = item["value"]
+          for cap in range(capacity, weight - 1, -1):
+              best[cap] = max(best[cap], best[cap - weight] + value)
+      return best[capacity]
+hints:
+  - level: 1
+    text: For each item you face a yes-or-no choice, either skip it and keep the value you had, or take it and add its value to the best packing of the leftover capacity.
+  - level: 2
+    text: Track best[cap], the most value that fits in weight cap. Update it as you consider each item using best[cap - weight] + value.
+  - level: 3
+    text: Sweep cap from capacity down to weight for each item. The downward direction guarantees best[cap - weight] does not already include the current item, enforcing at most one copy.
+tests:
+  public:
+    - name: pick_two
+      input: {capacity: 5, items: [{weight: 2, value: 3}, {weight: 3, value: 4}, {weight: 4, value: 5}, {weight: 5, value: 6}]}
+      expected: 7
+    - name: no_items
+      input: {capacity: 10, items: []}
+      expected: 0
+    - name: zero_capacity
+      input: {capacity: 0, items: [{weight: 1, value: 5}]}
+      expected: 0
+  validation:
+    - name: exact_single_fit
+      input: {capacity: 4, items: [{weight: 4, value: 10}]}
+      expected: 10
+    - name: too_heavy
+      input: {capacity: 3, items: [{weight: 5, value: 100}]}
+      expected: 0
+    - name: choose_best_subset
+      input: {capacity: 7, items: [{weight: 3, value: 8}, {weight: 4, value: 9}, {weight: 5, value: 10}]}
+      expected: 17
+    - name: value_dense_pair
+      input: {capacity: 10, items: [{weight: 5, value: 10}, {weight: 4, value: 40}, {weight: 6, value: 30}, {weight: 3, value: 50}]}
+      expected: 90
+    - name: single_use_only
+      input: {capacity: 6, items: [{weight: 3, value: 5}]}
+      expected: 5
+explanation_markdown: |
+  This is the 0/1 knapsack: each item is taken at most once, and you want the most
+  value within a weight limit. The per-item choice is binary, so the best value for
+  a given capacity is the better of two options: skip the item and keep the value
+  you already had at that capacity, or take it and add its value to the best packing
+  of `capacity - weight`.
+
+  The lesson's full 2-D table indexes by (items considered, capacity), but every
+  transition reads only the previous item's row. That is the classic signal to drop
+  to a **rolling array**: a single list `best` indexed by capacity, reused across
+  items. The catch is the sweep direction. We iterate `cap` from `capacity`
+  **downward** to the item's weight. Going high-to-low means that when we read
+  `best[cap - weight]`, it still reflects the state *before* the current item was
+  considered, so the item can be packed at most once.
+
+  Sweeping low-to-high instead would let `best[cap - weight]` already include the
+  current item, and the same item would be packed over and over, silently solving
+  the unbounded knapsack. That direction bug is the single most common knapsack
+  mistake. The rolling array cuts space from O(items * capacity) to O(capacity)
+  while keeping O(items * capacity) time.
+common_mistakes:
+  - Sweeping capacity from low to high, which lets one item be packed repeatedly and solves a different (unbounded) problem.
+  - Reusing a fresh zeroed array per item instead of carrying best forward, which forgets earlier items entirely.
+  - Adding items whose weight exceeds the current capacity by not stopping the inner range at the item's weight.
+  - Returning the max over the whole array rather than best[capacity]; the array already accounts for lighter packings at each index.

@@ -1,0 +1,122 @@
+id: exercise.library.attention_mechanics.a09
+kind: exercise
+version: 1
+language: python
+title: Steadying a Layer's Signal
+slug: attention-mechanics-a09
+difficulty: medium
+concepts:
+  - ai.attention_transformers
+prerequisites:
+  - python.lists
+  - python.comprehensions
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.attention_mechanics.a09
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original layer-normalization drill framed as steadying the signal vector flowing between transformer sublayers, using population variance.
+prompt_markdown: |
+  Deep transformers stack many sublayers, and without help the numbers flowing
+  between them can drift to wildly different scales, which makes training
+  unstable. **Layer normalization** rescales each vector on its own so that its
+  entries are centered at 0 and have a consistent spread, no matter how large or
+  small they arrived.
+
+  Given a vector `x = [x0, x1, ..., x(n-1)]`, first compute its mean and its
+  population variance:
+
+      mean = (x0 + x1 + ... + x(n-1)) / n
+      var  = ((x0 - mean)^2 + (x1 - mean)^2 + ... + (x(n-1) - mean)^2) / n
+
+  Then normalize every entry by subtracting the mean and dividing by the square
+  root of the variance plus a tiny constant `eps` (which keeps you from dividing
+  by zero when the vector is flat):
+
+      out[k] = (x[k] - mean) / sqrt(var + eps)
+
+  Note the variance divides by `n` (population variance), not `n - 1`.
+
+  Write `layer_norm(job)` that takes one dictionary such as
+  `{"vector": [1.0, 2.0, 3.0], "eps": 0.00001}` and returns the normalized list
+  with every entry rounded to 6 decimal places.
+starter_code: |
+  import math
+
+
+  def layer_norm(job):
+      return []
+function_name: layer_norm
+input_mode: function
+solution_sketch: Compute the mean, then the population variance, then the denominator sqrt(var + eps), and map each entry to (x - mean) / denom rounded to 6 places.
+sample_solution: |
+  import math
+
+
+  def layer_norm(job):
+      x = job["vector"]
+      eps = job["eps"]
+      n = len(x)
+      mean = sum(x) / n
+      var = sum((v - mean) ** 2 for v in x) / n
+      denom = math.sqrt(var + eps)
+      return [round((v - mean) / denom, 6) for v in x]
+hints:
+  - level: 1
+    text: Do it in stages. Compute the mean, then the variance from that mean, then reuse both to normalize each entry.
+  - level: 2
+    text: Population variance is the average of the squared distances from the mean, so divide the sum of (v - mean) ** 2 by n, not n - 1.
+  - level: 3
+    text: The shared denominator is math.sqrt(var + eps); build the output with a comprehension [round((v - mean) / denom, 6) for v in x].
+tests:
+  public:
+    - name: three_ascending
+      input:
+        vector: [1.0, 2.0, 3.0]
+        eps: 0.00001
+      expected: [-1.224736, 0.0, 1.224736]
+    - name: flat_vector
+      input:
+        vector: [2.0, 2.0, 2.0]
+        eps: 0.00001
+      expected: [0.0, 0.0, 0.0]
+    - name: two_far_apart
+      input:
+        vector: [0.0, 10.0]
+        eps: 0.00001
+      expected: [-1.0, 1.0]
+  validation:
+    - name: four_entries
+      input:
+        vector: [1.0, 2.0, 3.0, 4.0]
+        eps: 0.001
+      expected: [-1.341104, -0.447035, 0.447035, 1.341104]
+    - name: symmetric_negatives
+      input:
+        vector: [-2.0, 0.0, 2.0]
+        eps: 0.00001
+      expected: [-1.224743, 0.0, 1.224743]
+    - name: one_spike
+      input:
+        vector: [5.0, 1.0, 1.0, 1.0]
+        eps: 0.0001
+      expected: [1.732022, -0.577341, -0.577341, -0.577341]
+explanation_markdown: |
+  Layer normalization acts on one vector at a time and along its own features,
+  which is why it works even with a single example and does not care about batch
+  size. Centering at the mean and dividing by the spread turns any incoming
+  vector into one with mean 0 and (ignoring the tiny `eps`) unit variance, so the
+  next sublayer always sees inputs on a familiar scale.
+
+  Two details matter for exact answers. First, this uses population variance
+  (divide by `n`), which is the convention transformers follow. Second, `eps`
+  lives inside the square root; on a flat vector the true variance is 0, and
+  without `eps` you would divide by zero, but with it every normalized entry
+  comes out as 0 instead.
+common_mistakes:
+  - Using sample variance (dividing by n - 1) instead of population variance (dividing by n).
+  - Adding eps outside the square root, or forgetting it entirely so flat vectors blow up.
+  - Recomputing the mean or denominator inside the loop for each entry instead of once up front.

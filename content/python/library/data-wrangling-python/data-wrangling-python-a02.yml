@@ -1,0 +1,109 @@
+id: exercise.library.data_wrangling_python.a02
+kind: exercise
+version: 1
+language: python
+title: Filtering Tide Gauge Readings
+slug: data-wrangling-python-a02
+difficulty: easy
+concepts:
+  - concepts.grouping_aggregation
+  - python.comprehensions
+prerequisites:
+  - python.lists
+  - python.conditionals
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.data_wrangling_python.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original row-filtering drill framed around a coastal tide gauge logger.
+prompt_markdown: |
+  A coastal station logs water-level readings as a list of records, one
+  dictionary per measurement. A researcher wants only the readings at or above a
+  threshold so the calm-water noise drops out.
+
+  Write `filter_at_least(payload)` that takes a single dictionary with three keys:
+
+  - `"rows"`: a list of reading dictionaries, in recording order.
+  - `"field"`: the name of the numeric field to test.
+  - `"minimum"`: the threshold number.
+
+  Return a **new list** containing exactly the rows whose value at `"field"` is
+  **greater than or equal to** `"minimum"`, keeping them in their original order.
+  A reading whose value equals the threshold is kept. You may assume `"field"` is
+  present in every row and holds a number.
+
+  Edge cases the tests cover:
+
+  - An empty `"rows"` list returns an empty list.
+  - When no reading meets the threshold, return an empty list.
+
+  Example:
+
+  ```python
+  filter_at_least({
+      "rows": [{"gauge": "north", "height_cm": 80}, {"gauge": "north", "height_cm": 120}],
+      "field": "height_cm",
+      "minimum": 100,
+  })
+  # -> [{"gauge": "north", "height_cm": 120}]
+  ```
+starter_code: |
+  def filter_at_least(payload):
+      return []
+function_name: filter_at_least
+input_mode: function
+solution_sketch: Use a list comprehension over the rows, keeping each row whose payload field value is >= the minimum.
+sample_solution: |
+  def filter_at_least(payload):
+      rows = payload["rows"]
+      field = payload["field"]
+      minimum = payload["minimum"]
+      return [row for row in rows if row[field] >= minimum]
+hints:
+  - level: 1
+    text: Pull field and minimum out of the payload once, then decide row by row whether to keep each reading.
+  - level: 2
+    text: A row qualifies when row[field] >= minimum; note the comparison is inclusive, so equality keeps the row.
+  - level: 3
+    text: 'Express the whole thing as one list comprehension: [row for row in rows if row[field] >= minimum].'
+tests:
+  public:
+    - name: empty_log
+      input: {"rows": [], "field": "height_cm", "minimum": 100}
+      expected: []
+    - name: some_below
+      input: {"rows": [{"gauge": "north", "height_cm": 80}, {"gauge": "north", "height_cm": 120}, {"gauge": "south", "height_cm": 100}], "field": "height_cm", "minimum": 100}
+      expected: [{"gauge": "north", "height_cm": 120}, {"gauge": "south", "height_cm": 100}]
+    - name: none_qualify
+      input: {"rows": [{"gauge": "east", "height_cm": 10}, {"gauge": "east", "height_cm": 42}], "field": "height_cm", "minimum": 100}
+      expected: []
+  validation:
+    - name: all_qualify
+      input: {"rows": [{"gauge": "a", "height_cm": 200}, {"gauge": "b", "height_cm": 150}], "field": "height_cm", "minimum": 100}
+      expected: [{"gauge": "a", "height_cm": 200}, {"gauge": "b", "height_cm": 150}]
+    - name: boundary_included
+      input: {"rows": [{"gauge": "a", "height_cm": 99}, {"gauge": "b", "height_cm": 100}, {"gauge": "c", "height_cm": 101}], "field": "height_cm", "minimum": 100}
+      expected: [{"gauge": "b", "height_cm": 100}, {"gauge": "c", "height_cm": 101}]
+    - name: float_threshold
+      input: {"rows": [{"gauge": "a", "swell_m": 2.4}, {"gauge": "b", "swell_m": 2.5}, {"gauge": "c", "swell_m": 3.1}], "field": "swell_m", "minimum": 2.5}
+      expected: [{"gauge": "b", "swell_m": 2.5}, {"gauge": "c", "swell_m": 3.1}]
+    - name: negative_values
+      input: {"rows": [{"gauge": "a", "height_cm": -30}, {"gauge": "b", "height_cm": -5}, {"gauge": "c", "height_cm": 0}], "field": "height_cm", "minimum": -5}
+      expected: [{"gauge": "b", "height_cm": -5}, {"gauge": "c", "height_cm": 0}]
+explanation_markdown: |
+  Filtering is the "keep only these rows" half of wrangling, and a list
+  comprehension with an `if` clause says exactly that in one line. The comparison
+  uses `>=` so the boundary value itself survives; picking `>` instead would
+  silently drop every reading that lands right on the threshold.
+
+  Because you build a new list rather than deleting from the original, the source
+  data is untouched, and a single pass over the rows keeps the work linear in the
+  number of readings.
+common_mistakes:
+  - Using > instead of >=, which wrongly discards rows equal to the minimum.
+  - Removing rows from the input list while iterating it, which skips elements and mutates the caller's data.
+  - Reading the threshold from a hard-coded number instead of payload["minimum"].

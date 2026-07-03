@@ -1,0 +1,109 @@
+id: lesson.library.grid_simulation.a03
+kind: lesson
+version: 1
+language: python
+title: 'Simulating Step by Step: Rules, State, and Time'
+slug: lesson-grid-simulation-a03
+difficulty: medium
+concepts:
+  - patterns.simulation
+  - patterns.state_machine
+prerequisites:
+  - python.lists
+  - python.dictionaries
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.grid_simulation.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original simulation and state-machine walkthrough framed around a model railway signal box, with fresh worked code.
+body_markdown: |
+  Some problems hand you no formula at all — just a starting arrangement and a
+  rule for what happens next. A model railway is a good picture: signals flip,
+  trains advance one section, and the only way to know the layout after fifty
+  ticks is to *play the rules forward*. That is simulation, and interviewers
+  love it because the challenge is bookkeeping, not cleverness.
+
+  ### The simulation loop
+
+  Every simulation has the same skeleton: hold the current state, apply the
+  rule to produce the next state, repeat.
+
+  ```python
+  state = initial_state()
+  for _ in range(ticks):
+      state = step(state)
+  ```
+
+  The classic trap lives inside `step`. If the rule says "every cell updates
+  based on its neighbours *at the same moment*", you must compute the new
+  state from a **snapshot** of the old one. Mutating the grid while you scan
+  it lets already-updated cells contaminate their neighbours' decisions.
+
+  ```python
+  def step(grid):
+      rows, cols = len(grid), len(grid[0])
+      nxt = [row[:] for row in grid]          # work on a copy
+      for r in range(rows):
+          for c in range(cols):
+              nxt[r][c] = rule(grid, r, c)    # read old, write new
+      return nxt
+  ```
+
+  When the rule updates one mover at a time (a robot walking a floor plan),
+  in-place mutation is fine — only simultaneous rules need the copy.
+
+  ### State machines: rules as data
+
+  When the "thing being simulated" is a mode rather than a grid — a signal
+  that cycles green → amber → red, a kiosk moving between screens — the
+  cleanest model is a transition table: a dict from (state, event) to the
+  next state.
+
+  ```python
+  transitions = {
+      "green":  {"timer": "amber"},
+      "amber":  {"timer": "red"},
+      "red":    {"timer": "green", "override": "green"},
+  }
+
+  state = "red"
+  for event in ["timer", "override", "timer"]:
+      state = transitions[state].get(event, state)   # unknown event: stay put
+  ```
+
+  Nothing here is clever, and that is the point: the rules live in data, the
+  loop is three lines, and adding a new mode means editing the table, not the
+  code. Interview problems that read as walls of "if the signal is red and
+  the button is pressed..." prose usually collapse into exactly this shape.
+
+  ### Keeping direction straight
+
+  Movers on grids need a facing. Store direction as an index into a vector
+  list, and turning becomes arithmetic instead of an if-ladder:
+
+  ```python
+  DIRS = [(-1, 0), (0, 1), (1, 0), (0, -1)]   # up, right, down, left
+  facing = 0                                   # up
+  facing = (facing + 1) % 4                    # turn right
+  facing = (facing - 1) % 4                    # turn left
+  dr, dc = DIRS[facing]
+  r, c = r + dr, c + dc                        # step forward
+  ```
+
+  Between the snapshot rule, the transition table, and the direction ring,
+  you have the whole simulation toolkit: represent the state honestly, apply
+  the rules literally, and let the loop do the work.
+checkpoints:
+  - question: A rule says every cell in a grid updates simultaneously based on its neighbours. Why can't you update the grid in place while scanning it?
+    answer: Cells you have already updated would feed their new values into neighbours that are supposed to read the old generation, corrupting the result; you must read from a snapshot and write to a copy.
+    explanation: Simultaneous rules define the next state purely in terms of the previous one, so reads and writes must be kept on separate grids.
+  - question: What data structure turns a page of "when in state X and event Y happens, go to state Z" prose into three lines of code, and how do you handle an event with no listed transition?
+    answer: A nested dict transitions[state][event] mapping to the next state; use .get(event, state) so unlisted events leave the state unchanged.
+    explanation: Encoding transitions as data separates the rules from the loop, so the driver code never grows as new states are added.
+  - question: With directions stored as DIRS = [up, right, down, left] and a facing index, how do you turn right, and why is the modulo needed?
+    answer: facing = (facing + 1) % 4; the modulo wraps left turns from up back around to left and right turns from left back to up, keeping the index inside the list.
+    explanation: Treating the four directions as a ring indexed 0-3 replaces an if/elif ladder with one line of arithmetic.

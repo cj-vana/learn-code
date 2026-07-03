@@ -1,0 +1,95 @@
+id: lesson.library.functional_style.a01
+kind: lesson
+version: 1
+language: python
+title: 'map, filter, reduce — and When a Loop Is Clearer'
+slug: lesson-functional-style-a01
+difficulty: medium
+concepts:
+  - python.functional_style
+prerequisites:
+  - python.functions
+  - python.comprehensions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.functional_style.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original functional-style walkthrough framed around a tea blender's inventory transforms, with fresh worked comparisons.
+body_markdown: |
+  Functional style treats computation as **transformations of data** —
+  map this, keep those, combine into one — rather than step-by-step
+  mutation. Python supports it well, and a tea blender's inventory
+  makes the three verbs concrete.
+
+  ### The three transformations
+
+  ```python
+  weights = [{"tea": "assam", "kg": 12}, {"tea": "sencha", "kg": 3}, ...]
+
+  # map: transform each element
+  labels = [f"{w['tea']}: {w['kg']}kg" for w in weights]
+
+  # filter: keep elements passing a test
+  low = [w for w in weights if w["kg"] < 5]
+
+  # reduce: combine all into one
+  from functools import reduce
+  total = reduce(lambda acc, w: acc + w["kg"], weights, 0)
+  ```
+
+  In Python, **comprehensions are the idiomatic map and filter** —
+  `[f(x) for x in xs if p(x)]` reads more clearly than
+  `list(map(f, filter(p, xs)))` and is preferred. The `map`/`filter`
+  builtins earn their place when passing an *existing named function*
+  (`map(str.strip, lines)`) or building lazy pipelines over huge data.
+  Reduce is the one without a comprehension form — folding a sequence to
+  a single value — though `sum`, `max`, `min`, `any`, `all`, and
+  `"".join` are specialized reduces you should reach for first
+  (`sum(w["kg"] for w in weights)` beats the reduce above).
+
+  ### The real dividend: no mutation, no shared state
+
+  The functional versions never reassign a running variable or mutate a
+  list in place — each produces a *new* value. That buys real
+  properties: expressions compose (the output of one transform is the
+  input of the next), there is no half-updated intermediate state to
+  reason about, and the pieces are trivially testable because they are
+  pure functions of their inputs. A pipeline
+  `summarize(rank(filter_active(rows)))` reads as a sentence and each
+  stage is verifiable alone — the same plan-as-data clarity as the
+  automation area, at expression scale.
+
+  ### When the loop wins — and it sometimes does
+
+  Functional style is a tool, not a religion. Reach for an explicit loop
+  when:
+
+  - The body has **side effects** (writing files, logging) — a
+    comprehension run for side effects is a misuse that confuses readers.
+  - You need **early exit** (`break` on the first match) — a loop with
+    break is clearer than contorting `next(filter(...))`.
+  - The logic is **genuinely sequential** with interdependent steps that
+    do not decompose into clean stages.
+  - A comprehension would grow **three clauses and a nested
+    conditional** — past a point, readability inverts and a named loop
+    wins.
+
+  The mature judgment: use transformations for *data flow* (this
+  becomes that becomes the other), loops for *control flow* (do this,
+  then maybe stop, with effects). Most Python is happiest as mostly the
+  former with the latter where it genuinely fits — and knowing which is
+  which is the skill this area builds.
+checkpoints:
+  - question: In Python, what is the idiomatic spelling of map-and-filter, and when do the map/filter builtins earn their place instead?
+    answer: 'A comprehension: [f(x) for x in xs if p(x)]; the builtins are preferable when passing an existing named function (map(str.strip, lines)) or building lazy pipelines over very large or streaming data.'
+    explanation: 'Comprehensions read more clearly for inline transforms; the builtins shine with pre-existing callables and laziness.'
+  - question: What concrete properties does avoiding mutation in a transformation pipeline buy?
+    answer: 'Composition (each stage''s output feeds the next), no half-updated intermediate state to reason about, and per-stage testability since each transform is a pure function of its input — the same clarity as plan-as-data at expression scale.'
+    explanation: 'Purity is not aesthetic here; it is what makes pipelines composable and independently verifiable.'
+  - question: Name two situations where an explicit loop is clearer than a functional transformation.
+    answer: 'When the body has side effects (I/O, logging) — a comprehension run for effects misleads readers — and when early exit is needed (break on first match), which a loop expresses directly; also genuinely sequential interdependent logic and over-complex comprehensions.'
+    explanation: 'Transformations model data flow, loops model control flow; matching the tool to which one you have is the judgment, not dogma.'

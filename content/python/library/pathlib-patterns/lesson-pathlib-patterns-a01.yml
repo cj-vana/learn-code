@@ -1,0 +1,97 @@
+id: lesson.library.pathlib_patterns.a01
+kind: lesson
+version: 1
+language: python
+title: 'PurePath: Paths as Values'
+slug: lesson-pathlib-patterns-a01
+difficulty: medium
+concepts:
+  - python.pathlib_os
+prerequisites:
+  - python.strings
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.pathlib_patterns.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original PurePath walkthrough framed around a record label's master-tape archive naming scheme, with fresh worked examples.
+body_markdown: |
+  A path is not a string — it is structured data (segments, a name, an
+  extension) that happens to *serialize* as a string. Code that
+  manipulates paths with string methods rediscovers this the hard way:
+  `folder + "/" + name` doubles separators, breaks on Windows, and
+  mangles edge cases. `pathlib` treats path structure as first-class,
+  and its **PurePath** layer does so *without touching any filesystem* —
+  pure computation on path values, which is why it works identically on
+  paths that don't exist and machines that never will.
+
+  A record label's master-tape archive:
+
+  ```python
+  from pathlib import PurePosixPath
+
+  tape = PurePosixPath("masters/1974/harvest-moon/side-a.flac")
+
+  tape.name        # 'side-a.flac'      the final component
+  tape.stem        # 'side-a'           name without the last suffix
+  tape.suffix      # '.flac'            the last extension, dot included
+  tape.parent      # masters/1974/harvest-moon
+  tape.parts       # ('masters', '1974', 'harvest-moon', 'side-a.flac')
+  ```
+
+  Five accessors replace a dozen fragile `rsplit("/")` and
+  `rsplit(".")` idioms — and encode the edge cases those idioms get
+  wrong. Two worth knowing cold: **dotfiles** — `PurePath(".env").suffix`
+  is `""` (a leading dot marks a hidden file, not an extension), where
+  naive `split(".")` reports "env"; and **multi-suffix names** —
+  `tape.suffixes` for `"mix.tar.gz"` is `['.tar', '.gz']`, while
+  `.suffix` is only `.gz`.
+
+  ### Building paths: the / operator
+
+  ```python
+  archive = PurePosixPath("masters")
+  path = archive / "1974" / "harvest-moon" / "side-a.flac"
+  ```
+
+  Joining with `/` handles separators, and its one surprise is a
+  feature: joining with an *absolute* path resets — `archive /
+  "/etc/passwd"` yields `/etc/passwd`, not a nested path. Remember that
+  behavior; it is load-bearing for security (a hostile filename
+  containing an absolute path escapes your sandbox *silently* if you
+  never check), and your exercises test it directly.
+
+  ### Derived names: with_* methods
+
+  Renaming schemes are `with_name`, `with_stem`, and `with_suffix`:
+
+  ```python
+  tape.with_suffix(".wav")        # .../side-a.wav
+  tape.with_stem("side-b")        # .../side-b.flac
+  ```
+
+  `with_suffix("")` strips the extension; `with_suffix(".gz")` on
+  `mix.tar.gz` replaces only the *last* suffix (giving `mix.tar.gz` →
+  think it through — `.tar` remains). These methods return new values —
+  PurePaths are immutable, compare by value, and hash — so they behave
+  like the well-mannered data objects they are: usable as dict keys, safe
+  to share, natural to test.
+
+  Why the Pure layer exists as its own thing: manifests list paths on
+  *other* machines; archives store paths from systems long gone; and
+  logic on path values — validation, renaming plans, layout computation
+  — should be testable without a disk. The concrete `Path` subclass
+  (previous area) adds I/O; everything here is the algebra underneath.
+checkpoints:
+  - question: 'What do .suffix and .stem report for the filename ".env", and why is that correct where split(".") is not?'
+    answer: 'suffix is "" and stem is ".env" — a leading dot denotes a hidden file, not an extension boundary; splitting on dots would misreport "env" as an extension.'
+    explanation: 'The accessors encode filesystem naming conventions'' edge cases — dotfiles being the classic one string-splitting gets wrong.'
+  - question: What does PurePosixPath("uploads") / user_filename yield when user_filename is "/etc/passwd", and why must sandboxing code know this?
+    answer: 'Exactly /etc/passwd — joining with an absolute path RESETS rather than nests; sandbox code that assumes joining always stays under the base directory silently hands hostile input an escape.'
+    explanation: 'The reset rule is documented behavior, and validating that a joined result is still relative to the base is the required containment check.'
+  - question: Why does it matter that PurePath objects are immutable and compare by value?
+    answer: 'with_* methods return new paths instead of mutating, two equal paths hash and compare equal, and paths work as dict keys and set members — the semantics of well-behaved value objects, testable without a filesystem.'
+    explanation: Path-as-value is the design idea of the Pure layer — path logic becomes ordinary data manipulation with all the usual guarantees.

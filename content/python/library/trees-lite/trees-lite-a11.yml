@@ -1,0 +1,95 @@
+id: exercise.library.trees_lite.a11
+kind: exercise
+version: 1
+language: python
+title: Rebuilding a Balanced Card Index From a Sorted Roster
+slug: trees-lite-a11
+difficulty: hard
+concepts:
+  - python.trees_as_data
+  - patterns.recursion
+  - patterns.tree_traversal
+prerequisites:
+  - python.slicing
+  - patterns.binary_search
+estimated_time_minutes: 16
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.trees_lite.a11
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original build-a-balanced-BST-from-a-sorted-list drill themed as rebuilding a card index, returning the pre-order of the result.
+prompt_markdown: |
+  A registrar has a roster already sorted in ascending order and wants to rebuild
+  it as a *balanced* card index (a binary search tree as short as possible). The
+  trick: pick the middle entry as the root so equal counts fall on each side,
+  then rebuild the left half and right half the same way.
+
+  Write `rebuild_index(roster)` where `roster` is a list of distinct integers in
+  ascending order. Build the balanced tree using this rule and return its
+  **pre-order** traversal (root, left subtree, right subtree) as a list. For the
+  middle, use index `len // 2`. An empty roster returns `[]`.
+
+  You do not have to return the tree itself - just the pre-order list of the tree
+  you build.
+starter_code: |
+  def rebuild_index(roster):
+      # Build a balanced BST (middle element = index len // 2 as root),
+      # then return its pre-order traversal as a list.
+      return []
+function_name: rebuild_index
+input_mode: function
+solution_sketch: Recursively take the middle element as the root and prepend it to the pre-order of the left half then the right half.
+sample_solution: |
+  def rebuild_index(roster):
+      if not roster:
+          return []
+      mid = len(roster) // 2
+      left = rebuild_index(roster[:mid])
+      right = rebuild_index(roster[mid + 1:])
+      return [roster[mid]] + left + right
+hints:
+  - level: 1
+    text: The root of a balanced tree built from sorted data is the middle element, splitting the rest into two halves.
+  - level: 2
+    text: Pre-order records the root first, so you can emit the middle value before recursing into the left and right slices.
+  - level: 3
+    text: With mid = len(roster)//2, return [roster[mid]] + rebuild_index(roster[:mid]) + rebuild_index(roster[mid+1:]).
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: single
+      input: [42]
+      expected: [42]
+    - name: seven_values
+      input: [1, 2, 3, 4, 5, 6, 7]
+      expected: [4, 2, 1, 3, 6, 5, 7]
+  validation:
+    - name: two_values
+      input: [1, 2]
+      expected: [2, 1]
+    - name: three_values
+      input: [10, 20, 30]
+      expected: [20, 10, 30]
+    - name: six_values
+      input: [10, 20, 30, 40, 50, 60]
+      expected: [40, 20, 10, 30, 60, 50]
+explanation_markdown: |
+  Building a balanced tree from sorted input is a slicing recursion. The middle
+  element becomes the root because half the remaining values are smaller (they go
+  left) and half are larger (they go right), which keeps the two sides the same
+  height. Because you want the *pre-order* of that tree, you never have to
+  materialize the dictionaries at all: pre-order emits the root first, so you can
+  output `roster[mid]` and then recurse into the two slices in the same order.
+  With seven values the middle is 4, its left half `[1, 2, 3]` rebuilds to
+  `2, 1, 3`, and its right half `[5, 6, 7]` rebuilds to `6, 5, 7`, giving
+  `[4, 2, 1, 3, 6, 5, 7]`. Each value is chosen as a root exactly once, so the
+  build is O(n).
+common_mistakes:
+  - Using a different middle index than len // 2, which produces a valid but differently-shaped tree and mismatched output.
+  - Including the middle element in one of the recursive halves, duplicating or skipping values.
+  - Emitting in-order (which just re-sorts the roster) instead of pre-order.

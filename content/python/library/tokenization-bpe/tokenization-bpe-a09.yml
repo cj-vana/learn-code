@@ -1,0 +1,139 @@
+id: exercise.library.tokenization_bpe.a09
+kind: exercise
+version: 1
+language: python
+title: Tokenizing the Lighthouse Log
+slug: tokenization-bpe-a09
+difficulty: medium
+concepts:
+  - ai.tokenization
+  - python.strings
+  - python.loops
+prerequisites:
+  - python.lists
+  - python.functions
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.tokenization_bpe.a09
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original framing around a lighthouse keeper's log; combines whitespace splitting, the end-of-word marker convention, and per-word byte-pair merges into one full-text tokenizer with invented merge tables.
+prompt_markdown: |
+  A lighthouse keeper wants to feed her nightly log into a byte-pair encoding
+  (BPE) tokenizer. Full-text tokenization has three steps: split the text into
+  words, break each word into symbols, then merge the symbols.
+
+  Write `tokenize_text(job)` where `job` is a dict with:
+
+  - `"text"`: the log line, a string.
+  - `"merges"`: a list of learned merges, each a two-item list `[x, y]`.
+
+  Steps:
+
+  1. Split `text` into words on whitespace using `text.split()` (runs of spaces
+     collapse and there are no empty words). An empty or all-space text yields no
+     words at all.
+  2. For each word, build its symbol list as the word's characters **plus a final
+     end-of-word marker** `"</w>"`. So `"ab"` starts as `["a", "b", "</w>"]`. The
+     marker lets the tokenizer tell a word-final piece from a word-internal one,
+     and merges may glue a letter onto it.
+  3. Apply every merge to that symbol list, in order. To apply `[x, y]`, scan
+     left to right and replace each adjacent `x`-then-`y` with the joined symbol
+     `x + y`, greedily and non-overlapping (advance past both consumed symbols).
+  4. Concatenate the merged symbol lists of all words, in order, into one flat
+     token list.
+
+  Example: `job = {"text": "ab ab", "merges": [["a", "b"]]}` returns
+  `["ab", "</w>", "ab", "</w>"]`.
+starter_code: |
+  def tokenize_text(job):
+      tokens = []
+      for word in job["text"].split():
+          symbols = list(word) + ["</w>"]
+          tokens.extend(symbols)
+      return tokens
+function_name: tokenize_text
+input_mode: function
+solution_sketch: Split on whitespace; for each word form list(word) + ['</w>'], apply each merge with the greedy non-overlapping sweep, and extend one shared token list with the result.
+sample_solution: |
+  def tokenize_text(job):
+      merges = job["merges"]
+      tokens = []
+      for word in job["text"].split():
+          symbols = list(word) + ["</w>"]
+          for pair in merges:
+              left, right = pair[0], pair[1]
+              joined = left + right
+              rebuilt = []
+              i = 0
+              n = len(symbols)
+              while i < n:
+                  if i < n - 1 and symbols[i] == left and symbols[i + 1] == right:
+                      rebuilt.append(joined)
+                      i += 2
+                  else:
+                      rebuilt.append(symbols[i])
+                      i += 1
+              symbols = rebuilt
+          tokens.extend(symbols)
+      return tokens
+hints:
+  - level: 1
+    text: Handle one word at a time, then extend a single result list with each word's tokens so word order is preserved.
+  - level: 2
+    text: Build each word's symbols as list(word) + ['</w>'] before merging, so the end-of-word marker is present and can itself be merged.
+  - level: 3
+    text: Reuse the per-word merge sweep by walking an index, joining adjacent (x, y) pairs into x + y advancing by 2, else copying one symbol advancing by 1.
+tests:
+  public:
+    - name: empty_text
+      input:
+        text: ""
+        merges: []
+      expected: []
+    - name: two_words
+      input:
+        text: "low lower"
+        merges: [["l", "o"], ["lo", "w"]]
+      expected: ["low", "</w>", "low", "e", "r", "</w>"]
+    - name: repeated_word
+      input:
+        text: "ab ab"
+        merges: [["a", "b"]]
+      expected: ["ab", "</w>", "ab", "</w>"]
+  validation:
+    - name: merge_into_marker
+      input:
+        text: "cats"
+        merges: [["s", "</w>"]]
+      expected: ["c", "a", "t", "s</w>"]
+    - name: two_merges_two_words
+      input:
+        text: "tea time"
+        merges: [["t", "e"], ["t", "i"]]
+      expected: ["te", "a", "</w>", "ti", "m", "e", "</w>"]
+    - name: run_of_letters
+      input:
+        text: "aaa"
+        merges: [["a", "a"]]
+      expected: ["aa", "a", "</w>"]
+    - name: no_merges
+      input:
+        text: "go"
+        merges: []
+      expected: ["g", "o", "</w>"]
+explanation_markdown: |
+  Real tokenizers run per word so that merges never reach across a space, which
+  is why splitting comes first and the token lists are only concatenated at the
+  end. The `"</w>"` marker is what lets the vocabulary distinguish a suffix that
+  ends a word (`"s</w>"`) from the same letters mid-word, and because it is just
+  another symbol a merge like `["s", "</w>"]` can fuse it onto the preceding
+  letter. Each word costs `O(m * k)` for `m` merges and word length `k`, so the
+  whole line is linear in its total length times the number of merges.
+common_mistakes:
+  - Forgetting to append '</w>' to each word, so word-final tokens are indistinguishable and marker merges never fire.
+  - Splitting the whole text into characters up front, which lets merges cross word boundaries.
+  - Resetting or replacing the result list per word instead of extending one shared list, losing earlier words.

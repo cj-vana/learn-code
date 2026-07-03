@@ -1,0 +1,101 @@
+id: lesson.library.caching_performance.a02
+kind: lesson
+version: 1
+language: python
+title: 'Generators vs Lists: The Memory Tradeoff'
+slug: lesson-caching-performance-a02
+difficulty: medium
+concepts:
+  - concepts.performance
+  - python.iterators_generators
+prerequisites:
+  - python.iterators_generators
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.caching_performance.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original memory-tradeoff walkthrough contrasting eager and lazy processing of a sensor log, with fresh worked reasoning.
+body_markdown: |
+  Caching spent memory to save time. This lesson is the reverse trade —
+  and the most common performance decision in day-to-day Python:
+  **eager (list) versus lazy (generator)** evaluation.
+
+  ### The same computation, two memory profiles
+
+  A pipeline processes a year of sensor readings — ten million rows —
+  keeping the ones over a threshold:
+
+  ```python
+  # eager: builds the whole list in memory
+  hot = [r for r in readings if r.temp > 40]
+  count = len(hot)
+
+  # lazy: one row in memory at a time
+  hot = (r for r in readings if r.temp > 40)     # generator expression
+  count = sum(1 for _ in hot)
+  ```
+
+  The comprehension `[...]` **materializes** every matching row before
+  the next line runs — if a third of ten million match, that is millions
+  of objects held at once. The generator `(...)` produces rows *on
+  demand* and forgets each after use; memory stays flat at one row
+  regardless of input size. For data that does not fit in memory (or
+  barely does), that is the difference between running and crashing.
+
+  ### The mental model: pipeline vs. warehouse
+
+  A generator chain is a **pipeline** — each row flows through all
+  stages and out, and only one row is ever "in the pipe":
+
+  ```python
+  rows      = read_lines(path)          # lazy source
+  parsed    = (parse(r) for r in rows)  # stage
+  hot       = (p for p in parsed if p.temp > 40)
+  total     = sum(p.temp for p in hot)  # drives the whole chain, O(1) memory
+  ```
+
+  A list at any stage is a **warehouse** — everything stops and
+  accumulates there. The skill is placing warehouses deliberately: lazy
+  by default for large data, materialize only where you genuinely need
+  the whole collection at once.
+
+  ### When you *must* materialize
+
+  Lazy is not free of tradeoffs — a generator is **single-use**
+  (consumed once, then empty) and has **no length** and **no indexing**.
+  So build a list when you need to:
+
+  - iterate more than once (or `tee`, at a buffering cost);
+  - know the count up front, or index/slice;
+  - random-access or sort (sorting needs all elements anyway).
+
+  These are real needs, not failures — the point is *choosing*, not
+  defaulting to `[...]` reflexively. The classic waste is
+  `len([x for x in xs if p(x)])` (materialize a whole list to count it)
+  where `sum(1 for x in xs if p(x))` counts in constant memory; or
+  `list(map(...))[0]` where `next(...)` would stop after one. Your
+  exercises compare the shapes and identify which stage genuinely needs
+  the warehouse.
+
+  ### The honest caveat
+
+  In *this* sandbox you compare output shape and behavior, not
+  wall-clock memory — but the reasoning is exact and it is what senior
+  Python programmers do reflexively: ask, at each stage, "does this need
+  the whole collection, or just the next element?" Lazy where you can,
+  eager where you must, and a mental model of one-row-in-the-pipe versus
+  everything-in-the-warehouse to decide.
+checkpoints:
+  - question: Contrast the memory behavior of [r for r in rows if p(r)] and (r for r in rows if p(r)) on ten million rows.
+    answer: 'The list comprehension materializes every matching row in memory at once (potentially millions of objects); the generator expression yields one row at a time and forgets each, holding O(1) rows regardless of input size.'
+    explanation: 'Eager builds a warehouse, lazy runs a pipeline — the difference between fitting in memory and crashing on large data.'
+  - question: Give two situations where you MUST materialize a generator into a list.
+    answer: 'When you need to iterate the data more than once (generators are single-use), and when you need its length, indexing, slicing, or sorting — generators have no len and no random access, and sorting needs all elements anyway.'
+    explanation: 'Materializing is a deliberate choice for genuine multi-pass or random-access needs, not a default.'
+  - question: Why is len([x for x in xs if p(x)]) wasteful, and what replaces it?
+    answer: 'It builds an entire list solely to call len on it, holding every matching element in memory; sum(1 for x in xs if p(x)) counts in constant memory by consuming a generator without storing anything.'
+    explanation: 'Counting needs no warehouse — recognizing "I only need an aggregate, not the collection" is the everyday form of the lazy/eager decision.'

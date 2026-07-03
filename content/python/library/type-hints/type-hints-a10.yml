@@ -1,0 +1,175 @@
+id: exercise.library.type_hints.a10
+kind: exercise
+version: 1
+language: python
+title: Guessing the Spreadsheet's Columns
+slug: type-hints-a10
+difficulty: hard
+concepts:
+  - python.type_hints
+prerequisites:
+  - python.dictionaries
+  - python.sets
+  - python.loops
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.type_hints.a10
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original schema-inference drill framed around a data clerk guessing a spreadsheet's column types from a handful of exported rows.
+prompt_markdown: |
+  A data clerk has exported a spreadsheet as a list of row dictionaries and wants
+  to guess each **column's type** before importing it into a typed database. Some
+  columns hold a consistent kind of value, some are ragged, and some are missing
+  from a few rows entirely.
+
+  Write `schema_from_values(records)` that takes **one list** of flat dictionaries
+  (each a row mapping column names to scalar values) and returns a dictionary
+  mapping every column name that appears in any row to a **type-name string**,
+  built by these exact rules.
+
+  First, name a single value's type like this:
+
+  - `"null"` for `None`
+  - `"bool"` for a boolean (checked before int)
+  - `"int"` for an integer
+  - `"float"` for a floating-point number
+  - `"str"` for a string
+
+  Then, for each column, look only at the rows where that column **is present**:
+
+  - If every present value has the **same** type-name, the column's base name is
+    that shared name (for example `"int"`).
+  - If the present values have **more than one** type-name, the base name is
+    `"mixed"`.
+  - If the column is **absent from at least one row**, prefix the base name with
+    `"optional "` (for example `"optional int"` or `"optional mixed"`). A column
+    present in every row keeps its base name with no prefix.
+
+  Example call:
+
+  ```python
+  schema_from_values([{"name": "Ada", "age": 36},
+                      {"name": "Bo", "age": 41, "note": "temp"}])
+  # -> {"name": "str", "age": "int", "note": "optional str"}
+  ```
+
+  An empty record list returns an empty dictionary.
+starter_code: |
+  from typing import Any
+
+
+  def schema_from_values(records: list[dict[str, Any]]) -> dict[str, str]:
+      return {}
+function_name: schema_from_values
+input_mode: function
+solution_sketch: Collect every column name, and for each gather the type-names of its present values; a single shared name becomes the base, multiple names become "mixed", and a column missing from any row gets an "optional " prefix.
+sample_solution: |
+  from typing import Any
+
+
+  def _type_name(value: Any) -> str:
+      if value is None:
+          return "null"
+      if isinstance(value, bool):
+          return "bool"
+      if isinstance(value, int):
+          return "int"
+      if isinstance(value, float):
+          return "float"
+      return "str"
+
+
+  def schema_from_values(records: list[dict[str, Any]]) -> dict[str, str]:
+      total = len(records)
+      columns: list[str] = []
+      for record in records:
+          for key in record:
+              if key not in columns:
+                  columns.append(key)
+      schema: dict[str, str] = {}
+      for column in columns:
+          present = [_type_name(r[column]) for r in records if column in r]
+          names = set(present)
+          base = next(iter(names)) if len(names) == 1 else "mixed"
+          if len(present) < total:
+              schema[column] = "optional " + base
+          else:
+              schema[column] = base
+      return schema
+hints:
+  - level: 1
+    text: First gather every column name that appears in any row, then decide each column's type independently.
+  - level: 2
+    text: For a column, collect the type-names of only the rows that contain it; a set of size one means a consistent type, and a larger set means "mixed".
+  - level: 3
+    text: A column is optional when the count of rows containing it is less than the total number of rows, so prefix its base name with "optional ".
+tests:
+  public:
+    - name: empty_records
+      input: []
+      expected: {}
+    - name: single_record
+      input:
+        - {"name": "Ada", "qty": 3}
+      expected: {"name": "str", "qty": "int"}
+    - name: consistent_types
+      input:
+        - {"name": "Ada", "qty": 3}
+        - {"name": "Bo", "qty": 5}
+      expected: {"name": "str", "qty": "int"}
+    - name: mixed_type_column
+      input:
+        - {"qty": 3}
+        - {"qty": "lots"}
+      expected: {"qty": "mixed"}
+  validation:
+    - name: optional_column
+      input:
+        - {"name": "Ada", "note": "hi"}
+        - {"name": "Bo"}
+      expected: {"name": "str", "note": "optional str"}
+    - name: optional_mixed_and_optional_int
+      input:
+        - {"v": 1}
+        - {"v": "x"}
+        - {"a": 9}
+      expected: {"v": "optional mixed", "a": "optional int"}
+    - name: bool_column_consistent
+      input:
+        - {"flag": true}
+        - {"flag": false}
+      expected: {"flag": "bool"}
+    - name: bool_vs_int_is_mixed
+      input:
+        - {"n": true}
+        - {"n": 1}
+      expected: {"n": "mixed"}
+    - name: all_null_column
+      input:
+        - {"score": null}
+        - {"score": null}
+      expected: {"score": "null"}
+explanation_markdown: |
+  Inferring a schema is a grouping problem layered on top of the same type-naming
+  logic you use for a discriminated union. The `_type_name` helper resolves one
+  value to its variant, with `bool` deliberately checked before `int` so flags are
+  not swallowed into the integer column. For each column you gather the names of
+  only the rows that actually contain it; a set of one name is a clean type, and a
+  set of more than one collapses to `"mixed"`.
+
+  Optionality is a separate axis. Comparing the number of rows that contain the
+  column against the total row count tells you whether the column is ever absent;
+  if it is, the `"optional "` prefix records that a typed importer must allow a
+  missing value there. Because base type and optionality are computed
+  independently, all four combinations fall out naturally: `"int"`,
+  `"optional int"`, `"mixed"`, and `"optional mixed"`. The routine scans the rows
+  a constant number of times per column, staying linear in the total number of
+  cells.
+common_mistakes:
+  - Counting a column as required because it appears in the first row, without checking that it is present in every row.
+  - Letting booleans fall into the "int" bucket by testing isinstance(value, int) before isinstance(value, bool).
+  - Including missing rows as a "null" value instead of skipping absent columns, which turns an optional column into a mixed one.

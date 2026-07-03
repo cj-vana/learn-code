@@ -1,0 +1,89 @@
+id: lesson.library.modern_syntax.a03
+kind: lesson
+version: 1
+language: python
+title: 'Walrus, Slash, and Star: Small Syntax, Real Design'
+slug: lesson-modern-syntax-a03
+difficulty: medium
+concepts:
+  - python.modern_syntax
+prerequisites:
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.modern_syntax.a03
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original walkthrough of the walrus operator and parameter-kind markers as API-design tools, with fresh worked examples.
+body_markdown: |
+  Three small pieces of modern syntax carry outsized design weight. None
+  is hard; each changes how readable code gets written.
+
+  ### The walrus: assignment inside an expression
+
+  `:=` assigns and *yields the value*, letting you name a result exactly
+  where it is produced:
+
+  ```python
+  # read-process loops lose their awkward priming read:
+  while (block := stream.read(8192)):
+      process(block)
+
+  # comprehensions stop computing things twice:
+  results = [clean for raw in rows if (clean := normalize(raw)) is not None]
+  ```
+
+  The second example is the killer app: without the walrus you either
+  call `normalize` twice (filter and value) or abandon the comprehension.
+  With it, compute once, test, and keep. The chunking idiom
+  `while (chunk := take(it, size)):` is the same shape.
+
+  Taste rules that keep the feature a gift rather than a mess: the walrus
+  earns its place when the name is *reused* in the same expression or
+  loop; `if (x := f()):` where x is never mentioned again is noise. And
+  it needs its parentheses more often than you expect — `x := 1` as a
+  statement is a syntax error on purpose (plain `=` exists).
+
+  Related debugging sugar from the same era: `f"{order_id=}"` renders as
+  `order_id=1042` — expression and value, the print-debugging idiom made
+  first-class.
+
+  ### / and *: declaring how arguments may be passed
+
+  Function signatures can mark parameter *kinds*:
+
+  ```python
+  def price(base, /, quantity, *, currency="EUR", rush=False):
+      ...
+  ```
+
+  - Everything before `/` is **positional-only**: `price(base=10, ...)`
+    is a TypeError. Use it when the name is meaningless or private —
+    callers of `len(obj)` should never write `len(obj=x)` — and when you
+    want freedom to rename the parameter later without breaking callers.
+  - Everything after `*` is **keyword-only**: `price(10, 3, "USD",
+    True)` is a TypeError; the call must spell `currency="USD",
+    rush=True`. Use it for options and booleans — `resize(img, 300,
+    200, True, False)` is unreviewable, while keyword-only forces the
+    call site to document itself.
+
+  These markers are API *contracts*: they encode, in the signature, which
+  spellings of a call remain legal — which is precisely what you promise
+  users you will not break. A boolean flag that must be named, a core
+  argument that cannot be, both make future refactors safe and call
+  sites legible. Your exercises implement the enforcement logic itself —
+  deciding, from a signature spec and a call shape, whether the call is
+  legal — which is the clearest way to internalize the rules.
+checkpoints:
+  - question: 'In the comprehension [clean for raw in rows if (clean := normalize(raw)) is not None], what problem does the walrus solve?'
+    answer: 'Without it, normalize would run twice per row (once in the filter, once for the value) or the comprehension would need to become a loop; the walrus names the result inside the filter so it is computed once and reused.'
+    explanation: Filter-and-keep-the-computed-value is the walrus's strongest use case — one evaluation, no duplicated work, comprehension preserved.
+  - question: When does a parameter belong AFTER the * marker, and what does it buy the API?
+    answer: 'Options, flags, and anything whose bare value would be cryptic at the call site — keyword-only forces callers to write rush=True instead of a mystery positional True, making call sites self-documenting and argument order irrelevant.'
+    explanation: 'Keyword-only parameters trade a little typing for permanent call-site readability and reordering freedom.'
+  - question: Why would a library mark a parameter positional-only with /, given it restricts callers?
+    answer: 'When the name carries no meaning (len''s operand) or is deliberately unexposed — it keeps callers from writing name=... calls, so the library can rename the parameter later without breaking anyone.'
+    explanation: 'Every allowed spelling of a call is a compatibility promise; positional-only shrinks the promise to what the API means to support.'

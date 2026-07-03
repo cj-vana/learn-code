@@ -1,0 +1,91 @@
+id: lesson.library.linked_lists_patterns.a02
+kind: lesson
+version: 1
+language: python
+title: Reversing a Chain and Merging Two Sorted Ones
+slug: lesson-linked-lists-patterns-a02
+difficulty: medium
+concepts:
+  - patterns.linked_list
+prerequisites:
+  - python.classes
+  - python.loops
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.linked_lists_patterns.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original conveyor-belt reversal and two-lane merge framing for pointer rewiring.
+body_markdown: |
+  Once you can build a chain, the next skill is *rewiring* it without building a
+  new one. Two moves cover an enormous number of problems: reversing a chain in
+  place, and merging two sorted chains into one.
+
+  **Reversing in place** means flipping every `.next` pointer so the tail becomes
+  the head. Picture a conveyor belt of boxes; you want each box to point at the
+  box that used to sit *behind* it. The trick is to carry three references as you
+  walk: `prev` (the part already flipped), `current` (the box you are flipping),
+  and a saved `nxt` so you do not lose the rest of the belt the moment you rewire
+  `current.next`.
+
+  ```python
+  def reverse_chain(head):
+      prev = None
+      current = head
+      while current is not None:
+          nxt = current.next      # save the rest before we overwrite it
+          current.next = prev     # flip this box to point backwards
+          prev = current          # prev advances onto the flipped box
+          current = nxt           # current advances into the untouched rest
+      return prev                 # prev is the old tail, now the new head
+  ```
+
+  The order of those four lines is not negotiable. If you overwrite
+  `current.next` before saving `nxt`, the remaining boxes become unreachable and
+  the walk stalls. When the loop ends, `current` has fallen off the end and `prev`
+  holds the new front.
+
+  **Merging two sorted chains** stitches two ascending belts into one. The clean
+  pattern uses a throwaway *dummy* head so you never special-case the very first
+  pick. Keep a `tail` cursor on the growing result and, at each step, splice on
+  whichever input node is smaller:
+
+  ```python
+  def merge_sorted(a, b):
+      dummy = Node(None)
+      tail = dummy
+      while a is not None and b is not None:
+          if a.value <= b.value:
+              tail.next = a
+              a = a.next
+          else:
+              tail.next = b
+              b = b.next
+          tail = tail.next
+      tail.next = a if a is not None else b   # attach whatever remains
+      return dummy.next                       # skip the dummy
+  ```
+
+  When one chain runs out, the other is already sorted, so you attach it whole in
+  one move rather than copying box by box. The dummy node is the quiet hero here:
+  because `dummy.next` will eventually point at the true head, you build the whole
+  result with a single uniform rule and read the answer off `dummy.next` at the
+  end.
+
+  Both patterns share a mindset. You are never creating boxes, only redirecting
+  arrows, and you always hold enough references to avoid stranding the part of the
+  chain you have not visited yet. Get comfortable narrating each pointer move out
+  loud; the code is short, but the ordering is where every bug hides.
+checkpoints:
+  - question: In reverse_chain, what breaks if you write `current.next = prev` before saving `nxt = current.next`?
+    answer: You lose the reference to the rest of the chain, so `current` can no longer advance and the untouched boxes become unreachable.
+    explanation: Overwriting `.next` first destroys the only link to the remaining nodes, so the saved `nxt` must be captured before the flip.
+  - question: What is the purpose of the dummy node when merging two sorted chains?
+    answer: It gives the result a stable starting point so every real node is attached by the same rule, and the true head is simply dummy.next.
+    explanation: Without a dummy you would need a special case to pick the first head; the dummy removes that branch and simplifies the loop.
+  - question: After the merge loop ends because one chain is empty, why can you attach the other chain in a single step?
+    answer: The remaining chain is already sorted and all of its values are greater than or equal to everything placed so far, so it can be linked on whole.
+    explanation: Each input was sorted, and the loop only stops when one side is exhausted, leaving the other side as a valid sorted tail.

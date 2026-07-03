@@ -1,0 +1,96 @@
+id: lesson.library.attention_mechanics.a02
+kind: lesson
+version: 1
+language: python
+title: 'Scaling and Masking: The Two Corrections'
+slug: lesson-attention-mechanics-a02
+difficulty: hard
+concepts:
+  - ai.attention_transformers
+prerequisites:
+  - ai.attention_transformers
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.attention_mechanics.a02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original walkthrough of sqrt(d_k) scaling and causal masking with fresh numeric demonstrations.
+body_markdown: |
+  Raw attention — dot products into softmax into a blend — has two flaws
+  that every production transformer corrects. Both corrections are small;
+  both have precise reasons; and interviews about transformers love both.
+
+  ### Correction 1: divide by sqrt(d_k)
+
+  Dot products grow with vector dimension. Two random vectors whose
+  components each average magnitude ~1 produce a dot product whose typical
+  size is about sqrt(d_k) — for d_k = 4, scores like ±2; for d_k = 512,
+  scores like ±23. Now recall softmax's exponential sharpening: at scores
+  [23, -20], the weights are ~[1.0, 0.0000...] — winner-takes-all.
+
+  Why is that bad? Two reasons feeding each other. Statistically, a nearly
+  one-hot attention pattern at *initialization* means the model has
+  committed to lookups before learning anything. And from your autodiff
+  area: softmax at extreme inputs is **saturated** — its local derivatives
+  are nearly zero, so almost no gradient flows back through it, and the
+  attention weights barely train. Same disease as saturated tanh, new
+  location.
+
+  The cure divides all scores by sqrt(d_k), canceling the dimensional
+  growth and keeping scores in softmax's responsive range regardless of
+  vector size:
+
+  ```python
+  scaled = [s / math.sqrt(dim_k) for s in scores]
+  ```
+
+  That is the entire difference between "dot-product attention" and the
+  **scaled** dot-product attention in the transformer paper's title.
+
+  ### Correction 2: the causal mask
+
+  A language model trains by predicting token t+1 from tokens 1..t — with
+  the full sequence sitting in memory at once. Unrestricted attention would
+  let position t attend to position t+5: *reading the answer sheet*. The
+  model would ace training and collapse at generation time, when future
+  tokens genuinely don't exist.
+
+  The **causal mask** forbids it mechanically. In the square matrix of
+  scores (row = querying position, column = attended-to position), every
+  entry above the diagonal — every "query attends to its future" cell — is
+  overwritten with negative infinity *before* softmax:
+
+  ```text
+  row 0:  s00  -inf -inf      exp(-inf) = 0, so after softmax each row's
+  row 1:  s10  s11  -inf      weights over future positions are exactly 0,
+  row 2:  s20  s21  s22       and the rest renormalize over the past.
+  ```
+
+  Why -inf *before* softmax rather than zeroing weights after? Because
+  softmax renormalizes: exp(-inf) = 0 contributes nothing to the
+  denominator, so each row remains a clean distribution over exactly the
+  allowed positions. Zeroing afterwards leaves weights that no longer sum
+  to one. (In your exercises, masked positions use a null sentinel and the
+  softmax-over-prefix function makes the renormalization explicit.)
+
+  Row i of the masked matrix is a distribution over positions 0..i — the
+  first row can only attend to itself, the last row to everything. That
+  triangle shape is why decoder models are called "causal": information
+  flows only from past to future, matching the arrow of generation.
+
+  Both corrections composed give the transformer's core equation —
+  softmax(QK^T / sqrt(d_k)) · V, with the mask applied inside — and after
+  these exercises every symbol in it is something you have implemented.
+checkpoints:
+  - question: Trace the causal chain from large d_k to poor training, naming the phenomenon it shares with tanh.
+    answer: Dot products grow ~sqrt(d_k), so large dimensions produce extreme scores; softmax at extreme inputs saturates — near one-hot weights with near-zero local derivatives — so gradients stop flowing through attention and it barely learns. Dividing by sqrt(d_k) keeps scores in the responsive range.
+    explanation: Saturation starving gradients is the recurring disease of deep learning; scaling is attention's inoculation against it.
+  - question: Why must masked positions be set to negative infinity BEFORE softmax rather than having their weights zeroed after?
+    answer: 'Softmax renormalizes over its inputs: exp(-inf)=0 removes forbidden positions from the denominator, so each row remains a valid distribution over allowed positions; zeroing after softmax leaves the surviving weights summing to less than one.'
+    explanation: The mask must participate in normalization, not merely censor its output — a distinction that shows up directly in your masked-softmax exercise.
+  - question: What would a causal language model trained WITHOUT the mask do at training versus generation time?
+    answer: 'Training loss would look excellent — each position could copy information from the future tokens it is supposed to predict — but at generation time no future exists, and the model, having learned to rely on it, produces garbage.'
+    explanation: 'The mask aligns training conditions with generation conditions; removing it is the sequence-model version of leaking test labels into training features.'

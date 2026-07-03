@@ -1,0 +1,97 @@
+id: lesson.library.logging_diagnostics.a01
+kind: lesson
+version: 1
+language: python
+title: 'Why logging Beats print'
+slug: lesson-logging-diagnostics-a01
+difficulty: medium
+concepts:
+  - python.logging_diagnostics
+prerequisites:
+  - python.functions
+  - python.string_formatting
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.logging_diagnostics.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original logging-fundamentals walkthrough framed around a greenhouse control system, with fresh worked level reasoning.
+body_markdown: |
+  `print` has one volume knob: on. A greenhouse controller peppered with
+  `print` statements is either silent or drowning, says nothing about
+  *when* or *how severe*, and writes only to stdout. The `logging` module
+  replaces the knob with a mixing board — and the first idea is
+  **severity levels**.
+
+  ```python
+  import logging
+  log = logging.getLogger("greenhouse")
+
+  log.debug("sensor poll: temp=24.1 humidity=61")   # developer detail
+  log.info("vent opened")                            # normal milestone
+  log.warning("humidity above target")               # attention, still working
+  log.error("sensor 3 unreachable")                  # a function failed
+  log.critical("coolant loss — shutting down")       # the system is in danger
+  ```
+
+  Five levels, ordered by numeric severity (DEBUG 10 → CRITICAL 50). The
+  power is the **threshold**: set the logger to WARNING and DEBUG/INFO
+  vanish with zero code changes — the same statements, filtered at the
+  dial. Development runs at DEBUG (tell me everything); production at
+  INFO or WARNING (tell me what matters). One instrumentation, many
+  volumes — the thing print can never do.
+
+  ### Choosing a level is a real decision
+
+  The levels are a *contract* with whoever reads the logs at 3 a.m.:
+
+  - DEBUG: reconstruct-what-happened detail, off in production.
+  - INFO: the milestones a healthy system passes ("started", "processed
+    412 records").
+  - WARNING: something odd but handled — a retry, a fallback, a
+    deprecated path. The most *misused* level: not every surprise is a
+    warning, and a log full of warnings trains readers to ignore them.
+  - ERROR: an operation failed; a human may need to act.
+  - CRITICAL: the program cannot continue.
+
+  Miscalibration has a cost in both directions: everything-at-ERROR
+  cries wolf; everything-at-INFO buries the signal. Your exercises
+  classify events to levels precisely because it is judgment, not
+  lookup.
+
+  ### The two habits that separate logging from decorated printing
+
+  **Lazy formatting.** Pass the template and arguments *separately*:
+
+  ```python
+  log.debug("polled %s sensors in %d ms", count, elapsed)   # yes
+  log.debug(f"polled {count} sensors in {elapsed} ms")      # no
+  ```
+
+  The f-string builds its string *always* — even when DEBUG is disabled
+  and the message is discarded. The `%s`/`args` form only formats if the
+  level is enabled, so expensive debug logging costs nothing in
+  production. This is a genuine performance idiom, not a style
+  preference.
+
+  **Never log secrets.** Logs get shipped, indexed, and read by many;
+  passwords, tokens, and personal data logged "just for debugging"
+  become breaches. The trust-boundary thinking from the security area
+  applies to log output as much as to program input.
+
+  Level thresholds, calibrated severity, lazy formatting, secret
+  hygiene — the next lesson shows how the logger *hierarchy* routes all
+  this without wiring every module by hand.
+checkpoints:
+  - question: What can severity levels plus a threshold do that print statements fundamentally cannot?
+    answer: 'Change verbosity without changing code — DEBUG detail in development, INFO/WARNING in production, same statements filtered at a dial; print is always-on and level-blind, so tuning it means editing or deleting lines.'
+    explanation: 'The threshold is the whole point: instrument once at honest levels, then choose how much to hear per environment.'
+  - question: Why is log.debug("%s rows", n) preferable to log.debug(f"{n} rows") beyond style?
+    answer: 'The lazy form only formats the message if DEBUG is enabled; the f-string builds the string unconditionally, so disabled debug logging still pays the formatting cost — real overhead in hot paths.'
+    explanation: 'Deferred formatting makes verbose debug instrumentation free in production, which is what lets you leave it in the code.'
+  - question: Why is WARNING described as the most misused level, and what is the cost of overusing it?
+    answer: 'Developers log every surprise as a warning, but a warning should mean "odd but handled"; a log full of warnings trains readers to ignore the level, so a real warning is missed — the cry-wolf failure.'
+    explanation: 'Levels are a contract with the on-call reader; miscalibration in either direction destroys the signal the logs exist to carry.'

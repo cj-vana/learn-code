@@ -1,0 +1,103 @@
+id: quiz.library.embeddings_similarity_search.a01
+kind: quiz
+version: 1
+language: python
+title: Similarity Judgment Calls
+slug: quiz-embeddings-similarity-search-a01
+difficulty: medium
+concepts:
+  - ai.embeddings_retrieval
+prerequisites:
+  - ai.embeddings_retrieval
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.embeddings_similarity_search.a01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pattern-recognition quiz on choosing similarity measures, retrieval methods, and pipeline structure.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      Two documents about tide tables: a 3-page summary and a 300-page
+      almanac. Their term-count vectors point the same direction but differ
+      100x in magnitude. Which measure calls them similar, and why?
+    choices:
+      - Cosine similarity — it divides out magnitude and compares direction, which encodes topic
+      - Euclidean distance — it is scale-invariant by construction
+      - The raw dot product — bigger products mean more similarity
+      - Manhattan distance — it sums the differences fairly
+    correct_choice: Cosine similarity — it divides out magnitude and compares direction, which encodes topic
+    explanation: |
+      Same direction = same topic mix; cosine ≈ 1 regardless of length, while
+      Euclidean distance and dot products are dominated by the almanac's
+      sheer size.
+    concepts:
+      - ai.embeddings_retrieval
+  - id: q2
+    prompt: |
+      A search for error code "E-4402" must find exactly that string, and a
+      search for "ways to fix a flooded engine" should find "resolving
+      water-ingress stalls". What does production retrieval do?
+    choices:
+      - Run keyword scoring (BM25) and embedding similarity together and merge the rankings — their blind spots are complementary
+      - Use only embeddings — they subsume keyword search
+      - Use only BM25 — semantic search is unreliable
+      - Lowercase everything and use edit distance
+    correct_choice: Run keyword scoring (BM25) and embedding similarity together and merge the rankings — their blind spots are complementary
+    explanation: |
+      BM25 nails rare exact tokens but misses synonyms; embeddings match
+      meaning but blur precise identifiers. Hybrid retrieval exists because
+      each fails where the other succeeds.
+    concepts:
+      - ai.embeddings_retrieval
+  - id: q3
+    prompt: |
+      In TF-IDF over 1,000 reports, the word "harbor" appears in all 1,000.
+      What is its idf and its effect on rankings?
+    choices:
+      - log(1000/1000) = 0 — the term is multiplied away and contributes nothing
+      - log(1000) ≈ 6.9 — ubiquitous terms get the highest weight
+      - Undefined — division by zero
+      - '1.0 — idf is capped below by one'
+    correct_choice: log(1000/1000) = 0 — the term is multiplied away and contributes nothing
+    explanation: |
+      A term in every document distinguishes none of them; idf's log(N/df)
+      hits exactly zero, which is the designed behavior, not an edge case.
+    concepts:
+      - ai.embeddings_retrieval
+  - id: q4
+    prompt: |
+      Chunking a manual with size 200 and overlap 0 loses answers that
+      straddle chunk boundaries. What is the standard fix and its cost?
+    choices:
+      - Overlapping windows (e.g. overlap 50) — boundary content lives in two chunks, at the cost of duplicated storage
+      - Larger chunks — one vector per manual
+      - Smaller chunks — single-sentence precision
+      - Sorting chunks alphabetically before embedding
+    correct_choice: Overlapping windows (e.g. overlap 50) — boundary content lives in two chunks, at the cost of duplicated storage
+    explanation: |
+      Overlap spends redundancy on boundary integrity; the inflation factor is
+      roughly size/(size-overlap), a tunable space-for-recall trade.
+    concepts:
+      - ai.embeddings_retrieval
+  - id: q5
+    prompt: |
+      A retrieval system scores every chunk against every query (exhaustive
+      scan). At what point do HNSW-style approximate indexes become relevant,
+      and what do they trade?
+    choices:
+      - At large scale (millions of chunks) — they trade a little recall for large speedups over the exact O(n) scan
+      - Immediately — exact scans are incorrect
+      - Never — approximate indexes are for images only
+      - Only when using BM25 instead of embeddings
+    correct_choice: At large scale (millions of chunks) — they trade a little recall for large speedups over the exact O(n) scan
+    explanation: |
+      The exhaustive scan is exact and remains the correctness baseline;
+      approximate nearest-neighbour structures accept missing some true
+      neighbours to answer in sublinear time.
+    concepts:
+      - ai.embeddings_retrieval

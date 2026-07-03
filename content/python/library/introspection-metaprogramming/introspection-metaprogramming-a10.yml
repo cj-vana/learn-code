@@ -1,0 +1,157 @@
+id: exercise.library.introspection_metaprogramming.a10
+kind: exercise
+version: 1
+language: python
+title: The Shared Blank Tally Sheet
+slug: introspection-metaprogramming-a10
+difficulty: medium
+concepts:
+  - python.introspection
+  - python.functions
+prerequisites:
+  - python.lists
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.introspection_metaprogramming.a10
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: >-
+    Original dockside-tally framing of the classic mutable-default-argument
+    gotcha. The recording routine deliberately returns only a count, so the only
+    way to observe the accumulated default is to introspect func.__defaults__.
+prompt_markdown: |
+  A dockside clerk uses a tally routine that has a notorious flaw: its "blank"
+  sheet is a mutable default argument, so it is created **once** and quietly
+  shared across every call that does not pass its own sheet.
+
+  A factory `build_tally()` is defined for you. It returns a fresh `add(item,
+  sheet=[])` routine whose default `sheet` starts empty. Crucially, `add` returns
+  only the running *count* of items on the sheet, never the sheet itself — so the
+  only way to see what has accumulated on the shared sheet is to introspect the
+  routine's `__defaults__`.
+
+  Write `shared_default_snapshot(request)`. The `request` is a single dictionary
+  with two keys, for example:
+
+  ```python
+  {"entries": ["crate", "barrel"], "detour": ["rope"]}
+  ```
+
+  Do exactly this:
+
+  1. Build one fresh tally routine with `build_tally()`.
+  2. For each value in `request["entries"]`, call the routine passing only the
+     item, so it lands on the shared default sheet.
+  3. For each value in `request["detour"]`, call the routine passing the item
+     **and a brand-new empty list** as the `sheet`, so it goes onto a separate
+     sheet and never touches the shared default.
+  4. Return the shared default sheet itself — read it via the routine's
+     `__defaults__` (the first entry) and return it as a plain list, preserving
+     insertion order.
+
+  Because the detour calls supply their own sheet, only the `entries` values end
+  up on the shared default. Empty `entries` and `detour` lists are valid and yield
+  an empty result. Both keys are always present in `request`.
+starter_code: |
+  def build_tally():
+      def add(item, sheet=[]):
+          sheet.append(item)
+          return len(sheet)
+      return add
+
+
+  def shared_default_snapshot(request):
+      return []
+function_name: shared_default_snapshot
+input_mode: function
+solution_sketch: >-
+  Build one tally routine, call it with only the item for each entry (using the
+  shared default) and with an explicit fresh list for each detour item, then read
+  the shared default out of add.__defaults__[0] and return a copy as a list.
+sample_solution: |
+  def build_tally():
+      def add(item, sheet=[]):
+          sheet.append(item)
+          return len(sheet)
+      return add
+
+
+  def shared_default_snapshot(request):
+      add = build_tally()
+      for item in request["entries"]:
+          add(item)
+      for item in request["detour"]:
+          add(item, [])
+      return list(add.__defaults__[0])
+hints:
+  - level: 1
+    text: >-
+      A function's default arguments are stored on the object as a tuple in
+      func.__defaults__; the mutable default list is __defaults__[0].
+  - level: 2
+    text: >-
+      Calling add(item) uses and mutates the one shared default; calling
+      add(item, []) passes a separate list, so those items never reach the
+      default.
+  - level: 3
+    text: >-
+      After the two loops, return list(add.__defaults__[0]) so you hand back a
+      copy of the accumulated shared sheet in insertion order.
+tests:
+  public:
+    - name: entries_only
+      input:
+        entries: [crate, barrel]
+        detour: []
+      expected: [crate, barrel]
+    - name: some_detoured
+      input:
+        entries: [net]
+        detour: [rope, hook]
+      expected: [net]
+    - name: all_detoured
+      input:
+        entries: []
+        detour: [spare, extra]
+      expected: []
+  validation:
+    - name: empty_request
+      input:
+        entries: []
+        detour: []
+      expected: []
+    - name: order_preserved
+      input:
+        entries: [alpha, bravo, charlie]
+        detour: [zulu]
+      expected: [alpha, bravo, charlie]
+    - name: one_kept_many_detoured
+      input:
+        entries: [kept]
+        detour: [skip1, skip2, skip3]
+      expected: [kept]
+    - name: duplicates_kept
+      input:
+        entries: [tick, tick, tock]
+        detour: []
+      expected: [tick, tick, tock]
+explanation_markdown: |
+  A default argument is evaluated once, when the `def` runs, and then stored on
+  the function object in `__defaults__`. Because `build_tally` re-executes its
+  inner `def add(...)` on every call, each tally you build gets its own fresh
+  `[]`. But within a single tally, every call that omits `sheet` reuses and
+  mutates that same list — the classic mutable-default trap.
+
+  Here the routine hides its state by returning only a count, so you cannot
+  reconstruct the sheet from return values. Introspection is the way in:
+  `add.__defaults__[0]` *is* the shared list, holding exactly the `entries` you
+  routed through the default. The `detour` items passed their own list, so they
+  never appear. Returning a copy avoids handing back a reference someone could
+  keep mutating.
+common_mistakes:
+  - Passing an explicit sheet on the entry calls too, so nothing ever lands on the shared default and the result is always empty.
+  - Trying to rebuild the sheet from add's return values, which are only counts, instead of reading __defaults__.
+  - Returning add.__defaults__ (a tuple) rather than the list at index 0, or returning the live list without copying it.

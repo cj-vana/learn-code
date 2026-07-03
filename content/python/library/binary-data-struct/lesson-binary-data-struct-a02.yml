@@ -1,0 +1,95 @@
+id: lesson.library.binary_data_struct.a02
+kind: lesson
+version: 1
+language: python
+title: 'struct: Fixed-Width Records and the Endianness Question'
+slug: lesson-binary-data-struct-a02
+difficulty: medium
+concepts:
+  - python.binary_data
+prerequisites:
+  - python.binary_data
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.binary_data_struct.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original struct walkthrough framed around a weather buoy's telemetry frame, with fresh worked pack/unpack examples.
+body_markdown: |
+  Binary protocols and file headers describe themselves in sentences like
+  "2-byte station id, 4-byte little-endian timestamp, 2-byte signed
+  temperature in tenths of a degree". The `struct` module is Python's
+  translator for exactly those sentences.
+
+  ### Format strings: the record's schema
+
+  A weather buoy's 8-byte telemetry frame, in struct's little language:
+
+  ```python
+  import struct
+
+  FMT = "<HIh"        # < little-endian | H u16 | I u32 | h s16
+  frame = struct.pack(FMT, 714, 1719849600, -23)
+  station, ts, temp = struct.unpack(FMT, frame)
+  ```
+
+  The letters you will actually meet: `B`/`b` (unsigned/signed byte),
+  `H`/`h` (16-bit), `I`/`i` (32-bit), `Q`/`q` (64-bit), `f`/`d`
+  (float/double), `4s` (4 raw bytes), `x` (pad byte). A count prefix
+  repeats: `"3H"` is three u16s. `struct.calcsize(FMT)` tells you the
+  record's exact width — the number that lets you slice a byte stream
+  into records without parsing them.
+
+  Two contracts make struct honest work: `pack` *validates* — an
+  out-of-range value (65536 into `H`) raises instead of truncating — and
+  `unpack` demands an exactly-sized buffer. Both errors are gifts;
+  binary bugs that fail loudly are the rare kind.
+
+  ### Endianness: which end of the number comes first
+
+  A multi-byte number must choose its byte order. 0x01020304 stored
+  **big-endian** reads `01 02 03 04` (most significant first — how
+  humans write numbers, and how network protocols ship them); stored
+  **little-endian** it reads `04 03 02 01` (least significant first —
+  how x86 and most ARM systems store them).
+
+  The first character of the format string pins it: `<` little, `>` big
+  (`!` is an alias for big, meaning "network order"). **Always write
+  one.** Bare formats use your machine's *native* order and alignment —
+  padding fields to hardware boundaries, changing sizes — so the same
+  code parses differently on different machines: the classic
+  works-on-my-laptop binary bug. Your endianness exercise makes the
+  corruption visible: unpack little-endian data as big-endian and watch
+  714 become 51458 — same bytes, opposite reading. That number-shuffle
+  is what an endianness bug *looks like* from the outside: values that
+  are wrong but weirdly structured.
+
+  ### Records in streams
+
+  Fixed width is the point: record N lives at byte N × width, seekable
+  and sliceable with arithmetic alone.
+
+  ```python
+  width = struct.calcsize(FMT)
+  records = [struct.unpack(FMT, blob[i:i+width])
+             for i in range(0, len(blob), width)]
+  ```
+
+  (`struct.iter_unpack(FMT, blob)` does the same lazily.) This
+  slice-into-frames loop is the skeleton of every binary log reader,
+  sprite-sheet parser, and packet dissector — one format string, one
+  width, arithmetic. The exercises build it, plus a mock protocol header
+  with magic bytes and a checksum, which is a real parser in miniature.
+checkpoints:
+  - question: Why must a struct format string start with an explicit < or > (or !), and what goes wrong without one?
+    answer: 'Bare formats use the machine''s NATIVE byte order and alignment — sizes and padding can differ across systems, so the identical code parses the same bytes differently on different hardware; an explicit marker fixes the layout everywhere.'
+    explanation: Binary layouts are contracts between machines; native mode silently substitutes "whatever this machine does" for the contract.
+  - question: The bytes 0x02 0xCA unpacked as "<H" give 51714, but as ">H" give 714... backwards. What is the general symptom of an endianness bug?
+    answer: 'Values that are consistently wrong yet structured — small numbers become specific large ones and vice versa, because the same bytes are being read in reverse significance order.'
+    explanation: 'Recognizing byte-swapped values on sight (and checking both orders) is the practical diagnostic skill endianness knowledge buys.'
+  - question: What makes fixed-width records navigable without parsing, and which struct function provides the key number?
+    answer: 'Every record has the same byte width, so record N starts at N times the width — pure arithmetic; struct.calcsize(fmt) computes that width from the format string.'
+    explanation: 'Fixed width trades flexibility for O(1) random access — the reason binary logs and headers favor it over delimited text.'

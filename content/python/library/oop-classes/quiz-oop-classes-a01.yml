@@ -1,0 +1,107 @@
+id: quiz.library.oop_classes.a01
+kind: quiz
+version: 1
+language: python
+title: Choosing the Right Object-Oriented Tool
+slug: quiz-oop-classes-a01
+difficulty: medium
+concepts:
+  - python.classes
+  - python.dataclasses_dunder
+prerequisites:
+  - python.classes
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.oop_classes.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pattern-recognition questions matching design situations to class attributes, class methods, composition, and dataclasses.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      A ticketing system must give every ticket the next number from one running
+      counter shared across all tickets, while each ticket also stores its own
+      buyer name. Where should the shared counter live?
+    choices:
+      - As a class attribute defined in the class body, shared by all instances.
+      - As an instance attribute set on self in __init__.
+      - As a local variable inside a method.
+      - As a separate copy stored on every ticket instance.
+    correct_choice: As a class attribute defined in the class body, shared by all instances.
+    explanation: |
+      A single counter shared by every instance is exactly what a class attribute
+      is for. The buyer name differs per ticket, so it stays an instance attribute
+      set through self.
+    concepts:
+      - python.classes
+  - id: q2
+    prompt: |
+      You often build objects from raw strings like "R12|premium" that need parsing
+      before the real constructor runs. What is the cleanest way to offer this
+      alternative way of building an instance?
+    choices:
+      - A class method (cls) that parses the string and returns cls(...).
+      - Putting the parsing logic directly inside __init__.
+      - A module-level function that reaches into the instance's fields afterward.
+      - An instance method called before the object exists.
+    correct_choice: A class method (cls) that parses the string and returns cls(...).
+    explanation: |
+      A class method acts as an alternative constructor: it receives the class as
+      cls, does the parsing, and delegates to the normal __init__ via cls(...),
+      keeping __init__ focused on already-clean values.
+    concepts:
+      - python.classes
+  - id: q3
+    prompt: |
+      An Order needs to hold many LineItem objects and ask each for its own subtotal,
+      but a LineItem is in no sense a kind of Order. Which relationship fits?
+    choices:
+      - Composition -- Order holds a list of LineItem objects and delegates to them.
+      - Inheritance -- LineItem should subclass Order.
+      - Inheritance -- Order should subclass LineItem.
+      - Neither; both must be merged into one large class.
+    correct_choice: Composition -- Order holds a list of LineItem objects and delegates to them.
+    explanation: |
+      This is a has-a relationship, not an is-a one, so composition is the right
+      fit. Inheritance would only make sense if a LineItem truly were a specialised
+      kind of Order, which it is not.
+    concepts:
+      - python.classes
+  - id: q4
+    prompt: |
+      A function needs to return a small bundle of three related values that should
+      print readably and compare equal when their fields match, with no custom
+      behaviour. What is the lowest-ceremony choice?
+    choices:
+      - A @dataclass with the three fields annotated.
+      - A plain class with hand-written __init__, __repr__, and __eq__.
+      - A bare class with no methods at all.
+      - A subclass of an existing unrelated base class.
+    correct_choice: A @dataclass with the three fields annotated.
+    explanation: |
+      A dataclass generates __init__, __repr__, and __eq__ from the annotated
+      fields, giving a well-behaved value object with almost no boilerplate. Hand
+      writing the dunders works but is needless ceremony when there is no custom
+      logic.
+    concepts:
+      - python.dataclasses_dunder
+  - id: q5
+    prompt: |
+      Several shape types each compute area differently, and you want a loop to total
+      areas without checking each object's type. Which design enables that?
+    choices:
+      - A base class with an area method that each subclass overrides, called polymorphically.
+      - A single function with a long if/elif chain on a "kind" string.
+      - Storing the area as a class attribute shared by every shape.
+      - Giving each shape a differently named method so callers pick one explicitly.
+    correct_choice: A base class with an area method that each subclass overrides, called polymorphically.
+    explanation: |
+      When every subclass overrides the same-named method, a loop can call area()
+      and let Python dispatch to each object's own version -- polymorphism removes
+      the need for type checks and keeps the loop open to new shapes.
+    concepts:
+      - python.classes

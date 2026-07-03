@@ -1,0 +1,136 @@
+id: exercise.library.dp_recognition.b02
+kind: exercise
+version: 1
+language: python
+title: Joining Hands Across Two Lines
+slug: dp-recognition-b02
+difficulty: hard
+concepts:
+  - patterns.dynamic_programming
+prerequisites:
+  - python.lists
+  - python.loops
+estimated_time_minutes: 24
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dp_recognition.b02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original folk-dance framing of maximum non-crossing bipartite matching between two ordered ranks, solved with an LCS-style 2D table.
+prompt_markdown: |
+  A folk-dance caller lines up two ranks of dancers facing each other. The left
+  rank stands in a fixed order (positions `0, 1, 2, ...` from one end), and so does
+  the right rank. A dancer may join hands with a partner across the gap, but only
+  with someone they are *compatible* with, and every dancer joins at most one pair
+  of hands.
+
+  There is one more rule: joined arms must not cross. If left dancer `i` joins right
+  dancer `j`, and left dancer `k` (standing further along, so `k > i`) joins right
+  dancer `l`, then `l` must also stand further along than `j` (`l > j`). Otherwise
+  the two arms would cross.
+
+  Write `bridge_pairings(job)` where `job` is a dict with three keys:
+
+  - `left_count`: the number of dancers in the left rank (a non-negative integer)
+  - `right_count`: the number of dancers in the right rank (a non-negative integer)
+  - `allowed`: a list of length `left_count`. Entry `allowed[i]` is a list of the
+    right-rank positions (0-based integers) that left dancer `i` may join. The
+    positions in a single entry may appear in any order and may be empty.
+
+  Return a single integer: the maximum number of non-crossing pairs of joined hands.
+  With `left_count` up to 40 and `right_count` up to 40, a clean table fits easily.
+
+  Edges: if either rank is empty, or every `allowed` entry is empty, no hands can
+  join and the answer is `0`.
+
+  Example: with `left_count = 3`, `right_count = 3`, and
+  `allowed = [[1, 2], [0], [2]]`, the best you can do is `2` pairs (for instance
+  left 0 with right 1 and left 2 with right 2); joining left 1 with right 0 would
+  force an arm to cross.
+starter_code: |
+  def bridge_pairings(job):
+      return 0
+function_name: bridge_pairings
+input_mode: function
+solution_sketch: This is a maximum non-crossing bipartite matching, which is longest-common-subsequence in disguise. Fill a table dp[i][j] over prefixes of each rank; a compatible pair of the current two dancers extends the diagonal by one, otherwise carry the better of dropping one dancer from either side.
+sample_solution: |
+  def bridge_pairings(job):
+      n = job["left_count"]
+      m = job["right_count"]
+      allowed = job["allowed"]
+      compatible = [set(row) for row in allowed]
+      dp = [[0] * (m + 1) for _ in range(n + 1)]
+      for i in range(1, n + 1):
+          for j in range(1, m + 1):
+              best = dp[i - 1][j]
+              if dp[i][j - 1] > best:
+                  best = dp[i][j - 1]
+              if (j - 1) in compatible[i - 1]:
+                  paired = dp[i - 1][j - 1] + 1
+                  if paired > best:
+                      best = paired
+              dp[i][j] = best
+      return dp[n][m]
+hints:
+  - level: 1
+    text: Because both ranks keep a fixed order and arms may not cross, a valid set of pairs matches earlier-left dancers to earlier-right dancers. That order-preserving structure is exactly what longest-common-subsequence exploits.
+  - level: 2
+    text: Let dp[i][j] be the best number of non-crossing pairs using only the first i left dancers and the first j right dancers. Grow the table from small prefixes upward.
+  - level: 3
+    text: For dp[i][j], you may skip left dancer i-1 (take dp[i-1][j]), skip right dancer j-1 (take dp[i][j-1]), or, if right j-1 is in allowed[i-1], pair them for dp[i-1][j-1] + 1. Take the largest. The answer is dp[left_count][right_count].
+tests:
+  public:
+    - name: identity_full
+      input: {left_count: 3, right_count: 3, allowed: [[0], [1], [2]]}
+      expected: 3
+    - name: crossing_limits
+      input: {left_count: 3, right_count: 3, allowed: [[1, 2], [0], [2]]}
+      expected: 2
+    - name: no_left
+      input: {left_count: 0, right_count: 3, allowed: []}
+      expected: 0
+  validation:
+    - name: larger_left
+      input: {left_count: 3, right_count: 2, allowed: [[0, 1], [0, 1], [0, 1]]}
+      expected: 2
+    - name: all_want_same
+      input: {left_count: 3, right_count: 3, allowed: [[2], [2], [0, 1]]}
+      expected: 1
+    - name: identity_four
+      input: {left_count: 4, right_count: 4, allowed: [[0, 3], [1], [2], [3]]}
+      expected: 4
+    - name: empty_compat
+      input: {left_count: 3, right_count: 3, allowed: [[], [], []]}
+      expected: 0
+    - name: one_each_offset
+      input: {left_count: 2, right_count: 2, allowed: [[1], [0]]}
+      expected: 1
+explanation_markdown: |
+  The non-crossing rule is the whole puzzle. Since both ranks are in fixed order,
+  "no crossings" means the pairs you pick must respect that order on *both* sides:
+  if you sort the chosen pairs by their left position, the right positions must also
+  be increasing. That is precisely the shape of a longest common subsequence, so the
+  same 2D tabulation solves it.
+
+  Define `dp[i][j]` as the maximum number of non-crossing pairs you can form using
+  only the first `i` left dancers and the first `j` right dancers. To fill an entry
+  you consider the two "boundary" dancers, left `i-1` and right `j-1`:
+
+  - Ignore left `i-1`: inherit `dp[i-1][j]`.
+  - Ignore right `j-1`: inherit `dp[i][j-1]`.
+  - If they are compatible, join them and add one to the best solution for the
+    smaller prefixes that exclude both, `dp[i-1][j-1] + 1`.
+
+  Take the maximum. Because pairing only ever uses the two current boundary dancers
+  and then recurses into strictly smaller prefixes, the matched pairs are
+  automatically ordered on both sides, so no arm can cross. Row 0 and column 0 stay
+  `0` (an empty rank pairs with nobody), which also covers the empty-rank edges. The
+  table is O(left_count * right_count) in both time and space. Converting each
+  compatibility list to a `set` keeps the membership test O(1).
+common_mistakes:
+  - Treating it as ordinary bipartite matching and pairing any compatible dancers, which can produce crossing arms the rules forbid.
+  - Only checking the diagonal (the compatible case) and forgetting the two skip options, so unpaired dancers are not carried forward correctly.
+  - Adding one in the skip branch instead of only when the two boundary dancers are actually compatible, inflating the count.
+  - Indexing allowed with i or j instead of i-1 and j-1, an off-by-one against the padded row and column of zeros.

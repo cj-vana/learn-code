@@ -1,0 +1,93 @@
+id: exercise.library.dp_recognition.a04
+kind: exercise
+version: 1
+language: python
+title: Count Warehouse Robot Grid Paths
+slug: dp-recognition-a04
+difficulty: medium
+concepts:
+  - patterns.dynamic_programming
+prerequisites:
+  - python.dictionaries
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dp_recognition.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original warehouse-robot framing of counting monotone lattice paths across a grid using a dynamic-programming table.
+prompt_markdown: |
+  A stocking robot starts in the top-left cell of a rectangular warehouse floor and
+  must reach the storage bay in the bottom-right cell. On every move it may only roll
+  one cell to the **right** or one cell **down** -- never up, left, or diagonally.
+
+  Write `count_grid_paths(data)` where `data` is a dict with two keys, `rows` and
+  `cols`, each an integer that is at least 1 describing the grid's dimensions. Return
+  the number of distinct paths the robot can take from the top-left cell to the
+  bottom-right cell.
+
+  For example, `{"rows": 3, "cols": 3}` returns `6`, and a single-row floor like
+  `{"rows": 1, "cols": 5}` returns `1` because the robot can only roll straight right.
+starter_code: |
+  def count_grid_paths(data):
+      return 0
+function_name: count_grid_paths
+input_mode: function
+solution_sketch: Fill a rows-by-cols DP table where each cell is the sum of the paths into the cell above and the cell to its left.
+sample_solution: |
+  def count_grid_paths(data):
+      rows = data["rows"]
+      cols = data["cols"]
+      dp = [[1] * cols for _ in range(rows)]
+      for r in range(1, rows):
+          for c in range(1, cols):
+              dp[r][c] = dp[r - 1][c] + dp[r][c - 1]
+      return dp[rows - 1][cols - 1]
+hints:
+  - level: 1
+    text: There is exactly one way to reach any cell in the first row or the first column, since the robot has no choice but to go straight.
+  - level: 2
+    text: The robot reaches an interior cell either from directly above or from directly to the left, so combine those two counts.
+  - level: 3
+    text: Build a table where dp[r][c] = dp[r-1][c] + dp[r][c-1], seed the edges with 1, and return the bottom-right entry.
+tests:
+  public:
+    - name: three_by_three
+      input: {rows: 3, cols: 3}
+      expected: 6
+    - name: single_row
+      input: {rows: 1, cols: 5}
+      expected: 1
+    - name: single_cell
+      input: {rows: 1, cols: 1}
+      expected: 1
+  validation:
+    - name: single_column
+      input: {rows: 5, cols: 1}
+      expected: 1
+    - name: two_by_two
+      input: {rows: 2, cols: 2}
+      expected: 2
+    - name: rectangle
+      input: {rows: 3, cols: 7}
+      expected: 28
+    - name: square_four
+      input: {rows: 4, cols: 4}
+      expected: 20
+explanation_markdown: |
+  The number of paths into a cell depends only on the cells the robot could have
+  come from: the one directly above and the one directly to the left. That overlap
+  of subproblems is the signal to use dynamic programming.
+
+  Every cell in the first row or first column has exactly one path, because the robot
+  can only travel straight along an edge. Seed those with `1`. For each interior cell
+  `(r, c)`, the paths arriving there are the paths that reached `(r-1, c)` plus the
+  paths that reached `(r, c-1)`, so `dp[r][c] = dp[r-1][c] + dp[r][c-1]`. Filling the
+  table row by row guarantees both predecessors are already computed, and the
+  bottom-right entry holds the answer. The work is `O(rows * cols)`.
+common_mistakes:
+  - Forgetting that a single-row or single-column grid still has exactly one path, and returning 0 instead of 1.
+  - Initializing only dp[0][0] to 1 while leaving the rest of the first row and column at 0, which zeroes out the whole table.
+  - Confusing cells with moves and computing paths for a (rows-1) by (cols-1) grid of edges instead of the given cells.

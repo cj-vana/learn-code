@@ -149,6 +149,9 @@ class PathUnit(BaseModel):
     title: str = Field(min_length=1)
     description: str = Field(min_length=1)
     items: list[str] = Field(min_length=1)
+    # Optional milestone label shown when the learner finishes this unit —
+    # long career paths mark section boundaries so progress has waypoints.
+    milestone: str | None = None
 
 
 class PathContent(BaseModel):

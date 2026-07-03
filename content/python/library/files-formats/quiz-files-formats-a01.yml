@@ -1,0 +1,103 @@
+id: quiz.library.files_formats.a01
+kind: quiz
+version: 1
+language: python
+title: Picking the Right Parser
+slug: quiz-files-formats-a01
+difficulty: medium
+concepts:
+  - python.json_csv
+prerequisites:
+  - python.json_csv
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.files_formats.a01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pattern-recognition quiz on choosing between hand-parsing, csv, and json approaches for text-processing tasks.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      An export contains lines like 'C-88,"Rope, braided 12mm",6' — quoted
+      fields that may contain commas. What is the correct way to parse it?
+    choices:
+      - The csv module, which understands quoting and escaping rules
+      - line.split(",") after removing the quote characters
+      - A regular expression matching text between commas
+      - str.partition on each comma in turn
+    correct_choice: The csv module, which understands quoting and escaping rules
+    explanation: |
+      Quoted separators, doubled quotes, and embedded newlines are all legal
+      CSV; every hand-rolled splitter eventually mis-handles one of them. The
+      csv module exists precisely for this.
+    concepts:
+      - python.json_csv
+  - id: q2
+    prompt: |
+      A telemetry feed delivers one JSON object per line, and roughly one line
+      in a thousand is corrupted. What is the professional handling?
+    choices:
+      - Parse per line inside try/except, keep good records, and count the skipped lines
+      - Wrap the whole feed in one try/except and abandon parsing on the first bad line
+      - Pre-filter lines with a regex that detects valid JSON
+      - Fix the corrupted lines with string replacement before parsing
+    correct_choice: Parse per line inside try/except, keep good records, and count the skipped lines
+    explanation: |
+      The unit of failure should match the unit of data: one bad line should
+      cost one record. Counting skips keeps the loss visible instead of silent.
+    concepts:
+      - python.json_csv
+      - python.exceptions
+  - id: q3
+    prompt: |
+      You dump a Python dict whose keys are the integers 1, 2, 3 to JSON and
+      load it back. What are the keys now, and why?
+    choices:
+      - The strings "1", "2", "3" — JSON object keys can only be strings
+      - Still the integers 1, 2, 3 — round-trips are lossless
+      - Floats 1.0, 2.0, 3.0 — JSON has one number type
+      - The load fails — integer keys are invalid JSON
+    correct_choice: The strings "1", "2", "3" — JSON object keys can only be strings
+    explanation: |
+      dumps converts non-string keys to strings, and loads has no record that
+      they were ever ints — a silently lossy round trip unless you convert back
+      explicitly.
+    concepts:
+      - python.json_csv
+  - id: q4
+    prompt: |
+      A config file has lines like "greeting = a = b". You need the key
+      "greeting" and the value "a = b". Which call gets it right?
+    choices:
+      - line.partition("=") — it splits on the first separator only and keeps the rest whole
+      - line.split("=") — it returns every segment
+      - line.rsplit("=") — it splits from the right
+      - line.removeprefix("greeting") — it strips the key directly
+    correct_choice: line.partition("=") — it splits on the first separator only and keeps the rest whole
+    explanation: |
+      partition returns (before, sep, after) splitting exactly once, so a value
+      containing the separator survives; split("=") would shred it into three
+      pieces.
+    concepts:
+      - python.strings
+  - id: q5
+    prompt: |
+      Which output format choice makes two JSON dumps of equal data compare
+      equal as strings — useful for tests and diffs?
+    choices:
+      - json.dumps(data, sort_keys=True)
+      - json.dumps(data, indent=None)
+      - str(data) instead of json.dumps
+      - json.dumps(data, ensure_ascii=False)
+    correct_choice: json.dumps(data, sort_keys=True)
+    explanation: |
+      Sorting keys removes insertion-order variation, making serialization
+      deterministic; indent and ensure_ascii change formatting but not key
+      order.
+    concepts:
+      - python.json_csv
+      - concepts.testing

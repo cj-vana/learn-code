@@ -1,0 +1,143 @@
+id: exercise.library.decorators_closures.a11
+kind: exercise
+version: 1
+language: python
+title: Stamp Each Guest Onto The Log Twice
+slug: decorators-closures-a11
+difficulty: medium
+concepts:
+  - python.closures_decorators
+prerequisites:
+  - python.functions
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.decorators_closures.a11
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original event-lanyard scenario where a parametrized repeat decorator stamps each guest name a fixed number of times.
+prompt_markdown: |
+  At a conference check-in desk, a badge printer stamps every guest's name onto a
+  running lanyard log a fixed number of times before moving to the next guest.
+  You'll build that behavior with a **parametrized decorator** written entirely
+  from scratch.
+
+  Write a decorator factory `repeat(n)`: a function that takes an integer `n` and
+  returns a decorator, which in turn wraps a function so that calling the wrapped
+  function actually invokes the original function `n` times in a row (each call
+  receiving the same single argument).
+
+  Then finish `repeat_apply(data)`, where `data` is a dict with keys:
+
+  - `"times"`: a non-negative int, how many times each item should be stamped.
+  - `"items"`: a list of values to stamp, in order.
+
+  Inside `repeat_apply`, create a shared `log` list and define a small inner
+  function that appends its single argument to `log`. Decorate that inner
+  function with `repeat(times)`, then call the decorated function once per item
+  in `items` (in order). Return the final `log`.
+
+  For `{"times": 2, "items": ["a", "b"]}` the result is `["a", "a", "b", "b"]`.
+  For `{"times": 0, "items": ["x"]}` the decorated function runs zero times per
+  item, so the result is the empty list `[]`.
+
+  You must genuinely use a closure-based `repeat` decorator factory to do the
+  repetition. Do not just loop `times` times in the body of `repeat_apply`.
+starter_code: |
+  def repeat(n):
+      # Return a decorator that calls the wrapped function n times.
+      def decorator(func):
+          def wrapper(arg):
+              return func(arg)
+          return wrapper
+      return decorator
+
+
+  def repeat_apply(data):
+      times = data["times"]
+      items = data["items"]
+      log = []
+      return log
+function_name: repeat_apply
+input_mode: function
+solution_sketch: repeat(n) closes over n and returns a wrapper that calls func n times; the inner stamp function appends to a shared log, and each item triggers n appends.
+sample_solution: |
+  def repeat(n):
+      def decorator(func):
+          def wrapper(arg):
+              result = None
+              for _ in range(n):
+                  result = func(arg)
+              return result
+          return wrapper
+      return decorator
+
+
+  def repeat_apply(data):
+      times = data["times"]
+      items = data["items"]
+      log = []
+
+      @repeat(times)
+      def stamp(name):
+          log.append(name)
+
+      for item in items:
+          stamp(item)
+
+      return log
+hints:
+  - level: 1
+    text: repeat(n) has three nested layers - repeat takes n and returns a decorator, the decorator takes the function, and the innermost wrapper is what runs when you call the decorated function.
+  - level: 2
+    text: The wrapper should loop range(n) times, calling func(arg) on each pass. Because the wrapper closes over n, each decorated call repeats exactly n times.
+  - level: 3
+    text: Define stamp(name) to append name to the shared log, decorate it with @repeat(times), then loop over items calling stamp(item) once each. When times is 0 the wrapper's loop never runs, so nothing is appended.
+tests:
+  public:
+    - name: two_each_two_items
+      input: {"times": 2, "items": ["a", "b"]}
+      expected: ["a", "a", "b", "b"]
+    - name: zero_times
+      input: {"times": 0, "items": ["x"]}
+      expected: []
+    - name: once_each
+      input: {"times": 1, "items": ["p", "q", "r"]}
+      expected: ["p", "q", "r"]
+  validation:
+    - name: empty_items
+      input: {"times": 3, "items": []}
+      expected: []
+    - name: three_each_single_item
+      input: {"times": 3, "items": ["z"]}
+      expected: ["z", "z", "z"]
+    - name: repeats_preserve_order
+      input: {"times": 2, "items": ["first", "second", "third"]}
+      expected: ["first", "first", "second", "second", "third", "third"]
+    - name: numeric_items
+      input: {"times": 2, "items": [7, 8]}
+      expected: [7, 7, 8, 8]
+explanation_markdown: |
+  `repeat(n)` is a decorator factory: it captures `n` in a closure and hands back
+  a real decorator. That decorator wraps the target function in a `wrapper` that
+  loops `range(n)` times, invoking the original function on each pass. Because the
+  wrapper closes over `n`, the repetition count is baked in when the function is
+  decorated.
+
+  Inside `repeat_apply`, `stamp` appends its argument to the shared `log` list,
+  which the closure keeps alive. Decorating `stamp` with `@repeat(times)` means a
+  single `stamp(item)` call actually appends `item` to the log `times` times.
+  Looping over `items` in order therefore produces each value repeated
+  consecutively, preserving the overall order.
+
+  The edge cases fall out naturally: when `times` is 0 the wrapper's loop body
+  never executes, so no appends happen and the log stays empty; when `items` is
+  empty the outer loop never calls `stamp`, giving the same empty result.
+common_mistakes:
+  - Writing a plain loop of length times inside repeat_apply instead of letting the repeat decorator do the repetition.
+  - Forgetting that repeat needs three layers (factory, decorator, wrapper) and trying to make repeat itself the decorator.
+  - Calling range(times) but appending outside the loop, so each item is stamped once regardless of times.
+  - Rebinding log to a new list inside the inner function instead of mutating the shared list with append.

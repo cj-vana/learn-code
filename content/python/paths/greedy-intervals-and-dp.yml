@@ -1,0 +1,69 @@
+id: path.skill.greedy_intervals_dp
+kind: path
+path_type: skill
+version: 1
+language: python
+title: Greedy, Intervals & Dynamic Programming
+slug: greedy-intervals-and-dp
+description: From greedy interval-sweep reasoning to recognizing and solving overlapping-subproblem DP.
+outcomes:
+- Merge, sweep, and schedule intervals greedily
+- Spot overlapping subproblems and memoize them away
+estimated_hours: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: brief.paths.v1
+  author: agent
+  generated_at: '2026-07-02T18:00:00Z'
+  inspiration_sources: []
+  originality_notes: Curated ordering over the repository's original content bank; no external syllabus
+    copied.
+units:
+- id: unit.intervals_greedy
+  title: Intervals & Greedy
+  description: Lessons, drills, and quizzes for intervals & greedy.
+  items:
+  - lesson.library.intervals_greedy.a01
+  - lesson.library.intervals_greedy.a02
+  - lesson.library.intervals_greedy.a03
+  - exercise.library.intervals_greedy.a01
+  - exercise.library.intervals_greedy.a02
+  - exercise.library.intervals_greedy.a03
+  - exercise.library.intervals_greedy.a04
+  - exercise.library.intervals_greedy.a05
+  - quiz.library.intervals_greedy.a01
+  - exercise.library.intervals_greedy.a06
+  - exercise.library.intervals_greedy.a07
+  - exercise.library.intervals_greedy.a08
+  - exercise.library.intervals_greedy.a09
+  - exercise.library.intervals_greedy.a10
+  - quiz.library.intervals_greedy.a02
+  - exercise.library.intervals_greedy.a11
+  - exercise.library.intervals_greedy.a12
+  - exercise.library.intervals_greedy.b01
+  - exercise.library.intervals_greedy.b02
+- id: unit.dp_recognition
+  title: Dynamic Programming
+  description: Lessons, drills, and quizzes for dynamic programming.
+  items:
+  - lesson.library.dp_recognition.a01
+  - lesson.library.dp_recognition.a02
+  - lesson.library.dp_recognition.a03
+  - lesson.library.dp_recognition.a04
+  - exercise.library.dp_recognition.a01
+  - exercise.library.dp_recognition.a02
+  - exercise.library.dp_recognition.a03
+  - exercise.library.dp_recognition.a04
+  - exercise.library.dp_recognition.a05
+  - quiz.library.dp_recognition.a01
+  - exercise.library.dp_recognition.a06
+  - exercise.library.dp_recognition.a07
+  - exercise.library.dp_recognition.a08
+  - exercise.library.dp_recognition.a09
+  - exercise.library.dp_recognition.a10
+  - quiz.library.dp_recognition.a02
+  - exercise.library.dp_recognition.a11
+  - exercise.library.dp_recognition.a12
+  - exercise.library.dp_recognition.b01
+  - exercise.library.dp_recognition.b02

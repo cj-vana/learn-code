@@ -1,0 +1,96 @@
+id: lesson.library.oop_classes.a02
+kind: lesson
+version: 1
+language: python
+title: Class Attributes, Instance Attributes, and Class Methods
+slug: lesson-oop-classes-a02
+difficulty: easy
+concepts:
+  - python.classes
+prerequisites:
+  - python.classes
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.oop_classes.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original library-card scenario contrasting shared class state with per-instance state and an alternative constructor.
+body_markdown: |
+  Some data belongs to *one* object; other data belongs to *every* object of a
+  kind. A membership card at a lending library has its own holder name and card
+  number (per object), but the whole system shares one running counter used to
+  hand out the next number (shared by all). Python models this split with instance
+  attributes versus **class attributes**.
+
+  A class attribute is defined in the class body, outside any method. It lives on
+  the class itself, so a single copy is shared by all instances.
+
+  ```python
+  class LibraryCard:
+      next_number = 1          # class attribute: one shared counter
+
+      def __init__(self, holder):
+          self.holder = holder             # instance attribute
+          self.number = LibraryCard.next_number
+          LibraryCard.next_number += 1     # advance the shared counter
+  ```
+
+  Each time we build a card, `__init__` copies the current shared counter onto the
+  new instance as `self.number`, then bumps the class attribute so the next card
+  gets a fresh value.
+
+  ```python
+  a = LibraryCard("Priya")
+  b = LibraryCard("Marco")
+  print(a.number, b.number)          # 1 2
+  print(LibraryCard.next_number)     # 3
+  ```
+
+  A subtle rule governs reads and writes. When you *read* `self.number` Python
+  looks on the instance first and then falls back to the class, so instances can
+  see class attributes. But when you *assign* `self.something = value` you always
+  create or update an attribute on the instance, never the class. That is why we
+  wrote `LibraryCard.next_number += 1` and not `self.next_number += 1`: we want to
+  change the shared counter, so we name the class explicitly.
+
+  Sometimes you want an alternate way to build an object -- one that does not match
+  the raw arguments `__init__` expects. A **class method** is perfect for this. It
+  receives the class itself as its first parameter (named `cls` by convention) and
+  can call `cls(...)` to construct an instance:
+
+  ```python
+  class LibraryCard:
+      next_number = 1
+
+      def __init__(self, holder):
+          self.holder = holder
+          self.number = LibraryCard.next_number
+          LibraryCard.next_number += 1
+
+      @classmethod
+      def from_record(cls, record):
+          # record looks like "Priya Rao|adult"
+          name = record.split("|")[0]
+          return cls(name)
+  ```
+
+  Calling `LibraryCard.from_record("Priya Rao|adult")` parses the messy string and
+  hands the clean value to the normal constructor. This keeps `__init__` simple
+  while offering friendly entry points named for how the data actually arrives.
+  The `@classmethod` decorator is what tells Python to pass the class as `cls`
+  rather than passing an instance as `self`. Reach for class methods whenever you
+  find yourself writing helper functions whose only job is to produce instances.
+checkpoints:
+  - question: What is the difference between a class attribute and an instance attribute?
+    answer: A class attribute is defined in the class body and shared by every instance, while an instance attribute is set through self and belongs to one object.
+    explanation: 'next_number lives on the class as one shared counter; holder and number are stored per card via self.'
+  - question: Why does the example write LibraryCard.next_number += 1 instead of self.next_number += 1?
+    answer: Assigning through self would create a new instance attribute and leave the shared counter unchanged, so we name the class to update the one shared value.
+    explanation: Assignment always targets the instance; to mutate class state you must reference the class itself.
+  - question: What does the cls parameter of a class method receive, and what is it typically used for?
+    answer: cls receives the class itself, and it is typically used to call cls(...) to build and return a new instance.
+    explanation: A class method like from_record acts as an alternative constructor, parsing input before delegating to __init__.

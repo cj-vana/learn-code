@@ -1,0 +1,101 @@
+id: quiz.library.logging_diagnostics.a01
+kind: quiz
+version: 1
+language: python
+title: Diagnostics Judgment
+slug: quiz-logging-diagnostics-a01
+difficulty: medium
+concepts:
+  - python.logging_diagnostics
+prerequisites:
+  - python.logging_diagnostics
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.logging_diagnostics.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pattern-recognition quiz on logging levels, hierarchy, and diagnostic content.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      A service must run quietly in production but let developers see every
+      sensor poll during debugging — without editing code between
+      environments. What feature delivers this?
+    choices:
+      - Severity levels with an adjustable threshold — instrument at DEBUG/INFO, set the level per environment
+      - Commenting out print statements before deploy
+      - A global VERBOSE boolean checked everywhere
+      - Separate debug and production source files
+    correct_choice: Severity levels with an adjustable threshold — instrument at DEBUG/INFO, set the level per environment
+    explanation: |
+      The level dial is exactly the print-can't-do-this feature: one
+      instrumentation, environment-selected verbosity.
+    concepts:
+      - python.logging_diagnostics
+  - id: q2
+    prompt: |
+      You want the database layer at DEBUG while the rest of a large app
+      stays at WARNING, changing one line. What makes this possible?
+    choices:
+      - The logger name hierarchy — set the "app.db" logger to DEBUG and its whole subtree inherits it
+      - A regex filter on every message
+      - Duplicating the app at two log levels
+      - Setting each logger individually
+    correct_choice: The logger name hierarchy — set the "app.db" logger to DEBUG and its whole subtree inherits it
+    explanation: |
+      Dotted names form a tree; effective level is inherited by ascent, so
+      one setting tunes a named subsystem.
+    concepts:
+      - python.logging_diagnostics
+  - id: q3
+    prompt: |
+      A catch block logs log.error("could not import feed") and the on-call
+      engineer spends hours locating the failure. What should it have done?
+    choices:
+      - log.exception(...) to capture the traceback pinpointing where the error arose
+      - Retried the import silently
+      - Logged at CRITICAL instead
+      - Included the current timestamp manually
+    correct_choice: log.exception(...) to capture the traceback pinpointing where the error arose
+    explanation: |
+      Discarding the traceback discards the location of the bug; exception
+      logging preserves the one artifact that answers "where?".
+    concepts:
+      - python.logging_diagnostics
+  - id: q4
+    prompt: |
+      Every log line appears twice in the output. What is the most likely
+      cause?
+    choices:
+      - A handler attached at both a child logger and the root, so propagating records are written twice
+      - The log level is set too low
+      - Two threads share one logger
+      - The formatter has a duplicate field
+    correct_choice: A handler attached at both a child logger and the root, so propagating records are written twice
+    explanation: |
+      Records propagate up to ancestor handlers; a handler on both the child
+      and root writes each record on its single upward pass — the classic
+      duplicate-lines bug.
+    concepts:
+      - python.logging_diagnostics
+  - id: q5
+    prompt: |
+      During debugging, a developer logs the user's session token "just
+      temporarily." Why is this a serious mistake even if removed later?
+    choices:
+      - Logs are shipped, indexed, and retained — the secret may already be in log stores and backups the moment it is written
+      - Tokens slow down log formatting
+      - The log file grows too large
+      - Tokens break the log formatter
+    correct_choice: Logs are shipped, indexed, and retained — the secret may already be in log stores and backups the moment it is written
+    explanation: |
+      Log output crosses a trust boundary into systems and people beyond the
+      app; secrets logged are secrets leaked, retroactive removal
+      notwithstanding.
+    concepts:
+      - python.logging_diagnostics
+      - python.secure_coding

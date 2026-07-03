@@ -1,0 +1,113 @@
+id: exercise.library.grid_simulation.a04
+kind: exercise
+version: 1
+language: python
+title: Counting Lily Pad Clusters
+slug: grid-simulation-a04
+difficulty: medium
+concepts:
+  - patterns.grid_traversal
+  - patterns.dfs
+prerequisites:
+  - python.lists
+  - patterns.recursion
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.grid_simulation.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original connected-component counting drill framed as an aerial pond survey tallying clusters of lily pads.
+prompt_markdown: |
+  A drone photographs a pond as a rectangular grid, marking each cell `1` where a
+  lily pad floats and `0` for open water. Pads that touch edge-to-edge (up, down,
+  left, or right) belong to the same cluster; pads that only touch at a diagonal
+  corner are separate clusters.
+
+  Write `count_clusters(grid)` that takes the grid (a list of lists of `0`s and
+  `1`s) and returns the number of distinct lily pad clusters. Open water
+  contributes nothing. An empty grid `[]` and a grid of all `0`s both return `0`.
+
+  Example: for `[[1, 1, 0], [0, 0, 1], [1, 0, 1]]` there are three clusters, the
+  two joined pads in the top-left, the pair down the right edge, and the lone pad
+  in the bottom-left, so the result is `3`.
+starter_code: |
+  def count_clusters(grid):
+      return 0
+function_name: count_clusters
+input_mode: function
+solution_sketch: Scan every cell; each time you meet an unvisited pad, add one to the tally and depth-first flood its whole cluster so it is never counted again.
+sample_solution: |
+  def count_clusters(grid):
+      if not grid:
+          return 0
+      rows, cols = len(grid), len(grid[0])
+      seen = set()
+
+      def dfs(r, c):
+          if not (0 <= r < rows and 0 <= c < cols):
+              return
+          if (r, c) in seen or grid[r][c] != 1:
+              return
+          seen.add((r, c))
+          dfs(r + 1, c)
+          dfs(r - 1, c)
+          dfs(r, c + 1)
+          dfs(r, c - 1)
+
+      clusters = 0
+      for r in range(rows):
+          for c in range(cols):
+              if grid[r][c] == 1 and (r, c) not in seen:
+                  clusters += 1
+                  dfs(r, c)
+      return clusters
+hints:
+  - level: 1
+    text: Every cluster contains exactly one cell that the outer scan reaches first, so count a cluster the first time you hit an unvisited pad.
+  - level: 2
+    text: After finding a fresh pad, flood its entire cluster with a depth-first search so the rest of that cluster is already marked when the scan reaches it.
+  - level: 3
+    text: Keep a shared seen set; the flood adds every reachable pad to it, and the outer loop only starts a new count at pads not yet in seen.
+tests:
+  public:
+    - name: three_clusters
+      input: [[1, 1, 0], [0, 0, 1], [1, 0, 1]]
+      expected: 3
+    - name: open_water
+      input: [[0, 0], [0, 0]]
+      expected: 0
+    - name: one_big_cluster
+      input: [[1, 1], [1, 1]]
+      expected: 1
+  validation:
+    - name: empty_grid
+      input: []
+      expected: 0
+    - name: single_pad
+      input: [[1]]
+      expected: 1
+    - name: diagonal_checkerboard
+      input: [[1, 0, 1], [0, 1, 0], [1, 0, 1]]
+      expected: 5
+    - name: connected_snake
+      input: [[1, 1, 1], [0, 0, 1], [1, 1, 1]]
+      expected: 1
+    - name: gapped_row
+      input: [[1, 0, 1, 0, 1]]
+      expected: 3
+explanation_markdown: |
+  Counting connected components is flood fill wearing a different hat. The outer
+  double loop guarantees you visit every cell, but the shared `seen` set means
+  each cluster is only counted once: the first unvisited pad you meet triggers a
+  flood that marks the entire cluster, so the scan glides past the rest without
+  re-counting. Because the flood only follows orthogonal steps, diagonal-only
+  touches leave clusters separate, which is why the checkerboard has five. Each
+  cell is pushed and inspected a bounded number of times, so the whole survey is
+  O(rows * cols).
+common_mistakes:
+  - Incrementing the count for every pad cell instead of only for the first cell of each cluster.
+  - Sharing no seen set (or resetting it inside the flood), so already-counted pads start new clusters.
+  - Treating diagonal neighbours as connected, which merges clusters the survey should keep apart.

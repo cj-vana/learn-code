@@ -1,0 +1,101 @@
+id: exercise.library.trees_lite.a12
+kind: exercise
+version: 1
+language: python
+title: The Kth Coolest Reading in a Sensor Tree
+slug: trees-lite-a12
+difficulty: hard
+concepts:
+  - patterns.tree_traversal
+  - patterns.binary_search
+  - python.trees_as_data
+prerequisites:
+  - patterns.dfs
+  - patterns.recursion
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.trees_lite.a12
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original kth-smallest-in-a-BST drill themed around ranked sensor readings, composing the ordering property with an in-order walk.
+prompt_markdown: |
+  A cold-storage facility keeps its temperature readings in a binary *search*
+  tree (left subtree smaller, right subtree larger), stored as nested
+  dictionaries (`{"value", "left", "right"}`, empty branch is `None`). A
+  technician wants the `k`th coolest reading - the `k`th smallest value,
+  counting from 1.
+
+  Write `kth_coolest(data)` where `data` is a dict with:
+
+  - `data["tree"]` - the search tree
+  - `data["k"]` - a 1-based rank, guaranteed between 1 and the number of nodes
+
+  Return the value with that rank. Lean on the search-tree ordering so you do not
+  have to sort anything yourself.
+starter_code: |
+  def kth_coolest(data):
+      # data = {"tree": <node>, "k": <1-based rank>}
+      # Return the kth smallest value in the search tree.
+      return None
+function_name: kth_coolest
+input_mode: function
+solution_sketch: An in-order walk of a search tree yields sorted values, so collect them in order and take the element at position k-1.
+sample_solution: |
+  def kth_coolest(data):
+      k = data["k"]
+      ordered = []
+
+      def walk(node):
+          if node is None:
+              return
+          walk(node["left"])
+          ordered.append(node["value"])
+          walk(node["right"])
+
+      walk(data["tree"])
+      return ordered[k - 1]
+hints:
+  - level: 1
+    text: In a search tree, one particular traversal visits values from smallest to largest.
+  - level: 2
+    text: An in-order walk (left, node, right) of a BST produces the values already sorted.
+  - level: 3
+    text: Collect the in-order values into a list; the kth smallest sits at index k - 1.
+tests:
+  public:
+    - name: smallest
+      input: {tree: {value: 5, left: {value: 3, left: {value: 2, left: null, right: null}, right: {value: 4, left: null, right: null}}, right: {value: 8, left: null, right: {value: 9, left: null, right: null}}}, k: 1}
+      expected: 2
+    - name: the_root_rank
+      input: {tree: {value: 5, left: {value: 3, left: {value: 2, left: null, right: null}, right: {value: 4, left: null, right: null}}, right: {value: 8, left: null, right: {value: 9, left: null, right: null}}}, k: 4}
+      expected: 5
+    - name: largest
+      input: {tree: {value: 5, left: {value: 3, left: {value: 2, left: null, right: null}, right: {value: 4, left: null, right: null}}, right: {value: 8, left: null, right: {value: 9, left: null, right: null}}}, k: 6}
+      expected: 9
+  validation:
+    - name: second
+      input: {tree: {value: 5, left: {value: 3, left: {value: 2, left: null, right: null}, right: {value: 4, left: null, right: null}}, right: {value: 8, left: null, right: {value: 9, left: null, right: null}}}, k: 2}
+      expected: 3
+    - name: third
+      input: {tree: {value: 5, left: {value: 3, left: {value: 2, left: null, right: null}, right: {value: 4, left: null, right: null}}, right: {value: 8, left: null, right: {value: 9, left: null, right: null}}}, k: 3}
+      expected: 4
+    - name: single_node
+      input: {tree: {value: 42, left: null, right: null}, k: 1}
+      expected: 42
+explanation_markdown: |
+  This problem composes two ideas from the module. First, the defining property
+  of a binary search tree: an in-order traversal (left, node, right) emits values
+  in ascending order for free, because everything left of a node is smaller and
+  everything right is larger. Second, once you have that sorted sequence, the
+  `k`th smallest is simply the element at index `k - 1`. On the sample tree the
+  in-order walk produces `[2, 3, 4, 5, 8, 9]`, so rank 4 lands on the root value
+  5 and rank 6 lands on 9. The walk visits each node once for O(n) time; an
+  interview-grade refinement would stop early after emitting `k` values, but
+  collecting the full order is correct and clear.
+common_mistakes:
+  - Using a pre-order or post-order walk, which does not produce sorted values.
+  - Off-by-one errors - k is 1-based, so the answer is at index k - 1, not k.
+  - Sorting the values with an extra pass instead of trusting the in-order order the BST already provides.

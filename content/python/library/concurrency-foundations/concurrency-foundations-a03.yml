@@ -1,0 +1,156 @@
+id: exercise.library.concurrency_foundations.a03
+kind: exercise
+version: 1
+language: python
+title: Survey Runs at the Observatory
+slug: concurrency-foundations-a03
+difficulty: easy
+concepts:
+  - python.concurrency_model
+  - python.dictionaries
+prerequisites:
+  - python.lists
+  - python.dictionaries
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.concurrency_foundations.a03
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: >-
+    Original asyncio.gather-ordering drill themed around an observatory
+    dispatching parallel sky-survey exposures; teaches that gather returns
+    results in submission order, not completion order, as a pure function.
+prompt_markdown: |
+  An observatory kicks off several sky-survey exposures at once and waits for
+  all of them with a single `asyncio.gather(...)` call. New astronomers are
+  often surprised by two facts. First, `gather` hands back the results in the
+  order you *submitted* the awaitables, never the order they happened to finish.
+  Second, the exposures really do finish in whatever order their timers allow.
+  This drill has you report both so the distinction is concrete.
+
+  Write `gather_results(awaitables)`. The single argument `awaitables` is a list
+  of dicts, one per exposure, each with:
+
+  - `"label"`: a short string naming the exposure.
+  - `"finishes_at"`: an integer tick at which the exposure completes.
+  - `"value"`: the result the exposure produces (any JSON-style value).
+
+  Return a dict with two keys:
+
+  - `"results"`: the `"value"` of each exposure in the original submission order
+    of the list — this is what `gather` itself returns.
+  - `"completion_order"`: the exposure `"label"`s sorted by `"finishes_at"`
+    ascending, breaking ties by submission order (earlier in the list first).
+
+  Edge cases you must handle: an empty `awaitables` list returns empty lists for
+  both keys; when two exposures share a `"finishes_at"`, the one submitted first
+  comes first in `"completion_order"`.
+starter_code: |
+  def gather_results(awaitables):
+      return {}
+function_name: gather_results
+input_mode: function
+solution_sketch: >-
+  Collect the values in list order for "results". For "completion_order", sort
+  the indices by (finishes_at, submission index) and map back to labels. Return
+  both in a dict.
+sample_solution: |
+  def gather_results(awaitables):
+      results = [item["value"] for item in awaitables]
+      order = sorted(
+          range(len(awaitables)),
+          key=lambda i: (awaitables[i]["finishes_at"], i),
+      )
+      completion_order = [awaitables[i]["label"] for i in order]
+      return {"results": results, "completion_order": completion_order}
+hints:
+  - level: 1
+    text: >-
+      The `"results"` list is the easy half: just pull each `"value"` out in the
+      order the exposures appear in the input.
+  - level: 2
+    text: >-
+      For completion order you need a sort, but sorting the dicts directly loses
+      the submission tie-break. Sort the indices `0..n-1` instead.
+  - level: 3
+    text: >-
+      Use `sorted(range(len(awaitables)), key=lambda i: (awaitables[i]["finishes_at"], i))`
+      so equal finish ticks fall back to the submission index, then map the
+      sorted indices to their labels.
+tests:
+  public:
+    - name: same_order
+      input:
+        - {label: "a", finishes_at: 1, value: 10}
+        - {label: "b", finishes_at: 2, value: 20}
+      expected:
+        results: [10, 20]
+        completion_order: ["a", "b"]
+    - name: reversed_completion
+      input:
+        - {label: "a", finishes_at: 5, value: 1}
+        - {label: "b", finishes_at: 1, value: 2}
+      expected:
+        results: [1, 2]
+        completion_order: ["b", "a"]
+    - name: single
+      input:
+        - {label: "solo", finishes_at: 3, value: 99}
+      expected:
+        results: [99]
+        completion_order: ["solo"]
+  validation:
+    - name: empty
+      input: []
+      expected:
+        results: []
+        completion_order: []
+    - name: tie_break_by_submission
+      input:
+        - {label: "x", finishes_at: 2, value: 1}
+        - {label: "y", finishes_at: 2, value: 2}
+        - {label: "z", finishes_at: 1, value: 3}
+      expected:
+        results: [1, 2, 3]
+        completion_order: ["z", "x", "y"]
+    - name: string_values
+      input:
+        - {label: "p", finishes_at: 3, value: "pear"}
+        - {label: "q", finishes_at: 1, value: "quince"}
+      expected:
+        results: ["pear", "quince"]
+        completion_order: ["q", "p"]
+    - name: mixed_value_shapes
+      input:
+        - {label: "a", finishes_at: 4, value: [1, 2]}
+        - {label: "b", finishes_at: 2, value: 0}
+        - {label: "c", finishes_at: 6, value: [3]}
+      expected:
+        results: [[1, 2], 0, [3]]
+        completion_order: ["b", "a", "c"]
+explanation_markdown: |
+  `asyncio.gather(*aws)` returns a list whose order matches the order of the
+  awaitables you passed in, no matter when each coroutine actually finished. That
+  positional guarantee is what lets you write `first, second = await gather(a, b)`
+  and trust which is which. The coroutines still run concurrently and complete in
+  timer order, but `gather` reassembles their results back into submission
+  order for you.
+
+  Separating `"results"` from `"completion_order"` in this drill makes the two
+  orderings visible side by side. The `results` half needs no sorting at all —
+  it is a straight positional read. The `completion_order` half is the only
+  place a sort belongs, and sorting index positions rather than the dicts
+  themselves keeps the tie-break stable: when two exposures finish on the same
+  tick, the `(finishes_at, i)` key falls back to the submission index `i`, which
+  is exactly the deterministic behaviour you want.
+common_mistakes:
+  - Sorting the `"results"` list by `finishes_at`; `gather` preserves submission
+    order, so the results must not be reordered.
+  - Sorting the dicts directly on `finishes_at` without a secondary key, which
+    leaves same-tick exposures in an unspecified order instead of submission
+    order.
+  - Confusing the two outputs — returning completion order where results are
+    expected, or vice versa.

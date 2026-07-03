@@ -1,0 +1,120 @@
+id: exercise.library.pathlib_patterns.a06
+kind: exercise
+version: 1
+language: python
+title: Re-Exporting Gallery Scans
+slug: pathlib-patterns-a06
+difficulty: medium
+concepts:
+  - python.pathlib_os
+  - python.strings
+prerequisites:
+  - python.strings
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.pathlib_patterns.a06
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original print-gallery re-export framing for swapping a path suffix with PurePosixPath.with_suffix.
+prompt_markdown: |
+  A print gallery re-exports its scans into whatever format a client asks for, so
+  it rewrites the **extension** on each stored path.
+
+  Write `change_extension(job)` where `job` is a single dict with two keys:
+
+      {"path": "gallery/aurora.jpg", "new_ext": ".png"}
+
+  Return the `path` with its final extension replaced by `new_ext`, as a string.
+  The rules:
+
+  - Replacing an existing extension: `gallery/aurora.jpg` with `.png` returns
+    `gallery/aurora.png`.
+  - A path with no extension gains one: `harbor/manifest` with `.md` returns
+    `harbor/manifest.md`.
+  - Only the last extension changes: `field.tar.gz` with `.zip` returns
+    `field.tar.zip`.
+  - An empty `new_ext` **removes** the extension: `gallery/aurora.jpg` with `''`
+    returns `gallery/aurora`.
+  - `new_ext`, when non-empty, always includes its leading dot (for example
+    `.png`).
+
+  Use `pathlib.PurePosixPath(path).with_suffix(new_ext)` and return its string
+  form. No filesystem is touched.
+starter_code: |
+  from pathlib import PurePosixPath
+
+
+  def change_extension(job):
+      return ""
+function_name: change_extension
+input_mode: function
+solution_sketch: Read path and new_ext from the dict, then return str(PurePosixPath(path).with_suffix(new_ext)); with_suffix replaces the final extension, adds one when absent, and removes it when new_ext is "".
+sample_solution: |
+  from pathlib import PurePosixPath
+
+
+  def change_extension(job):
+      return str(PurePosixPath(job["path"]).with_suffix(job["new_ext"]))
+hints:
+  - level: 1
+    text: The single argument is a dict, so read job["path"] and job["new_ext"] first.
+  - level: 2
+    text: PurePosixPath has a with_suffix method that returns a new path with the last extension swapped, without touching a disk.
+  - level: 3
+    text: Return str(PurePosixPath(job["path"]).with_suffix(job["new_ext"])); an empty new_ext drops the extension, and a name with none simply gains one.
+tests:
+  public:
+    - name: replace_extension
+      input:
+        path: "gallery/aurora.jpg"
+        new_ext: ".png"
+      expected: "gallery/aurora.png"
+    - name: add_when_missing
+      input:
+        path: "harbor/manifest"
+        new_ext: ".md"
+      expected: "harbor/manifest.md"
+    - name: only_last
+      input:
+        path: "field.tar.gz"
+        new_ext: ".zip"
+      expected: "field.tar.zip"
+  validation:
+    - name: nested_path
+      input:
+        path: "logs/data.csv"
+        new_ext: ".tsv"
+      expected: "logs/data.tsv"
+    - name: remove_extension
+      input:
+        path: "gallery/aurora.jpg"
+        new_ext: ""
+      expected: "gallery/aurora"
+    - name: hidden_file_appends
+      input:
+        path: ".seedlog"
+        new_ext: ".txt"
+      expected: ".seedlog.txt"
+    - name: replace_single
+      input:
+        path: "reports/summary.txt"
+        new_ext: ".md"
+      expected: "reports/summary.md"
+explanation_markdown: |
+  `with_suffix` returns a **new** `PurePosixPath` with the final extension
+  swapped for the one you pass. If the name already has an extension it is
+  replaced; if it has none, `with_suffix` appends the new one; and passing an
+  empty string removes the extension entirely. Only the last extension is
+  affected, so `field.tar.gz` becomes `field.tar.zip`. Two rules are easy to
+  forget: a non-empty argument must include its leading dot (`with_suffix("png")`
+  raises `ValueError`), and a hidden file such as `.seedlog` has no extension, so
+  `with_suffix(".txt")` appends to give `.seedlog.txt`. Because `PurePosixPath`
+  never reads a disk, this transformation is a safe, deterministic string
+  operation.
+common_mistakes:
+  - Concatenating the new extension onto the raw string, which fails to strip the old one and yields "aurora.jpg.png".
+  - Passing a suffix without the leading dot, so with_suffix raises ValueError.
+  - Returning the PurePosixPath object instead of str(...), leaving the value unequal to the expected string.

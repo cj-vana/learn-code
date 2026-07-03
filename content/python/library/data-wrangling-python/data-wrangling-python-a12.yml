@@ -1,0 +1,151 @@
+id: exercise.library.data_wrangling_python.a12
+kind: exercise
+version: 1
+language: python
+title: Passbook Balances at the Co-op
+slug: data-wrangling-python-a12
+difficulty: hard
+concepts:
+  - concepts.grouping_aggregation
+prerequisites:
+  - python.dictionaries
+  - python.loops
+estimated_time_minutes: 20
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.data_wrangling_python.a12
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original running-total drill framed around a savings co-op stamping a running balance onto each passbook entry.
+prompt_markdown: |
+  A savings co-op posts transactions to member passbooks in the order they were
+  recorded. Each entry credits (positive) or debits (negative) an account, and the
+  clerk wants every entry stamped with the **running balance** for that account
+  right after the entry was applied.
+
+  Write `running_balances(payload)` that takes **one dictionary** with one entry:
+
+  - `"rows"`: a list of dictionaries, each with an `"account"` field and a numeric `"amount"` field, in posting order.
+
+  Example call:
+
+  ```python
+  running_balances({
+      "rows": [
+          {"account": "A", "amount": 10},
+          {"account": "A", "amount": 5},
+      ]
+  })
+  # -> [{"account": "A", "amount": 10, "balance": 10},
+  #     {"account": "A", "amount": 5, "balance": 15}]
+  ```
+
+  Return a **list of new dictionaries**, one per input row in the same order. Each
+  output dictionary must copy that row's fields and add a `"balance"` field equal
+  to the running sum of `amount` for that account, counting this row and all
+  earlier rows of the same account. Accounts are independent: each keeps its own
+  running total. **Do not mutate the input rows** -- build and return fresh
+  dictionaries. If `rows` is empty, return an empty list.
+starter_code: |
+  def running_balances(payload):
+      return []
+function_name: running_balances
+input_mode: function
+solution_sketch: Keep a dict of per-account running totals; for each row add its amount to that account's total, then emit a copy of the row with a balance field set to the updated total.
+sample_solution: |
+  def running_balances(payload):
+      rows = payload["rows"]
+      totals = {}
+      result = []
+      for row in rows:
+          account = row["account"]
+          totals[account] = totals.get(account, 0) + row["amount"]
+          new_row = dict(row)
+          new_row["balance"] = totals[account]
+          result.append(new_row)
+      return result
+hints:
+  - level: 1
+    text: Keep one dictionary mapping each account to its running total so far, updating it as you pass over the rows.
+  - level: 2
+    text: totals.get(account, 0) hands back 0 the first time an account appears, so the first entry's balance is just its own amount.
+  - level: 3
+    text: Copy each row with dict(row) before adding the balance key so the caller's original rows are never changed.
+tests:
+  public:
+    - name: empty_rows
+      input:
+        rows: []
+      expected: []
+    - name: single_account
+      input:
+        rows:
+          - {account: "A", amount: 10}
+          - {account: "A", amount: 5}
+      expected:
+        - {account: "A", amount: 10, balance: 10}
+        - {account: "A", amount: 5, balance: 15}
+    - name: two_accounts_interleaved
+      input:
+        rows:
+          - {account: "A", amount: 10}
+          - {account: "B", amount: 3}
+          - {account: "A", amount: -4}
+      expected:
+        - {account: "A", amount: 10, balance: 10}
+        - {account: "B", amount: 3, balance: 3}
+        - {account: "A", amount: -4, balance: 6}
+  validation:
+    - name: withdrawal_goes_negative
+      input:
+        rows:
+          - {account: "A", amount: 20}
+          - {account: "A", amount: -25}
+      expected:
+        - {account: "A", amount: 20, balance: 20}
+        - {account: "A", amount: -25, balance: -5}
+    - name: three_accounts
+      input:
+        rows:
+          - {account: "x", amount: 1}
+          - {account: "y", amount: 2}
+          - {account: "z", amount: 3}
+          - {account: "x", amount: 4}
+      expected:
+        - {account: "x", amount: 1, balance: 1}
+        - {account: "y", amount: 2, balance: 2}
+        - {account: "z", amount: 3, balance: 3}
+        - {account: "x", amount: 4, balance: 5}
+    - name: repeated_same_account
+      input:
+        rows:
+          - {account: "A", amount: 1}
+          - {account: "A", amount: 1}
+          - {account: "A", amount: 1}
+      expected:
+        - {account: "A", amount: 1, balance: 1}
+        - {account: "A", amount: 1, balance: 2}
+        - {account: "A", amount: 1, balance: 3}
+    - name: single_row
+      input:
+        rows:
+          - {account: "A", amount: 7}
+      expected:
+        - {account: "A", amount: 7, balance: 7}
+explanation_markdown: |
+  A running total is a grouped accumulator you read out on every step instead of
+  only at the end. One dictionary maps each account to its total so far;
+  `totals.get(account, 0)` supplies the fresh 0 the first time an account appears,
+  so the very first entry's balance equals its own amount. Because the rows are
+  already in posting order, one left-to-right pass produces correct running sums,
+  and accounts never interfere because each has its own slot in the totals dict.
+
+  The output must be new dictionaries: copying with `dict(row)` before setting
+  `balance` leaves the caller's data untouched, which matters when the same list
+  is reused elsewhere. The routine is a single linear pass with O(1) work per row.
+common_mistakes:
+  - Assigning row["balance"] directly, which mutates the caller's input dictionaries.
+  - Using one shared running total for all accounts instead of a per-account dictionary.
+  - Recomputing each balance by re-summing all earlier rows, turning a linear pass into quadratic work.

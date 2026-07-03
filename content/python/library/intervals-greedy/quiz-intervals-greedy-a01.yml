@@ -1,0 +1,107 @@
+id: quiz.library.intervals_greedy.a01
+kind: quiz
+version: 1
+language: python
+title: Sweep, Merge, or Grab Greedily?
+slug: quiz-intervals-greedy-a01
+difficulty: medium
+concepts:
+  - patterns.intervals
+  - patterns.greedy
+prerequisites:
+  - patterns.intervals
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.intervals_greedy.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pattern-recognition quiz on classifying interval merging, sweep-line counting, and greedy scheduling problems.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      A community hall receives dozens of booking requests with start and end
+      times, and the manager wants to host as MANY events as possible. Which
+      strategy is provably optimal?
+    choices:
+      - Sort by finish time and repeatedly take the earliest-finishing compatible event
+      - Sort by start time and take events in arrival order
+      - Take the shortest events first
+      - Take the longest events first to fill the calendar quickly
+    correct_choice: Sort by finish time and repeatedly take the earliest-finishing compatible event
+    explanation: |
+      Earliest finish leaves the most room for everything after it — the classic
+      exchange argument: any optimal schedule can be rewritten to start with the
+      earliest-finishing event without losing a booking.
+    concepts:
+      - patterns.greedy
+      - patterns.intervals
+  - id: q2
+    prompt: |
+      Given each visitor's entry and exit minute, you need the maximum number of
+      people inside a museum at once. Which technique fits?
+    choices:
+      - Turn each visit into +1/-1 events, sort them, and sweep a running count
+      - Merge overlapping visits into blocks and count the blocks
+      - Binary search for the busiest minute
+      - Compare every pair of visits for overlap
+    correct_choice: Turn each visit into +1/-1 events, sort them, and sweep a running count
+    explanation: |
+      Peak concurrency is a sweep-line problem: entries add one, exits subtract
+      one, and the maximum of the running total during the sorted sweep is the
+      answer, in O(n log n).
+    concepts:
+      - patterns.intervals
+  - id: q3
+    prompt: |
+      Why do nearly all interval algorithms begin by sorting the intervals?
+    choices:
+      - Sorting makes every overlap local — each interval only needs comparing with its neighbours
+      - Sorted data uses less memory
+      - Python requires lists to be sorted before slicing
+      - It removes duplicate intervals automatically
+    correct_choice: Sorting makes every overlap local — each interval only needs comparing with its neighbours
+    explanation: |
+      After sorting by start, any interval that overlaps you cannot lie beyond the
+      first non-overlapping one, so a single linear pass replaces all-pairs
+      comparison.
+    concepts:
+      - patterns.intervals
+      - python.sorting
+  - id: q4
+    prompt: |
+      Two sorted intervals [a, b] and [c, d] with a <= c. Which condition means
+      they overlap (touching endpoints count), and what is the merged interval?
+    choices:
+      - c <= b; merged is [a, max(b, d)]
+      - c < a; merged is [c, b]
+      - b == d; merged is [a, d]
+      - d <= b; merged is [c, d]
+    correct_choice: c <= b; merged is [a, max(b, d)]
+    explanation: |
+      The later interval overlaps if it starts before (or exactly when) the
+      earlier one ends. The max matters because the second interval can be
+      nested entirely inside the first.
+    concepts:
+      - patterns.intervals
+  - id: q5
+    prompt: |
+      Greedy "earliest finish" maximizes the COUNT of compatible bookings. Why
+      does it stop being optimal when bookings have different payment amounts
+      and you want maximum revenue?
+    choices:
+      - A single high-paying booking can beat many small ones, so exclusions must be weighed — a DP job
+      - Sorting by finish time is impossible when payments differ
+      - Greedy algorithms only work on unweighted graphs
+      - It remains optimal; revenue and count always agree
+    correct_choice: A single high-paying booking can beat many small ones, so exclusions must be weighed — a DP job
+    explanation: |
+      With weights, the exchange argument breaks: taking an early-finishing cheap
+      event can block one worth more than everything it enables. Weighted interval
+      scheduling needs dynamic programming over "best value using intervals up to i".
+    concepts:
+      - patterns.greedy
+      - patterns.dynamic_programming

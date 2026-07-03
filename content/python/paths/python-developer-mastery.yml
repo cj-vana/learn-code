@@ -1,0 +1,432 @@
+id: path.career.python_developer_mastery
+kind: path
+path_type: career
+version: 1
+language: python
+title: Python Developer Mastery
+slug: python-developer-mastery
+description: "The full beginner-to-advanced language arc: syntax fluency and core data structures, then\
+  \ every professional Python skill \u2014 OOP, iterators and generators, decorators, error handling,\
+  \ collections and itertools, regex, and pure-Python data wrangling \u2014 capped by mixed capstones."
+outcomes:
+- Write idiomatic Python from fundamentals through advanced idioms
+- Model programs with classes, generators, and decorators
+- Handle errors deliberately and process real-world text and records
+- Finish with capstones that mix everything without hints
+estimated_hours: 67
+review_status: published
+source_status: original
+provenance:
+  brief_id: brief.paths.v1
+  author: agent
+  generated_at: '2026-07-02T18:00:00Z'
+  inspiration_sources: []
+  originality_notes: Curated ordering over the repository's original content bank; no external syllabus
+    copied.
+units:
+- id: unit.python_refresh
+  title: Python Refresh
+  description: Lessons, drills, and quizzes for python refresh.
+  items:
+  - lesson.library.python_refresh.a01
+  - lesson.library.python_refresh.a02
+  - lesson.library.python_refresh.a03
+  - lesson.library.python_refresh.a04
+  - lesson.library.python_refresh.a05
+  - lesson.library.python_refresh.a06
+  - exercise.library.python_refresh.a01
+  - exercise.library.python_refresh.a02
+  - exercise.library.python_refresh.a03
+  - exercise.library.python_refresh.a04
+  - quiz.library.python_refresh.a01
+  - exercise.library.python_refresh.a05
+  - exercise.library.python_refresh.a06
+  - exercise.library.python_refresh.a07
+  - exercise.library.python_refresh.a08
+  - quiz.library.python_refresh.a02
+  - exercise.library.python_refresh.b01
+  - exercise.library.python_refresh.b02
+  - exercise.library.python_refresh.b03
+  - exercise.library.python_refresh.b04
+  - quiz.library.python_refresh.a03
+  - exercise.library.python_refresh.b05
+  - exercise.library.python_refresh.b06
+  - exercise.library.python_refresh.b07
+  - exercise.library.python_refresh.b08
+  - quiz.library.python_refresh.a04
+  - exercise.library.python_refresh.c01
+  - exercise.library.python_refresh.c02
+- id: unit.loops_lists_strings
+  title: Loops, Lists & Strings
+  description: Lessons, drills, and quizzes for loops, lists & strings.
+  items:
+  - lesson.library.loops_lists_strings.a01
+  - lesson.library.loops_lists_strings.a02
+  - lesson.library.loops_lists_strings.a03
+  - lesson.library.loops_lists_strings.a04
+  - lesson.library.loops_lists_strings.a05
+  - lesson.library.loops_lists_strings.a06
+  - exercise.library.loops_lists_strings.a01
+  - exercise.library.loops_lists_strings.a02
+  - exercise.library.loops_lists_strings.a03
+  - exercise.library.loops_lists_strings.a04
+  - quiz.library.loops_lists_strings.a01
+  - exercise.library.loops_lists_strings.a05
+  - exercise.library.loops_lists_strings.a06
+  - exercise.library.loops_lists_strings.a07
+  - exercise.library.loops_lists_strings.a08
+  - quiz.library.loops_lists_strings.a02
+  - exercise.library.loops_lists_strings.b01
+  - exercise.library.loops_lists_strings.b02
+  - exercise.library.loops_lists_strings.b03
+  - exercise.library.loops_lists_strings.b04
+  - quiz.library.loops_lists_strings.a03
+  - exercise.library.loops_lists_strings.b05
+  - exercise.library.loops_lists_strings.b06
+  - exercise.library.loops_lists_strings.b07
+  - exercise.library.loops_lists_strings.b08
+  - quiz.library.loops_lists_strings.a04
+  - exercise.library.loops_lists_strings.c01
+  - exercise.library.loops_lists_strings.c02
+- id: unit.dicts_sets_tuples
+  title: Dicts, Sets & Tuples
+  description: Lessons, drills, and quizzes for dicts, sets & tuples.
+  items:
+  - lesson.library.dicts_sets_tuples.a01
+  - lesson.library.dicts_sets_tuples.a02
+  - lesson.library.dicts_sets_tuples.a03
+  - lesson.library.dicts_sets_tuples.a04
+  - lesson.library.dicts_sets_tuples.a05
+  - exercise.library.dicts_sets_tuples.a01
+  - exercise.library.dicts_sets_tuples.a02
+  - exercise.library.dicts_sets_tuples.a03
+  - exercise.library.dicts_sets_tuples.a04
+  - quiz.library.dicts_sets_tuples.a01
+  - exercise.library.dicts_sets_tuples.a05
+  - exercise.library.dicts_sets_tuples.a06
+  - exercise.library.dicts_sets_tuples.a07
+  - exercise.library.dicts_sets_tuples.a08
+  - quiz.library.dicts_sets_tuples.a02
+  - exercise.library.dicts_sets_tuples.b01
+  - exercise.library.dicts_sets_tuples.b02
+  - exercise.library.dicts_sets_tuples.b03
+  - exercise.library.dicts_sets_tuples.b04
+  - quiz.library.dicts_sets_tuples.a03
+  - exercise.library.dicts_sets_tuples.b05
+  - exercise.library.dicts_sets_tuples.b06
+  - exercise.library.dicts_sets_tuples.b07
+  - exercise.library.dicts_sets_tuples.b08
+  - quiz.library.dicts_sets_tuples.a04
+  - exercise.library.dicts_sets_tuples.c01
+  - exercise.library.dicts_sets_tuples.c02
+- id: unit.debugging
+  title: Debugging
+  description: Lessons, drills, and quizzes for debugging.
+  items:
+  - lesson.library.debugging.a01
+  - lesson.library.debugging.a02
+  - lesson.library.debugging.a03
+  - lesson.library.debugging.a04
+  - exercise.library.debugging.a01
+  - exercise.library.debugging.a02
+  - exercise.library.debugging.a03
+  - quiz.library.debugging.a01
+  - exercise.library.debugging.a04
+  - exercise.library.debugging.a05
+  - exercise.library.debugging.a06
+  - quiz.library.debugging.a02
+  - exercise.library.debugging.a07
+  - exercise.library.debugging.a08
+  - exercise.library.debugging.b01
+  - quiz.library.debugging.a03
+  - exercise.library.debugging.b02
+  milestone: "Fundamentals complete \u2014 you write working Python"
+- id: unit.error_handling
+  title: Errors & Exceptions
+  description: Lessons, drills, and quizzes for errors & exceptions.
+  items:
+  - lesson.library.error_handling.a01
+  - lesson.library.error_handling.a02
+  - lesson.library.error_handling.a03
+  - exercise.library.error_handling.a01
+  - exercise.library.error_handling.a02
+  - exercise.library.error_handling.a03
+  - exercise.library.error_handling.a04
+  - quiz.library.error_handling.a01
+  - exercise.library.error_handling.a05
+  - exercise.library.error_handling.a06
+  - exercise.library.error_handling.a07
+  - exercise.library.error_handling.a08
+  - quiz.library.error_handling.a02
+  - exercise.library.error_handling.a09
+  - exercise.library.error_handling.a10
+  - exercise.library.error_handling.a11
+  - exercise.library.error_handling.a12
+  - quiz.library.error_handling.a03
+  - exercise.library.error_handling.b01
+  - exercise.library.error_handling.b02
+- id: unit.oop_classes
+  title: Object-Oriented Python
+  description: Lessons, drills, and quizzes for object-oriented python.
+  items:
+  - lesson.library.oop_classes.a01
+  - lesson.library.oop_classes.a02
+  - lesson.library.oop_classes.a03
+  - lesson.library.oop_classes.a04
+  - exercise.library.oop_classes.a01
+  - exercise.library.oop_classes.a02
+  - exercise.library.oop_classes.a03
+  - exercise.library.oop_classes.a04
+  - quiz.library.oop_classes.a01
+  - exercise.library.oop_classes.a05
+  - exercise.library.oop_classes.a06
+  - exercise.library.oop_classes.a07
+  - exercise.library.oop_classes.a08
+  - quiz.library.oop_classes.a02
+  - exercise.library.oop_classes.a09
+  - exercise.library.oop_classes.a10
+  - exercise.library.oop_classes.a11
+  - exercise.library.oop_classes.a12
+  - quiz.library.oop_classes.a03
+  - exercise.library.oop_classes.b01
+  - exercise.library.oop_classes.b02
+- id: unit.iterators_generators
+  title: Iterators & Generators
+  description: Lessons, drills, and quizzes for iterators & generators.
+  items:
+  - lesson.library.iterators_generators.a01
+  - lesson.library.iterators_generators.a02
+  - lesson.library.iterators_generators.a03
+  - lesson.library.iterators_generators.a04
+  - exercise.library.iterators_generators.a01
+  - exercise.library.iterators_generators.a02
+  - exercise.library.iterators_generators.a03
+  - exercise.library.iterators_generators.a04
+  - quiz.library.iterators_generators.a01
+  - exercise.library.iterators_generators.a05
+  - exercise.library.iterators_generators.a06
+  - exercise.library.iterators_generators.a07
+  - exercise.library.iterators_generators.a08
+  - quiz.library.iterators_generators.a02
+  - exercise.library.iterators_generators.a09
+  - exercise.library.iterators_generators.a10
+  - exercise.library.iterators_generators.a11
+  - exercise.library.iterators_generators.a12
+  - quiz.library.iterators_generators.a03
+  - exercise.library.iterators_generators.b01
+  - exercise.library.iterators_generators.b02
+- id: unit.decorators_closures
+  title: Closures & Decorators
+  description: Lessons, drills, and quizzes for closures & decorators.
+  items:
+  - lesson.library.decorators_closures.a01
+  - lesson.library.decorators_closures.a02
+  - lesson.library.decorators_closures.a03
+  - exercise.library.decorators_closures.a01
+  - exercise.library.decorators_closures.a02
+  - exercise.library.decorators_closures.a03
+  - exercise.library.decorators_closures.a04
+  - exercise.library.decorators_closures.a05
+  - quiz.library.decorators_closures.a01
+  - exercise.library.decorators_closures.a06
+  - exercise.library.decorators_closures.a07
+  - exercise.library.decorators_closures.a08
+  - exercise.library.decorators_closures.a09
+  - exercise.library.decorators_closures.a10
+  - quiz.library.decorators_closures.a02
+  - exercise.library.decorators_closures.a11
+  - exercise.library.decorators_closures.a12
+  - exercise.library.decorators_closures.b01
+  - exercise.library.decorators_closures.b02
+  milestone: "The senior idioms \u2014 OOP, generators, decorators \u2014 are yours"
+- id: unit.collections_itertools
+  title: Collections & Itertools
+  description: Lessons, drills, and quizzes for collections & itertools.
+  items:
+  - lesson.library.collections_itertools.a01
+  - lesson.library.collections_itertools.a02
+  - lesson.library.collections_itertools.a03
+  - lesson.library.collections_itertools.a04
+  - exercise.library.collections_itertools.a01
+  - exercise.library.collections_itertools.a02
+  - exercise.library.collections_itertools.a03
+  - exercise.library.collections_itertools.a04
+  - quiz.library.collections_itertools.a01
+  - exercise.library.collections_itertools.a05
+  - exercise.library.collections_itertools.a06
+  - exercise.library.collections_itertools.a07
+  - exercise.library.collections_itertools.a08
+  - quiz.library.collections_itertools.a02
+  - exercise.library.collections_itertools.a09
+  - exercise.library.collections_itertools.a10
+  - exercise.library.collections_itertools.a11
+  - exercise.library.collections_itertools.a12
+  - quiz.library.collections_itertools.a03
+  - exercise.library.collections_itertools.b01
+  - exercise.library.collections_itertools.b02
+- id: unit.regex_text_processing
+  title: Regex & Text Processing
+  description: Lessons, drills, and quizzes for regex & text processing.
+  items:
+  - lesson.library.regex_text_processing.a01
+  - lesson.library.regex_text_processing.a02
+  - lesson.library.regex_text_processing.a03
+  - exercise.library.regex_text_processing.a01
+  - exercise.library.regex_text_processing.a02
+  - exercise.library.regex_text_processing.a03
+  - exercise.library.regex_text_processing.a04
+  - exercise.library.regex_text_processing.a05
+  - quiz.library.regex_text_processing.a01
+  - exercise.library.regex_text_processing.a06
+  - exercise.library.regex_text_processing.a07
+  - exercise.library.regex_text_processing.a08
+  - exercise.library.regex_text_processing.a09
+  - exercise.library.regex_text_processing.a10
+  - quiz.library.regex_text_processing.a02
+  - exercise.library.regex_text_processing.a11
+  - exercise.library.regex_text_processing.a12
+  - exercise.library.regex_text_processing.b01
+  - exercise.library.regex_text_processing.b02
+  milestone: Text and data tooling mastered
+- id: unit.files_formats
+  title: Files & Data Formats
+  description: Lessons, drills, and quizzes for files & data formats.
+  items:
+  - lesson.library.files_formats.a01
+  - lesson.library.files_formats.a02
+  - lesson.library.files_formats.a03
+  - exercise.library.files_formats.a01
+  - exercise.library.files_formats.a02
+  - exercise.library.files_formats.a03
+  - exercise.library.files_formats.a04
+  - quiz.library.files_formats.a01
+  - exercise.library.files_formats.a05
+  - exercise.library.files_formats.a06
+  - exercise.library.files_formats.a07
+  - exercise.library.files_formats.a08
+  - quiz.library.files_formats.a02
+  - exercise.library.files_formats.a09
+  - exercise.library.files_formats.a10
+  - exercise.library.files_formats.a11
+  - exercise.library.files_formats.a12
+- id: unit.datetime_handling
+  title: Dates & Times
+  description: Lessons, drills, and quizzes for dates & times.
+  items:
+  - lesson.library.datetime_handling.a01
+  - lesson.library.datetime_handling.a02
+  - lesson.library.datetime_handling.a03
+  - exercise.library.datetime_handling.a01
+  - exercise.library.datetime_handling.a02
+  - exercise.library.datetime_handling.a03
+  - exercise.library.datetime_handling.a04
+  - quiz.library.datetime_handling.a01
+  - exercise.library.datetime_handling.a05
+  - exercise.library.datetime_handling.a06
+  - exercise.library.datetime_handling.a07
+  - exercise.library.datetime_handling.a08
+  - quiz.library.datetime_handling.a02
+  - exercise.library.datetime_handling.a09
+  - exercise.library.datetime_handling.a10
+  - exercise.library.datetime_handling.a11
+  - exercise.library.datetime_handling.a12
+- id: unit.data_wrangling_python
+  title: Pure-Python Data Wrangling
+  description: Lessons, drills, and quizzes for pure-python data wrangling.
+  items:
+  - lesson.library.data_wrangling_python.a01
+  - lesson.library.data_wrangling_python.a02
+  - lesson.library.data_wrangling_python.a03
+  - exercise.library.data_wrangling_python.a01
+  - exercise.library.data_wrangling_python.a02
+  - exercise.library.data_wrangling_python.a03
+  - exercise.library.data_wrangling_python.a04
+  - exercise.library.data_wrangling_python.a05
+  - quiz.library.data_wrangling_python.a01
+  - exercise.library.data_wrangling_python.a06
+  - exercise.library.data_wrangling_python.a07
+  - exercise.library.data_wrangling_python.a08
+  - exercise.library.data_wrangling_python.a09
+  - exercise.library.data_wrangling_python.a10
+  - quiz.library.data_wrangling_python.a02
+  - exercise.library.data_wrangling_python.a11
+  - exercise.library.data_wrangling_python.a12
+  - exercise.library.data_wrangling_python.b01
+  - exercise.library.data_wrangling_python.b02
+- id: unit.testing_concepts
+  title: Testing & Invariants
+  description: Lessons, drills, and quizzes for testing & invariants.
+  items:
+  - lesson.library.testing_concepts.a01
+  - lesson.library.testing_concepts.a02
+  - lesson.library.testing_concepts.a03
+  - exercise.library.testing_concepts.a01
+  - exercise.library.testing_concepts.a02
+  - exercise.library.testing_concepts.a03
+  - exercise.library.testing_concepts.a04
+  - quiz.library.testing_concepts.a01
+  - exercise.library.testing_concepts.a05
+  - exercise.library.testing_concepts.a06
+  - exercise.library.testing_concepts.a07
+  - exercise.library.testing_concepts.a08
+  - quiz.library.testing_concepts.a02
+  - exercise.library.testing_concepts.a09
+  - exercise.library.testing_concepts.a10
+  - exercise.library.testing_concepts.a11
+  - exercise.library.testing_concepts.a12
+- id: unit.type_hints
+  title: Type Hints & Contracts
+  description: Lessons, drills, and quizzes for type hints & contracts.
+  items:
+  - lesson.library.type_hints.a01
+  - lesson.library.type_hints.a02
+  - lesson.library.type_hints.a03
+  - exercise.library.type_hints.a01
+  - exercise.library.type_hints.a02
+  - exercise.library.type_hints.a03
+  - exercise.library.type_hints.a04
+  - quiz.library.type_hints.a01
+  - exercise.library.type_hints.a05
+  - exercise.library.type_hints.a06
+  - exercise.library.type_hints.a07
+  - exercise.library.type_hints.a08
+  - quiz.library.type_hints.a02
+  - exercise.library.type_hints.a09
+  - exercise.library.type_hints.a10
+  - exercise.library.type_hints.a11
+  - exercise.library.type_hints.a12
+  milestone: You test and type like a professional
+- id: unit.mixed_capstones
+  title: Mixed Capstones
+  description: Lessons, drills, and quizzes for mixed capstones.
+  items:
+  - exercise.library.mixed_capstones.a01
+  - exercise.library.mixed_capstones.a02
+  - quiz.library.mixed_capstones.a01
+  - exercise.library.mixed_capstones.a03
+  - exercise.library.mixed_capstones.a04
+  - quiz.library.mixed_capstones.a02
+  - exercise.library.mixed_capstones.a05
+  - exercise.library.mixed_capstones.a06
+  - quiz.library.mixed_capstones.a03
+  - exercise.library.mixed_capstones.a07
+  - exercise.library.mixed_capstones.a08
+  - quiz.library.mixed_capstones.a04
+  - exercise.library.mixed_capstones.b01
+  - exercise.library.mixed_capstones.b02
+  - quiz.library.mixed_capstones.a05
+  - exercise.library.mixed_capstones.b03
+  - exercise.library.mixed_capstones.b04
+  - quiz.library.mixed_capstones.a06
+- id: unit.capstone_ledger
+  title: 'Capstone: The Market Ledger'
+  description: 'Lessons, drills, and quizzes for capstone: the market ledger.'
+  items:
+  - lesson.library.capstone_ledger.a01
+  - exercise.library.capstone_ledger.c01
+  - exercise.library.capstone_ledger.c02
+  - exercise.library.capstone_ledger.c03
+  - exercise.library.capstone_ledger.c04
+  - exercise.library.capstone_ledger.c05
+  - exercise.library.capstone_ledger.c06
+  milestone: 'Mastery: you built a complete system from scratch'

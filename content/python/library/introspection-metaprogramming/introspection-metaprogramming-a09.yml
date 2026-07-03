@@ -1,0 +1,211 @@
+id: exercise.library.introspection_metaprogramming.a09
+kind: exercise
+version: 1
+language: python
+title: Measuring the Operating Manual
+slug: introspection-metaprogramming-a09
+difficulty: medium
+concepts:
+  - python.introspection
+  - python.strings
+prerequisites:
+  - python.functions
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.introspection_metaprogramming.a09
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: >-
+    Original print-shop framing. The research plan's function_source_lines_count
+    relies on inspect.getsource, which raises OSError in the sandbox because
+    exec-defined functions have no backing file; this replaces it with the
+    file-free inspect.getdoc, counting a routine's cleaned docstring lines.
+prompt_markdown: |
+  A letterpress print shop keeps a short operating manual in each routine's
+  docstring. You need to measure how long each manual is — but you cannot read
+  the source files, only the live routine objects.
+
+  Five routines are defined and collected in a `_ROUTINES` dictionary mapping each
+  name to its function object. Write `manual_line_count(name)`, which looks up the
+  named routine and returns the number of lines in its **cleaned** docstring.
+
+  Use `inspect.getdoc(func)`, which returns the docstring with the shared leading
+  indentation removed and with surrounding blank lines stripped, or `None` when
+  the routine has no docstring. Behaviour to implement exactly:
+
+  - If `inspect.getdoc(func)` is `None` (the routine has no docstring), return `0`.
+  - Otherwise return the number of lines in the cleaned docstring, counting each
+    line including blank lines that sit *between* text lines. Use
+    `len(cleaned.splitlines())`.
+
+  Because `getdoc` trims blank lines at the very top and bottom, a manual that is
+  padded with empty lines above and below its text counts only the lines from its
+  first word to its last. The given `name` is always a key in `_ROUTINES`.
+starter_code: |
+  import inspect
+
+
+  def press_setup():
+      """Warm the press to temperature."""
+      return 1
+
+
+  def ink_mix():
+      """Blend the ink.
+
+      Stir until even.
+      """
+      return 2
+
+
+  def roller_clean():
+      """Wipe the roller.
+      Dry it fully.
+      """
+      return 3
+
+
+  def plate_align():
+      return 4
+
+
+  def paper_feed():
+      """
+
+      Load the paper tray.
+      Check the alignment.
+
+      """
+      return 5
+
+
+  _ROUTINES = {
+      "press_setup": press_setup,
+      "ink_mix": ink_mix,
+      "roller_clean": roller_clean,
+      "plate_align": plate_align,
+      "paper_feed": paper_feed,
+  }
+
+
+  def manual_line_count(name):
+      return 0
+function_name: manual_line_count
+input_mode: function
+solution_sketch: >-
+  Look up the routine, call inspect.getdoc on it, return 0 when it is None,
+  otherwise return len(cleaned.splitlines()).
+sample_solution: |
+  import inspect
+
+
+  def press_setup():
+      """Warm the press to temperature."""
+      return 1
+
+
+  def ink_mix():
+      """Blend the ink.
+
+      Stir until even.
+      """
+      return 2
+
+
+  def roller_clean():
+      """Wipe the roller.
+      Dry it fully.
+      """
+      return 3
+
+
+  def plate_align():
+      return 4
+
+
+  def paper_feed():
+      """
+
+      Load the paper tray.
+      Check the alignment.
+
+      """
+      return 5
+
+
+  _ROUTINES = {
+      "press_setup": press_setup,
+      "ink_mix": ink_mix,
+      "roller_clean": roller_clean,
+      "plate_align": plate_align,
+      "paper_feed": paper_feed,
+  }
+
+
+  def manual_line_count(name):
+      func = _ROUTINES[name]
+      cleaned = inspect.getdoc(func)
+      if cleaned is None:
+          return 0
+      return len(cleaned.splitlines())
+hints:
+  - level: 1
+    text: >-
+      inspect.getdoc(func) returns the docstring with shared indentation removed,
+      or None when there is no docstring.
+  - level: 2
+    text: >-
+      Guard the None case first and return 0; a routine like plate_align has no
+      docstring at all.
+  - level: 3
+    text: >-
+      For a real docstring, split it with .splitlines() and return the length;
+      blank lines between paragraphs count, but getdoc already stripped the blank
+      lines at the very top and bottom.
+tests:
+  public:
+    - name: single_line
+      input: press_setup
+      expected: 1
+    - name: paragraph_with_gap
+      input: ink_mix
+      expected: 3
+    - name: no_docstring
+      input: plate_align
+      expected: 0
+    - name: two_lines
+      input: roller_clean
+      expected: 2
+  validation:
+    - name: padded_manual_trimmed
+      input: paper_feed
+      expected: 2
+    - name: paragraph_again
+      input: ink_mix
+      expected: 3
+    - name: single_line_again
+      input: press_setup
+      expected: 1
+    - name: missing_again
+      input: plate_align
+      expected: 0
+explanation_markdown: |
+  In the sandbox a function has no source file behind it, so `inspect.getsource`
+  would raise `OSError`. The docstring, however, lives on the object itself as
+  `__doc__`, and `inspect.getdoc` reads it directly — no file needed. `getdoc`
+  also does two clean-ups a raw `__doc__` does not: it removes the common leading
+  whitespace that indentation adds, and it strips blank lines above the first and
+  below the last line of text.
+
+  That trimming is why `paper_feed`, whose docstring is padded with empty lines
+  top and bottom, measures 2 rather than 4 — only the two lines of real content
+  survive. Meanwhile `ink_mix` measures 3 because the blank line *between* its two
+  sentences sits inside the text and is kept. Reading metadata off the live object
+  is the sandbox-safe way to answer "how long is this routine's manual?".
+common_mistakes:
+  - Calling inspect.getsource, which raises OSError for functions defined without a real source file.
+  - Reading __doc__ directly and counting its raw indented lines instead of letting getdoc normalise them.
+  - Forgetting the no-docstring case, so getdoc returns None and .splitlines() raises an AttributeError.

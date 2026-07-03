@@ -1,0 +1,87 @@
+id: lesson.library.bit_number_theory.a02
+kind: lesson
+version: 1
+language: python
+title: Bitmasks as Subsets and Feature Flags
+slug: lesson-bit-number-theory-a02
+difficulty: medium
+concepts:
+  - patterns.bit_manipulation
+  - python.loops
+prerequisites:
+  - patterns.bit_manipulation
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.bit_number_theory.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original subset-enumeration and flag-encoding lesson themed around a print shop order form.
+body_markdown: |
+  Once you can read and write single bits, a whole integer becomes a compact way
+  to describe a *set*. Picture a print shop where every order can request four
+  finishing options: lamination, binding, embossing, and foil. Number them 0 to
+  3 and one integer describes any combination. `0b0000` is a plain order and
+  `0b1010` means binding and foil are on.
+
+  This is the idea behind **feature flags**. Encoding a selection is a series of
+  ORs; decoding asks which bits survived an AND.
+
+  ```python
+  LAMINATE, BIND, EMBOSS, FOIL = 1 << 0, 1 << 1, 1 << 2, 1 << 3
+
+  def encode(options):
+      mask = 0
+      for flag in options:
+          mask |= flag          # OR each chosen option into the mask
+      return mask
+
+  def wants(mask, flag):
+      return mask & flag != 0   # non-zero means that bit survived
+  ```
+
+  Storing several booleans in one number saves space, but the more powerful move
+  is the reverse: **enumerating every possible subset**. A set of `n` items has
+  exactly `2**n` subsets, and the integers from `0` to `2**n - 1` are those
+  subsets in disguise. In the number `mask`, bit `i` answers "is item `i` in
+  this subset?" So a single counting loop walks through all of them.
+
+  ```python
+  def all_subsets(items):
+      n = len(items)
+      result = []
+      for mask in range(1 << n):          # 2**n masks, 0 .. 2**n - 1
+          subset = [items[i] for i in range(n) if (mask >> i) & 1]
+          result.append(subset)
+      return result
+  ```
+
+  Trace `items = ["A", "B"]`. Mask `0` is `[]`, mask `1` (binary `01`) keeps
+  item 0 giving `["A"]`, mask `2` (binary `10`) keeps item 1 giving `["B"]`, and
+  mask `3` (binary `11`) keeps both. The counting order is predictable, which
+  makes it easy to test.
+
+  Because each subset is just an integer, you can *filter* subsets with the bit
+  tools from the previous lesson. The popcount `n & (n - 1)` trick tells you how
+  many items a subset holds, so you can keep only subsets of a certain size, and
+  a running sum over the chosen items lets you keep only those within a budget.
+  Combining enumeration with a popcount test and a sum test is a classic way to
+  answer "how many ways can I pick exactly `k` things that fit a limit?" for
+  small `n`.
+
+  Keep the scale in mind: `2**n` grows explosively, so full subset enumeration
+  is a tool for small collections, roughly twenty items or fewer, not for large
+  inputs.
+checkpoints:
+  - question: How many subsets does a set of n items have, and how does that map onto integers?
+    answer: It has 2**n subsets, one for each integer from 0 to 2**n - 1, where bit i signals whether item i is included.
+    explanation: Each item is independently in or out, giving 2 choices for each of n items, and the binary form of the counter encodes exactly those choices.
+  - question: To build the subset for a given mask, how do you decide whether items[i] belongs in it?
+    answer: Include items[i] when (mask >> i) & 1 is 1, that is, when bit i of the mask is set.
+    explanation: Shifting the mask right by i and masking the low bit isolates the switch that stands for item i.
+  - question: Why is bitmask subset enumeration only practical for small item counts?
+    answer: Because the number of subsets is 2**n, which grows exponentially, so even a few dozen items produce an unmanageable number of masks.
+    explanation: At n = 20 there are over a million subsets and at n = 40 over a trillion, so the loop stops being feasible quickly.

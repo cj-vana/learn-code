@@ -1,0 +1,85 @@
+id: exercise.library.decorators_closures.a01
+kind: exercise
+version: 1
+language: python
+title: Running Toll Tally
+slug: decorators-closures-a01
+difficulty: easy
+concepts:
+  - python.closures_decorators
+  - python.functions
+prerequisites:
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.decorators_closures.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original ferry-booth running-total scenario driven by a stateful closure.
+prompt_markdown: |
+  A ferry booth wants a tally that remembers everything collected so far. Write
+  `running_totals(amounts)` where `amounts` is a list of fares. Build a closure
+  that keeps a private running total, feed it each fare in order, and return the
+  list of running totals after each charge.
+
+  For example, `running_totals([10, 5, 20])` returns `[10, 15, 35]`. An empty
+  list returns `[]`.
+starter_code: |
+  def running_totals(amounts):
+      # Build a closure that remembers the running total, then feed it each fare.
+      return []
+function_name: running_totals
+input_mode: function
+solution_sketch: A factory returns an inner function that uses nonlocal to accumulate; map it over the fares.
+sample_solution: |
+  def running_totals(amounts):
+      def make_teller():
+          total = 0
+          def add(fare):
+              nonlocal total
+              total += fare
+              return total
+          return add
+      teller = make_teller()
+      return [teller(fare) for fare in amounts]
+hints:
+  - level: 1
+    text: You need one variable that survives between calls without being global. A closure over a local variable does exactly that.
+  - level: 2
+    text: Write a factory that defines total = 0 and returns an inner add(fare) function; the inner function updates total and returns it.
+  - level: 3
+    text: Inside add, declare nonlocal total before doing total += fare, then build the result by calling the closure once per fare in order.
+tests:
+  public:
+    - name: three_fares
+      input: [10, 5, 20]
+      expected: [10, 15, 35]
+    - name: empty
+      input: []
+      expected: []
+    - name: single
+      input: [7]
+      expected: [7]
+  validation:
+    - name: with_zero
+      input: [0, 4, 0, 6]
+      expected: [0, 4, 4, 10]
+    - name: negatives_refund
+      input: [12, -5, 3]
+      expected: [12, 7, 10]
+    - name: repeats
+      input: [2, 2, 2, 2]
+      expected: [2, 4, 6, 8]
+explanation_markdown: |
+  The inner `add` closes over `total` from the factory's scope. Because `total`
+  lives in the enclosing frame rather than inside `add`, its value persists
+  across calls, and `nonlocal` lets `add` rebind it instead of creating a fresh
+  local. Calling the closure once per fare produces the cumulative sequence in a
+  single pass, with the state hidden inside the closure rather than in a global.
+common_mistakes:
+  - Forgetting nonlocal, so total += fare raises UnboundLocalError or silently resets each call.
+  - Storing the total in a global variable, which leaks state between separate tallies.
+  - Returning only the final total instead of the running total after each fare.

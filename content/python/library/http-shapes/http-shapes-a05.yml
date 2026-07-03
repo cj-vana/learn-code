@@ -1,0 +1,103 @@
+id: exercise.library.http_shapes.a05
+kind: exercise
+version: 1
+language: python
+title: The Status Light on the Wall
+slug: http-shapes-a05
+difficulty: easy
+concepts:
+  - python.http_model
+  - python.conditionals
+prerequisites:
+  - python.operators
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.http_shapes.a05
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original status-code classifier themed around a harbor monitoring dashboard; pure range logic.
+prompt_markdown: |
+  The harbor's monitoring wall shows three lamps for every API response: one for
+  a successful call, one for a caller mistake, and one for a server fault. Write
+  `status_flags(code)` that takes an integer HTTP status code and returns a dict
+  with exactly these three boolean keys:
+
+  - `"is_success"` — `True` when the code is in the 2xx range (`200` to `299`).
+  - `"is_client_error"` — `True` when the code is in the 4xx range (`400` to `499`).
+  - `"is_server_error"` — `True` when the code is in the 5xx range (`500` to `599`).
+
+  Any code outside all three ranges — including 1xx informational and 3xx
+  redirect codes, and anything above 599 — makes all three flags `False`. At
+  most one flag is ever `True`.
+
+  Examples:
+
+  - `200` returns `{"is_success": True, "is_client_error": False, "is_server_error": False}`.
+  - `404` returns `{"is_success": False, "is_client_error": True, "is_server_error": False}`.
+  - `301` returns all three flags `False`.
+starter_code: |
+  def status_flags(code):
+      return {}
+function_name: status_flags
+input_mode: function
+solution_sketch: Return a dict whose three boolean values are each a range comparison like 200 <= code <= 299.
+sample_solution: |
+  def status_flags(code):
+      return {
+          "is_success": 200 <= code <= 299,
+          "is_client_error": 400 <= code <= 499,
+          "is_server_error": 500 <= code <= 599,
+      }
+hints:
+  - level: 1
+    text: Each flag is just a yes/no test on which hundred-block the code falls into.
+  - level: 2
+    text: Python lets you chain comparisons, so 200 <= code <= 299 is a single boolean expression.
+  - level: 3
+    text: Return the three chained comparisons directly as the dict values; a comparison already evaluates to True or False, so no if-statement is needed.
+tests:
+  public:
+    - name: ok
+      input: 200
+      expected: {is_success: true, is_client_error: false, is_server_error: false}
+    - name: not_found
+      input: 404
+      expected: {is_success: false, is_client_error: true, is_server_error: false}
+    - name: service_unavailable
+      input: 503
+      expected: {is_success: false, is_client_error: false, is_server_error: true}
+  validation:
+    - name: redirect_all_false
+      input: 301
+      expected: {is_success: false, is_client_error: false, is_server_error: false}
+    - name: success_upper_boundary
+      input: 299
+      expected: {is_success: true, is_client_error: false, is_server_error: false}
+    - name: server_lower_boundary
+      input: 500
+      expected: {is_success: false, is_client_error: false, is_server_error: true}
+    - name: just_below_client
+      input: 399
+      expected: {is_success: false, is_client_error: false, is_server_error: false}
+    - name: teapot_is_client_error
+      input: 418
+      expected: {is_success: false, is_client_error: true, is_server_error: false}
+explanation_markdown: |
+  HTTP status codes are organized into hundred-blocks whose leading digit
+  carries the meaning: 2xx succeeded, 4xx blamed the caller, 5xx blamed the
+  server. Turning that into three independent boolean flags is exactly what a
+  dashboard needs, and because the ranges do not overlap, at most one flag is
+  ever `True`.
+
+  The tidy way to write each test is a chained comparison: `200 <= code <= 299`
+  reads like the math it represents and evaluates straight to a boolean, so the
+  whole function is three dict values with no `if` in sight. Codes that fall in
+  the 1xx and 3xx blocks are neither errors nor final successes here, so they
+  correctly leave every lamp dark.
+common_mistakes:
+  - Testing only the first digit (like `code // 100 == 2`) but forgetting that leaves out-of-range codes such as 700 mislabeled.
+  - Using `code >= 200` without an upper bound, so 404 is wrongly counted as a success.
+  - Returning bare booleans or a list instead of the dict of named flags the prompt asks for.

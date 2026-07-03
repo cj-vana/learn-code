@@ -24,6 +24,8 @@ const DETAIL: PathDetail = {
       title: 'Python Refresh',
       description: 'Start here.',
       percent_complete: 50,
+      status: 'in_progress',
+      milestone: null,
       items: [
         {
           id: 'lesson.library.python_refresh.a01',

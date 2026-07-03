@@ -1,0 +1,170 @@
+id: exercise.library.scripting_automation.a12
+kind: exercise
+version: 1
+language: python
+title: The City Archive Manifest Report
+slug: scripting-automation-a12
+difficulty: hard
+concepts:
+  - python.pathlib_os
+  - concepts.grouping_aggregation
+  - python.dictionaries
+prerequisites:
+  - python.dictionaries
+  - python.loops
+estimated_time_minutes: 26
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.scripting_automation.a12
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original multi-axis aggregation drill framed around a city archive summarizing a backup mirror manifest.
+prompt_markdown: |
+  A city archive runs a nightly backup mirror and wants a one-glance report over
+  the manifest before it commits the snapshot. You build the report as a pure
+  transform over the file records — no disk access, just the path strings and
+  sizes.
+
+  Write `summarize_manifest(files)` that takes a single list of record
+  dictionaries, each with a `"path"` string and an integer `"size"`. Return a
+  summary dictionary with exactly these keys:
+
+  - `"file_count"`: the number of files.
+  - `"total_size"`: the sum of all sizes.
+  - `"by_extension"`: a dict keyed by the lowercased final suffix **including the
+    dot** (e.g. `".log"`), using the empty string `""` for files with no
+    extension. Each value is a dict `{"count": <int>, "total_size": <int>}`.
+  - `"by_directory"`: a dict keyed by the immediate parent directory as a POSIX
+    string, mapping to how many files live directly in it. A file with no
+    directory component uses the key `"."`.
+  - `"largest"`: the `"path"` of the largest file by `"size"`. When two files tie
+    on size, pick the one whose path sorts first lexicographically. Use `None`
+    when there are no files.
+
+  Rules and edge cases the tests cover:
+
+  - An empty list returns
+    `{"file_count": 0, "total_size": 0, "by_extension": {}, "by_directory": {}, "largest": None}`.
+  - Extensions are grouped case-insensitively: `a.LOG` and `b.log` both count under
+    `".log"`.
+  - Only the final suffix is the extension: `db.tar.gz` counts under `".gz"`.
+  - Directory keys are the parent path, so `logs/night/a.log` counts under
+    `"logs/night"` and a root-level `README` counts under `"."`.
+
+  Example:
+
+  ```python
+  summarize_manifest([
+      {"path": "logs/night/a.log", "size": 30},
+      {"path": "logs/night/b.LOG", "size": 20},
+      {"path": "logs/summary.txt", "size": 50},
+      {"path": "README", "size": 5},
+  ])
+  # -> {
+  #   "file_count": 4,
+  #   "total_size": 105,
+  #   "by_extension": {".log": {"count": 2, "total_size": 50},
+  #                    ".txt": {"count": 1, "total_size": 50},
+  #                    "": {"count": 1, "total_size": 5}},
+  #   "by_directory": {"logs/night": 2, "logs": 1, ".": 1},
+  #   "largest": "logs/summary.txt",
+  # }
+  ```
+starter_code: |
+  from pathlib import PurePosixPath
+
+
+  def summarize_manifest(files):
+      return {}
+function_name: summarize_manifest
+input_mode: function
+solution_sketch: One pass over the records accumulates the count, total, per-extension bucket (via setdefault), and per-directory count, while tracking the largest file with a size-then-path tie-break; assemble the summary dict at the end.
+sample_solution: |
+  from pathlib import PurePosixPath
+
+
+  def summarize_manifest(files):
+      summary = {
+          "file_count": len(files),
+          "total_size": 0,
+          "by_extension": {},
+          "by_directory": {},
+          "largest": None,
+      }
+      best_path = None
+      best_size = None
+      for record in files:
+          path = record["path"]
+          size = record["size"]
+          pure = PurePosixPath(path)
+          summary["total_size"] += size
+
+          ext = pure.suffix.lower()
+          bucket = summary["by_extension"].setdefault(ext, {"count": 0, "total_size": 0})
+          bucket["count"] += 1
+          bucket["total_size"] += size
+
+          directory = str(pure.parent)
+          summary["by_directory"][directory] = summary["by_directory"].get(directory, 0) + 1
+
+          if best_size is None or size > best_size or (size == best_size and path < best_path):
+              best_size = size
+              best_path = path
+      summary["largest"] = best_path
+      return summary
+hints:
+  - level: 1
+    text: Do all four rollups in a single pass, seeding the summary dict with a zero count, zero total, two empty dicts, and None for largest.
+  - level: 2
+    text: 'For each file use PurePosixPath(path): .suffix.lower() (with "" for no dot) is the extension key and str(.parent) is the directory key.'
+  - level: 3
+    text: Track largest with two variables and update when size > best_size, or when size == best_size and path < best_path so ties break on the smaller path.
+tests:
+  public:
+    - name: empty_manifest
+      input: []
+      expected: {"file_count": 0, "total_size": 0, "by_extension": {}, "by_directory": {}, "largest": null}
+    - name: single_file
+      input: [{"path": "data/report.csv", "size": 12}]
+      expected: {"file_count": 1, "total_size": 12, "by_extension": {".csv": {"count": 1, "total_size": 12}}, "by_directory": {"data": 1}, "largest": "data/report.csv"}
+    - name: mixed_manifest
+      input: [{"path": "logs/night/a.log", "size": 30}, {"path": "logs/night/b.LOG", "size": 20}, {"path": "logs/summary.txt", "size": 50}, {"path": "README", "size": 5}]
+      expected: {"file_count": 4, "total_size": 105, "by_extension": {".log": {"count": 2, "total_size": 50}, ".txt": {"count": 1, "total_size": 50}, "": {"count": 1, "total_size": 5}}, "by_directory": {"logs/night": 2, "logs": 1, ".": 1}, "largest": "logs/summary.txt"}
+  validation:
+    - name: largest_tie_breaks_on_path
+      input: [{"path": "b.bin", "size": 100}, {"path": "a.bin", "size": 100}]
+      expected: {"file_count": 2, "total_size": 200, "by_extension": {".bin": {"count": 2, "total_size": 200}}, "by_directory": {".": 2}, "largest": "a.bin"}
+    - name: no_extension_grouping
+      input: [{"path": "bin/run", "size": 7}, {"path": "bin/exec", "size": 9}]
+      expected: {"file_count": 2, "total_size": 16, "by_extension": {"": {"count": 2, "total_size": 16}}, "by_directory": {"bin": 2}, "largest": "bin/exec"}
+    - name: double_suffix_extension
+      input: [{"path": "backups/db.tar.gz", "size": 40}]
+      expected: {"file_count": 1, "total_size": 40, "by_extension": {".gz": {"count": 1, "total_size": 40}}, "by_directory": {"backups": 1}, "largest": "backups/db.tar.gz"}
+    - name: deep_nesting_directories
+      input: [{"path": "a/b/c.txt", "size": 1}, {"path": "a/b/d.txt", "size": 2}, {"path": "a/e.txt", "size": 3}]
+      expected: {"file_count": 3, "total_size": 6, "by_extension": {".txt": {"count": 3, "total_size": 6}}, "by_directory": {"a/b": 2, "a": 1}, "largest": "a/e.txt"}
+    - name: case_insensitive_ext_and_tie
+      input: [{"path": "x.PNG", "size": 5}, {"path": "y.png", "size": 25}, {"path": "z.jpg", "size": 25}]
+      expected: {"file_count": 3, "total_size": 55, "by_extension": {".png": {"count": 2, "total_size": 30}, ".jpg": {"count": 1, "total_size": 25}}, "by_directory": {".": 3}, "largest": "y.png"}
+explanation_markdown: |
+  This is a multi-axis group-by, and the discipline is to compute every axis in a
+  single pass rather than looping the manifest four times. Each record contributes
+  to four running structures: the scalar `total_size`, an extension bucket, a
+  directory tally, and the running "largest so far". Seeding `by_extension` buckets
+  with `setdefault(ext, {"count": 0, "total_size": 0})` lets you fold count and
+  size into the same nested dict without a separate initialization step, and
+  `dict.get(directory, 0) + 1` is the idiomatic counter for the directory axis.
+
+  Two pathlib facts do the heavy lifting: `PurePosixPath(path).suffix.lower()`
+  normalizes the extension (and is `""` for dotless names, giving you the empty-key
+  bucket for free), and `str(PurePosixPath(path).parent)` yields `"."` for a
+  root-level file — which is why no special-casing is needed for files without a
+  directory. The `largest` tie-break — greater size wins, and on a tie the smaller
+  path wins — makes the result deterministic no matter what order the manifest
+  arrives in. The whole report is O(n).
+common_mistakes:
+  - Returning tuples or forgetting the nested `{"count", "total_size"}` shape, so `by_extension` values do not match.
+  - Breaking size ties arbitrarily (keeping whichever came first) instead of choosing the lexicographically smaller path.
+  - Special-casing root-level files instead of letting `str(PurePosixPath(path).parent)` produce the `"."` directory key.

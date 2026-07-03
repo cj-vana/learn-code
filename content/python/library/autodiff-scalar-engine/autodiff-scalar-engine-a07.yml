@@ -1,0 +1,160 @@
+id: exercise.library.autodiff_scalar_engine.a07
+kind: exercise
+version: 1
+language: python
+title: Scheduling a Compute Graph
+slug: autodiff-scalar-engine-a07
+difficulty: medium
+concepts:
+  - ai.gradients_autodiff
+  - patterns.graph_traversal
+prerequisites:
+  - python.dictionaries
+  - python.lists
+  - python.sorting
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.autodiff_scalar_engine.a07
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original Kahn-style ordering drill framed as scheduling nodes of a differentiable greenhouse-climate model, with an alphabetical tie-break to force a single deterministic answer.
+prompt_markdown: |
+  A differentiable model (think of a tiny neural network predicting greenhouse
+  temperature) is really a **graph of small computations**. Each node either holds
+  an input number or combines earlier nodes. Before you can evaluate a node, every
+  node it depends on must already be computed. That ordering is a **topological
+  order**, and it is exactly what a framework works out before running a forward
+  pass -- the *backward* pass then walks this same order in reverse.
+
+  Write `topo_order(graph)` that takes **one dictionary**:
+
+  - `graph["edges"]` maps each node name (a string) to a list of the node names
+    that must be computed **before** it (its inputs, the "children needed first").
+  - Every node appears as a key. A leaf (a raw input) maps to an empty list `[]`.
+  - The graph is a valid DAG: there are no cycles.
+
+  Return a list containing **every** node name, ordered so that each node appears
+  **after** all the names in its list. When several nodes are eligible at the same
+  moment (all of their prerequisites are already placed), append the
+  **alphabetically smallest** name first. This tie-break makes the answer unique.
+
+  Example:
+
+  ```python
+  topo_order({"edges": {"a": [], "b": [], "c": [], "d": ["a", "b"], "e": ["d", "c"]}})
+  # a, b, c have no prerequisites -> placed alphabetically: a, b, c
+  # then d (needs a, b), then e (needs d, c)
+  # -> ["a", "b", "c", "d", "e"]
+  ```
+starter_code: |
+  import heapq
+
+
+  def topo_order(graph):
+      return []
+function_name: topo_order
+input_mode: function
+solution_sketch: Count each node's prerequisites as an in-degree, build a reverse map from prerequisite to dependents, then run Kahn's algorithm using a min-heap of eligible node names so ties break alphabetically.
+sample_solution: |
+  import heapq
+
+
+  def topo_order(graph):
+      edges = graph["edges"]
+      indegree = {node: len(prereqs) for node, prereqs in edges.items()}
+      dependents = {node: [] for node in edges}
+      for node, prereqs in edges.items():
+          for prereq in prereqs:
+              dependents[prereq].append(node)
+      ready = [node for node, deg in indegree.items() if deg == 0]
+      heapq.heapify(ready)
+      order = []
+      while ready:
+          node = heapq.heappop(ready)
+          order.append(node)
+          for child in dependents[node]:
+              indegree[child] -= 1
+              if indegree[child] == 0:
+                  heapq.heappush(ready, child)
+      return order
+hints:
+  - level: 1
+    text: A node is ready to place once every name in its prerequisite list has already been placed. Start with the nodes whose lists are empty.
+  - level: 2
+    text: Track an in-degree (number of not-yet-placed prerequisites) per node and a reverse map from each prerequisite to the nodes that depend on it. Placing a node lowers its dependents' in-degrees.
+  - level: 3
+    text: Keep the currently ready node names in a min-heap so heappop always returns the alphabetically smallest. When a dependent's in-degree hits zero, push it onto the heap.
+tests:
+  public:
+    - name: linear_chain
+      input:
+        edges:
+          a: []
+          b: [a]
+      expected: [a, b]
+    - name: add_then_mul
+      input:
+        edges:
+          a: []
+          b: []
+          c: []
+          d: [a, b]
+          e: [d, c]
+      expected: [a, b, c, d, e]
+    - name: diamond
+      input:
+        edges:
+          x: []
+          p: [x]
+          q: [x]
+          z: [p, q]
+      expected: [x, p, q, z]
+  validation:
+    - name: two_roots_tie
+      input:
+        edges:
+          b: []
+          a: []
+          c: [a, b]
+      expected: [a, b, c]
+    - name: multiple_roots
+      input:
+        edges:
+          m: []
+          n: []
+          k: []
+          sum: [m, n]
+      expected: [k, m, n, sum]
+    - name: named_layers
+      input:
+        edges:
+          g1: []
+          g2: []
+          h: [g1, g2]
+          loss: [h]
+      expected: [g1, g2, h, loss]
+    - name: single_leaf
+      input:
+        edges:
+          only: []
+      expected: [only]
+explanation_markdown: |
+  Kahn's algorithm places nodes whose prerequisites are all satisfied. The
+  in-degree of a node is how many of its prerequisites remain unplaced; when it
+  reaches zero the node becomes eligible. Building `dependents` (the reverse of
+  `edges`) lets you cheaply decrement the right in-degrees each time you place a
+  node. Using a min-heap for the eligible set means that whenever there is a
+  choice, the alphabetically smallest name comes out first, so the output is a
+  single deterministic topological order. The whole run is O((V + E) log V).
+
+  This is the backbone of an autodiff engine: the forward pass evaluates nodes in
+  a topological order, and reverse-mode differentiation (backpropagation) sends
+  gradients along the **reverse** of that order, guaranteeing that every node's
+  gradient is fully accumulated before it is passed further back.
+common_mistakes:
+  - Sorting only the initial roots but then appending newly-ready nodes in discovery order, which breaks the alphabetical tie-break later in the run.
+  - Forgetting to include leaf nodes (empty prerequisite lists) in the output, so the order is missing its inputs.
+  - Building the graph as prerequisite lists but decrementing in-degrees as if the edges pointed the other way, producing a reversed order.

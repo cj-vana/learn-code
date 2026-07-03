@@ -1,0 +1,145 @@
+id: exercise.library.dataframe_thinking.a06
+kind: exercise
+version: 1
+language: python
+title: Spreading the Harbor Fuel Ledger
+slug: dataframe-thinking-a06
+difficulty: medium
+concepts:
+  - concepts.dataframe_thinking
+  - concepts.grouping_aggregation
+prerequisites:
+  - python.dictionaries
+  - python.loops
+estimated_time_minutes: 16
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dataframe_thinking.a06
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original long-to-wide reshape drill framed around spreading a harbor fuel ledger into a boat-by-fuel matrix, teaching the pivot_wider mental model including filling absent cells with None.
+prompt_markdown: |
+  A harbor logs every fuel purchase as a long-form row: which boat bought it,
+  which fuel type, and how many liters. The harbourmaster wants a grid instead -
+  one row per boat, one column per fuel type - the reshape a data-frame library
+  calls `pivot` or `pivot_wider`.
+
+  Write `spread_rows(payload)` that takes a single dictionary with four keys:
+
+  - `"rows"`: a list of long-form purchase dictionaries.
+  - `"index_col"`: the column whose distinct values become the output rows.
+  - `"columns_col"`: the column whose distinct values become the new column
+    names.
+  - `"values_col"`: the column supplying each cell's value.
+
+  Return a list of dictionaries, one per distinct `index_col` value, in the order
+  those values **first appear** in `"rows"`. Each output dictionary holds:
+
+  - `index_col` mapped to that index value, and
+  - one key for every distinct `columns_col` value seen anywhere in `"rows"`,
+    mapped to the matching `values_col` cell.
+
+  If a particular index/column combination never appears in the input, fill that
+  cell with `None`. You may assume each index/column pair appears at most once and
+  that all three named columns are present in every row.
+
+  Edge cases the tests cover:
+
+  - An empty `"rows"` list returns an empty list `[]`.
+  - When a boat lacks a fuel type another boat has, that cell is `None`.
+  - Every distinct column value becomes a key on every output row, even when it is
+    absent for some rows.
+
+  Example:
+
+  ```python
+  spread_rows({
+      "rows": [{"boat": "Otter", "fuel": "diesel", "liters": 40},
+               {"boat": "Otter", "fuel": "petrol", "liters": 10},
+               {"boat": "Wren", "fuel": "diesel", "liters": 25}],
+      "index_col": "boat",
+      "columns_col": "fuel",
+      "values_col": "liters",
+  })
+  # -> [{"boat": "Otter", "diesel": 40, "petrol": 10},
+  #     {"boat": "Wren", "diesel": 25, "petrol": None}]
+  ```
+starter_code: |
+  def spread_rows(payload):
+      return []
+function_name: spread_rows
+input_mode: function
+solution_sketch: In one pass record the first-appearance order of index values and column values and store each cell keyed by (index, column); then build one dictionary per index, reading every column with a default of None for absent pairs.
+sample_solution: |
+  def spread_rows(payload):
+      rows = payload["rows"]
+      index_col = payload["index_col"]
+      columns_col = payload["columns_col"]
+      values_col = payload["values_col"]
+      index_order = []
+      column_order = []
+      cells = {}
+      for row in rows:
+          idx = row[index_col]
+          col = row[columns_col]
+          if idx not in index_order:
+              index_order.append(idx)
+          if col not in column_order:
+              column_order.append(col)
+          cells[(idx, col)] = row[values_col]
+      result = []
+      for idx in index_order:
+          record = {index_col: idx}
+          for col in column_order:
+              record[col] = cells.get((idx, col))
+          result.append(record)
+      return result
+hints:
+  - level: 1
+    text: Spreading turns many tall rows into one wide row per index value, with a column for each distinct columns_col value across the whole input.
+  - level: 2
+    text: First scan the rows once to learn the index values, the full set of column values, and each (index, column) cell; track first-appearance order for both.
+  - level: 3
+    text: Store cells in a dict keyed by the (index, column) tuple, then build each output row by reading cells.get((idx, col)), which yields None for combinations that never appeared.
+tests:
+  public:
+    - name: empty_ledger
+      input: {"rows": [], "index_col": "boat", "columns_col": "fuel", "values_col": "liters"}
+      expected: []
+    - name: two_by_two_with_gap
+      input: {"rows": [{"boat": "Otter", "fuel": "diesel", "liters": 40}, {"boat": "Otter", "fuel": "petrol", "liters": 10}, {"boat": "Wren", "fuel": "diesel", "liters": 25}], "index_col": "boat", "columns_col": "fuel", "values_col": "liters"}
+      expected: [{"boat": "Otter", "diesel": 40, "petrol": 10}, {"boat": "Wren", "diesel": 25, "petrol": null}]
+    - name: single_index_two_columns
+      input: {"rows": [{"boat": "Otter", "fuel": "diesel", "liters": 40}, {"boat": "Otter", "fuel": "petrol", "liters": 10}], "index_col": "boat", "columns_col": "fuel", "values_col": "liters"}
+      expected: [{"boat": "Otter", "diesel": 40, "petrol": 10}]
+  validation:
+    - name: full_grid_no_gaps
+      input: {"rows": [{"day": "mon", "shift": "am", "sales": 5}, {"day": "mon", "shift": "pm", "sales": 7}, {"day": "tue", "shift": "am", "sales": 3}, {"day": "tue", "shift": "pm", "sales": 9}], "index_col": "day", "columns_col": "shift", "values_col": "sales"}
+      expected: [{"day": "mon", "am": 5, "pm": 7}, {"day": "tue", "am": 3, "pm": 9}]
+    - name: three_columns_with_gap
+      input: {"rows": [{"store": "A", "item": "tea", "qty": 2}, {"store": "A", "item": "jam", "qty": 4}, {"store": "A", "item": "rye", "qty": 1}, {"store": "B", "item": "tea", "qty": 5}], "index_col": "store", "columns_col": "item", "values_col": "qty"}
+      expected: [{"store": "A", "tea": 2, "jam": 4, "rye": 1}, {"store": "B", "tea": 5, "jam": null, "rye": null}]
+    - name: diagonal_fill
+      input: {"rows": [{"row": "r1", "col": "c1", "v": 9}, {"row": "r2", "col": "c2", "v": 8}], "index_col": "row", "columns_col": "col", "values_col": "v"}
+      expected: [{"row": "r1", "c1": 9, "c2": null}, {"row": "r2", "c1": null, "c2": 8}]
+    - name: single_column_value
+      input: {"rows": [{"boat": "Otter", "fuel": "diesel", "liters": 40}, {"boat": "Wren", "fuel": "diesel", "liters": 25}], "index_col": "boat", "columns_col": "fuel", "values_col": "liters"}
+      expected: [{"boat": "Otter", "diesel": 40}, {"boat": "Wren", "diesel": 25}]
+explanation_markdown: |
+  Spreading is the inverse of melting: it collapses many tall rows back into a
+  grid with one row per index value and one column per distinct label. The single
+  scan does three jobs at once - it learns the row order (first-appearance index
+  values), the full column set (first-appearance column values), and the value of
+  every cell keyed by an `(index, column)` tuple.
+
+  The rectangle must be complete: every output row carries a key for every column
+  value seen anywhere, even the ones that boat never bought. Reading each cell
+  through `cells.get((idx, col))` supplies `None` for those absent combinations,
+  which is exactly how a pivot marks a missing cell. Collecting the full column
+  set first is what guarantees the grid stays rectangular.
+common_mistakes:
+  - Only adding keys for the columns a given index actually has, so output rows have inconsistent keys instead of a filled None.
+  - Indexing cells[(idx, col)] directly when building rows, which raises KeyError on the missing combinations instead of yielding None.
+  - Emitting a separate output row for every input row rather than one merged row per distinct index value.

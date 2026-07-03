@@ -1,0 +1,95 @@
+id: lesson.library.cli_parsing.a03
+kind: lesson
+version: 1
+language: python
+title: 'argparse: The Grammar, Declared'
+slug: lesson-cli-parsing-a03
+difficulty: medium
+concepts:
+  - python.cli_args
+prerequisites:
+  - python.cli_args
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.cli_parsing.a03
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original argparse tour mapping each hand-built parsing concept to its declarative argparse equivalent, with a fresh print-shop example.
+body_markdown: |
+  You have built tokenizing, typing, choices, counting, exclusion, and
+  precedence by hand. `argparse` — the standard library's parser — is
+  those concepts as *declarations*. This closing tour maps everything
+  you built to its argparse spelling, which is how you will write real
+  tools from tomorrow on. (Lesson tour — the exercises stay on the pure
+  logic you have already mastered.)
+
+  ```python
+  import argparse
+
+  parser = argparse.ArgumentParser(prog="printq",
+                                   description="Submit and manage print jobs.")
+  sub = parser.add_subparsers(dest="command", required=True)
+
+  submit = sub.add_parser("submit", help="queue a document")
+  submit.add_argument("document")                          # positional
+  submit.add_argument("--copies", type=int, default=1)     # typed option
+  submit.add_argument("--paper", choices=["a4", "a3", "letter"], default="a4")
+  submit.add_argument("--rush", action="store_true")       # boolean switch
+  submit.add_argument("-v", "--verbose", action="count", default=0)
+  group = submit.add_mutually_exclusive_group()
+  group.add_argument("--rush2", action="store_true")       # exclusion groups
+  group.add_argument("--economy", action="store_true")
+
+  args = parser.parse_args()          # -> Namespace(document=..., copies=...)
+  ```
+
+  Line by line, the correspondences: `type=int` is your conversion
+  table; `choices=[...]` your membership validation (with the legal set
+  echoed in the error, exactly the message style you wrote);
+  `action="store_true"` your switches; `action="count"` your `-vvv`
+  intensity rule; `add_mutually_exclusive_group` your exclusion checker;
+  `default=` your pre-populated dict; subparsers your verb routing. The
+  `--` terminator and `--opt=value` forms work out of the box.
+
+  ### What you get free — and why it matters
+
+  `--help` output is *generated from the declarations*: usage line,
+  option table, defaults. This is the deep reason declarative parsing
+  wins — the grammar is stated once, so parsing, validation, and
+  documentation cannot drift apart. A hand-rolled parser's help text
+  lies within a month.
+
+  Errors exit with status 2 and a usage line — machine-checkable
+  (scripts test `$?`), human-readable, conventional.
+
+  ### The architecture that survives
+
+  The habit that separates maintainable tools: `parse_args` at the
+  edge, pure logic underneath.
+
+  ```python
+  def main(argv=None):
+      args = parser.parse_args(argv)          # argv injectable for tests!
+      return run(document=args.document, copies=args.copies, ...)
+  ```
+
+  `parse_args(argv)` accepting an explicit list is the testing seam —
+  tests call `main(["submit", "doc.pdf", "--copies", "3"])` with no
+  subprocess, no shell. And `run()` taking plain parameters means the
+  CLI is one *adapter* over logic that a web endpoint or a scheduler
+  could also drive. That is the shape of every tool you have used
+  happily, and now the shape of the ones you will write: grammar
+  declared, boundary thin, logic pure — the whole area in one sentence.
+checkpoints:
+  - question: Why is argparse's generated --help more trustworthy than hand-maintained help text?
+    answer: 'It is derived from the same declarations that drive parsing and validation — one source of truth — so documentation cannot drift from behavior the way a separately edited help string inevitably does.'
+    explanation: 'Declare-once is the core argument for declarative parsing: grammar, errors, and docs stay consistent by construction.'
+  - question: What testing seam does parse_args(argv) with an injectable list provide?
+    answer: 'Tests invoke main(["submit", "doc.pdf", "--copies", "3"]) directly — exercising the full grammar without subprocesses or shells — because parse_args falls back to sys.argv only when given None.'
+    explanation: 'The optional argv parameter is the difference between a CLI you can unit test and one needing integration harnesses.'
+  - question: In the durable CLI architecture, what does the main function do and what does it never do?
+    answer: 'It parses arguments at the edge and passes plain values to a pure run() function; it never embeds business logic in the parsing layer — keeping the CLI one thin adapter over logic reusable by other interfaces.'
+    explanation: 'Thin-boundary architecture is the same plan/act discipline as automation scripts, applied to the argument boundary.'

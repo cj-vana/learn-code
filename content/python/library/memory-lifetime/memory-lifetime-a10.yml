@@ -1,0 +1,126 @@
+id: exercise.library.memory_lifetime.a10
+kind: exercise
+version: 1
+language: python
+title: What the Catalog Card Points To
+slug: memory-lifetime-a10
+difficulty: medium
+concepts:
+  - python.memory_model
+  - python.dictionaries
+prerequisites:
+  - python.lists
+  - python.sets
+  - python.sorting
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.memory_lifetime.a10
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original direct-referents drill framed as a museum catalog where each artwork card lists the other cards it points to, modelling gc.get_referents.
+prompt_markdown: |
+  A museum catalog stores one card per artwork. Each card lists the id codes of
+  the other cards it points to: the works that inspired it, its former owners,
+  the room it hangs in. A single card may list the same target twice out of
+  sloppiness, and a card may even point to itself. Given one card, the archivist
+  wants the clean set of cards it directly points to.
+
+  This models `gc.get_referents(obj)`, which returns the objects an object
+  directly refers to (its outgoing references), one hop away.
+
+  Write `gc_referents_of(query)` taking one dict:
+
+  - `graph`: a dict mapping each card id (a string) to a list of the card ids it
+    points to
+  - `node`: the card id whose direct targets you want
+
+  Return a sorted list of the **distinct** card ids that `node` directly points
+  to. Remove duplicates and sort the result in ascending (alphabetical) order.
+  A card may point to itself, in which case its own id belongs in the result.
+  If `node` is not present in `graph`, or it points to nothing, return an empty
+  list.
+starter_code: |
+  def gc_referents_of(query):
+      return []
+function_name: gc_referents_of
+input_mode: function
+solution_sketch: Look up the node's outgoing list (defaulting to empty when absent), drop duplicates with a set, and return it sorted.
+sample_solution: |
+  def gc_referents_of(query):
+      graph = query["graph"]
+      node = query["node"]
+      return sorted(set(graph.get(node, [])))
+hints:
+  - level: 1
+    text: The direct targets are exactly the list stored under node in the graph; a missing node behaves like an empty list.
+  - level: 2
+    text: Wrap that list in a set to collapse duplicate targets into one entry each.
+  - level: 3
+    text: sorted(set(graph.get(node, []))) both removes duplicates and returns the ids in ascending order.
+tests:
+  public:
+    - name: basic_targets
+      input:
+        graph:
+          A: [B, C, B]
+          B: [C]
+          C: []
+        node: A
+      expected: [B, C]
+    - name: leaf_points_nowhere
+      input:
+        graph:
+          A: [B, C, B]
+          B: [C]
+          C: []
+        node: C
+      expected: []
+    - name: single_target
+      input:
+        graph:
+          A: [B]
+        node: A
+      expected: [B]
+  validation:
+    - name: self_reference_kept
+      input:
+        graph:
+          X: [X, Y]
+          Y: []
+        node: X
+      expected: [X, Y]
+    - name: missing_node
+      input:
+        graph:
+          A: [B]
+        node: Z
+      expected: []
+    - name: dedup_and_sort
+      input:
+        graph:
+          R: [m, a, m, z, a]
+        node: R
+      expected: [a, m, z]
+    - name: node_with_no_outgoing
+      input:
+        graph:
+          A: [B]
+          B: []
+        node: B
+      expected: []
+explanation_markdown: |
+  Direct referents are the one-hop outgoing edges of an object: the things it
+  holds a reference to right now. The garbage collector walks exactly these
+  edges when it traces reachability, so understanding them is the foundation for
+  reasoning about what keeps memory alive. Two details matter here. Duplicates in
+  the raw edge list are noise, so a set collapses them; and a self-reference is a
+  perfectly real edge, which is why a node can appear among its own referents.
+  Defaulting a missing node to an empty list keeps the function total instead of
+  raising a KeyError on ids that were never catalogued.
+common_mistakes:
+  - Returning the raw list with its duplicates instead of the distinct set of targets.
+  - Forgetting to sort, so the order depends on set iteration and the tests fail unpredictably.
+  - Raising a KeyError on an unknown node rather than treating it as having no outgoing references.

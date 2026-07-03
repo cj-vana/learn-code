@@ -1,0 +1,90 @@
+id: quiz.library.binary_data_struct.a02
+kind: quiz
+version: 1
+language: python
+title: Bytes-Level Mechanics
+slug: quiz-binary-data-struct-a02
+difficulty: hard
+concepts:
+  - python.binary_data
+prerequisites:
+  - python.binary_data
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.binary_data_struct.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax quiz on bytes indexing, struct formats, bytearray mutation, and memoryview contracts.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: 'For data = b"\x00\x41\x42", what are data[1] and data[1:2] respectively?'
+    choices:
+      - 65 and b"A" — indexing yields the integer, slicing yields bytes
+      - b"A" and b"A" — both preserve the type
+      - '"A" and "A" — bytes decode on access'
+      - 65 and 65 — both yield integers
+    correct_choice: 65 and b"A" — indexing yields the integer, slicing yields bytes
+    explanation: |
+      The index/slice asymmetry is the definitional behavior of bytes:
+      sequences of ints 0-255, with slices preserving the container type.
+    concepts:
+      - python.binary_data
+  - id: q2
+    prompt: What does struct.calcsize("<2HI") return?
+    choices:
+      - '8 — two 2-byte H fields plus one 4-byte I'
+      - '6 — H is one byte with a count of 2'
+      - '12 — alignment pads each field to 4'
+      - It depends on the machine
+    correct_choice: '8 — two 2-byte H fields plus one 4-byte I'
+    explanation: |
+      With an explicit endianness marker there is no padding: 2+2+4 = 8.
+      (Native mode, with no marker, could insert alignment — one more reason
+      to always write the marker.)
+    concepts:
+      - python.binary_data
+  - id: q3
+    prompt: struct.pack("<H", 70000) does what?
+    choices:
+      - Raises struct.error — 70000 exceeds the u16 range and pack validates instead of truncating
+      - Silently wraps to 4464
+      - Packs it into 3 bytes automatically
+      - Returns b"\xff\xff" as a saturation value
+    correct_choice: Raises struct.error — 70000 exceeds the u16 range and pack validates instead of truncating
+    explanation: |
+      pack's range validation is a gift: the silent-truncation bug that
+      plagues C is a loud exception in Python.
+    concepts:
+      - python.binary_data
+  - id: q4
+    prompt: |
+      buf = bytearray(b"12345678"); v = memoryview(buf); v[2:4] = b"XY".
+      What is buf now?
+    choices:
+      - bytearray(b"12XY5678") — assignment through the view wrote into the buffer
+      - Unchanged — views are read-only
+      - bytearray(b"XY345678") — views index from their own start
+      - A BufferError is raised
+    correct_choice: bytearray(b"12XY5678") — assignment through the view wrote into the buffer
+    explanation: |
+      Views of mutable buffers are writable windows; slice assignment of
+      equal length patches the underlying bytes in place, zero copies.
+    concepts:
+      - python.binary_data
+  - id: q5
+    prompt: 'Which operation raises TypeError: array.array("i", [1, 2]).append(3.7), or list([1, 2]).append(3.7)?'
+    choices:
+      - The array — its elements are typed machine ints and 3.7 is not integral; the list accepts anything
+      - The list — floats cannot follow ints
+      - Both — append is type-checked everywhere
+      - Neither — 3.7 is truncated to 3 in the array
+    correct_choice: The array — its elements are typed machine ints and 3.7 is not integral; the list accepts anything
+    explanation: |
+      array enforces its typecode at the boundary — the packed storage that
+      saves memory requires uniform machine types, checked on every write.
+    concepts:
+      - python.binary_data

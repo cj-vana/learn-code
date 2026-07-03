@@ -1,0 +1,97 @@
+id: quiz.library.grid_simulation.a02
+kind: quiz
+version: 1
+language: python
+title: Grid Mechanics in Python
+slug: quiz-grid-simulation-a02
+difficulty: medium
+concepts:
+  - patterns.grid_traversal
+  - python.lists
+prerequisites:
+  - python.lists
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.grid_simulation.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax quiz on list-of-lists mechanics, copying, direction vectors, and grid reshaping in Python.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: Why is `grid = [[0] * 4] * 3` a broken way to build a 3x4 grid of zeros?
+    choices:
+      - All three rows are the same list object, so writing one cell changes every row
+      - It creates a 4x3 grid instead of 3x4
+      - Multiplying lists raises a TypeError
+      - The zeros are shared, so incrementing one increments them all
+    correct_choice: All three rows are the same list object, so writing one cell changes every row
+    explanation: |
+      The outer * copies the row reference three times. Use a comprehension —
+      [[0] * 4 for _ in range(3)] — so each row is a fresh list.
+    concepts:
+      - python.lists
+  - id: q2
+    prompt: What does `[row[:] for row in grid]` produce?
+    choices:
+      - A new grid whose rows are independent copies of the originals
+      - A deep copy of every object the grid contains
+      - A reference to the same grid under a new name
+      - The grid transposed
+    correct_choice: A new grid whose rows are independent copies of the originals
+    explanation: |
+      row[:] shallow-copies each row list, which is exactly enough for grids of
+      numbers — the standard snapshot before a simultaneous update step.
+    concepts:
+      - python.lists
+      - patterns.simulation
+  - id: q3
+    prompt: For a rectangular `grid`, what does `[list(col) for col in zip(*grid)]` compute?
+    choices:
+      - The transpose — rows become columns
+      - The grid rotated 180 degrees
+      - The grid flattened into one list
+      - A copy with each row reversed
+    correct_choice: The transpose — rows become columns
+    explanation: |
+      zip(*grid) pairs the i-th elements of every row, yielding the columns as
+      tuples; wrapping in list() rebuilds them as rows. Rotating 90 degrees
+      clockwise adds a reversal: zip(*grid[::-1]).
+    concepts:
+      - python.lists
+      - patterns.grid_traversal
+  - id: q4
+    prompt: |
+      With DIRS = [(-1, 0), (0, 1), (1, 0), (0, -1)] (up, right, down, left) and
+      a facing index f, which update turns the mover 90 degrees to the LEFT?
+    choices:
+      - f = (f - 1) % 4
+      - f = (f + 1) % 4
+      - f = -f
+      - f = (f + 2) % 4
+    correct_choice: f = (f - 1) % 4
+    explanation: |
+      The list is ordered clockwise, so stepping backwards through it turns
+      counter-clockwise; the modulo wraps up (index 0) around to left (index 3).
+    concepts:
+      - patterns.state_machine
+      - python.lists
+  - id: q5
+    prompt: |
+      A walker at column c on a grid that wraps horizontally steps right. Which
+      expression yields the new column on a grid with C columns?
+    choices:
+      - (c + 1) % C
+      - c + 1 if c < C else 0
+      - min(c + 1, C)
+      - abs(c + 1 - C)
+    correct_choice: (c + 1) % C
+    explanation: |
+      The modulo maps C back to 0 and leaves every in-range value unchanged —
+      the standard idiom for toroidal (wrap-around) movement.
+    concepts:
+      - python.operators
+      - patterns.simulation

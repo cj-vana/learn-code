@@ -1,0 +1,175 @@
+id: exercise.library.oop_internals.a08
+kind: exercise
+version: 1
+language: python
+title: Which Crates Count as Cargo
+slug: oop-internals-a08
+difficulty: medium
+concepts:
+  - python.descriptors_mro
+  - python.sets
+prerequisites:
+  - python.classes
+  - python.dictionaries
+  - python.sets
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.oop_internals.a08
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original harbor-manifest framing of abc.ABC.register virtual-subclass semantics modelled as ancestor-set reachability over a plain inheritance graph.
+prompt_markdown: |
+  A harbor's manifest system asks a single question about each crate class: does
+  `issubclass(candidate, Cargo)` hold? `Cargo` is an abstract base. A class counts as
+  `Cargo` in two different ways, and this exercise makes you model both — real
+  inheritance *and* virtual registration via `Cargo.register(...)`.
+
+  Write `virtual_subclass_check(payload)` where `payload` is a dict with these keys:
+
+  - `"abc"`: the name (str) of the abstract base class we are testing against.
+  - `"inheritance"`: a dict mapping a class name to the list of its *direct* real base
+    class names. A class missing from this dict (or mapped to `[]`) simply has no
+    declared real bases.
+  - `"registered"`: a list of class names that were passed to `abc.register(...)` — the
+    virtual subclasses of `"abc"`.
+  - `"candidate"`: the name (str) of the class to test.
+
+  Return `True` if `issubclass(candidate, abc)` would be `True`, else `False`, using
+  these rules:
+
+  1. A class is a subclass of itself, so if `candidate == abc`, return `True`.
+  2. Real inheritance is transitive: follow the `"inheritance"` edges upward from
+     `candidate`. If `abc` is any (direct or indirect) real ancestor, return `True`.
+  3. Virtual registration counts too, and it flows *downward through real inheritance*:
+     if `candidate`, or any of its real ancestors, appears in `"registered"`, return
+     `True`. (Registering a class virtually also makes every real subclass of it a
+     virtual subclass of `abc`.)
+  4. Otherwise return `False`.
+
+  Assume the inheritance graph is acyclic. Compute the set of real ancestors of
+  `candidate` — including `candidate` itself — then apply the rules against that set.
+
+  Example: with `abc = "Cargo"`, `inheritance = {"Pallet": ["Container"], "Container": []}`,
+  `registered = ["Container"]`, and `candidate = "Pallet"`, the ancestors of `Pallet`
+  are `{"Pallet", "Container"}`. `Cargo` is not among them, but `Container` is
+  registered, so the answer is `True`.
+starter_code: |
+  def virtual_subclass_check(payload):
+      return False
+function_name: virtual_subclass_check
+input_mode: function
+solution_sketch: Walk the inheritance dict upward from candidate to gather its ancestor set (including itself), then return True if abc is in that set or any registered class is in that set, else False.
+sample_solution: |
+  def virtual_subclass_check(payload):
+      inheritance = payload["inheritance"]
+      candidate = payload["candidate"]
+      ancestors = set()
+      stack = [candidate]
+      while stack:
+          current = stack.pop()
+          if current in ancestors:
+              continue
+          ancestors.add(current)
+          for base in inheritance.get(current, []):
+              if base not in ancestors:
+                  stack.append(base)
+      if payload["abc"] in ancestors:
+          return True
+      return any(name in ancestors for name in payload["registered"])
+hints:
+  - level: 1
+    text: First build the set of every class reachable by following real base-class edges upward from the candidate, and include the candidate itself in that set.
+  - level: 2
+    text: Use a stack or queue and `inheritance.get(name, [])` so classes with no declared bases are handled cleanly; guard against revisiting a class.
+  - level: 3
+    text: Once you have the ancestor set, the answer is `abc in ancestors or any(reg in ancestors for reg in registered)` — that single expression covers self, real inheritance, and virtual registration.
+tests:
+  public:
+    - name: registered_flows_to_subclass
+      input:
+        abc: Cargo
+        inheritance:
+          Pallet: [Container]
+          Container: []
+        registered: [Container]
+        candidate: Pallet
+      expected: true
+    - name: candidate_equals_abc
+      input:
+        abc: Cargo
+        inheritance: {}
+        registered: []
+        candidate: Cargo
+      expected: true
+    - name: unrelated_class
+      input:
+        abc: Cargo
+        inheritance:
+          Ballast: []
+        registered: [Container]
+        candidate: Ballast
+      expected: false
+  validation:
+    - name: transitive_real_inheritance
+      input:
+        abc: Cargo
+        inheritance:
+          Crate: [Cargo]
+          SmallCrate: [Crate]
+        registered: []
+        candidate: SmallCrate
+      expected: true
+    - name: directly_registered
+      input:
+        abc: Cargo
+        inheritance:
+          Barrel: []
+        registered: [Barrel]
+        candidate: Barrel
+      expected: true
+    - name: registered_does_not_flow_upward
+      input:
+        abc: Cargo
+        inheritance:
+          Pallet: [Container]
+          Container: []
+        registered: [Pallet]
+        candidate: Container
+      expected: false
+    - name: diamond_reaches_abc
+      input:
+        abc: Cargo
+        inheritance:
+          Manifest: [LeftBase, RightBase]
+          LeftBase: [Cargo]
+          RightBase: []
+        registered: []
+        candidate: Manifest
+      expected: true
+    - name: neither_path_applies
+      input:
+        abc: Cargo
+        inheritance:
+          Rope: [Supply]
+          Supply: []
+        registered: [Container]
+        candidate: Rope
+      expected: false
+explanation_markdown: |
+  `abc.ABCMeta` answers `issubclass` with more than the normal method-resolution walk.
+  Besides real base classes, an ABC keeps a registry of *virtually* registered classes
+  added with `Cargo.register(Container)`. A virtual subclass has no inheritance link and
+  no inherited methods — it only satisfies `issubclass`/`isinstance`. Crucially, the
+  registration flows downward: any real subclass of a registered class is also treated
+  as a subclass of the ABC, but it never flows upward to a registered class's own bases.
+  Modelling this as "collect the candidate's real-ancestor set, then check whether the
+  ABC or any registered name sits in it" captures the exact semantics with a plain graph
+  walk. This is why ABCs let unrelated types (like the numeric tower) participate in an
+  interface without a shared base class.
+common_mistakes:
+  - Letting virtual registration flow upward — treating a base of the candidate as registered when only a descendant was registered.
+  - Forgetting the reflexive rule that a class is a subclass of itself, so `candidate == abc` must return True even with no edges.
+  - Only checking the candidate against `registered` and `abc` directly, missing that transitive real ancestors must be considered too.

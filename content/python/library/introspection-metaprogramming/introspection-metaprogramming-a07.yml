@@ -1,0 +1,230 @@
+id: exercise.library.introspection_metaprogramming.a07
+kind: exercise
+version: 1
+language: python
+title: Which Bells Ring Themselves
+slug: introspection-metaprogramming-a07
+difficulty: hard
+concepts:
+  - python.introspection
+  - patterns.recursion
+prerequisites:
+  - python.functions
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.introspection_metaprogramming.a07
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: >-
+    Original bell-tower framing that detects direct self-recursion statically by
+    reading a routine's bytecode, replacing the research plan's
+    deepest_safe_recursion probe (real recursion-limit probing is
+    non-deterministic and unsafe in the grader) with a deterministic
+    introspection analogue.
+prompt_markdown: |
+  A campanile keeps a set of ringing routines. Some are **self-ringing**: they
+  call themselves to repeat a peal. You want to find those *without running
+  them*, because running a self-calling routine could loop forever. You can tell
+  by reading each routine's compiled bytecode instead.
+
+  Six routines are already defined and collected in a `_ROUTINES` dictionary that
+  maps each name to its function object. Write `find_echoing_routines(names)`,
+  which receives a **list of routine-name strings** and returns the sorted list
+  of those names that ring themselves.
+
+  Use `dis.get_instructions(func)` to read a routine's bytecode. Apply this exact
+  rule: a routine **rings itself** when both of these are true of its
+  instructions:
+
+  1. Its own name appears as the `argval` of some instruction (the routine loads
+     its own name), and
+  2. at least one instruction's `opname` contains the substring `"CALL"` (the
+     routine makes a call).
+
+  Both conditions must hold. A routine that only *mentions* its own name but
+  never makes a call (for example `return ring_mirror`) does **not** ring itself.
+  A routine that calls a *different* routine (mutual ringing, like a relay that
+  calls its partner) does **not** ring itself, because its own name is never
+  loaded. Preserve nothing from the input order: always return the matches sorted
+  alphabetically. An empty input list returns an empty list. Every name in
+  `names` is guaranteed to be a key in `_ROUTINES`.
+starter_code: |
+  import dis
+
+
+  def ring_plain(n):
+      return n + 1
+
+
+  def ring_peal(n):
+      if n <= 0:
+          return 0
+      return 1 + ring_peal(n - 1)
+
+
+  def ring_cascade(n):
+      if n <= 0:
+          return 0
+      return ring_cascade(n - 1)
+
+
+  def ring_relay(n):
+      if n <= 0:
+          return 0
+      return ring_answer(n - 1)
+
+
+  def ring_answer(n):
+      if n <= 0:
+          return 0
+      return ring_relay(n - 1)
+
+
+  def ring_mirror():
+      return ring_mirror
+
+
+  _ROUTINES = {
+      "ring_plain": ring_plain,
+      "ring_peal": ring_peal,
+      "ring_cascade": ring_cascade,
+      "ring_relay": ring_relay,
+      "ring_answer": ring_answer,
+      "ring_mirror": ring_mirror,
+  }
+
+
+  def find_echoing_routines(names):
+      return []
+function_name: find_echoing_routines
+input_mode: function
+solution_sketch: >-
+  For each requested name, disassemble its function with dis.get_instructions,
+  check whether any instruction's argval equals the routine's own name and any
+  opname contains "CALL", collect the names that satisfy both, and return them
+  sorted.
+sample_solution: |
+  import dis
+
+
+  def ring_plain(n):
+      return n + 1
+
+
+  def ring_peal(n):
+      if n <= 0:
+          return 0
+      return 1 + ring_peal(n - 1)
+
+
+  def ring_cascade(n):
+      if n <= 0:
+          return 0
+      return ring_cascade(n - 1)
+
+
+  def ring_relay(n):
+      if n <= 0:
+          return 0
+      return ring_answer(n - 1)
+
+
+  def ring_answer(n):
+      if n <= 0:
+          return 0
+      return ring_relay(n - 1)
+
+
+  def ring_mirror():
+      return ring_mirror
+
+
+  _ROUTINES = {
+      "ring_plain": ring_plain,
+      "ring_peal": ring_peal,
+      "ring_cascade": ring_cascade,
+      "ring_relay": ring_relay,
+      "ring_answer": ring_answer,
+      "ring_mirror": ring_mirror,
+  }
+
+
+  def _rings_itself(func, own_name):
+      instructions = list(dis.get_instructions(func))
+      loads_own_name = any(instr.argval == own_name for instr in instructions)
+      makes_a_call = any("CALL" in instr.opname for instr in instructions)
+      return loads_own_name and makes_a_call
+
+
+  def find_echoing_routines(names):
+      echoing = []
+      for name in names:
+          func = _ROUTINES[name]
+          if _rings_itself(func, name):
+              echoing.append(name)
+      return sorted(echoing)
+hints:
+  - level: 1
+    text: >-
+      dis.get_instructions(func) yields the bytecode instructions of a function;
+      each instruction has an opname and an argval you can inspect.
+  - level: 2
+    text: >-
+      A directly self-calling routine loads its own name (some instruction's
+      argval equals the routine name) and also has a call instruction (an opname
+      containing "CALL"). Mutual recursion loads the partner's name, not its own.
+  - level: 3
+    text: >-
+      Loop over names, look each up in _ROUTINES, test both conditions on its
+      instructions, append the qualifying names, and return sorted(matches).
+tests:
+  public:
+    - name: single_self_caller
+      input: [ring_peal]
+      expected: [ring_peal]
+    - name: plain_routine
+      input: [ring_plain]
+      expected: []
+    - name: mixed_batch
+      input: [ring_peal, ring_plain, ring_cascade]
+      expected: [ring_cascade, ring_peal]
+    - name: empty_batch
+      input: []
+      expected: []
+  validation:
+    - name: mutual_pair_excluded
+      input: [ring_relay, ring_answer]
+      expected: []
+    - name: mirror_reference_only
+      input: [ring_mirror]
+      expected: []
+    - name: full_registry_sorted
+      input: [ring_answer, ring_cascade, ring_mirror, ring_peal, ring_plain, ring_relay]
+      expected: [ring_cascade, ring_peal]
+    - name: order_normalized
+      input: [ring_plain, ring_peal]
+      expected: [ring_peal]
+    - name: cascade_beside_mirror
+      input: [ring_mirror, ring_cascade]
+      expected: [ring_cascade]
+explanation_markdown: |
+  Direct self-recursion leaves two fingerprints in a function's bytecode: the
+  compiler emits a load of the function's own global name and, because the
+  routine actually invokes it, a call instruction. Checking both is what
+  separates a genuine self-call from a routine that merely *names* itself
+  (`return ring_mirror` loads the name but never calls) and from mutual
+  recursion (a relay loads its partner's name, never its own).
+
+  Reading this statically means you never execute the routine, so you learn that
+  `ring_peal` and `ring_cascade` repeat themselves without risking an unbounded
+  peal. This is the deterministic, sandbox-safe way to reason about recursion:
+  Python has no tail-call optimization, so a self-caller with no base case would
+  eventually raise `RecursionError` — but you can spot the self-call by
+  introspection before it ever rings.
+common_mistakes:
+  - Checking only that the name appears and forgetting the call condition, so a routine that just returns its own name is wrongly flagged.
+  - Treating mutual recursion as self-recursion, even though each partner loads the other's name rather than its own.
+  - Returning the matches in input order instead of sorting them.

@@ -1,0 +1,162 @@
+id: exercise.library.logging_diagnostics.a06
+kind: exercise
+version: 1
+language: python
+title: Resolving the Rail Yard Logger Tree
+slug: logging-diagnostics-a06
+difficulty: medium
+concepts:
+  - python.logging_diagnostics
+  - python.dictionaries
+  - python.strings
+prerequisites:
+  - python.dictionaries
+  - python.loops
+estimated_time_minutes: 16
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.logging_diagnostics.a06
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original logger-hierarchy resolution drill themed around a rail-yard control system; resolves each dotted logger name's effective level by walking dotted ancestors with the implicit root defaulting to WARNING.
+prompt_markdown: |
+  A rail-yard control system names its loggers hierarchically with dots, like
+  `yard.switch.north`, whose parent is `yard.switch`, whose parent is `yard`,
+  whose parent is the **root** logger (the empty-string name `""`). Write
+  `merge_logger_hierarchy_levels(levels)` where `levels` is a dict mapping each
+  configured logger name to its threshold name.
+
+  Return a new dict with the **same keys**, mapping each logger name to its
+  resolved **numeric** effective level, using
+  `NOTSET=0 DEBUG=10 INFO=20 WARNING=30 ERROR=40 CRITICAL=50`.
+
+  To resolve one logger, walk from that logger up through its dotted ancestors and
+  finally the root `""`. Return the numeric value of the **first ancestor that is
+  present in `levels` with a threshold other than `NOTSET`**. Rules for the walk:
+
+  - The ancestors of `a.b.c` are, in order: `a.b.c`, `a.b`, `a`, `""`.
+  - An ancestor name that is **not a key** in `levels` is skipped (it configures
+    nothing), and so is any ancestor whose threshold is `NOTSET`.
+  - If the walk reaches the root with nothing found — including when the root is
+    absent or itself `NOTSET` — the effective level is `30`, because the root
+    logger defaults to `WARNING`.
+
+  Every threshold name in `levels` is one of the six names above.
+starter_code: |
+  LEVELS = {"NOTSET": 0, "DEBUG": 10, "INFO": 20, "WARNING": 30, "ERROR": 40, "CRITICAL": 50}
+
+
+  def merge_logger_hierarchy_levels(levels):
+      # For each logger name, walk its dotted ancestors up to the root and resolve the effective level.
+      return {}
+function_name: merge_logger_hierarchy_levels
+input_mode: function
+solution_sketch: For each name, generate the ancestor chain by trimming the last dotted segment down to the root "", and return the first present non-NOTSET threshold as a number, defaulting to 30.
+sample_solution: |
+  LEVELS = {"NOTSET": 0, "DEBUG": 10, "INFO": 20, "WARNING": 30, "ERROR": 40, "CRITICAL": 50}
+
+
+  def merge_logger_hierarchy_levels(levels):
+      def ancestors(name):
+          chain = [name]
+          while "." in chain[-1]:
+              chain.append(chain[-1].rsplit(".", 1)[0])
+          if chain[-1] != "":
+              chain.append("")
+          return chain
+
+      def resolve(name):
+          for ancestor in ancestors(name):
+              threshold = levels.get(ancestor)
+              if threshold is not None and threshold != "NOTSET":
+                  return LEVELS[threshold]
+          return 30
+
+      return {name: resolve(name) for name in levels}
+hints:
+  - level: 1
+    text: Resolve each logger independently, then collect the answers into a dict keyed by the same names.
+  - level: 2
+    text: Build the ancestor chain by repeatedly trimming the text after the last dot, and remember to end the chain at the root "".
+  - level: 3
+    text: Walk the chain and return the first ancestor that is present in levels and is not NOTSET; if the walk finds nothing, return 30 for the root's default WARNING.
+tests:
+  public:
+    - name: flat_inherit
+      input:
+        '': WARNING
+        yard: INFO
+        yard.crane: NOTSET
+      expected:
+        '': 30
+        yard: 20
+        yard.crane: 20
+    - name: own_levels_no_root_key
+      input:
+        signal: ERROR
+        signal.auth: DEBUG
+      expected:
+        signal: 40
+        signal.auth: 10
+    - name: implicit_root_default
+      input:
+        track: NOTSET
+      expected:
+        track: 30
+  validation:
+    - name: deep_chain_inherits_root
+      input:
+        '': ERROR
+        a: NOTSET
+        a.b: NOTSET
+        a.b.c: NOTSET
+      expected:
+        '': 40
+        a: 40
+        a.b: 40
+        a.b.c: 40
+    - name: nearest_override_wins
+      input:
+        '': WARNING
+        svc: INFO
+        svc.db: NOTSET
+        svc.db.pool: CRITICAL
+      expected:
+        '': 30
+        svc: 20
+        svc.db: 20
+        svc.db.pool: 50
+    - name: siblings_are_independent
+      input:
+        yard: WARNING
+        yard.fast: DEBUG
+        yard.slow: NOTSET
+      expected:
+        yard: 30
+        yard.fast: 10
+        yard.slow: 30
+    - name: root_notset_defaults_warning
+      input:
+        '': NOTSET
+        job: NOTSET
+      expected:
+        '': 30
+        job: 30
+explanation_markdown: |
+  This is how a real logging hierarchy resolves thresholds: the dot in a logger
+  name *is* the parent link, so `yard.switch.north` inherits from `yard.switch`
+  from `yard` from the root unless one of them pins a level. Generating the
+  ancestor chain by trimming after the last dot mirrors that parent walk exactly,
+  and stopping at the first present, non-`NOTSET` ancestor gives you the nearest
+  override — the same precedence `getEffectiveLevel` uses. Two details keep it
+  faithful: ancestors that were never configured are simply absent from the dict
+  and must be skipped rather than treated as errors, and the walk always ends at
+  the root's default `WARNING`, so a subtree that inherits everything still lands
+  at `30`. Because each logger is resolved independently, sibling branches never
+  interfere with one another.
+common_mistakes:
+  - Splitting on the first dot instead of the last, which climbs the tree in the wrong direction and skips real ancestors.
+  - Crashing on an ancestor name that is not a key in levels, instead of skipping unconfigured intermediate loggers.
+  - Forgetting the implicit root, so a logger whose ancestors are all NOTSET or absent resolves to 0 rather than 30.

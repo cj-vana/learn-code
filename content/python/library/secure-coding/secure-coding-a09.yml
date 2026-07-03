@@ -1,0 +1,106 @@
+id: exercise.library.secure_coding.a09
+kind: exercise
+version: 1
+language: python
+title: Assembling a Harbor Session Token
+slug: secure-coding-a09
+difficulty: medium
+concepts:
+  - python.secure_coding
+  - python.strings
+prerequisites:
+  - python.lists
+  - python.strings
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.secure_coding.a09
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Deterministic pure-function analogue of secrets.token_hex — it encodes caller-supplied CSPRNG entropy bytes into a hex token so grading stays deterministic, themed around a harbor gate issuing session tokens.
+prompt_markdown: |
+  A harbor gatehouse hands each arriving skipper a session token to carry between
+  kiosks. In production the token comes from `secrets.token_hex(n)`, which draws
+  `n` cryptographically random bytes and renders them as a hex string. Because a
+  grader must be deterministic, we split that job in two: assume the random bytes
+  were already drawn for you, and write only the deterministic **encoding** step
+  that turns those bytes into the token string.
+
+  Write `assemble_hex_token(entropy_bytes)` where `entropy_bytes` is a list of
+  integers, each already a valid byte in the range 0 to 255 (in real code these
+  come from `secrets.token_bytes(n)`). Return the token as a lowercase hex string
+  where **every byte becomes exactly two hex characters**.
+
+  The two-characters-per-byte rule is the whole point. A byte less than 16 must
+  still produce two characters with a leading zero: byte `15` becomes `"0f"` and
+  byte `1` becomes `"01"`, never `"f"` or `"1"`. Dropping the leading zero would
+  shorten the token and silently throw away entropy — a real weakness in
+  hand-rolled token code.
+
+  So the output length is always exactly twice the number of bytes. An empty list
+  returns `""`.
+
+  Example: `assemble_hex_token([255, 0, 16])` returns `"ff0010"` — `255` to
+  `"ff"`, `0` to `"00"`, `16` to `"10"`.
+starter_code: |
+  def assemble_hex_token(entropy_bytes):
+      # Render each byte as exactly two lowercase hex characters.
+      return ""
+function_name: assemble_hex_token
+input_mode: function
+solution_sketch: Format each byte with "02x" (two-wide, zero-padded, lowercase hex) and join the pieces; equivalently, bytes(entropy_bytes).hex().
+sample_solution: |
+  def assemble_hex_token(entropy_bytes):
+      return "".join(format(byte, "02x") for byte in entropy_bytes)
+hints:
+  - level: 1
+    text: Each byte must always contribute two characters, so a value below 16 needs a leading zero — plain hex() would drop it.
+  - level: 2
+    text: format(byte, "02x") renders one byte as two zero-padded lowercase hex characters; build the token by joining those pieces in order.
+  - level: 3
+    text: '"".join(format(b, "02x") for b in entropy_bytes) works, and so does the idiomatic shortcut bytes(entropy_bytes).hex().'
+tests:
+  public:
+    - name: empty_is_empty
+      input: []
+      expected: ''
+    - name: three_bytes
+      input: [255, 0, 16]
+      expected: 'ff0010'
+    - name: small_values_padded
+      input: [1, 2, 3]
+      expected: '010203'
+  validation:
+    - name: single_zero
+      input: [0]
+      expected: '00'
+    - name: single_high_byte
+      input: [171]
+      expected: 'ab'
+    - name: boundary_fifteen_and_sixteen
+      input: [15, 16]
+      expected: '0f10'
+    - name: length_is_twice_byte_count
+      input: [10, 171, 255]
+      expected: '0aabff'
+explanation_markdown: |
+  This is the encoding half of `secrets.token_hex`. The security property that
+  matters at this layer is faithful, fixed-width encoding: `n` random bytes carry
+  `8n` bits of entropy, and the hex rendering must preserve every one of them.
+  The classic bug is writing something like `hex(byte)[2:]`, which produces a
+  single character for any byte below 16. A token built that way is shorter than
+  intended and, worse, has non-uniform structure, so an attacker guessing tokens
+  faces a smaller search space than the byte count suggests.
+
+  Using `format(byte, "02x")` — width two, zero-padded, lowercase hex — guarantees
+  each byte maps to exactly two characters, so the output length is deterministic
+  at `2 * len(entropy_bytes)` and the full entropy survives. The idiomatic
+  `bytes(entropy_bytes).hex()` does the same thing in one call and is what you
+  would normally reach for; writing the join by hand once makes the padding rule
+  concrete.
+common_mistakes:
+  - Using hex(byte)[2:], which drops the leading zero for any byte below 16 and shortens the token.
+  - Producing uppercase hex when the convention here (and in secrets.token_hex) is lowercase.
+  - Returning something other than "" for an empty list, or otherwise breaking the exactly-two-characters-per-byte length guarantee.

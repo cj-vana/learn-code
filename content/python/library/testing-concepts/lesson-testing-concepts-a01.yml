@@ -1,0 +1,91 @@
+id: lesson.library.testing_concepts.a01
+kind: lesson
+version: 1
+language: python
+title: 'The Anatomy of a Test'
+slug: lesson-testing-concepts-a01
+difficulty: easy
+concepts:
+  - concepts.testing
+prerequisites:
+  - python.functions
+  - python.conditionals
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.testing_concepts.a01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original testing-fundamentals walkthrough framed around calibrating a market scale, building the arrange-act-assert idea from scratch.
+body_markdown: |
+  A market inspector calibrates a scale the same way every time: place a known
+  weight on the pan, read the display, compare to what it *should* say. If the
+  display reads 500g for the 500g reference weight, the scale passes. That
+  three-step ritual — set up a known input, run the thing, compare against an
+  expected answer — is exactly what a software test is.
+
+  ```python
+  def total_price(qty, unit_price):
+      return round(qty * unit_price, 2)
+
+  # the test
+  result = total_price(3, 1.5)      # act on a known input
+  assert result == 4.5, f"expected 4.5, got {result}"
+  ```
+
+  The three phases have names — **arrange** (build the input), **act** (call
+  the function), **assert** (compare to the expectation) — and every test
+  framework ever written, pytest included, is scaffolding around this shape.
+  The `assert` statement does the comparing: it passes silently when the
+  condition holds and raises `AssertionError` with your message when it does
+  not.
+
+  ### A good failure message does half the debugging
+
+  `assert result == 4.5` alone tells you *that* something broke.
+  `f"expected 4.5, got {result}"` tells you *what happened* — and the
+  difference matters at 2 a.m. The habit of stating both the expected and the
+  actual value in every failure message is worth more than any framework
+  feature.
+
+  ### One test, one claim
+
+  Each test should verify a single claim about behavior, named so the claim
+  is readable:
+
+  ```python
+  def test_zero_quantity_costs_nothing():
+      assert total_price(0, 9.99) == 0.0
+
+  def test_price_rounds_to_cents():
+      assert total_price(3, 0.333) == 1.0
+  ```
+
+  When `test_price_rounds_to_cents` fails, the name alone tells you which
+  promise the code broke. A single mega-test that checks ten things stops at
+  the first failure and hides the other nine results.
+
+  ### Three outcomes, not two
+
+  A test that raises an unexpected exception did not fail — it **errored**,
+  and the distinction is diagnostic gold. A *failing* test means the code ran
+  and produced the wrong answer; an *erroring* test means the code never
+  produced an answer at all. Test reports separate `passed` / `failed` /
+  `errored` precisely because the two bad outcomes point to different kinds
+  of bug: wrong logic versus broken plumbing.
+
+  You will build these pieces yourself in the exercises — comparison helpers,
+  case runners, outcome classifiers — because having built a tiny test
+  harness once, nothing pytest does will ever feel like magic again.
+checkpoints:
+  - question: Name the three phases of every test and what each contributes.
+    answer: 'Arrange builds a known input, act runs the code under test, assert compares the result against the expected value — together they turn "does it work?" into a repeatable check.'
+    explanation: The pattern scales from one assert statement to entire suites; frameworks only add discovery, reporting, and isolation around it.
+  - question: Why is "expected 4.5, got 4.35" a better assertion message than "test failed"?
+    answer: It states both the promise and the reality, so the reader can often diagnose the bug (here, a rounding or arithmetic slip) without rerunning anything.
+    explanation: Failure messages are read at the worst moments; including expected and actual values does the first debugging step automatically.
+  - question: What is the difference between a test that fails and a test that errors, and why do reports keep them separate?
+    answer: A failure means the code ran and returned a wrong value; an error means it raised unexpectedly and never answered. Failures point to wrong logic, errors to broken plumbing.
+    explanation: Conflating them hides diagnostic information — a sudden wave of errors usually means a setup problem, not a hundred new logic bugs.

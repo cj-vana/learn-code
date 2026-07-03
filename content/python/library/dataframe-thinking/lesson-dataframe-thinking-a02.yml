@@ -1,0 +1,98 @@
+id: lesson.library.dataframe_thinking.a02
+kind: lesson
+version: 1
+language: python
+title: 'Masking and Grouping Without a Library'
+slug: lesson-dataframe-thinking-a02
+difficulty: medium
+concepts:
+  - concepts.dataframe_thinking
+  - concepts.grouping_aggregation
+prerequisites:
+  - concepts.dataframe_thinking
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dataframe_thinking.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original walkthrough of boolean masking and group-by mechanics in pure Python, framed around weather-station data, with fresh examples.
+body_markdown: |
+  Two operations define dataframe work — **filtering rows by a
+  condition** and **grouping rows to aggregate**. Both have a
+  pure-Python form that reveals exactly what pandas does behind its terse
+  syntax, and building them is how the syntax stops being magic.
+
+  ### Boolean masks: the condition as data
+
+  In pandas, `df[df["temp"] > 30]` filters. The `df["temp"] > 30` part is
+  the key idea: it produces a **boolean mask** — a column of True/False,
+  one per row — which then *selects*. Pure Python, columnar:
+
+  ```python
+  cols = {"station": [...], "temp": [22, 31, 28, 35]}
+  mask = [t > 30 for t in cols["temp"]]              # [F, T, F, T]
+  hot_temps = [t for t, m in zip(cols["temp"], mask) if m]     # [31, 35]
+  ```
+
+  Why separate the mask from the selection? Because a mask is *reusable
+  data*: compute `hot = temp > 30` once and apply it to *every* column to
+  keep whole rows (station, temp, humidity all filtered together), or
+  combine masks with boolean logic — `hot AND dry` is
+  `[h and d for h, d in zip(hot_mask, dry_mask)]`. That
+  combine-conditions-as-arrays move is precisely pandas' `&` and `|` on
+  masks, and it is far clearer than nesting `and` inside a row loop. Your
+  exercises build masks, apply them across columns, and combine them —
+  the vectorized-filter pattern.
+
+  ### Group-by: the pattern you already own
+
+  Grouping is your data-wrangling dict-accumulation, now named as the
+  dataframe primitive it is. "Average temperature per station":
+
+  ```python
+  from collections import defaultdict
+
+  groups = defaultdict(list)
+  for station, temp in zip(cols["station"], cols["temp"]):
+      groups[station].append(temp)                    # split
+
+  averages = {s: sum(v) / len(v) for s, v in groups.items()}   # apply + combine
+  ```
+
+  This is the **split-apply-combine** pattern — the single most
+  important idea in data analysis, and the engine under pandas'
+  `df.groupby("station")["temp"].mean()`. *Split* rows into groups by a
+  key, *apply* an aggregate to each group, *combine* into a result keyed
+  by group. Recognizing that the terse pandas call *is* this three-step
+  dance means you can reason about what it does, debug it when it
+  surprises you, and reproduce it when a library is not available.
+
+  ### Multi-key and multi-aggregate
+
+  Real analysis groups by several keys (station AND month) and computes
+  several aggregates (mean, max, count) at once — a tuple key and a dict
+  of aggregates, both natural extensions your exercises implement:
+
+  ```python
+  key = (station, month)
+  # per group: {"mean": ..., "max": ..., "count": ...}
+  ```
+
+  Boolean masking to select, split-apply-combine to summarize — with
+  those two, plus the columnar layout, you can do in pure Python most of
+  what people import pandas for on small-to-medium data. The library adds
+  speed and brevity; the *thinking* is what you just built, and the
+  thinking is what transfers.
+checkpoints:
+  - question: Why compute a boolean mask as a separate array rather than filtering inside one row loop?
+    answer: 'A mask is reusable data — compute "temp > 30" once and apply the same True/False array to every column to keep whole rows together, or combine masks with elementwise and/or; a nested row loop recomputes the condition and cannot be combined as cleanly.'
+    explanation: 'Separating the condition from the selection is exactly what makes pandas masks composable with & and |, and the clarity transfers to pure Python.'
+  - question: Name the three steps of split-apply-combine and map them to a "max rainfall per region" task.
+    answer: 'Split rows into groups keyed by region, apply the max aggregate to each group''s rainfall values, and combine into a dict of region to max; it is the dict-accumulation grouping pattern, and the engine under df.groupby("region")["rain"].max().'
+    explanation: 'Recognizing the terse groupby call as this three-step dance is what lets you reason about, debug, and reproduce it.'
+  - question: How do multi-key grouping and multi-aggregate summaries extend the basic group-by?
+    answer: 'Use a tuple like (station, month) as the group key, and compute a dict of aggregates {"mean":..., "max":..., "count":...} per group in one pass — natural extensions of the single-key, single-aggregate dict accumulation.'
+    explanation: 'Tuple keys and aggregate dicts scale split-apply-combine to the multi-dimensional summaries real analysis needs, still in pure Python.'

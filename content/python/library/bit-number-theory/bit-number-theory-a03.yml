@@ -1,0 +1,130 @@
+id: exercise.library.bit_number_theory.a03
+kind: exercise
+version: 1
+language: python
+title: The Lighting Control Desk
+slug: bit-number-theory-a03
+difficulty: medium
+concepts:
+  - patterns.bit_manipulation
+prerequisites:
+  - python.operators
+  - python.lists
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.bit_number_theory.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original set/clear/toggle mask-mutation drill themed around a theatre lighting control desk running a cue list.
+prompt_markdown: |
+  A theatre lighting desk stores which channels are lit as the set bits of one
+  integer mask, where bit 0 is channel 0. An operator runs a list of cues that
+  each turn a channel on, off, or flip it.
+
+  Write `apply_light_cues(cues)` where `cues` is a dict with exactly two keys:
+
+  - `"mask"`: the starting mask, a non-negative integer.
+  - `"ops"`: a list of two-element lists `[action, bit]`, applied left to right.
+    `action` is one of the strings `"set"` (force that channel on), `"clear"`
+    (force it off), or `"toggle"` (flip it). `bit` is the channel index.
+
+  Return the final integer mask after every cue has been applied. If `"ops"` is
+  empty, return the starting mask unchanged.
+
+  For example, `apply_light_cues({"mask": 0, "ops": [["set", 0], ["set", 2]]})`
+  returns `5` (binary `101`).
+starter_code: |
+  def apply_light_cues(cues):
+      return 0
+function_name: apply_light_cues
+input_mode: function
+solution_sketch: Start from the given mask, then for each [action, bit] pair OR in 1 << bit to set, AND with ~(1 << bit) to clear, or XOR with 1 << bit to toggle.
+sample_solution: |
+  def apply_light_cues(cues):
+      mask = cues["mask"]
+      for action, bit in cues["ops"]:
+          if action == "set":
+              mask |= 1 << bit
+          elif action == "clear":
+              mask &= ~(1 << bit)
+          elif action == "toggle":
+              mask ^= 1 << bit
+      return mask
+hints:
+  - level: 1
+    text: Build the single-bit mask `1 << bit` once per cue, then combine it with the running mask using the operator that matches the action.
+  - level: 2
+    text: OR (`|`) forces a bit on, AND with the inverted mask (`& ~(1 << bit)`) forces it off, and XOR (`^`) flips it.
+  - level: 3
+    text: Loop over `cues["ops"]`, unpack each pair as `action, bit`, dispatch on the action string, and return the accumulated mask at the end.
+tests:
+  public:
+    - name: two_sets
+      input:
+        mask: 0
+        ops:
+          - [set, 0]
+          - [set, 2]
+      expected: 5
+    - name: clear_one
+      input:
+        mask: 5
+        ops:
+          - [clear, 0]
+      expected: 4
+    - name: double_toggle
+      input:
+        mask: 0
+        ops:
+          - [toggle, 1]
+          - [toggle, 1]
+      expected: 0
+  validation:
+    - name: empty_ops
+      input:
+        mask: 6
+        ops: []
+      expected: 6
+    - name: set_then_toggle_off
+      input:
+        mask: 0
+        ops:
+          - [set, 3]
+          - [toggle, 3]
+      expected: 0
+    - name: clear_unset_bit
+      input:
+        mask: 0
+        ops:
+          - [clear, 5]
+      expected: 0
+    - name: mixed_sequence
+      input:
+        mask: 1
+        ops:
+          - [set, 1]
+          - [toggle, 0]
+          - [set, 4]
+      expected: 18
+    - name: idempotent_set
+      input:
+        mask: 0
+        ops:
+          - [set, 2]
+          - [set, 2]
+      expected: 4
+explanation_markdown: |
+  Each action maps to one bitwise operator against the single-bit mask `1 << bit`.
+  OR only ever adds a bit, so setting an already-lit channel leaves it lit. AND
+  with the inverted mask only ever removes a bit, so clearing a dark channel is a
+  no-op. XOR flips, so toggling the same channel twice returns to the start —
+  which is why the double-toggle and set-then-toggle cases land back where they
+  began. Because each cue touches exactly one bit and leaves the rest alone, the
+  cues compose cleanly in order.
+common_mistakes:
+  - Using `mask & (1 << bit)` to clear a bit instead of `mask & ~(1 << bit)`, which wipes every other channel.
+  - Reassigning `mask` only inside one branch and forgetting to return the accumulated value after the loop.
+  - Treating `set` as a toggle, so setting an already-on channel wrongly turns it off.

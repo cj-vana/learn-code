@@ -1,0 +1,116 @@
+id: exercise.library.embeddings_similarity_search.a08
+kind: exercise
+version: 1
+language: python
+title: Tasting Notes to Term Frequencies
+slug: embeddings-similarity-search-a08
+difficulty: medium
+concepts:
+  - ai.embeddings_retrieval
+  - concepts.grouping_aggregation
+prerequisites:
+  - python.dictionaries
+  - python.collections_module
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.embeddings_similarity_search.a08
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original term-frequency drill themed on tea-blend tasting notes, the TF half of a TF-IDF retrieval scorer.
+prompt_markdown: |
+  A sparse text vector starts with **term frequency**: how often each word occurs,
+  divided by how many words there are in total. Here the words are the tasting
+  notes scribbled on a tea-blend card.
+
+  Write `term_frequency(tokens)` that takes a list of word strings and returns a
+  dict mapping each distinct word to its relative frequency
+
+  ```
+  tf(term) = count(term) / len(tokens)
+  ```
+
+  **rounded to 6 decimal places** with `round(value, 6)`.
+
+  For example, `["chai", "chai", "mint"]` has three tokens, so `chai` appears
+  `2 / 3 = 0.666667` of the time and `mint` appears `1 / 3 = 0.333333`, giving
+  `{"chai": 0.666667, "mint": 0.333333}`.
+
+  If `tokens` is empty, return an empty dict `{}` (there is no total to divide by).
+starter_code: |
+  def term_frequency(tokens):
+      return {}
+function_name: term_frequency
+input_mode: function
+solution_sketch: Count occurrences of each token (e.g. with collections.Counter), then divide every count by the total token length and round to 6 decimals.
+sample_solution: |
+  from collections import Counter
+
+
+  def term_frequency(tokens):
+      n = len(tokens)
+      if n == 0:
+          return {}
+      counts = Counter(tokens)
+      return {term: round(count / n, 6) for term, count in counts.items()}
+hints:
+  - level: 1
+    text: First tally how many times each word appears. collections.Counter does this in one call, or you can build the tally with a plain dict.
+  - level: 2
+    text: Capture the total number of tokens once before dividing, because you reuse it for every term.
+  - level: 3
+    text: Return a dict comprehension mapping each term to round(count / len(tokens), 6), and handle the empty input by returning {} to avoid dividing by zero.
+tests:
+  public:
+    - name: two_thirds_split
+      input: [chai, chai, mint]
+      expected:
+        chai: 0.666667
+        mint: 0.333333
+    - name: single_token
+      input: [clove]
+      expected:
+        clove: 1.0
+    - name: empty
+      input: []
+      expected: {}
+  validation:
+    - name: all_unique_quarters
+      input: [mint, sage, clove, dill]
+      expected:
+        mint: 0.25
+        sage: 0.25
+        clove: 0.25
+        dill: 0.25
+    - name: repeating_decimal
+      input: [clove, mint, mint, mint, mint, mint]
+      expected:
+        clove: 0.166667
+        mint: 0.833333
+    - name: sevenths
+      input: [chai, chai, mint, mint, clove, clove, clove]
+      expected:
+        chai: 0.285714
+        mint: 0.285714
+        clove: 0.428571
+    - name: repeated_single_term
+      input: [dill, dill]
+      expected:
+        dill: 1.0
+explanation_markdown: |
+  Term frequency answers "how much of this document is about each word?" Dividing
+  the raw count by the token total makes short and long documents comparable: a
+  word that fills half a two-word note and half a hundred-word essay both score
+  0.5. On its own, term frequency over-rewards common filler words, which is why
+  the next step pairs it with an inverse-document-frequency weight to build a full
+  TF-IDF vector.
+
+  Rounding matters because these floats are later compared for equality. Values
+  like `1 / 3` are non-terminating in binary, so `round(count / n, 6)` pins each
+  entry to a fixed, reproducible number.
+common_mistakes:
+  - Returning raw counts instead of dividing by the total token count, which is not a frequency.
+  - Dividing by the number of distinct words rather than the total number of tokens.
+  - Skipping the empty-input guard and hitting a ZeroDivisionError on len(tokens) == 0.

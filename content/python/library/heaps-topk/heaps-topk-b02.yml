@@ -1,0 +1,132 @@
+id: exercise.library.heaps_topk.b02
+kind: exercise
+version: 1
+language: python
+title: Merging the Trading Price Feeds
+slug: heaps-topk-b02
+difficulty: hard
+concepts:
+  - patterns.heap_topk
+  - python.heapq_bisect
+prerequisites:
+  - python.lists
+  - python.tuples
+estimated_time_minutes: 23
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.heaps_topk.b02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: >-
+    Original market-data framing for a k-way heap merge. The twist is a stable
+    tie-break on equal timestamps that must preserve feed order, forcing the
+    solver to encode the feed index into the heap key rather than relying on the
+    price value.
+prompt_markdown: |
+  A trading desk subscribes to several price feeds. Each feed arrives already
+  sorted by timestamp, as a list of `[timestamp, price]` entries. You need to
+  merge them into a single stream that is still sorted by timestamp, cheaply,
+  without concatenating everything and re-sorting.
+
+  You are given `job` with this shape:
+
+  ```
+  {"feeds": [[[1, 100], [4, 40]], [[2, 20], [3, 30]]]}
+  ```
+
+  `feeds` is a list of feeds; each feed is a list of `[timestamp, price]` pairs in
+  non-decreasing timestamp order. Timestamps and prices are integers.
+
+  Write `merge_price_feeds(job)` that returns one merged list of `[timestamp,
+  price]` pairs sorted by timestamp. When two pairs share the same timestamp,
+  break the tie by **feed order**: the entry from the earlier feed (smaller index
+  in `feeds`) comes first, and within a single feed the original order is kept.
+
+  Cases the tests cover: a single feed passes straight through; some feeds may be
+  empty and contribute nothing; a list of only empty feeds returns an empty list;
+  equal timestamps across feeds resolve by feed index.
+starter_code: |
+  def merge_price_feeds(job):
+      # Return the k feeds merged into one timestamp-sorted list.
+      return []
+function_name: merge_price_feeds
+input_mode: function
+solution_sketch: >-
+  Seed a min-heap with the first pair of every non-empty feed, keyed by
+  (timestamp, feed_index, position); repeatedly pop the smallest, emit its
+  [timestamp, price], and push the next pair from that same feed until every feed
+  is exhausted.
+sample_solution: |
+  import heapq
+
+
+  def merge_price_feeds(job):
+      feeds = job["feeds"]
+      heap = []
+      for feed_index, feed in enumerate(feeds):
+          if feed:
+              timestamp, price = feed[0]
+              heapq.heappush(heap, (timestamp, feed_index, 0, price))
+
+      merged = []
+      while heap:
+          timestamp, feed_index, position, price = heapq.heappop(heap)
+          merged.append([timestamp, price])
+          nxt = position + 1
+          if nxt < len(feeds[feed_index]):
+              n_timestamp, n_price = feeds[feed_index][nxt]
+              heapq.heappush(heap, (n_timestamp, feed_index, nxt, n_price))
+      return merged
+hints:
+  - level: 1
+    text: You never need more than one pending entry per feed at a time, because each feed is already sorted. Keep the current front of every feed in a heap and always take the smallest.
+  - level: 2
+    text: Push a tuple that starts with the timestamp so the heap orders by time. When you pop a feed's front, push that feed's next pair to replace it.
+  - level: 3
+    text: To break timestamp ties by feed order, put the feed index in the heap key right after the timestamp, like (timestamp, feed_index, position, price). Never let the price decide ordering.
+tests:
+  public:
+    - name: single_feed
+      input: {"feeds": [[[1, 100], [2, 101]]]}
+      expected: [[1, 100], [2, 101]]
+    - name: two_feeds_interleave
+      input: {"feeds": [[[1, 10], [4, 40]], [[2, 20], [3, 30]]]}
+      expected: [[1, 10], [2, 20], [3, 30], [4, 40]]
+    - name: tie_keeps_feed_order
+      input: {"feeds": [[[5, 50]], [[5, 55]]]}
+      expected: [[5, 50], [5, 55]]
+  validation:
+    - name: some_feeds_empty
+      input: {"feeds": [[], [[1, 9]], []]}
+      expected: [[1, 9]]
+    - name: three_feeds_many_ties
+      input: {"feeds": [[[1, 11], [3, 13]], [[1, 21], [2, 22]], [[2, 32], [3, 33]]]}
+      expected: [[1, 11], [1, 21], [2, 22], [2, 32], [3, 13], [3, 33]]
+    - name: all_feeds_empty
+      input: {"feeds": [[], []]}
+      expected: []
+explanation_markdown: |
+  Because every feed is already sorted, the smallest unemitted pair across all
+  feeds must be at the *front* of one of the feeds. That is exactly the situation a
+  min-heap handles: keep one entry per feed -- its current front -- and the heap
+  top is always the next pair to emit. After emitting it, you advance that one feed
+  and push its new front. This is the classic k-way merge, and it costs
+  `O(total_entries * log k)` where k is the number of feeds, versus
+  `O(total_entries * log total_entries)` for dumping everything into one list and
+  sorting.
+
+  The tie-break is where the encoding matters. Two feeds can offer the same
+  timestamp, and the desk wants the earlier feed first. If your heap key were just
+  `(timestamp, price)`, ties would be decided by price, which is wrong -- and if two
+  equal timestamps also had equal prices, Python would try to compare the next
+  field. Putting the **feed index** immediately after the timestamp,
+  `(timestamp, feed_index, position, price)`, makes the ordering fully determined
+  and stable: same timestamp resolves by feed, and the index is unique so
+  comparison never falls through to the price. Empty feeds simply never get seeded,
+  so they contribute nothing.
+common_mistakes:
+  - Concatenating every feed and calling sort, which produces sorted output but is not a k-way merge and can reorder equal timestamps unpredictably.
+  - Keying the heap by (timestamp, price) so equal timestamps are broken by price instead of by feed order.
+  - Seeding empty feeds or indexing feed[0] without checking the feed is non-empty, causing an error on empty feeds.

@@ -1,0 +1,162 @@
+id: exercise.library.logging_diagnostics.a08
+kind: exercise
+version: 1
+language: python
+title: Throttling the Harbor Radio Bridge
+slug: logging-diagnostics-a08
+difficulty: hard
+concepts:
+  - python.logging_diagnostics
+  - patterns.sliding_window
+prerequisites:
+  - python.lists
+  - python.loops
+estimated_time_minutes: 24
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.logging_diagnostics.a08
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: >-
+    Original rate-limiter drill framed as a harbor VHF radio bridge that throttles
+    repeated hazard broadcasts. Pure sliding-window logic over a list of integer
+    seconds; only broadcasts that actually go out count toward the window, so it is
+    fully deterministic with no real clock.
+prompt_markdown: |
+  The harbor's automated radio bridge wants to warn passing vessels about a hazard,
+  but it must not flood channel 16. It throttles itself: within any trailing window
+  of `window` seconds it will send at most `max_count` broadcasts.
+
+  Write `rate_limit_log_decision(request)`. The single argument is a dict with:
+
+  - `"timestamps"` -- a list of integer seconds, one per broadcast **attempt**, in
+    non-decreasing order (an attempt is the moment the bridge would like to speak).
+  - `"window"` -- the window length in seconds (a non-negative int).
+  - `"max_count"` -- the most broadcasts allowed inside any one window (a
+    non-negative int).
+
+  Process the attempts left to right and return a list of booleans the same length
+  as `"timestamps"`: `True` where that attempt is **broadcast**, `False` where it is
+  **suppressed**.
+
+  The rule for an attempt at second `t`:
+
+  - Only attempts that were actually **broadcast** count toward the limit;
+    suppressed ones leave no trace.
+  - A previously broadcast attempt at second `s` is **inside the window** of `t`
+    exactly when `s > t - window`.
+  - Broadcast the current attempt only if the number of already-broadcast attempts
+    inside its window is **strictly less than** `max_count`. Otherwise suppress it.
+  - When you broadcast, record `t` so it counts toward later attempts.
+
+  Edge cases the tests cover: an empty attempt list (returns `[]`); `max_count` of
+  `0` (everything is suppressed); several attempts sharing the same second; and a
+  burst that fills the window followed by a quiet gap that reopens it.
+starter_code: |
+  def rate_limit_log_decision(request):
+      # Return a list of booleans: True = broadcast, False = suppressed.
+      return []
+function_name: rate_limit_log_decision
+input_mode: function
+solution_sketch: >-
+  Keep a list of the seconds you actually broadcast. For each attempt at t, count
+  how many recorded seconds satisfy s > t - window; if that count is below
+  max_count, append True and record t, else append False.
+sample_solution: |
+  def rate_limit_log_decision(request):
+      timestamps = request["timestamps"]
+      window = request["window"]
+      max_count = request["max_count"]
+
+      broadcast_at = []
+      decisions = []
+      for t in timestamps:
+          recent = sum(1 for s in broadcast_at if s > t - window)
+          if recent < max_count:
+              decisions.append(True)
+              broadcast_at.append(t)
+          else:
+              decisions.append(False)
+      return decisions
+hints:
+  - level: 1
+    text: Keep a separate list holding only the seconds of attempts you actually broadcast; suppressed attempts never go into it.
+  - level: 2
+    text: For each attempt at second t, count how many recorded broadcast seconds s satisfy s greater than t minus window. That count is how full the window already is.
+  - level: 3
+    text: Broadcast when that count is strictly less than max_count, and only then append t to your record. A max_count of 0 makes the count never less than it, so nothing is sent.
+tests:
+  public:
+    - name: two_per_window
+      input:
+        timestamps: [0, 1, 2, 15]
+        window: 10
+        max_count: 2
+      expected: [true, true, false, true]
+    - name: limit_never_reached
+      input:
+        timestamps: [0, 1, 2, 3]
+        window: 5
+        max_count: 5
+      expected: [true, true, true, true]
+    - name: zero_limit_suppresses_all
+      input:
+        timestamps: [0, 5, 10]
+        window: 100
+        max_count: 0
+      expected: [false, false, false]
+  validation:
+    - name: empty
+      input:
+        timestamps: []
+        window: 10
+        max_count: 2
+      expected: []
+    - name: duplicate_seconds
+      input:
+        timestamps: [5, 5, 5]
+        window: 10
+        max_count: 2
+      expected: [true, true, false]
+    - name: window_slides
+      input:
+        timestamps: [0, 3, 4, 5, 9]
+        window: 4
+        max_count: 1
+      expected: [true, false, true, false, true]
+    - name: single_attempt
+      input:
+        timestamps: [42]
+        window: 3
+        max_count: 1
+      expected: [true]
+    - name: burst_then_gap
+      input:
+        timestamps: [0, 1, 2, 3, 4, 20]
+        window: 10
+        max_count: 3
+      expected: [true, true, true, false, false, true]
+explanation_markdown: |
+  This is a sliding-window rate limiter, the same shape real logging throttles use
+  to keep one noisy event from drowning a channel. The trick that makes it
+  deterministic here is that the window is measured only against attempts that were
+  actually broadcast: suppressed attempts add nothing, so the state you carry is
+  just the list of seconds you spoke.
+
+  For each attempt you re-count how many recorded seconds still fall inside the
+  trailing window, using the strict test `s > t - window`. Because the attempts
+  arrive in non-decreasing order, every recorded second is at or before `t`, so the
+  count is exactly the window's current occupancy. Broadcasting only when that
+  occupancy is below `max_count` guarantees no window ever holds more than the
+  limit, and recording the second you broadcast is what lets later attempts see it.
+
+  A `max_count` of `0` can never be strictly greater than the occupancy, so the
+  bridge stays silent -- a clean way to mute a source entirely. A wide gap lets the
+  old broadcasts age out of the window, which reopens the channel without any real
+  clock ever ticking.
+common_mistakes:
+  - Counting every attempt toward the window instead of only the ones actually broadcast, which over-throttles after a run of suppressions.
+  - Using s greater-than-or-equal to t minus window instead of the strict greater-than, which shifts the window boundary by one second.
+  - Forgetting to record the second when you broadcast, so the limiter never sees its own recent broadcasts and lets everything through.

@@ -1,0 +1,116 @@
+id: exercise.library.linked_lists_patterns.a07
+kind: exercise
+version: 1
+language: python
+title: Does the Tram Loop Forever
+slug: linked-lists-patterns-a07
+difficulty: medium
+concepts:
+  - patterns.linked_list
+  - patterns.two_pointers
+prerequisites:
+  - python.classes
+  - python.loops
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.linked_lists_patterns.a07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original tram-network framing that wires a tail link back into the chain to test fast/slow cycle detection.
+prompt_markdown: |
+  A tram network is a chain of stops, but a maintenance crew sometimes wires the
+  final stop's track back onto an earlier stop, turning the line into an endless
+  loop. Write `detect_loop(network)` where `network` is a dict with two keys:
+
+  - `"stops"`: a list of stop names in track order.
+  - `"connect_to"`: an integer index. If it is `-1` the last stop ends the line
+    normally; otherwise the last stop's `.next` link is wired back to the stop at
+    that index, creating a cycle.
+
+  Build a singly linked list of `Node` objects, apply the wiring, and return
+  `True` if walking the track would loop forever and `False` otherwise. Use a
+  fast/slow pointer walk rather than remembering every stop you have visited. An
+  empty `"stops"` list returns `False`.
+starter_code: |
+  def detect_loop(network):
+      # Build the chain, apply connect_to, then use fast/slow pointers.
+      return False
+function_name: detect_loop
+input_mode: function
+solution_sketch: Build the chain, wire the tail to connect_to if set, then run slow-by-one and fast-by-two until they collide or fast falls off the end.
+sample_solution: |
+  def detect_loop(network):
+      class Node:
+          def __init__(self, value):
+              self.value = value
+              self.next = None
+
+      stops = network["stops"]
+      connect_to = network["connect_to"]
+      if not stops:
+          return False
+
+      nodes = [Node(name) for name in stops]
+      for i in range(len(nodes) - 1):
+          nodes[i].next = nodes[i + 1]
+      if connect_to >= 0:
+          nodes[-1].next = nodes[connect_to]
+
+      slow = nodes[0]
+      fast = nodes[0]
+      while fast is not None and fast.next is not None:
+          slow = slow.next
+          fast = fast.next.next
+          if slow is fast:
+              return True
+      return False
+hints:
+  - level: 1
+    text: If the track loops, a walker never reaches a None link, so counting steps or checking for None alone is not enough.
+  - level: 2
+    text: Move a slow cursor one stop at a time and a fast cursor two stops at a time; on a loop the fast one eventually laps the slow one.
+  - level: 3
+    text: Guard the loop with `fast is not None and fast.next is not None`, and after each double hop check `slow is fast` to detect a collision.
+tests:
+  public:
+    - name: no_loop
+      input: {stops: [depot, elm, oak, pier], connect_to: -1}
+      expected: false
+    - name: loops_back
+      input: {stops: [depot, elm, oak, pier], connect_to: 1}
+      expected: true
+    - name: empty
+      input: {stops: [], connect_to: -1}
+      expected: false
+  validation:
+    - name: single_no_loop
+      input: {stops: [depot], connect_to: -1}
+      expected: false
+    - name: single_self_loop
+      input: {stops: [depot], connect_to: 0}
+      expected: true
+    - name: two_loop
+      input: {stops: [north, south], connect_to: 0}
+      expected: true
+    - name: long_no_loop
+      input: {stops: [a, b, c, d, e, f, g], connect_to: -1}
+      expected: false
+    - name: loop_to_tail
+      input: {stops: [a, b, c, d, e], connect_to: 4}
+      expected: true
+explanation_markdown: |
+  Two cursors moving at different speeds settle the loop question in one pass with
+  O(1) extra memory. On a dead-ended line the fast cursor reaches `None` and the
+  loop stops, returning `False`. On a looped track the fast cursor keeps circling
+  and closes the gap on the slow cursor by one stop each step, so it must land on
+  the exact same box eventually. The collision test uses `is`, because we are
+  asking whether both cursors stand on the same stop, not whether two stops share
+  a name. The guard `fast.next is not None` protects the double hop from crashing
+  at the end of a non-looping line.
+common_mistakes:
+  - Checking only `fast is not None` and then crashing on `fast.next.next` at the last stop.
+  - Comparing `slow.value == fast.value` instead of `slow is fast`, which misreports duplicate names as loops.
+  - Trying to detect the loop by counting steps, which never terminates on a real cycle.

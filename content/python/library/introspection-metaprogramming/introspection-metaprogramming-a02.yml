@@ -1,0 +1,203 @@
+id: exercise.library.introspection_metaprogramming.a02
+kind: exercise
+version: 1
+language: python
+title: Labelling the Greenhouse Valves
+slug: introspection-metaprogramming-a02
+difficulty: medium
+concepts:
+  - python.introspection
+  - python.type_hints
+prerequisites:
+  - python.functions
+  - python.dictionaries
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.introspection_metaprogramming.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original inspect.signature annotation-reading drill themed as a greenhouse irrigation controller reporting the declared types of its routines.
+prompt_markdown: |
+  A greenhouse irrigation controller documents each routine with type hints. The
+  maintenance panel wants those declared types pulled straight from the code so the
+  docs can never drift out of sync.
+
+  Write `signature_annotations(routine)`. The single argument is the routine's name
+  (a string). Use `inspect.signature` to read the **real function object** from the
+  controller's catalog and return a dict mapping each **annotated** parameter to the
+  name of its annotated type, plus a `"return"` key for the return annotation:
+
+  - Report a type by its `__name__`, e.g. the annotation `int` becomes `"int"`,
+    `float` becomes `"float"`, `list` becomes `"list"`.
+  - Include a parameter **only if it has an annotation**. A parameter with no hint
+    is skipped entirely.
+  - Include the key `"return"` **only if** the function declares a return
+    annotation.
+
+  The catalog (already defined for you) contains:
+
+  - `open_valve(zone: int, seconds: float = 5.0) -> bool`
+  - `read_moisture(sensor: str) -> float`
+  - `set_schedule(zone: int, hours: list, enabled: bool = True) -> int`
+  - `status() -> str`
+  - `mix_nutrients(base: int, extra, ratio: float = 0.5) -> float`
+
+  So `signature_annotations("read_moisture")` returns
+  `{"sensor": "str", "return": "float"}`, and for `mix_nutrients` the unannotated
+  `extra` parameter is omitted:
+  `{"base": "int", "ratio": "float", "return": "float"}`. An unknown routine name
+  returns `{}`.
+
+  Read every type from the function object with `inspect.signature`; do not
+  hard-code the strings.
+starter_code: |
+  import inspect
+
+
+  def open_valve(zone: int, seconds: float = 5.0) -> bool:
+      ...
+
+
+  def read_moisture(sensor: str) -> float:
+      ...
+
+
+  def set_schedule(zone: int, hours: list, enabled: bool = True) -> int:
+      ...
+
+
+  def status() -> str:
+      ...
+
+
+  def mix_nutrients(base: int, extra, ratio: float = 0.5) -> float:
+      ...
+
+
+  CATALOG = {
+      "open_valve": open_valve,
+      "read_moisture": read_moisture,
+      "set_schedule": set_schedule,
+      "status": status,
+      "mix_nutrients": mix_nutrients,
+  }
+
+
+  def signature_annotations(routine):
+      return {}
+function_name: signature_annotations
+input_mode: function
+solution_sketch: Look the routine up in the catalog. Walk inspect.signature(fn).parameters, and whenever a parameter's annotation is not Parameter.empty record its __name__. Then add a "return" key when the signature's return_annotation is not Signature.empty.
+sample_solution: |
+  import inspect
+
+
+  def open_valve(zone: int, seconds: float = 5.0) -> bool:
+      ...
+
+
+  def read_moisture(sensor: str) -> float:
+      ...
+
+
+  def set_schedule(zone: int, hours: list, enabled: bool = True) -> int:
+      ...
+
+
+  def status() -> str:
+      ...
+
+
+  def mix_nutrients(base: int, extra, ratio: float = 0.5) -> float:
+      ...
+
+
+  CATALOG = {
+      "open_valve": open_valve,
+      "read_moisture": read_moisture,
+      "set_schedule": set_schedule,
+      "status": status,
+      "mix_nutrients": mix_nutrients,
+  }
+
+
+  def _type_name(annotation):
+      return getattr(annotation, "__name__", str(annotation))
+
+
+  def signature_annotations(routine):
+      fn = CATALOG.get(routine)
+      if fn is None:
+          return {}
+      signature = inspect.signature(fn)
+      result = {}
+      for name, param in signature.parameters.items():
+          if param.annotation is not inspect.Parameter.empty:
+              result[name] = _type_name(param.annotation)
+      if signature.return_annotation is not inspect.Signature.empty:
+          result["return"] = _type_name(signature.return_annotation)
+      return result
+hints:
+  - level: 1
+    text: Each Parameter object carries a .annotation attribute; when the parameter has no type hint that attribute is the sentinel inspect.Parameter.empty, not None.
+  - level: 2
+    text: A type object like int knows its own name through the __name__ attribute, so getattr(annotation, "__name__", str(annotation)) turns the annotation into a plain string.
+  - level: 3
+    text: The return annotation lives on the Signature itself as .return_annotation, with its own sentinel inspect.Signature.empty. Only add the "return" key when that sentinel is absent.
+tests:
+  public:
+    - name: param_and_return
+      input: read_moisture
+      expected:
+        sensor: str
+        return: float
+    - name: default_does_not_hide_annotation
+      input: open_valve
+      expected:
+        zone: int
+        seconds: float
+        return: bool
+    - name: skips_unannotated_param
+      input: mix_nutrients
+      expected:
+        base: int
+        ratio: float
+        return: float
+  validation:
+    - name: list_annotation
+      input: set_schedule
+      expected:
+        zone: int
+        hours: list
+        enabled: bool
+        return: int
+    - name: return_only
+      input: status
+      expected:
+        return: str
+    - name: unknown_routine
+      input: fertilize
+      expected: {}
+explanation_markdown: |
+  Annotations are stored on the function object, and `inspect.signature` surfaces
+  them in two places: each `Parameter.annotation` for the parameters, and
+  `Signature.return_annotation` for the arrow type. Both use their own "nothing
+  here" sentinels — `inspect.Parameter.empty` and `inspect.Signature.empty` — so an
+  unannotated parameter like `extra` is filtered out by comparing against the
+  sentinel, never by checking for `None`.
+
+  Turning a type into text uses the fact that classes expose a `__name__`. Falling
+  back to `str(annotation)` keeps the function robust if a routine ever uses an
+  annotation object without a `__name__`. Because none of this parses source code,
+  the panel's read-out always matches whatever the running code actually declares.
+
+  (Note: this works because the module does not enable
+  `from __future__ import annotations`, which would turn every annotation into a
+  string and change what `inspect.signature` hands back.)
+common_mistakes:
+  - Checking `param.annotation is None` instead of comparing with inspect.Parameter.empty, which either crashes or misclassifies unannotated parameters.
+  - Forgetting the return annotation lives on the Signature, not on any Parameter, and omitting the "return" key.
+  - Returning the raw type object (int) instead of its "__name__" string, so the value never matches the expected plain text.

@@ -1,0 +1,80 @@
+id: exercise.library.language_models_from_scratch.a02
+kind: exercise
+version: 1
+language: python
+title: Building the Vocabulary
+slug: language-models-from-scratch-a02
+difficulty: easy
+concepts:
+  - ai.language_models
+prerequisites:
+  - python.sets
+  - python.sorting
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.language_models_from_scratch.a02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original vocabulary-building drill framed around a lighthouse log of signal tokens.
+prompt_markdown: |
+  Before a language model can score anything, it needs its **vocabulary**: the set
+  of distinct token types it has ever seen, in a fixed canonical order. A stable
+  order matters because every token will later map to its position (index) in this
+  list.
+
+  Write `vocabulary(tokens)` that takes a list of token strings and returns a new
+  list of the **unique** tokens sorted in ascending (alphabetical) order.
+  Duplicates collapse to a single entry, and an empty input returns an empty list.
+
+  For `["fog", "bell", "fog", "wave", "bell"]` the vocabulary is
+  `["bell", "fog", "wave"]`.
+starter_code: |
+  def vocabulary(tokens):
+      return []
+function_name: vocabulary
+input_mode: function
+solution_sketch: Deduplicate with set(tokens), then sort into a canonical ascending list.
+sample_solution: |
+  def vocabulary(tokens):
+      return sorted(set(tokens))
+hints:
+  - level: 1
+    text: Uniqueness is exactly what a set gives you, and sorting fixes the order.
+  - level: 2
+    text: set(tokens) drops duplicates; wrapping it in sorted(...) yields alphabetical order.
+  - level: 3
+    text: sorted always returns a fresh list, so sorted(set(tokens)) is the entire solution.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: single
+      input: ["zephyr"]
+      expected: ["zephyr"]
+    - name: with_duplicates
+      input: ["fog", "bell", "fog", "wave", "bell"]
+      expected: ["bell", "fog", "wave"]
+  validation:
+    - name: all_same
+      input: ["cat", "cat", "cat"]
+      expected: ["cat"]
+    - name: reverse_order
+      input: ["c", "b", "a"]
+      expected: ["a", "b", "c"]
+    - name: mixed
+      input: ["sun", "moon", "sun", "star", "moon"]
+      expected: ["moon", "star", "sun"]
+explanation_markdown: |
+  Wrapping the tokens in a `set` removes duplicates in one pass, and `sorted`
+  imposes a deterministic order so the same corpus always yields the same
+  vocabulary list. The cost is O(n log n) from the sort. That fixed ordering is
+  what lets you later assign each token a stable integer id (its index), which
+  every embedding table and probability array depends on.
+common_mistakes:
+  - Returning list(set(tokens)) without sorting, whose iteration order is not guaranteed.
+  - Sorting without deduplicating first, leaving repeated tokens in the vocabulary.
+  - Building the result by appending only "new" tokens but forgetting to sort at the end.

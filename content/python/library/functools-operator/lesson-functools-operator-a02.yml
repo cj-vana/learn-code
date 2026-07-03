@@ -1,0 +1,98 @@
+id: lesson.library.functools_operator.a02
+kind: lesson
+version: 1
+language: python
+title: 'The operator Module: Names for the Symbols'
+slug: lesson-functools-operator-a02
+difficulty: medium
+concepts:
+  - python.functools_operator
+prerequisites:
+  - python.sorting
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.functools_operator.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original operator-module walkthrough framed around a chandlery's stock reports, with fresh worked examples.
+body_markdown: |
+  Python's operators — `+`, `<`, `[]` — are syntax, not values: you cannot
+  pass `+` to a function. The `operator` module gives every one of them a
+  callable name, and three of its factories replace half the lambdas ever
+  written.
+
+  ### itemgetter: sort keys without lambdas
+
+  A chandlery's stock report sorts rows by department, then by price:
+
+  ```python
+  from operator import itemgetter
+
+  rows.sort(key=itemgetter("dept", "price"))
+  ```
+
+  `itemgetter("dept", "price")` builds a callable that does
+  `(row["dept"], row["price"])` — a multi-key sort key in one readable
+  call. With a single key it returns the bare value; with several, a
+  tuple (which is exactly what tuple-comparison sorting wants — your
+  data-wrangling unit's technique, named). It works on any indexable:
+  `itemgetter(0, 2)` picks positions from lists and tuples.
+
+  ### attrgetter and methodcaller: the object-shaped siblings
+
+  ```python
+  from operator import attrgetter, methodcaller
+
+  boats.sort(key=attrgetter("berth.pier", "name"))   # dotted paths work
+  names = map(methodcaller("strip"), raw_lines)      # call the method on each
+  ```
+
+  `attrgetter` reaches through attributes (including dotted chains —
+  something a dict lookup cannot do), and `methodcaller("round_up", 10)`
+  calls a *named method with fixed arguments* on whatever it receives.
+  Together with `itemgetter`, they cover the three shapes of "extract
+  something from each object" — by key, by attribute, by method — as
+  named, introspectable callables.
+
+  ### Arithmetic names: reduce and friends
+
+  Every binary operator has a function form — `operator.add`,
+  `operator.mul`, `operator.and_` (trailing underscore where Python
+  keywords collide). Their natural habitat is higher-order functions:
+
+  ```python
+  from functools import reduce
+  from operator import mul
+
+  total_volume = reduce(mul, dimensions, 1)
+  ```
+
+  Reading note: `reduce(mul, xs, 1)` says *product* at a glance;
+  `reduce(lambda a, b: a * b, xs, 1)` makes the reviewer parse a lambda
+  to learn the same fact. That is the module's entire value proposition —
+  not speed (though the C-level callables are marginally faster than
+  lambdas), but **names for operations**, which compose into pipelines
+  that read as intent.
+
+  One boundary worth drawing: when the extraction is genuinely more than
+  a key/attribute/method — a computation, a conditional — a lambda (or a
+  named function) is *better* than contorting operator factories.
+  `key=lambda r: r["price"] * r["qty"]` has no operator-module spelling,
+  and should not. Use the named callables where they fit exactly; use
+  functions where logic lives. The exercises drive both factories and the
+  reduce idiom against realistic record data — the same shapes you will
+  meet in every sorting and grouping task from here on.
+checkpoints:
+  - question: What does itemgetter("dept", "price") return, and why does its two-key form suit Python's sorting so exactly?
+    answer: 'A callable extracting (row["dept"], row["price"]) as a tuple; sorted compares tuples element by element, so the multi-key extraction IS the multi-key sort order.'
+    explanation: The factory names the sort key and pairs perfectly with tuple comparison — the data-wrangling multi-key technique with the lambda removed.
+  - question: Which extraction shapes do itemgetter, attrgetter, and methodcaller each cover?
+    answer: 'itemgetter: indexable access like row["k"] or seq[0]; attrgetter: attribute access including dotted chains like berth.pier; methodcaller: invoking a named method with fixed arguments on each object.'
+    explanation: 'The trio maps one-to-one onto the three ways Python objects expose data — key, attribute, method.'
+  - question: When should you NOT reach for operator-module callables and write a lambda or named function instead?
+    answer: 'When the operation is real logic — arithmetic over several fields, conditionals, any computation — rather than plain extraction or a single operator; key=lambda r: r["price"] * r["qty"] has no honest operator spelling.'
+    explanation: 'The module provides names for existing operations, not a replacement for logic; forcing it past that boundary hurts readability, the very thing it exists to serve.'

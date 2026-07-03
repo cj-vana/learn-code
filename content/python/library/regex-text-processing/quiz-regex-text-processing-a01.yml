@@ -1,0 +1,102 @@
+id: quiz.library.regex_text_processing.a01
+kind: quiz
+version: 1
+language: python
+title: Choosing the Right re Tool
+slug: quiz-regex-text-processing-a01
+difficulty: medium
+concepts:
+  - python.regex
+prerequisites:
+  - python.regex
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.regex_text_processing.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original scenario-driven questions about selecting among match, search, findall, sub, and fullmatch.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      You need a yes/no answer to "does this log line contain a code like ERR-500
+      anywhere in it?" Which function is the natural fit?
+    choices:
+      - re.search
+      - re.match
+      - re.findall
+      - re.sub
+    correct_choice: re.search
+    explanation: |
+      re.search scans the whole string and returns the first match or None, which
+      is exactly a membership (anywhere) question. re.match only checks the start,
+      and findall/sub do more work than a yes/no needs.
+    concepts:
+      - python.regex
+  - id: q2
+    prompt: |
+      A field must contain a postal code and NOTHING else -- no leading spaces, no
+      trailing characters. Which function best expresses "the whole string fits"?
+    choices:
+      - re.fullmatch
+      - re.search
+      - re.match
+      - re.findall
+    correct_choice: re.fullmatch
+    explanation: |
+      re.fullmatch succeeds only when the pattern consumes the entire string, so it
+      rejects extra characters at either end. re.match anchors at the start but
+      ignores trailing junk, and re.search would accept the code buried in noise.
+    concepts:
+      - python.regex
+  - id: q3
+    prompt: |
+      You want a list of every temperature reading (a run of digits) in a long
+      sensor dump. Which function returns them all at once?
+    choices:
+      - re.findall
+      - re.search
+      - re.match
+      - re.fullmatch
+    correct_choice: re.findall
+    explanation: |
+      re.findall returns a list of every non-overlapping match, so it collects all
+      the digit-runs in one call. search returns only the first, and match/fullmatch
+      are about position, not collecting many values.
+    concepts:
+      - python.regex
+  - id: q4
+    prompt: |
+      A batch of records stores names as "Last, First" and you must rewrite every
+      one to "First Last". Which tool does the rewriting?
+    choices:
+      - re.sub
+      - re.findall
+      - re.search
+      - re.split
+    correct_choice: re.sub
+    explanation: |
+      re.sub replaces each match using a replacement string (or function), and with
+      capture groups plus backreferences it can reorder the pieces. findall and
+      search only read text; they do not produce a rewritten string.
+    concepts:
+      - python.regex
+  - id: q5
+    prompt: |
+      You must confirm a filename BEGINS with a batch prefix like "B2026_" but do
+      not care what follows. Which function is the most direct choice?
+    choices:
+      - re.match
+      - re.fullmatch
+      - re.findall
+      - re.sub
+    correct_choice: re.match
+    explanation: |
+      re.match anchors the pattern at position 0 and ignores the rest, which is
+      exactly "does it start this way?". fullmatch would wrongly demand the pattern
+      cover the entire filename, and search would also accept the prefix mid-string.
+    concepts:
+      - python.regex

@@ -1,0 +1,110 @@
+id: exercise.library.dataframe_thinking.a02
+kind: exercise
+version: 1
+language: python
+title: Trimming the Herbarium Ledger
+slug: dataframe-thinking-a02
+difficulty: easy
+concepts:
+  - concepts.dataframe_thinking
+  - python.dictionaries
+prerequisites:
+  - python.dictionaries
+  - python.comprehensions
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dataframe_thinking.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original column-projection drill framed around a herbarium ledger printing a short index, teaching the data-frame column-selection mental model as a per-row dict projection.
+prompt_markdown: |
+  A herbarium stores each pressed specimen as a wide dictionary with many
+  fields. To print a compact index, a curator wants to keep only a chosen handful
+  of columns from every row, in a chosen order, the way a data-frame library
+  writes `frame[["id", "name"]]`.
+
+  Write `select_columns(payload)` that takes a single dictionary with two keys:
+
+  - `"rows"`: a list of specimen dictionaries.
+  - `"columns"`: a list of field names to keep, in the order you want them.
+
+  Return a **new list** with one dictionary per input row, where each dictionary
+  contains only the listed columns, built in the listed order. The original rows
+  must not be modified. You may assume every listed column is present in every
+  row.
+
+  Edge cases the tests cover:
+
+  - An empty `"rows"` list returns an empty list `[]`.
+  - Requesting a single column still returns one-key dictionaries.
+  - Columns may be requested in an order different from the source rows; keep the
+    requested order.
+
+  Example:
+
+  ```python
+  select_columns({
+      "rows": [{"id": "F-1", "name": "fern", "shelf": 3}],
+      "columns": ["id", "name"],
+  })
+  # -> [{"id": "F-1", "name": "fern"}]
+  ```
+starter_code: |
+  def select_columns(payload):
+      return []
+function_name: select_columns
+input_mode: function
+solution_sketch: For each row, build a new dictionary by pulling each requested column in the requested order, and collect those into a new list.
+sample_solution: |
+  def select_columns(payload):
+      rows = payload["rows"]
+      columns = payload["columns"]
+      return [{column: row[column] for column in columns} for row in rows]
+hints:
+  - level: 1
+    text: Selecting columns means each output row is a smaller dictionary holding only the fields you asked for.
+  - level: 2
+    text: Loop over the requested columns to build each new row, so the keys land in the order the caller listed them.
+  - level: 3
+    text: 'A nested comprehension does it - [{c: row[c] for c in columns} for row in rows] - which never touches the original rows.'
+tests:
+  public:
+    - name: empty_ledger
+      input: {"rows": [], "columns": ["id", "name"]}
+      expected: []
+    - name: two_columns
+      input: {"rows": [{"id": "F-1", "name": "fern", "shelf": 3, "notes": "damp"}, {"id": "F-2", "name": "moss", "shelf": 1, "notes": "shade"}], "columns": ["id", "name"]}
+      expected: [{"id": "F-1", "name": "fern"}, {"id": "F-2", "name": "moss"}]
+    - name: single_column
+      input: {"rows": [{"id": "F-1", "shelf": 3}, {"id": "F-2", "shelf": 1}, {"id": "F-3", "shelf": 3}], "columns": ["shelf"]}
+      expected: [{"shelf": 3}, {"shelf": 1}, {"shelf": 3}]
+  validation:
+    - name: reordered_columns
+      input: {"rows": [{"id": "F-1", "name": "fern"}, {"id": "F-2", "name": "moss"}], "columns": ["name", "id"]}
+      expected: [{"name": "fern", "id": "F-1"}, {"name": "moss", "id": "F-2"}]
+    - name: all_columns
+      input: {"rows": [{"id": "F-3", "name": "ivy", "shelf": 3, "notes": "climbing"}], "columns": ["id", "name", "shelf", "notes"]}
+      expected: [{"id": "F-3", "name": "ivy", "shelf": 3, "notes": "climbing"}]
+    - name: drop_to_notes
+      input: {"rows": [{"id": "F-1", "notes": "damp"}, {"id": "F-2", "notes": "shade"}], "columns": ["notes"]}
+      expected: [{"notes": "damp"}, {"notes": "shade"}]
+    - name: numeric_and_text_mix
+      input: {"rows": [{"id": "F-9", "name": "sage", "shelf": 7, "notes": "dry"}], "columns": ["shelf", "name"]}
+      expected: [{"shelf": 7, "name": "sage"}]
+explanation_markdown: |
+  Column selection is a projection: each output row keeps only the fields you
+  named and drops the rest. Building the new dictionary by iterating the requested
+  `columns` list (rather than the row's own keys) gives you control over which
+  fields survive and the order they appear in, mirroring `frame[["name", "id"]]`.
+
+  Because you construct fresh dictionaries, the caller's rows are never mutated -
+  a projection returns a new, narrower table. The work is linear in rows times
+  selected columns, which is exactly what a data-frame does under the hood when it
+  slices a subset of columns.
+common_mistakes:
+  - Deleting unwanted keys from the original rows in place instead of building new dictionaries, which mutates the caller's data.
+  - Iterating over row.items() and filtering, which follows the row's key order rather than the requested column order.
+  - Returning the rows unchanged when a single column is requested instead of narrowing each dictionary to that one key.

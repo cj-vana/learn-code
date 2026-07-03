@@ -1,0 +1,95 @@
+id: lesson.library.autodiff_scalar_engine.a01
+kind: lesson
+version: 1
+language: python
+title: 'Why Every Neural Net Needs a Derivative Factory'
+slug: lesson-autodiff-scalar-engine-a01
+difficulty: medium
+concepts:
+  - ai.gradients_autodiff
+prerequisites:
+  - ai.classic_ml
+  - python.functions
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.autodiff_scalar_engine.a01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original introduction to automatic differentiation motivated from the gradient-descent lessons, with a fresh water-pipes analogy and worked chain-rule example.
+body_markdown: |
+  In the gradient descent lesson you computed two derivatives by hand for a
+  two-parameter model. A modern language model has *billions* of parameters,
+  and its loss is a formula thousands of operations deep. Nobody derives
+  those gradients by hand. Instead, every framework — PyTorch, JAX, all of
+  them — contains a **derivative factory**: a system that computes the
+  gradient of any formula automatically, exactly, and cheaply. It is called
+  **automatic differentiation**, and over this area you will build a working
+  one. It is smaller than you think.
+
+  ### The key move: formulas are graphs
+
+  Take `loss = (a * b + c) ** 2`. Instead of one opaque formula, see it as a
+  chain of tiny steps, each with a name:
+
+  ```text
+  u = a * b
+  v = u + c
+  loss = v ** 2
+  ```
+
+  Drawn with arrows (a and b into u; u and c into v; v into loss), this is a
+  **computational graph** — a DAG of primitive operations. Evaluating left to
+  right is the **forward pass**. Nothing new yet: it is how you would compute
+  it anyway.
+
+  The payoff: every *primitive* has a derivative you learned in school. For
+  `v ** 2`, d(loss)/dv = 2v. For `u + c`, dv/du = 1 and dv/dc = 1. For
+  `a * b`, du/da = b and du/db = a. Each node knows its own **local**
+  derivatives — one step, no context needed.
+
+  ### The chain rule: local facts compose into global answers
+
+  The chain rule says the derivative through a chain of steps is the
+  *product of the local derivatives along the way*:
+
+  ```text
+  d(loss)/da = d(loss)/dv · dv/du · du/da = 2v · 1 · b
+  ```
+
+  With a=2, b=3, c=1: u=6, v=7, loss=49, and d(loss)/da = 14 · 1 · 3 = 42.
+  Nudge a by 0.001 and recompute — the loss moves by about 0.042. The
+  machinery works, and no step of it required "doing calculus" on the whole
+  formula: just local rules and multiplication.
+
+  A picture that holds up: gradients are **water flowing backward** through
+  the graph from the loss. Each edge multiplies the flow by its local
+  derivative; where paths split going forward, flows *add* coming backward.
+  That one sentence is the entire backward pass, which you will implement
+  piece by piece in the exercises.
+
+  ### Why not the alternatives?
+
+  - **Numeric differentiation** — nudge each parameter, re-run, measure —
+    costs one full forward pass *per parameter*. For a billion parameters,
+    a billion re-runs per step. Useless for training, but perfect as a
+    *test oracle*: it checks any single gradient cheaply, which is exactly
+    how autodiff engines are verified (and how you will verify yours).
+  - **Symbolic differentiation** — algebra on the formula — produces
+    exponentially bloated expressions for deep graphs.
+
+  Autodiff gets every gradient, exactly, in about one extra pass, by storing
+  local derivatives during the forward trip and sweeping the chain rule
+  backward. The next lesson builds the node object that makes this concrete.
+checkpoints:
+  - question: In the graph for loss = (a*b + c)**2 with a=2, b=3, c=1, compose the chain rule to find d(loss)/dc.
+    answer: 'd(loss)/dv = 2v = 14 and dv/dc = 1, so d(loss)/dc = 14 — one local derivative per step along c''s path, multiplied.'
+    explanation: 'Every gradient in the graph is the same recipe: multiply the local derivatives along the path from the loss back to the variable.'
+  - question: Why is numeric (finite-difference) differentiation hopeless for training yet ideal for testing an autodiff engine?
+    answer: It needs a full forward re-run per parameter, so training a billion-parameter model would cost a billion evaluations per step; but checking ONE gradient needs only two evaluations, making it a cheap independent oracle for verification.
+    explanation: The same cost profile that disqualifies it as a training method makes it the standard gradient-checking tool — an oracle that shares no code with the thing it tests.
+  - question: In the water-flow picture of the backward pass, what happens where a variable feeds two different operations, and why?
+    answer: The backward flows from both paths ADD — the variable influences the loss through both routes, so its total gradient is the sum of contributions, which is why real engines accumulate with += rather than assigning.
+    explanation: 'Missing this accumulation is the classic hand-rolled-backprop bug: overwriting instead of summing silently drops one path''s influence.'

@@ -1,0 +1,110 @@
+id: exercise.library.binary_data.a05
+kind: exercise
+version: 1
+language: python
+title: Splicing the Label Tape
+slug: binary-data-struct-a05
+difficulty: medium
+concepts:
+  - python.binary_data
+  - python.slicing
+prerequisites:
+  - python.lists
+  - python.slicing
+  - python.functions
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.binary_data.a05
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original bytearray slice-assignment drill framed as splicing a run of bytes into a label printer's mutable tape buffer.
+prompt_markdown: |
+  A label printer holds its next print job in a mutable byte buffer, and an editor
+  splices new content in by replacing a stretch of the tape. Because a `bytes`
+  object is immutable, the buffer is a `bytearray`, whose slices can be assigned
+  to. Write `mutate_bytearray_slice(edit)` that receives a single dictionary with
+  four keys:
+
+  - `data`: a list of integers (each 0-255), the current tape contents.
+  - `start`: the start index of the stretch to replace (inclusive).
+  - `end`: the end index of the stretch to replace (exclusive).
+  - `new_bytes`: a list of integers to splice in where the stretch was.
+
+  Build a `bytearray` from `data`, replace the slice `start:end` with
+  `new_bytes` using slice assignment, and return the final buffer as a **list of
+  integers**.
+
+  The crucial property is that the replacement need not be the same length as the
+  removed stretch, so the tape can grow or shrink:
+
+  - Same length: `{"data": [1,2,3,4,5], "start": 1, "end": 3, "new_bytes": [9,9]}`
+    returns `[1, 9, 9, 4, 5]`.
+  - Grow: `new_bytes` longer than the removed slice inserts extra bytes, so
+    `start=1, end=3, new_bytes=[7,8,9]` on `[1,2,3,4,5]` returns
+    `[1, 7, 8, 9, 4, 5]`.
+  - Shrink: a shorter `new_bytes` removes bytes.
+  - Delete: an empty `new_bytes` deletes the stretch entirely.
+  - Insert: when `start == end`, nothing is removed and `new_bytes` is inserted at
+    that position.
+starter_code: |
+  def mutate_bytearray_slice(edit):
+      return []
+function_name: mutate_bytearray_slice
+input_mode: function
+solution_sketch: Build a bytearray from the data list, assign bytes(new_bytes) to the ba[start:end] slice (which resizes the buffer as needed), then return the buffer as a list of integers.
+sample_solution: |
+  def mutate_bytearray_slice(edit):
+      buffer = bytearray(edit["data"])
+      buffer[edit["start"]:edit["end"]] = bytes(edit["new_bytes"])
+      return list(buffer)
+hints:
+  - level: 1
+    text: A bytearray is the mutable cousin of bytes; unlike bytes, you can assign to a slice of it in place.
+  - level: 2
+    text: buffer[start:end] = bytes(new_bytes) removes the bytes in that range and drops the new ones in, resizing the bytearray automatically when the lengths differ.
+  - level: 3
+    text: Build the buffer with bytearray(edit["data"]), do the slice assignment, then return list(buffer).
+tests:
+  public:
+    - name: same_length_replace
+      input: {data: [1, 2, 3, 4, 5], start: 1, end: 3, new_bytes: [9, 9]}
+      expected: [1, 9, 9, 4, 5]
+    - name: grow
+      input: {data: [1, 2, 3, 4, 5], start: 1, end: 3, new_bytes: [7, 8, 9]}
+      expected: [1, 7, 8, 9, 4, 5]
+    - name: shrink
+      input: {data: [1, 2, 3, 4, 5], start: 1, end: 3, new_bytes: [9]}
+      expected: [1, 9, 4, 5]
+  validation:
+    - name: insert_when_start_equals_end
+      input: {data: [1, 2, 3, 4, 5], start: 2, end: 2, new_bytes: [100]}
+      expected: [1, 2, 100, 3, 4, 5]
+    - name: delete_with_empty
+      input: {data: [1, 2, 3, 4, 5], start: 1, end: 3, new_bytes: []}
+      expected: [1, 4, 5]
+    - name: replace_entire_buffer
+      input: {data: [1, 2, 3], start: 0, end: 3, new_bytes: [50, 60]}
+      expected: [50, 60]
+    - name: splice_into_empty
+      input: {data: [], start: 0, end: 0, new_bytes: [1, 2, 3]}
+      expected: [1, 2, 3]
+explanation_markdown: |
+  This is the headline difference between `bytes` and `bytearray`: a `bytearray`
+  supports in-place mutation, including slice assignment. Assigning to
+  `buffer[start:end]` is not limited to same-length swaps the way indexing a
+  fixed-width array would be. Python removes whatever occupied `start:end` and
+  splices in the new bytes, growing or shrinking the buffer to fit. That single
+  operation covers replacement, insertion (`start == end`), and deletion
+  (`new_bytes` empty).
+
+  The right-hand side must be a bytes-like object, which is why the solution wraps
+  the incoming list with `bytes(...)`; assigning a plain list of ints also works
+  in CPython, but converting first keeps the intent explicit and matches how you
+  would splice one buffer into another in real code.
+common_mistakes:
+  - Reaching for bytes instead of bytearray; bytes is immutable, so slice assignment raises TypeError.
+  - Assuming the replacement must be the same length as the removed slice, which is true for item assignment but not for slice assignment.
+  - Building the result by hand with concatenation and getting the insert (start == end) or delete (empty new_bytes) edge cases wrong.

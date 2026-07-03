@@ -1,0 +1,162 @@
+id: exercise.library.eval_metrics_for_models.a11
+kind: exercise
+version: 1
+language: python
+title: Expected Calibration Error in Confidence Bins
+slug: eval-metrics-for-models-a11
+difficulty: hard
+concepts:
+  - ai.model_evaluation
+prerequisites:
+  - python.lists
+  - python.loops
+  - concepts.grouping_aggregation
+estimated_time_minutes: 24
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.eval_metrics_for_models.a11
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original expected-calibration-error drill framed around a mushroom-edibility classifier, with the binning rule (left-closed, last right-closed) spelled out deterministically.
+prompt_markdown: |
+  A well-calibrated classifier's confidence should match how often it is right:
+  among the predictions it makes at 80% confidence, about 80% should be correct.
+  **Expected Calibration Error (ECE)** measures the gap between confidence and
+  accuracy, bin by bin.
+
+  A mushroom-edibility model outputs a confidence in `[0, 1]` for each specimen and
+  is later marked right or wrong. You are given a single dictionary `job` with:
+
+  - `"confidences"`: a list of confidence floats, each in `[0, 1]`.
+  - `"correct"`: a list of booleans, aligned by position with `"confidences"`
+    (`True` means that prediction turned out correct).
+  - `"buckets"`: an integer `n`, the number of equal-width confidence bins.
+
+  **Binning rule.** Split `[0, 1]` into `n` bins of width `1 / n`. Bin index `b`
+  (from `0` to `n - 1`) covers the half-open interval `[b/n, (b+1)/n)` -- left edge
+  included, right edge excluded -- **except the last bin**, which is closed on both
+  ends, `[(n-1)/n, 1.0]`, so a confidence of exactly `1.0` lands there. Equivalently,
+  place a confidence `c` in bin `int(c * n)`, and if that equals `n` (which only
+  happens when `c == 1.0`) use `n - 1`. Because the left edge is included, a value
+  exactly on a boundary such as `0.5` with `n = 2` falls into the **higher** bin.
+
+  **Per-bin numbers.** For each bin that contains at least one prediction, compute
+
+  - `acc` = fraction of that bin's predictions that are correct,
+  - `conf` = mean of that bin's confidences,
+  - and the gap `|acc - conf|`.
+
+  **ECE** weights each bin's gap by how many predictions it holds:
+
+  ```
+  ECE = sum over non-empty bins of (bin_size / total_predictions) * |acc - conf|
+  ```
+
+  Empty bins contribute nothing. Return the ECE **rounded to 4 decimal places**. If
+  `"confidences"` is empty, return `0.0`.
+
+  Worked example with `buckets = 2`:
+
+  ```python
+  calibration_error({
+      "confidences": [0.2, 0.8, 0.6, 0.9],
+      "correct": [False, True, True, True],
+      "buckets": 2,
+  })
+  # bin 0 = [0.0, 0.5): {0.2}  -> acc 0.0, conf 0.2, gap 0.2, weight 1/4
+  # bin 1 = [0.5, 1.0]: {0.8, 0.6, 0.9} -> acc 1.0, conf 0.7667, gap 0.2333, weight 3/4
+  # ECE = 0.25*0.2 + 0.75*0.2333... = 0.225
+  # -> 0.225
+  ```
+starter_code: |
+  def calibration_error(job):
+      return 0.0
+function_name: calibration_error
+input_mode: function
+solution_sketch: For each prediction find its bin with int(c*n) capped at n-1, accumulate per-bin count, confidence sum, and correct count; then for each non-empty bin add (count/total)*|acc-conf| and round the total to 4dp, returning 0.0 for empty input.
+sample_solution: |
+  def calibration_error(job):
+      confidences = job["confidences"]
+      correct = job["correct"]
+      buckets = job["buckets"]
+      total = len(confidences)
+      if total == 0:
+          return 0.0
+
+      counts = [0] * buckets
+      conf_sums = [0.0] * buckets
+      correct_sums = [0] * buckets
+      for c, ok in zip(confidences, correct):
+          b = int(c * buckets)
+          if b >= buckets:
+              b = buckets - 1
+          counts[b] += 1
+          conf_sums[b] += c
+          correct_sums[b] += 1 if ok else 0
+
+      ece = 0.0
+      for b in range(buckets):
+          if counts[b] == 0:
+              continue
+          acc = correct_sums[b] / counts[b]
+          conf = conf_sums[b] / counts[b]
+          ece += (counts[b] / total) * abs(acc - conf)
+      return round(ece, 4)
+hints:
+  - level: 1
+    text: Group predictions into bins first, then compute one accuracy and one mean confidence per bin; the ECE is a weighted average of the per-bin gaps.
+  - level: 2
+    text: The bin for confidence c is int(c * buckets), but a confidence of exactly 1.0 gives buckets, so clamp it down to buckets - 1.
+  - level: 3
+    text: Keep three parallel arrays (count, confidence sum, correct count) indexed by bin, skip empty bins, and weight each |acc - conf| by count/total before summing and rounding to 4 places.
+tests:
+  public:
+    - name: two_bins_worked_example
+      input: {"confidences": [0.2, 0.8, 0.6, 0.9], "correct": [false, true, true, true], "buckets": 2}
+      expected: 0.225
+    - name: perfectly_calibrated_midpoint
+      input: {"confidences": [0.5, 0.5, 0.5, 0.5], "correct": [true, false, true, false], "buckets": 2}
+      expected: 0.0
+    - name: ceiling_confidence_last_bin
+      input: {"confidences": [1.0, 1.0], "correct": [true, true], "buckets": 4}
+      expected: 0.0
+    - name: four_separate_bins
+      input: {"confidences": [0.125, 0.375, 0.625, 0.875], "correct": [true, false, true, true], "buckets": 4}
+      expected: 0.4375
+  validation:
+    - name: single_pair_two_bins
+      input: {"confidences": [0.25, 0.75], "correct": [true, false], "buckets": 2}
+      expected: 0.75
+    - name: spread_four_bins
+      input: {"confidences": [0.1, 0.4, 0.6, 0.9], "correct": [false, false, true, true], "buckets": 4}
+      expected: 0.25
+    - name: two_per_bin
+      input: {"confidences": [0.2, 0.2, 0.8, 0.8], "correct": [false, true, true, true], "buckets": 2}
+      expected: 0.25
+    - name: overconfident_low_bin
+      input: {"confidences": [0.9, 0.9, 0.9, 0.1], "correct": [true, true, false, false], "buckets": 2}
+      expected: 0.2
+explanation_markdown: |
+  ECE turns the abstract idea "confidence should equal accuracy" into one number.
+  Inside each confidence bin you compare two quantities: how sure the model was on
+  average (`conf`) versus how often it was actually right (`acc`). A bin where the
+  model claims 90% but is right only 67% of the time contributes a gap of `0.233`,
+  and that gap is weighted by how many predictions live in the bin, so crowded bins
+  dominate the score and near-empty ones barely register.
+
+  Two edge details make or break the implementation. First, the binning boundary:
+  `int(c * buckets)` maps `[0, 1)` onto `0 .. buckets - 1`, but `c == 1.0` maps to
+  `buckets`, one past the end, so it must be clamped into the final bin. Second, the
+  intervals are left-closed, which is why a confidence sitting exactly on a boundary
+  (like `0.5` with two bins) belongs to the upper bin, not the lower one. The
+  midpoint example scores `0.0` not because the model is good but because within its
+  single bin the mean confidence `0.5` happens to equal the accuracy `0.5`. That is
+  the subtle lesson of calibration: it is a property of aggregates, and a model can
+  be perfectly calibrated on average while being wrong on any individual case.
+common_mistakes:
+  - Forgetting to clamp c == 1.0 down from bin index buckets to buckets - 1, causing an index error or a lost prediction.
+  - Weighting every bin equally instead of by its share of predictions, which is a different (macro) metric.
+  - Using the right-open rule for the last bin too, so perfectly confident correct predictions get dropped.
+  - Comparing accuracy to a single confidence rather than the bin's mean confidence.

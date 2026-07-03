@@ -1,0 +1,111 @@
+id: lesson.library.oop_internals.a01
+kind: lesson
+version: 1
+language: python
+title: 'Descriptors: The Machinery Behind property'
+slug: lesson-oop-internals-a01
+difficulty: hard
+concepts:
+  - python.descriptors_mro
+prerequisites:
+  - python.classes
+  - python.dataclasses_dunder
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.oop_internals.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original descriptor-protocol walkthrough framed around a vineyard tank-monitoring class, with fresh worked code.
+body_markdown: |
+  You have used `@property` to make a method look like an attribute. This
+  lesson shows the machinery underneath — the **descriptor protocol** — which
+  also powers methods, `classmethod`, `staticmethod`, and every ORM field
+  you will ever meet. It is one rule:
+
+  > If a *class* attribute has a `__get__`/`__set__` method, attribute
+  > access on instances is routed through it.
+
+  ### A validated field, by hand
+
+  A vineyard's tank monitor must keep temperatures in a legal band. Instead
+  of writing a property per field, write one **descriptor class**:
+
+  ```python
+  class Bounded:
+      def __init__(self, low, high):
+          self.low, self.high = low, high
+
+      def __set_name__(self, owner, name):
+          self.name = name                 # told its own attribute name
+
+      def __get__(self, obj, objtype=None):
+          if obj is None:
+              return self                  # class access returns the descriptor
+          return obj.__dict__[self.name]
+
+      def __set__(self, obj, value):
+          if not (self.low <= value <= self.high):
+              raise ValueError(f"{self.name} out of range")
+          obj.__dict__[self.name] = value
+
+  class Tank:
+      temperature = Bounded(5, 30)         # one line per validated field
+      ph = Bounded(2.8, 4.2)
+  ```
+
+  Now `tank.temperature = 99` raises, and `tank.temperature` reads the
+  stored value. The three methods are the whole protocol: `__set_name__`
+  (called once at class creation, telling the descriptor its name),
+  `__get__`, and `__set__`. `@property` is simply a prepackaged descriptor
+  built from your getter/setter functions.
+
+  ### The lookup order that makes it work
+
+  Attribute access `obj.x` is not "check the instance dict" — the real
+  order is: **data descriptors on the class win over the instance dict,
+  which wins over non-data descriptors and plain class attributes.** A
+  *data* descriptor defines `__set__` (like `Bounded`); a *non-data*
+  descriptor defines only `__get__` (like functions — which is why you can
+  shadow a method by assigning to the instance, but not a property).
+
+  That precedence answers a classic puzzle: why does assigning
+  `obj.temperature = 5` go through the descriptor instead of just planting
+  an instance attribute that shadows it? Because data descriptors outrank
+  the instance dict — by design, so validation cannot be bypassed.
+
+  ### Lazy attributes: the non-data trick
+
+  A descriptor with only `__get__` that *writes its result into the
+  instance dict* runs once and then gets out of the way — subsequent reads
+  hit the instance dict first (non-data descriptors lose to it):
+
+  ```python
+  class Lazy:
+      def __init__(self, compute):
+          self.compute = compute
+      def __set_name__(self, owner, name):
+          self.name = name
+      def __get__(self, obj, objtype=None):
+          value = self.compute(obj)
+          obj.__dict__[self.name] = value   # cache: descriptor now bypassed
+          return value
+  ```
+
+  This "compute once, then become a plain attribute" pattern is
+  `functools.cached_property`, and now you can read its source without
+  fear. The exercises have you drive both patterns and predict the lookup
+  order — the part that separates using Python's object model from
+  understanding it.
+checkpoints:
+  - question: Why can validation in a data descriptor not be bypassed by assigning directly to the instance attribute?
+    answer: Because data descriptors (those with __set__) take precedence over the instance dict in attribute lookup — every assignment routes through __set__, which stores the validated value in obj.__dict__ itself.
+    explanation: The lookup precedence (data descriptor > instance dict > non-data descriptor) is the load-bearing rule of the object model.
+  - question: How does the lazy-attribute descriptor arrange to run only once per instance?
+    answer: It defines only __get__ (non-data), and on first access writes the computed value into the instance dict; since non-data descriptors lose to the instance dict, every later read finds the cached value directly.
+    explanation: The pattern exploits the precedence rules rather than fighting them — it is exactly how functools.cached_property works.
+  - question: What does __set_name__ provide, and when is it called?
+    answer: It hands the descriptor the attribute name it was assigned to ("temperature"), called once automatically when the owning class body is created — so one descriptor class can serve many differently-named fields.
+    explanation: Before __set_name__ existed, descriptors needed the name passed explicitly; the hook is what makes one-line validated fields ergonomic.

@@ -1,0 +1,125 @@
+id: exercise.library.cli_parsing.a04
+kind: exercise
+version: 1
+language: python
+title: Greenhouse Controller Missing-Setting Report
+slug: cli-parsing-a04
+difficulty: medium
+concepts:
+  - python.cli_args
+  - python.lists
+prerequisites:
+  - python.dictionaries
+  - python.conditionals
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.cli_parsing.a04
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original greenhouse-irrigation framing for a required-argument checker that treats blank and missing values alike.
+prompt_markdown: |
+  The greenhouse irrigation controller refuses to run until a few settings are
+  actually provided. A setting that was left out is missing; so is one that was
+  named but handed a blank value, because a blank value tells the controller
+  nothing.
+
+  Write `validate_required_args(job)` where `job` is a dict with two keys:
+
+  - `job["parsed"]`: a dict of the settings that were supplied.
+  - `job["required"]`: a list of setting names that must be present, in the order
+    they should be reported.
+
+  Return a list of the required names that are missing, using these rules:
+
+  - A required name is missing if it is not a key in `parsed`.
+  - It is also missing if it is a key but its value is `None` or an empty string
+    `''` (a blank counts as not provided).
+  - Report the missing names in the same order they appear in `required`.
+  - If nothing is missing, return an empty list. Assume `required` never repeats a
+    name.
+
+  Example: `parsed = {'zone': 'north', 'minutes': ''}` with
+  `required = ['zone', 'minutes', 'schedule']` returns `['minutes', 'schedule']`.
+starter_code: |
+  def validate_required_args(job):
+      parsed = job["parsed"]
+      required = job["required"]
+      missing = []
+      # Collect each required name that is absent or was given a blank value.
+      return missing
+function_name: validate_required_args
+input_mode: function
+solution_sketch: Walk required in order, appending each name whose key is absent from parsed or whose value is None or an empty string.
+sample_solution: |
+  def validate_required_args(job):
+      parsed = job["parsed"]
+      required = job["required"]
+      missing = []
+      for name in required:
+          if name not in parsed:
+              missing.append(name)
+          elif parsed[name] is None or parsed[name] == "":
+              missing.append(name)
+      return missing
+hints:
+  - level: 1
+    text: Iterate over required (not over parsed) so your output order matches the required list exactly.
+  - level: 2
+    text: "There are two ways to be missing: the key is absent, or the key exists but its value is None or an empty string."
+  - level: 3
+    text: Check `name not in parsed` first; only when the key exists is it safe to inspect parsed[name] for None or ''.
+tests:
+  public:
+    - name: all_present
+      input:
+        parsed: {host: local, port: '80'}
+        required: ['host', 'port']
+      expected: []
+    - name: one_absent
+      input:
+        parsed: {host: local}
+        required: ['host', 'port']
+      expected: ['port']
+    - name: blank_value_counts_missing
+      input:
+        parsed: {zone: north, minutes: ''}
+        required: ['zone', 'minutes', 'schedule']
+      expected: ['minutes', 'schedule']
+  validation:
+    - name: none_value_counts_missing
+      input:
+        parsed: {host: null, port: '80'}
+        required: ['host', 'port']
+      expected: ['host']
+    - name: all_missing_in_order
+      input:
+        parsed: {}
+        required: ['alpha', 'beta', 'gamma']
+      expected: ['alpha', 'beta', 'gamma']
+    - name: empty_required
+      input:
+        parsed: {x: '1'}
+        required: []
+      expected: []
+    - name: order_preserved
+      input:
+        parsed: {beta: '2'}
+        required: ['alpha', 'beta', 'gamma']
+      expected: ['alpha', 'gamma']
+explanation_markdown: |
+  Validating required arguments is really two questions folded together: was the
+  name supplied at all, and if so, does it carry a usable value? Checking only key
+  presence would wave through `--minutes ""`, where the caller named the setting
+  but gave it nothing, so the check also rejects `None` and the empty string. The
+  order of the two conditions matters: you must confirm the key exists before
+  reading `parsed[name]`, otherwise a missing key would raise a KeyError instead
+  of being reported. Driving the loop from `required` rather than from `parsed`
+  guarantees the report comes out in the caller's stated order, which is what a
+  user scanning an error message expects to see.
+common_mistakes:
+  - Treating only absent keys as missing, so a key present with an empty string or None slips through as if provided.
+  - Reading parsed[name] before confirming the key exists, which raises KeyError on genuinely absent names.
+  - Iterating over parsed instead of required, which scrambles the report order and can miss names that were never supplied.

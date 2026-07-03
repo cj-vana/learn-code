@@ -1,0 +1,102 @@
+id: lesson.library.files_formats.a02
+kind: lesson
+version: 1
+language: python
+title: 'JSON In, JSON Out'
+slug: lesson-files-formats-a02
+difficulty: medium
+concepts:
+  - python.json_csv
+  - python.dictionaries
+prerequisites:
+  - python.dictionaries
+  - python.lists
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.files_formats.a02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original JSON walkthrough framed around a chandlery's stock feed, with fresh worked code and an original NDJSON example.
+body_markdown: |
+  JSON is the lingua franca of data exchange: APIs speak it, config files use
+  it, and log pipelines emit it. Python's `json` module maps it onto the types
+  you already know, so working with JSON is really working with dicts and
+  lists — plus two functions.
+
+  ```python
+  import json
+
+  payload = '{"item": "lantern oil", "qty": 12, "tags": ["stock", "flammable"]}'
+  record = json.loads(payload)      # str -> Python objects
+  record["qty"] -= 1
+  text = json.dumps(record)        # Python objects -> str
+  ```
+
+  The mapping is mechanical: JSON objects become dicts, arrays become lists,
+  strings stay strings, numbers become `int` or `float`, `true`/`false` become
+  `True`/`False`, and `null` becomes `None`. Two consequences trip people up:
+
+  - **JSON keys are always strings.** `{"1": "a"}` round-trips fine, but if you
+    dump a dict with integer keys, they silently become strings — `{1: "a"}`
+    dumps to `'{"1": "a"}'` and does not come back the same.
+  - **Tuples become lists.** `dumps((1, 2))` produces `"[1, 2]"`, and loading it
+    gives a list. If your code relies on tuple-ness, JSON just erased it.
+
+  ### Navigating nested data
+
+  Real payloads nest. A chandlery's stock feed might look like:
+
+  ```python
+  feed = json.loads(text)
+  for item in feed["warehouse"]["shelves"]:
+      if item["qty"] < feed["reorder_level"]:
+          print(item["name"])
+  ```
+
+  Chains of `["key"]` lookups are fine when you trust the shape. When you do
+  not, `.get()` with a default keeps a missing branch from raising:
+
+  ```python
+  shelves = feed.get("warehouse", {}).get("shelves", [])
+  ```
+
+  ### Malformed input is normal
+
+  `json.loads` raises `json.JSONDecodeError` on anything that is not valid
+  JSON. In pipelines that read one JSON record per line (a common format
+  called NDJSON), the professional move is to decide *per line* what a bad
+  record costs you:
+
+  ```python
+  records, skipped = [], 0
+  for line in text.splitlines():
+      if not line.strip():
+          continue
+      try:
+          records.append(json.loads(line))
+      except json.JSONDecodeError:
+          skipped += 1
+  ```
+
+  Counting what you skipped matters as much as parsing what you kept — a
+  report that says "loaded 4,982 records, skipped 18" earns trust; one that
+  silently drops rows destroys it.
+
+  ### Pretty output
+
+  `json.dumps(data, indent=2, sort_keys=True)` produces stable, readable
+  output — sorted keys mean two dumps of equal data compare equal as strings,
+  which makes JSON diffable and testable.
+checkpoints:
+  - question: You dump {1 -> "north", 2 -> "south"} (a dict with integer keys) to JSON and load it back. What changed and why?
+    answer: The keys came back as the strings "1" and "2", because JSON object keys can only be strings, so dumps converts them and loads has no way to know they were ints.
+    explanation: The round trip is lossy for any non-string key; if int keys matter, convert explicitly after loading.
+  - question: In a one-record-per-line pipeline, why wrap json.loads in try/except per line instead of around the whole loop?
+    answer: Per-line handling lets one malformed record be counted and skipped while every other line still loads; wrapping the whole loop abandons everything after the first bad line.
+    explanation: The unit of failure should match the unit of data — one bad record should cost you one record, not the batch.
+  - question: Why does json.dumps(data, sort_keys=True) make JSON easier to test?
+    answer: Sorted keys make the output deterministic, so two dumps of equal data produce identical strings that can be compared directly.
+    explanation: Without sorting, key order follows insertion order, so semantically equal dicts can serialize to different strings and break string-level assertions.

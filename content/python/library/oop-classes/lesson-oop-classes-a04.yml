@@ -1,0 +1,106 @@
+id: lesson.library.oop_classes.a04
+kind: lesson
+version: 1
+language: python
+title: Composition Over Inheritance, and Overriding When You Do Inherit
+slug: lesson-oop-classes-a04
+difficulty: medium
+concepts:
+  - python.classes
+prerequisites:
+  - python.classes
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.oop_classes.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original print-shop scenario contrasting composed object graphs with an inheritance hierarchy and method overriding.
+body_markdown: |
+  Real programs rarely use a single class. They wire several small classes
+  together. There are two ways objects relate: **composition** (an object *has*
+  other objects) and **inheritance** (an object *is a* more specific kind of
+  another). Knowing when to use each keeps designs flexible.
+
+  Composition means one object holds references to others and delegates work to
+  them. Consider a print shop where an order is made up of line items:
+
+  ```python
+  class LineItem:
+      def __init__(self, pages, copies):
+          self.pages = pages
+          self.copies = copies
+
+      def sheets(self):
+          return self.pages * self.copies
+
+  class Order:
+      def __init__(self):
+          self.items = []
+
+      def add(self, item):
+          self.items.append(item)
+
+      def total_sheets(self):
+          return sum(item.sheets() for item in self.items)
+  ```
+
+  Here `Order` *has* a list of `LineItem` objects and asks each one to compute its
+  own sheet count. The pieces stay small and independent; you can test a
+  `LineItem` alone, and you can grow the object graph -- an order of items, a batch
+  of orders -- without any class needing to know the internals of another. This is
+  the spirit of "composition over inheritance": prefer assembling behaviour from
+  cooperating parts rather than building deep family trees.
+
+  Inheritance still earns its place when several types genuinely share behaviour
+  and differ in just a few spots. A subclass created with `class Sub(Base):`
+  automatically gets the base class's methods, and it can **override** any of them
+  by defining a method with the same name:
+
+  ```python
+  class Job:
+      def price(self):
+          return 0
+
+  class ColorJob(Job):
+      def __init__(self, sheets):
+          self.sheets = sheets
+
+      def price(self):
+          return self.sheets * 3      # overrides Job.price
+
+  class DraftJob(Job):
+      def __init__(self, sheets):
+          self.sheets = sheets
+
+      def price(self):
+          return self.sheets          # cheaper override
+  ```
+
+  Because both subclasses expose a `price` method, code can treat them uniformly:
+
+  ```python
+  jobs = [ColorJob(10), DraftJob(10)]
+  print(sum(job.price() for job in jobs))   # 40
+  ```
+
+  That is **polymorphism**: the loop calls `price()` without caring which subclass
+  it holds, and each object runs its own version. Notice we never check the type
+  with an `if`; the right method is chosen automatically. A subclass can also reuse
+  its parent's version by calling `super().method()` inside the override when it
+  wants to extend rather than replace behaviour. A useful rule of thumb: reach for
+  inheritance only when the subclasses truly are specialised kinds of one base and
+  share most of their logic; otherwise compose smaller objects, which almost always
+  stays easier to change.
+checkpoints:
+  - question: What distinguishes composition from inheritance?
+    answer: Composition is a has-a relationship where an object holds and delegates to other objects, while inheritance is an is-a relationship where a subclass specialises a base class.
+    explanation: Order has a list of LineItems (composition), whereas ColorJob is a kind of Job (inheritance).
+  - question: How does a subclass override a method from its base class?
+    answer: By defining a method with the same name in the subclass, which replaces the base class version for instances of the subclass.
+    explanation: ColorJob.price replaces Job.price, so calling price() on a ColorJob runs the subclass version.
+  - question: Why can the loop call job.price() without checking each object's type?
+    answer: Because every subclass provides its own price method, polymorphism lets Python dispatch to the correct version automatically.
+    explanation: Shared method names across subclasses remove the need for type checks, keeping the calling code simple and open to new job types.

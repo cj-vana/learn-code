@@ -1,0 +1,123 @@
+id: exercise.library.linked_lists_patterns.a11
+kind: exercise
+version: 1
+language: python
+title: Collapse the Threaded Tag Runs
+slug: linked-lists-patterns-a11
+difficulty: medium
+concepts:
+  - patterns.linked_list
+prerequisites:
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.linked_lists_patterns.a11
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original trailhead-tag framing that threads sorted readings onto a node chain and unlinks consecutive duplicates in place before serializing.
+prompt_markdown: |
+  A trail ranger threads elevation tags onto a single wire in the order they were
+  logged, and because the hike only ever climbs, the readings arrive already in
+  **non-decreasing order**. Whenever two neighbouring tags show the same number,
+  the ranger wants the wire to keep just the first of that run and unhook the rest.
+
+  Write `dedupe_chain(readings)` where `readings` is a list of integers in
+  non-decreasing order. Inside the function, build a singly linked list of `Node`
+  objects (one node per reading, in the same order), then remove every node whose
+  value duplicates the value of the previous **kept** node by rewiring the `.next`
+  links. Do not build a set or filter the list directly -- walk the chain and
+  splice out the duplicates. Finally, serialize the surviving chain back into a
+  plain list and return it.
+
+  For example, `[1, 1, 2, 3, 3, 3]` returns `[1, 2, 3]`. An empty input `[]`
+  returns `[]`.
+starter_code: |
+  def dedupe_chain(readings):
+      # Build a Node chain, unlink consecutive duplicates, then serialize it back.
+      return []
+function_name: dedupe_chain
+input_mode: function
+solution_sketch: Link the readings into Node objects, then walk with one pointer; when the next node equals the current node's value, bypass it, otherwise advance, and finally read the values back out.
+sample_solution: |
+  def dedupe_chain(readings):
+      class Node:
+          def __init__(self, value):
+              self.value = value
+              self.next = None
+
+      if not readings:
+          return []
+
+      head = Node(readings[0])
+      tail = head
+      for value in readings[1:]:
+          tail.next = Node(value)
+          tail = tail.next
+
+      current = head
+      while current is not None and current.next is not None:
+          if current.next.value == current.value:
+              current.next = current.next.next
+          else:
+              current = current.next
+
+      result = []
+      node = head
+      while node is not None:
+          result.append(node.value)
+          node = node.next
+      return result
+hints:
+  - level: 1
+    text: First stitch the readings into a chain of Node objects, keeping a reference to the head so you can walk it afterwards.
+  - level: 2
+    text: Use a single pointer at the current kept node; compare it with current.next rather than tracking a separate previous pointer.
+  - level: 3
+    text: When current.next has the same value, set current.next = current.next.next to unhook the duplicate and do NOT advance; only move current forward when the next value differs.
+tests:
+  public:
+    - name: example_run
+      input: [1, 1, 2, 3, 3, 3]
+      expected: [1, 2, 3]
+    - name: all_same
+      input: [4, 4, 4, 4]
+      expected: [4]
+    - name: no_duplicates
+      input: [1, 2, 3, 4]
+      expected: [1, 2, 3, 4]
+  validation:
+    - name: empty
+      input: []
+      expected: []
+    - name: single
+      input: [7]
+      expected: [7]
+    - name: two_same
+      input: [2, 2]
+      expected: [2]
+    - name: long_runs
+      input: [0, 0, 0, 1, 2, 2, 5, 5, 5, 5, 9]
+      expected: [0, 1, 2, 5, 9]
+    - name: negatives
+      input: [-3, -3, -1, -1, 0, 0]
+      expected: [-3, -1, 0]
+explanation_markdown: |
+  Because the readings are already non-decreasing, every group of equal values sits
+  together as a contiguous run on the wire. That means you never have to search --
+  a duplicate can only ever be the node directly after the one you are keeping. So
+  the pattern is a single left-to-right pass with one pointer parked on the last
+  kept node. If the next node matches, you splice it out with
+  `current.next = current.next.next` and stay put, because the new next node might
+  also be a duplicate of the same run. If the next node differs, you advance the
+  pointer, since that node becomes the new value to compare against. Serializing at
+  the end simply walks the surviving chain and collects each value. The empty input
+  is handled up front so there is no head to build. Working on the links directly is
+  what makes this a linked-list exercise rather than a set filter -- the chain is
+  repaired in place as you go.
+common_mistakes:
+  - Advancing the pointer after unlinking a duplicate, which skips over and keeps a second copy inside a long run.
+  - Building a set or list-comprehension of the values instead of rewiring the node .next links as the prompt requires.
+  - Forgetting the empty-input case and trying to read readings[0] on an empty list, which raises an IndexError.

@@ -1,0 +1,219 @@
+id: exercise.library.modern_syntax.a10
+kind: exercise
+version: 1
+language: python
+title: Observatory Command Contract
+slug: modern-syntax-a10
+difficulty: hard
+concepts:
+  - python.modern_syntax
+  - python.introspection
+prerequisites:
+  - python.functions
+  - python.dictionaries
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.modern_syntax.a10
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original drill on positional-only and keyword-only parameters, validated with a real inspect.Signature built from POSITIONAL_ONLY and KEYWORD_ONLY parameters, themed as an observatory telescope command API.
+prompt_markdown: |
+  An observatory's telescope API is strict about how commands are called. Some
+  parameters are **positional-only** (the fast numeric arguments, which must be
+  passed by position, never by name) and some are **keyword-only** (the safety
+  flags, which must be passed by name, never by position). Python expresses this
+  contract with the `/` and `*` markers in a signature; here you validate a call
+  against that contract using the real `inspect` machinery.
+
+  Write `bind_command(call)`. The single argument is a dict:
+
+  ```python
+  {
+      "positional_only": ["azimuth", "altitude"],
+      "keyword_only": ["confirm"],
+      "args": [120, 45],
+      "kwargs": {"confirm": True},
+  }
+  ```
+
+  Build an `inspect.Signature` whose parameters are, in order, the
+  `positional_only` names as `Parameter.POSITIONAL_ONLY`, then the
+  `keyword_only` names as `Parameter.KEYWORD_ONLY` (all required, no defaults).
+  Attempt to bind the supplied `args` and `kwargs` to it.
+
+  Return a dict:
+
+  - On a successful bind: `{"ok": True, "bound": <mapping of parameter name to
+    value>}`, where the mapping contains every bound parameter.
+  - If binding raises `TypeError`: `{"ok": False, "bound": {}}`.
+
+  A bind fails (returns `ok` False) when, for example:
+
+  - a positional-only name is supplied in `kwargs`;
+  - a keyword-only name is supplied positionally in `args`;
+  - a required parameter is missing;
+  - there are more positional `args` than positional-only parameters;
+  - `kwargs` contains a name that is not a parameter.
+
+  With no parameters and an empty call, the bind succeeds with an empty mapping.
+starter_code: |
+  from inspect import Parameter, Signature
+
+
+  def bind_command(call):
+      return {"ok": False, "bound": {}}
+function_name: bind_command
+input_mode: function
+solution_sketch: Assemble a list of Parameter objects (POSITIONAL_ONLY names first, then KEYWORD_ONLY names) and build a Signature. Call sig.bind(*args, **kwargs) inside try/except TypeError. On success return ok True with dict(bound.arguments); on TypeError return ok False with an empty mapping.
+sample_solution: |
+  from inspect import Parameter, Signature
+
+
+  def bind_command(call):
+      params = [Parameter(name, Parameter.POSITIONAL_ONLY) for name in call["positional_only"]]
+      params += [Parameter(name, Parameter.KEYWORD_ONLY) for name in call["keyword_only"]]
+      signature = Signature(params)
+      try:
+          bound = signature.bind(*call["args"], **call["kwargs"])
+      except TypeError:
+          return {"ok": False, "bound": {}}
+      return {"ok": True, "bound": dict(bound.arguments)}
+hints:
+  - level: 1
+    text: Create the parameters with inspect.Parameter(name, Parameter.POSITIONAL_ONLY) and inspect.Parameter(name, Parameter.KEYWORD_ONLY), keeping the positional-only ones first so the Signature order is valid.
+  - level: 2
+    text: Signature.bind(*call["args"], **call["kwargs"]) enforces the whole contract for you — it raises TypeError when the call violates positional-only or keyword-only rules, is missing an argument, or has an extra one.
+  - level: 3
+    text: 'Wrap the bind call in try/except TypeError. On success, dict(bound.arguments) is the name-to-value mapping to return under "bound"; on failure return the ok=False result with an empty mapping.'
+tests:
+  public:
+    - name: valid_call
+      input:
+        positional_only:
+          - azimuth
+          - altitude
+        keyword_only:
+          - confirm
+        args:
+          - 120
+          - 45
+        kwargs:
+          confirm: true
+      expected:
+        ok: true
+        bound:
+          azimuth: 120
+          altitude: 45
+          confirm: true
+    - name: positional_only_passed_by_keyword
+      input:
+        positional_only:
+          - azimuth
+        keyword_only: []
+        args: []
+        kwargs:
+          azimuth: 120
+      expected:
+        ok: false
+        bound: {}
+    - name: keyword_only_passed_positionally
+      input:
+        positional_only: []
+        keyword_only:
+          - confirm
+        args:
+          - true
+        kwargs: {}
+      expected:
+        ok: false
+        bound: {}
+  validation:
+    - name: missing_required_positional
+      input:
+        positional_only:
+          - a
+          - b
+        keyword_only: []
+        args:
+          - 1
+        kwargs: {}
+      expected:
+        ok: false
+        bound: {}
+    - name: too_many_positional
+      input:
+        positional_only:
+          - a
+        keyword_only: []
+        args:
+          - 1
+          - 2
+        kwargs: {}
+      expected:
+        ok: false
+        bound: {}
+    - name: unexpected_keyword
+      input:
+        positional_only: []
+        keyword_only:
+          - c
+        args: []
+        kwargs:
+          c: 1
+          d: 2
+      expected:
+        ok: false
+        bound: {}
+    - name: valid_multi_param
+      input:
+        positional_only:
+          - a
+          - b
+        keyword_only:
+          - c
+          - d
+        args:
+          - 1
+          - 2
+        kwargs:
+          c: 3
+          d: 4
+      expected:
+        ok: true
+        bound:
+          a: 1
+          b: 2
+          c: 3
+          d: 4
+    - name: no_params_empty_call
+      input:
+        positional_only: []
+        keyword_only: []
+        args: []
+        kwargs: {}
+      expected:
+        ok: true
+        bound: {}
+explanation_markdown: |
+  Positional-only (`/`) and keyword-only (`*`) parameters are how a Python API
+  author freezes the calling convention: callers cannot rely on the internal
+  name of a positional-only argument, and cannot accidentally pass a
+  keyword-only flag by position. Rather than re-implement those rules, this
+  exercise leans on `inspect.Signature.bind`, the exact same argument-matching
+  logic the interpreter uses.
+
+  Building the signature from `Parameter` objects — `POSITIONAL_ONLY` first,
+  then `KEYWORD_ONLY` — and calling `bind(*args, **kwargs)` gives you a single
+  source of truth. Every violation surfaces as a `TypeError`: a positional-only
+  name in `kwargs`, a keyword-only name arriving positionally, a missing
+  required argument, a surplus positional, or an unknown keyword. Catching that
+  one exception type cleanly separates the valid calls (whose
+  `bound.arguments` is the normalised name-to-value mapping) from the rejected
+  ones.
+common_mistakes:
+  - Placing keyword-only parameters before positional-only ones when constructing the Signature, which itself raises a ValueError about parameter order.
+  - Hand-writing the positional-only and keyword-only rules with if-statements and missing a case, instead of letting Signature.bind enforce the whole contract.
+  - Catching a broad Exception (or none at all) rather than TypeError, so a genuine binding failure is not turned into the ok=False result.

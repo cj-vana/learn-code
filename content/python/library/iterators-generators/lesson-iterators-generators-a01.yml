@@ -1,0 +1,85 @@
+id: lesson.library.iterators_generators.a01
+kind: lesson
+version: 1
+language: python
+title: Yielding Values One at a Time
+slug: lesson-iterators-generators-a01
+difficulty: easy
+concepts:
+  - python.iterators_generators
+  - python.functions
+prerequisites:
+  - python.functions
+  - python.loops
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.iterators_generators.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original observatory-countdown framing for introducing yield and lazy production.
+body_markdown: |
+  A normal function hands back a single value with `return` and then forgets
+  everything it was doing. A **generator function** is different: it uses `yield`
+  to hand back one value at a time, and it *pauses* right where it left off. The
+  next time you ask for a value, it wakes up, remembers all its local variables,
+  and runs until the next `yield`.
+
+  Picture an observatory that runs a countdown before opening the dome. Instead
+  of building the whole countdown list in memory, we can produce each number the
+  moment it is needed:
+
+  ```python
+  def dome_countdown(seconds):
+      while seconds > 0:
+          yield seconds
+          seconds -= 1
+
+  gen = dome_countdown(3)
+  print(next(gen))  # 3
+  print(next(gen))  # 2
+  print(next(gen))  # 1
+  ```
+
+  Calling `dome_countdown(3)` does **not** run the loop. It returns a *generator
+  object* that is ready to go but has done no work yet. Each `next(gen)` runs the
+  body until the next `yield`, then freezes. When the loop finally ends, the
+  generator raises `StopIteration`, which is Python's polite way of saying "there
+  is nothing left."
+
+  Most of the time you will not call `next` by hand. A `for` loop does it for
+  you, stopping automatically when `StopIteration` arrives:
+
+  ```python
+  for tick in dome_countdown(3):
+      print(tick)   # 3, then 2, then 1
+  ```
+
+  And when you actually want all the values collected at once, wrap the generator
+  in `list()`. This *exhausts* it, pulling every yielded value into a real list:
+
+  ```python
+  frames = list(dome_countdown(3))   # [3, 2, 1]
+  ```
+
+  That `list(...)` step is important. A generator is a recipe, not a batch of
+  food. Until something consumes it, no values exist. And once a generator is
+  exhausted, it is empty forever; you cannot rewind it. If you need the values
+  twice, either store the list or build a fresh generator.
+
+  The payoff is laziness. A generator only does the work you ask for, exactly
+  when you ask for it. That lets you describe a long or even endless sequence
+  without ever holding all of it in memory at once, a theme we will build on in
+  the exercises ahead.
+checkpoints:
+  - question: What does calling a generator function like dome_countdown(3) return before you consume anything?
+    answer: A generator object that has run none of its body yet; the loop only advances when you call next() or iterate.
+    explanation: Generator functions are lazy. Invoking them creates a paused generator; the code inside runs only as values are pulled out.
+  - question: You do frames = list(dome_countdown(3)) and then try to iterate the same generator object again and get nothing. Why?
+    answer: A generator can only be consumed once; list() already exhausted it, so there are no values left.
+    explanation: Generators do not rewind. To reuse the values you keep the materialized list, or you call the generator function again for a fresh generator.
+  - question: Inside a generator, what signals a for loop to stop?
+    answer: The function running off its end (or hitting return) raises StopIteration, which the for loop catches to end iteration.
+    explanation: yield produces a value and pauses; when there are no more yields, StopIteration ends the loop cleanly.

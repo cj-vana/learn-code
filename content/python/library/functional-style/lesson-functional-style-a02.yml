@@ -1,0 +1,100 @@
+id: lesson.library.functional_style.a02
+kind: lesson
+version: 1
+language: python
+title: 'Composition and Partial Application'
+slug: lesson-functional-style-a02
+difficulty: medium
+concepts:
+  - python.functional_style
+prerequisites:
+  - python.functional_style
+  - python.closures_decorators
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.functional_style.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original walkthrough of function composition and partial application framed around a document-processing pipeline, with fresh worked code.
+body_markdown: |
+  If functions are values (they are — pass them, store them, return
+  them), then functions can be *built from other functions*. Two
+  techniques — composition and partial application — turn small verified
+  pieces into larger behavior without a loop or a class in sight.
+
+  ### Composition: pipelines as values
+
+  A document scanner cleans text in stages: strip, lowercase,
+  collapse-whitespace, tokenize. Chaining calls works
+  (`tokenize(collapse(lower(strip(text))))`) but reads inside-out. A
+  **compose** helper turns the stages into one function:
+
+  ```python
+  def pipe(*funcs):
+      def piped(x):
+          for f in funcs:
+              x = f(x)
+          return x
+      return piped
+
+  clean = pipe(str.strip, str.lower, collapse_ws, tokenize)
+  clean(raw)          # reads in application order, left to right
+  ```
+
+  `pipe` builds a new function that threads a value through each stage.
+  The stages are named, individually tested, and reused across
+  pipelines; the composed function is a value you can pass to `map`,
+  store in a registry, or compose further. This is your data-pipeline
+  intuition — gather, transform, transform — expressed as function
+  values instead of inline code. (The `reduce`-over-functions
+  implementation is one of your exercises; so is right-to-left
+  `compose`, the mathematical convention.)
+
+  ### Partial application: specializing by fixing arguments
+
+  From the functools area: `partial` fixes some arguments, yielding a
+  narrower function. In a functional pipeline this is how *parameterized
+  stages* enter:
+
+  ```python
+  from functools import partial
+
+  redact = partial(re.sub, r"\d{16}", "[card]")     # a one-arg text transform
+  truncate_200 = partial(truncate, length=200)
+
+  clean = pipe(str.strip, redact, truncate_200, tokenize)
+  ```
+
+  `re.sub` takes three arguments; `redact` takes one — exactly the shape
+  a pipeline stage needs. Partial application is the adapter that lets
+  general functions slot into `map`, `pipe`, and callbacks by
+  pre-binding their configuration. Together, compose and partial are a
+  tiny algebra: partial *shapes* functions to fit, compose *chains*
+  them, and the result is behavior assembled from parts rather than
+  written as a monolith.
+
+  ### Point-free, in moderation
+
+  Code that builds functions without naming their argument
+  (`pipe(str.strip, str.lower)` never mentions the text) is called
+  **point-free**, and in moderation it is beautifully clear — the
+  pipeline *is* the logic. Overdone, it becomes a puzzle
+  (`compose(partial(map, partial(...)))` nested four deep), and the
+  loop-wins judgment from the last lesson applies: name the argument
+  and write the steps when composition stops clarifying. Used with
+  taste, though, function-building is how you turn a folder of small,
+  tested transforms into exactly the pipeline each job needs —
+  configuration by composition, the most reusable code you will write.
+checkpoints:
+  - question: What does a pipe/compose helper produce, and why is that more than syntactic sugar over nested calls?
+    answer: 'A new function value that threads its input through each stage in order; because it is a value, it can be named, stored, passed to map, or composed further, and its stages stay individually named and testable — nested calls are a one-off expression, a composed function is reusable behavior.'
+    explanation: 'Composition turns pipelines into first-class values, which is what makes stage libraries and configuration-by-composition possible.'
+  - question: Why is partial application the natural partner of composition in a pipeline?
+    answer: 'Pipeline stages must be single-argument transforms, but general functions take several arguments; partial pre-binds the configuration (the pattern to redact, the length to truncate) so a three-argument function becomes the one-argument stage a pipe expects.'
+    explanation: 'Partial shapes functions to fit the pipeline; compose chains them — a small algebra for assembling behavior from parts.'
+  - question: What is point-free style, and what is the taste rule for it?
+    answer: 'Building functions without naming their argument, so the composition itself expresses the logic (pipe(str.strip, str.lower) never mentions the text); it is clear in moderation and becomes an unreadable puzzle when nested deeply — name the argument and write steps when composition stops clarifying.'
+    explanation: 'The same clarity-first judgment as loops-versus-comprehensions: the technique serves readability, not the reverse.'

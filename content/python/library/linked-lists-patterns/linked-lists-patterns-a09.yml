@@ -1,0 +1,137 @@
+id: exercise.library.linked_lists_patterns.a09
+kind: exercise
+version: 1
+language: python
+title: Flip the Crates in Batches
+slug: linked-lists-patterns-a09
+difficulty: hard
+concepts:
+  - patterns.linked_list
+prerequisites:
+  - python.classes
+  - python.loops
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.linked_lists_patterns.a09
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original loading-dock framing that reverses fixed-size batches of a node chain in place while leaving a short trailing batch untouched.
+prompt_markdown: |
+  A loading dock feeds crates down a chain and a robot arm flips them over in
+  fixed batches. Write `flip_in_batches(order)` where `order` is a dict with:
+
+  - `"crates"`: a list of crate codes in arrival order.
+  - `"k"`: a positive integer batch size.
+
+  Build a singly linked list of `Node` objects, then reverse each consecutive
+  group of `k` nodes **by rewiring links** (not by slicing the input list). If the
+  final group has fewer than `k` crates, leave that short group in its original
+  order. Return a plain list of the crate codes after all full batches are
+  flipped.
+
+  For example, `crates = [1, 2, 3, 4, 5]` with `k = 2` becomes `[2, 1, 4, 3, 5]`:
+  the last lone crate stays put.
+starter_code: |
+  def flip_in_batches(order):
+      # Reverse each full group of k nodes in place, then serialize the chain.
+      return []
+function_name: flip_in_batches
+input_mode: function
+solution_sketch: Use a dummy head; for each group that has k nodes ahead, reverse those k links, reconnect the group's new head and old head to the surrounding chain, then advance to the next group.
+sample_solution: |
+  def flip_in_batches(order):
+      class Node:
+          def __init__(self, value):
+              self.value = value
+              self.next = None
+
+      crates = order["crates"]
+      k = order["k"]
+      if not crates:
+          return []
+
+      nodes = [Node(code) for code in crates]
+      for i in range(len(nodes) - 1):
+          nodes[i].next = nodes[i + 1]
+
+      def has_k_ahead(node, k):
+          count = 0
+          while node is not None and count < k:
+              node = node.next
+              count += 1
+          return count == k
+
+      dummy = Node(None)
+      dummy.next = nodes[0]
+      group_prev = dummy
+      while has_k_ahead(group_prev.next, k):
+          prev = None
+          current = group_prev.next
+          group_tail = current
+          for _ in range(k):
+              nxt = current.next
+              current.next = prev
+              prev = current
+              current = nxt
+          group_prev.next = prev       # new head of the reversed group
+          group_tail.next = current    # old head now points at the next group
+          group_prev = group_tail
+
+      result = []
+      node = dummy.next
+      while node is not None:
+          result.append(node.value)
+          node = node.next
+      return result
+hints:
+  - level: 1
+    text: Before reversing a group, check that k nodes actually remain ahead; if fewer remain, stop and leave them alone.
+  - level: 2
+    text: A dummy node in front of the head lets you reattach each reversed group without special-casing the very first group.
+  - level: 3
+    text: After reversing k links, the group's old first node becomes its tail, so set group_prev.next to the new head and the old first node's next to the following group's start.
+tests:
+  public:
+    - name: pairs
+      input: {crates: [1, 2, 3, 4, 5], k: 2}
+      expected: [2, 1, 4, 3, 5]
+    - name: triples
+      input: {crates: [1, 2, 3, 4, 5, 6], k: 3}
+      expected: [3, 2, 1, 6, 5, 4]
+    - name: k_one_no_change
+      input: {crates: [1, 2, 3], k: 1}
+      expected: [1, 2, 3]
+  validation:
+    - name: empty
+      input: {crates: [], k: 3}
+      expected: []
+    - name: k_equals_length
+      input: {crates: [1, 2, 3, 4], k: 4}
+      expected: [4, 3, 2, 1]
+    - name: k_larger_than_length
+      input: {crates: [1, 2, 3], k: 5}
+      expected: [1, 2, 3]
+    - name: trailing_partial
+      input: {crates: [10, 20, 30, 40, 50, 60, 70], k: 3}
+      expected: [30, 20, 10, 60, 50, 40, 70]
+    - name: exact_two_groups
+      input: {crates: [5, 6, 7, 8], k: 2}
+      expected: [6, 5, 8, 7]
+explanation_markdown: |
+  Reversing in batches combines the in-place reversal you already know with careful
+  bookkeeping between groups. A dummy node in front of the head gives you a stable
+  handle on the box *before* each group, so reconnecting is uniform even for the
+  first batch. For each group you first confirm that `k` nodes remain ahead; if not,
+  the trailing short group is left untouched, exactly as the spec requires. Inside a
+  group you flip `k` links with the standard `prev`/`current`/`nxt` dance. The
+  subtle part is the reconnection: the node that started the group becomes its tail,
+  so it must now point at the *next* group's first node, and the box before the
+  group must point at the group's new head. Getting those two links right is what
+  keeps the chain intact.
+common_mistakes:
+  - Reversing a trailing group that has fewer than k nodes instead of leaving it alone.
+  - Forgetting to point the group's old head at the next group, which drops the rest of the chain.
+  - Reversing the input list directly instead of rewiring the node links as the prompt requires.

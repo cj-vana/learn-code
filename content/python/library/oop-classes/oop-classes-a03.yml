@@ -1,0 +1,87 @@
+id: exercise.library.oop_classes.a03
+kind: exercise
+version: 1
+language: python
+title: Serial Numbers From a Shared Counter
+slug: oop-classes-a03
+difficulty: easy
+concepts:
+  - python.classes
+prerequisites:
+  - python.classes
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.oop_classes.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original bike-share dock scenario drilling a class attribute used as a shared counter.
+prompt_markdown: |
+  A bike-share station hands out a numbered tag to every bike as it is registered.
+  The tags are sequential and shared across the whole station: the first bike is
+  tag 1, the next is tag 2, and so on, no matter what the bikes are called.
+
+  Complete `register_bikes(names)`, where `names` is a list of bike names in the
+  order they are registered. Inside the function, define a `Bike` class that keeps
+  the next tag to hand out as a **class attribute** (shared by all bikes) and copies
+  its own tag onto the instance in `__init__`. Build one `Bike` per name and return
+  a list of the tag numbers in registration order.
+starter_code: |
+  def register_bikes(names):
+      # Define a Bike class with a shared counter class attribute,
+      # build one Bike per name, and collect their tag numbers.
+      return []
+function_name: register_bikes
+input_mode: function
+solution_sketch: Keep the next tag as a class attribute, read it into self.tag in __init__, then advance the class attribute.
+sample_solution: |
+  def register_bikes(names):
+      class Bike:
+          next_tag = 1
+
+          def __init__(self, name):
+              self.name = name
+              self.tag = Bike.next_tag
+              Bike.next_tag += 1
+
+      return [Bike(name).tag for name in names]
+hints:
+  - level: 1
+    text: Put the counter in the class body (outside __init__) so a single copy is shared by every Bike.
+  - level: 2
+    text: In __init__, set self.tag to the current class counter, then increase the class counter by one.
+  - level: 3
+    text: 'Write self.tag = Bike.next_tag then Bike.next_tag += 1; naming the class updates the shared value rather than making a new instance attribute.'
+tests:
+  public:
+    - name: three_bikes
+      input: [rover, comet, dash]
+      expected: [1, 2, 3]
+    - name: none_registered
+      input: []
+      expected: []
+    - name: single_bike
+      input: [solo]
+      expected: [1]
+  validation:
+    - name: duplicates_still_sequential
+      input: [red, red, red]
+      expected: [1, 2, 3]
+    - name: five_bikes
+      input: [a, b, c, d, e]
+      expected: [1, 2, 3, 4, 5]
+    - name: two_bikes
+      input: [north, south]
+      expected: [1, 2]
+explanation_markdown: |
+  `next_tag` is defined in the class body, so it lives on the class itself and is
+  shared by every `Bike`. Each `__init__` reads that shared value into the
+  instance's own `self.tag`, then advances the class attribute with
+  `Bike.next_tag += 1`. Writing through the class name (not `self`) is what keeps
+  the counter shared, so the tags come out strictly sequential.
+common_mistakes:
+  - Writing self.next_tag += 1, which creates a per-instance attribute and leaves every tag stuck at 1.
+  - Initialising the counter inside __init__, which resets it for each bike instead of sharing it.
+  - Returning the names instead of the numeric tags stored on each instance.

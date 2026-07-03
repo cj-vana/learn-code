@@ -1,0 +1,108 @@
+id: exercise.library.eval_metrics_for_models.a08
+kind: exercise
+version: 1
+language: python
+title: Normalized Exact Match for Short Answers
+slug: eval-metrics-for-models-a08
+difficulty: easy
+concepts:
+  - ai.model_evaluation
+prerequisites:
+  - python.strings
+  - python.functions
+  - python.conditionals
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.eval_metrics_for_models.a08
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original normalized-exact-match drill framed around grading a trivia bot's short answers, emphasizing the normalize-both-sides idea.
+prompt_markdown: |
+  When you grade a question-answering model, `"Blue Whale"` and `"blue whale"`
+  should count as the same answer. **Exact match** on raw strings is too strict, so
+  graders first put both strings through the same normalization and then compare.
+
+  You are given a single dictionary `job` with two keys:
+
+  - `"prediction"`: the model's answer string.
+  - `"reference"`: the accepted answer string.
+
+  Write `exact_match(job)` returning a **bool**: `True` if the two strings are equal
+  after normalization, else `False`. Normalize a string with these three steps, in
+  order:
+
+  1. **Case-fold** it (lowercase in a Unicode-aware way).
+  2. **Strip** leading and trailing whitespace.
+  3. **Collapse** every run of internal whitespace to a single space.
+
+  Both sides get the exact same treatment. For example `"  North  Star "` and
+  `"north star"` both normalize to `"north star"`, so they match.
+
+  ```python
+  exact_match({"prediction": "Blue Whale", "reference": "blue whale"})
+  # -> True
+  ```
+starter_code: |
+  def exact_match(job):
+      return False
+function_name: exact_match
+input_mode: function
+solution_sketch: Write a normalize helper that casefolds then uses " ".join(s.split()) to strip and collapse whitespace in one move, apply it to both strings, and compare.
+sample_solution: |
+  def exact_match(job):
+      def normalize(text):
+          return " ".join(text.casefold().split())
+
+      return normalize(job["prediction"]) == normalize(job["reference"])
+hints:
+  - level: 1
+    text: Do not compare the raw strings; run both through the identical normalization first, then test equality.
+  - level: 2
+    text: str.casefold handles case, and str.split with no argument splits on any whitespace run and drops leading/trailing whitespace.
+  - level: 3
+    text: '" ".join(text.split()) rejoins the pieces with single spaces, which strips the ends and collapses internal runs at once; casefold before splitting.'
+tests:
+  public:
+    - name: case_difference
+      input: {"prediction": "Blue Whale", "reference": "blue whale"}
+      expected: true
+    - name: extra_whitespace
+      input: {"prediction": "  hello   world ", "reference": "hello world"}
+      expected: true
+    - name: genuinely_different
+      input: {"prediction": "Cat", "reference": "dog"}
+      expected: false
+  validation:
+    - name: uppercase_run
+      input: {"prediction": "STRASSE", "reference": "strasse"}
+      expected: true
+    - name: identical_word
+      input: {"prediction": "Photosynthesis", "reference": "photosynthesis"}
+      expected: true
+    - name: inner_double_space
+      input: {"prediction": "north  star", "reference": "North Star"}
+      expected: true
+    - name: trailing_and_case
+      input: {"prediction": "42 kelvin", "reference": "42  Kelvin "}
+      expected: true
+explanation_markdown: |
+  The whole trick is to normalize both sides with one shared function so that any
+  difference the metric is supposed to ignore disappears before the comparison.
+  `text.casefold()` lowercases (more aggressively than `lower()` for non-English
+  text), and the idiom `" ".join(text.split())` does two jobs at once: calling
+  `split()` with no arguments breaks on any whitespace and discards empty pieces
+  from the ends, and rejoining with a single space collapses internal runs. So
+  `"  north   star "` becomes `"north star"` cleanly.
+
+  Applying the identical transform to prediction and reference means the only thing
+  a mismatch can reflect is a real difference in wording, which is exactly what
+  exact match should measure. This is deliberately strict: `"a blue whale"` still
+  will not match `"blue whale"`, because normalization only removes formatting
+  noise, not content.
+common_mistakes:
+  - Normalizing only the prediction (or only the reference) so equal answers are judged unequal.
+  - Using str.strip alone, which trims the ends but leaves doubled internal spaces intact.
+  - Reaching for str.lower instead of casefold, which is fine for plain ASCII but misses some Unicode case differences.

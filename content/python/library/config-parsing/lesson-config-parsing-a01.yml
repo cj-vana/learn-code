@@ -1,0 +1,96 @@
+id: lesson.library.config_parsing.a01
+kind: lesson
+version: 1
+language: python
+title: 'Config as Text: INI, TOML, and Typed Values'
+slug: lesson-config-parsing-a01
+difficulty: medium
+concepts:
+  - python.config_parsing
+prerequisites:
+  - python.dictionaries
+  - python.json_csv
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.config_parsing.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original config-formats walkthrough framed around a weather-station deployment, with fresh worked parsing.
+body_markdown: |
+  Every non-trivial program externalizes settings so they can change
+  without editing code. The formats differ; the parsing shape — text to
+  typed dict — is constant, and getting the *typed* part right is where
+  config bugs hide.
+
+  ### The format landscape
+
+  A weather station's config, three ways:
+
+  ```ini
+  # INI — simple, sectioned, everything is a string
+  [station]
+  id = ridge-04
+  interval = 60
+  active = true
+  ```
+
+  ```toml
+  # TOML — typed, nestable, the modern Python standard
+  [station]
+  id = "ridge-04"
+  interval = 60          # a real int
+  active = true          # a real bool
+  thresholds = [10, 25, 40]   # a real list
+  ```
+
+  Python reads INI with `configparser` (stdlib, everywhere) and TOML
+  with `tomllib` (stdlib since 3.11 — read-only, which suits config).
+  JSON works too but forbids comments, and config humans edit wants
+  comments. The trend is decisively toward TOML precisely because of the
+  next point.
+
+  ### The typing trap
+
+  `configparser` returns **every value as a string** — `"60"`, `"true"`,
+  `"10,25,40"`. The trap is that `bool("false")` is `True` (non-empty
+  string!), so `if config["active"]:` is *always* true regardless of the
+  file. Correct INI reading uses the typed accessors:
+
+  ```python
+  cfg.getint("station", "interval")       # 60
+  cfg.getboolean("station", "active")     # parses true/false/yes/no/1/0
+  ```
+
+  `getboolean` knows the vocabulary of truthy strings; hand-rolling
+  `value == "true"` misses `yes`, `on`, `1`. TOML sidesteps the whole
+  problem — `interval` arrives as an int, `active` as a bool, because
+  the *format* carries types. That is the entire case for TOML over INI:
+  the typing happens at parse time, correctly, instead of at every read
+  site, error-prone. Your exercises implement the INI coercion table and
+  the truthy-string vocabulary — the logic these accessors encapsulate.
+
+  ### Validation is not optional
+
+  A parsed config is *untrusted input* — the boundary rules apply. A
+  missing required key, an out-of-range interval, an unknown section:
+  each should fail *at load time* with a precise message
+  ("station.interval must be a positive integer, got 'fast'"), not
+  crash mysteriously three functions later when the value is used.
+  Loading config is exactly the parse-and-validate-at-the-boundary
+  pattern from files-and-formats, and a config loader that returns a
+  validated, fully-typed settings object — or refuses to start — is the
+  professional shape. The next lesson layers multiple config *sources*
+  into one such object.
+checkpoints:
+  - question: Why is `if config["active"]:` a bug when config comes from configparser and the file says active = false?
+    answer: 'configparser returns strings, and "false" is a non-empty string, so it is truthy — the condition is always true regardless of the file; getboolean("active") parses the intended value using the true/false/yes/no vocabulary.'
+    explanation: 'The string-truthiness trap is the single most common INI config bug, and typed accessors exist precisely to avoid it.'
+  - question: What is the core advantage of TOML over INI for configuration?
+    answer: 'TOML values carry types in the format — ints, bools, and lists parse as themselves — so typing happens once at parse time correctly, instead of at every read site via error-prone coercion; INI returns everything as strings.'
+    explanation: 'Format-level typing moves a whole class of coercion bugs from runtime read sites to a correct one-time parse.'
+  - question: Where should a malformed or missing config value be caught, and what should happen?
+    answer: 'At load time, with a precise message naming the key, the expectation, and the offending value — the program refuses to start rather than crashing later when the bad value is finally used three functions away.'
+    explanation: 'Config is untrusted boundary input; validating it into a typed settings object (or failing loudly) is the same discipline as parsing files and HTTP responses.'

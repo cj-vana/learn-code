@@ -1,0 +1,87 @@
+id: lesson.library.data_wrangling_python.a01
+kind: lesson
+version: 1
+language: python
+title: 'Bucketing Records: Group-By and Aggregate'
+slug: lesson-data-wrangling-python-a01
+difficulty: easy
+concepts:
+  - concepts.grouping_aggregation
+  - python.dictionaries
+prerequisites:
+  - python.loops
+  - python.dictionaries
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.data_wrangling_python.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original group-and-aggregate walkthrough built around a food co-op delivery log.
+body_markdown: |
+  Raw data usually arrives as a flat list of records: one dictionary per row,
+  every row independent of the next. The first question a data wrangler asks is
+  almost always "per what?" Crates per supplier, firings per glaze, boardings
+  per stop. Answering that question means **grouping** the records into labelled
+  buckets and then collapsing each bucket down to a single value. That collapse
+  is the **aggregate**.
+
+  The core move is one dictionary whose keys are group labels and whose values
+  are accumulators. You walk the list once, and for each record you find its
+  bucket and update it in place.
+
+  ```python
+  def crates_per_supplier(deliveries):
+      totals = {}
+      for row in deliveries:
+          supplier = row["supplier"]
+          totals[supplier] = totals.get(supplier, 0) + row["crates"]
+      return totals
+  ```
+
+  `dict.get(supplier, 0)` is the workhorse here. It hands back the running total
+  when the bucket already exists and a fresh `0` the first time you meet a
+  supplier, so you never have to write a separate "have I seen this key?" check.
+
+  Counting is the very same shape with `+ 1` in place of `+ row["crates"]` — each
+  record contributes one tally regardless of its contents. The pattern
+  generalises to any accumulator you can update incrementally.
+
+  Some aggregates need more than one number per bucket. An average, for example,
+  cannot be recovered from a single running value; you have to keep both a sum
+  and a count and divide only at the end. Minimum and maximum are subtler still,
+  because there is no safe starting value like `0` to compare against. The clean
+  fix is to initialise each bucket from the *first* record that lands in it:
+
+  ```python
+  def temp_ranges(readings):
+      ranges = {}
+      for row in readings:
+          sensor, temp = row["sensor"], row["temp"]
+          if sensor not in ranges:
+              ranges[sensor] = [temp, temp]
+          else:
+              lo, hi = ranges[sensor]
+              ranges[sensor] = [min(lo, temp), max(hi, temp)]
+      return ranges
+  ```
+
+  When you reach for a nested accumulator, `collections.defaultdict` and
+  `dict.setdefault` remove the boilerplate. `defaultdict(int)` starts every new
+  bucket at `0`; `setdefault(key, {})` gives you an empty inner dictionary the
+  first time and the existing one afterward. Either way the shape is identical:
+  one pass over the records, one dictionary of buckets, one update per row. Get
+  comfortable with this loop, because nearly every wrangling task in this module
+  is a variation on it.
+checkpoints:
+  - question: In crates_per_supplier, what does `totals.get(supplier, 0)` return the first time a brand-new supplier appears?
+    answer: It returns 0, the default, so that supplier's bucket starts from zero before the current row's crates are added.
+    explanation: '`dict.get` returns the stored value when the key exists and the supplied default otherwise, which lets one line handle both the first and later sightings of a key.'
+  - question: Why can't you initialise a per-group minimum to 0 the way you initialise a running sum?
+    answer: Because a real reading could be below 0, or all readings could be above 0, so a fixed 0 would give a wrong minimum; you must seed each bucket from its first actual value instead.
+    explanation: Sums have a true identity element (0), but min and max do not, so the first record in each bucket has to establish the starting point.
+  - question: To compute an average per group in a single pass, what two accumulators must each bucket hold?
+    answer: A running sum of the values and a running count of how many values were added, dividing only after the loop finishes.
+    explanation: An average is sum divided by count, and neither can be reconstructed from the other, so both must be tracked while scanning the records.

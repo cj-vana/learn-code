@@ -1,0 +1,128 @@
+id: exercise.library.dp_recognition.a12
+kind: exercise
+version: 1
+language: python
+title: Spelling A Banner From Word Tiles
+slug: dp-recognition-a12
+difficulty: hard
+concepts:
+  - patterns.dynamic_programming
+  - concepts.memoization
+prerequisites:
+  - python.strings
+  - python.sets
+estimated_time_minutes: 20
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dp_recognition.a12
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pre-printed word-tile framing of the word-break decision solved with memoized recursion over prefix positions.
+prompt_markdown: |
+  A sign shop has a crate of pre-printed word tiles and wants to know whether a
+  requested banner phrase can be spelled by lining tiles up left to right with no
+  gaps and no leftover letters. Each tile carries a fixed piece of text, tiles may
+  be reused as often as needed, and the whole banner string must be covered
+  exactly by a sequence of tiles laid end to end.
+
+  Write `can_spell_banner(job)` where `job` is a dict with two keys:
+
+  - `text`: the banner phrase to spell, a string with no spaces
+  - `pieces`: a list of strings, the text printed on the available tiles
+
+  Return `True` if `text` can be formed by concatenating one or more tiles from
+  `pieces` (each usable any number of times), and `False` otherwise.
+
+  Edges: the empty banner `""` needs no tiles and is always spellable, so return
+  `True`. If some middle stretch of the banner cannot be covered by any tile,
+  return `False`.
+
+  Example: with `text = "applepie"` and `pieces = ["apple", "pie", "app"]`, the
+  answer is `True` (`apple` + `pie`).
+starter_code: |
+  def can_spell_banner(job):
+      return False
+function_name: can_spell_banner
+input_mode: function
+solution_sketch: Ask whether the banner can be spelled starting at each position; a position works if some tile matches a prefix there and the rest of the banner can be spelled. Cache each position's answer.
+sample_solution: |
+  def can_spell_banner(job):
+      text = job["text"]
+      pieces = set(job["pieces"])
+      length = len(text)
+      cache = {}
+
+      def can_break(start):
+          if start == length:
+              return True
+          if start in cache:
+              return cache[start]
+          result = False
+          for end in range(start + 1, length + 1):
+              if text[start:end] in pieces and can_break(end):
+                  result = True
+                  break
+          cache[start] = result
+          return result
+
+      return can_break(0)
+hints:
+  - level: 1
+    text: Define the subproblem by a starting position, can the rest of the banner from this index onward be spelled with tiles?
+  - level: 2
+    text: From a start index, try every prefix ending; if that prefix is a tile and the remainder starting at the end index is also spellable, the whole thing works.
+  - level: 3
+    text: Recurse on the end index and cache each start position's answer so overlapping suffixes are solved once. Base case, reaching the end of the string returns True.
+tests:
+  public:
+    - name: two_tiles
+      input: {text: "applepie", pieces: ["apple", "pie", "app"]}
+      expected: true
+    - name: empty_banner
+      input: {text: "", pieces: ["a", "b"]}
+      expected: true
+    - name: uncovered_tail
+      input: {text: "gardens", pieces: ["garden", "den"]}
+      expected: false
+  validation:
+    - name: split_cleanly
+      input: {text: "banner", pieces: ["ban", "ner", "nerd"]}
+      expected: true
+    - name: reused_tile
+      input: {text: "aaaa", pieces: ["a", "aa"]}
+      expected: true
+    - name: compound_word
+      input: {text: "cartwheel", pieces: ["car", "wheel", "cart"]}
+      expected: true
+    - name: needs_backtrack
+      input: {text: "applepie", pieces: ["app", "apple", "pie"]}
+      expected: true
+    - name: no_valid_split
+      input: {text: "windowpanes", pieces: ["window", "pane"]}
+      expected: false
+explanation_markdown: |
+  This is the word-break decision, and the state that makes it a DP is a single
+  starting position in the banner: `can_break(start)` asks whether the substring
+  from `start` to the end can be tiled. From `start`, try every possible end for the
+  first tile. If `text[start:end]` is a tile *and* the remainder `can_break(end)`
+  succeeds, the whole suffix is spellable.
+
+  The reason this needs memoization is that the same starting position is reached
+  along many different tile choices. Consider a banner where `"app"` and `"apple"`
+  both match at the front: exploring `"app"` first fails, then exploring `"apple"`
+  succeeds, and both paths ask about later positions again and again. Caching each
+  `start` position's answer collapses that overlap so every position is solved once,
+  turning an exponential search into O(n^2) substring checks over the banner.
+
+  Putting `pieces` into a `set` makes each tile lookup O(1) on average. The base
+  case `start == length` returns `True`: reaching the end means the banner was
+  covered exactly, which also makes the empty banner spellable for free. A stretch
+  no tile can cover leaves some `start` with no working end, so its cached answer is
+  `False` and the failure propagates up.
+common_mistakes:
+  - Greedily committing to the first matching tile without trying other lengths, which misses splits like apple+pie when app also matches.
+  - Skipping the cache, so overlapping suffixes are re-explored and the search blows up exponentially.
+  - Requiring exactly one tile instead of any concatenation, which rejects valid multi-tile banners.
+  - Treating the empty banner as False; with no letters left to cover it should return True.

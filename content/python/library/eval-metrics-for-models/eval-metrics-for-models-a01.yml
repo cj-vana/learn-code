@@ -1,0 +1,117 @@
+id: exercise.library.eval_metrics_for_models.a01
+kind: exercise
+version: 1
+language: python
+title: Sorting Warbler Calls Into Four Buckets
+slug: eval-metrics-for-models-a01
+difficulty: easy
+concepts:
+  - ai.model_evaluation
+prerequisites:
+  - python.dictionaries
+  - python.lists
+  - python.loops
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.eval_metrics_for_models.a01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original confusion-count drill framed around a wildlife-lab warbler audio detector.
+prompt_markdown: |
+  A wildlife lab runs an automatic **warbler detector** over short audio clips. For
+  each clip the detector emits a prediction: `1` means "a warbler is calling" and
+  `0` means "no warbler". A human expert has already labelled every clip the same
+  way, giving the ground truth.
+
+  Before you can score the detector you must sort each clip into one of four
+  **confusion-matrix** buckets by comparing the prediction against the label:
+
+  - **True positive (`tp`)**: predicted `1`, label `1`.
+  - **False positive (`fp`)**: predicted `1`, label `0`.
+  - **True negative (`tn`)**: predicted `0`, label `0`.
+  - **False negative (`fn`)**: predicted `0`, label `1`.
+
+  Write `confusion_counts(job)` that takes a single dictionary with two keys:
+
+  - `"predictions"`: a list of `0`/`1` ints, the detector's calls.
+  - `"labels"`: a list of `0`/`1` ints of the same length, the ground truth.
+
+  Return a dictionary `{"tp": ..., "fp": ..., "tn": ..., "fn": ...}` counting how
+  many clips fall in each bucket. Two empty lists return all zeros.
+
+  Example:
+
+  ```python
+  confusion_counts({"predictions": [1, 1, 0, 0], "labels": [1, 0, 1, 0]})
+  # -> {"tp": 1, "fp": 1, "tn": 1, "fn": 1}
+  ```
+starter_code: |
+  def confusion_counts(job):
+      return {"tp": 0, "fp": 0, "tn": 0, "fn": 0}
+function_name: confusion_counts
+input_mode: function
+solution_sketch: Zip predictions with labels and increment the tp/fp/tn/fn counter that matches each prediction-label pair.
+sample_solution: |
+  def confusion_counts(job):
+      predictions = job["predictions"]
+      labels = job["labels"]
+      counts = {"tp": 0, "fp": 0, "tn": 0, "fn": 0}
+      for pred, actual in zip(predictions, labels):
+          if pred == 1 and actual == 1:
+              counts["tp"] += 1
+          elif pred == 1 and actual == 0:
+              counts["fp"] += 1
+          elif pred == 0 and actual == 0:
+              counts["tn"] += 1
+          else:
+              counts["fn"] += 1
+      return counts
+hints:
+  - level: 1
+    text: Walk the two lists in lockstep with zip(predictions, labels) so you always compare a clip's prediction with its own label.
+  - level: 2
+    text: The bucket depends on both values, so branch on the pair (pred, actual) rather than on either value alone.
+  - level: 3
+    text: Start a dict of four zero counters, then in the loop add 1 to exactly one of "tp", "fp", "tn", or "fn" for each pair.
+tests:
+  public:
+    - name: empty
+      input: {"predictions": [], "labels": []}
+      expected: {"tp": 0, "fp": 0, "tn": 0, "fn": 0}
+    - name: all_correct
+      input: {"predictions": [1, 0, 1, 0], "labels": [1, 0, 1, 0]}
+      expected: {"tp": 2, "fp": 0, "tn": 2, "fn": 0}
+    - name: one_of_each
+      input: {"predictions": [1, 1, 0, 0], "labels": [1, 0, 1, 0]}
+      expected: {"tp": 1, "fp": 1, "tn": 1, "fn": 1}
+  validation:
+    - name: all_positive_predictions
+      input: {"predictions": [1, 1, 1], "labels": [1, 0, 1]}
+      expected: {"tp": 2, "fp": 1, "tn": 0, "fn": 0}
+    - name: all_negative_predictions
+      input: {"predictions": [0, 0, 0, 0], "labels": [0, 1, 0, 1]}
+      expected: {"tp": 0, "fp": 0, "tn": 2, "fn": 2}
+    - name: longer_mix
+      input: {"predictions": [1, 0, 1, 1, 0, 0, 1], "labels": [1, 1, 0, 1, 0, 1, 0]}
+      expected: {"tp": 2, "fp": 2, "tn": 1, "fn": 2}
+    - name: single_true_negative
+      input: {"predictions": [0], "labels": [0]}
+      expected: {"tp": 0, "fp": 0, "tn": 1, "fn": 0}
+explanation_markdown: |
+  Every evaluation metric for a binary classifier is built on these four counts, so
+  getting them right is the foundation for accuracy, precision, recall, and F1. The
+  trick is that the bucket is decided by the *pair* of values, not by the prediction
+  or the label alone: a `1` prediction is a true positive only when the label is
+  also `1`, and a false positive otherwise.
+
+  Zipping the two lists guarantees each prediction is matched to its own clip's
+  label. The four-way branch is exhaustive and mutually exclusive, so exactly one
+  counter increments per clip and the four totals always add up to the number of
+  clips.
+common_mistakes:
+  - Deciding the bucket from the prediction alone and ignoring the label, which collapses true and false positives together.
+  - Iterating with a range index but reading predictions and labels from mismatched positions, so pairs get crossed.
+  - Forgetting the false-negative case (predicted 0, label 1) and letting it fall through to true negatives.

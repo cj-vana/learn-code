@@ -1,0 +1,136 @@
+id: exercise.library.classic_ml_from_scratch.a12
+kind: exercise
+version: 1
+language: python
+title: Putting Tea Measurements on the Same Scale
+slug: classic-ml-from-scratch-a12
+difficulty: hard
+concepts:
+  - ai.classic_ml
+prerequisites:
+  - python.lists
+  - python.comprehensions
+  - python.functions
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.classic_ml_from_scratch.a12
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original column-wise z-score standardisation drill framed around tea-sample measurements, using statistics.pstdev and guarding constant columns against division by zero.
+prompt_markdown: |
+  Before feeding features into most machine-learning models, you put them on a
+  common scale so that a column measured in the hundreds does not drown out a
+  column measured in tenths. The standard move is **z-score standardisation**:
+  for each feature, subtract that feature's mean and divide by its standard
+  deviation.
+
+  You are given a data matrix of tea samples: each **row** is one sample, each
+  **column** is one measured feature (caffeine, aroma, and so on). Write
+  `zscore_standardize(matrix)` that takes the matrix (a list of equal-length rows
+  of numbers) and returns a new matrix of the same shape where every column has
+  been standardised.
+
+  For a column with values `v`, using the **population** standard deviation:
+
+  ```
+  mean = sum(v) / len(v)
+  std  = statistics.pstdev(v)
+  standardized_value = (x - mean) / std
+  ```
+
+  Use `statistics.mean` and `statistics.pstdev` (the population standard
+  deviation, dividing by `N`, not `N - 1`).
+
+  Guard the constant-column case: if a column's standard deviation is `0` (every
+  value in it is identical), you cannot divide by it. For such a column, output
+  `0.0` for every entry instead.
+
+  Round every value in the returned matrix to **6 decimal places**. The input
+  matrix has at least one row and at least one column.
+starter_code: |
+  import statistics
+
+
+  def zscore_standardize(matrix):
+      return []
+function_name: zscore_standardize
+input_mode: function
+solution_sketch: Build each column by reading column j from every row. Compute its mean and pstdev once. Then rebuild the matrix row by row; for each value use 0.0 when that column's stdev is 0, otherwise round((value-mean)/stdev, 6).
+sample_solution: |
+  import statistics
+
+
+  def zscore_standardize(matrix):
+      if not matrix:
+          return []
+      ncols = len(matrix[0])
+      columns = [[row[j] for row in matrix] for j in range(ncols)]
+      means = [statistics.mean(col) for col in columns]
+      stds = [statistics.pstdev(col) for col in columns]
+      result = []
+      for row in matrix:
+          new_row = []
+          for j, value in enumerate(row):
+              if stds[j] == 0:
+                  new_row.append(0.0)
+              else:
+                  new_row.append(round((value - means[j]) / stds[j], 6))
+          result.append(new_row)
+      return result
+hints:
+  - level: 1
+    text: Standardisation is per column, so first gather each column's values by reading index j from every row.
+  - level: 2
+    text: Compute each column's mean and statistics.pstdev once and store them, rather than recomputing inside the loop over rows.
+  - level: 3
+    text: When rebuilding the matrix, check each column's stdev; if it is exactly 0 emit 0.0, otherwise emit round((value-mean)/stdev, 6).
+tests:
+  public:
+    - name: single_column
+      input: [[1.0], [2.0], [3.0]]
+      expected: [[-1.224745], [0.0], [1.224745]]
+    - name: constant_column_becomes_zero
+      input: [[5.0, 1.0], [5.0, 2.0], [5.0, 3.0]]
+      expected: [[0.0, -1.224745], [0.0, 0.0], [0.0, 1.224745]]
+    - name: two_columns
+      input: [[1.0, 10.0], [3.0, 20.0], [5.0, 30.0]]
+      expected: [[-1.224745, -1.224745], [0.0, 0.0], [1.224745, 1.224745]]
+  validation:
+    - name: all_constant
+      input: [[7.0, 7.0], [7.0, 7.0]]
+      expected: [[0.0, 0.0], [0.0, 0.0]]
+    - name: single_row_all_constant
+      input: [[4.0, 8.0, 2.0]]
+      expected: [[0.0, 0.0, 0.0]]
+    - name: negatives_single_column
+      input: [[-2.0], [0.0], [2.0], [4.0]]
+      expected: [[-1.341641], [-0.447214], [0.447214], [1.341641]]
+    - name: mixed_scale_with_constant
+      input: [[10.0, 1.0], [20.0, 1.0], [30.0, 1.0], [40.0, 1.0]]
+      expected: [[-1.341641, 0.0], [-0.447214, 0.0], [0.447214, 0.0], [1.341641, 0.0]]
+explanation_markdown: |
+  Standardisation rewrites every feature into units of "standard deviations away
+  from its own mean". After the transform each column has mean `0` and spread `1`,
+  so a distance-based method like kNN or a gradient-based optimiser treats all
+  features even-handedly instead of being dominated by whichever one happens to
+  have the biggest raw numbers. The work is naturally column-oriented, which is
+  why the solution first transposes the matrix into columns, measures each one,
+  and only then rebuilds the rows.
+
+  The subtle part is the constant column. If every value in a feature is the same,
+  its standard deviation is `0`, and `(x - mean) / 0` would raise
+  `ZeroDivisionError`. There is no meaningful spread to normalise by, so the
+  convention is to map the whole column to `0.0` -- the value it would "want" to
+  take, since each entry already sits exactly at the mean. The `all_constant` and
+  `single_row_all_constant` cases exercise this guard (a single row makes *every*
+  column constant). Using `statistics.pstdev` rather than `stdev` matters too: the
+  population version divides by `N`, which is the standard choice when you are
+  standardising the data you actually hold rather than estimating a wider
+  population.
+common_mistakes:
+  - Standardising across rows instead of down columns, mixing unrelated features together.
+  - Letting a constant column divide by a zero standard deviation instead of emitting 0.0.
+  - Using statistics.stdev (sample, divides by N-1) instead of pstdev, which shifts every standardized value.

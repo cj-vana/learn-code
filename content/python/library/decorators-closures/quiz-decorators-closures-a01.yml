@@ -1,0 +1,101 @@
+id: quiz.library.decorators_closures.a01
+kind: quiz
+version: 1
+language: python
+title: Recognizing Closures and Decorator Shapes
+slug: quiz-decorators-closures-a01
+difficulty: medium
+concepts:
+  - python.closures_decorators
+prerequisites:
+  - python.closures_decorators
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.decorators_closures.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original conceptual questions about closure state, decorator layering, and functools.wraps.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      You need a function that keeps its own running count between calls,
+      without using a global variable or a class. Which tool fits best?
+    choices:
+      - A closure over a local variable, updated with nonlocal
+      - A list comprehension
+      - A plain module-level function with no state
+      - A set literal
+    correct_choice: A closure over a local variable, updated with nonlocal
+    explanation: |
+      A closure captures a variable from its enclosing scope and can rebind it
+      with nonlocal, giving persistent private state without a global or a class.
+    concepts:
+      - python.closures_decorators
+  - id: q2
+    prompt: |
+      A decorator needs to accept a configuration argument, as in
+      @cache_for(seconds=30). How many nested function layers does that require?
+    choices:
+      - Three (factory, decorator, wrapper)
+      - One
+      - Two
+      - Four
+    correct_choice: Three (factory, decorator, wrapper)
+    explanation: |
+      An argument-taking decorator is a factory that returns a decorator, which
+      returns the wrapper, so three nested functions in total.
+    concepts:
+      - python.closures_decorators
+  - id: q3
+    prompt: |
+      Given this stack, which decorator wraps the function first?
+
+          @outer
+          @inner
+          def job(x):
+              return x
+    choices:
+      - inner, because it is nearest the def
+      - outer, because it is listed first
+      - They apply simultaneously
+      - Neither; stacking is not allowed
+    correct_choice: inner, because it is nearest the def
+    explanation: |
+      Stacked decorators compose bottom-up, so the one closest to the def wraps
+      first; this is equivalent to outer(inner(job)).
+    concepts:
+      - python.closures_decorators
+  - id: q4
+    prompt: |
+      Why do well-written decorators apply @functools.wraps(func) to their inner
+      wrapper?
+    choices:
+      - To copy the original function's name, docstring, and metadata onto the wrapper
+      - To make the wrapper run faster
+      - To automatically cache the function's results
+      - To convert the function into a generator
+    correct_choice: To copy the original function's name, docstring, and metadata onto the wrapper
+    explanation: |
+      Without functools.wraps the wrapper reports its own name and loses the
+      original docstring; wraps copies __name__, __doc__, and related attributes.
+    concepts:
+      - python.closures_decorators
+  - id: q5
+    prompt: |
+      You want a decorator that records every call to a shared audit list but
+      leaves the function's return value untouched. What must the wrapper do?
+    choices:
+      - Compute the result, append a log record as a side effect, then return the unchanged result
+      - Return the log list instead of the result
+      - Replace the result with the number of calls so far
+      - Raise an exception after logging
+    correct_choice: Compute the result, append a log record as a side effect, then return the unchanged result
+    explanation: |
+      A logging decorator observes behavior through a side effect; it must still
+      return the original result so it stays transparent to callers.
+    concepts:
+      - python.closures_decorators

@@ -1,0 +1,117 @@
+id: exercise.library.graphs_lite.a08
+kind: exercise
+version: 1
+language: python
+title: Sequencing the Satellite Assembly
+slug: graphs-lite-a08
+difficulty: hard
+concepts:
+  - patterns.graph_traversal
+  - patterns.queue_bfs
+  - python.heapq_bisect
+prerequisites:
+  - python.dictionaries
+  - python.lists
+estimated_time_minutes: 25
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.graphs_lite.a08
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original satellite-assembly scenario producing a lexicographically smallest topological ordering via indegree counting and a min-heap.
+prompt_markdown: |
+  Assembling a satellite means performing steps in an order that respects
+  dependencies: a link `[a, b]` means step `a` must be completed before step `b`.
+  You want a full work order -- a list of every step in an order that never
+  violates a dependency. This is a *topological sort*.
+
+  You are given `data` with `nodes` (every step id) and `edges` (a list of
+  `[a, b]` directed dependencies, none repeated). Write `assembly_order(data)`
+  returning a valid ordering as a list. When several orderings are valid, return
+  the one that is alphabetically smallest: whenever more than one step is ready to
+  run, always choose the alphabetically first. If the dependencies contain a cycle
+  and no full ordering exists, return an empty list.
+starter_code: |
+  def assembly_order(data):
+      # Return a valid topological ordering, or [] if impossible.
+      return []
+function_name: assembly_order
+input_mode: function
+solution_sketch: Count incoming dependencies per step, keep every zero-indegree step in a min-heap, and repeatedly pop the smallest, releasing its dependents.
+sample_solution: |
+  import heapq
+
+
+  def assembly_order(data):
+      nodes = data["nodes"]
+      edges = data["edges"]
+      adjacency = {node: [] for node in nodes}
+      indegree = {node: 0 for node in nodes}
+      for source, target in edges:
+          adjacency[source].append(target)
+          indegree[target] += 1
+
+      ready = [node for node in nodes if indegree[node] == 0]
+      heapq.heapify(ready)
+      order = []
+      while ready:
+          step = heapq.heappop(ready)
+          order.append(step)
+          for nxt in adjacency[step]:
+              indegree[nxt] -= 1
+              if indegree[nxt] == 0:
+                  heapq.heappush(ready, nxt)
+
+      if len(order) != len(nodes):
+          return []
+      return order
+hints:
+  - level: 1
+    text: A step can run only once every step it depends on has already been placed; track how many unmet dependencies each step still has.
+  - level: 2
+    text: Keep the count of incoming edges per node; a node with count zero is ready. Placing a node lowers its dependents' counts by one.
+  - level: 3
+    text: Use a min-heap of ready nodes so you always emit the alphabetically smallest; if the finished list is shorter than the node list, a cycle blocked some steps, so return [].
+tests:
+  public:
+    - name: linear_chain
+      input: {"nodes": [a, b, c], "edges": [[a, b], [b, c]]}
+      expected: [a, b, c]
+    - name: all_independent_sorted
+      input: {"nodes": [c, a, b], "edges": []}
+      expected: [a, b, c]
+    - name: cycle_has_no_order
+      input: {"nodes": [a, b], "edges": [[a, b], [b, a]]}
+      expected: []
+  validation:
+    - name: diamond
+      input: {"nodes": [a, b, c, d], "edges": [[a, b], [a, c], [b, d], [c, d]]}
+      expected: [a, b, c, d]
+    - name: tie_break_respects_dependency
+      input: {"nodes": [x, y, z], "edges": [[z, x]]}
+      expected: [y, z, x]
+    - name: fan_in_then_fan_out
+      input: {"nodes": [a, b, c, d, e], "edges": [[a, c], [b, c], [c, d], [c, e]]}
+      expected: [a, b, c, d, e]
+    - name: cycle_with_tail
+      input: {"nodes": [a, b, c, d], "edges": [[a, b], [b, c], [c, b]]}
+      expected: []
+explanation_markdown: |
+  Kahn's algorithm turns ordering into repeated bookkeeping. The *indegree* of a
+  step is how many dependencies still block it; a step with indegree zero is ready
+  to place. Each time you place a step, you have satisfied one dependency for each
+  of its dependents, so you decrement their indegrees, and any that hit zero join
+  the ready set. Using a **min-heap** for the ready set is what delivers the
+  alphabetically smallest valid order: among all currently-ready steps, the
+  smallest always comes out first. The cycle check is elegant -- if some steps
+  never reach indegree zero, they were trapped in a loop and never got placed, so
+  the finished list ends up shorter than the full node list and you return `[]`.
+  Notice in `tie_break_respects_dependency` that `y` comes before `z` even though
+  `z` is smaller, because `z` was ready from the start too and `y` is smaller
+  still; `x` waits until `z` releases it.
+common_mistakes:
+  - Using a plain list or queue instead of a heap, which produces a valid order but not the alphabetically smallest one.
+  - Forgetting to detect the cycle case, returning a partial ordering instead of an empty list.
+  - Decrementing indegree but forgetting to push a node the moment its count reaches zero.

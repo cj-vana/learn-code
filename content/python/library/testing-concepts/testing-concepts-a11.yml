@@ -1,0 +1,121 @@
+id: exercise.library.testing_concepts.a11
+kind: exercise
+version: 1
+language: python
+title: Diffing Two Lighting Presets
+slug: testing-concepts-a11
+difficulty: hard
+concepts:
+  - concepts.testing
+  - python.dictionaries
+  - python.sorting
+prerequisites:
+  - python.loops
+  - python.conditionals
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.testing_concepts.a11
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original assertion-diff drill framed as comparing an expected and an actual lighting preset, producing a human-readable difference report.
+prompt_markdown: |
+  When a test asserts that two dictionaries are equal and they are not, a bare
+  "not equal" is useless -- what you want is a **diff** that names each disagreeing
+  key. You are building that report for a lighting desk, comparing the preset the
+  operator **expected** against the preset the board **actually** produced.
+
+  Write `diff_report(job)` where `job` is a dict with:
+
+  - `expected`: the intended preset, a dict mapping channel names to values.
+  - `actual`: the preset the board actually holds, a dict mapping channel names to
+    values.
+
+  Produce a list of difference strings, one per problem channel, using these **exact**
+  formats:
+
+  - A channel present in both but with different values:
+    `"<key>: expected <e>, got <a>"`, where `<e>` and `<a>` are the expected and
+    actual values written with Python's `str()` (so the integer `50` prints as `50`).
+  - A channel in `expected` but missing from `actual`:
+    `"<key>: missing"`.
+  - A channel in `actual` that was not expected:
+    `"<key>: unexpected"`.
+
+  Channels whose values match produce no string. Return the list **sorted in
+  ascending (lexicographic) order**. If the two presets are identical, return an
+  empty list.
+
+  For example, `{"expected": {"brightness": 50, "warmth": 30}, "actual":
+  {"brightness": 50, "hue": 10}}` returns `["hue: unexpected", "warmth: missing"]`.
+starter_code: |
+  def diff_report(job):
+      # Compare expected vs actual and build the sorted list of difference strings.
+      return []
+function_name: diff_report
+input_mode: function
+solution_sketch: Walk the expected keys to emit "missing" or value-mismatch strings, walk the actual keys to emit "unexpected" strings, then return the list sorted.
+sample_solution: |
+  def diff_report(job):
+      expected = job["expected"]
+      actual = job["actual"]
+      diffs = []
+      for key in expected:
+          if key not in actual:
+              diffs.append(f"{key}: missing")
+          elif expected[key] != actual[key]:
+              diffs.append(f"{key}: expected {expected[key]}, got {actual[key]}")
+      for key in actual:
+          if key not in expected:
+              diffs.append(f"{key}: unexpected")
+      return sorted(diffs)
+hints:
+  - level: 1
+    text: There are three kinds of problem channels -- value mismatch, missing, and unexpected -- so handle each kind separately.
+  - level: 2
+    text: One loop over the expected keys covers "missing" (not in actual) and the value-mismatch case; a second loop over the actual keys covers "unexpected".
+  - level: 3
+    text: Build each string with an f-string in the exact format, append it to a list, and return sorted(list) so the report is in ascending order.
+tests:
+  public:
+    - name: all_match_empty
+      input: {expected: {brightness: 50, warmth: 30}, actual: {brightness: 50, warmth: 30}}
+      expected: []
+    - name: single_value_differs
+      input: {expected: {brightness: 50}, actual: {brightness: 80}}
+      expected: ['brightness: expected 50, got 80']
+    - name: missing_and_unexpected
+      input: {expected: {brightness: 50, warmth: 30}, actual: {brightness: 50, hue: 10}}
+      expected: ['hue: unexpected', 'warmth: missing']
+  validation:
+    - name: both_empty
+      input: {expected: {}, actual: {}}
+      expected: []
+    - name: all_missing
+      input: {expected: {a: 1, b: 2}, actual: {}}
+      expected: ['a: missing', 'b: missing']
+    - name: all_unexpected
+      input: {expected: {}, actual: {x: 5, y: 6}}
+      expected: ['x: unexpected', 'y: unexpected']
+    - name: mixed_all_three
+      input: {expected: {brightness: 50, warmth: 30, contrast: 70}, actual: {brightness: 90, contrast: 70, hue: 10}}
+      expected: ['brightness: expected 50, got 90', 'hue: unexpected', 'warmth: missing']
+explanation_markdown: |
+  A useful equality assertion does not just fail -- it explains *why*. Building the
+  diff means partitioning the keys into three buckets. Looping over `expected` finds
+  channels that are `missing` from `actual` (a key that should be there is not) and
+  channels whose values disagree; a second loop over `actual` finds `unexpected`
+  channels (a key that should not be there is). Channels that appear in both with
+  equal values contribute nothing, which is why the identical-preset case yields an
+  empty list. Formatting the values with `str()` via an f-string keeps the message
+  readable, and sorting the finished list makes the report deterministic -- crucial
+  for a test, since dictionaries give no ordering guarantee you would want to depend
+  on and an unstable report would make failures flap. Splitting the work into an
+  expected-side pass and an actual-side pass keeps each of the three cases in exactly
+  one place, so none is double-counted.
+common_mistakes:
+  - Reporting a "missing" key as a value mismatch (or crashing with a KeyError) by reading actual[key] before checking that the key is present.
+  - Returning the strings in dictionary-iteration order instead of sorting them, making the report non-deterministic across runs.
+  - Deviating from the exact wording or punctuation (for example "got" vs "actual", or dropping the comma), so the strings no longer match.

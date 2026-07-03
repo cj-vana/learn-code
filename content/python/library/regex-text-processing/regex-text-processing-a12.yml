@@ -1,0 +1,106 @@
+id: exercise.library.regex_text_processing.a12
+kind: exercise
+version: 1
+language: python
+title: Slugify a Headline for a URL
+slug: regex-text-processing-a12
+difficulty: medium
+concepts:
+  - python.regex
+  - python.string_formatting
+prerequisites:
+  - python.strings
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.regex_text_processing.a12
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original blog-CMS scenario that turns a free-text headline into a clean URL slug with a single re.sub run collapse.
+prompt_markdown: |
+  A small blog engine needs to turn each article headline into a tidy piece of a
+  web address called a **slug**: lowercase, no spaces, and no punctuation, so that
+  a title like `Hello, World!!` becomes the address fragment `hello-world`.
+
+  Write `slugify(text)` where `text` is a single string. Return its URL slug built
+  with these rules, in order:
+
+  1. Lowercase the whole string.
+  2. Replace every **run** of one or more non-alphanumeric characters (anything
+     that is not a letter `a`-`z` or a digit `0`-`9`) with a single hyphen `-`.
+     Use `re.sub` for this step.
+  3. Strip any leading or trailing hyphens from the result.
+
+  For example, `'  Hello, World!! '` returns `'hello-world'`, and `'a__b'` returns
+  `'a-b'` because the two underscores are one run of non-alphanumeric characters.
+  If `text` is the empty string `''`, or contains no letters or digits at all,
+  return the empty string `''`.
+starter_code: |
+  import re
+
+
+  def slugify(text):
+      return ""
+function_name: slugify
+input_mode: function
+solution_sketch: Lowercase the text, use re.sub to collapse each run of non-alphanumeric characters into one hyphen, then strip leading and trailing hyphens.
+sample_solution: |
+  import re
+
+
+  def slugify(text):
+      lowered = text.lower()
+      hyphenated = re.sub(r"[^a-z0-9]+", "-", lowered)
+      return hyphenated.strip("-")
+hints:
+  - level: 1
+    text: Lowercase the string first, then everything you match against only needs to worry about the letters a-z and digits 0-9.
+  - level: 2
+    text: A single re.sub call can replace many characters at once. Make the pattern match a whole run of non-alphanumeric characters, not just one, so repeated symbols collapse to one hyphen.
+  - level: 3
+    text: Use re.sub(r"[^a-z0-9]+", "-", text.lower()) and then call .strip("-") on the result to remove hyphens that ended up at the very start or end.
+tests:
+  public:
+    - name: headline_with_punctuation
+      input: '  Hello, World!! '
+      expected: 'hello-world'
+    - name: collapses_underscore_run
+      input: 'a__b'
+      expected: 'a-b'
+    - name: empty_string
+      input: ''
+      expected: ''
+  validation:
+    - name: strips_edge_symbols
+      input: '---Trim Me---'
+      expected: 'trim-me'
+    - name: keeps_digits
+      input: 'Python 3.14 Rocks'
+      expected: 'python-3-14-rocks'
+    - name: only_symbols
+      input: '!!!'
+      expected: ''
+    - name: mixed_separators
+      input: 'The Quick_Brown  Fox'
+      expected: 'the-quick-brown-fox'
+    - name: already_clean
+      input: 'ready-set-go'
+      expected: 'ready-set-go'
+explanation_markdown: |
+  The three rules map directly onto three small steps. Lowercasing first means the
+  rest of the code only has to think about `a`-`z` and `0`-`9`, so the character
+  class `[^a-z0-9]` cleanly describes "everything that should be squeezed out."
+
+  The key move is the `+` in `[^a-z0-9]+`: it matches a whole **run** of unwanted
+  characters, so `', '` in `Hello, World` and the two underscores in `a__b` each
+  become a single hyphen instead of several. That is why a single `re.sub` call is
+  enough. After substitution, leading or trailing punctuation has turned into
+  hyphens at the ends of the string, and `.strip("-")` removes exactly those. The
+  empty string and all-symbol inputs collapse to `''` naturally: they contain
+  nothing to keep, so after stripping there is nothing left.
+common_mistakes:
+  - Replacing single characters instead of runs (omitting the + quantifier), which leaves double hyphens like "a--b".
+  - Forgetting to strip the leading and trailing hyphens, so a title with edge punctuation returns "-hello-world-".
+  - Using \w in the pattern, which counts the underscore as a word character and fails to replace it.

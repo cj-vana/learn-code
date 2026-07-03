@@ -1,0 +1,113 @@
+id: exercise.library.http_shapes.a03
+kind: exercise
+version: 1
+language: python
+title: Dissecting the Dockmaster's Endpoint
+slug: http-shapes-a03
+difficulty: medium
+concepts:
+  - python.http_model
+  - python.strings
+prerequisites:
+  - python.dictionaries
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.http_shapes.a03
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original URL-component breakdown themed around a dockmaster's API endpoint; no network access.
+prompt_markdown: |
+  Before the dockmaster's client can talk to an API, it splits the endpoint URL
+  into its parts. Write `parse_url_components(url)` that takes a full URL string
+  and returns a dict with exactly these five keys:
+
+  - `"scheme"` — the scheme, lowercased (`"https"`, `"http"`).
+  - `"host"` — the host name, lowercased, with no port attached.
+  - `"port"` — the port as an integer, or `None` when the URL has no explicit port.
+  - `"path"` — the path portion, or `""` when there is none.
+  - `"query"` — the raw query string after the `?`, or `""` when there is none.
+
+  Use `urllib.parse.urlparse`, which already normalizes the scheme and host to
+  lowercase for you while leaving the path's capitalization untouched. Note that
+  a URL like `http://localhost:3000` (no path) has an empty path `""`, while
+  `http://example.com/` (a bare slash) has path `"/"`.
+
+  Examples:
+
+  - `"https://harbor.example.com:8080/berths/list?free=1&max=3"` returns
+    `{"scheme": "https", "host": "harbor.example.com", "port": 8080,
+    "path": "/berths/list", "query": "free=1&max=3"}`.
+  - `"http://example.com/"` returns `{"scheme": "http", "host": "example.com",
+    "port": None, "path": "/", "query": ""}`.
+starter_code: |
+  from urllib.parse import urlparse
+
+
+  def parse_url_components(url):
+      return {}
+function_name: parse_url_components
+input_mode: function
+solution_sketch: Call urlparse(url) and read .scheme, .hostname, .port, .path, and .query into a dict, defaulting host to "" if hostname is None.
+sample_solution: |
+  from urllib.parse import urlparse
+
+
+  def parse_url_components(url):
+      parsed = urlparse(url)
+      return {
+          "scheme": parsed.scheme,
+          "host": parsed.hostname or "",
+          "port": parsed.port,
+          "path": parsed.path,
+          "query": parsed.query,
+      }
+hints:
+  - level: 1
+    text: urlparse does the hard splitting for you; your job is to copy the right attributes into a dict.
+  - level: 2
+    text: Read .scheme, .hostname, .port, .path, and .query from the parse result rather than slicing the string yourself.
+  - level: 3
+    text: .hostname is already lowercased and excludes the port; .port is an int or None. Use `parsed.hostname or ""` so a missing host becomes "".
+tests:
+  public:
+    - name: full_url_with_port
+      input: 'https://harbor.example.com:8080/berths/list?free=1&max=3'
+      expected: {scheme: 'https', host: 'harbor.example.com', port: 8080, path: '/berths/list', query: 'free=1&max=3'}
+    - name: trailing_slash_no_port
+      input: 'http://example.com/'
+      expected: {scheme: 'http', host: 'example.com', port: null, path: '/', query: ''}
+    - name: no_query
+      input: 'https://api.harbor.io/status'
+      expected: {scheme: 'https', host: 'api.harbor.io', port: null, path: '/status', query: ''}
+  validation:
+    - name: scheme_and_host_lowercased
+      input: 'HTTPS://Harbor.EXAMPLE.com/Berths?A=1'
+      expected: {scheme: 'https', host: 'harbor.example.com', port: null, path: '/Berths', query: 'A=1'}
+    - name: port_but_no_path
+      input: 'http://localhost:3000'
+      expected: {scheme: 'http', host: 'localhost', port: 3000, path: '', query: ''}
+    - name: deep_path_with_port
+      input: 'https://dock.example.org:443/v2/berths/north/slip-7?sort=depth'
+      expected: {scheme: 'https', host: 'dock.example.org', port: 443, path: '/v2/berths/north/slip-7', query: 'sort=depth'}
+    - name: query_with_multiple_pairs
+      input: 'https://harbor.example.com/search?q=open+slip&sort=depth&page=2'
+      expected: {scheme: 'https', host: 'harbor.example.com', port: null, path: '/search', query: 'q=open+slip&sort=depth&page=2'}
+explanation_markdown: |
+  A URL packs several independent pieces into one string, and `urlparse` knows
+  the grammar so you do not have to hunt for delimiters by hand. It normalizes
+  the scheme and host to lowercase because those are case-insensitive in the
+  HTTP spec, while deliberately leaving the path alone, since `/Berths` and
+  `/berths` may point at different resources on the server.
+
+  Reading `.hostname` rather than `.netloc` gives you the host without the port,
+  and `.port` returns a real integer (or `None`), which is far safer than
+  slicing after a `:` yourself. Watch the difference between an absent path
+  (`""`) and a root path (`"/"`): both are common, and treating them as the
+  same value is a frequent source of routing bugs.
+common_mistakes:
+  - Reading .netloc for the host, which leaves the `:port` attached instead of splitting it out.
+  - Lowercasing the path along with the host, even though paths are case-sensitive on the server.
+  - Confusing an empty path "" with a root path "/", or returning the port as a string instead of an int.

@@ -1,0 +1,89 @@
+id: exercise.library.collections_itertools.a11
+kind: exercise
+version: 1
+language: python
+title: Busiest Hub on the Transit Map
+slug: collections-itertools-a11
+difficulty: hard
+concepts:
+  - python.collections_module
+  - python.itertools_module
+  - concepts.grouping_aggregation
+prerequisites:
+  - python.dictionaries
+estimated_time_minutes: 17
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.collections_itertools.a11
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original transit-map scenario combining itertools.chain flattening with a Counter tally and a deterministic tie-break.
+prompt_markdown: |
+  A transit map is a list of legs, each written `[origin, destination]`. A
+  station's *traffic* is how many times it shows up as an endpoint anywhere on
+  the map -- counting both the origins and the destinations. Write
+  `busiest_hub(legs)` that returns the name of the station with the highest
+  traffic. If several stations tie for the highest traffic, return the one whose
+  name comes first alphabetically. An empty map returns the empty string `""`.
+
+  For example, in `[["a", "b"], ["b", "c"], ["b", "a"]]` the endpoints are
+  `a, b, b, c, b, a`, so `b` has traffic 3 and wins.
+starter_code: |
+  def busiest_hub(legs):
+      return ""
+function_name: busiest_hub
+input_mode: function
+solution_sketch: Flatten every endpoint with chain.from_iterable into a Counter, then pick the max count breaking ties by name.
+sample_solution: |
+  from collections import Counter
+  from itertools import chain
+
+
+  def busiest_hub(legs):
+      counts = Counter(chain.from_iterable(legs))
+      if not counts:
+          return ""
+      return min(counts, key=lambda station: (-counts[station], station))
+hints:
+  - level: 1
+    text: Every leg contributes two endpoints; treat all origins and destinations as one big pile of station names.
+  - level: 2
+    text: chain.from_iterable(legs) yields each endpoint in turn, and Counter tallies how often each station appears.
+  - level: 3
+    text: 'Pick the winner with min(counts, key=lambda s: (-counts[s], s)) so the highest count wins and ties go to the alphabetically smallest name.'
+tests:
+  public:
+    - name: clear_winner
+      input: [[a, b], [b, c], [b, a]]
+      expected: b
+    - name: single_leg
+      input: [[x, y]]
+      expected: x
+    - name: empty
+      input: []
+      expected: ''
+  validation:
+    - name: tie_breaks_alphabetically
+      input: [[m, n], [n, m]]
+      expected: m
+    - name: hub_from_both_ends
+      input: [[p, q], [q, r], [q, s], [t, q]]
+      expected: q
+    - name: repeated_endpoint
+      input: [[z, z], [a, b]]
+      expected: z
+explanation_markdown: |
+  `chain.from_iterable(legs)` lazily walks every endpoint across all legs
+  without first building a flattened list, and `Counter` tallies each station in
+  one pass -- a clean pairing of an itertools combinator with a collections
+  helper. The tie-break is the subtle part: sorting by the tuple `(-count,
+  name)` and taking the `min` puts the largest count first (because negating
+  flips the order) and, among equal counts, the alphabetically smallest name.
+  In `[["z", "z"], ["a", "b"]]`, station `z` is counted twice from the single
+  self-referencing leg, which is exactly what "counts both endpoints" means.
+common_mistakes:
+  - Counting only origins or only destinations instead of both endpoints of every leg.
+  - Using max with an unstable or missing tie-break, so equal-traffic stations return inconsistently.
+  - Sorting by count ascending, or forgetting to negate the count, and returning the least-busy station.

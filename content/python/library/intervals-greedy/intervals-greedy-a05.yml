@@ -1,0 +1,108 @@
+id: exercise.library.intervals_greedy.a05
+kind: exercise
+version: 1
+language: python
+title: Free Slots on the Observatory Telescope
+slug: intervals-greedy-a05
+difficulty: medium
+concepts:
+  - patterns.intervals
+  - python.sorting
+prerequisites:
+  - python.lists
+estimated_time_minutes: 18
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.intervals_greedy.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original observatory-telescope framing for finding the gaps left uncovered by a set of intervals within a window.
+prompt_markdown: |
+  An observatory rents its telescope during a nightly window and wants to
+  advertise the *free* slots. Write `free_slots(data)` where `data` is a dict
+  with two keys:
+
+  - `"bookings"`: a list of `[start, end]` reservations, possibly overlapping and
+    in any order.
+  - `"window"`: a `[open, close]` pair for when the telescope is available.
+
+  Return the free gaps inside the window as a list of `[start, end]` slots,
+  sorted by start time. Bookings may spill past the window edges; only report
+  free time that lies inside `[open, close]`. If the window is fully booked,
+  return `[]`.
+starter_code: |
+  def free_slots(data):
+      return []
+function_name: free_slots
+input_mode: function
+solution_sketch: Clip bookings to the window and merge them, then emit the gaps between consecutive covered blocks.
+sample_solution: |
+  def free_slots(data):
+      bookings = data["bookings"]
+      open_t, close_t = data["window"]
+      covered = []
+      for start, end in sorted(bookings):
+          s = max(start, open_t)
+          e = min(end, close_t)
+          if s >= e:
+              continue
+          if covered and s <= covered[-1][1]:
+              covered[-1][1] = max(covered[-1][1], e)
+          else:
+              covered.append([s, e])
+      gaps = []
+      cursor = open_t
+      for start, end in covered:
+          if start > cursor:
+              gaps.append([cursor, start])
+          cursor = max(cursor, end)
+      if cursor < close_t:
+          gaps.append([cursor, close_t])
+      return gaps
+hints:
+  - level: 1
+    text: First clip every booking to the window, dropping any part that falls outside [open, close].
+  - level: 2
+    text: Merge the clipped bookings into covered blocks, then the free slots are the spaces between them.
+  - level: 3
+    text: Sweep a cursor from open; before each covered block emit [cursor, block_start] if there is a gap, then jump cursor to the block end; finally emit [cursor, close] if any time remains.
+tests:
+  public:
+    - name: one_gap_each_side
+      input: {"bookings": [[3, 5]], "window": [0, 8]}
+      expected: [[0, 3], [5, 8]]
+    - name: fully_booked
+      input: {"bookings": [[0, 8]], "window": [0, 8]}
+      expected: []
+    - name: no_bookings
+      input: {"bookings": [], "window": [0, 8]}
+      expected: [[0, 8]]
+  validation:
+    - name: middle_gap
+      input: {"bookings": [[0, 3], [5, 8]], "window": [0, 8]}
+      expected: [[3, 5]]
+    - name: spill_over_edges
+      input: {"bookings": [[-2, 2], [6, 12]], "window": [0, 8]}
+      expected: [[2, 6]]
+    - name: overlapping_bookings
+      input: {"bookings": [[1, 4], [2, 6]], "window": [0, 10]}
+      expected: [[0, 1], [6, 10]]
+    - name: back_to_back_no_gap
+      input: {"bookings": [[0, 4], [4, 8]], "window": [0, 8]}
+      expected: []
+explanation_markdown: |
+  Finding free time is the mirror image of merging. First you clip each booking
+  to the rentable window, because time booked before `open` or after `close` is
+  irrelevant; a clipped interval with `s >= e` disappears entirely. Merging the
+  clipped bookings gives the covered blocks. Then a single cursor sweeps from
+  `open`: whenever the next covered block starts beyond the cursor, the space
+  between them is free, so you emit `[cursor, block_start]`. After each block the
+  cursor jumps to the block's end. Any time left between the final block and
+  `close` is one last free slot. Back-to-back bookings leave no gap because the
+  cursor lands exactly on the next block's start.
+common_mistakes:
+  - Reporting free time that lies outside the window because bookings were not clipped to [open, close] first.
+  - Forgetting the trailing gap between the last covered block and close.
+  - Advancing the cursor with cursor = end instead of max(cursor, end), which moves it backward when a nested block ends early.

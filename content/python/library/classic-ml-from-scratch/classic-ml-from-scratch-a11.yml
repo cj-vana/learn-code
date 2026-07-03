@@ -1,0 +1,137 @@
+id: exercise.library.classic_ml_from_scratch.a11
+kind: exercise
+version: 1
+language: python
+title: Rolling Down the Parameter Valley
+slug: classic-ml-from-scratch-a11
+difficulty: hard
+concepts:
+  - ai.classic_ml
+prerequisites:
+  - python.lists
+  - python.loops
+  - patterns.running_total
+estimated_time_minutes: 24
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.classic_ml_from_scratch.a11
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original gradient-descent drill over a separable quadratic bowl, with a deliberately diverging large-learning-rate case to show instability, all framed as tuning calibration knobs.
+prompt_markdown: |
+  Tuning a model often means minimising a smooth loss surface by taking small
+  downhill steps -- **gradient descent**. Here the surface is a simple
+  multi-dimensional bowl. For a parameter vector `p`, the loss is
+
+  ```
+  loss(p) = sum(a[i] * (p[i] - c[i]) ** 2 for i in range(len(p)))
+  ```
+
+  Each coordinate is its own upward parabola, with steepness `a[i]` and its lowest
+  point at `c[i]`. The gradient (the vector of partial derivatives) is
+
+  ```
+  grad[i] = 2 * a[i] * (p[i] - c[i])
+  ```
+
+  Write `gradient_descent_run(job)` that runs plain gradient descent for a fixed
+  number of steps. The input is a single dictionary:
+
+  ```
+  {
+    "start": [10.0],
+    "grad_coeffs": {"a": [1.0], "c": [3.0]},
+    "lr": 0.1,
+    "steps": 1
+  }
+  ```
+
+  - `start` is the initial parameter vector.
+  - `grad_coeffs` holds two equal-length lists: `a` (the steepness per
+    coordinate) and `c` (the centre per coordinate).
+  - `lr` is the learning rate (step size).
+  - `steps` is how many update steps to take.
+
+  Each step, compute the gradient at the **current** parameters and move every
+  coordinate downhill:
+
+  ```
+  grad[i] = 2 * a[i] * (p[i] - c[i])
+  p[i] = p[i] - lr * grad[i]
+  ```
+
+  Do this `steps` times (all coordinates update together each step, using the
+  gradient measured before that step). Return the final parameter vector as a
+  list, with each number **rounded to 6 decimal places**.
+starter_code: |
+  def gradient_descent_run(job):
+      return []
+function_name: gradient_descent_run
+input_mode: function
+solution_sketch: Copy start into a working list. For each of steps iterations, compute grad[i] = 2*a[i]*(p[i]-c[i]) for the current p, then set p[i] = p[i] - lr*grad[i] for every coordinate. After the loop, round each parameter to 6 places.
+sample_solution: |
+  def gradient_descent_run(job):
+      p = list(job["start"])
+      a = job["grad_coeffs"]["a"]
+      c = job["grad_coeffs"]["c"]
+      lr = job["lr"]
+      steps = job["steps"]
+      for _ in range(steps):
+          grad = [2 * a[i] * (p[i] - c[i]) for i in range(len(p))]
+          p = [p[i] - lr * grad[i] for i in range(len(p))]
+      return [round(v, 6) for v in p]
+hints:
+  - level: 1
+    text: The whole run is a loop that repeats steps times. Inside each pass you recompute the gradient from the current parameters, then step.
+  - level: 2
+    text: Compute the full gradient list first using the current p, then build the new p. Do not overwrite p[0] before you use it to compute grad[1].
+  - level: 3
+    text: The per-coordinate update is p[i] = p[i] - lr * (2 * a[i] * (p[i] - c[i])). After all steps, round each final value to 6 decimals.
+tests:
+  public:
+    - name: single_step_1d
+      input: {start: [10.0], grad_coeffs: {a: [1.0], c: [3.0]}, lr: 0.1, steps: 1}
+      expected: [8.6]
+    - name: three_steps_toward_center
+      input: {start: [0.0], grad_coeffs: {a: [0.5], c: [4.0]}, lr: 0.2, steps: 3}
+      expected: [1.952]
+    - name: two_dimensions_one_step
+      input: {start: [0.0, 0.0], grad_coeffs: {a: [1.0, 2.0], c: [1.0, -1.0]}, lr: 0.1, steps: 1}
+      expected: [0.2, -0.4]
+  validation:
+    - name: converging_run
+      input: {start: [5.0], grad_coeffs: {a: [1.0], c: [2.0]}, lr: 0.3, steps: 5}
+      expected: [2.03072]
+    - name: diverging_big_lr
+      input: {start: [3.0], grad_coeffs: {a: [1.0], c: [0.0]}, lr: 1.1, steps: 10}
+      expected: [18.575209]
+    - name: two_dimensions_uneven
+      input: {start: [0.0, 10.0], grad_coeffs: {a: [1.0, 0.5], c: [2.0, 2.0]}, lr: 0.2, steps: 4}
+      expected: [1.7408, 5.2768]
+    - name: already_at_minimum
+      input: {start: [2.0, 2.0], grad_coeffs: {a: [3.0, 1.0], c: [2.0, 2.0]}, lr: 0.5, steps: 5}
+      expected: [2.0, 2.0]
+explanation_markdown: |
+  Gradient descent is the workhorse of machine learning: measure which way is
+  downhill, take a step, repeat. On this separable bowl each coordinate moves
+  independently, and the update `p - lr * 2 * a * (p - c)` pulls `p` toward its
+  centre `c`. Notice the two structural details that trip people up. The gradient
+  must be read from the **current** parameters *before* you move, so compute the
+  whole `grad` list first and only then build the new `p` -- otherwise a mutated
+  `p[0]` would poison the gradient of `p[1]`. And the `already_at_minimum` case
+  shows the fixed point: when `p == c` the gradient is zero, so the parameters sit
+  still no matter how many steps you take.
+
+  The learning rate is where it gets interesting. For a one-dimensional bowl the
+  update multiplies the distance-to-centre by `(1 - 2 * lr * a)` each step.
+  When that factor has magnitude below 1 the run converges (the `converging_run`
+  case creeps toward `2`). When `lr` is too large the factor's magnitude exceeds
+  1 and the steps **overshoot and grow** -- the `diverging_big_lr` case starts at
+  `3` and blows up past `18`, oscillating further from the minimum every step.
+  That is exactly why picking a stable learning rate matters in practice.
+common_mistakes:
+  - Updating p[i] in place while still computing later coordinates' gradients from the already-changed vector.
+  - Recomputing the gradient only once instead of fresh at every step.
+  - Adding lr*grad instead of subtracting it, which climbs the bowl rather than descending it.

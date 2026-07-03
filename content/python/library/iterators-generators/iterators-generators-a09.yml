@@ -1,0 +1,111 @@
+id: exercise.library.iterators_generators.a09
+kind: exercise
+version: 1
+language: python
+title: Transit Turnstile Pipeline
+slug: iterators-generators-a09
+difficulty: hard
+concepts:
+  - python.iterators_generators
+  - patterns.filtering
+prerequisites:
+  - python.iterators_generators
+  - python.tuples
+estimated_time_minutes: 16
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.iterators_generators.a09
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original transit turnstile scenario composing a four-stage lazy generator pipeline.
+prompt_markdown: |
+  A transit system collects raw turnstile entries as `[line, riders]` pairs. You
+  need a small reporting pipeline. Write `turnstile_report(spec)` where `spec` is a
+  dict with keys `"entries"` (a list of `[line, riders]` pairs), `"allowed"` (a
+  list of line names that count), and `"factor"` (an integer weight). Return a
+  **list** of weighted rider counts, in order, keeping only entries that both have
+  a positive rider count *and* belong to an allowed line, each multiplied by
+  `factor`.
+
+  Build it as a **multi-stage generator pipeline** with a separate generator for
+  each step: unpack the pairs, drop non-positive counts, drop lines that are not
+  allowed, then scale. Compose them and finish with `list()`.
+
+  For example, `turnstile_report({"entries": [["red", 4], ["blue", 0], ["green",
+  3], ["red", -2]], "allowed": ["red", "green"], "factor": 10})` returns
+  `[40, 30]`.
+starter_code: |
+  def turnstile_report(spec):
+      # Compose generators: unpack -> keep positive -> keep allowed -> scale, then list(...).
+      return []
+function_name: turnstile_report
+input_mode: function
+solution_sketch: Four chained generators unpack the pairs, filter by positive riders, filter by allowed line, and scale by factor before list() collects the result.
+sample_solution: |
+  def turnstile_report(spec):
+      def unpack(rows):
+          for line, riders in rows:
+              yield line, riders
+
+      def positive(pairs):
+          for line, riders in pairs:
+              if riders > 0:
+                  yield line, riders
+
+      def allowed_only(pairs, allowed):
+          for line, riders in pairs:
+              if line in allowed:
+                  yield line, riders
+
+      def scale(pairs, factor):
+          for _, riders in pairs:
+              yield riders * factor
+
+      allowed = set(spec["allowed"])
+      stream = unpack(spec["entries"])
+      stream = positive(stream)
+      stream = allowed_only(stream, allowed)
+      stream = scale(stream, spec["factor"])
+      return list(stream)
+hints:
+  - level: 1
+    text: Give each transformation its own generator, then feed one into the next like sections of pipe.
+  - level: 2
+    text: Keep (line, riders) tuples flowing through the filters, and only reduce to a single number in the final scaling stage.
+  - level: 3
+    text: unpack -> positive (riders > 0) -> allowed_only (line in allowed) -> scale (riders * factor); wrap the whole chain in list().
+tests:
+  public:
+    - name: example
+      input: {entries: [["red", 4], ["blue", 0], ["green", 3], ["red", -2]], allowed: ["red", "green"], factor: 10}
+      expected: [40, 30]
+    - name: nothing_allowed
+      input: {entries: [["red", 5]], allowed: ["blue"], factor: 2}
+      expected: []
+    - name: empty
+      input: {entries: [], allowed: ["red"], factor: 3}
+      expected: []
+  validation:
+    - name: factor_one
+      input: {entries: [["a", 1], ["a", 2], ["b", 3]], allowed: ["a", "b"], factor: 1}
+      expected: [1, 2, 3]
+    - name: drops_zero_and_negative
+      input: {entries: [["a", 0], ["a", -1], ["a", 4]], allowed: ["a"], factor: 5}
+      expected: [20]
+    - name: order_preserved
+      input: {entries: [["x", 2], ["y", 9], ["x", 1]], allowed: ["x"], factor: 10}
+      expected: [20, 10]
+explanation_markdown: |
+  Because every stage is a lazy generator, an entry travels the whole pipeline,
+  unpacked, checked for a positive count, checked against the allowed set, and
+  scaled, before the next entry is ever pulled. Nothing accumulates in the middle.
+  Keeping `(line, riders)` tuples flowing until the final stage lets each filter
+  see both fields; only `scale` collapses a survivor down to a single weighted
+  number. Converting `allowed` to a `set` makes the membership test fast, and
+  iterating the source in order keeps the output in order.
+common_mistakes:
+  - Collapsing to just the rider count too early, so a later stage can no longer filter by line.
+  - Combining every rule into one loop, which is harder to read and loses the composable-stage structure the task asks for.
+  - Forgetting that both conditions must hold, letting a positive count on a disallowed line through.

@@ -1,0 +1,82 @@
+id: exercise.library.error_handling.a01
+kind: exercise
+version: 1
+language: python
+title: Watering the Greenhouse Trays
+slug: error-handling-a01
+difficulty: easy
+concepts:
+  - python.exceptions
+  - python.dictionaries
+prerequisites:
+  - python.functions
+  - python.conditionals
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.error_handling.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original greenhouse irrigation scenario using try/except to turn a divide-by-zero into a safe sentinel.
+prompt_markdown: |
+  A greenhouse controller spreads a reservoir of water evenly across its planting
+  trays. Write `water_per_tray(plan)` where `plan` is a dict with two keys:
+  `total_ml` (whole millilitres in the reservoir) and `trays` (how many trays are
+  set out).
+
+  Return the whole millilitres each tray receives, using integer division. If
+  `trays` is `0` there is nothing to water and dividing would crash, so catch that
+  case and return the sentinel `-1` instead of letting the program blow up.
+starter_code: |
+  def water_per_tray(plan):
+      # Return total_ml // trays, or -1 when there are no trays.
+      return 0
+function_name: water_per_tray
+input_mode: function
+solution_sketch: Wrap the integer division in try/except and return -1 on ZeroDivisionError.
+sample_solution: |
+  def water_per_tray(plan):
+      try:
+          return plan["total_ml"] // plan["trays"]
+      except ZeroDivisionError:
+          return -1
+hints:
+  - level: 1
+    text: Dividing by zero raises an exception rather than returning a number, so plan for that one case.
+  - level: 2
+    text: Put the division inside a try block and add an except clause for the specific error it can raise.
+  - level: 3
+    text: Use `except ZeroDivisionError:` and `return -1` there; otherwise return `plan["total_ml"] // plan["trays"]`.
+tests:
+  public:
+    - name: even_split
+      input: {total_ml: 1200, trays: 4}
+      expected: 300
+    - name: no_trays
+      input: {total_ml: 1000, trays: 0}
+      expected: -1
+    - name: empty_reservoir
+      input: {total_ml: 0, trays: 5}
+      expected: 0
+  validation:
+    - name: rounds_down
+      input: {total_ml: 999, trays: 10}
+      expected: 99
+    - name: zero_trays_full_tank
+      input: {total_ml: 50, trays: 0}
+      expected: -1
+    - name: one_each
+      input: {total_ml: 7, trays: 7}
+      expected: 1
+explanation_markdown: |
+  Integer division normally returns a clean number, but `x // 0` raises
+  `ZeroDivisionError` and stops the program. Wrapping the division in a `try`
+  block lets you intercept exactly that failure and respond with a value the rest
+  of the system understands. Catching the *specific* error (not a bare `except`)
+  keeps any genuinely unexpected bug visible instead of silently swallowing it.
+common_mistakes:
+  - Checking `trays` with an if-statement is fine, but the task is to practise catching the exception the division raises.
+  - Using a bare `except:` that would also hide typos like a misspelled key.
+  - Returning `0` for the no-trays case, which is indistinguishable from an empty reservoir.

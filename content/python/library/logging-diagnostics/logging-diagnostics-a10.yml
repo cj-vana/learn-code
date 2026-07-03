@@ -1,0 +1,186 @@
+id: exercise.library.logging_diagnostics.a10
+kind: exercise
+version: 1
+language: python
+title: Skimming the Cable-Car Log
+slug: logging-diagnostics-a10
+difficulty: medium
+concepts:
+  - python.logging_diagnostics
+  - patterns.filtering
+  - python.dictionaries
+prerequisites:
+  - python.dictionaries
+  - python.loops
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.logging_diagnostics.a10
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: >-
+    Original level-filter drill framed as a mountain cable-car control room skimming
+    an overnight log for entries at or above a threshold. Reuses the canonical level
+    map with case-insensitive names and treats unrecognized severities as the lowest
+    rung.
+prompt_markdown: |
+  The morning crew in a mountain cable-car control room does not want to read every
+  routine tick from the overnight log -- only entries at or above a chosen severity.
+
+  Write `filter_logs_by_level(request)`. The single argument is a dict with:
+
+  - `"entries"` -- a list of log entries in the order they were recorded. Each entry
+    is a dict that always has a `"level"` name and a `"message"`, and may carry extra
+    keys you must leave untouched.
+  - `"min_level"` -- the threshold severity name.
+
+  Return a new list containing the entries whose level is **at or above** the
+  threshold, in their original order. Keep each kept entry exactly as it was.
+
+  Resolve severity names to numbers with the canonical map:
+
+  ```
+  NOTSET=0  DEBUG=10  INFO=20  WARNING=30  ERROR=40  CRITICAL=50
+  ```
+
+  Naming rules:
+
+  - Level names are case-insensitive and may carry stray whitespace: `"error"`,
+    `"ERROR"`, and `"  Error "` all mean `40`.
+  - Honor the aliases `"WARN"` (= `30`) and `"FATAL"` (= `50`) wherever a level name
+    appears, including in `"min_level"`.
+  - An entry whose level name is **not** recognized counts as level `0`, so it is
+    kept only when the threshold itself resolves to `0`.
+
+  Edge cases the tests cover: an empty entry list; mixed-case and aliased names;
+  an unrecognized level treated as the lowest rung; and extra keys preserved on kept
+  entries.
+starter_code: |
+  def filter_logs_by_level(request):
+      # Return the entries whose level is at or above request["min_level"].
+      return []
+function_name: filter_logs_by_level
+input_mode: function
+solution_sketch: >-
+  Build a normalized name-to-number map, resolve the threshold once, then keep each
+  entry whose resolved level is greater than or equal to that threshold, defaulting
+  unknown names to 0.
+sample_solution: |
+  LEVELS = {
+      "NOTSET": 0,
+      "DEBUG": 10,
+      "INFO": 20,
+      "WARNING": 30,
+      "WARN": 30,
+      "ERROR": 40,
+      "CRITICAL": 50,
+      "FATAL": 50,
+  }
+
+
+  def _level_value(name):
+      return LEVELS.get(name.strip().upper(), 0)
+
+
+  def filter_logs_by_level(request):
+      threshold = _level_value(request["min_level"])
+      return [
+          entry
+          for entry in request["entries"]
+          if _level_value(entry["level"]) >= threshold
+      ]
+hints:
+  - level: 1
+    text: Resolve the threshold name to a number once, before you loop, so you are comparing numbers to numbers.
+  - level: 2
+    text: Write a small helper that normalizes a level name (strip, upper-case) and looks it up, defaulting unknown names to 0.
+  - level: 3
+    text: Keep an entry when its resolved level is greater than or equal to the threshold, and append the entry unchanged so its extra keys survive.
+tests:
+  public:
+    - name: keep_warning_and_above
+      input:
+        entries:
+          - {level: INFO, message: routine tick}
+          - {level: WARNING, message: cable tension high}
+          - {level: ERROR, message: brake fault}
+        min_level: WARNING
+      expected:
+        - {level: WARNING, message: cable tension high}
+        - {level: ERROR, message: brake fault}
+    - name: debug_threshold_keeps_all
+      input:
+        entries:
+          - {level: DEBUG, message: tick}
+          - {level: INFO, message: ok}
+        min_level: DEBUG
+      expected:
+        - {level: DEBUG, message: tick}
+        - {level: INFO, message: ok}
+    - name: high_threshold_keeps_none
+      input:
+        entries:
+          - {level: INFO, message: a}
+          - {level: DEBUG, message: b}
+        min_level: ERROR
+      expected: []
+  validation:
+    - name: empty_entries
+      input:
+        entries: []
+        min_level: INFO
+      expected: []
+    - name: case_insensitive_names
+      input:
+        entries:
+          - {level: info, message: x}
+          - {level: Error, message: y}
+        min_level: warn
+      expected:
+        - {level: Error, message: y}
+    - name: fatal_alias_threshold
+      input:
+        entries:
+          - {level: ERROR, message: e}
+          - {level: CRITICAL, message: c}
+        min_level: FATAL
+      expected:
+        - {level: CRITICAL, message: c}
+    - name: unknown_level_is_lowest
+      input:
+        entries:
+          - {level: TRACE, message: t}
+          - {level: WARNING, message: w}
+        min_level: INFO
+      expected:
+        - {level: WARNING, message: w}
+    - name: extra_keys_preserved
+      input:
+        entries:
+          - {level: CRITICAL, message: m1, code: 9}
+          - {level: WARNING, message: m2}
+          - {level: ERROR, message: m3}
+        min_level: ERROR
+      expected:
+        - {level: CRITICAL, message: m1, code: 9}
+        - {level: ERROR, message: m3}
+explanation_markdown: |
+  Filtering by severity is the everyday version of what a handler's level does:
+  entries below the bar are dropped, the rest pass through untouched. Resolving the
+  threshold once, before the loop, is the key efficiency and clarity move -- you turn
+  a name into a number a single time and then compare numbers, rather than re-parsing
+  the threshold on every entry.
+
+  A tiny normalization helper (strip, upper-case, look up) keeps the casing and alias
+  rules in one place, so `"error"` and `"  Error "` behave identically and `WARN`
+  lines up with `WARNING`. Defaulting an unrecognized name to `0` is a deliberate
+  choice: a mystery severity should not silently jump above your threshold, so it
+  sinks to the bottom and only survives a `NOTSET` bar. Appending the original entry
+  object -- not a rebuilt copy -- is what guarantees extra keys like a `code` ride
+  along unchanged.
+common_mistakes:
+  - Comparing the raw level strings instead of their numeric values, so ordering becomes alphabetical and WARNING sorts below INFO.
+  - Re-resolving the threshold name inside the loop, or worse, comparing each entry against a string threshold.
+  - Rebuilding kept entries as fresh dicts and dropping their extra keys instead of passing the original entry through.

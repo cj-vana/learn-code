@@ -1,0 +1,146 @@
+id: exercise.library.capstone_ledger.c01
+kind: exercise
+version: 1
+language: python
+title: The Market Ledger - Parsing a Sales Line
+slug: capstone-ledger-c01
+difficulty: medium
+concepts:
+  - python.strings
+  - python.exceptions
+prerequisites:
+  - python.dictionaries
+  - python.types
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.capstone_ledger.c01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original opening stage of a farmers' market cooperative ledger capstone; parses one pipe-delimited sales record into a typed dict with a documented rejection taxonomy the later stages reuse.
+prompt_markdown: |
+  Stage 1 of the Market Ledger capstone: the Riverbend farmers' market cooperative
+  is replacing its paper sales book with a ledger program, and every stage you
+  build feeds the next. It all starts with a single line.
+
+  Each sale is recorded as a pipe-delimited string with exactly five fields:
+
+      YYYY-MM-DD|vendor|item|qty|unit_price
+
+  For example `2026-06-01|Rosewood Farm|heirloom tomatoes|12|3.50`.
+
+  Write `parse_entry(line)` that turns one well-formed line into a typed
+  dictionary with exactly these keys:
+
+  - `"date"`: the date field, left as a string.
+  - `"vendor"`: the vendor field, left as a string.
+  - `"item"`: the item field, left as a string.
+  - `"qty"`: the quantity as an `int`.
+  - `"unit_price"`: the price as a `float` rounded to 2 decimal places.
+  - `"total"`: `qty * unit_price`, also a `float` rounded to 2 decimal places.
+
+  A line is **malformed** if any of the following hold, checked in this order.
+  Later stages reuse these exact reasons, so keep the precedence:
+
+  1. **wrong field count** - splitting on `"|"` does not give exactly 5 fields.
+  2. **non-numeric qty** - the quantity field is not a whole number.
+  3. **non-positive qty** - the quantity parses but is `0` or negative.
+  4. **non-numeric price** - the price field is not a number.
+
+  For any malformed line, return `None`. You may assume a well-formed line always
+  has a sensible date and non-empty vendor and item.
+
+  Example:
+
+  ```python
+  parse_entry("2026-06-01|Rosewood Farm|heirloom tomatoes|12|3.50")
+  # -> {"date": "2026-06-01", "vendor": "Rosewood Farm",
+  #     "item": "heirloom tomatoes", "qty": 12,
+  #     "unit_price": 3.5, "total": 42.0}
+  ```
+starter_code: |
+  def parse_entry(line):
+      return None
+function_name: parse_entry
+input_mode: function
+solution_sketch: Split on the pipe, reject unless there are 5 fields, then convert qty with int() and price with float() inside try/except, rejecting non-positive quantities; round the price and total to 2 places.
+sample_solution: |
+  def parse_entry(line):
+      fields = line.split("|")
+      if len(fields) != 5:
+          return None
+      date, vendor, item, qty_text, price_text = fields
+      try:
+          qty = int(qty_text)
+      except ValueError:
+          return None
+      if qty <= 0:
+          return None
+      try:
+          price = float(price_text)
+      except ValueError:
+          return None
+      unit_price = round(price, 2)
+      total = round(qty * unit_price, 2)
+      return {
+          "date": date,
+          "vendor": vendor,
+          "item": item,
+          "qty": qty,
+          "unit_price": unit_price,
+          "total": total,
+      }
+hints:
+  - level: 1
+    text: Start with line.split("|"); if the resulting list is not exactly 5 items long the line is malformed no matter what else is true.
+  - level: 2
+    text: int() and float() raise ValueError on bad text, so wrap each conversion in its own try/except and return None on failure. Check qty <= 0 only after the int conversion succeeds.
+  - level: 3
+    text: Round both unit_price and total with round(value, 2) so the money fields carry exactly two decimals, then assemble the six-key dictionary.
+tests:
+  public:
+    - name: well_formed_line
+      input: "2026-06-01|Rosewood Farm|heirloom tomatoes|12|3.50"
+      expected: {"date": "2026-06-01", "vendor": "Rosewood Farm", "item": "heirloom tomatoes", "qty": 12, "unit_price": 3.5, "total": 42.0}
+    - name: too_few_fields
+      input: "2026-06-01|Rosewood Farm|heirloom tomatoes|12"
+      expected: null
+    - name: qty_not_a_number
+      input: "2026-06-02|Hillside Dairy|goat cheese|many|6.00"
+      expected: null
+  validation:
+    - name: zero_quantity_rejected
+      input: "2026-06-02|Hillside Dairy|goat cheese|0|6.00"
+      expected: null
+    - name: price_not_a_number
+      input: "2026-06-03|Bramble Orchard|cider|3|market"
+      expected: null
+    - name: total_rounds_to_two_places
+      input: "2026-06-03|Rosewood Farm|basil|7|1.15"
+      expected: {"date": "2026-06-03", "vendor": "Rosewood Farm", "item": "basil", "qty": 7, "unit_price": 1.15, "total": 8.05}
+    - name: too_many_fields
+      input: "2026-06-01|Rosewood Farm|basil|7|1.15|extra"
+      expected: null
+    - name: whole_number_price
+      input: "2026-06-04|Hillside Dairy|butter|2|4"
+      expected: {"date": "2026-06-04", "vendor": "Hillside Dairy", "item": "butter", "qty": 2, "unit_price": 4.0, "total": 8.0}
+explanation_markdown: |
+  Parsing is where messy real input meets a clean internal shape, so the function
+  does two jobs at once: it validates and it converts. The field-count check comes
+  first because nothing else can be trusted until the line splits into the five
+  parts you expect. After that, `int()` and `float()` are the natural validators -
+  they already raise `ValueError` on junk, so a narrow `try/except` around each
+  turns "this text is not a number" into a clean `None` without a pile of manual
+  character checks.
+
+  Ordering the checks matters because Stage 2 will report *why* a line was
+  rejected, and it must agree with this precedence. Rounding both money fields to
+  two places keeps every downstream sum honest: if the per-line totals already
+  carry cents-level precision, the cooperative's grand totals will too.
+common_mistakes:
+  - Using a bare except that also swallows a genuine bug, instead of catching ValueError from the number conversions specifically.
+  - Checking qty <= 0 before converting the text, so a value like "0" or "-3" is compared as a string.
+  - Forgetting to round, so unit_price or total carries a long floating-point tail that breaks later comparisons.
+  - Treating a line with too many fields as valid by unpacking only the first five and ignoring the rest.

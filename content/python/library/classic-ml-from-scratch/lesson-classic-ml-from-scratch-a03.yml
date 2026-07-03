@@ -1,0 +1,103 @@
+id: lesson.library.classic_ml_from_scratch.a03
+kind: lesson
+version: 1
+language: python
+title: 'Gradient Descent: Learning as Rolling Downhill'
+slug: lesson-classic-ml-from-scratch-a03
+difficulty: medium
+concepts:
+  - ai.classic_ml
+  - ai.gradients_autodiff
+prerequisites:
+  - ai.classic_ml
+  - python.functions
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.classic_ml_from_scratch.a03
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original gradient-descent walkthrough framed around fitting a bakery's oven-temperature model, with fresh worked code and a hand-computed example.
+body_markdown: |
+  k-NN stored the data; k-means summarized it with centroids. The third — and
+  most consequential — way to learn is to write a tiny formula with unknown
+  numbers in it, then *tune the numbers until the formula fits*. Every neural
+  network ever trained, including the ones behind chat assistants, is this
+  idea at scale.
+
+  A bakery suspects bake time relates to loaf weight: `time = w * weight + b`.
+  The unknowns `w` and `b` are the **parameters**. How wrong are they? Measure
+  it — for each past bake, compare prediction to truth and average the squared
+  misses:
+
+  ```python
+  def mse(w, b, data):
+      return sum((w * x + b - y) ** 2 for x, y in data) / len(data)
+  ```
+
+  This is the **loss function**, and it turns learning into a search: find
+  the `(w, b)` where the loss is smallest. Picture the loss as a landscape
+  over all possible parameter pairs — a smooth bowl, for MSE. Learning is
+  finding the bottom of the bowl.
+
+  ### The gradient points uphill
+
+  At any point on the landscape, the **gradient** is the vector of partial
+  derivatives — the direction of steepest *increase*. For the bakery's loss:
+
+  ```python
+  def gradients(w, b, data):
+      n = len(data)
+      dw = sum(2 * (w * x + b - y) * x for x, y in data) / n
+      db = sum(2 * (w * x + b - y) for x, y in data) / n
+      return dw, db
+  ```
+
+  If the gradient points uphill, walk the other way. That single sentence is
+  **gradient descent**:
+
+  ```python
+  for _ in range(steps):
+      dw, db = gradients(w, b, data)
+      w -= lr * dw
+      b -= lr * db
+  ```
+
+  ### The learning rate: the one knob that matters most
+
+  `lr` — the learning rate — scales each step, and it embodies a real
+  tension:
+
+  - **Too small**: thousands of timid steps, training crawls.
+  - **Too large**: each step overshoots the valley floor and lands *higher*
+    on the far wall; the loss oscillates and then explodes toward infinity.
+    Divergence looks like loss values growing without bound — a trace you
+    will learn to recognize on sight in the exercises.
+
+  Watching a training loop's loss go 12.0 → 4.1 → 1.3 → 0.9 (healthy) versus
+  12.0 → 15.8 → 41.2 → 388.0 (lr too high) teaches more intuition than any
+  formula.
+
+  ### Why this one scales when the others don't
+
+  k-NN scans everything per query; k-means needs the "mean" to be computable.
+  Gradient descent asks only one thing: that the loss be *differentiable*
+  with respect to the parameters. That works for 2 parameters or 2 billion —
+  the recipe is identical: compute loss, compute gradients, step downhill,
+  repeat. What changes at scale is only *how gradients get computed*: by hand
+  here, but automatically for big models — which is exactly what you will
+  build next in the autodiff area. The perceptron exercises in this area are
+  the historical bridge: a one-neuron model whose update rule is gradient
+  descent wearing 1950s clothing.
+checkpoints:
+  - question: What single requirement does gradient descent place on a model, and why does that make it scale where k-NN and k-means don't?
+    answer: The loss must be differentiable with respect to the parameters — nothing else; the identical loop (loss, gradient, step) then works for two parameters or billions, whereas k-NN scans all data per query and k-means needs computable cluster means.
+    explanation: Differentiability is the universal interface — it's why one optimization idea underlies everything from line-fitting to language models.
+  - question: A training loop's loss trace reads 8.2, 11.9, 35.0, 210.7. What is happening mechanically, and what is the fix?
+    answer: The learning rate is too high — each step overshoots the valley floor and lands higher on the opposite wall, so steps compound upward and the loss diverges; reduce the learning rate.
+    explanation: Reading loss traces is a practitioner's reflex — monotone decrease is healthy, oscillating growth is overshoot, and a plateau may mean the rate is too small.
+  - question: Why does gradient descent update by subtracting the gradient rather than adding it?
+    answer: The gradient points in the direction of steepest increase of the loss; stepping opposite to it moves toward lower loss — downhill in the landscape.
+    explanation: The sign convention encodes the entire geometry — flipping it turns learning into anti-learning that actively worsens the fit.

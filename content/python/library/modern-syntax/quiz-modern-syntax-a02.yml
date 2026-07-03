@@ -1,0 +1,93 @@
+id: quiz.library.modern_syntax.a02
+kind: quiz
+version: 1
+language: python
+title: Modern Syntax Mechanics
+slug: quiz-modern-syntax-a02
+difficulty: medium
+concepts:
+  - python.modern_syntax
+prerequisites:
+  - python.modern_syntax
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.modern_syntax.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax quiz on walrus mechanics, parameter-kind markers, guards, and sequence patterns.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: 'What does the loop `while (chunk := reader.take(64)):` do that a plain while loop cannot do as cleanly?'
+    choices:
+      - Assigns each read to chunk AND tests its truthiness in one place, eliminating the duplicated priming read before the loop
+      - Reads twice as fast by caching
+      - Guarantees chunk is never empty inside the body
+      - Makes chunk local to the loop
+    correct_choice: Assigns each read to chunk AND tests its truthiness in one place, eliminating the duplicated priming read before the loop
+    explanation: |
+      The classic alternative needs a read before the loop plus one at the
+      bottom; the walrus fuses produce-name-test into the condition itself.
+    concepts:
+      - python.modern_syntax
+  - id: q2
+    prompt: 'Given def connect(host, /, port, *, timeout): which call is legal?'
+    choices:
+      - connect("db.local", 5432, timeout=30)
+      - connect(host="db.local", port=5432, timeout=30)
+      - connect("db.local", 5432, 30)
+      - connect("db.local", port=5432, 30)
+    correct_choice: connect("db.local", 5432, timeout=30)
+    explanation: |
+      host is positional-only (no host= spelling), timeout is keyword-only
+      (no bare 30), and positional arguments can never follow keyword ones.
+      Only the first call satisfies all three rules.
+    concepts:
+      - python.modern_syntax
+  - id: q3
+    prompt: 'In `case [first, *middle, last]:` matched against ["a", "b", "c", "d"], what is bound?'
+    choices:
+      - first="a", middle=["b", "c"], last="d"
+      - first="a", middle=("b", "c"), last="d"
+      - first="a", middle="b", last=["c", "d"]
+      - The pattern fails — starred captures need exact length
+    correct_choice: first="a", middle=["b", "c"], last="d"
+    explanation: |
+      Sequence patterns destructure like unpacking assignments: the star
+      absorbs the variable-length middle as a list, requiring only that the
+      sequence has at least two elements.
+    concepts:
+      - python.modern_syntax
+  - id: q4
+    prompt: What does the f-string f"{count=}" evaluate to when count is 7?
+    choices:
+      - '"count=7"'
+      - '"7"'
+      - '"count"'
+      - A SyntaxError — = is not allowed in format specs
+    correct_choice: '"count=7"'
+    explanation: |
+      The trailing = renders the expression text, an equals sign, and the
+      value — debug printing without typing the name twice, added in 3.8
+      alongside the walrus.
+    concepts:
+      - python.modern_syntax
+  - id: q5
+    prompt: |
+      In a match statement, when is a case's guard (`if` clause) evaluated,
+      and what may it reference?
+    choices:
+      - After the pattern matches and binds its names — the guard may use those freshly bound names, and a False result falls through to the next case
+      - Before the pattern is tried, using only outer variables
+      - Once, before the whole match statement
+      - Guards run for every case regardless of pattern success
+    correct_choice: After the pattern matches and binds its names — the guard may use those freshly bound names, and a False result falls through to the next case
+    explanation: |
+      Bind-then-guard ordering is what lets cases share a shape and split on
+      conditions like value ranges — with fall-through keeping dispatch
+      total.
+    concepts:
+      - python.modern_syntax

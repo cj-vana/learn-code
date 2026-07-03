@@ -1,0 +1,126 @@
+id: exercise.library.functools_operator.a10
+kind: exercise
+version: 1
+language: python
+title: Sliding Windows Over Starlight
+slug: functools-operator-a10
+difficulty: hard
+concepts:
+  - python.functools_operator
+  - python.itertools_module
+  - patterns.sliding_window
+prerequisites:
+  - python.lists
+  - python.iterators_generators
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.functools_operator.a10
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original itertools.tee sliding-window recipe framed as smoothing an observatory's one-shot brightness stream.
+prompt_markdown: |
+  An observatory reads a star's brightness as a *one-shot stream* of magnitudes —
+  the kind of iterator you can walk only once. To smooth the signal, analysts want
+  every consecutive window of a fixed width. The canonical stdlib recipe for this
+  uses `itertools.tee`: fork the single stream into several independent iterators,
+  advance each one a little further than the last, and zip them back together.
+
+  Write `brightness_windows(data)` where `data` is a dict with two keys:
+
+  - `"stream"`: a list of brightness magnitudes (numbers), in time order.
+  - `"width"`: a positive integer (`>= 1`), the window size.
+
+  Return a list of windows, where **each window is a list** of `width`
+  consecutive magnitudes. Successive windows overlap, sliding forward by one.
+
+  You must build this with `itertools.tee`, not by slicing the list directly —
+  the point is to practise the independent-consumption property that tee gives
+  you. Concretely: `tee(stream, width)` makes `width` iterators; skip 0 items in
+  the first, 1 in the second, ..., `width - 1` in the last, then `zip` them.
+
+  Edge cases you must handle:
+
+  - If `"width"` is larger than the stream length, there are no full windows:
+    return `[]`.
+  - An empty `"stream"` returns `[]`.
+  - `"width"` of 1 returns one single-element window per magnitude.
+
+  Example: `brightness_windows({"stream": [4, 5, 6, 7], "width": 2})` returns
+  `[[4, 5], [5, 6], [6, 7]]`.
+starter_code: |
+  import itertools
+
+
+  def brightness_windows(data):
+      return []
+function_name: brightness_windows
+input_mode: function
+solution_sketch: Tee the stream into `width` independent iterators, advance the i-th one i steps with next(), then zip them together and convert each resulting tuple window to a list.
+sample_solution: |
+  import itertools
+
+
+  def brightness_windows(data):
+      stream = data["stream"]
+      width = data["width"]
+      iterators = itertools.tee(iter(stream), width)
+      for offset, it in enumerate(iterators):
+          for _ in range(offset):
+              next(it, None)
+      return [list(window) for window in zip(*iterators)]
+hints:
+  - level: 1
+    text: itertools.tee(source, k) returns k iterators that each independently replay the source from where it stood, so advancing one does not disturb the others.
+  - level: 2
+    text: Offset the iterators by different amounts - skip 0 items in the first, 1 in the second, and so on up to width - 1 - using next(it, None) in a loop.
+  - level: 3
+    text: zip(*iterators) stops at the shortest, so the most-advanced iterator caps the window count at len - width + 1; when width exceeds the length, zip yields nothing and you return [].
+tests:
+  public:
+    - name: width_two
+      input: {stream: [4, 5, 6, 7], width: 2}
+      expected: [[4, 5], [5, 6], [6, 7]]
+    - name: width_one
+      input: {stream: [9, 8, 7], width: 1}
+      expected: [[9], [8], [7]]
+    - name: width_wider_than_stream
+      input: {stream: [1, 2], width: 3}
+      expected: []
+  validation:
+    - name: width_three
+      input: {stream: [1, 2, 3, 4, 5], width: 3}
+      expected: [[1, 2, 3], [2, 3, 4], [3, 4, 5]]
+    - name: width_equals_length
+      input: {stream: [10, 20, 30], width: 3}
+      expected: [[10, 20, 30]]
+    - name: empty_stream
+      input: {stream: [], width: 2}
+      expected: []
+    - name: single_element
+      input: {stream: [42], width: 1}
+      expected: [[42]]
+explanation_markdown: |
+  `itertools.tee(source, k)` returns `k` iterators that share one buffered copy of
+  the source, each remembering its own position. Advancing one does not consume the
+  others — that independence is what lets you build a sliding window. By skipping
+  `i` items in the `i`-th iterator, the group becomes staggered starting points:
+  `0, 1, 2, ..., width - 1`. Zipping them then reads one aligned window per step.
+
+  The window count works out cleanly because `zip` stops at its shortest argument.
+  The most-advanced iterator (skipping `width - 1`) has `len(stream) - (width - 1)`
+  items left, so you get exactly `len - width + 1` windows — and when `width`
+  exceeds the length, that count is zero or negative, so `zip` yields nothing and
+  you return `[]` with no special-casing.
+
+  This is the tee-based recipe that predates `itertools.pairwise`; `pairwise` is
+  really just this pattern hard-wired to `width = 2`. Because `tee` buffers items
+  until every branch has consumed them, it works on a genuine one-shot iterator,
+  which plain list slicing could not do without materialising the whole stream.
+common_mistakes:
+  - Slicing the list with stream[i:i+width] instead of teeing, which sidesteps the independent-consumption lesson entirely.
+  - Advancing every tee'd iterator by the same amount, so all windows start at the same place or misalign.
+  - Forgetting to convert each zipped tuple window into a list, leaving tuples in the result.
+  - Assuming tee'd iterators are truly independent copies you can walk in any order without cost; heavily skewed consumption forces tee to buffer everything in between.

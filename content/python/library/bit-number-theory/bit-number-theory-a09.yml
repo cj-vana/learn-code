@@ -1,0 +1,124 @@
+id: exercise.library.bit_number_theory.a09
+kind: exercise
+version: 1
+language: python
+title: The Rotating Cipher Wheel
+slug: bit-number-theory-a09
+difficulty: medium
+concepts:
+  - concepts.number_theory
+prerequisites:
+  - python.loops
+  - python.operators
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.bit_number_theory.a09
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original modular-exponentiation drill framed as a cipher wheel that lands on a position after many repeated turns.
+prompt_markdown: |
+  A brass cipher wheel has `mod` positions numbered `0` to `mod - 1`. Each turn of
+  the crank multiplies the current reading by a fixed `base`, wrapping around the
+  wheel (taking the remainder modulo `mod`). After `exp` turns starting from `1`,
+  the wheel shows `base**exp % mod`. For big exponents you must not build the giant
+  number `base**exp` directly.
+
+  Write `wheel_position(settings)` where `settings` is a dictionary with three
+  integer keys:
+
+  - `"base"`: a non-negative integer.
+  - `"exp"`: the number of turns, an integer with `exp >= 0`.
+  - `"mod"`: the number of positions, an integer with `mod >= 2`.
+
+  Return `base**exp % mod` computed by **square-and-multiply**: square the running
+  base each step, reduce modulo `mod` after every multiply, and fold in a factor
+  only when the current low bit of the exponent is set. You may **not** call the
+  three-argument `pow(base, exp, mod)`; implement the loop yourself.
+
+  Example: `wheel_position({"base": 2, "exp": 10, "mod": 1000})` returns `24`,
+  because `2**10` is `1024` and `1024 % 1000` is `24`.
+starter_code: |
+  def wheel_position(settings):
+      return 0
+function_name: wheel_position
+input_mode: function
+solution_sketch: Reduce the base modulo mod, then loop over the exponent's bits, squaring the base each step and multiplying it into the result whenever the low bit is set.
+sample_solution: |
+  def wheel_position(settings):
+      base = settings["base"] % settings["mod"]
+      exp = settings["exp"]
+      mod = settings["mod"]
+      result = 1
+      while exp:
+          if exp & 1:
+              result = result * base % mod
+          base = base * base % mod
+          exp >>= 1
+      return result
+hints:
+  - level: 1
+    text: Reading the exponent in binary lets you reach base**exp with about log2(exp) multiplications instead of exp of them.
+  - level: 2
+    text: Keep a running result starting at 1; each loop, square the base (mod mod) and shift the exponent right by one bit.
+  - level: 3
+    text: When the low bit exp & 1 is 1, multiply the current base into the result and reduce mod mod; stop when the exponent reaches 0.
+tests:
+  public:
+    - name: power_of_two
+      input:
+        base: 2
+        exp: 10
+        mod: 1000
+      expected: 24
+    - name: zero_exponent
+      input:
+        base: 3
+        exp: 0
+        mod: 7
+      expected: 1
+    - name: small
+      input:
+        base: 5
+        exp: 3
+        mod: 13
+      expected: 8
+  validation:
+    - name: last_digit
+      input:
+        base: 7
+        exp: 4
+        mod: 10
+      expected: 1
+    - name: mid_range
+      input:
+        base: 10
+        exp: 5
+        mod: 6
+      expected: 4
+    - name: large_exponent
+      input:
+        base: 2
+        exp: 20
+        mod: 1000000
+      expected: 48576
+    - name: two_digit_mod
+      input:
+        base: 123
+        exp: 7
+        mod: 100
+      expected: 47
+explanation_markdown: |
+  Square-and-multiply assembles `base**exp` out of the powers `base**1`,
+  `base**2`, `base**4`, ... that correspond to the set bits of `exp` in binary.
+  Each loop iteration squares the running base to reach the next power of two, and
+  whenever the exponent's current low bit is `1` you multiply that power into the
+  answer. Reducing with `% mod` after every multiplication keeps every number
+  below `mod**2`, so the values never explode no matter how large `exp` is. An
+  exponent of `0` skips the loop entirely and returns the identity `1`.
+common_mistakes:
+  - Reducing only at the end instead of after every multiply, which rebuilds the huge number you were trying to avoid.
+  - Squaring the base but forgetting to shift the exponent, so the loop never terminates.
+  - Returning 0 for an exponent of 0 instead of 1.

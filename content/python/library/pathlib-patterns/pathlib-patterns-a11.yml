@@ -1,0 +1,128 @@
+id: exercise.library.pathlib_patterns.a11
+kind: exercise
+version: 1
+language: python
+title: Consolidating the Fleet's Shared Route
+slug: pathlib-patterns-a11
+difficulty: hard
+concepts:
+  - python.pathlib_os
+  - python.lists
+  - python.strings
+prerequisites:
+  - python.strings
+  - python.lists
+  - python.pathlib_os
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.pathlib_patterns.a11
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original longest-common-prefix drill themed around consolidating a shipping fleet's manifest paths, exercising component-wise comparison of PurePosixPath.parts.
+prompt_markdown: |
+  A shipping line stores every manifest under a POSIX-style path. To fold many
+  manifests into a single shared folder, the dispatcher needs the longest
+  directory that **all** of the paths share as a leading run of components.
+
+  Write `common_path_prefix(path_strs)` that takes a list of path strings and
+  returns the longest shared leading path, joined back into a single string.
+
+  - Compare **component by component**, never by partial characters.
+    `["orchard/apple", "orchard/apricot"]` share only `orchard`, giving
+    `"orchard"` — not `"orchard/ap"`.
+  - When every path lands in the same folder, return it:
+    `["fleet/ship-a/log", "fleet/ship-a/cargo", "fleet/ship-a/crew/list"]`
+    returns `"fleet/ship-a"`.
+  - Absolute paths share the root `/` as their first component, so
+    `["/srv/www/index", "/srv/www/style", "/srv/www"]` returns `"/srv/www"`.
+  - A mix of absolute and relative paths shares no leading component (their
+    anchors differ), so return `""`.
+  - If the paths share no leading component at all, return `""`.
+  - An **empty input list** returns `""`.
+  - A list with a **single path** returns that path unchanged.
+
+  Assume the paths contain no `.` or `..` segments. Work on the path strings
+  only; never read a real filesystem.
+starter_code: |
+  from pathlib import PurePosixPath
+
+
+  def common_path_prefix(path_strs):
+      return ""
+function_name: common_path_prefix
+input_mode: function
+solution_sketch: Split each path into PurePosixPath.parts, walk the zipped columns collecting components that agree across all paths, stop at the first mismatch, then rejoin the shared components into a path string.
+sample_solution: |
+  from pathlib import PurePosixPath
+
+
+  def common_path_prefix(path_strs):
+      if not path_strs:
+          return ""
+      part_lists = [PurePosixPath(p).parts for p in path_strs]
+      common = []
+      for column in zip(*part_lists):
+          first = column[0]
+          if all(part == first for part in column):
+              common.append(first)
+          else:
+              break
+      if not common:
+          return ""
+      return str(PurePosixPath(*common))
+hints:
+  - level: 1
+    text: Turn each path into its component tuple with PurePosixPath(p).parts so you can compare whole names instead of characters.
+  - level: 2
+    text: "`zip(*part_lists)` lines the paths up column by column. Keep taking a column while every entry in it matches the first; stop at the first disagreement."
+  - level: 3
+    text: Collect the agreed components, then rebuild with `str(PurePosixPath(*common))`. Guard the empty list and the no-shared-component case by returning "".
+tests:
+  public:
+    - name: shared_folder
+      input: ["fleet/ship-a/log", "fleet/ship-a/cargo", "fleet/ship-a/crew/list"]
+      expected: "fleet/ship-a"
+    - name: no_common
+      input: ["north/dock", "south/dock"]
+      expected: ""
+    - name: absolute_shared
+      input: ["/srv/www/index", "/srv/www/style", "/srv/www"]
+      expected: "/srv/www"
+  validation:
+    - name: empty_list
+      input: []
+      expected: ""
+    - name: single_path
+      input: ["solo/path/here"]
+      expected: "solo/path/here"
+    - name: identical
+      input: ["a/b/c", "a/b/c"]
+      expected: "a/b/c"
+    - name: mixed_anchor
+      input: ["/etc/nginx/conf", "etc/nginx/conf"]
+      expected: ""
+    - name: component_not_character
+      input: ["orchard/apple", "orchard/apricot"]
+      expected: "orchard"
+explanation_markdown: |
+  Splitting each path into `PurePosixPath(...).parts` reduces the problem to a
+  longest-common-prefix over lists of whole components. `zip(*part_lists)`
+  transposes the paths into columns; the first column holds every path's first
+  component, the second holds every second component, and so on. You collect a
+  column only while all of its entries agree, and the moment one disagrees the
+  shared prefix ends.
+
+  Comparing components rather than characters is the crux: `apple` and
+  `apricot` overlap in the letters `ap`, but as folder names they are simply
+  different, so the shared route stops at `orchard`. Rebuilding with
+  `PurePosixPath(*common)` restores the root anchor for absolute paths and joins
+  relative names with `/`. Mixed absolute and relative inputs disagree in their
+  very first component (`/` versus a name), so the shared prefix is empty and
+  you return `""`.
+common_mistakes:
+  - Using string-level `os.path.commonprefix`-style character matching, which would return `orchard/ap` instead of `orchard`.
+  - Forgetting the empty-list and single-path guards, causing an error or a wrong empty result.
+  - Joining the shared components with a bare `"/".join`, which mishandles the absolute-path root anchor.

@@ -1,0 +1,126 @@
+id: exercise.library.functools_operator.a11
+kind: exercise
+version: 1
+language: python
+title: The Bakery's Running Ledger
+slug: functools-operator-a11
+difficulty: hard
+concepts:
+  - python.functools_operator
+  - python.itertools_module
+  - patterns.running_total
+prerequisites:
+  - python.lists
+estimated_time_minutes: 20
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.functools_operator.a11
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original itertools.accumulate drill exercising custom operator functions and the initial= keyword, framed as a bakery ledger.
+prompt_markdown: |
+  A bakery keeps a running ledger over a day's transactions, and different reports
+  want different running combinations: a running total, a running product, a
+  running high-water mark, or a running low. `itertools.accumulate` produces all
+  of these from one iterable plus a two-argument combining function — and the
+  `operator` module supplies those functions by name.
+
+  Write `running_ledger(data)` where `data` is a dict with three keys:
+
+  - `"amounts"`: a list of numbers, in order.
+  - `"op"`: one of the strings `"add"`, `"mul"`, `"max"`, or `"min"`, choosing the
+    combining function.
+  - `"start"`: either a number or `null`. When it is a number, pass it to
+    `accumulate` as the `initial=` value; when it is `null`, do not supply an
+    initial at all.
+
+  Map `"add"` to `operator.add`, `"mul"` to `operator.mul`, `"max"` to the
+  built-in `max`, and `"min"` to the built-in `min`. Return the accumulated list.
+
+  The `initial=` keyword changes the output shape, and that is the crux of this
+  exercise:
+
+  - With **no** initial (`"start"` is `null`), the result has the same length as
+    `"amounts"`, and the first element is just the first amount. An empty
+    `"amounts"` returns `[]`.
+  - With an initial, the result is **one longer**: it begins with `start`, then
+    folds each amount in. An empty `"amounts"` with an initial returns
+    `[start]`.
+
+  Example: `running_ledger({"amounts": [1, 2, 3], "op": "add", "start": null})`
+  returns `[1, 3, 6]`, while `running_ledger({"amounts": [1, 2, 3], "op": "add",
+  "start": 10})` returns `[10, 11, 13, 16]`.
+starter_code: |
+  import itertools
+  import operator
+
+
+  def running_ledger(data):
+      return []
+function_name: running_ledger
+input_mode: function
+solution_sketch: Look the op name up in a dict mapping to operator.add / operator.mul / max / min, then call itertools.accumulate with initial= only when start is not None.
+sample_solution: |
+  import itertools
+  import operator
+
+
+  def running_ledger(data):
+      ops = {"add": operator.add, "mul": operator.mul, "max": max, "min": min}
+      func = ops[data["op"]]
+      start = data["start"]
+      if start is None:
+          return list(itertools.accumulate(data["amounts"], func))
+      return list(itertools.accumulate(data["amounts"], func, initial=start))
+hints:
+  - level: 1
+    text: itertools.accumulate(iterable, func) yields running results; the second argument is any two-argument function, so operator.add, operator.mul, max, and min all fit.
+  - level: 2
+    text: Build a dict from the op name to the function once, then index it - that is cleaner than a chain of if/elif branches.
+  - level: 3
+    text: The initial= keyword prepends the start value and makes the output one element longer. Only pass initial= when start is not None; otherwise call accumulate with just the iterable and func.
+tests:
+  public:
+    - name: running_total_no_start
+      input: {amounts: [1, 2, 3], op: "add", start: null}
+      expected: [1, 3, 6]
+    - name: running_total_with_start
+      input: {amounts: [1, 2, 3], op: "add", start: 10}
+      expected: [10, 11, 13, 16]
+    - name: running_max
+      input: {amounts: [3, 1, 4, 1, 5], op: "max", start: null}
+      expected: [3, 3, 4, 4, 5]
+  validation:
+    - name: running_product_with_start
+      input: {amounts: [2, 3, 4], op: "mul", start: 1}
+      expected: [1, 2, 6, 24]
+    - name: empty_with_start
+      input: {amounts: [], op: "add", start: 5}
+      expected: [5]
+    - name: empty_no_start
+      input: {amounts: [], op: "add", start: null}
+      expected: []
+    - name: running_min
+      input: {amounts: [5, 3, 8, 1], op: "min", start: null}
+      expected: [5, 3, 3, 1]
+explanation_markdown: |
+  `itertools.accumulate` folds a running result across an iterable. Its second
+  positional argument is the binary combiner, defaulting to `operator.add`; passing
+  `operator.mul`, `max`, or `min` instead turns the same machinery into a running
+  product, running maximum, or running minimum. Storing those in a dict keyed by
+  name replaces a stack of `if/elif` branches with a single lookup.
+
+  The subtle part is `initial=`. Without it, `accumulate` seeds the fold with the
+  first element, so the output length equals the input length and an empty input
+  yields nothing. With `initial=start`, the fold is seeded by `start`, which is
+  emitted first, so the output is exactly one element longer — and an empty input
+  still emits `[start]`. That length shift is a common source of off-by-one bugs,
+  which is why passing `initial=` must be conditional on `start` actually being
+  provided rather than folded in as a plain first list element.
+common_mistakes:
+  - Always passing initial=start, so a null start is folded in as a value and shifts or corrupts the result.
+  - Prepending start manually to the amounts list, which double-counts it once accumulate also seeds from it.
+  - Forgetting that no-initial accumulate on an empty list returns [] while with an initial it returns [start].
+  - Reaching for functools.reduce, which collapses to a single value instead of the running list accumulate produces.

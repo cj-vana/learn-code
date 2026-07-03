@@ -1,0 +1,109 @@
+id: quiz.library.autodiff_scalar_engine.a02
+kind: quiz
+version: 1
+language: python
+title: Backward-Pass Machinery
+slug: quiz-autodiff-scalar-engine-a02
+difficulty: hard
+concepts:
+  - ai.gradients_autodiff
+  - python.closures_decorators
+prerequisites:
+  - ai.gradients_autodiff
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.autodiff_scalar_engine.a02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax quiz on closures, topological ordering, and numeric verification in a scalar autodiff engine.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: |
+      Each multiplication node stores `def backward(g): a_grad += g * b_val`.
+      What language feature lets each node's backward remember ITS OWN
+      operands, and when are they captured?
+    choices:
+      - A closure — the inner function captures the enclosing scope's variables at node-creation time
+      - A decorator — @backward registers the operands globally
+      - Default arguments — operands are re-evaluated at call time
+      - A generator — operands are yielded lazily
+    correct_choice: A closure — the inner function captures the enclosing scope's variables at node-creation time
+    explanation: |
+      A thousand multiplications create a thousand closures, each carrying its
+      own operands — the closures unit's "function with a memory", doing the
+      backbone work of every autodiff engine.
+    concepts:
+      - python.closures_decorators
+      - ai.gradients_autodiff
+  - id: q2
+    prompt: |
+      Forward evaluation of an expression DAG must process a node only after
+      which other nodes — and what standard algorithm produces such an order?
+    choices:
+      - All of its inputs; a topological sort of the dependency graph
+      - All of its consumers; a breadth-first search from the output
+      - Its alphabetical predecessors; a lexicographic sort
+      - No constraint; dicts preserve insertion order
+    correct_choice: All of its inputs; a topological sort of the dependency graph
+    explanation: |
+      A node's value needs its inputs' values; topo sort linearizes the DAG so
+      every dependency precedes its dependents. Backward runs the same order
+      reversed.
+    concepts:
+      - patterns.graph_traversal
+      - ai.gradients_autodiff
+  - id: q3
+    prompt: |
+      Why does the gradient checker use the CENTRAL difference
+      (f(x+e) - f(x-e)) / 2e rather than the one-sided (f(x+e) - f(x)) / e?
+    choices:
+      - The symmetric form's error shrinks with e squared rather than e, giving far more accuracy for the same epsilon
+      - The one-sided form needs three function evaluations
+      - Central differences avoid floating-point entirely
+      - One-sided differences only work for increasing functions
+    correct_choice: The symmetric form's error shrinks with e squared rather than e, giving far more accuracy for the same epsilon
+    explanation: |
+      Central differencing cancels the first-order truncation term, so with
+      e = 1e-5 the estimate is accurate to ~1e-10 — tight enough to arbitrate
+      whether an analytic rule is correct.
+    concepts:
+      - ai.gradients_autodiff
+  - id: q4
+    prompt: |
+      An engine frees each node's forward value as soon as the forward pass
+      moves past it, to save memory. Which backward rules break, and which
+      survive?
+    choices:
+      - mul, pow, and exp break (their local gradients need forward values); add survives (its local gradient is 1)
+      - All rules break equally
+      - None break — backward recomputes values as needed
+      - Only tanh breaks, since it is nonlinear
+    correct_choice: mul, pow, and exp break (their local gradients need forward values); add survives (its local gradient is 1)
+    explanation: |
+      d(ab)/da = b, d(a^n)/da needs a, d(e^x)/dx is the output itself — all
+      consumed by backward. Addition routes gradient unchanged. This is why
+      training uses memory proportional to graph depth.
+    concepts:
+      - ai.gradients_autodiff
+  - id: q5
+    prompt: |
+      In the backward loop `for name in reversed(topo_order(graph))`, what
+      exactly has gone wrong if some node distributes gradient to its parents
+      before one of its consumers has processed?
+    choices:
+      - The node's accumulated gradient was incomplete, so everything upstream of it receives an undercount
+      - Nothing — later contributions retroactively propagate
+      - The graph must contain a cycle
+      - Floating-point error, correctable by a smaller epsilon
+    correct_choice: The node's accumulated gradient was incomplete, so everything upstream of it receives an undercount
+    explanation: |
+      Once a node passes its gradient along, later arrivals never flow further —
+      the reversed topological order exists precisely to make every node's
+      inbox complete before it sends.
+    concepts:
+      - ai.gradients_autodiff
+      - patterns.graph_traversal

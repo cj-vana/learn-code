@@ -1,0 +1,134 @@
+id: exercise.library.eval_metrics_for_models.a07
+kind: exercise
+version: 1
+language: python
+title: Clipped Word Overlap for a Tasting Bot
+slug: eval-metrics-for-models-a07
+difficulty: medium
+concepts:
+  - ai.model_evaluation
+prerequisites:
+  - python.dictionaries
+  - python.loops
+  - patterns.hash_map_counting
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.eval_metrics_for_models.a07
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original clipped-unigram-precision drill framed around a wine-tasting caption model, with clipping motivated concretely rather than quoting BLEU papers.
+prompt_markdown: |
+  A model that writes tasting captions keeps repeating the same flattering word to
+  game a naive overlap score. The fix used by BLEU-style metrics is **clipping**:
+  a word can only earn credit as many times as it actually appears in the human
+  reference.
+
+  You are given a single dictionary `job` with two keys, each a list of word
+  tokens (plain strings):
+
+  - `"candidate"`: the tokens the model produced.
+  - `"reference"`: the tokens a human wrote.
+
+  Write `unigram_overlap(job)` returning the **clipped unigram precision**. For
+  every distinct word `w` in the candidate, its clipped count is
+
+  ```
+  clip(w) = min(count of w in candidate, count of w in reference)
+  ```
+
+  The score is the total clipped count divided by the number of tokens in the
+  candidate:
+
+  ```
+  precision = (sum of clip(w) over distinct candidate words) / len(candidate)
+  ```
+
+  Return the result **rounded to 4 decimal places**. If the candidate is empty,
+  return `0.0` (there is nothing to score, and you must not divide by zero).
+
+  Example: with `candidate = ["ripe", "ripe", "berry"]` and
+  `reference = ["ripe", "berry", "tart"]`, the word `ripe` is clipped from 2 down
+  to 1 and `berry` stays at 1, giving `(1 + 1) / 3 = 0.6667`.
+
+  ```python
+  unigram_overlap({"candidate": ["ripe", "ripe", "berry"],
+                   "reference": ["ripe", "berry", "tart"]})
+  # -> 0.6667
+  ```
+starter_code: |
+  from collections import Counter
+
+
+  def unigram_overlap(job):
+      return 0.0
+function_name: unigram_overlap
+input_mode: function
+solution_sketch: Count both lists with Counter, sum min(candidate_count, reference_count) over distinct candidate words, divide by candidate length, round to 4dp, and short-circuit an empty candidate to 0.0.
+sample_solution: |
+  from collections import Counter
+
+
+  def unigram_overlap(job):
+      candidate = job["candidate"]
+      reference = job["reference"]
+      if len(candidate) == 0:
+          return 0.0
+      cand_counts = Counter(candidate)
+      ref_counts = Counter(reference)
+      clipped = sum(min(count, ref_counts[word])
+                    for word, count in cand_counts.items())
+      return round(clipped / len(candidate), 4)
+hints:
+  - level: 1
+    text: Clipping means a word cannot score more times than it appears in the reference, so compare the two per-word counts and keep the smaller.
+  - level: 2
+    text: Build a Counter for the candidate and one for the reference; a missing key in a Counter reads as 0, so ref_counts[word] is safe even for unseen words.
+  - level: 3
+    text: Sum min(candidate_count, reference_count) over the candidate's distinct words, divide by len(candidate), and round to 4 places, returning 0.0 first if the candidate is empty.
+tests:
+  public:
+    - name: repeated_word_clipped
+      input: {"candidate": ["ripe", "ripe", "berry"], "reference": ["ripe", "berry", "tart"]}
+      expected: 0.6667
+    - name: empty_candidate
+      input: {"candidate": [], "reference": ["ripe", "berry"]}
+      expected: 0.0
+    - name: perfect_match
+      input: {"candidate": ["a", "b", "c"], "reference": ["a", "b", "c"]}
+      expected: 1.0
+  validation:
+    - name: heavy_repeat
+      input: {"candidate": ["oak", "oak", "oak"], "reference": ["oak"]}
+      expected: 0.3333
+    - name: partial_clip
+      input: {"candidate": ["smoke", "smoke", "pear", "pear", "pear"], "reference": ["smoke", "pear", "pear"]}
+      expected: 0.6
+    - name: no_overlap
+      input: {"candidate": ["moss", "fern"], "reference": ["stone", "clay"]}
+      expected: 0.0
+    - name: clip_to_half
+      input: {"candidate": ["honey", "honey", "honey", "honey"], "reference": ["honey", "honey"]}
+      expected: 0.5
+explanation_markdown: |
+  Plain overlap (fraction of candidate words that appear anywhere in the reference)
+  is easy to cheat: repeat one good word ten times and the score stays high.
+  Clipping removes that loophole by capping each word's credit at its reference
+  frequency, so `["oak", "oak", "oak"]` against a reference containing one `oak`
+  earns credit for exactly one match, giving `1 / 3`.
+
+  Counters make this a two-line computation. `Counter(candidate)` gives every
+  distinct word with its multiplicity, and reading `ref_counts[word]` returns 0
+  for words the reference never used, so `min(count, ref_counts[word])` is the
+  clipped count without any special cases. Dividing by `len(candidate)` (not the
+  reference length) is what makes this a precision: it asks what fraction of the
+  words the model emitted were justified. The empty-candidate guard both avoids a
+  ZeroDivisionError and matches the convention that a model which says nothing
+  scores zero.
+common_mistakes:
+  - Dividing by the reference length instead of the candidate length, which computes a recall-flavored score rather than precision.
+  - Skipping the clip and just counting how many candidate words appear in the reference, so a repeated word inflates the score.
+  - Forgetting the empty-candidate case and dividing by zero.
+  - Rounding to the wrong number of places or returning the unrounded float, which fails the exact equality check.

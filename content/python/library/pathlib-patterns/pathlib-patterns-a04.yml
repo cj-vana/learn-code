@@ -1,0 +1,100 @@
+id: exercise.library.pathlib_patterns.a04
+kind: exercise
+version: 1
+language: python
+title: Straightening a Harbor Route
+slug: pathlib-patterns-a04
+difficulty: medium
+concepts:
+  - python.pathlib_os
+  - python.strings
+prerequisites:
+  - python.strings
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.pathlib_patterns.a04
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original harbor crate-route framing for lexical path normalization with os.path.normpath.
+prompt_markdown: |
+  A harbor logs the route a crate takes between docks as a string like
+  `dock/west/../east`, full of detours and doubled slashes. Before storing it the
+  system normalizes the route **lexically** — collapsing `.`, `..`, and repeated
+  slashes purely as text, without ever consulting a real map.
+
+  Write `normalize_path(path_str)` that returns the normalized path using
+  `os.path.normpath`. The rules:
+
+  - `dock/./crate` returns `dock/crate` (a lone `.` means "stay put").
+  - `dock/west/../east` returns `dock/east` (`..` cancels the previous segment).
+  - `dock//crate` returns `dock/crate` (repeated slashes collapse to one).
+  - An empty string returns `'.'`.
+  - A `..` that would climb above an absolute root is clamped:
+    `/var/../../etc` returns `/etc`.
+  - A leading `..` on a relative path is kept: `../attic` returns `../attic`.
+
+  Because this is pure string math, it never checks whether any dock exists.
+starter_code: |
+  import os.path
+
+
+  def normalize_path(path_str):
+      return ""
+function_name: normalize_path
+input_mode: function
+solution_sketch: Return os.path.normpath(path_str), which lexically folds ".", "..", and duplicate separators; it returns "." for the empty string and clamps ".." at an absolute root.
+sample_solution: |
+  import os.path
+
+
+  def normalize_path(path_str):
+      return os.path.normpath(path_str)
+hints:
+  - level: 1
+    text: The standard library already has a function that collapses ".", "..", and repeated slashes as pure text, with no filesystem access.
+  - level: 2
+    text: os.path.normpath does exactly this lexical folding, unlike pathlib, which deliberately leaves ".." in place.
+  - level: 3
+    text: Return os.path.normpath(path_str); it yields "." for "", clamps ".." above an absolute root, and keeps a leading ".." on relative paths.
+tests:
+  public:
+    - name: single_dot
+      input: "dock/./crate"
+      expected: "dock/crate"
+    - name: parent_cancels
+      input: "dock/west/../east"
+      expected: "dock/east"
+    - name: collapse_double_slash
+      input: "dock//crate"
+      expected: "dock/crate"
+  validation:
+    - name: empty_string
+      input: ""
+      expected: "."
+    - name: clamp_above_root
+      input: "/var/../../etc"
+      expected: "/etc"
+    - name: keep_leading_parent
+      input: "../attic"
+      expected: "../attic"
+    - name: unwind_to_parent
+      input: "hold/bay/../../.."
+      expected: ".."
+explanation_markdown: |
+  `os.path.normpath` folds a path lexically: it drops `.` segments, cancels each
+  `..` against the segment before it, and squeezes runs of `/` down to one. It
+  does all of this as string arithmetic, never asking the operating system
+  whether a path exists, which is why it is safe and deterministic in a sandbox.
+  Two behaviours are worth remembering. On an absolute path, `..` cannot rise
+  above the root, so `/var/../../etc` clamps to `/etc`. On a relative path there
+  is no known root, so a leading `..` is preserved (`../attic` stays put). Note
+  that `pathlib.PurePath` intentionally does **not** collapse `..`, because that
+  would change meaning in the presence of symlinks — so `os.path.normpath` is the
+  right tool when you specifically want the lexical fold.
+common_mistakes:
+  - Reaching for PurePosixPath and expecting it to resolve "..", which it deliberately leaves untouched.
+  - Assuming ".." on an absolute path can escape the root, instead of being clamped there.
+  - Returning "" for the empty-string input rather than the "." that normpath produces.

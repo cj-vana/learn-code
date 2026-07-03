@@ -1,0 +1,98 @@
+id: quiz.library.memory_lifetime.a02
+kind: quiz
+version: 1
+language: python
+title: Refcounts, GC, and the GIL — Mechanics
+slug: quiz-memory-lifetime-a02
+difficulty: hard
+concepts:
+  - python.memory_model
+  - python.concurrency_model
+prerequisites:
+  - python.memory_model
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.memory_lifetime.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax quiz on refcount mechanics, interning, del semantics, and the GIL's relationship to memory management.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: 'After x = SomeObject(), what does sys.getrefcount(x) typically report, and why?'
+    choices:
+      - 2 — your name plus the temporary reference created by passing x into getrefcount itself
+      - 1 — only your name references it
+      - 0 — counting starts after the first container insertion
+      - It varies randomly between runs
+    correct_choice: 2 — your name plus the temporary reference created by passing x into getrefcount itself
+    explanation: |
+      The measurement adds a reference for the duration of the call — the
+      famous off-by-one that makes getrefcount a hint rather than an oracle.
+    concepts:
+      - python.memory_model
+  - id: q2
+    prompt: 'What does `del items` do when another list also contains the same objects?'
+    choices:
+      - Removes the NAME items and drops one reference to the list — the objects live on through the other list
+      - Frees the list and its contents immediately
+      - Marks the objects for the next GC pass
+      - Raises if any object is still referenced elsewhere
+    correct_choice: Removes the NAME items and drops one reference to the list — the objects live on through the other list
+    explanation: |
+      del unbinds a name; objects die only when their LAST reference goes.
+      "del deletes variables, not objects" resolves a whole family of
+      confusions.
+    concepts:
+      - python.memory_model
+  - id: q3
+    prompt: |
+      "a" * 3 == "aaa" is always True, but ("a" * 3) is "aaa" may be True or
+      False depending on context. What explains the difference?
+    choices:
+      - String interning is an optimization applied to some compile-time strings — identity for equal strings is an implementation accident, equality is a guarantee
+      - The * operator returns a subclass of str
+      - is compares lengths before contents
+      - Multiplied strings are stored in a separate pool
+    correct_choice: String interning is an optimization applied to some compile-time strings — identity for equal strings is an implementation accident, equality is a guarantee
+    explanation: |
+      Interning shares some identical strings to save memory; when and which
+      is version- and context-dependent, which is exactly why correct code
+      never uses is for string comparison.
+    concepts:
+      - python.memory_model
+  - id: q4
+    prompt: What does CPython's Global Interpreter Lock actually protect?
+    choices:
+      - The interpreter's internal state — reference counts above all — by letting only one thread execute Python bytecode at a time
+      - Your data structures from all race conditions
+      - Files from concurrent writes
+      - The GC from running during allocations
+    correct_choice: The interpreter's internal state — reference counts above all — by letting only one thread execute Python bytecode at a time
+    explanation: |
+      Non-atomic refcount updates from parallel threads would corrupt memory
+      management; the GIL serializes bytecode to keep them safe. It does NOT
+      make your own compound operations thread-safe.
+    concepts:
+      - python.concurrency_model
+      - python.memory_model
+  - id: q5
+    prompt: |
+      weakref.finalize registers callbacks for three objects in order A, B, C.
+      At interpreter exit (none reclaimed earlier), in what order do the
+      finalizers run?
+    choices:
+      - C, B, A — most recently registered first, like a stack of teardown actions
+      - A, B, C — registration order
+      - Alphabetical by object repr
+      - Simultaneously on the GC thread
+    correct_choice: C, B, A — most recently registered first, like a stack of teardown actions
+    explanation: |
+      finalize guarantees LIFO ordering at exit — matching the setup/teardown
+      stack discipline of context managers, and unlike __del__, it is a
+      defined order you can rely on.
+    concepts:
+      - python.memory_model

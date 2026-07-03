@@ -1,0 +1,102 @@
+id: exercise.library.graphs_lite.a06
+kind: exercise
+version: 1
+language: python
+title: Loops in the Irrigation Grid
+slug: graphs-lite-a06
+difficulty: medium
+concepts:
+  - patterns.dfs
+  - patterns.graph_traversal
+  - python.sets
+prerequisites:
+  - python.dictionaries
+estimated_time_minutes: 18
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.graphs_lite.a06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original irrigation-pipe scenario detecting a cycle in an undirected graph via parent-aware DFS.
+prompt_markdown: |
+  A greenhouse irrigation network joins junctions with two-way pipes. If the
+  pipes ever form a loop, water can circulate wastefully, so the maintenance crew
+  wants to know whether any loop exists.
+
+  You are given `data` with `nodes` (all junctions) and `edges` (a list of
+  `[a, b]` two-way pipes, with no pipe repeated and no pipe from a junction to
+  itself). Write `has_cycle_undirected(data)` that returns `True` if the network
+  contains at least one cycle and `False` otherwise.
+starter_code: |
+  def has_cycle_undirected(data):
+      return False
+function_name: has_cycle_undirected
+input_mode: function
+solution_sketch: Traverse each component tracking the node you arrived from; seeing an already-visited neighbour that is not that parent means a cycle.
+sample_solution: |
+  def has_cycle_undirected(data):
+      nodes = data["nodes"]
+      edges = data["edges"]
+      adjacency = {node: [] for node in nodes}
+      for node_a, node_b in edges:
+          adjacency[node_a].append(node_b)
+          adjacency[node_b].append(node_a)
+
+      seen = set()
+      for start in nodes:
+          if start in seen:
+              continue
+          stack = [(start, None)]
+          seen.add(start)
+          while stack:
+              junction, parent = stack.pop()
+              for neighbour in adjacency[junction]:
+                  if neighbour not in seen:
+                      seen.add(neighbour)
+                      stack.append((neighbour, junction))
+                  elif neighbour != parent:
+                      return True
+      return False
+hints:
+  - level: 1
+    text: In an undirected graph, bumping into an already-visited junction usually signals a loop -- except for the pipe you just came through.
+  - level: 2
+    text: Carry the parent junction alongside each node so you can tell the difference between the edge you arrived on and a genuine back-edge.
+  - level: 3
+    text: A visited neighbour that is not the parent closes a cycle; run this parent-aware traversal starting from every not-yet-seen node to cover all components.
+tests:
+  public:
+    - name: triangle
+      input: {"nodes": [a, b, c], "edges": [[a, b], [b, c], [c, a]]}
+      expected: true
+    - name: open_path
+      input: {"nodes": [a, b, c], "edges": [[a, b], [b, c]]}
+      expected: false
+    - name: two_separate_edges
+      input: {"nodes": [a, b, c, d], "edges": [[a, b], [c, d]]}
+      expected: false
+  validation:
+    - name: single_junction
+      input: {"nodes": [a], "edges": []}
+      expected: false
+    - name: cycle_in_one_component
+      input: {"nodes": [a, b, c, d, e], "edges": [[a, b], [b, c], [d, e], [e, d]]}
+      expected: true
+    - name: square_loop
+      input: {"nodes": [a, b, c, d], "edges": [[a, b], [b, c], [c, d], [d, a]]}
+      expected: true
+explanation_markdown: |
+  Undirected cycle detection hinges on one subtlety: because every pipe appears in
+  both junctions' neighbour lists, you will always see the junction you *just came
+  from*. That is not a cycle. A real cycle shows up when you reach a junction that
+  was already visited through some *other* route -- a neighbour that is visited but
+  is not your parent. Tracking the parent for each node lets you ignore the
+  harmless back-reference and catch the genuine loop. Looping the traversal over
+  every unseen node handles graphs that are split into several disconnected
+  sub-networks, so a loop hiding in any component is still found.
+common_mistakes:
+  - Reporting a cycle the first time any visited neighbour appears, forgetting that the parent always looks visited.
+  - Only starting the search from one node, missing cycles in other components.
+  - Adding both directions of each edge but then treating the graph as if it were directed.

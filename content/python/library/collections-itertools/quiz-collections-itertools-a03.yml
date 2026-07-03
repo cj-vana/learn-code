@@ -1,0 +1,110 @@
+id: quiz.library.collections_itertools.a03
+kind: quiz
+version: 1
+language: python
+title: Collections and Itertools in Practice
+slug: quiz-collections-itertools-a03
+difficulty: medium
+concepts:
+  - python.collections_module
+  - python.itertools_module
+  - concepts.grouping_aggregation
+prerequisites:
+  - python.dictionaries
+  - python.lists
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.collections_itertools.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original mixed-review questions combining defaultdict, deque, groupby, and combinations decisions.
+quiz_type: mixed_review
+questions:
+  - id: q1
+    prompt: |
+      You have `counts = defaultdict(int)` and, just to inspect it, you evaluate
+      `value = counts["missing"]`. What side effect does that read have?
+    choices:
+      - 'The key "missing" is inserted with value 0'
+      - 'A KeyError is raised'
+      - 'Nothing is stored; it only returns 0 without changing the dict'
+      - 'The entire dictionary is cleared'
+    correct_choice: 'The key "missing" is inserted with value 0'
+    explanation: |
+      defaultdict runs its factory on any missing-key access, including a read,
+      so even a lookup inserts "missing": 0. Use .get or `in` when you only want
+      to peek without creating the key.
+    concepts:
+      - python.collections_module
+  - id: q2
+    prompt: |
+      Why must a list be sorted by the grouping key before you call
+      itertools.groupby on that key?
+    choices:
+      - 'groupby only groups consecutive equal keys, so identical keys must be adjacent'
+      - 'groupby sorts the data internally, so sorting first is redundant'
+      - 'groupby requires a fully materialised list rather than an iterator'
+      - 'groupby returns the keys in reverse order unless the input is sorted'
+    correct_choice: 'groupby only groups consecutive equal keys, so identical keys must be adjacent'
+    explanation: |
+      Unlike a SQL GROUP BY, groupby walks the sequence once and starts a new
+      group whenever the key changes, so equal keys that are not adjacent land in
+      separate groups. Sorting first makes them adjacent.
+    concepts:
+      - python.itertools_module
+      - concepts.grouping_aggregation
+  - id: q3
+    prompt: |
+      A `deque(maxlen=3)` already holds `[1, 2, 3]`. You call `d.append(4)`.
+      What does `d` hold now?
+    choices:
+      - 'deque([2, 3, 4], maxlen=3)'
+      - 'deque([1, 2, 3, 4], maxlen=3)'
+      - 'deque([1, 2, 3], maxlen=3)'
+      - 'it raises an overflow error'
+    correct_choice: 'deque([2, 3, 4], maxlen=3)'
+    explanation: |
+      A bounded deque drops the item on the far end when a new append would
+      exceed its maxlen, so appending 4 evicts the oldest value 1. This makes it
+      a ready-made sliding buffer of the last n items.
+    concepts:
+      - python.collections_module
+      - patterns.sliding_window
+  - id: q4
+    prompt: |
+      From rows of `(customer, price)` you want the total spend per customer in a
+      single pass. Which approach is cleanest?
+    choices:
+      - 'Accumulate into a defaultdict(int): totals[customer] += price'
+      - 'Sort the rows by price and take the last one'
+      - 'Enumerate every permutation of the rows with itertools.permutations'
+      - 'Wrap each row in a namedtuple and stop there'
+    correct_choice: 'Accumulate into a defaultdict(int): totals[customer] += price'
+    explanation: |
+      Adding each price into a defaultdict(int) keyed by customer builds the
+      per-customer totals in one pass. Sorting, permuting, or wrapping rows in
+      records does not aggregate the spend.
+    concepts:
+      - python.collections_module
+      - concepts.grouping_aggregation
+  - id: q5
+    prompt: |
+      You must test every unordered pair of stations for compatibility, without
+      pairing a station with itself or checking the same pair twice. Which call
+      is correct?
+    choices:
+      - 'itertools.combinations(stations, 2)'
+      - 'itertools.product(stations, stations)'
+      - 'itertools.permutations(stations, 2)'
+      - 'itertools.chain(stations, stations)'
+    correct_choice: 'itertools.combinations(stations, 2)'
+    explanation: |
+      combinations(stations, 2) yields each unordered pair once and never pairs
+      an element with itself. product and permutations include self-pairs or
+      both orderings, and chain just concatenates.
+    concepts:
+      - python.itertools_module
+      - patterns.brute_force

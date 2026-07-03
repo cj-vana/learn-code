@@ -1,0 +1,243 @@
+id: exercise.library.capstone_ledger.c06
+kind: exercise
+version: 1
+language: python
+title: The Market Ledger - Rendering the Statement
+slug: capstone-ledger-c06
+difficulty: hard
+concepts:
+  - python.string_formatting
+  - python.strings
+prerequisites:
+  - python.dictionaries
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.capstone_ledger.c06
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original final stage of the market ledger capstone; renders one vendor's fee-adjusted statement into a fixed-width plain-text receipt using str.format field widths.
+prompt_markdown: |
+  Stage 6 of the Market Ledger capstone: everything comes together as a printed
+  statement the vendor takes home. Your last job is to render one vendor's record
+  into an exact fixed-width text block.
+
+  Write `render_statement(job)` where `job` is a dictionary with three keys:
+
+  - `"vendor"`: the vendor's name (string).
+  - `"statement"`: that vendor's fee-adjusted record from Stage 4, a dict with
+    `"gross"` (float), `"items"` (a dict mapping item name to integer quantity),
+    `"days_active"` (int), `"fee"` (float) and `"net"` (float).
+  - `"date_range"`: a two-element list `[start, end]` of date strings.
+
+  Return a single string built from these lines, joined with `"\n"` and with **no
+  trailing newline**:
+
+  1. `Vendor: ` followed by the vendor name.
+  2. `Period: ` then the start date, ` to `, then the end date.
+  3. `Market days: ` followed by `days_active`.
+  4. A rule line of exactly 28 dashes (`-` repeated 28 times).
+  5. One line per item, in the order the items appear in the `"items"` dict, where
+     the item name is left-justified in a field of width 20 and the quantity is
+     right-justified in a field of width 8. Use `"{:<20}{:>8}".format(name, qty)`.
+     (An item name longer than 20 characters is not truncated; it simply fills
+     past the column.)
+  6. A second rule line of 28 dashes.
+  7. `Gross`, left-justified in width 20, then the gross right-justified in width 8
+     with exactly 2 decimals: `"{:<20}{:>8.2f}".format("Gross", gross)`.
+  8. The same layout for `Fee` and its value.
+  9. The same layout for `Net` and its value.
+
+  Example output (spaces are significant):
+
+  ```
+  Vendor: Rosewood Farm
+  Period: 2026-06-01 to 2026-06-07
+  Market days: 1
+  ----------------------------
+  heirloom tomatoes         12
+  basil                      7
+  ----------------------------
+  Gross                  50.05
+  Fee                     2.50
+  Net                    47.55
+  ```
+starter_code: |
+  def render_statement(job):
+      return ""
+function_name: render_statement
+input_mode: function
+solution_sketch: Build a list of lines - three header lines, a dash rule, one formatted line per item, another rule, then Gross/Fee/Net formatted with the same width specifiers - and join them with newlines.
+sample_solution: |
+  def render_statement(job):
+      vendor = job["vendor"]
+      statement = job["statement"]
+      start, end = job["date_range"]
+      rule = "-" * 28
+      lines = [
+          f"Vendor: {vendor}",
+          f"Period: {start} to {end}",
+          f"Market days: {statement['days_active']}",
+          rule,
+      ]
+      for item, qty in statement["items"].items():
+          lines.append("{:<20}{:>8}".format(item, qty))
+      lines.append(rule)
+      lines.append("{:<20}{:>8.2f}".format("Gross", statement["gross"]))
+      lines.append("{:<20}{:>8.2f}".format("Fee", statement["fee"]))
+      lines.append("{:<20}{:>8.2f}".format("Net", statement["net"]))
+      return "\n".join(lines)
+hints:
+  - level: 1
+    text: Build the statement as a list of finished line strings, then return "\n".join(lines) at the very end so there is no trailing newline.
+  - level: 2
+    text: "The alignment comes entirely from format specifiers: {:<20} left-justifies text in width 20 and {:>8} right-justifies in width 8. For money use {:>8.2f} to force two decimals."
+  - level: 3
+    text: Iterate statement["items"].items() in its natural order for the item lines, and reuse the exact same width specifiers for the Gross, Fee, and Net footer rows so the columns line up.
+tests:
+  public:
+    - name: two_items
+      input:
+        vendor: "Rosewood Farm"
+        statement:
+          gross: 50.05
+          items: {"heirloom tomatoes": 12, "basil": 7}
+          days_active: 1
+          fee: 2.5
+          net: 47.55
+        date_range: ["2026-06-01", "2026-06-07"]
+      expected: |-
+        Vendor: Rosewood Farm
+        Period: 2026-06-01 to 2026-06-07
+        Market days: 1
+        ----------------------------
+        heirloom tomatoes         12
+        basil                      7
+        ----------------------------
+        Gross                  50.05
+        Fee                     2.50
+        Net                    47.55
+    - name: single_item_zero_fee
+      input:
+        vendor: "Hillside Dairy"
+        statement:
+          gross: 8.0
+          items: {"butter": 2}
+          days_active: 1
+          fee: 0.0
+          net: 8.0
+        date_range: ["2026-06-04", "2026-06-04"]
+      expected: |-
+        Vendor: Hillside Dairy
+        Period: 2026-06-04 to 2026-06-04
+        Market days: 1
+        ----------------------------
+        butter                     2
+        ----------------------------
+        Gross                   8.00
+        Fee                     0.00
+        Net                     8.00
+    - name: larger_totals
+      input:
+        vendor: "Bramble Orchard"
+        statement:
+          gross: 120.0
+          items: {"cider": 40, "apple": 8}
+          days_active: 3
+          fee: 9.6
+          net: 110.4
+        date_range: ["2026-06-01", "2026-06-21"]
+      expected: |-
+        Vendor: Bramble Orchard
+        Period: 2026-06-01 to 2026-06-21
+        Market days: 3
+        ----------------------------
+        cider                     40
+        apple                      8
+        ----------------------------
+        Gross                 120.00
+        Fee                     9.60
+        Net                   110.40
+  validation:
+    - name: three_digit_quantity
+      input:
+        vendor: "Ash Grove"
+        statement:
+          gross: 200.0
+          items: {"plums": 100}
+          days_active: 2
+          fee: 20.0
+          net: 180.0
+        date_range: ["2026-07-01", "2026-07-14"]
+      expected: |-
+        Vendor: Ash Grove
+        Period: 2026-07-01 to 2026-07-14
+        Market days: 2
+        ----------------------------
+        plums                    100
+        ----------------------------
+        Gross                 200.00
+        Fee                    20.00
+        Net                   180.00
+    - name: long_item_name_overflows_column
+      input:
+        vendor: "Cheddar Hollow"
+        statement:
+          gross: 75.0
+          items: {"aged farmhouse cheddar": 5, "curds": 3}
+          days_active: 2
+          fee: 3.75
+          net: 71.25
+        date_range: ["2026-06-10", "2026-06-24"]
+      expected: |-
+        Vendor: Cheddar Hollow
+        Period: 2026-06-10 to 2026-06-24
+        Market days: 2
+        ----------------------------
+        aged farmhouse cheddar       5
+        curds                      3
+        ----------------------------
+        Gross                  75.00
+        Fee                     3.75
+        Net                    71.25
+    - name: fee_two_decimals_padded
+      input:
+        vendor: "Bramble Orchard"
+        statement:
+          gross: 33.33
+          items: {"cider": 3}
+          days_active: 1
+          fee: 1.0
+          net: 32.33
+        date_range: ["2026-06-03", "2026-06-03"]
+      expected: |-
+        Vendor: Bramble Orchard
+        Period: 2026-06-03 to 2026-06-03
+        Market days: 1
+        ----------------------------
+        cider                      3
+        ----------------------------
+        Gross                  33.33
+        Fee                     1.00
+        Net                    32.33
+explanation_markdown: |
+  Rendering is the mirror image of parsing: Stage 1 turned text into structured
+  data, and Stage 6 turns structured data back into text a person reads. The key
+  idea is that alignment is not achieved by counting spaces by hand - it comes from
+  format specifiers. `{:<20}` pads a string on the right to width 20, `{:>8}`
+  pads on the left to width 8, and `{:>8.2f}` does the same while forcing exactly
+  two decimals so every money column ends flush.
+
+  Assembling the whole thing as a list of finished lines and joining with `"\n"`
+  at the end is what guarantees there is no stray trailing newline - a detail that
+  quietly breaks exact-match comparisons if you build the string with `+= "\n"`
+  in a loop instead. Because the label fields and the number fields reuse the same
+  widths on every row, the item lines and the Gross/Fee/Net footer share one clean
+  right-hand column.
+common_mistakes:
+  - Ending the string with a trailing newline by joining with "\n" and then adding one more, or by building it with += inside the loop.
+  - Hand-padding with manual spaces instead of format specifiers, which drifts the moment a value changes width.
+  - Using {:>8} instead of {:>8.2f} for the money rows, so a value like 8.0 prints without its two decimals.
+  - Reordering the item lines (for example sorting them) instead of following the items dict's own order.

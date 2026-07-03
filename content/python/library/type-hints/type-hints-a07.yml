@@ -1,0 +1,136 @@
+id: exercise.library.type_hints.a07
+kind: exercise
+version: 1
+language: python
+title: Labelling Specimens in the Archive
+slug: type-hints-a07
+difficulty: medium
+concepts:
+  - python.type_hints
+prerequisites:
+  - python.lists
+  - python.types
+  - python.conditionals
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.type_hints.a07
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original discriminated-union tagging drill framed around an archive cataloguer stamping each specimen reading with its type label.
+prompt_markdown: |
+  A natural-history archive records one loose reading per specimen card, and the
+  values arrive as a mixed pile: some are whole counts, some are measured
+  decimals, some are written notes, some are yes/no flags, and some cards are
+  blank. Before the pile can be filed, each value must be stamped with a **type
+  tag** so the discriminated-union importer knows how to store it.
+
+  Write `tag_union(values)` that takes **one list** of scalar values and returns
+  a **list of `[tag, value]` pairs** (each pair a two-element list), one per input
+  value in the same order. The `tag` is a string chosen by the value's Python
+  type:
+
+  - `"null"` if the value is `None`
+  - `"bool"` if the value is a boolean (`True` or `False`)
+  - `"int"` if the value is an integer
+  - `"float"` if the value is a floating-point number
+  - `"str"` if the value is a string
+
+  The order of the checks matters. In Python a boolean is a special kind of
+  integer, so `isinstance(True, int)` is `True`. You must test for `bool`
+  **before** `int`, otherwise every flag would be mislabelled `"int"`. Likewise,
+  check for `None` before anything else.
+
+  Example call:
+
+  ```python
+  tag_union([7, True, "moss", None, 2.5])
+  # -> [["int", 7], ["bool", True], ["str", "moss"], ["null", None], ["float", 2.5]]
+  ```
+
+  Each input value is one of those five kinds. An empty input returns an empty
+  list. Return a list, not tuples.
+starter_code: |
+  from typing import Any
+
+
+  def tag_union(values: list[Any]) -> list[list[Any]]:
+      return []
+function_name: tag_union
+input_mode: function
+solution_sketch: Loop over the values; for each, decide the tag by checking None first, then bool, then int, then float, then str, and append a two-element list of the tag and the original value.
+sample_solution: |
+  from typing import Any
+
+
+  def tag_union(values: list[Any]) -> list[list[Any]]:
+      tagged: list[list[Any]] = []
+      for value in values:
+          if value is None:
+              tag = "null"
+          elif isinstance(value, bool):
+              tag = "bool"
+          elif isinstance(value, int):
+              tag = "int"
+          elif isinstance(value, float):
+              tag = "float"
+          else:
+              tag = "str"
+          tagged.append([tag, value])
+      return tagged
+hints:
+  - level: 1
+    text: Walk the list once and decide a single tag string for each value based on its type, then pair the tag with the value.
+  - level: 2
+    text: Order your isinstance checks carefully; None comes first, and bool must be tested before int because isinstance(True, int) is True.
+  - level: 3
+    text: Append [tag, value] for each element so the result is a list of two-element lists in the original order.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: plain_integers
+      input: [1, 2]
+      expected: [["int", 1], ["int", 2]]
+    - name: bool_before_int
+      input: [true, 1]
+      expected: [["bool", true], ["int", 1]]
+    - name: none_becomes_null
+      input: [null]
+      expected: [["null", null]]
+  validation:
+    - name: strings_and_floats
+      input: ["moss", 3.5]
+      expected: [["str", "moss"], ["float", 3.5]]
+    - name: all_five_kinds
+      input: [true, 7, 2.5, "note", null]
+      expected: [["bool", true], ["int", 7], ["float", 2.5], ["str", "note"], ["null", null]]
+    - name: false_and_zero
+      input: [false, 0]
+      expected: [["bool", false], ["int", 0]]
+    - name: negative_and_zero_float
+      input: [-4, 0.0]
+      expected: [["int", -4], ["float", 0.0]]
+    - name: strings_only
+      input: ["a", "b", "c"]
+      expected: [["str", "a"], ["str", "b"], ["str", "c"]]
+explanation_markdown: |
+  This is a discriminated union: every value carries a tag that names its variant
+  so a later stage can dispatch on it without re-inspecting the raw value. The one
+  subtlety is Python's type hierarchy. `bool` is a subclass of `int`, so
+  `isinstance(True, int)` returns `True`. If you checked `int` first, every flag
+  would be stamped `"int"` and the boolean variant would never appear. Ordering
+  the checks None -> bool -> int -> float -> str resolves each value to its most
+  specific tag.
+
+  The pass is a single linear scan, O(n) in the number of values, and it never
+  mutates the input. Type tags like these are what a runtime type-checker or a
+  serialisation format builds on when a field can legitimately hold more than one
+  shape of data.
+common_mistakes:
+  - Checking int before bool, which mislabels True and False as "int" because booleans are a subclass of int.
+  - Forgetting the None case, so blank cards fall through to the string branch and are tagged "str".
+  - Returning tuples like (tag, value) instead of two-element lists, so the output does not match the expected structure.

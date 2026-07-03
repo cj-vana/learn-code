@@ -1,0 +1,132 @@
+id: exercise.library.concurrency_foundations.a09
+kind: exercise
+version: 1
+language: python
+title: Backing Off From a Silent Buoy
+slug: concurrency-foundations-a09
+difficulty: medium
+concepts:
+  - python.concurrency_model
+  - patterns.simulation
+prerequisites:
+  - python.lists
+  - python.loops
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.concurrency_foundations.a09
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original capped exponential backoff computed as a pure schedule (no real sleep), framed as a dock-master retrying a silent buoy sensor.
+prompt_markdown: |
+  A dock-master keeps losing contact with a weather buoy. Rather than hammering it,
+  the retry logic waits longer between each attempt — capped exponential backoff.
+  You compute the whole delay schedule up front as pure numbers; nothing actually
+  sleeps.
+
+  Write `retry_with_backoff_schedule(payload)`. The single argument is a dict:
+
+  - `payload["attempts"]`: a non-negative integer, how many delays to produce.
+  - `payload["base_delay"]`: a non-negative integer, the first delay in milliseconds.
+  - `payload["factor"]`: a positive integer the delay is multiplied by each step.
+  - `payload["max_delay"]`: an integer ceiling; no delay may exceed it.
+
+  Return a list of `attempts` integers. The delay before attempt `i` (starting at
+  `i = 0`) is `base_delay * factor ** i`, then clamped so it never exceeds
+  `max_delay`. If `attempts` is 0, return `[]`.
+
+  Example: `{"attempts": 5, "base_delay": 100, "factor": 2, "max_delay": 1000}`
+  returns `[100, 200, 400, 800, 1000]` — the raw fifth value would be 1600, so it
+  is capped to 1000.
+starter_code: |
+  def retry_with_backoff_schedule(payload):
+      return []
+function_name: retry_with_backoff_schedule
+input_mode: function
+solution_sketch: For i in range(attempts), compute base_delay * factor ** i, cap it with min(..., max_delay), and collect into a list.
+sample_solution: |
+  def retry_with_backoff_schedule(payload):
+      attempts = payload["attempts"]
+      base_delay = payload["base_delay"]
+      factor = payload["factor"]
+      max_delay = payload["max_delay"]
+      schedule = []
+      for i in range(attempts):
+          raw = base_delay * factor ** i
+          schedule.append(min(raw, max_delay))
+      return schedule
+hints:
+  - level: 1
+    text: There is no real waiting here — you are just building a list of numbers, one per attempt.
+  - level: 2
+    text: For attempt i, the raw delay is base_delay times factor raised to the power i; iterate i over range(attempts).
+  - level: 3
+    text: Clamp each raw delay with min(raw, max_delay) before appending, so the sequence flattens out once it hits the ceiling.
+tests:
+  public:
+    - name: standard_capped
+      input:
+        attempts: 5
+        base_delay: 100
+        factor: 2
+        max_delay: 1000
+      expected: [100, 200, 400, 800, 1000]
+    - name: zero_attempts
+      input:
+        attempts: 0
+        base_delay: 100
+        factor: 2
+        max_delay: 1000
+      expected: []
+    - name: constant_factor_one
+      input:
+        attempts: 4
+        base_delay: 50
+        factor: 1
+        max_delay: 1000
+      expected: [50, 50, 50, 50]
+  validation:
+    - name: base_above_ceiling
+      input:
+        attempts: 3
+        base_delay: 500
+        factor: 3
+        max_delay: 400
+      expected: [400, 400, 400]
+    - name: never_reaches_cap
+      input:
+        attempts: 3
+        base_delay: 10
+        factor: 2
+        max_delay: 10000
+      expected: [10, 20, 40]
+    - name: factor_three
+      input:
+        attempts: 4
+        base_delay: 100
+        factor: 3
+        max_delay: 5000
+      expected: [100, 300, 900, 2700]
+    - name: base_zero
+      input:
+        attempts: 3
+        base_delay: 0
+        factor: 2
+        max_delay: 100
+      expected: [0, 0, 0]
+explanation_markdown: |
+  Exponential backoff spreads retries apart so a struggling peer gets room to
+  recover instead of a flood of immediate retries. Each step multiplies by `factor`,
+  and the `min(raw, max_delay)` clamp keeps the wait from growing without bound —
+  once the raw value passes the ceiling, every later delay sits at the ceiling.
+  Computing the schedule as a pure list separates the policy (how long to wait) from
+  the mechanism (actually sleeping), which is exactly what makes retry logic
+  testable: real code would feed these numbers to a timer, but the numbers
+  themselves are deterministic. Real systems usually add random jitter on top; that
+  is omitted here precisely because it would break reproducibility.
+common_mistakes:
+  - Clamping with max() instead of min(), which raises delays up to the ceiling rather than capping them.
+  - Multiplying the previous delay by factor after it was already clamped, so the growth restarts from the capped value instead of the true exponential.
+  - Using range(1, attempts) or otherwise starting the exponent at 1, shifting every delay one step too high.

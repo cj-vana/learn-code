@@ -1,0 +1,104 @@
+id: quiz.library.data_wrangling_python.a01
+kind: quiz
+version: 1
+language: python
+title: Which Wrangling Move Fits?
+slug: quiz-data-wrangling-python-a01
+difficulty: medium
+concepts:
+  - concepts.grouping_aggregation
+  - python.dictionaries
+prerequisites:
+  - concepts.grouping_aggregation
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.data_wrangling_python.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pattern-recognition quiz on picking group-by, join, dedupe, and pivot operations for record-processing tasks.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      A flower stall's sales log is a list of dicts with "variety" and "stems".
+      You want total stems sold per variety. Which operation is this?
+    choices:
+      - A group-by with a sum aggregate, accumulated in a dict keyed by variety
+      - An inner join between the log and itself on variety
+      - A multi-key sort by variety then stems
+      - A pivot with stems as the row label
+    correct_choice: A group-by with a sum aggregate, accumulated in a dict keyed by variety
+    explanation: |
+      Per-key totals are the definition of group-by + aggregate: bucket each row
+      by variety, adding its stems into a running sum per bucket.
+    concepts:
+      - concepts.grouping_aggregation
+  - id: q2
+    prompt: |
+      Ferry bookings live in one list of dicts and passenger contact details in
+      another, both carrying a "passenger_id" field. Producing one combined row
+      per booking with the contact fields attached is which operation?
+    choices:
+      - A join on passenger_id, using a dict index built over the contacts
+      - A group-by over both lists at once
+      - Concatenating the two lists and deduplicating
+      - Sorting both lists by passenger_id
+    correct_choice: A join on passenger_id, using a dict index built over the contacts
+    explanation: |
+      Combining columns from two tables via a shared key is a join; indexing the
+      contacts by passenger_id first makes each booking's lookup O(1).
+    concepts:
+      - concepts.grouping_aggregation
+      - python.dictionaries
+  - id: q3
+    prompt: |
+      Volunteers may submit the sign-up form multiple times, and only the newest
+      submission per email should count. Scanning the list and overwriting a
+      dict entry keyed by email implements what, and why does it keep the newest?
+    choices:
+      - Deduplication by key — later writes to the same dict key replace earlier ones
+      - A stable sort — dicts keep their entries sorted by insertion time
+      - A pivot — each email becomes a column
+      - A filter — dicts reject duplicate keys with an error
+    correct_choice: Deduplication by key — later writes to the same dict key replace earlier ones
+    explanation: |
+      Assigning d[email] = row repeatedly leaves the last row scanned, so a
+      forward scan naturally keeps each key's newest record.
+    concepts:
+      - concepts.grouping_aggregation
+      - python.dictionaries
+  - id: q4
+    prompt: |
+      A long log holds one row per (weather station, hour, temperature). You want
+      a structure where result["north-ridge"]["09:00"] returns a temperature.
+      Which reshaping is this?
+    choices:
+      - A pivot from long rows into a nested dict of row and column keys
+      - A left join of the log with an hours table
+      - A group-by producing one list per station
+      - A transpose of the original list of dicts
+    correct_choice: A pivot from long rows into a nested dict of row and column keys
+    explanation: |
+      Turning (row-label, column-label, value) triples into nested mappings is a
+      pivot: the outer key selects the station row, the inner key the hour column.
+    concepts:
+      - concepts.grouping_aggregation
+  - id: q5
+    prompt: |
+      "Show each courier's three fastest deliveries" requires which combination,
+      in which order?
+    choices:
+      - Group rows by courier, then sort each group by time and slice the first three
+      - Sort all rows by time, then slice the first three of the whole list
+      - Slice the first three rows, then group them by courier
+      - Join the rows with themselves, then filter by time
+    correct_choice: Group rows by courier, then sort each group by time and slice the first three
+    explanation: |
+      Top-n per group needs the grouping first; a single global sort-and-slice
+      returns the three fastest deliveries overall, not three per courier.
+    concepts:
+      - concepts.grouping_aggregation
+      - python.sorting

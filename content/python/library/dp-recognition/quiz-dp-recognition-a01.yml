@@ -1,0 +1,109 @@
+id: quiz.library.dp_recognition.a01
+kind: quiz
+version: 1
+language: python
+title: Is This a DP Problem?
+slug: quiz-dp-recognition-a01
+difficulty: medium
+concepts:
+  - patterns.dynamic_programming
+  - concepts.memoization
+prerequisites:
+  - patterns.dynamic_programming
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dp_recognition.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pattern-recognition quiz on spotting overlapping subproblems, choosing memoization versus tabulation, and telling DP apart from greedy.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      What pair of properties signals that a counting or optimization problem
+      is a dynamic-programming problem rather than a plain divide-and-conquer?
+    choices:
+      - Overlapping subproblems and optimal substructure
+      - Sorted input and a monotonic answer
+      - Independent subproblems and balanced splitting
+      - A small alphabet and a fixed-length input
+    correct_choice: Overlapping subproblems and optimal substructure
+    explanation: |
+      DP pays off when the same subproblems recur (so caching helps) and optimal
+      answers compose from optimal sub-answers (so the recurrence is valid).
+      Merge-sort-style independent halves gain nothing from a cache.
+    concepts:
+      - patterns.dynamic_programming
+  - id: q2
+    prompt: |
+      A naive recursion for a cable-cutting price problem runs in exponential
+      time, and you notice it recomputes the same lengths thousands of times.
+      What is the minimal change that fixes the running time?
+    choices:
+      - Memoize — cache each length's result the first time it is computed
+      - Convert every recursive call into a while loop
+      - Randomize the order of the recursive calls
+      - Switch the recursion to iterate from the largest length down
+    correct_choice: Memoize — cache each length's result the first time it is computed
+    explanation: |
+      Memoization keeps the recursive structure intact and collapses repeated
+      subproblems into O(1) lookups, taking the work from exponential to one
+      computation per distinct length.
+    concepts:
+      - concepts.memoization
+      - patterns.dynamic_programming
+  - id: q3
+    prompt: |
+      A tabulated recurrence only ever reads dp[i-1] and dp[i-2] to fill dp[i].
+      What optimization does that access pattern unlock?
+    choices:
+      - Rolling variables — keep just the last two values in O(1) space
+      - Binary search over the table
+      - Parallel evaluation of all rows at once
+      - Skipping every second table entry
+    correct_choice: Rolling variables — keep just the last two values in O(1) space
+    explanation: |
+      When each entry depends on a bounded window of predecessors, the full
+      array is unnecessary; two variables slide forward and memory drops from
+      O(n) to O(1).
+    concepts:
+      - concepts.space_complexity
+      - patterns.dynamic_programming
+  - id: q4
+    prompt: |
+      Picking market stalls along one street where adjacent stalls can't both be
+      chosen, to maximize total haul: why does "always grab the richest stall
+      next" fail where DP succeeds?
+    choices:
+      - A locally best grab can block two neighbours whose combined value is higher
+      - Greedy algorithms cannot process values in a list
+      - The problem has no optimal substructure
+      - DP is only needed when values can be negative
+    correct_choice: A locally best grab can block two neighbours whose combined value is higher
+    explanation: |
+      The greedy choice ignores what it excludes. The DP recurrence
+      best(i) = max(best(i-1), value[i] + best(i-2)) weighs both futures and is
+      exactly what the greedy throws away.
+    concepts:
+      - patterns.dynamic_programming
+      - patterns.greedy
+  - id: q5
+    prompt: |
+      A recurrence on two strings of lengths m and n compares their prefixes,
+      with each state (i, j) computed from (i-1, j), (i, j-1), and (i-1, j-1).
+      How many distinct subproblems are there?
+    choices:
+      - (m + 1) * (n + 1)
+      - m + n
+      - 2 ** (m + n)
+      - m * n * (m + n)
+    correct_choice: (m + 1) * (n + 1)
+    explanation: |
+      Each pair of prefix lengths (0..m, 0..n) is one state, so a table of
+      (m+1)(n+1) cells covers everything — the reason two-string DP runs in
+      O(mn) rather than exponential time.
+    concepts:
+      - patterns.dynamic_programming

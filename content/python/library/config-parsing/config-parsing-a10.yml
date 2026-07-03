@@ -1,0 +1,210 @@
+id: exercise.library.config_parsing.a10
+kind: exercise
+version: 1
+language: python
+title: Redacting the Tea Importer's Deploy Manifest
+slug: config-parsing-a10
+difficulty: hard
+concepts:
+  - python.config_parsing
+  - patterns.recursion
+  - python.secure_coding
+prerequisites:
+  - python.dictionaries
+  - python.lists
+  - patterns.recursion
+estimated_time_minutes: 24
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.config_parsing.a10
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original secret-redaction drill framed as sanitizing a tea importer's nested deploy manifest before sharing it, recursing through dicts and lists and masking whole subtrees under case-insensitive secret keys.
+prompt_markdown: |
+  Before a tea importer pastes its deploy manifest into a public support thread, it
+  needs every secret scrubbed. Write `redact_secrets_in_config(request)` that walks
+  the nested config and masks the sensitive values, returning a **new** structure
+  and leaving the input untouched.
+
+  The function receives **one dictionary** with two keys:
+
+  ```python
+  redact_secrets_in_config({
+      "config": {"host": "db.internal", "password": "hunter2"},
+      "secret_keys": ["password"],
+  })
+  # -> {"host": "db.internal", "password": "***"}
+  ```
+
+  - `"config"` is a nested structure made of dictionaries, lists, and scalar values.
+  - `"secret_keys"` is a list of key names considered sensitive.
+
+  Redaction rules:
+
+  - Matching a key against the secret list is **case-insensitive**: with
+    `"api_key"` in the secret list, a key `"API_KEY"` matches.
+  - When a dictionary key is a secret, replace its value with the string `"***"` —
+    **regardless** of the value's type, and **without** looking inside it. If the
+    secret value was itself a dict or list, the whole subtree is masked to `"***"`.
+  - For any non-secret dictionary key, **recurse** into its value.
+  - Recurse into every element of a list.
+  - Scalars that are not under a secret key pass through unchanged.
+  - Preserve the original key order and list order. Do not mutate the input; build
+    and return a new structure.
+
+  An empty config returns an empty dictionary.
+starter_code: |
+  def redact_secrets_in_config(request):
+      return {}
+function_name: redact_secrets_in_config
+input_mode: function
+solution_sketch: Lowercase the secret-key names into a set. Write a recursive helper that handles three shapes. For a dict, mask any value whose key (lowercased) is secret and otherwise recurse; for a list, recurse into each element; for a scalar, return it unchanged. Build fresh containers so the input is never mutated.
+sample_solution: |
+  def redact_secrets_in_config(request):
+      config = request["config"]
+      secret_lower = {name.lower() for name in request["secret_keys"]}
+
+      def redact(node):
+          if isinstance(node, dict):
+              result = {}
+              for key, value in node.items():
+                  if isinstance(key, str) and key.lower() in secret_lower:
+                      result[key] = "***"
+                  else:
+                      result[key] = redact(value)
+              return result
+          if isinstance(node, list):
+              return [redact(item) for item in node]
+          return node
+
+      return redact(config)
+hints:
+  - level: 1
+    text: Lowercase the secret key names once into a set so each key comparison is a fast case-insensitive membership check.
+  - level: 2
+    text: Write a recursive helper that handles three shapes — dict, list, and scalar — and call it on the top-level config.
+  - level: 3
+    text: Inside a dict, if the key is secret set its value to "***" and stop (do not recurse into that value); otherwise recurse into the value. For a list, recurse into each element; scalars are returned as-is. Build new dicts and lists so the caller's data stays intact.
+tests:
+  public:
+    - name: flat_redact
+      input:
+        config:
+          host: "db.internal"
+          password: "hunter2"
+        secret_keys:
+          - "password"
+      expected:
+        host: "db.internal"
+        password: "***"
+    - name: no_secrets_present
+      input:
+        config:
+          host: "db.internal"
+          port: 5432
+        secret_keys:
+          - "password"
+      expected:
+        host: "db.internal"
+        port: 5432
+    - name: case_insensitive_match
+      input:
+        config:
+          API_KEY: "abc123"
+        secret_keys:
+          - "api_key"
+      expected:
+        API_KEY: "***"
+  validation:
+    - name: nested_dictionary
+      input:
+        config:
+          db:
+            user: "admin"
+            password: "p@ss"
+        secret_keys:
+          - "password"
+      expected:
+        db:
+          user: "admin"
+          password: "***"
+    - name: list_of_dicts
+      input:
+        config:
+          services:
+            - name: "brew"
+              token: "t1"
+            - name: "steep"
+              token: "t2"
+        secret_keys:
+          - "token"
+      expected:
+        services:
+          - name: "brew"
+            token: "***"
+          - name: "steep"
+            token: "***"
+    - name: whole_subtree_masked
+      input:
+        config:
+          credentials:
+            user: "u"
+            pass: "p"
+        secret_keys:
+          - "credentials"
+      expected:
+        credentials: "***"
+    - name: multiple_secret_keys
+      input:
+        config:
+          password: "x"
+          apiKey: "y"
+          host: "h"
+        secret_keys:
+          - "password"
+          - "apikey"
+      expected:
+        password: "***"
+        apiKey: "***"
+        host: "h"
+    - name: deep_mixed_structure
+      input:
+        config:
+          env: "prod"
+          nodes:
+            - ip: "10.0.0.1"
+              secret: "s1"
+          meta:
+            owner: "importer"
+            secret: "deep"
+        secret_keys:
+          - "secret"
+      expected:
+        env: "prod"
+        nodes:
+          - ip: "10.0.0.1"
+            secret: "***"
+        meta:
+          owner: "importer"
+          secret: "***"
+explanation_markdown: |
+  Redaction is a tree walk, and the cleanest way to walk a tree of dicts, lists,
+  and scalars is a recursive function that dispatches on the node's shape. The
+  base case is a scalar (return it unchanged); the recursive cases are dict and
+  list. Lowercasing the secret names once, into a set, keeps each key check
+  case-insensitive and O(1).
+
+  The rule that makes this a security tool rather than a toy is *masking the whole
+  subtree*: when a key is secret you replace its value with `"***"` and stop, so a
+  credentials block nested three levels deep never has its guts exposed even
+  partially. And because you build brand-new dicts and lists on the way back up
+  rather than editing the originals, the caller's manifest is safe to keep using —
+  an accidental in-place mutation of config data is exactly the kind of bug that
+  leaks secrets into the next log line.
+common_mistakes:
+  - Recursing into a secret value before masking it, so nested fields under a secret key still leak.
+  - Comparing keys case-sensitively, letting "API_KEY" slip past a lowercase "api_key" rule.
+  - Forgetting the list case, so secrets tucked inside a list of service definitions are never scrubbed.
+  - Mutating the input dictionaries in place, which corrupts the caller's config and can leak the original values elsewhere.

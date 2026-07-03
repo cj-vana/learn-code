@@ -1,0 +1,158 @@
+id: exercise.library.grid_simulation.a08
+kind: exercise
+version: 1
+language: python
+title: The Ticket Kiosk Screens
+slug: grid-simulation-a08
+difficulty: medium
+concepts:
+  - patterns.state_machine
+  - patterns.simulation
+prerequisites:
+  - python.dictionaries
+  - python.loops
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.grid_simulation.a08
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original table-driven finite state machine themed around the screens of a self-service ticket kiosk.
+prompt_markdown: |
+  A cinema's self-service ticket kiosk moves between labelled screens as visitors
+  tap buttons. You are given its wiring as a transition table: a dictionary that
+  maps each screen name to another dictionary mapping a button-press event to the
+  next screen. For example:
+
+  ```python
+  {
+    "welcome": {"tap": "menu"},
+    "menu":    {"buy": "pay", "back": "welcome"},
+    "pay":     {"card": "print", "back": "menu"},
+    "print":   {"done": "welcome"},
+  }
+  ```
+
+  Starting on a given screen, the kiosk receives a list of events in order. For
+  each event, look up the current screen's row in the table:
+
+  - If that screen has an entry for the event, move to the screen it names.
+  - If the event is **not listed** for the current screen (an unknown or
+    inapplicable press), the kiosk stays on the current screen.
+
+  Write `run_kiosk(config)` where `config` is a single dictionary with keys
+  `"transitions"` (the table above), `"start"` (the starting screen name), and
+  `"events"` (the list of event strings). Feed the events in order and **return
+  the final screen name** as a string. An empty event list means the kiosk never
+  leaves its starting screen.
+starter_code: |
+  def run_kiosk(config):
+      return ""
+function_name: run_kiosk
+input_mode: function
+solution_sketch: Hold the current screen in a variable. For each event, look it up in the current screen's transition row, defaulting to the current screen when the event is absent.
+sample_solution: |
+  def run_kiosk(config):
+      state = config["start"]
+      transitions = config["transitions"]
+      for event in config["events"]:
+          state = transitions.get(state, {}).get(event, state)
+      return state
+hints:
+  - level: 1
+    text: Keep a single variable for the current screen and reassign it as you process each event in turn.
+  - level: 2
+    text: For the current screen, its allowed events live in `transitions[state]`. Use `.get(event, state)` so an unlisted event falls back to the screen you are already on.
+  - level: 3
+    text: "The whole loop body is one line: `state = transitions.get(state, {}).get(event, state)`. Return `state` after the loop."
+tests:
+  public:
+    - name: full_purchase
+      input:
+        transitions:
+          welcome: {tap: menu}
+          menu: {buy: pay, back: welcome}
+          pay: {card: print, back: menu}
+          print: {done: welcome}
+        start: welcome
+        events: [tap, buy, card, done]
+      expected: welcome
+    - name: unknown_event_ignored
+      input:
+        transitions:
+          welcome: {tap: menu}
+          menu: {buy: pay, back: welcome}
+          pay: {card: print, back: menu}
+          print: {done: welcome}
+        start: menu
+        events: [card, buy]
+      expected: pay
+    - name: no_events
+      input:
+        transitions:
+          welcome: {tap: menu}
+          menu: {buy: pay, back: welcome}
+          pay: {card: print, back: menu}
+          print: {done: welcome}
+        start: pay
+        events: []
+      expected: pay
+  validation:
+    - name: back_navigation
+      input:
+        transitions:
+          welcome: {tap: menu}
+          menu: {buy: pay, back: welcome}
+          pay: {card: print, back: menu}
+          print: {done: welcome}
+        start: welcome
+        events: [tap, buy, back, back]
+      expected: welcome
+    - name: dead_presses_then_move
+      input:
+        transitions:
+          welcome: {tap: menu}
+          menu: {buy: pay, back: welcome}
+          pay: {card: print, back: menu}
+          print: {done: welcome}
+        start: welcome
+        events: [buy, card, done, tap]
+      expected: menu
+    - name: loop_around
+      input:
+        transitions:
+          welcome: {tap: menu}
+          menu: {buy: pay, back: welcome}
+          pay: {card: print, back: menu}
+          print: {done: welcome}
+        start: print
+        events: [done, tap, buy]
+      expected: pay
+    - name: single_unknown
+      input:
+        transitions:
+          welcome: {tap: menu}
+          menu: {buy: pay, back: welcome}
+          pay: {card: print, back: menu}
+          print: {done: welcome}
+        start: menu
+        events: [zoom]
+      expected: menu
+explanation_markdown: |
+  This is a finite state machine driven by a lookup table. Rather than a wall of
+  `if`/`elif` branches, the transitions live in data, so the same loop handles any
+  kiosk wiring you hand it. The key trick is the double `.get`: the inner
+  `.get(event, state)` returns the current screen unchanged whenever the event is
+  not one the screen recognises, which is exactly the "stay put" rule. The outer
+  `.get(state, {})` is a small safety net so a screen with no outgoing entries at
+  all is handled gracefully.
+
+  Processing one event is a constant-time dictionary lookup, so the routine runs
+  in O(number of events) time. Table-driven state machines like this show up
+  everywhere: menu systems, parsers, protocol handlers, and game logic.
+common_mistakes:
+  - Iterating over the transition table instead of over the events list, so the order of presses is lost.
+  - Resetting to the start screen on an unknown event instead of leaving the current screen unchanged.
+  - Assuming every screen lists every event, then hitting a KeyError when a press does not apply to the current screen.

@@ -1,0 +1,124 @@
+id: exercise.library.functional_style.a07
+kind: exercise
+version: 1
+language: python
+title: Emptying the Seed-Swap Trays
+slug: functional-style-a07
+difficulty: medium
+concepts:
+  - python.functional_style
+  - python.functools_operator
+prerequisites:
+  - python.lists
+  - python.loops
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.functional_style.a07
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original one-level flatten drill framed around a community seed library folding volunteer intake trays into one list, taught through functools.reduce with an explicit seed value.
+prompt_markdown: |
+  A community seed library takes in donations on shallow trays. Each volunteer
+  hands over **one tray**, which is a list of seed-packet codes, and at closing
+  time the codes from every tray are folded into a single intake list.
+
+  Write `merge_trays(trays)` that takes a **list of trays** (a list of lists of
+  strings) and returns **one flat list** with the codes from every tray, in the
+  order the trays appear and the order within each tray.
+
+  Example call:
+
+  ```python
+  merge_trays([["basil", "dill"], ["sage"]])
+  # -> ["basil", "dill", "sage"]
+  ```
+
+  Rules:
+
+  - Flatten exactly **one level**: the trays hold plain strings, never nested
+    trays.
+  - An **empty tray** contributes nothing but must not break the fold.
+  - Duplicate codes are kept as-is (do not deduplicate).
+  - If `trays` is empty, return an empty list.
+
+  Build the result as a **left fold** with `functools.reduce`, seeding it with an
+  empty list so the empty-input and single-tray cases fall out for free.
+starter_code: |
+  from functools import reduce
+
+
+  def merge_trays(trays):
+      return []
+function_name: merge_trays
+input_mode: function
+solution_sketch: Use functools.reduce with a two-argument combiner that concatenates the running intake list with the next tray, seeded with an empty list so an empty trays argument returns [] and the first tray is handled uniformly.
+sample_solution: |
+  from functools import reduce
+
+
+  def merge_trays(trays):
+      return reduce(lambda intake, tray: intake + tray, trays, [])
+hints:
+  - level: 1
+    text: A left fold walks the trays one at a time, carrying a running result that starts empty and grows by one tray each step.
+  - level: 2
+    text: reduce(func, trays, []) passes an empty starting list as the accumulator, so func receives (running_list, next_tray) on every step.
+  - level: 3
+    text: Write the combiner as lambda intake, tray -> intake + tray, which builds a new concatenated list each step and never touches the caller's trays.
+tests:
+  public:
+    - name: empty_outer
+      input: []
+      expected: []
+    - name: single_tray
+      input:
+        - ["basil", "dill"]
+      expected: ["basil", "dill"]
+    - name: two_trays
+      input:
+        - ["basil", "dill"]
+        - ["sage"]
+      expected: ["basil", "dill", "sage"]
+  validation:
+    - name: empty_inner_trays_skipped
+      input:
+        - ["basil"]
+        - []
+        - ["sage"]
+      expected: ["basil", "sage"]
+    - name: all_trays_empty
+      input:
+        - []
+        - []
+      expected: []
+    - name: duplicates_preserved
+      input:
+        - ["basil", "sage"]
+        - ["basil"]
+      expected: ["basil", "sage", "basil"]
+    - name: order_preserved_across_many
+      input:
+        - ["a"]
+        - ["b", "c"]
+        - ["d"]
+      expected: ["a", "b", "c", "d"]
+explanation_markdown: |
+  Flattening one level is a fold: you start with an empty intake list and, tray by
+  tray, extend it with that tray's contents. `functools.reduce(func, trays, [])`
+  expresses exactly that. The seed value `[]` is the important part -- it is what
+  `reduce` returns when `trays` is empty, and it means the very first tray is
+  combined against a real accumulator instead of being treated as a special case.
+
+  Writing the combiner as `intake + tray` produces a brand-new list each step, so
+  the caller's trays are never mutated. That purity is the whole point of the
+  functional style here: the same inputs always fold to the same output with no
+  side effects. If you wanted to trade a little clarity for speed you could reach
+  for `operator.iconcat` with a fresh seed list, but the concatenation form reads
+  as plainly what it is: fold the trays into one list.
+common_mistakes:
+  - Calling reduce without the third seed argument, which raises on an empty trays list and mishandles the single-tray case.
+  - Seeding the fold with the first tray (or using operator.iadd), which appends into and mutates the caller's original list.
+  - Recursing into inner elements and flattening more than one level when the trays are documented to hold plain strings only.

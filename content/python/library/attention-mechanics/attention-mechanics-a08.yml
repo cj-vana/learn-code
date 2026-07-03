@@ -1,0 +1,134 @@
+id: exercise.library.attention_mechanics.a08
+kind: exercise
+version: 1
+language: python
+title: One Slot of a Position Stamp
+slug: attention-mechanics-a08
+difficulty: medium
+concepts:
+  - ai.attention_transformers
+prerequisites:
+  - python.dictionaries
+  - python.operators
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.attention_mechanics.a08
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original sinusoidal positional-encoding drill framed as stamping one slot of a position tag, computing a single component rather than a whole vector.
+prompt_markdown: |
+  Attention treats its inputs as an unordered bag, so a transformer has no idea
+  which token came first unless you tell it. The classic fix is a **positional
+  encoding**: each position `p` gets a fixed vector of `d` numbers built from
+  sines and cosines of different wavelengths, and that vector is added to the
+  token's embedding.
+
+  Here you compute a single slot of that vector. Given a position `p`, the model
+  width `d`, and a slot index `i` (with `0 <= i < d`), form the angle
+
+      angle = p / 10000 ** (2 * i / d)
+
+  and then read one of two functions off that angle depending on whether the
+  slot index is even or odd:
+
+      slot value = sin(angle)   if i is even
+      slot value = cos(angle)   if i is odd
+
+  Even slots wave as sines, odd slots as cosines, and larger `i` stretches the
+  wavelength so different slots vary at very different rates. That mix is what
+  gives every position a unique, smoothly-changing stamp.
+
+  Write `positional_encoding(job)` that takes one dictionary such as
+  `{"pos": 1, "dim": 4, "i": 1}` and returns the single slot value rounded to 6
+  decimal places.
+starter_code: |
+  import math
+
+
+  def positional_encoding(job):
+      return 0.0
+function_name: positional_encoding
+input_mode: function
+solution_sketch: Compute angle = pos / 10000 ** (2*i/dim), then return sin(angle) when i is even and cos(angle) when i is odd, rounded to 6 places.
+sample_solution: |
+  import math
+
+
+  def positional_encoding(job):
+      p = job["pos"]
+      d = job["dim"]
+      i = job["i"]
+      angle = p / 10000 ** (2 * i / d)
+      value = math.sin(angle) if i % 2 == 0 else math.cos(angle)
+      return round(value, 6)
+hints:
+  - level: 1
+    text: Build the angle first, exactly as written, then decide sine or cosine from whether i is even or odd.
+  - level: 2
+    text: The exponent 2 * i / d must be computed with real division so it can be fractional; 10000 ** (2*i/d) then gives the wavelength scale.
+  - level: 3
+    text: Use i % 2 == 0 to pick math.sin, otherwise math.cos, and wrap the whole thing in round(value, 6).
+tests:
+  public:
+    - name: pos_zero_even_slot
+      input:
+        pos: 0
+        dim: 4
+        i: 0
+      expected: 0.0
+    - name: even_slot_sine
+      input:
+        pos: 1
+        dim: 4
+        i: 0
+      expected: 0.841471
+    - name: odd_slot_cosine
+      input:
+        pos: 1
+        dim: 4
+        i: 1
+      expected: 0.99995
+  validation:
+    - name: high_even_slot
+      input:
+        pos: 2
+        dim: 4
+        i: 2
+      expected: 0.0002
+    - name: odd_slot_width_six
+      input:
+        pos: 3
+        dim: 6
+        i: 1
+      expected: 0.990321
+    - name: odd_slot_width_eight
+      input:
+        pos: 5
+        dim: 8
+        i: 3
+      expected: 0.999988
+    - name: sine_wraps_negative
+      input:
+        pos: 10
+        dim: 4
+        i: 0
+      expected: -0.544021
+explanation_markdown: |
+  These sinusoidal stamps have a neat property: because sine and cosine are
+  smooth and periodic, nearby positions get nearby encodings, and the model can
+  learn to attend "three tokens back" as a fixed rotation that works the same at
+  any absolute position. The `10000 ** (2 * i / d)` term spreads the wavelengths
+  from very short (small `i`, values change quickly with position) to very long
+  (large `i`, values barely move), so the full vector captures both fine and
+  coarse notions of order.
+
+  The one subtlety in Python is that `2 * i / d` uses true division and stays a
+  float, so the exponent is genuinely fractional rather than truncated to an
+  integer. Rounding to 6 places keeps floating-point drift out of the answer.
+common_mistakes:
+  - Swapping the cases so even slots use cosine and odd slots use sine.
+  - Writing the exponent as 2 * i // d (integer division), which collapses most slots to the same wavelength.
+  - Returning the raw sine or cosine without rounding to 6 decimal places.

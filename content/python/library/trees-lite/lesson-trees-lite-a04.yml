@@ -1,0 +1,103 @@
+id: lesson.library.trees_lite.a04
+kind: lesson
+version: 1
+language: python
+title: Binary Search Trees - Validation, Search, and Ancestors
+slug: lesson-trees-lite-a04
+difficulty: hard
+concepts:
+  - patterns.tree_traversal
+  - python.trees_as_data
+  - patterns.recursion
+prerequisites:
+  - patterns.dfs
+  - patterns.binary_search
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.trees_lite.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original BST validation and ancestor walkthrough framed around a catalogue index with the bounds-not-parents pitfall.
+body_markdown: |
+  A **binary search tree** (BST) adds one ordering rule to the plain trees you
+  already know: for every node, every value in its left subtree is smaller, and
+  every value in its right subtree is larger. Think of a library catalogue index
+  where turning left always leads to lower call numbers and turning right to
+  higher ones. That single invariant makes lookups fast and validation subtle.
+
+  ### The bounds pitfall
+
+  The most common bug in checking a BST is comparing each node only against its
+  immediate parent. That is not enough. A node deep in a left subtree must be
+  smaller than *every* ancestor it hangs beneath, not just its parent. The fix is
+  to carry a `(low, high)` window down the recursion. Each node must fall strictly
+  inside its window; going left tightens the upper bound to the current value,
+  and going right tightens the lower bound:
+
+  ```python
+  def is_bst(tree, low=None, high=None):
+      if tree is None:
+          return True
+      v = tree["value"]
+      if (low is not None and v <= low) or (high is not None and v >= high):
+          return False
+      return is_bst(tree["left"], low, v) and is_bst(tree["right"], v, high)
+  ```
+
+  Consider a root of 5 whose left child 3 has a right child 6. Every parent
+  comparison passes (6 > 3), yet 6 sits in the left subtree of 5 and violates the
+  rule. The bounds approach catches it, because 6 arrives with `high = 5` and
+  `6 >= 5` fails. Using `<=` and `>=` also rejects duplicate values, keeping the
+  tree strictly ordered.
+
+  ### Searching a BST
+
+  Ordering means you never explore both children. Compare the target to the
+  current value and step left or right, discarding half the tree at each move:
+
+  ```python
+  def contains(tree, target):
+      node = tree
+      while node is not None:
+          if target == node["value"]:
+              return True
+          node = node["left"] if target < node["value"] else node["right"]
+      return False
+  ```
+
+  This is binary search expressed as a tree walk: O(height) instead of O(n).
+
+  ### Lowest common ancestor
+
+  The **lowest common ancestor** (LCA) of two values is the deepest node that has
+  both values somewhere below it (a node counts as its own ancestor). In a
+  general binary tree, recurse into both sides: if one target turns up on the
+  left and the other on the right, the current node is the meeting point;
+  otherwise the answer is whichever side returned a hit.
+
+  ```python
+  def lca(tree, a, b):
+      if tree is None or tree["value"] in (a, b):
+          return tree
+      left = lca(tree["left"], a, b)
+      right = lca(tree["right"], a, b)
+      if left and right:
+          return tree
+      return left or right
+  ```
+
+  When both recursive calls come back non-empty, the split happens right here, so
+  this node is the lowest ancestor covering both targets.
+checkpoints:
+  - question: Why does comparing each node only to its parent fail to validate a BST?
+    answer: A node must be within the range set by all of its ancestors, so a value can beat its parent yet still violate an ancestor's bound.
+    explanation: Carrying a (low, high) window down the recursion enforces every ancestor's constraint, catching cases like a 6 placed in the left subtree of a 5.
+  - question: When searching a BST for a target smaller than the current node's value, which child do you move to and why?
+    answer: You move to the left child, because all smaller values live in the left subtree.
+    explanation: The BST ordering guarantees the target, if present, cannot be on the right, so you discard the right subtree entirely.
+  - question: In the LCA recursion, what does it mean when both the left and right recursive calls return a non-None result?
+    answer: One target was found in the left subtree and the other in the right, so the current node is their lowest common ancestor.
+    explanation: The two targets split at this node, making it the deepest node with both values beneath it.

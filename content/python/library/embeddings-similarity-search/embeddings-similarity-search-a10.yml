@@ -1,0 +1,156 @@
+id: exercise.library.embeddings_similarity_search.a10
+kind: exercise
+version: 1
+language: python
+title: Assembling a TF-IDF Vector
+slug: embeddings-similarity-search-a10
+difficulty: hard
+concepts:
+  - ai.embeddings_retrieval
+  - concepts.grouping_aggregation
+prerequisites:
+  - python.dictionaries
+  - python.lists
+  - python.comprehensions
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.embeddings_similarity_search.a10
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original TF-IDF vectorisation drill that composes term frequency and a supplied IDF table into a fixed-order sparse vector, themed on a trail-journal search index.
+prompt_markdown: |
+  Now combine the two halves. A **TF-IDF vector** turns one document into a fixed
+  list of numbers, one slot per vocabulary term, so documents can be compared by
+  their coordinates. Here the document is a list of tokens from a trail journal.
+
+  Write `tfidf_vector(job)` where `job` is a single dict:
+
+  ```
+  {
+    "doc": ["fern", "fern", "moss"],
+    "idf": {"fern": 0.0, "moss": 0.693147, "lichen": 1.386294},
+    "vocab": ["fern", "moss", "lichen"]
+  }
+  ```
+
+  Return a list of numbers, one per term in `vocab` **in that exact order**. For a
+  term `t`:
+
+  - Its term frequency is `tf(t) = count(t in doc) / len(doc)`.
+  - Its component is `tf(t) * idf[t]`, **rounded to 6 decimal places** with
+    `round(value, 6)`.
+  - If `t` is **not a key in `idf`**, its component is `0.0` (an unweighted,
+    out-of-corpus term).
+  - If `doc` is empty, every component is `0.0`.
+
+  For the example, `doc` has 3 tokens. `fern` has `tf = 2/3` but `idf = 0.0`, so its
+  component is `0.0`. `moss` has `tf = 1/3` and `idf = 0.693147`, giving
+  `0.231049`. `lichen` is absent from `doc`, so `tf = 0` and its component is `0.0`.
+  The result is `[0.0, 0.231049, 0.0]`.
+starter_code: |
+  def tfidf_vector(job):
+      return []
+function_name: tfidf_vector
+input_mode: function
+solution_sketch: Count the document's tokens, then walk vocab in order emitting round(count/len(doc) * idf[term], 6), or 0.0 when the doc is empty or the term is missing from the idf table.
+sample_solution: |
+  from collections import Counter
+
+
+  def tfidf_vector(job):
+      doc = job["doc"]
+      idf = job["idf"]
+      vocab = job["vocab"]
+      n = len(doc)
+      counts = Counter(doc)
+      vector = []
+      for term in vocab:
+          if n == 0 or term not in idf:
+              vector.append(0.0)
+          else:
+              tf = counts.get(term, 0) / n
+              vector.append(round(tf * idf[term], 6))
+      return vector
+hints:
+  - level: 1
+    text: The output length always equals len(vocab), and the order of the output must follow vocab, not the order words appear in the document.
+  - level: 2
+    text: Precount the document's tokens once so each term lookup is a dictionary read; a term missing from the document simply has count 0.
+  - level: 3
+    text: For each vocab term, emit 0.0 when the document is empty or the term is not a key in idf; otherwise append round(counts.get(term, 0) / len(doc) * idf[term], 6).
+tests:
+  public:
+    - name: basic_vector
+      input:
+        doc: [fern, fern, moss]
+        idf:
+          fern: 0.0
+          moss: 0.693147
+          lichen: 1.386294
+        vocab: [fern, moss, lichen]
+      expected: [0.0, 0.231049, 0.0]
+    - name: term_missing_from_idf
+      input:
+        doc: [fern, lichen]
+        idf:
+          fern: 0.5
+        vocab: [fern, lichen]
+      expected: [0.25, 0.0]
+    - name: empty_doc
+      input:
+        doc: []
+        idf:
+          fern: 0.5
+        vocab: [fern]
+      expected: [0.0]
+  validation:
+    - name: term_in_vocab_not_in_doc
+      input:
+        doc: [moss, moss]
+        idf:
+          fern: 1.0
+          moss: 0.5
+        vocab: [fern, moss]
+      expected: [0.0, 0.5]
+    - name: multiple_nonzero
+      input:
+        doc: [fern, fern, moss, lichen]
+        idf:
+          fern: 0.5
+          moss: 2.0
+          lichen: 1.0
+        vocab: [fern, moss, lichen]
+      expected: [0.25, 0.5, 0.25]
+    - name: rounding_needed
+      input:
+        doc: [fern, moss, moss]
+        idf:
+          fern: 1.098612
+          moss: 0.405465
+        vocab: [fern, moss]
+      expected: [0.366204, 0.27031]
+    - name: vocab_term_absent_everywhere
+      input:
+        doc: [fern]
+        idf:
+          fern: 2.0
+        vocab: [fern, xtra]
+      expected: [2.0, 0.0]
+explanation_markdown: |
+  Fixing the coordinate order with `vocab` is what makes two TF-IDF vectors
+  comparable: slot 0 always means the same term in every document, so a dot product
+  or cosine similarity between documents lines up term-for-term. That shared
+  coordinate system is the whole reason sparse retrieval works.
+
+  The two escape hatches encode real modelling choices. A term absent from `idf` is
+  outside the fitted corpus vocabulary, so it earns no weight (`0.0`) rather than
+  crashing the lookup. An empty document has no meaningful frequencies, so it maps
+  to the zero vector. Everything else is `tf * idf`, rounded so the floats compare
+  cleanly.
+common_mistakes:
+  - Emitting the vector in the document's word order instead of the fixed vocab order.
+  - Letting a term that is missing from the idf table raise a KeyError instead of contributing 0.0.
+  - Rounding the term frequency and the idf separately in a way that drifts from rounding the final product once.

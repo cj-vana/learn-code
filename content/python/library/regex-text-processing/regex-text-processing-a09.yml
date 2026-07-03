@@ -1,0 +1,91 @@
+id: exercise.library.regex_text_processing.a09
+kind: exercise
+version: 1
+language: python
+title: Redact Contacts From a Support Log
+slug: regex-text-processing-a09
+difficulty: hard
+concepts:
+  - python.regex
+  - python.strings
+prerequisites:
+  - python.regex
+estimated_time_minutes: 18
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.regex_text_processing.a09
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original support-log redaction task combining two distinct re.sub passes for emails and phone numbers.
+prompt_markdown: |
+  A support tool writes free-text notes that sometimes leak contact details.
+  Write `redact(text)` that hides two kinds of substring:
+
+  - **Email addresses**: one or more of letters, digits, dots, or underscores,
+    then `@`, then one or more of letters, digits, or dots, then a dot and a
+    2-to-3 letter ending (like `.com`, `.org`, or `.io`). Replace each with
+    `[email]`.
+  - **Phone numbers** in the exact form `###-###-####` (three digits, hyphen,
+    three digits, hyphen, four digits). Replace each with `[phone]`.
+
+  Everything else stays exactly as it is. Return the redacted text.
+starter_code: |
+  import re
+
+
+  def redact(text):
+      return text
+function_name: redact
+input_mode: function
+solution_sketch: Run two re.sub passes, one for the email pattern and one for the phone pattern, replacing each with its token.
+sample_solution: |
+  import re
+
+
+  def redact(text):
+      text = re.sub(r"[A-Za-z0-9._]+@[A-Za-z0-9.]+\.[A-Za-z]{2,3}", "[email]", text)
+      text = re.sub(r"\b\d{3}-\d{3}-\d{4}\b", "[phone]", text)
+      return text
+hints:
+  - level: 1
+    text: The two kinds of data are unrelated, so handle them with two separate re.sub passes over the same text.
+  - level: 2
+    text: An email pattern needs a local part, an @, a domain, and a short letter ending; a phone pattern is three fixed digit runs joined by hyphens.
+  - level: 3
+    text: Replace the email pattern first with "[email]", then the pattern r"\b\d{3}-\d{3}-\d{4}\b" with "[phone]".
+tests:
+  public:
+    - name: email_and_phone
+      input: 'Reach ana at ana.k@mail.com or 555-123-4567 today'
+      expected: 'Reach ana at [email] or [phone] today'
+    - name: nothing_to_redact
+      input: 'customer was satisfied with the fix'
+      expected: 'customer was satisfied with the fix'
+    - name: two_emails
+      input: 'Write a@b.co or c_d@shop.org now'
+      expected: 'Write [email] or [email] now'
+  validation:
+    - name: two_phones
+      input: 'Call 555-000-1111 then 555-222-3333'
+      expected: 'Call [phone] then [phone]'
+    - name: empty
+      input: ''
+      expected: ''
+    - name: email_then_phone
+      input: 'user_9@node.io logged 800-555-0100'
+      expected: '[email] logged [phone]'
+explanation_markdown: |
+  The two data types share no structure, so the cleanest solution is two passes.
+  The email pattern spells out four parts: a local part of letters, digits, dots,
+  or underscores; the `@`; a domain of letters, digits, or dots; and a final dot
+  plus a short 2-3 letter ending. The phone pattern pins three fixed digit runs
+  joined by hyphens, wrapped in `\b` word boundaries so it does not fire inside a
+  longer number. Running the substitutions in sequence lets each replace all of
+  its matches independently, and because the replacement tokens contain no digits
+  or `@`, neither pass disturbs the other's work.
+common_mistakes:
+  - Trying to cram both formats into one giant alternation, which is far harder to read and get right than two passes.
+  - Writing the domain ending as [A-Za-z]+ so it swallows 4-letter or longer tails and misaligns the match.
+  - Forgetting the word boundaries on the phone pattern, so it matches part of a longer digit sequence.

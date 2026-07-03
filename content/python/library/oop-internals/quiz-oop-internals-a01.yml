@@ -1,0 +1,101 @@
+id: quiz.library.oop_internals.a01
+kind: quiz
+version: 1
+language: python
+title: Predicting the Object Model
+slug: quiz-oop-internals-a01
+difficulty: hard
+concepts:
+  - python.descriptors_mro
+prerequisites:
+  - python.descriptors_mro
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.oop_internals.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pattern-recognition quiz on descriptor lookup precedence, MRO prediction, and slots behavior.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      class D(B, C) where B and C both inherit A, and all four define ping().
+      Which ping runs for D(), and by what rule?
+    choices:
+      - B's — the MRO is (D, B, C, A, object) and lookup takes the first hit walking it
+      - A's — the shared base is the most general
+      - C's — the rightmost parent wins
+      - Ambiguous — Python raises at call time
+    correct_choice: B's — the MRO is (D, B, C, A, object) and lookup takes the first hit walking it
+    explanation: |
+      C3 linearization puts the class first, parents in declaration order, and
+      the shared ancestor after both branches; method lookup is a front-to-back
+      walk of that list.
+    concepts:
+      - python.descriptors_mro
+  - id: q2
+    prompt: |
+      A property validates assignments to obj.mass. A teammate tries to bypass
+      it with obj.__dict__["mass"] = -5 followed by reading obj.mass. What
+      happens on the read?
+    choices:
+      - The property still runs — data descriptors on the class outrank the instance dict in lookup
+      - The read returns -5 — instance dicts always win
+      - AttributeError — properties forbid instance-dict entries
+      - The read returns -5 only in classes without __slots__
+    correct_choice: The property still runs — data descriptors on the class outrank the instance dict in lookup
+    explanation: |
+      property defines __get__ and __set__, making it a data descriptor;
+      lookup precedence (data descriptor > instance dict) means the smuggled
+      dict entry is simply never consulted by normal attribute access.
+    concepts:
+      - python.descriptors_mro
+  - id: q3
+    prompt: |
+      Why can you shadow an inherited METHOD by assigning obj.render = lambda: 1
+      on an instance, but cannot shadow a PROPERTY the same way?
+    choices:
+      - Functions are non-data descriptors (only __get__), which lose to the instance dict; properties are data descriptors, which win over it
+      - Methods are stored in the instance while properties live in the class
+      - Properties are immutable objects
+      - You can — both shadow identically
+    correct_choice: Functions are non-data descriptors (only __get__), which lose to the instance dict; properties are data descriptors, which win over it
+    explanation: |
+      The data/non-data split is exactly this asymmetry — one precedence table
+      explains both behaviors.
+    concepts:
+      - python.descriptors_mro
+  - id: q4
+    prompt: |
+      In cooperative multiple inheritance, Heated.setup calls super().setup().
+      At runtime inside a Fermenter(Heated, Pressurized) instance, which class's
+      setup does that call reach?
+    choices:
+      - Pressurized's — super() follows the instance's MRO, and the sibling comes next
+      - Vessel's — super() always means the textual base class
+      - Fermenter's — super() restarts at the top
+      - None — super() skips classes that Heated does not inherit from
+    correct_choice: Pressurized's — super() follows the instance's MRO, and the sibling comes next
+    explanation: |
+      super() means "next in the caller's MRO", not "my parent" — the mechanism
+      that lets every class's setup run exactly once when all cooperate.
+    concepts:
+      - python.descriptors_mro
+  - id: q5
+    prompt: |
+      A dataclass with slots=True is instantiated ten million times in a
+      pipeline. Beyond memory, what behavioral change should the team expect?
+    choices:
+      - Assigning any attribute name not declared as a field raises AttributeError — typos fail loudly instead of creating junk attributes
+      - Instances become immutable
+      - Equality comparisons stop working
+      - Inheritance from the class is forbidden
+    correct_choice: Assigning any attribute name not declared as a field raises AttributeError — typos fail loudly instead of creating junk attributes
+    explanation: |
+      No __dict__ means no dynamic attributes: the layout is closed, which is
+      half memory optimization and half structural typo guard.
+    concepts:
+      - python.descriptors_mro

@@ -1,0 +1,127 @@
+id: exercise.library.typing_runtime.a08
+kind: exercise
+version: 1
+language: python
+title: The Label Printer Ignores the Fine Print
+slug: typing-runtime-a08
+difficulty: medium
+concepts:
+  - python.type_hints
+  - python.functions
+prerequisites:
+  - python.functions
+  - python.conditionals
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.typing_runtime.a08
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original warehouse label-printer scenario showing annotations never run and only a manual guard rejects bad types.
+prompt_markdown: |
+  A warehouse label printer has one small helper, annotated as
+  `def render(count: int) -> str`, that turns a count into text for a shipping
+  label. A new hire assumes the `int` annotation means Python will refuse anything
+  that is not an integer. It does not: annotations are never checked when the
+  function runs. The only thing that rejects a bad value is a guard **you** write.
+
+  Write `hint_boundary_check(request)`, where `request` is a dict shaped like
+  `{"value": <any>, "enforce": <bool>}`. Inside the function, define the annotated
+  helper `render` whose body is simply `return str(count)` -- `str(...)` accepts any
+  value, so the annotation never blocks the call. Then behave as follows:
+
+  - When `enforce` is `False`, ignore the annotation exactly as the interpreter does:
+    call `render(value)` for whatever `value` is and return
+    `{"result": <rendered string>, "raised": False, "reason": "hint ignored at runtime"}`.
+  - When `enforce` is `True`, add the runtime guard the annotation only *suggested*.
+    Accept the value only if its type is exactly `int`. Use `type(value) is int`, not
+    `isinstance`, so that a `bool` (whose type is `bool`, a subclass of `int`) is
+    **rejected**.
+    - If it passes, return
+      `{"result": <rendered string>, "raised": False, "reason": "passed manual guard"}`.
+    - If it fails, do not call `render`; return
+      `{"result": None, "raised": True, "reason": "manual guard rejected <typename>"}`,
+      where `<typename>` is the value's runtime type name, e.g. `"str"` or `"bool"`.
+
+  For example, `hint_boundary_check({"value": "lots", "enforce": False})` returns
+  `{"result": "lots", "raised": False, "reason": "hint ignored at runtime"}`, while
+  `hint_boundary_check({"value": "lots", "enforce": True})` returns
+  `{"result": None, "raised": True, "reason": "manual guard rejected str"}`.
+starter_code: |
+  def hint_boundary_check(request):
+      # Define an annotated render(count: int) -> str, then either ignore the hint
+      # (enforce False) or add the manual type guard the hint only documented.
+      return {}
+function_name: hint_boundary_check
+input_mode: function
+solution_sketch: Define an annotated helper whose body uses str(), then branch on enforce, applying a type(value) is int guard only when enforce is True.
+sample_solution: |
+  def hint_boundary_check(request):
+      value = request["value"]
+      enforce = request["enforce"]
+
+      def render(count: int) -> str:
+          return str(count)
+
+      if enforce and type(value) is not int:
+          return {
+              "result": None,
+              "raised": True,
+              "reason": "manual guard rejected " + type(value).__name__,
+          }
+      return {
+          "result": render(value),
+          "raised": False,
+          "reason": "passed manual guard" if enforce else "hint ignored at runtime",
+      }
+hints:
+  - level: 1
+    text: The int annotation on render is documentation only; calling render(value) runs its body no matter what type value is, and str() never complains.
+  - level: 2
+    text: When enforce is False, always call render and report the hint was ignored; the branching only matters when enforce is True.
+  - level: 3
+    text: For the guard use type(value) is int so True (a bool) is rejected, and build the reason string with type(value).__name__ for the rejected type.
+tests:
+  public:
+    - name: ignored_string
+      input: {value: 'lots', enforce: false}
+      expected: {result: 'lots', raised: false, reason: 'hint ignored at runtime'}
+    - name: guard_accepts_int
+      input: {value: 3, enforce: true}
+      expected: {result: '3', raised: false, reason: 'passed manual guard'}
+    - name: guard_rejects_string
+      input: {value: 'lots', enforce: true}
+      expected: {result: null, raised: true, reason: 'manual guard rejected str'}
+  validation:
+    - name: bool_is_not_int
+      input: {value: true, enforce: true}
+      expected: {result: null, raised: true, reason: 'manual guard rejected bool'}
+    - name: float_flows_when_unguarded
+      input: {value: 2.5, enforce: false}
+      expected: {result: '2.5', raised: false, reason: 'hint ignored at runtime'}
+    - name: float_rejected_when_guarded
+      input: {value: 2.5, enforce: true}
+      expected: {result: null, raised: true, reason: 'manual guard rejected float'}
+    - name: list_flows_when_unguarded
+      input: {value: [1, 2], enforce: false}
+      expected: {result: '[1, 2]', raised: false, reason: 'hint ignored at runtime'}
+explanation_markdown: |
+  Type annotations are stored on the function object and read by external tools, but
+  the interpreter never consults them while calling the function. That is why every
+  `enforce: False` case simply runs `render` and returns a string: the `int`
+  annotation on `count` has no say at runtime, and `str()` happily formats a string,
+  a float, or a list.
+
+  Enforcement is something you opt into by hand. The `type(value) is int` check is the
+  guard the annotation only hinted at, and choosing `type(...) is int` over
+  `isinstance(value, int)` is deliberate: `bool` is a subclass of `int`, so
+  `isinstance(True, int)` is `True` and would let a boolean slip through as a count.
+  Comparing the exact type keeps `True` out, which is why the `bool_is_not_int` case
+  is rejected. The takeaway is the whole point of this area: hints describe intent,
+  runtime checks enforce it, and the two are entirely separate.
+common_mistakes:
+  - Believing the int annotation makes Python raise on a bad argument; nothing is checked until you write a guard.
+  - Using isinstance(value, int) for the guard, which wrongly accepts booleans because bool subclasses int.
+  - Returning the raw value instead of str(value), or forgetting that str() is what lets any type flow through unguarded.

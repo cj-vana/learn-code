@@ -1,0 +1,142 @@
+id: exercise.library.oop_internals.a10
+kind: exercise
+version: 1
+language: python
+title: The Tide Gauge Speaks Many Formats
+slug: oop-internals-a10
+difficulty: medium
+concepts:
+  - python.descriptors_mro
+  - python.string_formatting
+prerequisites:
+  - python.strings
+  - python.conditionals
+  - python.functions
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.oop_internals.a10
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original __format__ dispatch drill using a small invented format-spec mini-language for a harbor tide-gauge reading object.
+prompt_markdown: |
+  A harbor tide gauge reports a whole-number reading (in millimetres, possibly negative).
+  The gauge is an object whose `__format__(self, spec)` decides how `format(gauge, spec)`
+  and f-string `f"{gauge:spec}"` render the number. You will implement that dispatch as a
+  pure function over a small, invented format-spec mini-language.
+
+  Write `custom_format(payload)` where `payload` is a dict with:
+
+  - `"value"`: an integer reading (may be negative or zero).
+  - `"spec"`: the format spec string requested. Interpret it exactly as follows and
+    return the resulting string:
+
+    - `""` (empty spec): the reading in base 10 with comma thousands separators, keeping
+      a leading minus for negatives. `1234567` → `"1,234,567"`, `-1234` → `"-1,234"`,
+      `0` → `"0"`.
+    - `"sign"`: base 10 with an explicit leading sign and no separators. `42` → `"+42"`,
+      `-42` → `"-42"`, `0` → `"+0"`.
+    - `"hex"`: uppercase hexadecimal of the magnitude, with a leading minus for negatives
+      and no `0x` prefix. `255` → `"FF"`, `-255` → `"-FF"`, `0` → `"0"`.
+    - `"bin"`: binary of the magnitude, with a leading minus for negatives and no `0b`
+      prefix. `5` → `"101"`, `-5` → `"-101"`, `0` → `"0"`.
+    - `"pad" + digits`, e.g. `"pad6"`: base 10, zero-padded to that total width with the
+      sign counted inside the width — exactly like Python's `format(value, "06d")`.
+      `42` with `"pad6"` → `"000042"`, `-42` with `"pad6"` → `"-00042"`, `7` with
+      `"pad3"` → `"007"`. If the number already meets or exceeds the width, return it
+      unpadded (`123456` with `"pad4"` → `"123456"`).
+
+  Every spec listed above is valid; you do not need to handle any other spec string. (In
+  a real `__format__`, an unrecognised spec raises `ValueError` — here the closed set
+  keeps the exercise deterministic.)
+starter_code: |
+  def custom_format(payload):
+      return ""
+function_name: custom_format
+input_mode: function
+solution_sketch: Read value and spec, then dispatch on spec — empty uses a comma format, "sign" uses a plus format, "hex"/"bin" format the magnitude with a manual minus, and "padN" parses the width and delegates to Python's zero-padded integer format.
+sample_solution: |
+  def custom_format(payload):
+      value = payload["value"]
+      spec = payload["spec"]
+      if spec == "":
+          return format(value, ",")
+      if spec == "sign":
+          return format(value, "+")
+      if spec == "hex":
+          sign = "-" if value < 0 else ""
+          return sign + format(abs(value), "X")
+      if spec == "bin":
+          sign = "-" if value < 0 else ""
+          return sign + format(abs(value), "b")
+      if spec.startswith("pad"):
+          width = int(spec[3:])
+          return format(value, "0{}d".format(width))
+      raise ValueError("unsupported spec: {}".format(spec))
+hints:
+  - level: 1
+    text: This is a dispatch problem — read the spec string first and pick one branch per supported spec, then format the integer inside that branch.
+  - level: 2
+    text: Python's built-in `format(number, code)` does the heavy lifting; `format(n, ",")` gives comma grouping and `format(n, "+")` forces a sign, both handling negatives for you.
+  - level: 3
+    text: 'For hex and bin, format `abs(value)` and prepend your own minus; for "pad6", slice the width out with `int(spec[3:])` and use `format(value, "0{}d".format(width))`, which counts the sign inside the width just like "06d".'
+tests:
+  public:
+    - name: empty_spec_grouping
+      input:
+        value: 1234567
+        spec: ''
+      expected: '1,234,567'
+    - name: hex_negative
+      input:
+        value: -255
+        spec: hex
+      expected: '-FF'
+    - name: pad_positive
+      input:
+        value: 42
+        spec: pad6
+      expected: '000042'
+  validation:
+    - name: empty_spec_negative
+      input:
+        value: -1234
+        spec: ''
+      expected: '-1,234'
+    - name: sign_zero
+      input:
+        value: 0
+        spec: sign
+      expected: '+0'
+    - name: bin_negative
+      input:
+        value: -5
+        spec: bin
+      expected: '-101'
+    - name: pad_negative_counts_sign
+      input:
+        value: -42
+        spec: pad6
+      expected: '-00042'
+    - name: pad_already_wide
+      input:
+        value: 123456
+        spec: pad4
+      expected: '123456'
+explanation_markdown: |
+  When you write `format(obj, spec)` or `f"{obj:spec}"`, Python calls
+  `type(obj).__format__(obj, spec)` and hands it the raw spec string after the colon —
+  the object is entirely responsible for parsing that string and producing text. Numeric
+  and string builtins interpret the standard format mini-language, but a custom class can
+  invent its own, which is exactly what you did: branch on the spec, then lean on the
+  builtin `format` for the actual digit work (`","` for grouping, `"+"` for a forced
+  sign, `"0{width}d"` for sign-aware zero padding). Formatting the magnitude and adding
+  your own minus for hex and bin mirrors how Python itself keeps the sign outside the
+  base conversion. The key mental model: `__format__` receives a spec, not pre-formatted
+  output, so all interpretation happens inside your method.
+common_mistakes:
+  - Formatting `value` directly for hex/bin instead of `abs(value)`, so negatives render as two's-complement noise or with a misplaced sign.
+  - Building the pad width by hand and forgetting that the minus sign must be counted inside the total width, unlike a naive left-zfill of the digits only.
+  - Assuming an empty spec should return `str(value)`; it must apply comma grouping here, which is a different string for values over 999.

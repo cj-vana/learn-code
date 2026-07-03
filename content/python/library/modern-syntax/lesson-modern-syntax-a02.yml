@@ -1,0 +1,105 @@
+id: lesson.library.modern_syntax.a02
+kind: lesson
+version: 1
+language: python
+title: 'Exception Groups and except*'
+slug: lesson-modern-syntax-a02
+difficulty: medium
+concepts:
+  - python.modern_syntax
+  - python.exceptions
+prerequisites:
+  - python.exceptions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.modern_syntax.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original exception-groups walkthrough framed around a nursery's batch seed-order processing, with fresh worked semantics.
+body_markdown: |
+  Classic exception handling assumes one failure at a time. Concurrency
+  broke that assumption: run five subtasks together and *three* may fail —
+  with different exceptions. Raising just the first discards evidence.
+  Python 3.11 gave failure-in-plural first-class syntax: **exception
+  groups** and `except*`.
+
+  ### Raising several failures as one
+
+  A nursery processes a batch of seed orders; validation problems should
+  all surface, not just the first:
+
+  ```python
+  errors = []
+  for order in batch:
+      try:
+          validate(order)
+      except (MissingStock, BadAddress) as exc:
+          errors.append(exc)
+  if errors:
+      raise ExceptionGroup("batch had failures", errors)
+  ```
+
+  An `ExceptionGroup` is itself an exception that *contains* others (and
+  groups can nest). The traceback renders the whole tree — every failure,
+  each with its own context.
+
+  ### except*: handle by category, keep the rest
+
+  The new handler syntax splits a group by type:
+
+  ```python
+  try:
+      process(batch)
+  except* MissingStock as eg:
+      reorder(eg.exceptions)         # eg is a GROUP of the matching ones
+  except* BadAddress as eg:
+      queue_for_review(eg.exceptions)
+  ```
+
+  The semantics differ from `except` in three load-bearing ways:
+
+  1. **Every matching block runs.** Plain `except` picks the first
+     matching handler and stops. With `except*`, a group holding both
+     MissingStock and BadAddress triggers *both* blocks, each receiving
+     the subgroup of its own kind.
+  2. **You always receive a group.** Even if one exception matched, `eg`
+     is an ExceptionGroup; the individuals are in `eg.exceptions`.
+  3. **Unmatched exceptions re-raise automatically.** If the group also
+     held a TimeoutError no block matched, it propagates onward as a
+     (smaller) group — failures cannot be swallowed by omission.
+
+  A related pair worth knowing: `eg.subgroup(pred)` / `eg.split(pred)`
+  filter a group programmatically — your exercise builds the
+  split-by-category summary that these express.
+
+  ### Notes: annotating in flight
+
+  Smaller 3.11 gift, broadly useful: any exception can carry extra
+  context added *after* it was raised:
+
+  ```python
+  except ValueError as exc:
+      exc.add_note(f"while processing order {order_id}")
+      raise
+  ```
+
+  Notes render at the end of the traceback — the right way to attach
+  "what were we doing at the time" without wrapping the exception in a
+  new type (which would break callers' `except ValueError`). Re-raising
+  with `raise` (bare) preserves identity and traceback; the note rides
+  along. Between groups for parallel failures and notes for context,
+  Python's error reporting finally matches how failures actually happen:
+  several at once, each with a story.
+checkpoints:
+  - question: A group contains two MissingStock and one BadAddress. With except* blocks for each type, describe exactly what runs and what each receives.
+    answer: 'Both blocks run — the MissingStock block gets a group whose .exceptions holds the two stock errors, and the BadAddress block gets a group holding the one address error; with plain except only one handler would have run.'
+    explanation: except* partitions the group by type and dispatches every partition — the semantic that makes multi-failure handling complete.
+  - question: What happens to exceptions in a group that NO except* block matches?
+    answer: 'They automatically re-raise as a smaller ExceptionGroup after the matching blocks finish — unhandled failures propagate by default instead of being silently dropped.'
+    explanation: The auto-re-raise rule means an except* ladder can never accidentally swallow failure kinds it didn't anticipate.
+  - question: Why is exc.add_note(...) + bare raise better than wrapping the exception in a new custom type to add context?
+    answer: 'The note attaches context while preserving the exception''s type, identity, and traceback — callers'' existing except clauses still match, and the note renders in the traceback; wrapping changes the type and breaks handlers.'
+    explanation: 'Notes solve the annotate-without-altering problem that wrapping never could.'

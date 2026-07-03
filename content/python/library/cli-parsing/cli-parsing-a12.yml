@@ -1,0 +1,270 @@
+id: exercise.library.cli_parsing.a12
+kind: exercise
+version: 1
+language: python
+title: Predicting the Ridge Station's Namespace
+slug: cli-parsing-a12
+difficulty: hard
+concepts:
+  - python.cli_args
+  - python.dictionaries
+  - python.types
+prerequisites:
+  - python.loops
+  - python.conditionals
+  - python.lists
+estimated_time_minutes: 26
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.cli_parsing.a12
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original mini-parser capstone framed as a mountain ridge data-sync station, composing defaults, value/flag options, type coercion, dest normalization, and positional binding into one namespace prediction.
+prompt_markdown: |
+  A remote ridge station syncs its readings with a small home-grown argument parser,
+  and you are writing the piece that predicts the final namespace -- the dict of
+  settings the parser hands to the program -- from a spec and a token list.
+
+  The grader calls your function with one argument: a request dict shaped like
+
+  ```python
+  {
+      "spec": {
+          "options": [
+              {"name": "--output", "type": "str", "default": "out.txt"},
+              {"name": "--jobs", "type": "int", "default": 1},
+              {"name": "--dry-run", "flag": True, "default": False}
+          ],
+          "positionals": [
+              {"name": "source", "type": "str"},
+              {"name": "dest", "type": "str"}
+          ]
+      },
+      "argv": ["--jobs", "4", "--dry-run", "input.csv", "backup.csv"]
+  }
+  ```
+
+  Write `predict_namespace(request)` that returns the resulting namespace dict.
+
+  Naming: every option or positional maps to a **dest** key equal to its name with
+  leading dashes stripped and any remaining dash turned into an underscore, so
+  `--dry-run` stores under `dry_run` and `source` stores under `source`.
+
+  Start every option at its declared `default`, then walk `argv`:
+
+  - A token beginning with `--` is an option; you may assume it matches one declared
+    in the spec. If that option has `"flag": True` it is a switch: set its dest to
+    `True` and move on, consuming no value. Otherwise it is a value option: take the
+    **next** token as its value, coerce it by the option's `type`, and store it. A
+    repeated option keeps the last value seen.
+  - Any other token is a positional value; collect these in order.
+
+  After the walk, bind positionals: the first collected value fills the first
+  declared positional, the second fills the second, and so on, each coerced by that
+  positional's `type`. A declared positional with no value left gets `None`. Extra
+  collected values beyond the declared positionals are dropped.
+
+  Coercion by `type`: `"int"` uses `int(...)`; `"float"` uses `float(...)` rounded
+  to 4 places; `"str"` keeps the string as-is. Flag options never go through
+  coercion.
+
+  For the example above the namespace is
+  `{"output": "out.txt", "jobs": 4, "dry_run": True, "source": "input.csv", "dest": "backup.csv"}`.
+starter_code: |
+  def predict_namespace(request):
+      return {}
+function_name: predict_namespace
+input_mode: function
+solution_sketch: Seed the namespace from every option default keyed by its normalized dest, scan argv binding flag options to True and value options to their coerced next token while collecting bare tokens, then assign collected positionals in order (coerced) with None for any that run out.
+sample_solution: |
+  def predict_namespace(request):
+      spec = request["spec"]
+      argv = request["argv"]
+      options = spec["options"]
+      positionals = spec["positionals"]
+
+      by_name = {opt["name"]: opt for opt in options}
+      namespace = {}
+      for opt in options:
+          namespace[_dest(opt["name"])] = opt["default"]
+
+      collected = []
+      i = 0
+      n = len(argv)
+      while i < n:
+          token = argv[i]
+          if token.startswith("--"):
+              opt = by_name[token]
+              dest = _dest(opt["name"])
+              if opt.get("flag"):
+                  namespace[dest] = True
+                  i += 1
+              else:
+                  namespace[dest] = _coerce(argv[i + 1], opt["type"])
+                  i += 2
+          else:
+              collected.append(token)
+              i += 1
+
+      for idx, pos in enumerate(positionals):
+          dest = _dest(pos["name"])
+          if idx < len(collected):
+              namespace[dest] = _coerce(collected[idx], pos["type"])
+          else:
+              namespace[dest] = None
+      return namespace
+
+
+  def _dest(name):
+      return name.lstrip("-").replace("-", "_")
+
+
+  def _coerce(value, typ):
+      if typ == "int":
+          return int(value)
+      if typ == "float":
+          return round(float(value), 4)
+      return value
+hints:
+  - level: 1
+    text: Two phases. First fill the namespace with every option's default; then scan argv, letting real tokens overwrite those defaults and gathering bare tokens for the positionals.
+  - level: 2
+    text: A flag option consumes only itself and sets its dest True; a value option consumes the next token too, so advance your index by 1 or 2 accordingly.
+  - level: 3
+    text: Bind positionals by index against the list you collected, coercing each by its type, and assign None whenever the collected list runs out before the declared positionals do.
+tests:
+  public:
+    - name: full_invocation
+      input:
+        spec:
+          options:
+            - {name: "--output", type: "str", default: "out.txt"}
+            - {name: "--jobs", type: "int", default: 1}
+            - {name: "--dry-run", flag: true, default: false}
+          positionals:
+            - {name: "source", type: "str"}
+            - {name: "dest", type: "str"}
+        argv: ["--jobs", "4", "--dry-run", "input.csv", "backup.csv"]
+      expected:
+        output: "out.txt"
+        jobs: 4
+        dry_run: true
+        source: "input.csv"
+        dest: "backup.csv"
+    - name: defaults_only
+      input:
+        spec:
+          options:
+            - {name: "--output", type: "str", default: "out.txt"}
+            - {name: "--jobs", type: "int", default: 1}
+            - {name: "--dry-run", flag: true, default: false}
+          positionals:
+            - {name: "source", type: "str"}
+            - {name: "dest", type: "str"}
+        argv: []
+      expected:
+        output: "out.txt"
+        jobs: 1
+        dry_run: false
+        source: null
+        dest: null
+    - name: missing_second_positional
+      input:
+        spec:
+          options:
+            - {name: "--output", type: "str", default: "out.txt"}
+            - {name: "--jobs", type: "int", default: 1}
+            - {name: "--dry-run", flag: true, default: false}
+          positionals:
+            - {name: "source", type: "str"}
+            - {name: "dest", type: "str"}
+        argv: ["input.csv"]
+      expected:
+        output: "out.txt"
+        jobs: 1
+        dry_run: false
+        source: "input.csv"
+        dest: null
+  validation:
+    - name: override_and_extra_dropped
+      input:
+        spec:
+          options:
+            - {name: "--output", type: "str", default: "out.txt"}
+            - {name: "--jobs", type: "int", default: 1}
+            - {name: "--dry-run", flag: true, default: false}
+          positionals:
+            - {name: "source", type: "str"}
+            - {name: "dest", type: "str"}
+        argv: ["--output", "final.txt", "--jobs", "-2", "a", "b", "c"]
+      expected:
+        output: "final.txt"
+        jobs: -2
+        dry_run: false
+        source: "a"
+        dest: "b"
+    - name: repeated_option_last_wins
+      input:
+        spec:
+          options:
+            - {name: "--output", type: "str", default: "out.txt"}
+            - {name: "--jobs", type: "int", default: 1}
+            - {name: "--dry-run", flag: true, default: false}
+          positionals:
+            - {name: "source", type: "str"}
+            - {name: "dest", type: "str"}
+        argv: ["--jobs", "2", "--jobs", "9", "src", "dst"]
+      expected:
+        output: "out.txt"
+        jobs: 9
+        dry_run: false
+        source: "src"
+        dest: "dst"
+    - name: flag_before_single_positional
+      input:
+        spec:
+          options:
+            - {name: "--output", type: "str", default: "out.txt"}
+            - {name: "--jobs", type: "int", default: 1}
+            - {name: "--dry-run", flag: true, default: false}
+          positionals:
+            - {name: "source", type: "str"}
+            - {name: "dest", type: "str"}
+        argv: ["--dry-run", "only.txt"]
+      expected:
+        output: "out.txt"
+        jobs: 1
+        dry_run: true
+        source: "only.txt"
+        dest: null
+    - name: float_type_and_dashed_dest
+      input:
+        spec:
+          options:
+            - {name: "--rate", type: "float", default: 1.0}
+            - {name: "--keep-going", flag: true, default: false}
+          positionals:
+            - {name: "target", type: "str"}
+        argv: ["--rate", "0.25", "--keep-going", "zone-a"]
+      expected:
+        rate: 0.25
+        keep_going: true
+        target: "zone-a"
+explanation_markdown: |
+  This capstone composes every idea from the area into one prediction: dest
+  normalization, defaults, flag versus value options, per-type coercion, and
+  positional binding by position. The two-phase shape is what keeps it honest --
+  seed defaults first so any option the user omits already holds the right value,
+  then let the scan overwrite only what was actually supplied. Advancing the index
+  by 1 for flags and 2 for value options is the same bookkeeping a real recursive
+  descent parser does to avoid reading a value as if it were another option.
+
+  Binding positionals by index (with `None` padding when the tokens run short)
+  mirrors how a real parser reports missing required arguments, while dropping the
+  extras keeps the namespace shaped exactly like the spec.
+common_mistakes:
+  - Advancing the index by 2 for a flag option, which skips the following positional or option that the flag never consumed.
+  - Forgetting to seed defaults, so options the user omitted are missing from the namespace instead of holding their default value.
+  - Normalizing dest for options but not positionals (or vice versa), leaving keys like "dry-run" that should read "dry_run".

@@ -1,0 +1,185 @@
+id: exercise.library.data_wrangling_python.a11
+kind: exercise
+version: 1
+language: python
+title: Fastest Laps by Kart Class
+slug: data-wrangling-python-a11
+difficulty: hard
+concepts:
+  - concepts.grouping_aggregation
+  - python.sorting
+prerequisites:
+  - python.sorting
+  - python.dictionaries
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.data_wrangling_python.a11
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original top-n-per-group drill framed around a go-kart club ranking each class by recorded top speed.
+prompt_markdown: |
+  A go-kart club logs the top speed reached on every lap, tagged with the kart's
+  **class**. At the end of the day they want a leaderboard: the fastest few laps
+  **per class**, highest speed first.
+
+  Write `top_n_per_group(payload)` that takes **one dictionary** with four entries:
+
+  - `"rows"`: a list of dictionaries (the lap records).
+  - `"key"`: the field name to group by (the class).
+  - `"value"`: the field name to rank by (the speed).
+  - `"n"`: how many top rows to keep per group.
+
+  Example call:
+
+  ```python
+  top_n_per_group({
+      "rows": [
+          {"kart_class": "junior", "driver": "Ada", "speed": 40},
+          {"kart_class": "junior", "driver": "Ben", "speed": 45},
+      ],
+      "key": "kart_class",
+      "value": "speed",
+      "n": 1,
+  })
+  # -> {"junior": [{"kart_class": "junior", "driver": "Ben", "speed": 45}]}
+  ```
+
+  Return a **dictionary** mapping each group to a **list of its top `n` rows**,
+  sorted by the value field **descending** (highest first). When two rows in a
+  group tie on value, keep them in their **original input order**. Each output row
+  is the full original record. If a group has fewer than `n` rows, return all of
+  them (still sorted); if `n` is `0`, its list is empty. If `rows` is empty,
+  return an empty dictionary.
+starter_code: |
+  def top_n_per_group(payload):
+      return {}
+function_name: top_n_per_group
+input_mode: function
+solution_sketch: Group rows into lists by key preserving input order, then for each group take a stable sort by value in reverse and slice off the first n rows.
+sample_solution: |
+  def top_n_per_group(payload):
+      rows = payload["rows"]
+      key = payload["key"]
+      value = payload["value"]
+      n = payload["n"]
+      groups = {}
+      for row in rows:
+          groups.setdefault(row[key], []).append(row)
+      result = {}
+      for group, items in groups.items():
+          ranked = sorted(items, key=lambda r: r[value], reverse=True)
+          result[group] = ranked[:n]
+      return result
+hints:
+  - level: 1
+    text: First bucket the rows into a dictionary of lists keyed by the group field, appending in input order.
+  - level: 2
+    text: Python's sorted is stable, so sorting by the value field with reverse=True keeps tied rows in their original order.
+  - level: 3
+    text: After sorting each group's list descending, slice with [:n] -- slicing is safe even when a group has fewer than n rows or n is 0.
+tests:
+  public:
+    - name: empty_rows
+      input:
+        rows: []
+        key: kart_class
+        value: speed
+        n: 2
+      expected: {}
+    - name: single_group_top_two
+      input:
+        rows:
+          - {kart_class: "junior", driver: "Ada", speed: 40}
+          - {kart_class: "junior", driver: "Ben", speed: 45}
+          - {kart_class: "junior", driver: "Cy", speed: 38}
+        key: kart_class
+        value: speed
+        n: 2
+      expected:
+        junior:
+          - {kart_class: "junior", driver: "Ben", speed: 45}
+          - {kart_class: "junior", driver: "Ada", speed: 40}
+    - name: two_groups_top_one
+      input:
+        rows:
+          - {kart_class: "junior", driver: "Ada", speed: 40}
+          - {kart_class: "senior", driver: "Di", speed: 55}
+          - {kart_class: "junior", driver: "Ben", speed: 45}
+          - {kart_class: "senior", driver: "Ed", speed: 50}
+        key: kart_class
+        value: speed
+        n: 1
+      expected:
+        junior:
+          - {kart_class: "junior", driver: "Ben", speed: 45}
+        senior:
+          - {kart_class: "senior", driver: "Di", speed: 55}
+  validation:
+    - name: ties_keep_input_order
+      input:
+        rows:
+          - {kart_class: "a", driver: "x", speed: 30}
+          - {kart_class: "a", driver: "y", speed: 30}
+          - {kart_class: "a", driver: "z", speed: 30}
+        key: kart_class
+        value: speed
+        n: 2
+      expected:
+        a:
+          - {kart_class: "a", driver: "x", speed: 30}
+          - {kart_class: "a", driver: "y", speed: 30}
+    - name: n_larger_than_group
+      input:
+        rows:
+          - {kart_class: "a", driver: "x", speed: 10}
+          - {kart_class: "a", driver: "y", speed: 20}
+        key: kart_class
+        value: speed
+        n: 5
+      expected:
+        a:
+          - {kart_class: "a", driver: "y", speed: 20}
+          - {kart_class: "a", driver: "x", speed: 10}
+    - name: n_zero_empty_lists
+      input:
+        rows:
+          - {kart_class: "a", driver: "x", speed: 10}
+        key: kart_class
+        value: speed
+        n: 0
+      expected:
+        a: []
+    - name: ties_mixed_with_distinct
+      input:
+        rows:
+          - {kart_class: "b", driver: "p", speed: 60}
+          - {kart_class: "b", driver: "q", speed: 60}
+          - {kart_class: "b", driver: "r", speed: 70}
+          - {kart_class: "b", driver: "s", speed: 50}
+        key: kart_class
+        value: speed
+        n: 3
+      expected:
+        b:
+          - {kart_class: "b", driver: "r", speed: 70}
+          - {kart_class: "b", driver: "p", speed: 60}
+          - {kart_class: "b", driver: "q", speed: 60}
+explanation_markdown: |
+  This is grouping followed by a per-bucket ranking. The first pass buckets rows
+  into lists with `setdefault`, and because you append in input order, tied rows
+  arrive in the order you will later need to preserve. The second pass sorts each
+  bucket.
+
+  The tie rule is handled for free by Python's stable sort: when two rows compare
+  equal on the value key, `sorted` leaves them in their existing order, and
+  `reverse=True` still preserves that stability rather than flipping equal
+  elements. Sorting descending and slicing `[:n]` gives the top n, and slicing is
+  forgiving -- it returns the whole list when a group is smaller than n and an
+  empty list when n is 0, so no special-casing is needed.
+common_mistakes:
+  - Sorting all rows once globally instead of within each group, which mixes classes together.
+  - Sorting ascending or negating the key inconsistently, so the slowest laps come back instead of the fastest.
+  - Building ties by reversing the whole sorted list, which flips tied rows out of their required input order.

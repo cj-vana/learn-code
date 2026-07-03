@@ -1,0 +1,150 @@
+id: exercise.library.oop_internals.a01
+kind: exercise
+version: 1
+language: python
+title: The Observatory's Bounded Dial
+slug: oop-internals-a01
+difficulty: easy
+concepts:
+  - python.descriptors_mro
+  - python.classes
+prerequisites:
+  - python.exceptions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.oop_internals.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original descriptor drill framed around a telescope calibration dial that clamps out-of-range writes.
+prompt_markdown: |
+  A mountaintop observatory calibrates its telescope through a single dial whose
+  reading must always stay between a low and high limit. The dial is guarded by a
+  **descriptor** so that any write outside the range is rejected and the dial keeps
+  the value it already had.
+
+  Write `calibrate_dials(job)`. The single argument is a dict shaped like:
+
+  ```python
+  {"low": 0, "high": 100, "writes": [55, -3, 100, 101, 42]}
+  ```
+
+  - `low` and `high` are the inclusive bounds.
+  - The dial starts at `low` (always a legal value).
+  - Apply each number in `writes` to the dial, in order.
+  - A write is accepted only when `low <= value <= high`. When accepted, the dial
+    takes that new value.
+  - A write outside the range is rejected: the dial keeps its current value.
+
+  Return a list with the dial's value **after** processing each write, one entry
+  per write. For the example above the result is `[55, 55, 100, 100, 42]` (the
+  `-3` and `101` writes are rejected). An empty `writes` list returns `[]`.
+
+  Implement the guard as a descriptor class with `__set_name__`, `__get__`, and a
+  `__set__` that raises `ValueError` when a value is out of range; catch that error
+  in your loop so a rejected write leaves the reading untouched.
+starter_code: |
+  def calibrate_dials(job):
+      return []
+function_name: calibrate_dials
+input_mode: function
+solution_sketch: A data descriptor validates each assignment in __set__, raising ValueError out of range; the loop catches it so rejected writes leave the stored value unchanged, and records the current reading each step.
+sample_solution: |
+  def calibrate_dials(job):
+      low = job["low"]
+      high = job["high"]
+      writes = job["writes"]
+
+      class BoundedReading:
+          def __set_name__(self, owner, name):
+              self._store = "_" + name
+
+          def __get__(self, obj, owner=None):
+              if obj is None:
+                  return self
+              return getattr(obj, self._store)
+
+          def __set__(self, obj, value):
+              if not (low <= value <= high):
+                  raise ValueError("reading out of range")
+              setattr(obj, self._store, value)
+
+      class Instrument:
+          dial = BoundedReading()
+
+          def __init__(self, start):
+              self.dial = start
+
+      instrument = Instrument(low)
+      history = []
+      for value in writes:
+          try:
+              instrument.dial = value
+          except ValueError:
+              pass
+          history.append(instrument.dial)
+      return history
+hints:
+  - level: 1
+    text: A descriptor lives on the class as a class attribute; its __set__ runs every time you assign to that attribute on an instance.
+  - level: 2
+    text: Store the real number under a different name (like "_dial") so __get__ and __set__ don't recurse into themselves. Use __set_name__ to learn that backing name.
+  - level: 3
+    text: In the loop, wrap the assignment in try/except ValueError. On rejection do nothing, then append the current dial value regardless of whether the write succeeded.
+tests:
+  public:
+    - name: example_mixed
+      input:
+        low: 0
+        high: 100
+        writes: [55, -3, 100, 101, 42]
+      expected: [55, 55, 100, 100, 42]
+    - name: no_writes
+      input:
+        low: 10
+        high: 20
+        writes: []
+      expected: []
+    - name: negatives_allowed
+      input:
+        low: -5
+        high: 5
+        writes: [0, 6, -6, 5, -5]
+      expected: [0, 0, 0, 5, -5]
+  validation:
+    - name: single_point_range
+      input:
+        low: 0
+        high: 0
+        writes: [0, 1, 0]
+      expected: [0, 0, 0]
+    - name: boundaries_inclusive
+      input:
+        low: 1
+        high: 9
+        writes: [1, 9, 10, 0, 5]
+      expected: [1, 9, 9, 9, 5]
+    - name: all_rejected
+      input:
+        low: 100
+        high: 200
+        writes: [50, 300, 99]
+      expected: [100, 100, 100]
+explanation_markdown: |
+  A descriptor is any object whose class defines `__get__`/`__set__` (and friends).
+  Placed as a class attribute, it intercepts attribute access on every instance.
+  Because `BoundedReading` defines `__set__`, it is a **data descriptor**, so it
+  always runs on assignment even if the instance dict holds a same-named key.
+
+  The trick that avoids infinite recursion is storing the actual number under a
+  separate backing name (`_dial`). `__set_name__` hands the descriptor the attribute
+  name it was assigned to at class-creation time, so the backing name is derived
+  once rather than hard-coded. Validation lives in exactly one place — `__set__` —
+  which is precisely how `property` setters and typed-attribute libraries enforce
+  their invariants.
+common_mistakes:
+  - Storing the value under the same attribute name the descriptor guards, causing __get__/__set__ to call themselves forever.
+  - Appending the attempted write instead of the dial's current value, so rejected writes wrongly appear in the history.
+  - Making the descriptor an instance attribute; descriptors only trigger their protocol when they live on the class.

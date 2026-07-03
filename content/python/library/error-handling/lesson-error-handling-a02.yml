@@ -1,0 +1,101 @@
+id: lesson.library.error_handling.a02
+kind: lesson
+version: 1
+language: python
+title: Raising and Designing Your Own Exceptions
+slug: lesson-error-handling-a02
+difficulty: medium
+concepts:
+  - python.exceptions
+  - python.classes
+prerequisites:
+  - python.functions
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.error_handling.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original treatment of raising with messages and building a domain exception hierarchy for a booking system.
+body_markdown: |
+  Handling exceptions is half the story. The other half is *raising* them:
+  signalling from your own code that a rule has been broken. You raise with the
+  `raise` keyword and an exception instance, almost always carrying a message that
+  explains what went wrong.
+
+  ```python
+  def book_seat(seats_left):
+      if seats_left <= 0:
+          raise ValueError("no seats left to book")
+      return seats_left - 1
+  ```
+
+  The message is not decoration. When the exception is caught, `str(exc)` returns
+  that text, and when it is not caught, the message is what prints in the
+  traceback. A good message names the specific problem and, where useful, the
+  offending value: `raise ValueError(f"days {days} exceeds the 14-day limit")`
+  tells a future reader far more than a bare `raise ValueError`.
+
+  Built-in types like `ValueError` and `TypeError` cover generic problems, but a
+  real program has *domain* failures that deserve their own names. You create one
+  by subclassing `Exception`:
+
+  ```python
+  class BookingError(Exception):
+      pass
+  ```
+
+  That is a complete, usable exception. Now callers can catch a booking problem
+  specifically -- `except BookingError` -- without accidentally trapping an
+  unrelated `ValueError` from somewhere else. Naming the error also makes the
+  intent obvious at the `raise` site.
+
+  When several related failures can occur, arrange them into a hierarchy so callers
+  can choose their level of precision:
+
+  ```python
+  class BookingError(Exception):
+      pass
+
+  class SoldOutError(BookingError):
+      pass
+
+  class PaymentDeclinedError(BookingError):
+      pass
+
+  def reserve(seats_left, paid):
+      if seats_left <= 0:
+          raise SoldOutError("event is sold out")
+      if not paid:
+          raise PaymentDeclinedError("payment was declined")
+      return "confirmed"
+  ```
+
+  Because both subclasses inherit from `BookingError`, one handler can catch the
+  whole family:
+
+  ```python
+  try:
+      reserve(0, True)
+  except BookingError as exc:
+      print(type(exc).__name__, "->", exc)
+  ```
+
+  A caller that cares about the category catches the base class; a caller that
+  needs the detail catches a specific subclass or reads `type(exc).__name__`. This
+  is the design payoff of custom exceptions: the *shape* of your error types
+  mirrors the structure of the problems your program actually has, so error
+  handling reads like the domain rather than like a pile of string comparisons on
+  generic errors.
+checkpoints:
+  - question: Why attach a message when you raise an exception, for example `raise ValueError("days out of range")`?
+    answer: The message explains the failure; it is what `str(exc)` returns when caught and what appears in the traceback when the exception is not caught.
+    explanation: A specific message that names the problem (and often the bad value) makes both handled and unhandled failures far easier to diagnose.
+  - question: How do you define a custom exception for a domain error, and what does subclassing buy you?
+    answer: "Subclass `Exception`, for example `class BookingError(Exception): pass`; it lets callers catch that specific kind of failure without trapping unrelated exceptions."
+    explanation: A named exception type separates your domain's failures from generic built-in errors, making both raising and catching more precise and readable.
+  - question: If `SoldOutError` and `PaymentDeclinedError` both subclass `BookingError`, how can one handler catch either?
+    answer: Because both are subclasses of `BookingError`, an `except BookingError` clause matches either subclass while still preserving each exception's real type.
+    explanation: A hierarchy lets callers pick their precision -- catch the base for the whole family, or a subclass for one specific case -- from the same raised objects.

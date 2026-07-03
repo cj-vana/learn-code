@@ -1,0 +1,193 @@
+id: exercise.library.sqlite_patterns.a10
+kind: exercise
+version: 1
+language: python
+title: Vetting the Observatory's Catalog Upload
+slug: sqlite-patterns-a10
+difficulty: medium
+concepts:
+  - python.sqlite_sql
+  - python.exceptions
+prerequisites:
+  - python.dictionaries
+  - python.lists
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sqlite_patterns.a10
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original UNIQUE-constraint probe framed as an observatory vetting a star-catalog upload, inserting rows one by one against a UNIQUE column and catching the first IntegrityError to report the offending value; deliberately surfaces SQLite's NULL-distinct rule.
+prompt_markdown: |
+  An observatory receives nightly uploads for its star catalog: a list of rows,
+  each a dict like `{"catalog_id": "HD-4021", "magnitude": 5.1}`. Before the
+  upload is accepted, a clerk checks that the identifying column really is unique
+  across the whole file, because two rows claiming the same catalog id would
+  corrupt the catalog.
+
+  Write `unique_constraint_violation_check(request)` where `request` is a single
+  dict:
+
+  - `"rows"`: the uploaded rows, a list of dicts that all share the same keys.
+  - `"unique_col"`: the column that must hold no repeated value, for example
+    `"catalog_id"`.
+
+  Build an in-memory SQLite table whose `unique_col` carries a `UNIQUE`
+  constraint, then insert the rows **one at a time in order**. Stop at the first
+  insert that raises a uniqueness violation. Return a dict describing what
+  happened:
+
+  - `"ok"`: `True` if every row inserted cleanly, otherwise `False`.
+  - `"first_conflict"`: the `unique_col` value of the first row that collided,
+    or `None` when there was no collision.
+  - `"inserted"`: how many rows inserted successfully before you stopped (so on a
+    clean upload this equals the number of rows).
+
+  Details that matter:
+
+  - If `"rows"` is empty, the upload is trivially clean:
+    `{"ok": True, "first_conflict": None, "inserted": 0}`.
+  - SQLite treats `NULL` as distinct from every other `NULL`, so multiple rows
+    whose `unique_col` is `None` do **not** collide — let the database decide
+    this rather than special-casing it yourself.
+
+  Open `sqlite3.connect(":memory:")` inside the function; do not touch any files.
+starter_code: |
+  import sqlite3
+
+
+  def unique_constraint_violation_check(request):
+      return {}
+function_name: unique_constraint_violation_check
+input_mode: function
+solution_sketch: "Create an in-memory table declaring the unique column UNIQUE, loop over the rows inserting one at a time inside a try/except for sqlite3.IntegrityError; on the first error return ok False with that row's key value and the running inserted count, otherwise return ok True with None and the full count."
+sample_solution: |
+  import sqlite3
+
+
+  def unique_constraint_violation_check(request):
+      rows = request["rows"]
+      unique_col = request["unique_col"]
+      if not rows:
+          return {"ok": True, "first_conflict": None, "inserted": 0}
+      columns = list(rows[0].keys())
+      col_list = ", ".join('"%s"' % c for c in columns)
+      placeholders = ", ".join("?" for _ in columns)
+      defs = ", ".join(
+          '"%s" UNIQUE' % c if c == unique_col else '"%s"' % c for c in columns
+      )
+      conn = sqlite3.connect(":memory:")
+      conn.isolation_level = None
+      conn.execute("CREATE TABLE catalog (%s)" % defs)
+      insert = "INSERT INTO catalog (%s) VALUES (%s)" % (col_list, placeholders)
+      inserted = 0
+      for row in rows:
+          try:
+              conn.execute(insert, tuple(row[c] for c in columns))
+              inserted += 1
+          except sqlite3.IntegrityError:
+              return {
+                  "ok": False,
+                  "first_conflict": row[unique_col],
+                  "inserted": inserted,
+              }
+      return {"ok": True, "first_conflict": None, "inserted": inserted}
+hints:
+  - level: 1
+    text: Declare only the unique column with a UNIQUE constraint when you CREATE the table; the other columns stay plain.
+  - level: 2
+    text: Insert the rows one by one inside a try block and increment a counter after each successful insert.
+  - level: 3
+    text: Catch sqlite3.IntegrityError; the row you were inserting when it fired is the first conflict, and the counter already holds how many landed before it. Let NULL values flow through untouched so SQLite's NULL-distinct rule applies.
+tests:
+  public:
+    - name: clean_upload
+      input:
+        rows:
+          - {catalog_id: HD-4021, magnitude: 5.1}
+          - {catalog_id: HD-4099, magnitude: 6.3}
+          - {catalog_id: HD-5100, magnitude: 4.0}
+        unique_col: catalog_id
+      expected:
+        ok: true
+        first_conflict: null
+        inserted: 3
+    - name: duplicate_id
+      input:
+        rows:
+          - {catalog_id: HD-4021, magnitude: 5.1}
+          - {catalog_id: HD-4099, magnitude: 6.3}
+          - {catalog_id: HD-4021, magnitude: 9.9}
+        unique_col: catalog_id
+      expected:
+        ok: false
+        first_conflict: HD-4021
+        inserted: 2
+    - name: empty_upload
+      input:
+        rows: []
+        unique_col: catalog_id
+      expected:
+        ok: true
+        first_conflict: null
+        inserted: 0
+  validation:
+    - name: first_two_collide
+      input:
+        rows:
+          - {catalog_id: HD-1, magnitude: 2.2}
+          - {catalog_id: HD-1, magnitude: 3.3}
+        unique_col: catalog_id
+      expected:
+        ok: false
+        first_conflict: HD-1
+        inserted: 1
+    - name: nulls_are_distinct
+      input:
+        rows:
+          - {catalog_id: null, magnitude: 5.1}
+          - {catalog_id: null, magnitude: 6.3}
+        unique_col: catalog_id
+      expected:
+        ok: true
+        first_conflict: null
+        inserted: 2
+    - name: numeric_unique_column
+      input:
+        rows:
+          - {band: 1, flux: 30}
+          - {band: 2, flux: 40}
+          - {band: 1, flux: 55}
+        unique_col: band
+      expected:
+        ok: false
+        first_conflict: 1
+        inserted: 2
+    - name: single_row
+      input:
+        rows:
+          - {catalog_id: HD-7, magnitude: 1.0}
+        unique_col: catalog_id
+      expected:
+        ok: true
+        first_conflict: null
+        inserted: 1
+explanation_markdown: |
+  Rather than hand-rolling a duplicate scan, this lets the database enforce the
+  rule and reports what it enforced. A `UNIQUE` column makes SQLite reject the
+  first colliding insert with `sqlite3.IntegrityError`, so the row you were
+  holding at that moment is exactly the first conflict, and the counter you kept
+  tells you how many rows made it in first. Inserting one at a time (instead of
+  one `executemany`) is what lets you pinpoint *which* value broke the rule.
+
+  The subtle case is `NULL`. In SQL a `NULL` is not considered equal to anything,
+  not even another `NULL`, so a `UNIQUE` column happily accepts many `NULL`
+  rows. Because you pass the values straight through to the database, you inherit
+  that behaviour for free — and it is the correct behaviour, which is why the
+  two-`None` upload reports `ok: True`.
+common_mistakes:
+  - Using a single executemany, which does flag a duplicate but cannot tell you which value collided or how many rows preceded it.
+  - Special-casing None as a duplicate, which contradicts SQL's rule that NULL is distinct from every other NULL.
+  - Counting the failed row as inserted, so the reported inserted total is one too high.

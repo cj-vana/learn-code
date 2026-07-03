@@ -1,0 +1,108 @@
+id: quiz.library.trees_lite.a03
+kind: quiz
+version: 1
+language: python
+title: Search Trees, Balance, and Ancestors
+slug: quiz-trees-lite-a03
+difficulty: hard
+concepts:
+  - python.trees_as_data
+  - patterns.binary_search
+  - patterns.tree_traversal
+prerequisites: []
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.trees_lite.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original quiz on BST validation bounds, height-balance every-node rule, LCA reasoning, and balanced-build from sorted data.
+quiz_type: mixed_review
+questions:
+  - id: q1
+    prompt: |
+      Why is comparing each node only against its immediate parent an incorrect
+      way to validate a binary search tree?
+    choices:
+      - A node must respect the bounds set by every ancestor, not just its parent
+      - Parent comparisons are too slow to run on large trees
+      - Duplicate values are always allowed, so no comparison is needed
+      - You must compare a node to its sibling instead
+    correct_choice: A node must respect the bounds set by every ancestor, not just its parent
+    explanation: |
+      A value can beat its parent yet still violate a higher ancestor's bound - for
+      example a 6 placed in the left subtree of a 5. Threading a (low, high) window
+      down the recursion enforces every ancestor's constraint.
+    concepts:
+      - patterns.binary_search
+      - python.trees_as_data
+  - id: q2
+    prompt: |
+      Is this tree a valid binary search tree (strict ordering, no duplicates)?
+
+          {"value": 10,
+           "left": {"value": 5, "left": None,
+                    "right": {"value": 12, "left": None, "right": None}},
+           "right": {"value": 15, "left": None, "right": None}}
+    choices:
+      - "No - 12 sits in the left subtree of 10 but is larger than 10"
+      - "Yes - every node is larger than its own left child"
+      - "No - 5 should be on the right of 10"
+      - "Yes - it is perfectly balanced"
+    correct_choice: "No - 12 sits in the left subtree of 10 but is larger than 10"
+    explanation: |
+      Node 12 is greater than its parent 5, but it lives in 10's left subtree, where
+      every value must stay below 10. The upper bound of 10 is violated.
+    concepts:
+      - patterns.binary_search
+      - python.trees_as_data
+  - id: q3
+    prompt: |
+      For height-balance, a tree is balanced only when which condition holds?
+    choices:
+      - At every node, the two subtree heights differ by at most one
+      - The root's two subtree heights differ by at most one
+      - Every leaf sits at the same depth
+      - The tree is a valid binary search tree
+    correct_choice: At every node, the two subtree heights differ by at most one
+    explanation: |
+      Balance is a per-node property. A tree can look even at the root yet hide a
+      deeper node whose two sides differ by more than one, so every node must be
+      checked.
+    concepts:
+      - patterns.tree_traversal
+  - id: q4
+    prompt: |
+      In a general (unordered) binary tree, during the lowest-common-ancestor
+      recursion, what does it mean when a node's left search and right search both
+      return a non-None result?
+    choices:
+      - The two targets split at this node, so it is their lowest common ancestor
+      - The tree is not a valid search tree
+      - Both targets are equal to this node's value
+      - The search should restart from the root
+    correct_choice: The two targets split at this node, so it is their lowest common ancestor
+    explanation: |
+      One target was found on the left and the other on the right, so this node is
+      the deepest node with both values beneath it - the lowest common ancestor.
+    concepts:
+      - patterns.tree_traversal
+  - id: q5
+    prompt: |
+      To build the shortest possible binary search tree from a sorted list, which
+      element should become the root of each (sub)list?
+    choices:
+      - The middle element, so equal counts fall on each side
+      - The first element, so the rest form the right subtree
+      - The last element, so the rest form the left subtree
+      - The largest element, to keep the tree left-heavy
+    correct_choice: The middle element, so equal counts fall on each side
+    explanation: |
+      Choosing the middle value splits the remaining sorted data into two halves of
+      near-equal size, which keeps the two subtrees the same height and the whole
+      tree balanced.
+    concepts:
+      - python.trees_as_data
+      - patterns.binary_search

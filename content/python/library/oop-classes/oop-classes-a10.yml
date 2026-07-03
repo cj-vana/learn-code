@@ -1,0 +1,96 @@
+id: exercise.library.oop_classes.a10
+kind: exercise
+version: 1
+language: python
+title: Peak Load on the Shuttle Route
+slug: oop-classes-a10
+difficulty: medium
+concepts:
+  - python.classes
+  - patterns.simulation
+prerequisites:
+  - python.classes
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.oop_classes.a10
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original airport-shuttle scenario building a Shuttle-and-Stop object model to compute peak occupancy.
+prompt_markdown: |
+  An airport shuttle runs a fixed loop of stops. It starts empty. At each stop,
+  passengers get off first, then new passengers get on. The operator wants the
+  **peak occupancy** -- the largest number of people on board at any moment during
+  the run.
+
+  Complete `peak_load(stops)`, where `stops` is a list of `[boarding, alighting]`
+  pairs, one per stop in order. You may assume no stop asks more people to alight
+  than are currently aboard. Inside the function, build a small object model: a
+  `Shuttle` class that tracks how many are aboard and remembers the highest count
+  seen, and it should process each stop by alighting then boarding. Return the peak
+  occupancy as an integer (0 if the shuttle never carries anyone).
+starter_code: |
+  def peak_load(stops):
+      # Build a Shuttle that alights then boards at each stop, tracking the
+      # highest occupancy reached, and return that peak.
+      return 0
+function_name: peak_load
+input_mode: function
+solution_sketch: Model a Shuttle that updates occupancy per stop (alight then board) and records the running maximum.
+sample_solution: |
+  def peak_load(stops):
+      class Shuttle:
+          def __init__(self):
+              self.aboard = 0
+              self.peak = 0
+
+          def serve(self, boarding, alighting):
+              self.aboard -= alighting
+              self.aboard += boarding
+              if self.aboard > self.peak:
+                  self.peak = self.aboard
+
+      shuttle = Shuttle()
+      for boarding, alighting in stops:
+          shuttle.serve(boarding, alighting)
+      return shuttle.peak
+hints:
+  - level: 1
+    text: Keep two numbers on the shuttle -- how many are aboard now, and the highest that count has ever been.
+  - level: 2
+    text: At each stop, subtract the alighting passengers before adding the boarding ones, then compare aboard against the stored peak.
+  - level: 3
+    text: In serve, do self.aboard -= alighting, self.aboard += boarding, then if self.aboard > self.peak update self.peak; return shuttle.peak at the end.
+tests:
+  public:
+    - name: rising_then_empty
+      input: [[3, 0], [2, 1], [0, 4]]
+      expected: 4
+    - name: no_stops
+      input: []
+      expected: 0
+    - name: single_stop
+      input: [[5, 0]]
+      expected: 5
+  validation:
+    - name: peak_in_middle
+      input: [[6, 0], [1, 5], [0, 2]]
+      expected: 6
+    - name: steady_swap
+      input: [[4, 0], [2, 2], [2, 2]]
+      expected: 4
+    - name: all_get_off
+      input: [[3, 0], [0, 3], [7, 0]]
+      expected: 7
+explanation_markdown: |
+  The `Shuttle` object owns two pieces of state: the current headcount and the
+  highest headcount seen so far. Processing a stop in the right order -- alight,
+  then board -- keeps `aboard` accurate, and comparing it to `peak` after each
+  change captures the maximum without a second pass. Because both values live on the
+  instance, the loop just replays the stops and reads `shuttle.peak` at the end.
+common_mistakes:
+  - Boarding before alighting, which can overstate the peak at a stop where a full load turns over.
+  - Recording the peak only at the final stop instead of after every change in occupancy.
+  - Returning the final aboard count rather than the maximum reached during the run.

@@ -1,0 +1,100 @@
+id: exercise.library.intervals_greedy.a06
+kind: exercise
+version: 1
+language: python
+title: How Many Charging Bays Does the Depot Need?
+slug: intervals-greedy-a06
+difficulty: medium
+concepts:
+  - patterns.intervals
+  - patterns.greedy
+  - python.sorting
+prerequisites:
+  - python.lists
+estimated_time_minutes: 18
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.intervals_greedy.a06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original electric-van depot framing for the peak-concurrency sweep that sizes a resource pool.
+prompt_markdown: |
+  A delivery depot charges electric vans overnight. Each van needs a bay for an
+  interval `[plug_in, unplug]`. A single bay serves one van at a time, but a van
+  that unplugs exactly when another plugs in (`[1, 5]` then `[5, 9]`) can hand
+  the bay straight over. Write `bays_needed(vans)` that returns the minimum
+  number of bays so no van ever waits — that is, the greatest number of vans
+  charging at the same instant.
+
+  An empty list needs `0` bays.
+starter_code: |
+  def bays_needed(vans):
+      return 0
+function_name: bays_needed
+input_mode: function
+solution_sketch: Sort start times and end times separately, then sweep both to track and cap the running count in use.
+sample_solution: |
+  def bays_needed(vans):
+      if not vans:
+          return 0
+      starts = sorted(v[0] for v in vans)
+      ends = sorted(v[1] for v in vans)
+      i = j = 0
+      in_use = 0
+      peak = 0
+      while i < len(starts):
+          if starts[i] < ends[j]:
+              in_use += 1
+              peak = max(peak, in_use)
+              i += 1
+          else:
+              in_use -= 1
+              j += 1
+      return peak
+hints:
+  - level: 1
+    text: The answer is the largest number of vans that are ever plugged in simultaneously, not the total number of vans.
+  - level: 2
+    text: Pull all start times into one sorted list and all end times into another, then walk them with two pointers.
+  - level: 3
+    text: When the next start is strictly before the next end, a van plugs in (count up); otherwise a van leaves (count down). Track the peak count.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: 0
+    - name: single
+      input: [[1, 5]]
+      expected: 1
+    - name: two_overlap
+      input: [[1, 5], [2, 6]]
+      expected: 2
+  validation:
+    - name: hand_off_reuses_bay
+      input: [[1, 5], [5, 9]]
+      expected: 1
+    - name: staggered_peak_two
+      input: [[1, 4], [2, 6], [5, 7]]
+      expected: 2
+    - name: triple_stack
+      input: [[1, 10], [2, 9], [3, 8]]
+      expected: 3
+    - name: two_clusters
+      input: [[1, 3], [2, 4], [10, 12], [11, 13]]
+      expected: 2
+explanation_markdown: |
+  The number of bays you must build equals the peak concurrency — the most vans
+  ever charging at once. Merging the intervals would hide that, so instead you
+  sweep a line across the night. Sorting the start times and end times into two
+  separate lists lets you replay the evening as a sequence of events: each start
+  raises the count of bays in use, each end lowers it, and the running maximum is
+  your answer. The comparison `starts[i] < ends[j]` is what lets a van reuse a
+  bay the instant another frees it: when a start and an end coincide, the end is
+  processed first, so the count dips before it climbs and no extra bay is
+  charged. Both lists are walked once, so the work is dominated by the sort.
+common_mistakes:
+  - Returning the number of vans or the number of merged blocks instead of the peak simultaneous count.
+  - Using <= in the start-versus-end comparison, which allocates an extra bay for a clean hand-off.
+  - Comparing whole intervals in start order and losing track of when each van actually unplugs.

@@ -1,0 +1,105 @@
+id: lesson.library.caching_performance.a01
+kind: lesson
+version: 1
+language: python
+title: 'Memoization: Trading Memory for Time'
+slug: lesson-caching-performance-a01
+difficulty: medium
+concepts:
+  - concepts.performance
+  - concepts.memoization
+prerequisites:
+  - python.functions
+  - python.dictionaries
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.caching_performance.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original memoization walkthrough framed around a route-planning service, with fresh worked cache mechanics.
+body_markdown: |
+  Performance work is mostly one trade repeated: **spend memory to save
+  time**, or spend time to save memory. Caching is the first direction's
+  purest form — remember an answer so you never recompute it — and its
+  standard tool deserves to be understood, not just decorated on.
+
+  ### The pattern, by hand and by decorator
+
+  A route service recomputes the same expensive distance queries. The
+  hand-rolled cache is a dict:
+
+  ```python
+  _cache = {}
+  def distance(a, b):
+      key = (a, b)
+      if key not in _cache:
+          _cache[key] = expensive_compute(a, b)
+      return _cache[key]
+  ```
+
+  The standard-library version is one line:
+
+  ```python
+  from functools import lru_cache
+
+  @lru_cache(maxsize=1024)
+  def distance(a, b):
+      return expensive_compute(a, b)
+  ```
+
+  Same behavior, plus eviction and `cache_info()`. But the decorator
+  hides decisions the hand-rolled version makes explicit — and every one
+  is a real choice.
+
+  ### The three questions every cache answers
+
+  **What is the key?** The arguments — which must be *hashable* (lists
+  fail; convert to tuples). And key design has correctness weight:
+  caching `distance(a, b)` and `distance(b, a)` separately wastes half
+  the cache if distance is symmetric; normalizing the key
+  (`tuple(sorted((a, b)))`) doubles the hit rate. Your exercises design
+  keys for exactly such cases.
+
+  **When is a cached value wrong?** The cache's deadly sin. Memoization
+  is only valid for **pure functions** — same inputs, same output,
+  forever. Cache a function that reads a changing database or the clock,
+  and you serve stale answers indefinitely. "Why is it showing
+  yesterday's price?" is a caching bug more often than not. The rule:
+  cache pure computation; never cache a function whose answer can change
+  under fixed inputs.
+
+  **How big, and what gets evicted?** Unbounded caches (`maxsize=None`,
+  `@cache`) are memory leaks unless the key space is provably small —
+  the memory-model unit's warning, wearing a decorator. Bounded caches
+  need an **eviction policy**: LRU (least-recently-used) discards the
+  entry unused longest, betting that recent access predicts future
+  access — a good bet for most workloads. Your exercise implements the
+  LRU mechanic (a bounded store that evicts the oldest-touched key),
+  which demystifies what `lru_cache` does when full.
+
+  ### Reading whether it helps
+
+  ```python
+  distance.cache_info()   # CacheInfo(hits=8102, misses=204, ...)
+  ```
+
+  A cache is a *bet*, and `cache_info` tells you if it paid: high
+  hit-rate means the bet won; a full cache with near-zero hits means the
+  workload doesn't repeat and the cache is pure overhead. Measure, don't
+  assume — the first law of performance, and the subject of the whole
+  area: caching helps *repeated* work on *pure* functions with a
+  *bounded, well-keyed* store, and knowing when those conditions hold is
+  the skill.
+checkpoints:
+  - question: Why is memoization only valid for pure functions, and what bug does violating this cause?
+    answer: 'Memoization returns a stored answer for repeated inputs; if the function''s output can change under fixed inputs (it reads a database, the clock, or mutable state), the cache serves stale values indefinitely — the "why is it showing yesterday''s data?" bug.'
+    explanation: 'Caching assumes same-input-same-output forever; a function without that property must not be cached, or its cache becomes a source of wrong answers.'
+  - question: For a symmetric function like distance(a, b) == distance(b, a), why normalize the cache key, and how?
+    answer: 'Without normalization, (a, b) and (b, a) cache as separate entries, halving the hit rate and wasting memory; using tuple(sorted((a, b))) as the key maps both call orders to one entry.'
+    explanation: 'Key design is a correctness-and-efficiency decision, not a mechanical detail — exploiting symmetry doubles a symmetric cache''s effectiveness.'
+  - question: A function decorated with @lru_cache(maxsize=512) shows cache_info hits=30, misses=90000. What does this mean and what should you do?
+    answer: 'The workload almost never repeats within the cache window, so the cache is nearly pure overhead; either the function is not a caching candidate, or the working set far exceeds 512 and maxsize should grow toward it — measured, not guessed.'
+    explanation: 'cache_info turns "is caching helping?" from faith into a reading; a near-zero hit rate is evidence to remove or resize the cache.'

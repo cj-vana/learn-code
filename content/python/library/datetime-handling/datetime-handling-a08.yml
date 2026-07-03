@@ -1,0 +1,116 @@
+id: exercise.library.datetime_handling.a08
+kind: exercise
+version: 1
+language: python
+title: Next Recycling Pickup
+slug: datetime-handling-a08
+difficulty: medium
+concepts:
+  - python.datetime_module
+prerequisites:
+  - python.strings
+  - python.dictionaries
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.datetime_handling.a08
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original weekday-advance drill framed around a household finding its next recycling collection day.
+prompt_markdown: |
+  A recycling service collects on the same weekday every week, and a household
+  wants to know the date of its next pickup **strictly after** a given day. If the
+  reference day itself happens to be that weekday, the answer is one week later,
+  not the same day.
+
+  Write `next_occurrence(job)` that takes a single dictionary with two keys:
+
+  - `"after"`: an ISO date string like `"2026-07-02"`.
+  - `"weekday"`: the collection weekday as a lowercase English name, one of
+    `"monday"`, `"tuesday"`, `"wednesday"`, `"thursday"`, `"friday"`,
+    `"saturday"`, `"sunday"`.
+
+  Return the ISO date string of the next date after `"after"` that falls on the
+  named weekday. The result must be strictly later than `"after"`, so when
+  `"after"` already lands on that weekday you jump a full 7 days ahead.
+
+  Example:
+
+  ```python
+  next_occurrence({"after": "2026-07-02", "weekday": "tuesday"})
+  # -> "2026-07-07"
+  ```
+
+  Here `2026-07-02` is a Thursday, so the next Tuesday is five days later.
+starter_code: |
+  from datetime import date, timedelta
+
+
+  def next_occurrence(job):
+      return ""
+function_name: next_occurrence
+input_mode: function
+solution_sketch: Map the weekday name to a 0-6 index, compute (target - current_weekday) mod 7, bump a zero result up to 7 so the same weekday rolls forward a week, then add that many days.
+sample_solution: |
+  from datetime import date, timedelta
+
+
+  def next_occurrence(job):
+      names = ["monday", "tuesday", "wednesday", "thursday",
+               "friday", "saturday", "sunday"]
+      start = date.fromisoformat(job["after"])
+      target = names.index(job["weekday"].lower())
+      ahead = (target - start.weekday()) % 7
+      if ahead == 0:
+          ahead = 7
+      return (start + timedelta(days=ahead)).isoformat()
+hints:
+  - level: 1
+    text: date.weekday() numbers Monday as 0 through Sunday as 6, so map the requested name to the same 0-6 scheme.
+  - level: 2
+    text: The gap in days is (target_index - start.weekday()) % 7, which lands in the range 0 to 6.
+  - level: 3
+    text: When that gap is 0 the reference day is already the target weekday, so replace it with 7 before adding a timedelta, guaranteeing a strictly later date.
+tests:
+  public:
+    - name: thursday_to_tuesday
+      input: {"after": "2026-07-02", "weekday": "tuesday"}
+      expected: "2026-07-07"
+    - name: same_weekday_skips_a_week
+      input: {"after": "2026-07-07", "weekday": "tuesday"}
+      expected: "2026-07-14"
+    - name: next_day
+      input: {"after": "2026-07-02", "weekday": "friday"}
+      expected: "2026-07-03"
+  validation:
+    - name: month_boundary
+      input: {"after": "2026-02-26", "weekday": "monday"}
+      expected: "2026-03-02"
+    - name: year_boundary
+      input: {"after": "2026-12-31", "weekday": "friday"}
+      expected: "2027-01-01"
+    - name: leap_year_boundary
+      input: {"after": "2024-02-28", "weekday": "friday"}
+      expected: "2024-03-01"
+    - name: same_weekday_thursday
+      input: {"after": "2026-07-02", "weekday": "thursday"}
+      expected: "2026-07-09"
+explanation_markdown: |
+  The clean trick for "next weekday after a date" is modular arithmetic on the
+  weekday index. Python numbers weekdays with `date.weekday()` as Monday 0 through
+  Sunday 6, so once you translate the requested name into the same scheme, the
+  distance forward is `(target - current) % 7`. That expression naturally wraps
+  around the end of the week, giving a value from 0 to 6.
+
+  The one subtlety is the strict-after rule. A gap of 0 means the reference date
+  is already the target weekday, and returning it unchanged would violate "after".
+  Bumping that single case up to 7 rolls the answer to the same weekday next week.
+  Because `timedelta` arithmetic understands month lengths, leap days, and year
+  rollovers, adding the day count handles `2026-02-26 -> 2026-03-02` and
+  `2026-12-31 -> 2027-01-01` without any special casing.
+common_mistakes:
+  - Returning the reference date itself when it already falls on the target weekday, instead of advancing a full week.
+  - Mixing up the weekday numbering, for example assuming Sunday is 0 (isoweekday or a calendar convention) rather than Monday 0.
+  - Building the next date by hand-incrementing month and day instead of adding a timedelta, which breaks at month and year boundaries.

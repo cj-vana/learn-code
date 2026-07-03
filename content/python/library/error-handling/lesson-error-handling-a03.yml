@@ -1,0 +1,102 @@
+id: lesson.library.error_handling.a03
+kind: lesson
+version: 1
+language: python
+title: Cleanup You Can Trust - Context Managers and Retry Loops
+slug: lesson-error-handling-a03
+difficulty: medium
+concepts:
+  - python.exceptions
+  - python.classes
+prerequisites:
+  - python.functions
+  - python.loops
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.error_handling.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pairing of try/finally cleanup with a pure-function exponential-backoff retry loop.
+body_markdown: |
+  Some work has to be undone whether or not it succeeds: a valve opened must be
+  closed, a lock taken must be released. The `finally` clause guarantees that:
+
+  ```python
+  def drain(channel, amount):
+      channel.open()
+      try:
+          channel.remove(amount)
+      finally:
+          channel.close()          # runs even if remove() raises
+  ```
+
+  Writing that pattern over and over is tedious, so Python packages it as a
+  *context manager* used with the `with` statement. A context manager is any object
+  with two methods: `__enter__` (setup, runs on the way in) and `__exit__`
+  (cleanup, runs on the way out -- exactly like `finally`).
+
+  ```python
+  class Gate:
+      def __init__(self, log):
+          self.log = log
+
+      def __enter__(self):
+          self.log.append("opened")
+          return self
+
+      def __exit__(self, exc_type, exc, tb):
+          self.log.append("closed")
+          return True              # suppress any exception from the block
+  ```
+
+  `__exit__` receives details about any exception that occurred inside the block
+  (or `None`, `None`, `None` if it exited cleanly). Its return value is a switch:
+  return `True` to say "I handled it, do not propagate," or `False`/`None` to let
+  the exception continue. Either way, `__exit__` runs. That is what makes `with`
+  trustworthy:
+
+  ```python
+  log = []
+  with Gate(log):
+      log.append("working")
+      raise RuntimeError("halt")   # __exit__ still records "closed"
+  # log is now ["opened", "working", "closed"]; the error was suppressed
+  ```
+
+  The same "recover and continue" instinct powers *retry with backoff*. A flaky
+  operation might succeed on a second or third try, so you catch the failure, wait
+  a growing amount of time, and try again -- backing off further after each failure
+  to avoid hammering a struggling resource:
+
+  ```python
+  def poll(attempts, base_delay):
+      total_delay = 0
+      for i, outcome in enumerate(attempts):
+          try:
+              if outcome != "ok":
+                  raise RuntimeError("transient")
+              return {"tries": i + 1, "delay": total_delay}
+          except RuntimeError:
+              if i < len(attempts) - 1:
+                  total_delay += base_delay * (2 ** i)  # 1, 2, 4, 8...
+      return {"tries": len(attempts), "delay": total_delay}
+  ```
+
+  Two details make backoff correct. First, the wait belongs *between* attempts, so
+  you add nothing after the final try. Second, the delay grows exponentially with
+  the attempt index (`2 ** i`), which is what "exponential backoff" means. Modelled
+  as a pure function like this -- no real sleeping, no randomness -- the whole
+  recovery policy becomes something you can test with exact expected values.
+checkpoints:
+  - question: What guarantees that a context manager's `__exit__` cleanup runs even when the `with` block raises an exception?
+    answer: The `with` statement always calls `__exit__` on the way out, on both the normal path and the exception path, just as a `finally` clause would.
+    explanation: That guarantee is the whole point of a context manager -- setup in `__enter__`, cleanup in `__exit__` -- so resources are released no matter how the block ends.
+  - question: In `__exit__`, what does returning `True` do versus returning `False` or `None`?
+    answer: Returning `True` suppresses the exception so it does not propagate out of the `with` block; returning `False` or `None` lets the exception continue to propagate.
+    explanation: The return value is a switch for whether the context manager considers the exception handled, while the cleanup code in `__exit__` runs regardless.
+  - question: In exponential backoff, why is no delay added after the final attempt, and why use `2 ** i`?
+    answer: A wait only makes sense between two attempts, so the last attempt has no following delay; `2 ** i` makes each successive wait double (1, 2, 4, 8...), which is the exponential growth that defines backoff.
+    explanation: Adding a trailing delay would overcount the total, and keying the delay to the attempt index is what spaces retries out progressively.

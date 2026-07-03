@@ -1,0 +1,132 @@
+id: exercise.library.collections_itertools.b02
+kind: exercise
+version: 1
+language: python
+title: Crewing the Lifeboat Shifts
+slug: collections-itertools-b02
+difficulty: hard
+concepts:
+  - python.itertools_module
+prerequisites:
+  - python.sets
+  - patterns.brute_force
+estimated_time_minutes: 24
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.collections_itertools.b02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original rescue-station rostering task that counts skill-disjoint matchings of a fixed number of pairs by brute force over itertools.combinations.
+prompt_markdown: |
+  A coastal rescue station rosters its crew into two-person lifeboat shifts. To
+  avoid duplicated coverage, the two people on a shift must have **no certification
+  in common**. Write `shift_pairings(job)` where `job` is a dict with:
+
+  - `"crew"`: a dict mapping each crew member's name to a list of their
+    certification names.
+  - `"pairs"`: a non-negative integer, the number of shifts (pairs) to fill.
+
+  A **valid shift** is any two distinct crew members whose certification lists
+  share no common entry. A **valid roster** chooses exactly `"pairs"` valid shifts
+  such that **no crew member is used on more than one shift**. Two rosters are the
+  same if they use the same set of shifts (order of the shifts, and order within a
+  shift, do not matter).
+
+  Return the integer count of distinct valid rosters. The crew is small, so it is
+  fine to try every combination. Filling `0` pairs is always possible in exactly
+  one way (the empty roster), so `pairs = 0` returns `1`. If there are not enough
+  compatible people to fill that many shifts, return `0`.
+
+  For example, with crew `{"a": ["radio"], "b": ["medic"], "c": ["radio"],
+  "d": ["medic"]}` and `pairs = 2`, the only rosters are `{a-b, c-d}` and
+  `{a-d, b-c}`, so the answer is `2`.
+starter_code: |
+  from itertools import combinations
+
+
+  def shift_pairings(job):
+      # Count rosters of `pairs` skill-disjoint, member-disjoint two-person shifts.
+      return 0
+function_name: shift_pairings
+input_mode: function
+solution_sketch: List every valid two-person shift as a frozenset of names (skill sets disjoint). Then for each combination of `pairs` shifts, accept it only if the chosen shifts use no member twice; count the accepted combinations.
+sample_solution: |
+  from itertools import combinations
+
+
+  def shift_pairings(job):
+      crew = job["crew"]
+      pairs = job["pairs"]
+      names = sorted(crew)
+
+      valid_shifts = []
+      for a, b in combinations(names, 2):
+          if set(crew[a]).isdisjoint(crew[b]):
+              valid_shifts.append(frozenset((a, b)))
+
+      count = 0
+      for chosen in combinations(valid_shifts, pairs):
+          used = set()
+          ok = True
+          for shift in chosen:
+              if used & shift:
+                  ok = False
+                  break
+              used |= shift
+          if ok:
+              count += 1
+      return count
+hints:
+  - level: 1
+    text: Start by building the list of every compatible two-person shift; two people are compatible when their certification sets are disjoint.
+  - level: 2
+    text: A roster is a combination of `pairs` shifts, so iterate combinations of the valid-shift list taken `pairs` at a time.
+  - level: 3
+    text: Accept a combination only if the shifts never reuse a person; track a set of used names and reject the moment a shift overlaps it.
+tests:
+  public:
+    - name: basic_pair
+      input: {crew: {a: [rope], b: [flare]}, pairs: 1}
+      expected: 1
+    - name: shared_skill_blocks
+      input: {crew: {a: [rope], b: [rope]}, pairs: 1}
+      expected: 0
+    - name: two_disjoint_rosters
+      input: {crew: {a: [radio], b: [medic], c: [radio], d: [medic]}, pairs: 2}
+      expected: 2
+  validation:
+    - name: single_from_four
+      input: {crew: {a: [radio], b: [medic], c: [radio], d: [medic]}, pairs: 1}
+      expected: 4
+    - name: too_many_pairs
+      input: {crew: {a: [radio], b: [medic], c: [radio], d: [medic]}, pairs: 3}
+      expected: 0
+    - name: empty_roster
+      input: {crew: {a: [rope], b: [flare]}, pairs: 0}
+      expected: 1
+    - name: all_distinct_perfect
+      input: {crew: {a: [radio], b: [medic], c: [helm], d: [rope], e: [flare], f: [nav]}, pairs: 3}
+      expected: 15
+    - name: multi_skill_overlap
+      input: {crew: {a: [helm, radio], b: [medic], c: [radio], d: [helm]}, pairs: 2}
+      expected: 1
+explanation_markdown: |
+  This is a matching-count problem, and the two-stage structure keeps the brute
+  force honest. Stage one reduces the crew to the raw material: every pair of
+  members whose certification sets are disjoint, which `set.isdisjoint` checks
+  directly. Representing each shift as a `frozenset` of the two names makes the
+  second stage's overlap test a plain set intersection. Stage two asks a
+  combinatorial question — how many ways to pick `pairs` of those shifts so nobody
+  is double-booked — and `itertools.combinations` enumerates the candidate rosters
+  without repeating or reordering. For each candidate you sweep its shifts, keeping
+  a running set of used names and rejecting the moment a name repeats. Because the
+  crew is small, the number of shifts and combinations stays tiny, so exhaustive
+  enumeration is both correct and fast. Two edge cases fall straight out of
+  `combinations`: `pairs = 0` yields the single empty selection (one roster), and
+  asking for more pairs than the crew can support yields no valid combination.
+common_mistakes:
+  - Checking only that each shift is skill-disjoint but forgetting the member-disjoint rule, so one person is booked onto two shifts at once.
+  - Counting ordered selections of shifts, which multiplies the true roster count by the number of shift orderings.
+  - Treating shift order within a pair as significant, so a-b and b-a are counted as two different shifts.

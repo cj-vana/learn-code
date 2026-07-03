@@ -1,0 +1,105 @@
+id: quiz.library.numeric_precision.a01
+kind: quiz
+version: 1
+language: python
+title: Choosing Your Number Type
+slug: quiz-numeric-precision-a01
+difficulty: medium
+concepts:
+  - python.numeric_precision
+prerequisites:
+  - python.numeric_precision
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.numeric_precision.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pattern-recognition quiz on float pitfalls and selecting float, Decimal, or Fraction by domain.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      An invoicing system computes 19% VAT on thousands of line items, and
+      audits demand the totals match to the cent under a contractual
+      rounding rule. Which numeric type?
+    choices:
+      - Decimal built from strings, with quantize and an explicit rounding mode
+      - float with round(x, 2) at the end
+      - Fraction, converted to float for display
+      - int cents everywhere, with float percentages
+    correct_choice: Decimal built from strings, with quantize and an explicit rounding mode
+    explanation: |
+      Money with legally specified rounding is Decimal's exact domain:
+      base-ten exactness plus named rounding modes make compliance visible
+      and testable. Late rounding of floats leaves accumulated drift.
+    concepts:
+      - python.numeric_precision
+  - id: q2
+    prompt: |
+      assert compute_angle() == 1.4142135623730951 passes for months, then
+      fails after an innocent refactor reorders two additions. What happened?
+    choices:
+      - Float addition is not associative — a different summation order gives a slightly different result, and exact equality was always the bug
+      - The refactor introduced a logic error
+      - Python's float precision changed between versions
+      - The constant was mistyped originally
+    correct_choice: Float addition is not associative — a different summation order gives a slightly different result, and exact equality was always the bug
+    explanation: |
+      (a+b)+c can differ from a+(b+c) in the last bits; tests on computed
+      floats need isclose/approx, and the refactor merely exposed the
+      latent fragility.
+    concepts:
+      - python.numeric_precision
+      - concepts.testing
+  - id: q3
+    prompt: |
+      A probability engine multiplies and adds many exact dice ratios (1/6,
+      5/36...) and must stay exact through arbitrary chains. Which type, and
+      what is its known cost?
+    choices:
+      - Fraction — exact forever, but denominators (and compute time) grow as operations compound
+      - Decimal — exact for all ratios at precision 28
+      - float — probabilities are small enough to be exact
+      - int pairs managed by hand
+    correct_choice: Fraction — exact forever, but denominators (and compute time) grow as operations compound
+    explanation: |
+      Ratios are Fraction's domain (Decimal still rounds 1/3); the price of
+      never rounding is integers that grow with every unlike-denominator
+      addition.
+    concepts:
+      - python.numeric_precision
+  - id: q4
+    prompt: |
+      A geometry routine checks whether a computed offset is zero with
+      math.isclose(offset, 0.0). It never matches, even for offsets like
+      1e-15. Why?
+    choices:
+      - Relative tolerance compares against the magnitudes, and nothing is relatively close to zero — the check needs abs_tol
+      - isclose cannot accept 0.0 as an argument
+      - 1e-15 is a large number in float terms
+      - The offset is negative
+    correct_choice: Relative tolerance compares against the magnitudes, and nothing is relatively close to zero — the check needs abs_tol
+    explanation: |
+      The near-zero case is isclose's standard trap: rel_tol scales with
+      the operands, so zero comparisons require an absolute floor like
+      abs_tol=1e-12.
+    concepts:
+      - python.numeric_precision
+  - id: q5
+    prompt: |
+      math.comb(60, 30) in Python versus the same computation in a 64-bit C
+      program: what differs?
+    choices:
+      - Python returns the exact 118264581564861424 — larger cases keep working since ints never overflow, while C wraps or traps past 2^63
+      - C is exact while Python approximates
+      - Both overflow at the same point
+      - Python returns a float approximation
+    correct_choice: Python returns the exact 118264581564861424 — larger cases keep working since ints never overflow, while C wraps or traps past 2^63
+    explanation: |
+      Arbitrary-precision integers make combinatorics safe by construction —
+      no ceiling, exact at any size, with only speed as the gradual cost.
+    concepts:
+      - python.numeric_precision

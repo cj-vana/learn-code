@@ -1,0 +1,153 @@
+id: exercise.library.eval_metrics_for_models.a12
+kind: exercise
+version: 1
+language: python
+title: Cohen's Kappa Between Two Judges
+slug: eval-metrics-for-models-a12
+difficulty: hard
+concepts:
+  - ai.model_evaluation
+prerequisites:
+  - python.dictionaries
+  - python.loops
+  - patterns.hash_map_counting
+  - concepts.probability
+estimated_time_minutes: 26
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.eval_metrics_for_models.a12
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original Cohen's-kappa drill framed around two LLM judges labeling support replies, with the chance-agreement correction and the degenerate-denominator rule stated explicitly.
+prompt_markdown: |
+  Two automated judges each label the same batch of model answers, and you want to
+  know how much they truly agree -- not counting the agreements they would hit just
+  by guessing the same way. **Cohen's kappa** subtracts that chance agreement out.
+
+  You are given a single dictionary `job` with two keys:
+
+  - `"ratings_a"`: judge A's labels, a list of category strings.
+  - `"ratings_b"`: judge B's labels, the same length as `"ratings_a"`, aligned by
+    position.
+
+  Write `judge_agreement(job)` returning Cohen's kappa. Let `N` be the number of
+  items. Define:
+
+  - **Observed agreement** `p_o` = (number of positions where the two labels match)
+    divided by `N`.
+  - **Expected (chance) agreement** `p_e`: for each category `k` appearing in either
+    list, let `pa_k` be the fraction of A's labels equal to `k` and `pb_k` the
+    fraction of B's labels equal to `k`; then
+    `p_e = sum over categories k of pa_k * pb_k`.
+
+  Kappa is:
+
+  ```
+  kappa = (p_o - p_e) / (1 - p_e)
+  ```
+
+  Return it **rounded to 4 decimal places**.
+
+  **Degenerate case.** If `1 - p_e == 0` (this happens when both judges placed every
+  item in one single identical category, so chance agreement is already total and
+  the formula would divide by zero), do not divide. Instead return `1.0` if the two
+  rating lists are identical and `0.0` otherwise.
+
+  Kappa can be negative: perfectly opposite judges score below zero.
+
+  ```python
+  judge_agreement({"ratings_a": ["good", "bad", "good", "bad"],
+                   "ratings_b": ["good", "bad", "bad", "bad"]})
+  # p_o = 3/4 = 0.75, p_e = 0.5, kappa = (0.75 - 0.5) / (1 - 0.5) = 0.5
+  # -> 0.5
+  ```
+starter_code: |
+  from collections import Counter
+
+
+  def judge_agreement(job):
+      return 0.0
+function_name: judge_agreement
+input_mode: function
+solution_sketch: Compute p_o as the fraction of aligned positions that match, p_e as the sum over categories of the product of each side's category frequency, then return (p_o - p_e)/(1 - p_e) rounded to 4dp, handling the zero-denominator case as 1.0 if the lists are identical else 0.0.
+sample_solution: |
+  from collections import Counter
+
+
+  def judge_agreement(job):
+      ratings_a = job["ratings_a"]
+      ratings_b = job["ratings_b"]
+      n = len(ratings_a)
+
+      agree = sum(1 for x, y in zip(ratings_a, ratings_b) if x == y)
+      p_o = agree / n
+
+      counts_a = Counter(ratings_a)
+      counts_b = Counter(ratings_b)
+      categories = set(counts_a) | set(counts_b)
+      p_e = sum((counts_a[k] / n) * (counts_b[k] / n) for k in categories)
+
+      if 1 - p_e == 0:
+          return 1.0 if ratings_a == ratings_b else 0.0
+      return round((p_o - p_e) / (1 - p_e), 4)
+hints:
+  - level: 1
+    text: Kappa rescales observed agreement against chance agreement; compute p_o and p_e separately before combining them.
+  - level: 2
+    text: p_e sums, over every category either judge used, the product of that category's frequency in A and in B; a Counter for each list makes those frequencies easy.
+  - level: 3
+    text: Guard the division when 1 - p_e is zero (both judges constant on the same category) by returning 1.0 for identical lists else 0.0, and round the normal result to 4 places.
+tests:
+  public:
+    - name: one_disagreement
+      input: {"ratings_a": ["good", "bad", "good", "bad"], "ratings_b": ["good", "bad", "bad", "bad"]}
+      expected: 0.5
+    - name: perfect_agreement
+      input: {"ratings_a": ["yes", "yes", "no"], "ratings_b": ["yes", "yes", "no"]}
+      expected: 1.0
+    - name: all_one_category
+      input: {"ratings_a": ["a", "a", "a"], "ratings_b": ["a", "a", "a"]}
+      expected: 1.0
+    - name: perfect_disagreement
+      input: {"ratings_a": ["pass", "fail", "pass", "fail"], "ratings_b": ["fail", "pass", "fail", "pass"]}
+      expected: -1.0
+  validation:
+    - name: partial_overlap
+      input: {"ratings_a": ["hi", "hi", "lo", "lo", "hi"], "ratings_b": ["hi", "lo", "lo", "hi", "hi"]}
+      expected: 0.1667
+    - name: constant_but_different
+      input: {"ratings_a": ["x", "x", "x"], "ratings_b": ["y", "y", "y"]}
+      expected: 0.0
+    - name: three_categories
+      input: {"ratings_a": ["1", "2", "3", "1", "2", "3"], "ratings_b": ["1", "2", "3", "3", "2", "1"]}
+      expected: 0.5
+    - name: two_categories_mixed
+      input: {"ratings_a": ["keep", "keep", "cut", "keep"], "ratings_b": ["keep", "cut", "cut", "keep"]}
+      expected: 0.5
+explanation_markdown: |
+  Raw agreement flatters lazy judges. If both judges label almost everything
+  "good", they will agree most of the time even if neither is paying attention.
+  Kappa fixes this by asking how much agreement is left once you subtract what two
+  judges with the same label frequencies would reach by independent chance. That
+  chance term `p_e` is exactly the probability the two independent draws land on the
+  same category, summed over categories, which is why it multiplies A's frequency by
+  B's frequency for each label.
+
+  The `(p_o - p_e) / (1 - p_e)` form rescales the leftover agreement so that `1.0`
+  means "as far above chance as possible", `0.0` means "no better than chance", and
+  negative values mean the judges disagree even more than random labeling would
+  predict, as in the perfectly-opposite `pass`/`fail` example that scores `-1.0`.
+  The degenerate guard handles the one case the formula cannot: when both judges are
+  stuck on a single shared category, chance agreement is already `1.0`, the
+  denominator vanishes, and there is simply no variation for kappa to measure -- so
+  we report a perfect `1.0` when the lists match and `0.0` otherwise rather than
+  dividing by zero. Note that two judges who are each constant but on different
+  categories (`x` vs `y`) are not degenerate: their `p_e` is `0`, and kappa is a
+  well-defined `0.0`.
+common_mistakes:
+  - Reporting raw observed agreement p_o and forgetting the chance correction entirely.
+  - Computing p_e from only the categories in one list, dropping labels the other judge used.
+  - Dividing by 1 - p_e without guarding the case where it is zero, causing a ZeroDivisionError.
+  - Clamping kappa to be non-negative; legitimate negative values signal systematic disagreement.

@@ -1,0 +1,129 @@
+id: exercise.library.functional_style.a01
+kind: exercise
+version: 1
+language: python
+title: The Proofing Line at Dawn
+slug: functional-style-a01
+difficulty: easy
+concepts:
+  - python.functional_style
+  - python.functions
+prerequisites:
+  - python.functions
+  - python.lists
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.functional_style.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original left-to-right composition drill framed as a bakery proofing line that chains named dough stages into one pipeline.
+prompt_markdown: |
+  A dawn-shift bakery runs each batch of dough through a **proofing line**: an
+  ordered list of named stages, each a small transformation on a single number
+  (the batch's proof score). Your job is to build one composed function from the
+  named stages and feed the starting score through it, left to right.
+
+  Write `pipeline_compose(spec)`. The single argument `spec` is a dict:
+
+  - `spec["stages"]`: a list of stage names, applied in order (the first name in
+    the list runs first, its output feeds the second, and so on).
+  - `spec["start"]`: the integer proof score that enters the line.
+
+  The available stages and their exact behavior on an integer `x`:
+
+  - `"double"` -> `x * 2`
+  - `"add_ten"` -> `x + 10`
+  - `"halve"` -> `x // 2` (floor division)
+  - `"negate"` -> `-x`
+  - `"square"` -> `x * x`
+
+  Return the final integer after every stage has run. If `spec["stages"]` is
+  empty, no stage runs and you return `spec["start"]` unchanged.
+
+  Example: `{"stages": ["double", "add_ten"], "start": 3}` runs `double(3) = 6`
+  then `add_ten(6) = 16`, so the answer is `16`. Order matters: the same two
+  stages reversed would give `double(add_ten(3)) = double(13) = 26`.
+starter_code: |
+  from functools import reduce
+
+
+  def pipeline_compose(spec):
+      return spec["start"]
+function_name: pipeline_compose
+input_mode: function
+solution_sketch: Look each stage name up in a registry of one-argument functions, then fold the list of functions into a single composed callable (left to right) and apply it to the start value.
+sample_solution: |
+  from functools import reduce
+
+
+  def pipeline_compose(spec):
+      stages = {
+          "double": lambda x: x * 2,
+          "add_ten": lambda x: x + 10,
+          "halve": lambda x: x // 2,
+          "negate": lambda x: -x,
+          "square": lambda x: x * x,
+      }
+      funcs = [stages[name] for name in spec["stages"]]
+      pipeline = reduce(lambda f, g: lambda x: g(f(x)), funcs, lambda x: x)
+      return pipeline(spec["start"])
+hints:
+  - level: 1
+    text: Composing left to right means the output of one stage becomes the input of the next, exactly like piping a value through a sequence of steps.
+  - level: 2
+    text: Store the stage behaviors in a dict keyed by name, then translate spec["stages"] into a list of the actual functions to run.
+  - level: 3
+    text: 'Start from an identity function (lambda x: x) and fold the list with reduce, wrapping each new stage g around the accumulated pipeline f as g(f(x)); finally call the result on spec["start"].'
+tests:
+  public:
+    - name: empty_line_passes_through
+      input:
+        stages: []
+        start: 7
+      expected: 7
+    - name: single_stage
+      input:
+        stages: ["double"]
+        start: 5
+      expected: 10
+    - name: two_stages_in_order
+      input:
+        stages: ["double", "add_ten"]
+        start: 3
+      expected: 16
+  validation:
+    - name: order_matters
+      input:
+        stages: ["add_ten", "double"]
+        start: 3
+      expected: 26
+    - name: three_stage_chain
+      input:
+        stages: ["double", "square", "halve"]
+        start: 3
+      expected: 18
+    - name: negate_then_add
+      input:
+        stages: ["negate", "add_ten"]
+        start: 5
+      expected: 5
+    - name: four_stages_with_floor
+      input:
+        stages: ["square", "negate", "add_ten", "halve"]
+        start: 4
+      expected: -3
+explanation_markdown: |
+  Function composition turns a list of small steps into one callable. Reading the
+  stages left to right, each step's result becomes the next step's argument, so
+  the pipeline is really `stage_n(... stage_2(stage_1(x)) ...)`. Folding with
+  `reduce` from an identity function builds that nesting for any length of list,
+  including the empty case where the identity survives untouched and hands back
+  the start value. The registry dict is the functional-style move here: names map
+  to behavior, so the caller composes by data rather than by writing new code.
+common_mistakes:
+  - Applying the stages right to left, so a two-stage list runs in the wrong order.
+  - Using true division for "halve" (x / 2), which returns a float and drifts from the expected integers.
+  - Forgetting the empty-stages case and returning 0 or None instead of the untouched start value.

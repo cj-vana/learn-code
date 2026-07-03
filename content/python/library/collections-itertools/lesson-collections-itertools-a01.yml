@@ -1,0 +1,84 @@
+id: lesson.library.collections_itertools.a01
+kind: lesson
+version: 1
+language: python
+title: Grouping and Counting With defaultdict
+slug: lesson-collections-itertools-a01
+difficulty: easy
+concepts:
+  - python.collections_module
+  - concepts.grouping_aggregation
+prerequisites:
+  - python.dictionaries
+  - python.loops
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.collections_itertools.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original greenhouse seed-sorting scenario used to motivate defaultdict grouping and counting.
+body_markdown: |
+  Imagine you are sorting seed packets in a greenhouse. Every packet lands in a
+  bin named after the plant's first letter. With a plain dictionary you have to
+  check whether a bin exists before you drop a packet in:
+
+  ```python
+  bins = {}
+  for name in ["basil", "borage", "chive"]:
+      letter = name[0]
+      if letter not in bins:      # the annoying guard clause
+          bins[letter] = []
+      bins[letter].append(name)
+  ```
+
+  That `if letter not in bins` guard shows up every single time you build a
+  grouped collection. `collections.defaultdict` removes it. You hand
+  `defaultdict` a *factory* -- a zero-argument callable it will call to create a
+  value the first time you touch a missing key.
+
+  ```python
+  from collections import defaultdict
+
+  bins = defaultdict(list)          # missing keys start as []
+  for name in ["basil", "borage", "chive"]:
+      bins[name[0]].append(name)    # no guard needed
+  ```
+
+  The moment you write `bins["b"]`, defaultdict notices the key is absent, calls
+  `list()` to make a fresh empty list, stores it, and returns it -- all before
+  `.append` runs. The two common factories are `list` for grouping and `int`
+  for counting. `int()` returns `0`, so a running tally becomes a one-liner:
+
+  ```python
+  from collections import defaultdict
+
+  tally = defaultdict(int)
+  for scan in ["A", "B", "A", "A"]:
+      tally[scan] += 1             # starts from 0 automatically
+  # tally == {"A": 3, "B": 1}
+  ```
+
+  Two habits keep this clean. First, only *access* keys you mean to create --
+  even a read like `tally["Z"]` will insert `Z: 0`, which can surprise you
+  later. Second, when you are done building and want an ordinary dict (for
+  equality checks or JSON), wrap it: `dict(tally)`. A defaultdict compares equal
+  to a plain dict with the same contents, but converting makes the "no more
+  autovivification" intent explicit.
+
+  You reach for `defaultdict(list)` whenever the answer is "a bucket of items per
+  key" and `defaultdict(int)` whenever the answer is "how many per key". Both
+  turn a two-step check-then-update into a single expressive line, which is
+  exactly the kind of aggregation you will do constantly with real data.
+checkpoints:
+  - question: What value does `defaultdict(int)` produce for a key that has never been assigned?
+    answer: It calls `int()`, which returns `0`, so the missing key starts at zero.
+    explanation: The factory is called with no arguments; `int()` yields 0, making it perfect for accumulating counts with `+= 1`.
+  - question: Why can simply reading `tally["Z"]` be a subtle bug with a defaultdict?
+    answer: Any access to a missing key inserts it using the factory, so a read creates and stores `Z` even though you never counted it.
+    explanation: defaultdict triggers the factory on `__getitem__`, so even a lookup mutates the dictionary; use `.get` or `in` when you only want to peek.
+  - question: When would you choose `defaultdict(list)` over `defaultdict(int)`?
+    answer: When you are grouping -- collecting several items under each key -- rather than counting how many fall under each key.
+    explanation: '`list` gives an empty list to append into (grouping); `int` gives 0 to increment (counting).'

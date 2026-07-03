@@ -1,0 +1,99 @@
+id: exercise.library.modern_syntax.a02
+kind: exercise
+version: 1
+language: python
+title: Reading the Tide Gauge
+slug: modern-syntax-a02
+difficulty: easy
+concepts:
+  - python.modern_syntax
+  - python.conditionals
+prerequisites:
+  - python.operators
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.modern_syntax.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original guard-clause dispatch drill themed around an hourly harbor tide-gauge delta, exercising capture-plus-guard ordering.
+prompt_markdown: |
+  A harbor tide gauge reports the change in water level for the last hour as a
+  single integer (positive means the water rose, negative means it fell). Write
+  `band_tide(delta)` that uses a `match`/`case` statement with **guard clauses**
+  (a `case` followed by `if ...`) and returns a band label:
+
+  - a change of exactly `0` returns `"slack"`
+  - any negative change returns `"ebb"`
+  - a positive change of `20` or less returns `"gentle-flood"`
+  - a positive change greater than `20` returns `"strong-flood"`
+
+  Guards are tested top to bottom, so once you have handled `0` and the negative
+  case, the remaining values are all positive and you only need to split them at
+  the boundary of `20`. Boundary detail: a delta of exactly `20` is
+  `"gentle-flood"`, and `21` is `"strong-flood"`.
+starter_code: |
+  def band_tide(delta):
+      return "slack"
+function_name: band_tide
+input_mode: function
+solution_sketch: Match on the literal 0 first, then use capture-with-guard cases (case n if n < 0, case n if n <= 20) and let a wildcard handle the strong-flood remainder.
+sample_solution: |
+  def band_tide(delta):
+      match delta:
+          case 0:
+              return "slack"
+          case n if n < 0:
+              return "ebb"
+          case n if n <= 20:
+              return "gentle-flood"
+          case _:
+              return "strong-flood"
+hints:
+  - level: 1
+    text: A guard is an if clause attached to a case, like `case n if n < 0:`. The case only matches when both the pattern and the guard are true.
+  - level: 2
+    text: Handle the literal 0 with `case 0:` first. After the negative case, every remaining delta is positive, so a single boundary check at 20 separates gentle from strong.
+  - level: 3
+    text: Order matters. `case 0`, then `case n if n < 0`, then `case n if n <= 20`, then `case _` for everything above 20.
+tests:
+  public:
+    - name: zero_is_slack
+      input: 0
+      expected: "slack"
+    - name: negative_is_ebb
+      input: -5
+      expected: "ebb"
+    - name: small_positive_is_gentle
+      input: 12
+      expected: "gentle-flood"
+  validation:
+    - name: boundary_twenty_is_gentle
+      input: 20
+      expected: "gentle-flood"
+    - name: boundary_twentyone_is_strong
+      input: 21
+      expected: "strong-flood"
+    - name: large_positive_is_strong
+      input: 100
+      expected: "strong-flood"
+    - name: minus_one_is_ebb
+      input: -1
+      expected: "ebb"
+    - name: one_is_gentle
+      input: 1
+      expected: "gentle-flood"
+explanation_markdown: |
+  A guard lets a `case` combine a pattern with an arbitrary boolean test. Here the
+  pattern `n` captures the delta and the guard decides which band it belongs to.
+  Because `match` evaluates cases in order and stops at the first success, you can
+  lean on earlier cases to narrow the field: after `case 0` and `case n if n < 0`,
+  the only values left are strictly positive, so the guard `n <= 20` cleanly splits
+  gentle from strong and the wildcard mops up the rest. This top-down narrowing is
+  what keeps each guard simple instead of restating `n > 0 and n <= 20`.
+common_mistakes:
+  - Putting the wildcard `case _:` before the guarded cases, which short-circuits every value into "strong-flood".
+  - Writing `case n <= 20:` instead of `case n if n <= 20:`; a guard must be a separate `if` clause after the capture pattern.
+  - Getting the boundary wrong by using `n < 20`, which mislabels a delta of exactly 20 as "strong-flood".

@@ -1,0 +1,118 @@
+id: exercise.library.data_wrangling_python.a06
+kind: exercise
+version: 1
+language: python
+title: Ordering the Seating Chart
+slug: data-wrangling-python-a06
+difficulty: medium
+concepts:
+  - python.sorting
+  - concepts.grouping_aggregation
+prerequisites:
+  - python.sorting
+  - python.tuples
+estimated_time_minutes: 16
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.data_wrangling_python.a06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original multi-key stable sort drill framed around arranging a theatre seating chart.
+prompt_markdown: |
+  A theatre needs its seating chart sorted by several columns at once - section
+  first, then maybe row descending, then name. Each column can be ascending or
+  descending, and rows that tie on every sort column must stay in their original
+  input order.
+
+  Write `sort_rows(payload)` that takes a single dictionary with two keys:
+
+  - `"rows"`: a list of seat dictionaries.
+  - `"by"`: a list of `[field, direction]` pairs, where `direction` is the string
+    `"asc"` or `"desc"`. Earlier pairs are the more significant sort keys.
+
+  Return a **new list** of the same rows arranged by the spec. The sort must be
+  **stable**: when two rows compare equal on every listed field, the one that came
+  first in `"rows"` comes first in the output. You may assume every field named in
+  `"by"` is present in every row.
+
+  Edge cases the tests cover:
+
+  - An empty `"by"` list returns the rows in their original order.
+  - A single ascending or descending key sorts on that field alone.
+
+  Hint: Python's `list.sort` is stable, so you can sort by each key one at a time,
+  applying the **least** significant key first and the **most** significant key
+  last. This avoids building comparison tuples and works for string fields too.
+
+  Example:
+
+  ```python
+  sort_rows({
+      "rows": [{"section": "B", "row": 1}, {"section": "A", "row": 5}, {"section": "A", "row": 2}],
+      "by": [["section", "asc"], ["row", "desc"]],
+  })
+  # -> [{"section": "A", "row": 5}, {"section": "A", "row": 2}, {"section": "B", "row": 1}]
+  ```
+starter_code: |
+  def sort_rows(payload):
+      return []
+function_name: sort_rows
+input_mode: function
+solution_sketch: Copy the rows, then sort repeatedly from the least significant key to the most significant, using reverse=True for desc, relying on sort stability.
+sample_solution: |
+  def sort_rows(payload):
+      rows = payload["rows"]
+      by = payload["by"]
+      result = list(rows)
+      for field, direction in reversed(by):
+          result.sort(key=lambda row: row[field], reverse=(direction == "desc"))
+      return result
+hints:
+  - level: 1
+    text: Because Python's sort is stable, you can apply one sort key at a time and earlier sorts survive as tie-breakers.
+  - level: 2
+    text: Process the by-list in reverse so the most significant key is applied last and therefore dominates the final order.
+  - level: 3
+    text: 'For each [field, direction] pair, call result.sort(key=lambda row: row[field], reverse=(direction == "desc")).'
+tests:
+  public:
+    - name: empty_spec
+      input: {"rows": [{"name": "Ada", "row": 2}, {"name": "Ben", "row": 1}], "by": []}
+      expected: [{"name": "Ada", "row": 2}, {"name": "Ben", "row": 1}]
+    - name: single_key_asc
+      input: {"rows": [{"name": "Ada", "row": 2}, {"name": "Ben", "row": 1}], "by": [["row", "asc"]]}
+      expected: [{"name": "Ben", "row": 1}, {"name": "Ada", "row": 2}]
+    - name: section_asc_row_desc
+      input: {"rows": [{"section": "B", "row": 1}, {"section": "A", "row": 2}, {"section": "A", "row": 5}, {"section": "B", "row": 3}], "by": [["section", "asc"], ["row", "desc"]]}
+      expected: [{"section": "A", "row": 5}, {"section": "A", "row": 2}, {"section": "B", "row": 3}, {"section": "B", "row": 1}]
+  validation:
+    - name: single_key_desc
+      input: {"rows": [{"id": 1, "pts": 30}, {"id": 2, "pts": 50}, {"id": 3, "pts": 40}], "by": [["pts", "desc"]]}
+      expected: [{"id": 2, "pts": 50}, {"id": 3, "pts": 40}, {"id": 1, "pts": 30}]
+    - name: string_desc
+      input: {"rows": [{"name": "Ada"}, {"name": "Cy"}, {"name": "Ben"}], "by": [["name", "desc"]]}
+      expected: [{"name": "Cy"}, {"name": "Ben"}, {"name": "Ada"}]
+    - name: stable_on_tie
+      input: {"rows": [{"name": "Zoe", "group": 1}, {"name": "Yan", "group": 1}, {"name": "Xio", "group": 1}], "by": [["group", "asc"]]}
+      expected: [{"name": "Zoe", "group": 1}, {"name": "Yan", "group": 1}, {"name": "Xio", "group": 1}]
+    - name: three_keys
+      input: {"rows": [{"zone": "east", "tier": 2, "code": 9}, {"zone": "east", "tier": 1, "code": 4}, {"zone": "west", "tier": 1, "code": 7}, {"zone": "east", "tier": 1, "code": 2}], "by": [["zone", "asc"], ["tier", "asc"], ["code", "desc"]]}
+      expected: [{"zone": "east", "tier": 1, "code": 4}, {"zone": "east", "tier": 1, "code": 2}, {"zone": "east", "tier": 2, "code": 9}, {"zone": "west", "tier": 1, "code": 7}]
+explanation_markdown: |
+  A multi-key sort can be done in one shot with a tuple key, but building that
+  tuple gets awkward the moment a descending key is a string, since you cannot
+  negate `"Ben"`. The stable-sort trick sidesteps that: sort the whole list once
+  per key, going from the *least* significant key up to the *most* significant.
+  Each pass leaves rows that tie on the current key in whatever order the previous
+  passes established, so the earlier (less significant) orderings survive as
+  tie-breakers and the final pass on the most significant key wins overall.
+
+  Copying the input with `list(rows)` first keeps the caller's list untouched, and
+  an empty spec means no passes run, so the copy comes back unchanged. With k sort
+  keys the cost is O(k * n log n).
+common_mistakes:
+  - Iterating the by-list in forward order, which makes the first key the weakest instead of the strongest.
+  - Trying to negate values for descending order, which breaks on string fields; use reverse=True per pass instead.
+  - Calling sorted or sort once with a hand-built tuple that ignores per-field direction.

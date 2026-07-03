@@ -1,0 +1,164 @@
+id: exercise.library.files_formats.a10
+kind: exercise
+version: 1
+language: python
+title: Reading Observatory Instrument Dumps
+slug: files-formats-a10
+difficulty: hard
+concepts:
+  - python.json_csv
+  - patterns.state_machine
+prerequisites:
+  - python.strings
+  - python.dictionaries
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.files_formats.a10
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original multi-line record parser framed around an observatory dumping instrument state in headed blocks.
+prompt_markdown: |
+  An observatory dumps the state of each instrument as a block of text. A block
+  starts with a header line of the form `=== <id> ===` and is followed by zero or
+  more `key: value` lines, up to the next header. Write `parse_log_blocks(text)`
+  that returns a **list of dictionaries**, one per block, in the order the blocks
+  appear.
+
+  Example input:
+
+  ```
+  === dome-a ===
+  status: online
+  temp: 4.2
+  === dome-b ===
+  status: offline
+  ```
+
+  Returns:
+
+  ```python
+  [
+      {"id": "dome-a", "status": "online", "temp": "4.2"},
+      {"id": "dome-b", "status": "offline"},
+  ]
+  ```
+
+  Rules:
+
+  - A header line is any line that, after stripping surrounding whitespace, both
+    starts and ends with `"==="`. The instrument id is what remains once you strip
+    the `"="` characters and surrounding spaces (e.g. `=== dome-a ===` gives
+    `"dome-a"`). Store it under the key `"id"`.
+  - A `key: value` line is split on the **first** colon only: the part before is
+    the key and the part after is the value. Strip surrounding whitespace from
+    both. A value may itself contain a colon (e.g. a `12:30` timestamp), which
+    must stay inside the value.
+  - Every value stays a **string**; do not convert numbers.
+  - A header with no following `key: value` lines still produces a dictionary
+    holding just its `"id"`.
+  - Ignore blank or whitespace-only lines.
+  - Empty input text returns an empty list.
+starter_code: |
+  def parse_log_blocks(text):
+      return []
+function_name: parse_log_blocks
+input_mode: function
+solution_sketch: Walk the lines keeping a reference to the current block dict; when a line is a header, start a new dict seeded with its id and append it; otherwise split the line once on ":" and add the trimmed key/value to the current block.
+sample_solution: |
+  def parse_log_blocks(text):
+      blocks = []
+      current = None
+      for raw in text.splitlines():
+          line = raw.strip()
+          if not line:
+              continue
+          if line.startswith("===") and line.endswith("==="):
+              block_id = line.strip("=").strip()
+              current = {"id": block_id}
+              blocks.append(current)
+          elif current is not None and ":" in line:
+              key, value = line.split(":", 1)
+              current[key.strip()] = value.strip()
+      return blocks
+hints:
+  - level: 1
+    text: Iterate over text.splitlines() and keep a variable pointing at the block dictionary you are currently filling.
+  - level: 2
+    text: When a stripped line starts and ends with "===", start a fresh dict, seed it with its id, and append it to the results so later key lines land in it.
+  - level: 3
+    text: For a key line use line.split(":", 1) so only the first colon splits, then strip both halves; a value like "check 12:30 window" keeps its inner colon.
+tests:
+  public:
+    - name: two_blocks_with_keys
+      input: |
+        === dome-a ===
+        status: online
+        temp: 4.2
+        === dome-b ===
+        status: offline
+      expected:
+        - {id: "dome-a", status: "online", temp: "4.2"}
+        - {id: "dome-b", status: "offline"}
+    - name: header_without_keys
+      input: |
+        === dome-a ===
+        === dome-b ===
+        status: online
+      expected:
+        - {id: "dome-a"}
+        - {id: "dome-b", status: "online"}
+    - name: empty_text
+      input: ""
+      expected: []
+  validation:
+    - name: single_block
+      input: |
+        === rig-7 ===
+        mode: idle
+      expected:
+        - {id: "rig-7", mode: "idle"}
+    - name: value_contains_colon
+      input: |
+        === rig-1 ===
+        note: check 12:30 window
+      expected:
+        - {id: "rig-1", note: "check 12:30 window"}
+    - name: blank_lines_ignored
+      input: |
+        === a ===
+        status: on
+
+        === b ===
+        status: off
+      expected:
+        - {id: "a", status: "on"}
+        - {id: "b", status: "off"}
+    - name: many_keys
+      input: |
+        === scope-3 ===
+        status: online
+        focus: locked
+        target: m31
+      expected:
+        - {id: "scope-3", status: "online", focus: "locked", target: "m31"}
+explanation_markdown: |
+  This is a small state machine driven line by line. The single piece of state you
+  carry is `current`, a reference to the block dictionary being filled. A header
+  line switches state: you build a new dict, seed it with the parsed id, and
+  append it to the results list. Because you append the same object you keep
+  filling, every following `key: value` line lands in the right block without any
+  extra bookkeeping.
+
+  Two details make the parsing robust. Stripping the `"="` and spaces off the
+  header isolates the id regardless of the exact spacing, and `split(":", 1)`
+  limits the split to the first colon so a value that itself contains a colon,
+  like a timestamp, stays intact. Skipping blank lines and only recording key
+  lines when a block is open means stray whitespace or a leading gap cannot
+  corrupt the output.
+common_mistakes:
+  - Using line.split(":") without the maxsplit of 1, which shreds any value that contains its own colon.
+  - Collecting keys into a fresh dict that is never linked to the results list, so completed blocks are lost.
+  - Treating a header with no key lines as an error and skipping it instead of emitting a dict with only its id.

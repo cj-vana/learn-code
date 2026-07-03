@@ -1,0 +1,147 @@
+id: exercise.library.language_models_from_scratch.a07
+kind: exercise
+version: 1
+language: python
+title: Scoring a Sentence in Log-Space
+slug: language-models-from-scratch-a07
+difficulty: medium
+concepts:
+  - ai.language_models
+  - concepts.probability
+prerequisites:
+  - python.dictionaries
+  - python.loops
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.language_models_from_scratch.a07
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original bigram log-probability drill framed around a birdsong field notebook, with explicit missing/zero-pair handling.
+prompt_markdown: |
+  A field researcher records short birdsong phrases as sequences of syllable
+  tokens. A tiny **bigram language model** scores a phrase by multiplying the
+  probability of each syllable given the one just before it. Multiplying many
+  small probabilities quickly underflows toward zero on a real computer, so we
+  work in **log-space** and *add* `math.log(p)` instead of multiplying.
+
+  Write `sequence_log_prob(job)` that takes **one dictionary**:
+
+  - `"tokens"`: a list of syllable tokens (strings) in order.
+  - `"probs"`: a dictionary mapping a pair key to its probability. The key
+    `"a|b"` is the probability that token `a` is immediately followed by token
+    `b`. The pipe is only a separator between the earlier token and the later
+    one.
+
+  Example call:
+
+  ```python
+  sequence_log_prob({
+      "tokens": ["chip", "whistle"],
+      "probs": {"chip|whistle": 0.5, "chip|trill": 0.5},
+  })
+  # -> -0.693147   (math.log(0.5), rounded to 6 decimals)
+  ```
+
+  For every **adjacent pair** `(tokens[i], tokens[i + 1])`, look up its
+  probability under the key `f"{tokens[i]}|{tokens[i + 1]}"` and add
+  `math.log(p)`. Return the running total **rounded to 6 decimal places**.
+
+  Rules:
+
+  - If any needed pair is **missing** from `probs`, or its probability is
+    exactly `0`, the phrase is impossible under this model — return `None`. (The
+    log of zero is negative infinity, which would poison the whole sum, so a
+    single unseen transition is fatal.)
+  - A phrase with fewer than two tokens has no pairs, so its log-probability is
+    `0.0`.
+starter_code: |
+  import math
+
+
+  def sequence_log_prob(job):
+      return 0.0
+function_name: sequence_log_prob
+input_mode: function
+solution_sketch: Loop i over the adjacent pairs, build the "left|right" key, look it up with dict.get; bail out returning None on a missing key or a zero probability, otherwise accumulate math.log(p) and round the total to 6 decimals.
+sample_solution: |
+  import math
+
+
+  def sequence_log_prob(job):
+      tokens = job["tokens"]
+      probs = job["probs"]
+      total = 0.0
+      for i in range(len(tokens) - 1):
+          key = f"{tokens[i]}|{tokens[i + 1]}"
+          p = probs.get(key)
+          if p is None or p == 0:
+              return None
+          total += math.log(p)
+      return round(total, 6)
+hints:
+  - level: 1
+    text: Multiplying probabilities becomes adding logs, so keep a running total that starts at 0.0 and add math.log(p) for each adjacent pair.
+  - level: 2
+    text: Build each pair's key with an f-string like f"{tokens[i]}|{tokens[i + 1]}" and read it with probs.get(key) so a missing pair comes back as None.
+  - level: 3
+    text: The moment a lookup is None or the probability equals 0, return None immediately; otherwise finish the loop and return round(total, 6).
+tests:
+  public:
+    - name: one_pair
+      input:
+        tokens: ["the", "cat"]
+        probs: {"the|cat": 0.5, "the|dog": 0.5}
+      expected: -0.693147
+    - name: two_pairs
+      input:
+        tokens: ["a", "b", "c"]
+        probs: {"a|b": 0.4, "b|c": 0.25}
+      expected: -2.302585
+    - name: missing_pair
+      input:
+        tokens: ["a", "b", "c"]
+        probs: {"a|b": 0.4}
+      expected: null
+  validation:
+    - name: zero_probability
+      input:
+        tokens: ["x", "y"]
+        probs: {"x|y": 0.0}
+      expected: null
+    - name: single_token
+      input:
+        tokens: ["solo"]
+        probs: {"a|b": 0.5}
+      expected: 0.0
+    - name: three_token_chain
+      input:
+        tokens: ["i", "eat", "fish"]
+        probs: {"i|eat": 0.2, "eat|fish": 0.1, "eat|meat": 0.9}
+      expected: -3.912023
+    - name: empty_tokens
+      input:
+        tokens: []
+        probs: {}
+      expected: 0.0
+explanation_markdown: |
+  A language model assigns a probability to a whole sequence by chaining
+  conditional probabilities: `P(phrase) = P(w2 | w1) * P(w3 | w2) * ...`. Each
+  factor is at most 1, so the product shrinks fast, and with dozens of tokens it
+  underflows to `0.0` in floating point long before the math says it should.
+  Taking a logarithm turns that product into a sum — `log(x * y) = log(x) +
+  log(y)` — which stays in a comfortable numeric range and is exactly why real
+  models report **log-probabilities**.
+
+  The zero rule is not a corner case to tolerate; it is the whole point. If the
+  model never saw a transition, it assigns it probability `0`, and `log(0)` is
+  negative infinity. One such gap makes the entire sequence infinitely
+  unlikely, so returning `None` faithfully reports "this phrase is impossible
+  under this model" instead of silently producing a misleading finite number.
+common_mistakes:
+  - Multiplying the probabilities directly instead of summing their logs, which underflows for long sequences and defeats the purpose of the exercise.
+  - Indexing probs[key] directly so a missing pair raises KeyError instead of returning None.
+  - Forgetting that probability 0 must short-circuit to None; letting it reach math.log raises a ValueError.
+  - Looping i to len(tokens) instead of len(tokens) - 1, which runs off the end when reading tokens[i + 1].

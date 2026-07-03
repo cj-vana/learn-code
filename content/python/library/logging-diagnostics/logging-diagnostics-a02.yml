@@ -1,0 +1,109 @@
+id: exercise.library.logging_diagnostics.a02
+kind: exercise
+version: 1
+language: python
+title: Following the Cannery Loggers Upstream
+slug: logging-diagnostics-a02
+difficulty: medium
+concepts:
+  - python.logging_diagnostics
+  - python.dictionaries
+  - python.loops
+prerequisites:
+  - python.loops
+  - python.dictionaries
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.logging_diagnostics.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original effective-level resolution drill themed around a fish-cannery logger hierarchy; models getEffectiveLevel walking up a NOTSET chain with the root defaulting to WARNING.
+prompt_markdown: |
+  A fish cannery configures a chain of named loggers, from a specific machine up
+  through its department to the plant-wide root. Each logger has a **threshold
+  name**, and `NOTSET` means "no threshold of my own — inherit from further up".
+
+  Write `effective_level(chain)` where `chain` is a list of threshold-name
+  strings ordered from the logger itself first, then each ancestor, ending with
+  the root. Return the resolved **numeric** effective level using this fixed
+  mapping:
+
+  ```
+  NOTSET=0  DEBUG=10  INFO=20  WARNING=30  ERROR=40  CRITICAL=50
+  ```
+
+  Resolution rule (this mirrors how the standard `logging` module's
+  `getEffectiveLevel` works): walk the chain from the front, and return the
+  numeric value of the **first name that is not `NOTSET`**. If every entry in the
+  chain is `NOTSET`, return `30` — the root logger defaults to `WARNING` even when
+  nothing overrides it.
+
+  You may assume every name in `chain` is one of the six names above and that
+  `chain` has at least one entry.
+starter_code: |
+  LEVELS = {"NOTSET": 0, "DEBUG": 10, "INFO": 20, "WARNING": 30, "ERROR": 40, "CRITICAL": 50}
+
+
+  def effective_level(chain):
+      # Return the numeric level of the first non-NOTSET name, else 30 (root default WARNING).
+      return 0
+function_name: effective_level
+input_mode: function
+solution_sketch: Walk the chain front-to-back returning the numeric value of the first name that is not NOTSET; if none, return 30.
+sample_solution: |
+  LEVELS = {"NOTSET": 0, "DEBUG": 10, "INFO": 20, "WARNING": 30, "ERROR": 40, "CRITICAL": 50}
+
+
+  def effective_level(chain):
+      for name in chain:
+          if name != "NOTSET":
+              return LEVELS[name]
+      return 30
+hints:
+  - level: 1
+    text: The logger itself comes first in the chain, so scan from the front and stop at the first real threshold.
+  - level: 2
+    text: A name of "NOTSET" means "keep looking upward"; any other name is the answer and you return its numeric value immediately.
+  - level: 3
+    text: If the loop finishes without finding a non-NOTSET name, the whole chain inherited nothing, so fall back to 30 for the root's default WARNING.
+tests:
+  public:
+    - name: own_level_wins
+      input: [INFO, WARNING, WARNING]
+      expected: 20
+    - name: inherit_from_parent
+      input: [NOTSET, ERROR, WARNING]
+      expected: 40
+    - name: all_notset_defaults_warning
+      input: [NOTSET, NOTSET, NOTSET]
+      expected: 30
+  validation:
+    - name: single_logger_set
+      input: [DEBUG]
+      expected: 10
+    - name: single_logger_notset
+      input: [NOTSET]
+      expected: 30
+    - name: skip_two_notset_levels
+      input: [NOTSET, NOTSET, CRITICAL, WARNING]
+      expected: 50
+    - name: root_is_warning
+      input: [NOTSET, NOTSET, WARNING]
+      expected: 30
+explanation_markdown: |
+  A logger's *effective* level is rarely its own configured level — most loggers
+  are left at `NOTSET` on purpose so they inherit a threshold set once, higher up.
+  Resolving it is a walk toward the root that stops at the first logger that
+  actually pinned a level. Because the front of the chain is the most specific
+  logger, scanning front-to-back returns the nearest override, which is exactly
+  the precedence real code relies on. The `WARNING` fallback is not magic: the
+  root logger is constructed at `WARNING`, so a chain that never overrides
+  anything still resolves to `30`. Returning as soon as you find a real level also
+  means you never look at ancestors that can't affect the result.
+common_mistakes:
+  - Walking the chain from the root end first, which returns the least specific level instead of the nearest override.
+  - Treating NOTSET (0) as a valid threshold and returning 0 instead of continuing up the chain.
+  - Forgetting the all-NOTSET case and returning 0, when the root's default WARNING makes the answer 30.

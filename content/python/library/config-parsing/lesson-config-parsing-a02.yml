@@ -1,0 +1,101 @@
+id: lesson.library.config_parsing.a02
+kind: lesson
+version: 1
+language: python
+title: 'Precedence: Layering Defaults, Files, Env, and Flags'
+slug: lesson-config-parsing-a02
+difficulty: medium
+concepts:
+  - python.config_parsing
+prerequisites:
+  - python.config_parsing
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.config_parsing.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original config-precedence walkthrough building a layered settings resolver, with fresh worked merge examples.
+body_markdown: |
+  Real config comes from several places at once, and the same setting can
+  be specified in more than one. The question every configurable program
+  must answer — *which value wins?* — has a standard answer, and
+  implementing it is this lesson.
+
+  ### The ladder
+
+  From weakest to strongest:
+
+  ```text
+  1. built-in defaults    (in code — the program always runs)
+  2. config file          (per-project or per-machine settings)
+  3. environment variables (per-deployment: containers, CI, secrets)
+  4. command-line flags   (per-invocation: this run, right now)
+  ```
+
+  The ordering is *specificity of intent*: a default is what the authors
+  chose for everyone; a file is what this project decided; an env var is
+  what this deployment sets; a flag is what the operator wants *this
+  time*. Narrower, fresher intent wins. A weather station ships with
+  `interval=60` (default), the ridge deployment's file sets `30`, the
+  container's `STATION_INTERVAL=15` overrides for that host, and
+  `--interval 5` wins for one debugging run.
+
+  ### The merge is a fold
+
+  Implementation is dict layering — later sources overwrite earlier keys:
+
+  ```python
+  def resolve(defaults, file_cfg, env_cfg, cli_cfg):
+      config = {}
+      for layer in (defaults, file_cfg, env_cfg, cli_cfg):
+          config.update({k: v for k, v in layer.items() if v is not None})
+      return config
+  ```
+
+  Two subtleties your exercises pin down. **`None` means "not
+  specified", not "set to null"** — a source that didn't mention a key
+  must not clobber a lower layer with None, hence the filter (the
+  Optional-versus-absent distinction from typing, load-bearing again).
+  And **env vars need a mapping and coercion**: `STATION_INTERVAL`
+  (screaming snake case, often prefixed) maps to `interval`, and its
+  string value `"15"` needs the same typing as INI — env is another
+  all-strings source.
+
+  ### Deep merge, when config nests
+
+  Flat `update` overwrites whole sub-dicts: if defaults have
+  `{"db": {"host": "local", "port": 5432}}` and the file sets
+  `{"db": {"port": 6000}}`, flat merge *loses the host*. Nested config
+  needs a **recursive merge** — descend into dicts present in both,
+  overwrite leaves. Your exercise implements exactly this deep-merge,
+  the difference between "override one setting" and "replace the whole
+  section."
+
+  ### Explain yourself
+
+  The feature that ends debugging sessions: track *provenance* — which
+  layer supplied each final value — and expose it.
+
+  ```text
+  interval = 15   (from env STATION_INTERVAL)
+  id       = ridge-04  (from config file)
+  retries  = 3    (default)
+  ```
+
+  A `--show-config` that prints the resolved values *with their sources*
+  answers "why is it behaving like that?" instantly, and your exercise
+  returns the merged config alongside a source map. Precedence you can
+  see is precedence you can trust — the whole discipline in one output.
+checkpoints:
+  - question: State the config precedence ladder and the principle that orders it.
+    answer: 'Defaults < config file < environment variables < command-line flags, ordered by specificity of intent: broad author defaults, then project file, then per-deployment env, then the operator''s choice for this single invocation — narrower and fresher intent wins.'
+    explanation: 'The ladder is a cross-tool convention; users expect a flag to beat an env var to beat a file, and honoring it makes a program predictable.'
+  - question: Why must the merge skip keys whose value is None from a given layer?
+    answer: 'None means the layer did not specify the key, not that it wants to set null; overwriting a lower layer''s real value with None would let an absent setting erase a present one — the Optional-versus-absent distinction applied to config.'
+    explanation: 'Distinguishing "unset" from "set to nothing" is what keeps higher-but-silent layers from clobbering lower-but-specified ones.'
+  - question: Flat dict.update loses data when merging nested config. Give the example and the fix.
+    answer: 'With defaults {"db": {"host": "local", "port": 5432}} and a file {"db": {"port": 6000}}, flat update replaces the whole db dict and drops host; a recursive deep merge descends into shared sub-dicts and overwrites only the specified leaves.'
+    explanation: 'Nested settings require nested merging — "override a setting" and "replace a section" are different operations, and flat update only does the latter.'

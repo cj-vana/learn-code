@@ -1,0 +1,100 @@
+id: exercise.library.iterators_generators.a04
+kind: exercise
+version: 1
+language: python
+title: Foundry Serial Plates
+slug: iterators-generators-a04
+difficulty: medium
+concepts:
+  - python.iterators_generators
+  - python.classes
+prerequisites:
+  - python.classes
+  - python.functions
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.iterators_generators.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original foundry serial-plate scenario practicing the iterator protocol with __iter__ and __next__.
+prompt_markdown: |
+  A foundry stamps a run of cast plates with consecutive serial numbers. Write
+  `stamp_serials(spec)` where `spec` is a dict with keys `"start"` (the first
+  serial number) and `"count"` (how many plates to stamp). Return a **list** of
+  the serials, in stamping order.
+
+  Do it by hand-building an **iterator class** that implements the iterator
+  protocol: an `__iter__` method that returns the iterator, and a `__next__`
+  method that returns the next serial or raises `StopIteration` once the run is
+  finished. Then let `list()` drive it. A `count` of `0` returns an empty list.
+
+  For example, `stamp_serials({"start": 40, "count": 3})` returns `[40, 41, 42]`.
+starter_code: |
+  def stamp_serials(spec):
+      # Build a class with __iter__ and __next__, then return list(...) of an instance.
+      return []
+function_name: stamp_serials
+input_mode: function
+solution_sketch: A class tracks the current serial and how many remain; __next__ raises StopIteration when none remain, and list() collects the rest.
+sample_solution: |
+  def stamp_serials(spec):
+      class Serials:
+          def __init__(self, start, count):
+              self.current = start
+              self.remaining = count
+
+          def __iter__(self):
+              return self
+
+          def __next__(self):
+              if self.remaining <= 0:
+                  raise StopIteration
+              value = self.current
+              self.current += 1
+              self.remaining -= 1
+              return value
+
+      return list(Serials(spec["start"], spec["count"]))
+hints:
+  - level: 1
+    text: An object becomes iterable when it has __iter__ (returning an iterator) and __next__ (returning the next value or raising StopIteration).
+  - level: 2
+    text: Track the next serial and a remaining counter; each __next__ returns the serial, advances it, and decrements remaining.
+  - level: 3
+    text: When remaining hits 0, raise StopIteration; have __iter__ return self, then return list() of the instance.
+tests:
+  public:
+    - name: three
+      input: {start: 40, count: 3}
+      expected: [40, 41, 42]
+    - name: one
+      input: {start: 500, count: 1}
+      expected: [500]
+    - name: none
+      input: {start: 7, count: 0}
+      expected: []
+  validation:
+    - name: from_zero
+      input: {start: 0, count: 4}
+      expected: [0, 1, 2, 3]
+    - name: larger_run
+      input: {start: 100, count: 5}
+      expected: [100, 101, 102, 103, 104]
+    - name: negative_start
+      input: {start: -2, count: 3}
+      expected: [-2, -1, 0]
+explanation_markdown: |
+  This is the machinery a `for` loop uses under the hood. `list()` calls `iter()`
+  once to get the iterator (here the instance returns itself), then calls `next()`
+  repeatedly. Each `__next__` hands back the current serial and updates its own
+  state, and when `remaining` reaches zero it raises `StopIteration`, the agreed
+  signal that iteration is over. Because the object *is* its own iterator, it is a
+  one-shot: after `list()` drains it, nothing is left, which is fine here since we
+  materialize it exactly once.
+common_mistakes:
+  - Forgetting to raise StopIteration, so iteration never terminates.
+  - Advancing the counter but returning the already-incremented value, which is off by one.
+  - Having __iter__ return something without a __next__ method, so list() cannot drive it.

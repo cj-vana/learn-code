@@ -1,0 +1,127 @@
+id: exercise.library.grid_simulation.a03
+kind: exercise
+version: 1
+language: python
+title: How Far the Paint Spill Spreads
+slug: grid-simulation-a03
+difficulty: medium
+concepts:
+  - patterns.grid_traversal
+  - patterns.dfs
+prerequisites:
+  - python.lists
+  - patterns.recursion
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.grid_simulation.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original flood-fill region-size drill framed as a paint spill spreading across same-coloured floor tiles.
+prompt_markdown: |
+  A workshop floor is tiled in two finishes, stored as a grid of `0`s and `1`s
+  where `grid[r][c]` is the finish of the tile at row `r`, column `c`. A can of
+  paint tips over on one tile and seeps to every touching tile of the same
+  finish, spreading only up, down, left, and right (never diagonally).
+
+  Write `spill_size(spill)` where `spill` is a single dictionary with two keys:
+
+  - `"grid"`: a non-empty rectangular list of lists of `0`s and `1`s
+  - `"start"`: a two-element list `[r, c]` giving the tile the paint lands on
+
+  Return the number of tiles in the connected region that shares the starting
+  tile's finish and includes the start. The count always includes the starting
+  tile itself, so the smallest possible answer is `1`. Note the region is defined
+  by whatever value sits at the start, so a spill onto a `0` tile spreads across
+  connected `0` tiles.
+
+  Example: for `{"grid": [[1, 1, 0], [1, 0, 0], [0, 0, 1]], "start": [0, 0]}` the
+  connected `1`s are `(0, 0)`, `(0, 1)`, and `(1, 0)`, so the result is `3`.
+starter_code: |
+  def spill_size(spill):
+      return 0
+function_name: spill_size
+input_mode: function
+solution_sketch: Depth-first search from the start, counting each unvisited cell whose value matches the start's value and recursing into its four orthogonal neighbours.
+sample_solution: |
+  def spill_size(spill):
+      grid = spill["grid"]
+      sr, sc = spill["start"]
+      rows, cols = len(grid), len(grid[0])
+      target = grid[sr][sc]
+      seen = set()
+
+      def dfs(r, c):
+          if not (0 <= r < rows and 0 <= c < cols):
+              return 0
+          if (r, c) in seen or grid[r][c] != target:
+              return 0
+          seen.add((r, c))
+          return 1 + dfs(r + 1, c) + dfs(r - 1, c) + dfs(r, c + 1) + dfs(r, c - 1)
+
+      return dfs(sr, sc)
+hints:
+  - level: 1
+    text: The region is every tile you can reach from the start by stepping to same-valued orthogonal neighbours, so first record the start's value.
+  - level: 2
+    text: A recursive helper that returns a count works well; it should return 0 for out-of-bounds, already-seen, or wrong-value cells.
+  - level: 3
+    text: Mark a cell in a seen set before recursing, and return 1 plus the counts from its four neighbours so each tile is added exactly once.
+tests:
+  public:
+    - name: region_of_ones
+      input:
+        grid: [[1, 1, 0], [1, 0, 0], [0, 0, 1]]
+        start: [0, 0]
+      expected: 3
+    - name: isolated_one
+      input:
+        grid: [[1, 1, 0], [1, 0, 0], [0, 0, 1]]
+        start: [2, 2]
+      expected: 1
+    - name: region_of_zeros
+      input:
+        grid: [[1, 1, 0], [1, 0, 0], [0, 0, 1]]
+        start: [1, 1]
+      expected: 5
+  validation:
+    - name: whole_grid_ones
+      input:
+        grid: [[1, 1], [1, 1]]
+        start: [0, 0]
+      expected: 4
+    - name: whole_row_zeros
+      input:
+        grid: [[0, 0, 0]]
+        start: [0, 2]
+      expected: 3
+    - name: single_cell
+      input:
+        grid: [[1]]
+        start: [0, 0]
+      expected: 1
+    - name: diagonal_not_connected
+      input:
+        grid: [[1, 0], [0, 1]]
+        start: [0, 0]
+      expected: 1
+    - name: enclosed_patch
+      input:
+        grid: [[0, 0, 0, 0], [0, 1, 1, 0], [0, 1, 0, 0], [0, 0, 0, 0]]
+        start: [1, 1]
+      expected: 3
+explanation_markdown: |
+  Flood fill is a depth-first search that only steps between cells sharing a
+  value. Capturing `target = grid[sr][sc]` up front lets the same routine measure
+  a patch of `1`s or a patch of `0`s. The `seen` set is what keeps the search
+  finite: once a cell is recorded, revisiting it returns `0`, so the recursion
+  cannot bounce back and forth between two neighbours forever. Because diagonal
+  moves are excluded, tiles that only touch at a corner belong to different
+  regions. Each cell is examined a constant number of times, so the routine runs
+  in O(rows * cols) time and uses stack space proportional to the region size.
+common_mistakes:
+  - Hard-coding the region value to 1, which breaks when the spill starts on a 0 tile.
+  - Forgetting to mark cells as seen, so the recursion revisits neighbours endlessly and overflows the stack.
+  - Counting diagonal neighbours, which merges regions that should stay separate.

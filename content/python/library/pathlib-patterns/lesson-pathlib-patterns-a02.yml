@@ -1,0 +1,94 @@
+id: lesson.library.pathlib_patterns.a02
+kind: lesson
+version: 1
+language: python
+title: 'Relative Paths, Containment, and Normal Forms'
+slug: lesson-pathlib-patterns-a02
+difficulty: medium
+concepts:
+  - python.pathlib_os
+prerequisites:
+  - python.pathlib_os
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.pathlib_patterns.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original walkthrough of relative_to, is_relative_to, and path normalization framed around a site-generator's link computation, with fresh examples.
+body_markdown: |
+  Two questions dominate real path logic: *how do I get from here to
+  there?* (relative paths) and *is this inside that?* (containment). Both
+  have precise pathlib answers — and both have traps that make the naive
+  string versions security bugs.
+
+  ### relative_to: expressing one path in terms of another
+
+  A static-site generator computing a link from a page to an asset:
+
+  ```python
+  page = PurePosixPath("site/blog/2026/lighthouse.html")
+  asset = PurePosixPath("site/assets/beam.svg")
+
+  asset.relative_to("site")            # assets/beam.svg
+  page.relative_to("site")             # blog/2026/lighthouse.html
+  ```
+
+  `relative_to` *strips a known prefix* — and raises `ValueError` when
+  the path is not under it. Note what it refuses to do: compute
+  "up-and-over" paths (`../../assets/beam.svg` from the page's
+  directory). Since 3.12, `walk_up=True` permits exactly that when you
+  mean it. The refusal-by-default is correct: `..` segments in emitted
+  paths are precisely the things that later escape directories.
+
+  ### Containment, done honestly
+
+  "Is this upload inside the sandbox?" — the question from the join-reset
+  trap. The honest tool is `is_relative_to`:
+
+  ```python
+  candidate = (sandbox / user_name)
+  candidate.is_relative_to(sandbox)     # the containment check
+  ```
+
+  But there is a subtlety that makes it *two* checks in real code:
+  containment is only meaningful on a **normal form**. The path
+  `sandbox/../secrets/key` is not "under sandbox" in any sense that
+  matters, yet segment-wise checks can be fooled by it. Pure path logic
+  must first normalize `.` and `..` segments *lexically* — collapsing
+  `a/b/../c` to `a/c` — which is exactly your exercise: implementing the
+  normalization stack machine (push segment, pop on `..`, and the
+  crucial edge: `..` at the root or beyond the start of a relative path
+  must be *rejected or preserved*, never silently dropped). On real
+  filesystems, `Path.resolve()` does this *plus* symlink resolution —
+  the two-key delete protocol's first key. The layering to remember:
+  **lexical normalization** (Pure, no disk) versus **resolution** (real
+  disk, symlinks) — use the first for value logic, the second before
+  irreversible acts.
+
+  ### Sorting and grouping paths
+
+  Path values order lexicographically by parts, which mostly does what
+  reports want — but note that `file10.txt` sorts before `file2.txt`
+  (string ordering, not numeric). The fix is the natural-sort key from
+  your sorting units: split digit runs and compare numerically. Grouping
+  by directory is `itertools`/dict grouping keyed on `p.parent`; depth
+  is `len(p.parts)` — path structure feeding the data-wrangling
+  machinery you already own.
+
+  The area's running theme sharpens here: paths are values with algebra
+  (join, strip-prefix, normalize, contain), and every operation has a
+  pure form you can test exhaustively — which is why path bugs, of all
+  bugs, have the least excuse to reach production.
+checkpoints:
+  - question: What does relative_to do when the path is not under the given base, and why is that the right default for emitted links?
+    answer: 'It raises ValueError rather than fabricating an up-and-over ../ path (unless walk_up=True is requested explicitly since 3.12); emitted .. segments are the raw material of directory escapes, so producing them must be opt-in.'
+    explanation: 'The refusal encodes a security posture: paths that leave their base should be a loud decision, not a silent computation.'
+  - question: Why must containment checks normalize the path before asking is_relative_to, and what does lexical normalization do with a/b/../c?
+    answer: 'Un-normalized paths can appear to sit under a base while their .. segments walk out of it; normalization collapses parent segments (a/b/../c becomes a/c) so the containment question is asked of the path''s true shape.'
+    explanation: 'Normalize-then-check (or resolve-then-check on real disks) is the two-step that makes "is it inside?" mean what it says.'
+  - question: Distinguish lexical normalization from Path.resolve(), and give the rule for choosing.
+    answer: 'Lexical normalization rewrites . and .. segments by pure string-structure rules, touching no disk; resolve() additionally consults the real filesystem to expand symlinks; use lexical for pure path-value logic and resolve before irreversible filesystem acts, where symlinks can make lexical answers lie.'
+    explanation: 'The two live at different layers — value algebra versus disk truth — and security-sensitive code needs to know which question it is asking.'

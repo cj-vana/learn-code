@@ -1,0 +1,105 @@
+id: lesson.library.sqlite_patterns.a01
+kind: lesson
+version: 1
+language: python
+title: 'sqlite3: A Real Database in One Import'
+slug: lesson-sqlite-patterns-a01
+difficulty: medium
+concepts:
+  - python.sqlite_sql
+prerequisites:
+  - python.dictionaries
+  - concepts.grouping_aggregation
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sqlite_patterns.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original sqlite3 introduction framed around a bicycle co-op's member ledger, with fresh worked SQL examples.
+body_markdown: |
+  Python ships a complete relational database. Not a toy — SQLite runs
+  inside every phone and browser on Earth — and `sqlite3.connect(":memory:")`
+  gives you one in a variable, no server, no files, gone when you close
+  it. That makes it both a real production tool (single-writer apps,
+  local state, data crunching) and the perfect place to learn SQL with
+  nothing to install.
+
+  A bicycle co-op's member ledger:
+
+  ```python
+  import sqlite3
+
+  db = sqlite3.connect(":memory:")
+  db.execute("""CREATE TABLE members (
+      id INTEGER PRIMARY KEY,
+      name TEXT NOT NULL,
+      joined TEXT,
+      fees_paid REAL DEFAULT 0.0)""")
+  db.execute("INSERT INTO members (name, joined) VALUES (?, ?)",
+             ("Ada Lovelock", "2026-03-15"))
+  db.commit()
+  ```
+
+  ### The relational mindset shift
+
+  Coming from dicts and lists, three reorientations:
+
+  - **Schema first.** A table declares its columns and types up front —
+    the TypedDict discipline, enforced by the storage layer. `NOT NULL`
+    and `DEFAULT` are the validation rules you wrote by hand in the
+    wrangling area, now declarative.
+  - **Rows are found by content, not position.** No indexes into lists;
+    every retrieval is a `WHERE` describing what you want.
+  - **You say what, not how.** SQL is declarative: `SELECT name FROM
+    members WHERE fees_paid > 50 ORDER BY joined` states the result; the
+    engine picks the algorithm. Your wrangling unit implemented
+    filter-sort-group as functions; SQL is those functions as grammar.
+
+  ### Reading rows back
+
+  ```python
+  db.row_factory = sqlite3.Row          # rows behave like dicts
+  cur = db.execute("SELECT * FROM members WHERE fees_paid > ?", (50,))
+  for row in cur:
+      print(row["name"], row["fees_paid"])
+  ```
+
+  `fetchone()` (a row or None — the Optional pattern), `fetchall()` (a
+  list), or iteration (lazy — the generator pattern). `Row` factory
+  gives name-based access; without it rows are tuples and code fills
+  with magic indexes.
+
+  ### The aggregation you already know
+
+  ```sql
+  SELECT strftime('%Y-%m', joined) AS month, COUNT(*) AS joined_count
+  FROM members GROUP BY month HAVING joined_count > 3
+  ORDER BY month;
+  ```
+
+  `GROUP BY` is your dict-accumulation pattern; `COUNT/SUM/AVG/MIN/MAX`
+  are the aggregates you folded by hand; `HAVING` filters *groups*
+  (WHERE filters rows — before grouping; HAVING after — a distinction
+  worth cementing now). Every wrangling exercise you solved has a
+  one-line SQL spelling, and recognizing the correspondence — dict
+  pattern ↔ SQL clause — is what makes SQL feel like an old friend
+  rather than a new language.
+
+  One discipline before the next lesson names its reason: the `?`
+  placeholders in every execute above are not style — they are the
+  entire defense against the injection attacks the security area
+  covers, and we will treat them as non-negotiable from the first
+  query.
+checkpoints:
+  - question: What does sqlite3.connect(":memory:") create, and why is it ideal for both learning and tests?
+    answer: 'A complete, real SQL database living in process memory — no server, no file, discarded on close; tests and experiments get full relational behavior with zero setup and perfect isolation.'
+    explanation: 'In-memory SQLite is the same engine that runs in production phones and apps, which is why skills learned against it transfer directly.'
+  - question: Map GROUP BY / COUNT / HAVING onto the pure-Python wrangling patterns they replace.
+    answer: 'GROUP BY is the dict-accumulation bucket pattern; COUNT/SUM/AVG are the per-bucket folds; HAVING is a filter applied to the aggregated groups (whereas WHERE filters rows before grouping).'
+    explanation: 'SQL declares what the wrangling unit implemented — recognizing the correspondences converts existing skill into SQL fluency.'
+  - question: Why set db.row_factory = sqlite3.Row before reading query results?
+    answer: 'Rows then support name-based access (row["name"]) instead of positional tuple indexing — eliminating the magic-number indexes that break silently when the SELECT column list changes.'
+    explanation: 'Name-based row access is the same maintainability argument as dicts-over-tuples for records, applied to query results.'

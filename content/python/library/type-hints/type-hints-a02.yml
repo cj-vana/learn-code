@@ -1,0 +1,117 @@
+id: exercise.library.type_hints.a02
+kind: exercise
+version: 1
+language: python
+title: The Next Ticket or the Fallback Sign
+slug: type-hints-a02
+difficulty: easy
+concepts:
+  - python.type_hints
+  - python.types
+prerequisites:
+  - python.dictionaries
+  - python.conditionals
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.type_hints.a02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original fallback-value drill framed around a bakery counter that either calls the next ticket number or displays a standing sign.
+prompt_markdown: |
+  A bakery counter shows the number of the customer being served. When the waiting
+  line is empty, the display instead shows a standing sign such as `"TAKE A NUMBER"`.
+  You are writing the helper that decides what to show.
+
+  Read the signature:
+
+  ```python
+  def first_or_default(job: dict[str, Any]) -> int | str:
+  ```
+
+  The return annotation `int | str` is the important teaching here: it documents
+  that this function can hand back **either** a ticket number (`int`) **or** the
+  fallback sign (`str`). The caller reads that union and knows to expect both.
+
+  `job` is a dictionary with two keys:
+
+  - `"items"`: a list of waiting ticket numbers, in call order.
+  - `"default"`: the fallback value to show when nobody is waiting.
+
+  Return the **first** element of `"items"` if the list has any tickets; otherwise
+  return `"default"`. Decide by whether the list is empty, not by whether the first
+  ticket is "truthy", because ticket `0` is a real number that must still be
+  returned.
+
+  Example:
+
+  ```python
+  first_or_default({"items": [42, 43], "default": "TAKE A NUMBER"})  # -> 42
+  first_or_default({"items": [], "default": "TAKE A NUMBER"})        # -> "TAKE A NUMBER"
+  ```
+starter_code: |
+  from typing import Any
+
+
+  def first_or_default(job: dict[str, Any]) -> int | str:
+      return job["default"]
+function_name: first_or_default
+input_mode: function
+solution_sketch: Read job["items"]; if the list is non-empty return its first element, otherwise return job["default"]. Test list emptiness directly so a falsy first item like 0 is still returned.
+sample_solution: |
+  from typing import Any
+
+
+  def first_or_default(job: dict[str, Any]) -> int | str:
+      items = job["items"]
+      if items:
+          return items[0]
+      return job["default"]
+hints:
+  - level: 1
+    text: The return annotation int | str signals two outcomes, so your function has two return paths, one for a present ticket and one for the fallback.
+  - level: 2
+    text: Check whether job["items"] is non-empty with a plain truthiness test on the list itself, not on its first element.
+  - level: 3
+    text: "When the list is non-empty return job[\"items\"][0]; otherwise return job[\"default\"]. Avoid items[0] or default, which would skip a real ticket 0."
+tests:
+  public:
+    - name: has_items
+      input: {"items": [42, 43, 44], "default": "TAKE A NUMBER"}
+      expected: 42
+    - name: empty_items
+      input: {"items": [], "default": "TAKE A NUMBER"}
+      expected: "TAKE A NUMBER"
+    - name: single_item
+      input: {"items": [7], "default": "NONE WAITING"}
+      expected: 7
+  validation:
+    - name: empty_with_int_default
+      input: {"items": [], "default": 0}
+      expected: 0
+    - name: preserves_first
+      input: {"items": [100, 5, 5], "default": "X"}
+      expected: 100
+    - name: default_string
+      input: {"items": [], "default": "CLOSED"}
+      expected: "CLOSED"
+    - name: zero_first_ticket
+      input: {"items": [0, 1, 2], "default": "NONE"}
+      expected: 0
+explanation_markdown: |
+  A union return type like `int | str` is a contract with the caller: it says the
+  result may be either type, so downstream code should be ready for both. This is
+  the everyday shape of "value or fallback" logic, closely related to `Optional`,
+  where a missing value is replaced by a stand-in.
+
+  The subtle part is the emptiness check. Writing `job["items"][0] or job["default"]`
+  looks tidy but is wrong: when the first ticket is `0`, that expression is falsy,
+  so it would skip the real ticket and return the sign instead. Testing the list
+  itself with `if items:` asks the right question, "is anyone waiting?", and lets a
+  legitimate zero through.
+common_mistakes:
+  - Writing items[0] or default, which incorrectly returns the fallback when the first ticket is 0 or another falsy value.
+  - Indexing job["items"][0] without first checking the list is non-empty, raising IndexError on an empty line.
+  - Treating the int | str return hint as a runtime guarantee instead of documentation of the two possible outcomes.

@@ -1,0 +1,82 @@
+id: exercise.library.collections_itertools.a10
+kind: exercise
+version: 1
+language: python
+title: Pages Printed Per Customer
+slug: collections-itertools-a10
+difficulty: medium
+concepts:
+  - python.collections_module
+  - concepts.grouping_aggregation
+prerequisites:
+  - python.dictionaries
+  - python.loops
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.collections_itertools.a10
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original print-shop billing scenario accumulating a summed field per key with defaultdict(int).
+prompt_markdown: |
+  A print shop logs each job as `[customer, pages]`. A customer can appear in
+  many jobs across the day, and billing needs the *total* pages each customer
+  printed. Write `pages_per_customer(jobs)` where `jobs` is a list of
+  `[customer, pages]` records (`pages` is a non-negative integer). Return a
+  dictionary mapping each customer to their summed page count. An empty log
+  returns an empty dictionary.
+starter_code: |
+  def pages_per_customer(jobs):
+      return {}
+function_name: pages_per_customer
+input_mode: function
+solution_sketch: Accumulate each job's pages into a defaultdict(int) keyed by customer, then convert to a plain dict.
+sample_solution: |
+  from collections import defaultdict
+
+
+  def pages_per_customer(jobs):
+      totals = defaultdict(int)
+      for customer, pages in jobs:
+          totals[customer] += pages
+      return dict(totals)
+hints:
+  - level: 1
+    text: This is a running sum per customer, not a count of jobs -- add the pages, do not just add one.
+  - level: 2
+    text: A defaultdict(int) starts each new customer at 0, so totals[customer] += pages works on the first job too.
+  - level: 3
+    text: Unpack each record as `for customer, pages in jobs`, accumulate into totals, then return dict(totals).
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: {}
+    - name: single_job
+      input: [[ana, 5]]
+      expected: {ana: 5}
+    - name: repeat_customer
+      input: [[ana, 3], [bo, 4], [ana, 2]]
+      expected: {ana: 5, bo: 4}
+  validation:
+    - name: one_customer_many_jobs
+      input: [[cy, 1], [cy, 1], [cy, 1]]
+      expected: {cy: 3}
+    - name: includes_zero_page_job
+      input: [[dai, 0], [dai, 5]]
+      expected: {dai: 5}
+    - name: several_customers
+      input: [[e, 10], [f, 2], [e, 3], [g, 7]]
+      expected: {e: 13, f: 2, g: 7}
+explanation_markdown: |
+  The key difference from a plain tally is that you add the job's `pages` field
+  rather than adding one per job. `defaultdict(int)` supplies a starting `0` the
+  first time a customer appears, so `totals[customer] += pages` needs no
+  check-then-initialise guard. Converting with `dict(totals)` at the end returns
+  an ordinary dictionary for a clean equality comparison.
+common_mistakes:
+  - Counting jobs with `+= 1` instead of summing the pages field.
+  - Overwriting with `totals[customer] = pages`, which keeps only each customer's last job.
+  - Using a plain dict and hitting a KeyError on a customer's first job.

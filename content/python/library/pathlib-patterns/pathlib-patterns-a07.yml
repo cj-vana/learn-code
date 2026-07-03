@@ -1,0 +1,108 @@
+id: exercise.library.pathlib_patterns.a07
+kind: exercise
+version: 1
+language: python
+title: Tracing the Vault's Enclosing Halls
+slug: pathlib-patterns-a07
+difficulty: medium
+concepts:
+  - python.pathlib_os
+  - python.lists
+prerequisites:
+  - python.strings
+  - python.lists
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.pathlib_patterns.a07
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original ancestor-walk drill themed around a museum cold-storage vault, exercising PurePosixPath.parents on pure path strings.
+prompt_markdown: |
+  A museum's cold-storage vault records every artifact by a POSIX-style
+  location path such as `vault/aisle-3/shelf/box-12`. When a curator pulls an
+  item, the audit trail needs the full chain of enclosing halls, from the
+  location's immediate container outward to the top.
+
+  Write `parent_chain(path_str)` that returns a list of ancestor path strings,
+  in order from the immediate parent first up to and including the top-most
+  anchor. Match `pathlib`'s own `.parents` behaviour exactly:
+
+  - For a **relative** path the last element is `.` (the current-directory
+    anchor). Example: `parent_chain("vault/aisle-3/shelf/box-12")` returns
+    `["vault/aisle-3/shelf", "vault/aisle-3", "vault", "."]`.
+  - For an **absolute** path the last element is `/` (the root). Example:
+    `parent_chain("/home/keeper")` returns `["/home", "/"]`.
+  - A path that is already the root `/` or the bare current directory `.` has
+    no ancestors, so return an empty list `[]`.
+  - A single-component relative name such as `ledger.txt` has exactly one
+    ancestor, `.`, so return `["."]`.
+
+  Treat the path as text with forward slashes; do not touch any real
+  filesystem.
+starter_code: |
+  from pathlib import PurePosixPath
+
+
+  def parent_chain(path_str):
+      return []
+function_name: parent_chain
+input_mode: function
+solution_sketch: Wrap the string in PurePosixPath, iterate its .parents view, and stringify each ancestor into a list.
+sample_solution: |
+  from pathlib import PurePosixPath
+
+
+  def parent_chain(path_str):
+      return [str(ancestor) for ancestor in PurePosixPath(path_str).parents]
+hints:
+  - level: 1
+    text: A pure path object exposes its ancestors without any disk access. Look at what `PurePosixPath(path_str).parents` yields.
+  - level: 2
+    text: The `.parents` view already runs from the immediate parent outward to the anchor, so you only need to convert each entry to a string.
+  - level: 3
+    text: Return `[str(ancestor) for ancestor in PurePosixPath(path_str).parents]`. Root and `.` yield an empty view, giving `[]` for free.
+tests:
+  public:
+    - name: deep_relative
+      input: "vault/aisle-3/shelf/box-12"
+      expected: ["vault/aisle-3/shelf", "vault/aisle-3", "vault", "."]
+    - name: absolute
+      input: "/archive/2026/manifest.csv"
+      expected: ["/archive/2026", "/archive", "/"]
+    - name: single_component
+      input: "ledger.txt"
+      expected: ["."]
+  validation:
+    - name: root
+      input: "/"
+      expected: []
+    - name: current_dir
+      input: "."
+      expected: []
+    - name: long_relative
+      input: "logs/june/expedition/day-01.log"
+      expected: ["logs/june/expedition", "logs/june", "logs", "."]
+    - name: absolute_short
+      input: "/home/keeper"
+      expected: ["/home", "/"]
+    - name: bare_name
+      input: "notes"
+      expected: ["."]
+explanation_markdown: |
+  `PurePosixPath` parses a path purely as text, so this works with no disk
+  access and stays deterministic. Its `.parents` attribute is a lazy sequence
+  that already yields ancestors from the closest parent outward to the anchor,
+  which is exactly the order the audit trail wants. Converting each entry with
+  `str()` turns the path objects back into plain strings.
+
+  The anchor is the tell for whether a path is absolute or relative: relative
+  chains bottom out at `.`, absolute chains bottom out at `/`. A path that *is*
+  the anchor (`/` or `.`) has nothing enclosing it, so `.parents` is empty and
+  the comprehension naturally returns `[]`.
+common_mistakes:
+  - Reversing the order by walking from the root down instead of from the immediate parent outward.
+  - Forgetting that relative paths end at `.` and absolute paths end at `/`, so the final anchor is dropped or wrong.
+  - Returning PurePosixPath objects instead of strings, which fails the equality check against the expected list.

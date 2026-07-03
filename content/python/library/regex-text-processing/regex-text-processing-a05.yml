@@ -1,0 +1,94 @@
+id: exercise.library.regex_text_processing.a05
+kind: exercise
+version: 1
+language: python
+title: Tokenize a Placard Into Words
+slug: regex-text-processing-a05
+difficulty: medium
+concepts:
+  - python.regex
+  - python.strings
+  - python.lists
+prerequisites:
+  - python.regex
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.regex_text_processing.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original museum-placard tokenizing task that treats letter runs as words and everything else as separators.
+prompt_markdown: |
+  A museum stores the text of its exhibit placards and wants to break each one
+  into words for a search index. Define a *word* as a run of one or more letters
+  (`a`-`z` or `A`-`Z`). Digits, punctuation, and whitespace are all separators
+  and must not appear in the result. Write `tokenize(text)` that returns the list
+  of words in the order they appear, preserving their original letter casing.
+starter_code: |
+  import re
+
+
+  def tokenize(text):
+      return []
+function_name: tokenize
+input_mode: function
+solution_sketch: Use re.findall with a pattern that matches runs of letters only.
+sample_solution: |
+  import re
+
+
+  def tokenize(text):
+      return re.findall(r"[A-Za-z]+", text)
+hints:
+  - level: 1
+    text: A word here is a run of letters, so a single character class repeated with + describes it.
+  - level: 2
+    text: re.findall gathers every non-overlapping match at once, which is exactly one match per word.
+  - level: 3
+    text: Return re.findall(r"[A-Za-z]+", text); anything that is not a letter automatically acts as a boundary.
+tests:
+  public:
+    - name: simple_sentence
+      input: 'Bronze age tools, circa 1200.'
+      expected:
+        - Bronze
+        - age
+        - tools
+        - circa
+    - name: digits_split_words
+      input: room2gallery
+      expected:
+        - room
+        - gallery
+    - name: empty
+      input: ''
+      expected: []
+  validation:
+    - name: apostrophe_splits
+      input: 'potter''s wheel'
+      expected:
+        - potter
+        - s
+        - wheel
+    - name: only_symbols
+      input: '--- 4567 ---'
+      expected: []
+    - name: mixed_case_kept
+      input: 'The AZTEC Sunstone'
+      expected:
+        - The
+        - AZTEC
+        - Sunstone
+explanation_markdown: |
+  `re.findall(r"[A-Za-z]+", text)` walks the whole string and returns every
+  maximal run of letters as a separate list item. Because the character class
+  excludes digits, spaces, and punctuation, each of those characters ends the
+  current word and starts the search for the next one, so you never have to strip
+  or split by hand. An apostrophe is not a letter, which is why `potter's` becomes
+  the two tokens `potter` and `s`.
+common_mistakes:
+  - Using \w+, which also captures digits and underscores, so "room2gallery" would stay a single token.
+  - Splitting on a single space with str.split, which leaves punctuation stuck to the words.
+  - Forgetting that findall returns an empty list (not None) when there are no words.

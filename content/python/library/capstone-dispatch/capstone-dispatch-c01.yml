@@ -1,0 +1,113 @@
+id: exercise.library.capstone_dispatch.c01
+kind: exercise
+version: 1
+language: python
+title: 'The Courier Dispatch Board: Wiring the Street Map'
+slug: capstone-dispatch-c01
+difficulty: medium
+concepts:
+  - patterns.graph_traversal
+  - python.dictionaries
+prerequisites:
+  - python.lists
+  - python.sorting
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.capstone_dispatch.c01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: >-
+    Opening stage of an original bicycle-courier dispatch capstone; turns a
+    weighted two-way street list into a sorted adjacency map that later stages
+    route across.
+prompt_markdown: |
+  The Kettle Lane Couriers run every delivery in the old town by bicycle, and
+  their whole dispatch system is about to be built one stage at a time. It starts
+  with the street map.
+
+  The map arrives as a list of two-way lanes. Each lane is `[junction_a, junction_b, minutes]`,
+  meaning a rider can pedal between those two junctions in that many minutes, in
+  either direction. Write `build_map(edges)` that returns an **adjacency map**: a
+  dictionary whose keys are junction names and whose values are lists of
+  `[neighbour, minutes]` pairs.
+
+  Rules the later stages rely on:
+
+  - Every lane is two-way, so a lane `[a, b, m]` puts `[b, m]` in `a`'s list *and*
+    `[a, m]` in `b`'s list.
+  - Sort each neighbour list by neighbour name; if two share a name they cannot
+    (no pair of junctions is ever listed twice), so the name alone orders them,
+    with the travel time as the second sort key.
+  - Return a `[neighbour, minutes]` pair as a two-element **list**, not a tuple.
+  - An empty lane list returns an empty dictionary.
+
+  For example, `[["depot", "market", 5]]` returns
+  `{"depot": [["market", 5]], "market": [["depot", 5]]}`.
+starter_code: |
+  def build_map(edges):
+      adjacency = {}
+      return adjacency
+function_name: build_map
+input_mode: function
+solution_sketch: For each lane add both endpoints as keys and append the mirrored pair to each side, then sort every neighbour list.
+sample_solution: |
+  def build_map(edges):
+      adjacency = {}
+      for a, b, minutes in edges:
+          adjacency.setdefault(a, [])
+          adjacency.setdefault(b, [])
+          adjacency[a].append([b, minutes])
+          adjacency[b].append([a, minutes])
+      return {node: sorted(neighbours) for node, neighbours in adjacency.items()}
+hints:
+  - level: 1
+    text: A two-way lane belongs in two places at once, once under each of its endpoints.
+  - level: 2
+    text: Use setdefault so both junctions exist as keys, then append [b, minutes] to a's list and [a, minutes] to b's list.
+  - level: 3
+    text: After all lanes are recorded, return a dict comprehension mapping each junction to sorted(neighbours); sorting the [name, minutes] lists orders them by name first.
+tests:
+  public:
+    - name: single_lane
+      input: [["depot", "market", 5]]
+      expected: {"depot": [["market", 5]], "market": [["depot", 5]]}
+    - name: chain
+      input: [["a", "b", 4], ["b", "c", 2]]
+      expected: {"a": [["b", 4]], "b": [["a", 4], ["c", 2]], "c": [["b", 2]]}
+    - name: sort_two_neighbours
+      input: [["hub", "west", 3], ["hub", "east", 7]]
+      expected: {"hub": [["east", 7], ["west", 3]], "west": [["hub", 3]], "east": [["hub", 7]]}
+  validation:
+    - name: empty
+      input: []
+      expected: {}
+    - name: triangle
+      input: [["x", "y", 2], ["y", "z", 6], ["x", "z", 9]]
+      expected: {"x": [["y", 2], ["z", 9]], "y": [["x", 2], ["z", 6]], "z": [["x", 9], ["y", 6]]}
+    - name: sort_by_name_not_time
+      input: [["mid", "cedar", 8], ["mid", "birch", 8], ["mid", "alder", 1]]
+      expected: {"mid": [["alder", 1], ["birch", 8], ["cedar", 8]], "cedar": [["mid", 8]], "birch": [["mid", 8]], "alder": [["mid", 1]]}
+    - name: ring_of_three
+      input: [["north", "south", 10], ["south", "east", 4], ["east", "north", 4]]
+      expected: {"north": [["east", 4], ["south", 10]], "south": [["east", 4], ["north", 10]], "east": [["north", 4], ["south", 4]]}
+explanation_markdown: |
+  An adjacency map is the representation every routing algorithm in this capstone
+  will lean on: for each junction it lists exactly the junctions one lane away,
+  together with the cost of that lane. Because bicycle lanes run both ways, a
+  single input entry `[a, b, m]` contributes to two neighbour lists — `b` becomes
+  a neighbour of `a` and `a` becomes a neighbour of `b`, both at cost `m`.
+
+  Using `setdefault` guarantees a junction shows up as a key even when it only
+  ever appears on one side of a lane, so no destination silently vanishes. Sorting
+  each list at the end makes the output deterministic: `sorted` compares the
+  `[name, minutes]` lists element by element, so the neighbour name decides the
+  order and the travel time only matters if two names somehow tie. That stable
+  shape is what lets Stage 2's shortest-path search rely on a predictable
+  neighbour order.
+common_mistakes:
+  - Recording a lane in only one direction, which drops half of every connection.
+  - Returning tuples instead of two-element lists, so the values no longer match the expected shape.
+  - Forgetting to sort, leaving neighbour order dependent on the arbitrary input order of the lanes.

@@ -1,0 +1,91 @@
+id: exercise.library.tokenization_bpe.a02
+kind: exercise
+version: 1
+language: python
+title: Tallying Neighbouring Symbol Pairs
+slug: tokenization-bpe-a02
+difficulty: easy
+concepts:
+  - ai.tokenization
+  - patterns.hash_map_counting
+prerequisites:
+  - python.dictionaries
+  - python.loops
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.tokenization_bpe.a02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original adjacent-pair frequency drill framed as a scribe tallying which neighbouring glyphs occur together across a corpus.
+prompt_markdown: |
+  A byte-pair-encoding tokenizer decides what to merge by looking at which two
+  neighbouring symbols sit side by side most often. Your job is the counting
+  step.
+
+  Write `pair_counts(corpus)` where `corpus` is a list of words and each word is
+  itself a list of symbol strings (for example the output of the previous
+  exercise). Look at every **adjacent pair** of symbols inside each word. Build a
+  dictionary whose keys are the two symbols joined by a single space (the pair
+  `"l"` then `"o"` becomes the key `"l o"`) and whose values count how many times
+  that ordered pair appears across the whole corpus.
+
+  For example, `[["l", "o", "w", "</w>"], ["l", "o", "w", "</w>"]]` has the
+  adjacent pairs `l o`, `o w`, and `w </w>` in each word, so the result is
+  `{"l o": 2, "o w": 2, "w </w>": 2}`. A word with fewer than two symbols
+  contributes no pairs, and an empty corpus returns an empty dict.
+starter_code: |
+  def pair_counts(corpus):
+      return {}
+function_name: pair_counts
+input_mode: function
+solution_sketch: For each word, walk indices 0..len-2, build the space-joined key from symbols[i] and symbols[i+1], and increment its count in a dict.
+sample_solution: |
+  def pair_counts(corpus):
+      counts = {}
+      for symbols in corpus:
+          for i in range(len(symbols) - 1):
+              key = symbols[i] + " " + symbols[i + 1]
+              counts[key] = counts.get(key, 0) + 1
+      return counts
+hints:
+  - level: 1
+    text: An adjacent pair is symbols[i] together with symbols[i + 1], so the last valid i is len(symbols) - 2.
+  - level: 2
+    text: Build the dictionary key by concatenating the two symbols with a single space between them.
+  - level: 3
+    text: Use counts.get(key, 0) + 1 to add one, which handles both the first sighting and later repeats of a pair.
+tests:
+  public:
+    - name: two_identical_words
+      input: [["l", "o", "w", "</w>"], ["l", "o", "w", "</w>"]]
+      expected: {"l o": 2, "o w": 2, "w </w>": 2}
+    - name: single_word
+      input: [["t", "e", "a", "</w>"]]
+      expected: {"t e": 1, "e a": 1, "a </w>": 1}
+    - name: empty_corpus
+      input: []
+      expected: {}
+  validation:
+    - name: single_symbol_words
+      input: [["a", "</w>"], ["b", "</w>"]]
+      expected: {"a </w>": 1, "b </w>": 1}
+    - name: repeated_letter_word
+      input: [["a", "a", "a", "</w>"]]
+      expected: {"a a": 2, "a </w>": 1}
+    - name: shared_neighbours
+      input: [["m", "o", "o", "n", "</w>"], ["m", "o", "o", "n", "</w>"], ["s", "o", "o", "n", "</w>"]]
+      expected: {"m o": 2, "o o": 3, "o n": 3, "n </w>": 3, "s o": 1}
+explanation_markdown: |
+  Counting adjacent pairs is the heartbeat of BPE: whichever pair is most common
+  is the next candidate to be merged into a single symbol. Each word of length
+  `n` contributes `n - 1` pairs, so the loop runs from index `0` to `n - 2`. The
+  space-joined string key keeps each ordered pair distinct and human-readable,
+  and `dict.get(key, 0) + 1` accumulates counts without a separate check for
+  whether the key already exists. The whole pass is `O(total symbols)`.
+common_mistakes:
+  - Looping to len(symbols) instead of len(symbols) - 1, which reads past the end when forming symbols[i + 1].
+  - Forgetting the space in the key so "l" + "o" collides with a real symbol named "lo".
+  - Counting pairs per word only and overwriting instead of accumulating across the whole corpus.

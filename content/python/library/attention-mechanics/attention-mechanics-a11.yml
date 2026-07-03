@@ -1,0 +1,107 @@
+id: exercise.library.attention_mechanics.a11
+kind: exercise
+version: 1
+language: python
+title: Peaked or Spread-Out Attention
+slug: attention-mechanics-a11
+difficulty: medium
+concepts:
+  - ai.attention_transformers
+prerequisites:
+  - python.lists
+  - concepts.probability
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.attention_mechanics.a11
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original Shannon-entropy drill framed as measuring how sharply a single attention head focuses versus spreads across positions.
+prompt_markdown: |
+  Once a head has produced its attention weights, it helps to ask: is this head
+  laser-focused on one position, or does it spread its attention thinly across
+  many? **Shannon entropy** answers that with a single number. For a set of
+  weights that form a probability distribution (each `p` is between 0 and 1 and
+  together they sum to 1):
+
+      entropy = -(p0 * log2(p0) + p1 * log2(p1) + ... + p(n-1) * log2(p(n-1)))
+
+  Entropy is measured in bits. A head that puts all its weight on one position
+  has entropy `0` (it is perfectly certain); a head that spreads weight evenly
+  across `n` positions reaches the maximum, `log2(n)` bits.
+
+  A weight of exactly `0` contributes nothing (its `log2` is undefined, but
+  `0 * log2(0)` is taken to be 0), so **skip any weight that is 0** rather than
+  calling `log2` on it.
+
+  Write `attention_entropy(weights)` that takes a list of attention weights
+  directly, for example `[0.25, 0.25, 0.25, 0.25]`, and returns the entropy in
+  bits rounded to 4 decimal places.
+starter_code: |
+  import math
+
+
+  def attention_entropy(weights):
+      return 0.0
+function_name: attention_entropy
+input_mode: function
+solution_sketch: Sum p * log2(p) over the strictly positive weights, negate the total, and round to 4 places.
+sample_solution: |
+  import math
+
+
+  def attention_entropy(weights):
+      total = 0.0
+      for p in weights:
+          if p > 0:
+              total += p * math.log2(p)
+      return round(-total, 4)
+hints:
+  - level: 1
+    text: Accumulate p * log2(p) across the weights, then negate the running sum at the end.
+  - level: 2
+    text: Guard the logarithm. Only include a weight in the sum when p > 0, because log2(0) is undefined.
+  - level: 3
+    text: After the loop, return round(-total, 4); the leading minus sign is what makes entropy come out non-negative.
+tests:
+  public:
+    - name: uniform_four
+      input: [0.25, 0.25, 0.25, 0.25]
+      expected: 2.0
+    - name: fully_peaked
+      input: [1.0, 0.0, 0.0]
+      expected: 0.0
+    - name: even_split
+      input: [0.5, 0.5]
+      expected: 1.0
+  validation:
+    - name: skewed_three
+      input: [0.7, 0.2, 0.1]
+      expected: 1.1568
+    - name: zeros_ignored
+      input: [0.0, 0.5, 0.0, 0.5]
+      expected: 1.0
+    - name: uniform_ten
+      input: [0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1, 0.1]
+      expected: 3.3219
+    - name: nearly_certain
+      input: [0.9, 0.1]
+      expected: 0.469
+explanation_markdown: |
+  Entropy is a compact diagnostic for what a head is doing. Low entropy means the
+  head has committed to a small number of positions, which often shows up on
+  heads that track syntax like "the verb attends to its subject." High entropy
+  means the head is averaging broadly, closer to a smoothing or context-pooling
+  role. Because the maximum is `log2(n)`, comparing a head's entropy to that
+  ceiling tells you how close to uniform it is.
+
+  The one trap is the `0 * log2(0)` term. Mathematically its limit is 0, but
+  `math.log2(0)` raises an error, so you must filter out zero weights before
+  taking the log. Using base-2 logs reports the answer in bits; base-e would give
+  nats, a different scale for the same idea.
+common_mistakes:
+  - Calling math.log2 on a zero weight instead of skipping it, which raises a math domain error.
+  - Forgetting the leading minus sign, so the result comes out negative.
+  - Using math.log (natural log) instead of math.log2, which reports nats rather than bits and fails the expected values.

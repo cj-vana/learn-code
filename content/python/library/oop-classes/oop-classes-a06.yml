@@ -1,0 +1,91 @@
+id: exercise.library.oop_classes.a06
+kind: exercise
+version: 1
+language: python
+title: Ranking Climbing Routes
+slug: oop-classes-a06
+difficulty: medium
+concepts:
+  - python.dataclasses_dunder
+  - python.classes
+  - python.sorting
+prerequisites:
+  - python.classes
+  - python.sorting
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.oop_classes.a06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original climbing-gym scenario drilling __lt__ so sorted() orders objects by grade then name.
+prompt_markdown: |
+  A climbing gym posts its routes on a board, ordered from easiest to hardest. Each
+  route has a name and an integer grade. Routes are ranked by grade ascending, and
+  when two routes share a grade they are listed alphabetically by name.
+
+  Complete `route_order(routes)`, where `routes` is a list of `[name, grade]` pairs.
+  Inside the function, define a `Route` class that stores the name and grade and
+  defines `__lt__` so that `sorted()` orders routes by grade first and by name to
+  break ties. Build a `Route` for each pair, sort them, and return the list of route
+  names in ranked order.
+starter_code: |
+  def route_order(routes):
+      # Define a Route class with an __lt__ that orders by grade then name,
+      # then sort the routes and return their names.
+      return []
+function_name: route_order
+input_mode: function
+solution_sketch: Define __lt__ to compare (grade, name) tuples so sorted() ranks by grade then alphabetically.
+sample_solution: |
+  def route_order(routes):
+      class Route:
+          def __init__(self, name, grade):
+              self.name = name
+              self.grade = grade
+
+          def __lt__(self, other):
+              return (self.grade, self.name) < (other.grade, other.name)
+
+      objs = [Route(name, grade) for name, grade in routes]
+      return [route.name for route in sorted(objs)]
+hints:
+  - level: 1
+    text: sorted() compares items with the < operator, which __lt__ implements, so put the ranking rule there.
+  - level: 2
+    text: Comparing the tuple (self.grade, self.name) against the other route's tuple gives grade-first, name-second ordering for free.
+  - level: 3
+    text: Return (self.grade, self.name) < (other.grade, other.name) in __lt__, then return [r.name for r in sorted(objs)].
+tests:
+  public:
+    - name: distinct_grades
+      input: [[overhang, 5], [slab, 3], [crack, 4]]
+      expected: [slab, crack, overhang]
+    - name: tie_broken_by_name
+      input: [[zephyr, 2], [arch, 2]]
+      expected: [arch, zephyr]
+    - name: empty
+      input: []
+      expected: []
+  validation:
+    - name: single
+      input: [[solo, 7]]
+      expected: [solo]
+    - name: mixed_ties
+      input: [[delta, 3], [bravo, 3], [alpha, 5], [charlie, 3]]
+      expected: [bravo, charlie, delta, alpha]
+    - name: already_sorted
+      input: [[a, 1], [b, 2], [c, 3]]
+      expected: [a, b, c]
+explanation_markdown: |
+  `sorted()` never inspects your fields directly; it just asks, for pairs of items,
+  which is "less than" the other. Defining `__lt__` to compare the tuple
+  `(grade, name)` gives Python exactly the rule it needs: tuples compare
+  element by element, so grade decides the order and name breaks ties. Once the
+  objects know how to compare, `sorted()` ranks them and you read off the names.
+common_mistakes:
+  - Sorting the raw pairs and hoping the order matches, instead of letting the object's __lt__ define the ranking.
+  - Comparing only grades in __lt__, which leaves same-grade routes in an unpredictable order.
+  - Returning the sorted Route objects rather than their name strings.

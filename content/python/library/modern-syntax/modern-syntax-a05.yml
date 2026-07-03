@@ -1,0 +1,105 @@
+id: exercise.library.modern_syntax.a05
+kind: exercise
+version: 1
+language: python
+title: Reading the Radio Schedule
+slug: modern-syntax-a05
+difficulty: medium
+concepts:
+  - python.modern_syntax
+  - python.strings
+prerequisites:
+  - python.dictionaries
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.modern_syntax.a05
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original or-pattern drill themed around a community radio scheduler, covering literal or-patterns and an or-pattern over alternative dict keys binding one name.
+prompt_markdown: |
+  A community radio station stores each schedule entry in one of two shapes: a
+  short slot code string, or a dict naming who is on air. Write
+  `read_schedule(entry)` that uses a `match`/`case` statement with **or-patterns**
+  (alternatives joined by `|`) and returns a string:
+
+  - a slot code of `"am1"`, `"am2"`, or `"am3"` returns `"morning"`
+  - a slot code of `"pm1"` or `"pm2"` returns `"afternoon"`
+  - a slot code of `"n1"` or `"n2"` returns `"overnight"`
+  - a dict written as either `{"host": <name>}` or `{"presenter": <name>}`
+    returns `<name>` (the two spellings are treated as equivalent)
+  - anything else returns `"unscheduled"`
+
+  The dict rule uses an or-pattern across two different key spellings that both bind
+  the same capture name, so `{"host": "Dee"}` and `{"presenter": "Ravi"}` return
+  `"Dee"` and `"Ravi"` respectively. If a dict has neither key (for example `{}`),
+  it returns `"unscheduled"`.
+starter_code: |
+  def read_schedule(entry):
+      return "unscheduled"
+function_name: read_schedule
+input_mode: function
+solution_sketch: Use or-patterns over the literal slot codes for the three time-of-day labels, then an or-pattern over the two mapping shapes binding the same name, then a wildcard returning unscheduled.
+sample_solution: |
+  def read_schedule(entry):
+      match entry:
+          case "am1" | "am2" | "am3":
+              return "morning"
+          case "pm1" | "pm2":
+              return "afternoon"
+          case "n1" | "n2":
+              return "overnight"
+          case {"host": name} | {"presenter": name}:
+              return name
+          case _:
+              return "unscheduled"
+hints:
+  - level: 1
+    text: An or-pattern lets one case match several alternatives, like `case "pm1" | "pm2":`. It succeeds if the value matches any alternative.
+  - level: 2
+    text: 'Or-patterns also work across mapping shapes. `case {"host": name} | {"presenter": name}:` matches either key spelling and binds the value to name in both.'
+  - level: 3
+    text: Every alternative in an or-pattern must bind the same set of names, so use the same capture name (name) on both sides of the dict alternative. End with `case _:` returning "unscheduled".
+tests:
+  public:
+    - name: morning_slot
+      input: "am2"
+      expected: "morning"
+    - name: afternoon_slot
+      input: "pm1"
+      expected: "afternoon"
+    - name: presenter_dict
+      input: {"presenter": "Ravi"}
+      expected: "Ravi"
+  validation:
+    - name: overnight_slot
+      input: "n1"
+      expected: "overnight"
+    - name: host_dict
+      input: {"host": "Dee"}
+      expected: "Dee"
+    - name: unknown_string
+      input: "weekend"
+      expected: "unscheduled"
+    - name: empty_dict
+      input: {}
+      expected: "unscheduled"
+    - name: third_morning_slot
+      input: "am3"
+      expected: "morning"
+explanation_markdown: |
+  An or-pattern collapses several alternatives into a single case, matching if any
+  one of them matches. For the literal slot codes it reads almost like a set of
+  accepted values. The more interesting use is across the two dict shapes: `{"host":
+  name} | {"presenter": name}` accepts either key spelling and, crucially, binds the
+  captured value to the same name on both sides. Python enforces that rule at
+  compile time. If the two alternatives bound different names (say `name` on one side
+  and `who` on the other), the branch body could not know which variable was set, so
+  it is a `SyntaxError`. Reusing one capture name is exactly what lets the body treat
+  both spellings uniformly.
+common_mistakes:
+  - 'Binding different names in the two dict alternatives (for example `{"host": name} | {"presenter": who}`), which is a SyntaxError because or-pattern alternatives must bind the same names.'
+  - Writing separate cases for "pm1" and "pm2" instead of a single or-pattern, which works but misses the point of the feature.
+  - Assuming `{}` matches the dict alternative; with neither key present it falls through to the wildcard and returns "unscheduled".

@@ -1,0 +1,120 @@
+id: exercise.library.typing_runtime.a07
+kind: exercise
+version: 1
+language: python
+title: Tagging Berths at Harbor Control
+slug: typing-runtime-a07
+difficulty: medium
+concepts:
+  - python.type_hints
+  - python.introspection
+prerequisites:
+  - python.types
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.typing_runtime.a07
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original harbor-berth scenario that proves typing.NewType is an identity wrapper at runtime.
+prompt_markdown: |
+  Harbor Control wants its code to stop confusing a **berth id** with an ordinary
+  integer, so a colleague reaches for `typing.NewType` to give berth ids their own
+  name. Before the team relies on it, you need to show exactly what `NewType` does
+  when the program actually runs -- which is almost nothing.
+
+  Write `unwrap_berth_ids(raw_ids)`, where `raw_ids` is a list of integers. Inside
+  the function, create a distinct type alias with
+  `BerthId = NewType("BerthId", int)`, then tag every raw id by calling
+  `BerthId(raw)`. Return a dict with these four keys:
+
+  - `"unwrapped"`: the list of tagged values, in the same order as the input.
+    Because `NewType` hands back the very object you passed in, this list equals
+    `raw_ids`.
+  - `"runtime_types"`: a list with the runtime type **name** of each tagged value,
+    e.g. `"int"`. Every entry is `"int"` because the tag does not create a new
+    class.
+  - `"declared_supertype"`: the name of the base type the alias was built from,
+    read from `BerthId.__supertype__`. Here that is `"int"`.
+  - `"identity_preserved"`: `True` if every tagged value **is** the exact same
+    object as the raw id it came from (checked with `is`, not `==`). This is always
+    `True` regardless of the integers involved, because `NewType` returns its
+    argument unchanged.
+
+  For example, `unwrap_berth_ids([7, 12])` returns
+  `{"unwrapped": [7, 12], "runtime_types": ["int", "int"], "declared_supertype": "int", "identity_preserved": True}`.
+  An empty list returns `{"unwrapped": [], "runtime_types": [], "declared_supertype": "int", "identity_preserved": True}`.
+starter_code: |
+  from typing import NewType
+
+
+  def unwrap_berth_ids(raw_ids):
+      # Build a NewType alias, tag each id, and report what survives at runtime.
+      return {}
+function_name: unwrap_berth_ids
+input_mode: function
+solution_sketch: Create a NewType alias, map it over the ids, and report the unchanged values, their runtime type names, the declared supertype, and object identity.
+sample_solution: |
+  from typing import NewType
+
+
+  def unwrap_berth_ids(raw_ids):
+      BerthId = NewType("BerthId", int)
+      tagged = [BerthId(raw) for raw in raw_ids]
+      return {
+          "unwrapped": tagged,
+          "runtime_types": [type(value).__name__ for value in tagged],
+          "declared_supertype": BerthId.__supertype__.__name__,
+          "identity_preserved": all(
+              tag is raw for tag, raw in zip(tagged, raw_ids)
+          ),
+      }
+hints:
+  - level: 1
+    text: Calling a NewType alias like BerthId(raw) does not build a wrapper object; it returns the raw value untouched, so the runtime type stays int.
+  - level: 2
+    text: Use type(value).__name__ to read each runtime type name, and BerthId.__supertype__ to recover the base type the alias was declared from.
+  - level: 3
+    text: For identity_preserved, compare each tagged value against its source with is and combine the checks using all(); it is always True because the alias returns the same object.
+tests:
+  public:
+    - name: two_ids
+      input: [7, 12]
+      expected: {unwrapped: [7, 12], runtime_types: ['int', 'int'], declared_supertype: 'int', identity_preserved: true}
+    - name: empty
+      input: []
+      expected: {unwrapped: [], runtime_types: [], declared_supertype: 'int', identity_preserved: true}
+    - name: single
+      input: [42]
+      expected: {unwrapped: [42], runtime_types: ['int'], declared_supertype: 'int', identity_preserved: true}
+  validation:
+    - name: includes_zero
+      input: [0, 5]
+      expected: {unwrapped: [0, 5], runtime_types: ['int', 'int'], declared_supertype: 'int', identity_preserved: true}
+    - name: large_values_beyond_int_cache
+      input: [1000, 999999]
+      expected: {unwrapped: [1000, 999999], runtime_types: ['int', 'int'], declared_supertype: 'int', identity_preserved: true}
+    - name: negatives_with_repeat
+      input: [-3, -8, -8]
+      expected: {unwrapped: [-3, -8, -8], runtime_types: ['int', 'int', 'int'], declared_supertype: 'int', identity_preserved: true}
+explanation_markdown: |
+  `NewType("BerthId", int)` looks like it manufactures a new class, but at runtime it
+  is just a thin callable that returns its argument. That is why `BerthId(raw) is raw`
+  is always true: no new object is created, so there is nothing for the value's
+  identity to differ from. The `large_values_beyond_int_cache` case makes the point
+  sharper -- even integers far outside CPython's small-int cache come back identical,
+  because identity here has nothing to do with caching and everything to do with the
+  alias returning the same object.
+
+  The only lasting trace of the declaration is the `__supertype__` attribute, which
+  records the base type (`int`). Static type checkers use the `BerthId` name to catch
+  a plain `int` being passed where a berth id is required, but the interpreter neither
+  stores nor enforces that distinction. The lesson: `NewType` buys you documentation
+  and static safety, not a runtime wrapper you can inspect later.
+common_mistakes:
+  - Expecting BerthId(raw) to return a wrapper object with its own class rather than the untouched int.
+  - Reading identity_preserved as a fact about int caching instead of the alias returning the same object every time.
+  - Reaching for type(value) directly in the output; the expected values are the type names from type(value).__name__.

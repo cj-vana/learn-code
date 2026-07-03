@@ -1,0 +1,82 @@
+id: exercise.library.regex_text_processing.a07
+kind: exercise
+version: 1
+language: python
+title: Mask Badge Numbers in a Log
+slug: regex-text-processing-a07
+difficulty: medium
+concepts:
+  - python.regex
+  - python.strings
+prerequisites:
+  - python.regex
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.regex_text_processing.a07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original print-shop badge-masking task using a re.sub replacement function that keeps only trailing digits.
+prompt_markdown: |
+  A print shop's door log records employee badge numbers, which are always
+  exactly six digits, e.g. `482913`. For privacy, each badge number should be
+  masked so only its **last two digits** survive, preceded by four asterisks:
+  `482913` becomes `****13`. Numbers that are not exactly six digits long (a page
+  count, a year, and so on) must be left alone. Write `mask_badges(text)` that
+  returns the log line with every six-digit badge number masked.
+starter_code: |
+  import re
+
+
+  def mask_badges(text):
+      return text
+function_name: mask_badges
+input_mode: function
+solution_sketch: Match exactly-six-digit runs with word boundaries and use a re.sub replacement function that keeps the last two digits.
+sample_solution: |
+  import re
+
+
+  def mask_badges(text):
+      return re.sub(r"\b\d{6}\b", lambda m: "****" + m.group()[-2:], text)
+hints:
+  - level: 1
+    text: You need to match a run of exactly six digits and nothing more, which \b...\b word boundaries help pin down.
+  - level: 2
+    text: re.sub can take a function as its replacement; it receives the match object and returns the text to substitute.
+  - level: 3
+    text: 'Use re.sub(r"\b\d{6}\b", lambda m: "****" + m.group()[-2:], text) so only genuine six-digit badges are masked.'
+tests:
+  public:
+    - name: one_badge
+      input: 'Badge 482913 entered at gate'
+      expected: 'Badge ****13 entered at gate'
+    - name: leaves_short_and_long
+      input: 'run 12345 pages over 1234567 sheets'
+      expected: 'run 12345 pages over 1234567 sheets'
+    - name: no_numbers
+      input: door held open
+      expected: door held open
+  validation:
+    - name: two_badges
+      input: '482913 relieved 000042 on shift'
+      expected: '****13 relieved ****42 on shift'
+    - name: empty
+      input: ''
+      expected: ''
+    - name: badge_among_years
+      input: 'in 2026 badge 700815 clocked in'
+      expected: 'in 2026 badge ****15 clocked in'
+explanation_markdown: |
+  `\b\d{6}\b` matches a run of exactly six digits bounded by word boundaries, so a
+  five-digit page count or a seven-digit sheet count never matches. Passing a
+  function to `re.sub` gives you control over each replacement: the function
+  receives the match object, and `m.group()[-2:]` slices out the final two digits,
+  which are joined to the four asterisks. Every badge is rewritten while all other
+  numbers pass through untouched.
+common_mistakes:
+  - Dropping the word boundaries and using \d{6}, which would match the first six digits inside a longer number.
+  - Hard-coding a replacement string, which cannot vary the kept digits per match.
+  - Using \d{6,} (six or more), which would wrongly mask longer numbers too.

@@ -86,15 +86,25 @@ export function PathRoute() {
             {detail.units.map((unit) => (
               <Panel
                 key={unit.id}
-                title={unit.title}
-                eyebrow={`${unit.percent_complete}% · ${unit.items.length} items`}
+                title={unit.status === 'locked' ? `🔒 ${unit.title}` : unit.title}
+                eyebrow={`${unit.status === 'complete' ? '✓ complete' : unit.status.replace('_', ' ')} · ${unit.percent_complete}% · ${unit.items.length} items`}
               >
                 <p className="muted">{unit.description}</p>
-                <ul className="card-list">
-                  {unit.items.map((item) => (
-                    <ItemRow key={item.id} item={item} />
-                  ))}
-                </ul>
+                {unit.status === 'locked' ? (
+                  <p className="muted">
+                    Unlocks when the previous unit reaches 70% — you can still open items early if
+                    you want to peek ahead.
+                  </p>
+                ) : (
+                  <ul className="card-list">
+                    {unit.items.map((item) => (
+                      <ItemRow key={item.id} item={item} />
+                    ))}
+                  </ul>
+                )}
+                {unit.milestone && unit.status === 'complete' ? (
+                  <p className="path-milestone">🏁 {unit.milestone}</p>
+                ) : null}
               </Panel>
             ))}
           </div>

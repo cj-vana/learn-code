@@ -1,0 +1,105 @@
+id: quiz.library.linked_lists_patterns.a01
+kind: quiz
+version: 1
+language: python
+title: Picking the Right Chain Technique
+slug: quiz-linked-lists-patterns-a01
+difficulty: medium
+concepts:
+  - patterns.linked_list
+  - patterns.two_pointers
+prerequisites: []
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.linked_lists_patterns.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pattern-recognition prompts matching chain scenarios to the linked-list technique that solves them.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      You must decide whether a chain of stops eventually loops back on itself,
+      using only a constant amount of extra memory. Which technique fits best?
+    choices:
+      - A fast/slow pointer walk that checks whether the two cursors ever land on the same node.
+      - Storing every visited node in a set and checking for a repeat.
+      - Sorting the node values and scanning for duplicates.
+      - Reversing the chain and comparing it to the original.
+    correct_choice: A fast/slow pointer walk that checks whether the two cursors ever land on the same node.
+    explanation: |
+      A set would work but costs O(n) extra memory. Two cursors at different speeds
+      detect a loop in one pass with O(1) space, because on a cycle the fast cursor
+      must eventually collide with the slow one.
+    concepts:
+      - patterns.linked_list
+      - patterns.two_pointers
+  - id: q2
+    prompt: |
+      You need the middle node of a chain in a single pass, without first counting
+      how many nodes there are. Which approach does this?
+    choices:
+      - Advance a slow cursor one node and a fast cursor two nodes until fast reaches the end.
+      - Walk to the end counting nodes, then walk again to the halfway index.
+      - Keep two cursors a fixed gap apart and move them together.
+      - Reverse the chain and take its new head.
+    correct_choice: Advance a slow cursor one node and a fast cursor two nodes until fast reaches the end.
+    explanation: |
+      When the fast cursor has travelled the whole chain, the slow cursor, moving at
+      half the speed, sits at the midpoint. No separate counting pass is needed.
+    concepts:
+      - patterns.linked_list
+      - patterns.two_pointers
+  - id: q3
+    prompt: |
+      To remove the node that sits n positions from the end in one pass, what setup
+      makes the removal cleanest?
+    choices:
+      - A lead cursor moved n nodes ahead of a trail cursor, plus a dummy node before the head.
+      - Two cursors starting at opposite ends moving toward each other.
+      - A fast cursor moving twice as fast as a slow cursor.
+      - A set recording each node's distance from the head.
+    correct_choice: A lead cursor moved n nodes ahead of a trail cursor, plus a dummy node before the head.
+    explanation: |
+      The fixed gap of n means that when the lead cursor reaches the end, the trail
+      cursor is n nodes from the tail. A dummy before the head gives a handle on the
+      node just before the target, even when the target is the head itself.
+    concepts:
+      - patterns.linked_list
+      - patterns.two_pointers
+  - id: q4
+    prompt: |
+      You are merging two already-sorted chains into one sorted chain by rewiring
+      links. Which helper structure most simplifies the code?
+    choices:
+      - A dummy head node that you splice the smaller front node onto each step.
+      - A stack that holds every node from both chains.
+      - A recursive binary search over the two chains.
+      - A set of all values seen so far.
+    correct_choice: A dummy head node that you splice the smaller front node onto each step.
+    explanation: |
+      A dummy head lets you append the smaller of the two front nodes without a
+      special case for the very first node, and its `.next` is the merged head when
+      you finish.
+    concepts:
+      - patterns.linked_list
+  - id: q5
+    prompt: |
+      Checking whether a chain reads the same forwards and backwards, in O(1) extra
+      space, is best done how?
+    choices:
+      - Find the midpoint with fast/slow, reverse the second half in place, then compare the halves.
+      - Copy every value into a list and compare it to its reverse.
+      - Push all nodes on a stack and pop them while re-walking.
+      - Sort the chain and check whether it is unchanged.
+    correct_choice: Find the midpoint with fast/slow, reverse the second half in place, then compare the halves.
+    explanation: |
+      Copying into a list or a stack both use O(n) extra memory. Reversing the second
+      half in place lets you compare the two halves node by node with only a few
+      pointers.
+    concepts:
+      - patterns.linked_list
+      - patterns.two_pointers

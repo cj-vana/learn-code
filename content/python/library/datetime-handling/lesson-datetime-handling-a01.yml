@@ -1,0 +1,97 @@
+id: lesson.library.datetime_handling.a01
+kind: lesson
+version: 1
+language: python
+title: 'Dates, Times, and the Arithmetic Between Them'
+slug: lesson-datetime-handling-a01
+difficulty: easy
+concepts:
+  - python.datetime_module
+prerequisites:
+  - python.types
+  - python.operators
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.datetime_handling.a01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original datetime fundamentals walkthrough framed around a frame shop's order book, with fresh worked code.
+body_markdown: |
+  Nothing humbles a programmer faster than calendar math. "Three days from
+  Friday" crosses a weekend; "one month later" means different things in
+  January and February; the 29th of February exists once every four years,
+  mostly. The `datetime` module exists so you never do this arithmetic by
+  hand.
+
+  Three types do nearly all the work:
+
+  ```python
+  from datetime import date, datetime, timedelta
+
+  ordered = date(2026, 7, 3)                 # a calendar day
+  pickup  = datetime(2026, 7, 3, 14, 30)     # a day plus a time
+  week    = timedelta(days=7)                # a duration
+  ```
+
+  A `date` is a day on the calendar. A `datetime` is a day *and* a clock time.
+  A `timedelta` is not a moment at all — it is a *distance* between moments.
+  Keeping "moment" and "duration" separate in your head is the core skill:
+  you can add a duration to a moment (`date + timedelta -> date`), and you can
+  subtract two moments (`date - date -> timedelta`), but adding two dates is
+  meaningless and Python refuses.
+
+  ```python
+  ready = ordered + timedelta(days=10)       # date(2026, 7, 13)
+  wait  = ready - ordered                    # timedelta(days=10)
+  wait.days                                  # 10
+  ```
+
+  The arithmetic knows the calendar. Add three days to July 30 and you land in
+  August; add one day to February 28, 2028 and you get February 29 because
+  2028 is a leap year. Every month-length and leap-year rule you would have
+  botched is built in.
+
+  ### Reading the parts
+
+  ```python
+  ordered.year, ordered.month, ordered.day    # 2026, 7, 3
+  ordered.weekday()                           # 4  (Monday is 0, Sunday is 6)
+  ordered.isoformat()                         # '2026-07-03'
+  ```
+
+  `weekday()` returning Friday as 4 powers all "skip the weekend" logic: a
+  date is a weekend day exactly when `d.weekday() >= 5`.
+
+  ### Durations decompose oddly
+
+  A `timedelta` stores only days, seconds, and microseconds. A duration of 90
+  minutes is `timedelta(seconds=5400)` inside, and `td.seconds` for a
+  two-day-and-one-hour delta is `3600`, not `176400` — the days live in
+  `td.days`. When you want one total number, ask for it explicitly:
+
+  ```python
+  td = timedelta(days=2, hours=1)
+  td.total_seconds()                          # 176400.0
+  ```
+
+  Mixing up `.seconds` (the leftover) and `.total_seconds()` (the whole thing)
+  is the classic beginner datetime bug, and it hides until a duration first
+  crosses midnight.
+
+  One discipline the exercises will enforce: real programs take moments as
+  *inputs* rather than calling `datetime.now()` deep inside logic. A function
+  that receives dates is testable and predictable; one that consults the wall
+  clock gives a different answer every run.
+checkpoints:
+  - question: Which of these operations is meaningless and rejected — date + timedelta, date - date, or date + date — and why?
+    answer: date + date; adding two calendar moments has no meaning, while adding a duration to a moment gives a new moment and subtracting two moments gives the duration between them.
+    explanation: Moments and durations are different kinds of quantity, like positions and distances — the type system encodes which combinations make sense.
+  - question: For td = timedelta(days=2, hours=1), what do td.seconds and td.total_seconds() each return?
+    answer: td.seconds is 3600 (just the leftover within the final partial day), while td.total_seconds() is 176400.0 (the entire duration).
+    explanation: timedelta normalizes into days plus leftover seconds, so .seconds silently drops the days — the bug only appears once durations exceed 24 hours.
+  - question: How do you test whether a date d falls on a weekend, given how weekday() numbers the days?
+    answer: d.weekday() >= 5, because Monday is 0 through Sunday is 6, so Saturday and Sunday are 5 and 6.
+    explanation: The zero-based Monday convention differs from isoweekday() (Monday=1), so pick one accessor and stay consistent.

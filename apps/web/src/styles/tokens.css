@@ -1,21 +1,57 @@
 :root {
-  --paper: #f3efe2;
-  --paper-aged: #e7dec7;
-  --ink: #14130f;
-  --blackboard: #1a211b;
-  --panel: #242b22;
-  --pine: #476047;
-  --rust: #a13d2d;
-  --ochre: #b2873b;
-  --blueprint: #5c8fa3;
-  --graphite: #6d685d;
-  --rule: #b8ae98;
-  --focus: #ff8a2a;
+  /* ---- Night Study palette ------------------------------------------
+   * The room goes dark: a warm walnut desk after hours, lit by a single
+   * brass lamp. Lesson cards are lit cream paper that lift off the desk;
+   * the chrome (masthead, rails, footer) is deep wood and shadow. */
+
+  /* Desk & chrome (dark surfaces) */
+  --desk: #14110c;          /* body canvas — warm near-black walnut */
+  --desk-deep: #0d0b07;     /* deepest wells, masthead */
+  --desk-panel: #1d1811;    /* raised wood, nav bar */
+  --desk-line: #3a3021;     /* hairline on dark */
+
+  /* Lit paper (light surfaces — cards, panels, receipts) */
+  --paper: #efe7d4;         /* a lit page under the lamp */
+  --paper-aged: #e2d6bb;    /* shadowed paper, wells */
+  --ink: #1a160e;           /* text on paper */
+  --ink-soft: #4a4335;      /* secondary text on paper */
+
+  /* Legacy names kept as aliases so every component resolves.
+   * "blackboard/panel" now mean the dark instrument surfaces. */
+  --blackboard: #17130d;
+  --panel: #221b12;
+
+  /* Accents — warm brass lamp, banker's green, ember, cold moon */
+  --brass: #d4a13c;         /* the lamp — primary accent */
+  --brass-bright: #f0c766;  /* filament highlight */
+  --pine: #5c7f52;          /* banker's-lamp green — pass / mastery */
+  --rust: #c15637;          /* ember — action / alert */
+  --ochre: #c68a34;         /* aged brass — quizzes */
+  --blueprint: #6fa2b8;     /* cold moonlight — lessons / info */
+  --graphite: #8c8371;      /* muted ink on paper */
+
+  /* Structural */
+  --rule: #c3b795;          /* rule lines on paper */
+  --paper-line: color-mix(in srgb, var(--rule) 55%, transparent);
+  --focus: #f0c766;         /* brass focus glow */
+
+  /* Warm lamp glow used for lifting paper off the desk */
+  --lamp-glow: color-mix(in srgb, var(--brass) 22%, transparent);
+
   --space-1: 4px;
   --space-2: 8px;
   --space-3: 12px;
   --space-4: 16px;
   --space-6: 24px;
   --space-8: 32px;
-  --radius: 6px;
+  --radius: 7px;
+
+  /* Type — an editorial almanac serif for reading, a geometric sans for
+   * stamped labels, and a crisp mono for code and instrument readouts. */
+  --font-body: 'Iowan Old Style', 'Palatino Linotype', Palatino,
+    'Book Antiqua', Georgia, serif;
+  --font-stamp: 'Avenir Next', 'Futura', 'Century Gothic', 'Segoe UI',
+    system-ui, sans-serif;
+  --font-mono: ui-monospace, 'SF Mono', 'JetBrains Mono', 'Cascadia Mono',
+    'Roboto Mono', Menlo, Consolas, monospace;
 }

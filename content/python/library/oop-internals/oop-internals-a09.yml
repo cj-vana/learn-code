@@ -1,0 +1,201 @@
+id: exercise.library.oop_internals.a09
+kind: exercise
+version: 1
+language: python
+title: Filling In the Bakery's Comparison Table
+slug: oop-internals-a09
+difficulty: hard
+concepts:
+  - python.descriptors_mro
+  - python.functools_operator
+prerequisites:
+  - python.classes
+  - python.conditionals
+  - python.dictionaries
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.oop_internals.a09
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original derivation drill reproducing functools.total_ordering's exact operator-synthesis formulas from a single supplied ordering operator plus equality.
+prompt_markdown: |
+  A bakery ranks loaves by a `Loaf` class. To save typing, the class is decorated with
+  `functools.total_ordering`: it defines `__eq__` and exactly *one* ordering operator,
+  and the decorator synthesises the other three from those two. Your job is to reproduce
+  that synthesis by hand, so you understand precisely which formulas `total_ordering`
+  uses.
+
+  Write `total_ordering_compare(payload)` where `payload` is a dict describing one
+  comparison of two loaves `a` and `b`:
+
+  - `"eq"`: the boolean result of `a == b` (what `__eq__` returned).
+  - `"defined"`: which single ordering operator the class actually implemented — one of
+    `"lt"`, `"le"`, `"gt"`, or `"ge"`.
+  - `"value"`: the boolean result of calling that one defined operator on `(a, b)`.
+
+  Using ONLY those two booleans — exactly the information `total_ordering` has access to
+  — return a dict giving all six comparison results:
+  `{"lt": ..., "le": ..., "gt": ..., "ge": ..., "eq": ..., "ne": ...}`.
+
+  The `eq` result is just the input `"eq"`, and `ne` is its negation. The four ordering
+  results follow `total_ordering`'s own formulas. Writing `E` for `"eq"` and `V` for
+  `"value"`:
+
+  - If `defined == "lt"` (so `V` means `a < b`):
+    `lt = V`, `le = V or E`, `gt = (not V) and (not E)`, `ge = not V`.
+  - If `defined == "le"` (so `V` means `a <= b`):
+    `le = V`, `lt = V and (not E)`, `ge = (not V) or E`, `gt = not V`.
+  - If `defined == "gt"` (so `V` means `a > b`):
+    `gt = V`, `ge = V or E`, `lt = (not V) and (not E)`, `le = not V`.
+  - If `defined == "ge"` (so `V` means `a >= b`):
+    `ge = V`, `gt = V and (not E)`, `le = (not V) or E`, `lt = not V`.
+
+  Every returned value must be a genuine Python bool (`True`/`False`). Example: with
+  `eq = False`, `defined = "lt"`, `value = True` (modelling `a = 3`, `b = 5`), the result
+  is `{"lt": True, "le": True, "gt": False, "ge": False, "eq": False, "ne": True}`.
+starter_code: |
+  def total_ordering_compare(payload):
+      return {}
+function_name: total_ordering_compare
+input_mode: function
+solution_sketch: Read eq and the single defined operator's value, then branch on which operator was defined and apply total_ordering's synthesis formulas to fill lt/le/gt/ge; eq passes through and ne is its negation.
+sample_solution: |
+  def total_ordering_compare(payload):
+      e = bool(payload["eq"])
+      v = bool(payload["value"])
+      defined = payload["defined"]
+      if defined == "lt":
+          lt, le, gt, ge = v, (v or e), ((not v) and (not e)), (not v)
+      elif defined == "le":
+          le, lt, ge, gt = v, (v and (not e)), ((not v) or e), (not v)
+      elif defined == "gt":
+          gt, ge, lt, le = v, (v or e), ((not v) and (not e)), (not v)
+      elif defined == "ge":
+          ge, gt, le, lt = v, (v and (not e)), ((not v) or e), (not v)
+      else:
+          raise ValueError(f"unknown operator: {defined}")
+      return {"lt": lt, "le": le, "gt": gt, "ge": ge, "eq": e, "ne": not e}
+hints:
+  - level: 1
+    text: The whole table is derivable from just two booleans — equality and the one ordering operator the class defined — which is exactly why total_ordering only needs those two methods.
+  - level: 2
+    text: Branch on `payload["defined"]`; each branch sets the operator you were given directly to `value`, then computes the other three from `value` and `eq`.
+  - level: 3
+    text: 'For the "lt" branch: le is `value or eq`, ge is `not value`, and gt is `(not value) and (not eq)`. The other three branches follow the same shape with the roles rotated — always fill eq from input and ne as its negation.'
+tests:
+  public:
+    - name: lt_defined_a_less_than_b
+      input:
+        eq: false
+        defined: lt
+        value: true
+      expected:
+        lt: true
+        le: true
+        gt: false
+        ge: false
+        eq: false
+        ne: true
+    - name: lt_defined_equal_values
+      input:
+        eq: true
+        defined: lt
+        value: false
+      expected:
+        lt: false
+        le: true
+        gt: false
+        ge: true
+        eq: true
+        ne: false
+    - name: ge_defined_a_greater
+      input:
+        eq: false
+        defined: ge
+        value: true
+      expected:
+        lt: false
+        le: false
+        gt: true
+        ge: true
+        eq: false
+        ne: true
+  validation:
+    - name: le_defined_a_less
+      input:
+        eq: false
+        defined: le
+        value: true
+      expected:
+        lt: true
+        le: true
+        gt: false
+        ge: false
+        eq: false
+        ne: true
+    - name: gt_defined_equal_values
+      input:
+        eq: true
+        defined: gt
+        value: false
+      expected:
+        lt: false
+        le: true
+        gt: false
+        ge: true
+        eq: true
+        ne: false
+    - name: gt_defined_a_greater
+      input:
+        eq: false
+        defined: gt
+        value: true
+      expected:
+        lt: false
+        le: false
+        gt: true
+        ge: true
+        eq: false
+        ne: true
+    - name: le_defined_equal_values
+      input:
+        eq: true
+        defined: le
+        value: true
+      expected:
+        lt: false
+        le: true
+        gt: false
+        ge: true
+        eq: true
+        ne: false
+    - name: ge_defined_equal_values
+      input:
+        eq: true
+        defined: ge
+        value: true
+      expected:
+        lt: false
+        le: true
+        gt: false
+        ge: true
+        eq: true
+        ne: false
+explanation_markdown: |
+  `functools.total_ordering` fills in the missing rich-comparison methods by expressing
+  each one in terms of the single operator you supplied plus `__eq__`. For a class that
+  defines `__lt__`, the decorator installs `__le__` as `a < b or a == b`, `__gt__` as
+  `not (a < b) and a != b`, and `__ge__` as `not (a < b)` — precisely the formulas you
+  implemented. Because every ordering reduces to one comparison call and one equality
+  call, `total_ordering` never needs the other operators to exist. The tradeoff is real:
+  each synthesised operator may perform two underlying calls instead of one, so it is a
+  little slower than hand-writing all six, and it assumes your ordering is total and
+  self-consistent. Reproducing the table by hand is the surest way to remember which
+  formula the decorator actually uses for each case.
+common_mistakes:
+  - Deriving `gt` as simply `not le` while forgetting the equality term, so equal values wrongly report `a > b`.
+  - Mixing up the branch — applying the `lt` formulas when the class actually defined `ge`, which flips several results.
+  - Returning truthy non-bool values (like the result of `value or eq` when value is a truthy object) instead of real `True`/`False` booleans.

@@ -1,0 +1,192 @@
+id: exercise.library.config_parsing.a11
+kind: exercise
+version: 1
+language: python
+title: Seeding the Apiary Monitor Defaults
+slug: config-parsing-a11
+difficulty: medium
+concepts:
+  - python.config_parsing
+  - patterns.recursion
+  - python.dictionaries
+prerequisites:
+  - python.dictionaries
+  - patterns.recursion
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.config_parsing.a11
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original schema-to-defaults drill framed as seeding a rooftop apiary monitor's config from a typed schema, recursing into nested field groups and supplying type-based zero values when no default is given.
+prompt_markdown: |
+  A rooftop apiary monitor is described by a schema, and on first boot the rig needs
+  a full defaults dictionary built from that schema. Write
+  `default_config_template(schema)` that turns the schema into a defaults dict.
+
+  The function receives the schema dictionary directly. It maps each key name to a
+  **spec**:
+
+  ```python
+  default_config_template({
+      "interval": {"type": "int", "default": 30},
+      "unit": {"type": "str"},
+  })
+  # -> {"interval": 30, "unit": ""}
+  ```
+
+  Interpret each spec in this order:
+
+  - If the spec has a `"fields"` key, it is a **group**: its value is a nested
+    schema. Recurse into it and store the resulting nested dictionary.
+  - Otherwise, if the spec has a `"default"` key, use that default value **verbatim**
+    (whatever it is, even if its type does not match `"type"`).
+  - Otherwise, supply the **zero value** for the spec's `"type"`:
+    - `"int"` -> `0`
+    - `"float"` -> `0.0`
+    - `"str"` -> `""`
+    - `"bool"` -> `False`
+    - `"list"` -> `[]`
+    - `"dict"` -> `{}`
+
+  Return the assembled defaults dictionary. An empty schema returns an empty
+  dictionary. Groups may nest to any depth.
+starter_code: |
+  def default_config_template(schema):
+      return {}
+function_name: default_config_template
+input_mode: function
+solution_sketch: Walk the schema's items. When a spec has "fields", recurse to build the nested dict; when it has "default", copy that value; otherwise look up a fresh zero value for its declared type. Build a new zero container each time so nested lists and dicts are not shared.
+sample_solution: |
+  def _zero_value(type_name):
+      zeros = {"int": 0, "float": 0.0, "str": "", "bool": False, "list": [], "dict": {}}
+      return zeros[type_name]
+
+
+  def default_config_template(schema):
+      result = {}
+      for key, spec in schema.items():
+          if "fields" in spec:
+              result[key] = default_config_template(spec["fields"])
+          elif "default" in spec:
+              result[key] = spec["default"]
+          else:
+              result[key] = _zero_value(spec["type"])
+      return result
+hints:
+  - level: 1
+    text: Iterate over the schema's key/spec pairs and decide, per spec, whether it is a nested group, a default-carrying leaf, or a bare typed leaf.
+  - level: 2
+    text: A spec with a "fields" key is a nested schema — call the same function on spec["fields"] and store the result, which is what makes groups nest to any depth.
+  - level: 3
+    text: When there is no "fields" and no "default", map the declared type to its zero value; build a fresh [] or {} each time via a small lookup so nested containers are never accidentally shared.
+tests:
+  public:
+    - name: defaults_used
+      input:
+        port:
+          type: "int"
+          default: 8080
+        host:
+          type: "str"
+          default: "local"
+      expected:
+        port: 8080
+        host: "local"
+    - name: zero_values
+      input:
+        count:
+          type: "int"
+        name:
+          type: "str"
+        armed:
+          type: "bool"
+      expected:
+        count: 0
+        name: ""
+        armed: false
+    - name: empty_schema
+      input: {}
+      expected: {}
+  validation:
+    - name: nested_group
+      input:
+        sensor:
+          fields:
+            interval:
+              type: "int"
+              default: 30
+            unit:
+              type: "str"
+              default: "c"
+      expected:
+        sensor:
+          interval: 30
+          unit: "c"
+    - name: list_and_float_zero
+      input:
+        tags:
+          type: "list"
+        gain:
+          type: "float"
+      expected:
+        tags: []
+        gain: 0.0
+    - name: default_overrides_type
+      input:
+        ratio:
+          type: "int"
+          default: 0.75
+      expected:
+        ratio: 0.75
+    - name: mixed_leaf_and_group
+      input:
+        name:
+          type: "str"
+          default: "hive-1"
+        alarm:
+          fields:
+            enabled:
+              type: "bool"
+              default: true
+            threshold:
+              type: "int"
+      expected:
+        name: "hive-1"
+        alarm:
+          enabled: true
+          threshold: 0
+    - name: deeply_nested_groups
+      input:
+        outer:
+          fields:
+            middle:
+              fields:
+                inner:
+                  type: "int"
+                  default: 9
+      expected:
+        outer:
+          middle:
+            inner: 9
+explanation_markdown: |
+  Building defaults from a schema is a recursion whose base cases are the leaf
+  specs and whose recursive case is a group. The ordering of the checks encodes
+  the precedence: a `"fields"` group is recognized first (so a group is never
+  mistaken for a leaf), then an explicit `"default"`, and only when neither is
+  present do you fall back to a type-based zero value. That fallback is why a fresh
+  config comes up fully populated instead of riddled with missing keys.
+
+  Two details keep it correct. Using the declared default *verbatim* means the
+  schema author stays in charge — even a `default` that disagrees with `type` wins,
+  because the schema is the source of truth, not your guess. And producing a fresh
+  `[]` or `{}` for each zero value avoids the aliasing trap where two config keys
+  would otherwise point at the same shared list, so appending to one silently
+  changes the other.
+common_mistakes:
+  - Checking for "default" before "fields", so a nested group with no default collapses to a zero value and loses its structure.
+  - Returning a single shared [] or {} for every zero value, causing two keys to alias the same mutable object.
+  - Overriding the schema's explicit default because it does not match the declared type, instead of using it verbatim.
+  - Handling only one level of nesting instead of recursing, so groups inside groups are left unbuilt.

@@ -1,0 +1,182 @@
+id: exercise.library.concurrency_foundations.a06
+kind: exercise
+version: 1
+language: python
+title: The Telescope's Ready Queue
+slug: concurrency-foundations-a06
+difficulty: medium
+concepts:
+  - python.concurrency_model
+  - python.heapq_bisect
+prerequisites:
+  - python.heapq_bisect
+  - python.lists
+  - python.dictionaries
+estimated_time_minutes: 16
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.concurrency_foundations.a06
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: >-
+    Original cooperative-scheduler drill themed around a telescope's ready queue
+    of exposure jobs; models an event-loop-style priority scheduler over tasks
+    that become ready at an arrival tick, using heapq, fully deterministic.
+prompt_markdown: |
+  A robotic telescope runs one exposure job at a time from a *ready queue*, just
+  like a cooperative event loop draining its ready tasks. A job cannot run before
+  its instrument has warmed up, so each job becomes ready only at its arrival
+  tick. Whenever the telescope is free, it picks the most urgent job that is
+  ready right now — never a job that has not arrived yet, no matter how urgent.
+
+  Write `schedule_tasks(tasks)`. The single argument `tasks` is a list of dicts,
+  each with:
+
+  - `"name"`: a unique string naming the job.
+  - `"priority"`: an integer where a *smaller* number means more urgent.
+  - `"arrival"`: an integer tick at or after which the job may run.
+
+  Simulate the schedule with a clock starting at tick `0`. Running a job takes
+  exactly one tick. At each step:
+
+  1. A job is *ready* if its arrival tick is at or before the current clock and
+     it has not run yet.
+  2. If at least one job is ready, run the ready job with the smallest
+     `"priority"`. Break ties by earlier `"arrival"`, then by earlier position
+     in the input list. Advance the clock by one tick.
+  3. If no job is ready but jobs remain, jump the clock forward to the earliest
+     arrival tick among the remaining jobs (the telescope idles), then continue.
+
+  Return the list of job `"name"`s in the order they run.
+
+  Edge cases you must handle: an empty `tasks` list returns `[]`; a more urgent
+  job that arrives later must still wait if a less urgent job is the only one
+  ready; jobs sharing priority and arrival run in input order.
+starter_code: |
+  import heapq
+
+
+  def schedule_tasks(tasks):
+      return []
+function_name: schedule_tasks
+input_mode: function
+solution_sketch: >-
+  Order jobs by (arrival, index) for release. Keep a min-heap of ready jobs keyed
+  (priority, arrival, index). Each step, release everything arrived by the clock;
+  if the heap is empty jump the clock to the next arrival; otherwise pop the best
+  ready job, append its name, and advance the clock one tick.
+sample_solution: |
+  import heapq
+
+
+  def schedule_tasks(tasks):
+      pending = sorted(
+          range(len(tasks)),
+          key=lambda i: (tasks[i]["arrival"], i),
+      )
+      ready = []
+      order = []
+      clock = 0
+      cursor = 0
+      total = len(tasks)
+      while len(order) < total:
+          while cursor < len(pending) and tasks[pending[cursor]]["arrival"] <= clock:
+              idx = pending[cursor]
+              job = tasks[idx]
+              heapq.heappush(ready, (job["priority"], job["arrival"], idx, job["name"]))
+              cursor += 1
+          if not ready:
+              clock = tasks[pending[cursor]]["arrival"]
+              continue
+          _, _, _, name = heapq.heappop(ready)
+          order.append(name)
+          clock += 1
+      return order
+hints:
+  - level: 1
+    text: >-
+      Two things change over time: which jobs have arrived, and which is most
+      urgent among them. A min-heap keyed by priority handles the second; a clock
+      handles the first.
+  - level: 2
+    text: >-
+      Before each pick, push every job whose arrival is at or before the clock
+      into the ready heap. Only jobs already in the heap are eligible to run.
+  - level: 3
+    text: >-
+      Key the heap as `(priority, arrival, index, name)` so ties fall back to
+      arrival then input order. When the heap is empty but jobs remain, set the
+      clock to the next unreleased job's arrival instead of advancing by one.
+tests:
+  public:
+    - name: priority_same_arrival
+      input:
+        - {name: "a", priority: 2, arrival: 0}
+        - {name: "b", priority: 1, arrival: 0}
+        - {name: "c", priority: 3, arrival: 0}
+      expected: ["b", "a", "c"]
+    - name: arrival_gates_urgency
+      input:
+        - {name: "early", priority: 5, arrival: 0}
+        - {name: "late", priority: 1, arrival: 3}
+      expected: ["early", "late"]
+    - name: single
+      input:
+        - {name: "solo", priority: 0, arrival: 0}
+      expected: ["solo"]
+  validation:
+    - name: empty
+      input: []
+      expected: []
+    - name: fifo_tie_break
+      input:
+        - {name: "first", priority: 1, arrival: 0}
+        - {name: "second", priority: 1, arrival: 0}
+        - {name: "third", priority: 1, arrival: 0}
+      expected: ["first", "second", "third"]
+    - name: interleaved_arrivals
+      input:
+        - {name: "a", priority: 2, arrival: 0}
+        - {name: "b", priority: 1, arrival: 1}
+        - {name: "c", priority: 3, arrival: 0}
+      expected: ["a", "b", "c"]
+    - name: idle_gap
+      input:
+        - {name: "x", priority: 1, arrival: 0}
+        - {name: "y", priority: 1, arrival: 5}
+      expected: ["x", "y"]
+    - name: priority_beats_when_both_ready
+      input:
+        - {name: "low", priority: 9, arrival: 0}
+        - {name: "high", priority: 1, arrival: 0}
+      expected: ["high", "low"]
+explanation_markdown: |
+  This is a cooperative scheduler in miniature, the same shape as an event loop
+  draining its ready queue. Two independent questions drive it: *which jobs are
+  eligible* (they have arrived) and *which eligible job is most urgent* (lowest
+  priority number). Conflating the two is the classic bug — an unarrived job must
+  never be scheduled, even if it would be the most urgent choice once it shows
+  up.
+
+  A min-heap is the right tool for "most urgent ready job" because each push and
+  pop is O(log n), so the whole schedule costs O(n log n) rather than the O(n^2)
+  of rescanning every job at every tick. The composite key
+  `(priority, arrival, index)` makes the ordering total and deterministic:
+  priority first, then earlier arrival, then original input position, so there is
+  never a coin-flip between equally urgent jobs.
+
+  The idle jump in step 3 is what keeps the clock honest. If nothing is ready,
+  advancing one tick at a time would still be correct but pointless; snapping the
+  clock straight to the next arrival models a telescope that simply waits until
+  its next job is warm. The observable result — the run order — is identical
+  either way, which is why a deterministic simulation like this faithfully
+  captures real scheduling logic without any real concurrency.
+common_mistakes:
+  - Picking the globally most urgent job regardless of arrival, letting a job run
+    before its arrival tick.
+  - Sorting all jobs once by priority up front, which ignores that later
+    arrivals can change what is ready at each step.
+  - Omitting the input index from the heap key, so jobs with equal priority and
+    arrival come out in heap-implementation order instead of input order.

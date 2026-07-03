@@ -1,0 +1,104 @@
+id: exercise.library.dp_recognition.a06
+kind: exercise
+version: 1
+language: python
+title: Split The Prize Chips Evenly
+slug: dp-recognition-a06
+difficulty: medium
+concepts:
+  - patterns.dynamic_programming
+prerequisites:
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dp_recognition.a06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original two-player chip-splitting scenario framing the classic equal-subset-sum decision as a reachable-totals DP.
+prompt_markdown: |
+  Two friends just won a pile of numbered prize chips and want to divide them
+  into two stacks worth exactly the same total. Every chip must go into one of
+  the two stacks, and each chip's value is a positive whole number.
+
+  Write `can_partition(chips)` where `chips` is a list of positive ints. Return
+  `True` if the chips can be split into two groups whose sums are equal, and
+  `False` otherwise. For an empty list, both stacks are empty and sum to zero, so
+  return `True`.
+
+  Example: `[1, 5, 11, 5]` returns `True` (11 and 1+5+5). `[1, 2, 3, 5]` returns
+  `False`.
+starter_code: |
+  def can_partition(chips):
+      return None
+function_name: can_partition
+input_mode: function
+solution_sketch: If the total is odd it is impossible; otherwise DP over which subset sums up to total/2 are reachable.
+sample_solution: |
+  def can_partition(chips):
+      total = sum(chips)
+      if total % 2 != 0:
+          return False
+      target = total // 2
+      reachable = {0}
+      for value in chips:
+          reachable |= {r + value for r in reachable if r + value <= target}
+          if target in reachable:
+              return True
+      return target in reachable
+hints:
+  - level: 1
+    text: If the grand total of all chips is odd, no even split can exist.
+  - level: 2
+    text: An equal split means one stack must add up to exactly half the total, so the real question is whether some subset reaches total // 2.
+  - level: 3
+    text: Track a set of subset sums you can build. Start with {0}; for each chip, add it onto every sum you already have, and check whether the target appears.
+tests:
+  public:
+    - name: classic_true
+      input: [1, 5, 11, 5]
+      expected: true
+    - name: classic_false
+      input: [1, 2, 3, 5]
+      expected: false
+    - name: empty_list
+      input: []
+      expected: true
+    - name: single_chip
+      input: [7]
+      expected: false
+  validation:
+    - name: two_equal_chips
+      input: [4, 4]
+      expected: true
+    - name: odd_total
+      input: [3, 1]
+      expected: false
+    - name: balanced_five
+      input: [3, 3, 3, 4, 5]
+      expected: true
+    - name: even_total_no_split
+      input: [1, 2, 5]
+      expected: false
+    - name: four_ones
+      input: [1, 1, 1, 1]
+      expected: true
+explanation_markdown: |
+  Splitting into two equal stacks is only possible when the whole pile has an
+  even total, because each stack would carry exactly half. So the first check is
+  `total % 2`: an odd total returns `False` immediately.
+
+  When the total is even, the goal becomes a subset-sum decision: can any group of
+  chips add up to `target = total // 2`? If it can, the leftover chips
+  automatically sum to the same amount. The DP keeps a set of every subtotal you
+  can currently form, starting from `{0}` (using no chips). For each chip you fold
+  it into all existing subtotals, keeping only those still at or under the target.
+  The moment `target` shows up, an equal split exists. This runs in
+  O(n * target) time, far better than trying every possible grouping.
+common_mistakes:
+  - Forgetting the quick odd-total shortcut and doing needless work for sums that can never split.
+  - Mutating the reachable set while iterating over it instead of building the new sums first.
+  - Returning True only when a full subset uses every chip, rather than any subset that reaches half the total.
+  - Assuming an empty list is False when two empty stacks each sum to zero.

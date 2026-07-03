@@ -1,0 +1,166 @@
+id: exercise.library.regex_text_processing.b02
+kind: exercise
+version: 1
+language: python
+title: Tokenizing a Recipe Line
+slug: regex-text-processing-b02
+difficulty: hard
+concepts:
+  - python.regex
+  - python.strings
+prerequisites:
+  - python.regex
+  - python.lists
+estimated_time_minutes: 24
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.regex_text_processing.b02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original recipe-line lexer built from a single master regex with named alternatives classified by Match.lastgroup, distinct from the letters-only word tokenizer in the a-series.
+prompt_markdown: |
+  A cooking app needs to lex a recipe line into typed tokens before parsing it.
+  Write `tokenize_recipe(text)` that scans the string left to right and returns a
+  list of `[type, value]` pairs (each a two-element list, not a tuple), in the order
+  the tokens appear.
+
+  Classify each token by these exact rules, tried in this priority order at every
+  position:
+
+  1. `number`: a run of digits, optionally with a single decimal point and more
+     digits, e.g. `"2"` or `"1.5"`. The token value is the matched text as a string.
+  2. `unit`: one of these exact lowercase measurement words, standing alone as a
+     whole word: `cups`, `cup`, `tbsp`, `tsp`, `kg`, `g`, `ml`, `l`, `oz`. Matching
+     is case-sensitive, so `Cups` is not a unit.
+  3. `word`: a run of one or more letters (`A`-`Z` or `a`-`z`) that was not matched
+     as a unit.
+  4. `punct`: any single character that is not a letter, a digit, or whitespace
+     (for example `,` `.` `;` `(` `)` `-`). Each punctuation character is its own
+     token.
+
+  Whitespace separates tokens and is never emitted. You may assume numbers and units
+  are always separated from their neighbors by whitespace or punctuation (there is no
+  glued form like `2cups`). An empty string returns `[]`.
+
+  Example: `tokenize_recipe("2 cups flour, 1.5 tsp salt")` returns
+  `[["number", "2"], ["unit", "cups"], ["word", "flour"], ["punct", ","],
+  ["number", "1.5"], ["unit", "tsp"], ["word", "salt"]]`. Note that `cupcake` is a
+  single `word` token, not a `cup` unit followed by `cake`.
+starter_code: |
+  import re
+
+
+  def tokenize_recipe(text):
+      return []
+function_name: tokenize_recipe
+input_mode: function
+solution_sketch: Build one master regex with a named alternative per token type in priority order, plus a whitespace alternative. Iterate with finditer, read Match.lastgroup to learn which alternative fired, skip whitespace matches, and collect [type, value] for the rest.
+sample_solution: |
+  import re
+
+
+  def tokenize_recipe(text):
+      pattern = re.compile(
+          r"(?P<number>\d+(?:\.\d+)?)"
+          r"|(?P<unit>\b(?:cups|cup|tbsp|tsp|kg|g|ml|l|oz)\b)"
+          r"|(?P<word>[A-Za-z]+)"
+          r"|(?P<punct>[^\sA-Za-z0-9])"
+          r"|(?P<ws>\s+)"
+      )
+      tokens = []
+      for match in pattern.finditer(text):
+          kind = match.lastgroup
+          if kind == "ws":
+              continue
+          tokens.append([kind, match.group()])
+      return tokens
+hints:
+  - level: 1
+    text: A single master pattern of alternatives, tried in order, plus finditer to walk every non-overlapping match, is the classic lexer shape. Order the alternatives so higher-priority types come first.
+  - level: 2
+    text: Give each alternative a name with (?P<name>...). After a match, match.lastgroup tells you which named alternative actually fired, so you know the token type without re-testing.
+  - level: 3
+    text: Put number before unit before word before punct, and add a whitespace alternative so spaces are consumed but skipped. Wrap the unit list in word boundaries (\b...\b) so cup inside cupcake does not match as a unit, and list cups before cup.
+tests:
+  public:
+    - name: main_example
+      input: "2 cups flour, 1.5 tsp salt"
+      expected:
+        - ["number", "2"]
+        - ["unit", "cups"]
+        - ["word", "flour"]
+        - ["punct", ","]
+        - ["number", "1.5"]
+        - ["unit", "tsp"]
+        - ["word", "salt"]
+    - name: unit_lookalike_word
+      input: "cupcake batter"
+      expected:
+        - ["word", "cupcake"]
+        - ["word", "batter"]
+    - name: empty
+      input: ""
+      expected: []
+  validation:
+    - name: punct_run
+      input: "mix (gently); rest"
+      expected:
+        - ["word", "mix"]
+        - ["punct", "("]
+        - ["word", "gently"]
+        - ["punct", ")"]
+        - ["punct", ";"]
+        - ["word", "rest"]
+    - name: grams_number
+      input: "300 g sugar"
+      expected:
+        - ["number", "300"]
+        - ["unit", "g"]
+        - ["word", "sugar"]
+    - name: decimal_and_hyphen
+      input: "0.25 cup cocoa-powder"
+      expected:
+        - ["number", "0.25"]
+        - ["unit", "cup"]
+        - ["word", "cocoa"]
+        - ["punct", "-"]
+        - ["word", "powder"]
+    - name: capital_unit_is_word
+      input: "Cups of Tea"
+      expected:
+        - ["word", "Cups"]
+        - ["word", "of"]
+        - ["word", "Tea"]
+    - name: liter_single_letter
+      input: "1 l water"
+      expected:
+        - ["number", "1"]
+        - ["unit", "l"]
+        - ["word", "water"]
+explanation_markdown: |
+  A tokenizer is a set of competing patterns and a rule for who wins. The compact way
+  to express that in Python is one compiled regex whose alternatives are the token
+  types, each wrapped in a *named* group. `re.finditer` walks the string and returns
+  every non-overlapping match in order; for each one `Match.lastgroup` reports which
+  named alternative matched, which is the token's type. The value is just
+  `match.group()`, the matched text.
+
+  Priority is encoded by alternative order. `number` comes first so digit runs are
+  never split, then `unit`, then the more general `word`, then `punct` as the
+  catch-all for a single non-word, non-space character. A trailing `ws` alternative
+  consumes whitespace so the scanner advances past it, but we drop those matches
+  instead of emitting them.
+
+  The subtle part is the unit list. Wrapping it in word boundaries `\b(?:...)\b`
+  stops `cup` from matching inside `cupcake`: after the `cup` in `cupcake` there is no
+  boundary, so the whole unit alternative fails there and the engine falls through to
+  `word`, which grabs `cupcake` entire. Listing `cups` before `cup` keeps a full
+  `cups` from being clipped to `cup`. Because matching is case-sensitive, `Cups`
+  never matches the lowercase unit list and is classified as a `word`.
+common_mistakes:
+  - Omitting the word boundaries around the unit list, so cup matches inside words like cupcake and the token stream is wrong.
+  - Testing token types with separate re.match calls at hand-advanced offsets instead of one finditer pass, which is easy to get off by one.
+  - Emitting whitespace tokens, or forgetting the whitespace alternative so finditer silently skips characters and misaligns.
+  - Returning tuples instead of two-element lists, or reordering the alternatives so word shadows unit (or punct shadows number).

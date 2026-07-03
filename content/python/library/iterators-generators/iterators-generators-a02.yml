@@ -1,0 +1,81 @@
+id: exercise.library.iterators_generators.a02
+kind: exercise
+version: 1
+language: python
+title: Ink Drop Squares
+slug: iterators-generators-a02
+difficulty: easy
+concepts:
+  - python.iterators_generators
+  - python.comprehensions
+  - patterns.filtering
+prerequisites:
+  - python.comprehensions
+  - python.lists
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.iterators_generators.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original print-shop ink drill practicing a filtered generator expression materialized to a list.
+prompt_markdown: |
+  A print shop logs ink-drop readings, some of which are zero or negative because
+  of sensor glitches. Write `positive_squares(readings)` that returns a **list**
+  containing the square of every reading that is strictly greater than zero, in
+  their original order.
+
+  Build it with a **generator expression** (round parentheses, not square
+  brackets) and pass it straight to `list()`. Non-positive readings are skipped.
+
+  For example, `positive_squares([-1, 2, 3, 0])` returns `[4, 9]`.
+starter_code: |
+  def positive_squares(readings):
+      # Use a generator expression: list(n * n for n in readings if ...)
+      return []
+function_name: positive_squares
+input_mode: function
+solution_sketch: A filtered generator expression yields n*n for each positive n; list() collects them.
+sample_solution: |
+  def positive_squares(readings):
+      return list(n * n for n in readings if n > 0)
+hints:
+  - level: 1
+    text: A generator expression looks like a comprehension but uses round parentheses, and stays lazy until consumed.
+  - level: 2
+    text: The filter goes at the end as an if clause, so only readings greater than zero contribute.
+  - level: 3
+    text: Return list(n * n for n in readings if n > 0).
+tests:
+  public:
+    - name: mixed
+      input: [-1, 2, 3, 0]
+      expected: [4, 9]
+    - name: empty
+      input: []
+      expected: []
+    - name: single
+      input: [5]
+      expected: [25]
+  validation:
+    - name: all_non_positive
+      input: [-4, -2, 0]
+      expected: []
+    - name: all_positive
+      input: [1, 2, 3]
+      expected: [1, 4, 9]
+    - name: zero_and_negative_mixed
+      input: [0, -1, 10]
+      expected: [100]
+explanation_markdown: |
+  A generator expression `(n * n for n in readings if n > 0)` describes the work
+  without doing it up front. Passing it to `list()` drives the generator to
+  completion, computing each square only as it is pulled. The `if n > 0` clause
+  filters out zeros and negatives before squaring, and iterating the source in
+  order preserves the original order of the survivors.
+common_mistakes:
+  - Squaring before filtering, so a negative reading sneaks in as a positive square.
+  - Using square brackets, which builds an eager list comprehension rather than the requested lazy generator expression.
+  - Including zero because the condition uses >= instead of >.

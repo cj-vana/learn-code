@@ -1,0 +1,138 @@
+id: exercise.library.dataframe_thinking.a03
+kind: exercise
+version: 1
+language: python
+title: Normalizing the Observatory Field Notebook
+slug: dataframe-thinking-a03
+difficulty: medium
+concepts:
+  - concepts.dataframe_thinking
+  - python.dictionaries
+prerequisites:
+  - python.loops
+  - python.dictionaries
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dataframe_thinking.a03
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original column-map drill framed around a bird observatory standardizing one notebook column at a time, teaching the vectorized apply/map mental model with a named-transform vocabulary instead of a passed-in callable.
+prompt_markdown: |
+  A bird observatory keeps its field notebook as a list of sighting rows. Before
+  sharing the notebook, an editor standardizes one column at a time by applying
+  the same transform to every row, the way a data-frame library writes
+  `frame["count"] = frame["count"].map(...)`.
+
+  Because the transform must travel as data, it arrives as the name of one of a
+  fixed set of operations. Write `apply_column(payload)` that takes a single
+  dictionary with four keys:
+
+  - `"rows"`: a list of sighting dictionaries.
+  - `"source"`: the column to read from.
+  - `"target"`: the column to write the transformed value into (it may equal
+    `"source"` to overwrite in place, or be a new column name to add).
+  - `"op"`: one of these operation names (given as a string):
+    - `"double"`: numeric value times two.
+    - `"negate"`: numeric value with its sign flipped.
+    - `"abs"`: numeric absolute value.
+    - `"upper"`: string value uppercased.
+    - `"length"`: the length of the value (for example a string's character
+      count).
+
+  Return a **new list** with one dictionary per row. Each output row is a copy of
+  the input row with `target` set to `op(row[source])`; every other field is
+  carried over unchanged. Do not modify the caller's rows. You may assume
+  `"source"` is present in every row and that the value matches the operation's
+  expected type.
+
+  Edge cases the tests cover:
+
+  - An empty `"rows"` list returns an empty list `[]`.
+  - When `target` differs from `source`, the source column stays and the new
+    column is added.
+
+  Example:
+
+  ```python
+  apply_column({
+      "rows": [{"species": "wren", "count": 3}],
+      "source": "count",
+      "target": "count",
+      "op": "double",
+  })
+  # -> [{"species": "wren", "count": 6}]
+  ```
+starter_code: |
+  def apply_column(payload):
+      return []
+function_name: apply_column
+input_mode: function
+solution_sketch: Map each op name to a one-argument transform, then for every row make a shallow copy, overwrite the target key with the transform of the source value, and collect the copies.
+sample_solution: |
+  def apply_column(payload):
+      rows = payload["rows"]
+      source = payload["source"]
+      target = payload["target"]
+      transforms = {
+          "double": lambda x: x * 2,
+          "negate": lambda x: -x,
+          "abs": lambda x: abs(x),
+          "upper": lambda x: x.upper(),
+          "length": lambda x: len(x),
+      }
+      transform = transforms[payload["op"]]
+      result = []
+      for row in rows:
+          new_row = dict(row)
+          new_row[target] = transform(row[source])
+          result.append(new_row)
+      return result
+hints:
+  - level: 1
+    text: Applying a column transform means every row gets the same operation, computed from its source value and stored under the target key.
+  - level: 2
+    text: Look the operation up by name in a dictionary of one-argument functions so you can call it uniformly without branching per row.
+  - level: 3
+    text: For each row, copy it with dict(row) first, then set new_row[target] = transform(row[source]); copying keeps the other columns and avoids mutating the input.
+tests:
+  public:
+    - name: empty_notebook
+      input: {"rows": [], "source": "count", "target": "count", "op": "double"}
+      expected: []
+    - name: double_count_in_place
+      input: {"rows": [{"species": "wren", "count": 3}, {"species": "gull", "count": 5}, {"species": "tern", "count": 2}], "source": "count", "target": "count", "op": "double"}
+      expected: [{"species": "wren", "count": 6}, {"species": "gull", "count": 10}, {"species": "tern", "count": 4}]
+    - name: upper_species_in_place
+      input: {"rows": [{"species": "wren", "count": 3}, {"species": "gull", "count": 5}], "source": "species", "target": "species", "op": "upper"}
+      expected: [{"species": "WREN", "count": 3}, {"species": "GULL", "count": 5}]
+  validation:
+    - name: length_into_new_column
+      input: {"rows": [{"species": "wren", "count": 3}, {"species": "heron", "count": 1}], "source": "species", "target": "letters", "op": "length"}
+      expected: [{"species": "wren", "count": 3, "letters": 4}, {"species": "heron", "count": 1, "letters": 5}]
+    - name: negate_into_new_column
+      input: {"rows": [{"species": "owl", "count": 4}, {"species": "hawk", "count": 6}], "source": "count", "target": "delta", "op": "negate"}
+      expected: [{"species": "owl", "count": 4, "delta": -4}, {"species": "hawk", "count": 6, "delta": -6}]
+    - name: abs_overwrite_negatives
+      input: {"rows": [{"species": "owl", "trend": -2}, {"species": "hawk", "trend": 3}], "source": "trend", "target": "trend", "op": "abs"}
+      expected: [{"species": "owl", "trend": 2}, {"species": "hawk", "trend": 3}]
+    - name: single_row_double
+      input: {"rows": [{"species": "tern", "count": 7}], "source": "count", "target": "count", "op": "double"}
+      expected: [{"species": "tern", "count": 14}]
+explanation_markdown: |
+  A column map applies the same operation to every row's value in one pass, which
+  is the pure-Python shape of a vectorized `.map()` or `.apply()` over a single
+  column. Because the operation must be passed as data, you decode its name into a
+  concrete function once, then reuse it row by row rather than embedding a switch
+  in the loop body.
+
+  Copying each row with `dict(row)` before writing `target` is the load-bearing
+  step: it preserves the other columns and guarantees the caller's original rows
+  are untouched, so a transform that writes into a new column simply grows the
+  table while overwriting `source` leaves the width unchanged.
+common_mistakes:
+  - Mutating each row in place (assigning row[target] = ...) so the caller's original rows change too.
+  - Building each output row from only the source and target keys, dropping the other columns.
+  - Applying the operation to the wrong field by reading target instead of source when computing the value.

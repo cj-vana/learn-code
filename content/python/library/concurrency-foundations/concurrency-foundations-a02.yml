@@ -1,0 +1,169 @@
+id: exercise.library.concurrency_foundations.a02
+kind: exercise
+version: 1
+language: python
+title: Keys to the Drawbridges
+slug: concurrency-foundations-a02
+difficulty: medium
+concepts:
+  - python.concurrency_model
+  - patterns.graph_traversal
+prerequisites:
+  - python.lists
+  - python.dictionaries
+  - python.sets
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.concurrency_foundations.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: >-
+    Original lock-ordering deadlock detector themed around canal drawbridge
+    crews acquiring shared keys; models the wait-for / acquired-before graph and
+    detects a cycle with iterative-safe DFS, a deterministic pure function.
+prompt_markdown: |
+  A canal has several drawbridges, each opened with its own numbered key. A
+  bridge crew must hold every key it has picked up until its boat has passed,
+  and it always picks keys up one at a time in a fixed personal order. Deadlock
+  becomes possible the moment two crews disagree about the order: if crew A
+  grabs key 1 then key 2, while crew B grabs key 2 then key 1, each can end up
+  holding one key and waiting forever for the other. The classic defence is a
+  single global key order that everyone obeys.
+
+  You are given the crews' acquisition orders and must report whether a deadlock
+  is *possible*. Build the "acquired-before" graph: whenever any crew picks up
+  key `a` and then immediately picks up key `b` next, that is a directed edge
+  `a -> b`. A deadlock is possible exactly when this graph contains a cycle
+  (some set of keys where the orders chase each other in a loop).
+
+  Write `has_deadlock_risk(crews)`. The single argument `crews` is a list of
+  lists; each inner list is one crew's key-acquisition order, front to back. Keys
+  may be integers or strings, and a given key appears at most once within a
+  single crew's list. Return `True` if the acquired-before graph has a cycle and
+  `False` otherwise.
+
+  Edge cases you must handle: an empty `crews` list has no edges and returns
+  `False`; a single crew's list can never form a cycle on its own and returns
+  `False`; keys that appear in one crew but never conflict with another must not
+  produce a false positive.
+starter_code: |
+  def has_deadlock_risk(crews):
+      return False
+function_name: has_deadlock_risk
+input_mode: function
+solution_sketch: >-
+  Build an adjacency dict, adding edge a->b for every consecutive pair (a, b) in
+  each crew's list and ensuring every key is a node. Then run a three-colour DFS
+  (white/grey/black): a grey node reached again means a back edge, hence a cycle.
+  Return True on the first cycle found, else False.
+sample_solution: |
+  def has_deadlock_risk(crews):
+      graph = {}
+      for sequence in crews:
+          for earlier, later in zip(sequence, sequence[1:]):
+              graph.setdefault(earlier, set()).add(later)
+              graph.setdefault(later, set())
+
+      WHITE, GREY, BLACK = 0, 1, 2
+      color = {node: WHITE for node in graph}
+
+      def has_cycle_from(start):
+          stack = [(start, iter(graph[start]))]
+          color[start] = GREY
+          while stack:
+              node, neighbors = stack[-1]
+              advanced = False
+              for neighbor in neighbors:
+                  if color[neighbor] == GREY:
+                      return True
+                  if color[neighbor] == WHITE:
+                      color[neighbor] = GREY
+                      stack.append((neighbor, iter(graph[neighbor])))
+                      advanced = True
+                      break
+              if not advanced:
+                  color[node] = BLACK
+                  stack.pop()
+          return False
+
+      for node in graph:
+          if color[node] == WHITE and has_cycle_from(node):
+              return True
+      return False
+hints:
+  - level: 1
+    text: >-
+      Turn the crews into a directed graph. Each consecutive pair in a crew's
+      list — the key it holds and the very next key it reaches for — is one
+      directed edge.
+  - level: 2
+    text: >-
+      Two crews that pick the same two keys in opposite orders create edges that
+      point both ways, which is a cycle. Detecting "deadlock possible" is
+      detecting a cycle in this graph.
+  - level: 3
+    text: >-
+      Use a colour-marked DFS. Mark a node grey while you are still exploring its
+      descendants; if you ever reach a grey node again you have found a back
+      edge and therefore a cycle. Mark a node black once fully explored.
+tests:
+  public:
+    - name: consistent_order
+      input: [[1, 2, 3], [1, 2], [2, 3]]
+      expected: false
+    - name: simple_inversion
+      input: [[1, 2], [2, 1]]
+      expected: true
+    - name: single_crew
+      input: [[3, 1, 2]]
+      expected: false
+  validation:
+    - name: empty
+      input: []
+      expected: false
+    - name: three_way_cycle
+      input: [[1, 2], [2, 3], [3, 1]]
+      expected: true
+    - name: string_keys_inverted
+      input: [["db", "cache"], ["cache", "db"]]
+      expected: true
+    - name: long_consistent
+      input: [["a", "b", "c", "d"], ["a", "c"], ["b", "d"]]
+      expected: false
+    - name: nested_no_cycle
+      input: [[1, 2, 3], [1, 3]]
+      expected: false
+    - name: cycle_among_many
+      input: [["w", "x"], ["y", "z"], ["x", "w"]]
+      expected: true
+explanation_markdown: |
+  Deadlock detection reduces to cycle detection in a directed graph, and that is
+  precisely how real tooling reasons about lock ordering. The graph you build is
+  the *acquired-before* (or wait-for) graph: an edge `a -> b` records that some
+  crew commits to grabbing `b` while already holding `a`. If those commitments
+  ever form a loop, there is an ordering under which every crew is stuck holding
+  one key and waiting on the next — a deadlock.
+
+  Consecutive pairs are enough to capture the constraint because acquisition
+  order is transitive along a crew's list: a crew that grabs 1, then 2, then 3
+  contributes `1 -> 2` and `2 -> 3`, and the path `1 -> 3` follows for free. So
+  an inversion between non-adjacent keys still surfaces as a cycle through the
+  chain.
+
+  The three-colour DFS distinguishes a *back edge* (reaching a grey ancestor
+  still on the current path, which proves a cycle) from a *cross edge* (reaching
+  an already-finished black node, which is harmless). The iterative stack keeps
+  the search safe even on long chains where deep recursion could otherwise be a
+  concern. The real-world fix this models is imposing one global lock order so
+  the graph stays acyclic by construction.
+common_mistakes:
+  - Adding an edge between every pair of keys in a crew rather than only
+    consecutive ones is still correct, but adding edges in the wrong direction
+    (later -> earlier) inverts the whole graph and flips the answer.
+  - Treating any repeated key across crews as a cycle; a shared key is only a
+    problem when the acquisition orders actually conflict.
+  - Using a simple visited set instead of grey/black colours, which cannot tell
+    a back edge from a harmless cross edge and reports false cycles.

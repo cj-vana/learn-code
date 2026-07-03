@@ -1,0 +1,65 @@
+id: path.skill.practical_python
+kind: path
+path_type: skill
+version: 1
+language: python
+title: 'Practical Python: Files, Formats & Dates'
+slug: practical-python-files-and-dates
+description: 'The working developer''s daily bread: parsing text, JSON, and CSV safely, and doing calendar
+  math without off-by-one regrets.'
+outcomes:
+- Parse config files, JSON payloads, and quoted CSV correctly
+- Do date arithmetic, recurrence, and timestamp parsing with datetime
+estimated_hours: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: brief.paths.v1
+  author: agent
+  generated_at: '2026-07-02T18:00:00Z'
+  inspiration_sources: []
+  originality_notes: Curated ordering over the repository's original content bank; no external syllabus
+    copied.
+units:
+- id: unit.files_formats
+  title: Files & Data Formats
+  description: Lessons, drills, and quizzes for files & data formats.
+  items:
+  - lesson.library.files_formats.a01
+  - lesson.library.files_formats.a02
+  - lesson.library.files_formats.a03
+  - exercise.library.files_formats.a01
+  - exercise.library.files_formats.a02
+  - exercise.library.files_formats.a03
+  - exercise.library.files_formats.a04
+  - quiz.library.files_formats.a01
+  - exercise.library.files_formats.a05
+  - exercise.library.files_formats.a06
+  - exercise.library.files_formats.a07
+  - exercise.library.files_formats.a08
+  - quiz.library.files_formats.a02
+  - exercise.library.files_formats.a09
+  - exercise.library.files_formats.a10
+  - exercise.library.files_formats.a11
+  - exercise.library.files_formats.a12
+- id: unit.datetime_handling
+  title: Dates & Times
+  description: Lessons, drills, and quizzes for dates & times.
+  items:
+  - lesson.library.datetime_handling.a01
+  - lesson.library.datetime_handling.a02
+  - lesson.library.datetime_handling.a03
+  - exercise.library.datetime_handling.a01
+  - exercise.library.datetime_handling.a02
+  - exercise.library.datetime_handling.a03
+  - exercise.library.datetime_handling.a04
+  - quiz.library.datetime_handling.a01
+  - exercise.library.datetime_handling.a05
+  - exercise.library.datetime_handling.a06
+  - exercise.library.datetime_handling.a07
+  - exercise.library.datetime_handling.a08
+  - quiz.library.datetime_handling.a02
+  - exercise.library.datetime_handling.a09
+  - exercise.library.datetime_handling.a10
+  - exercise.library.datetime_handling.a11
+  - exercise.library.datetime_handling.a12

@@ -1,0 +1,110 @@
+id: exercise.library.numeric_precision.a08
+kind: exercise
+version: 1
+language: python
+title: Squaring the Courtyard
+slug: numeric-precision-a08
+difficulty: medium
+concepts:
+  - python.numeric_precision
+  - concepts.number_theory
+prerequisites:
+  - python.conditionals
+  - python.operators
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.numeric_precision.a08
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original integer-square-root drill contrasting math.isqrt's exactness on huge integers with the guard needed for negative inputs, framed around a stonemason laying the largest possible square courtyard.
+prompt_markdown: |
+  A stonemason has a pile of square paving tiles and wants to lay the largest
+  perfectly square courtyard possible, edge to edge. If there are `n` tiles, the
+  side of that square is the largest whole number `s` with `s * s <= n`, which is
+  the floor of the square root of `n`.
+
+  Reaching for `int(math.sqrt(n))` is a trap: `math.sqrt` returns a float, and for
+  very large `n` the float cannot hold enough precision, so the answer can come
+  out one too high or one too low. The stdlib gives you `math.isqrt`, which works
+  in exact integer arithmetic and is correct no matter how astronomically large
+  `n` gets. The catch is that `math.isqrt` raises `ValueError` on a negative
+  argument, so you must guard against a bad reading first.
+
+  Write `courtyard_side(n)` that takes a single integer `n`:
+
+  - If `n` is negative, there is no real square root, so return `-1` as a sentinel.
+  - Otherwise return `math.isqrt(n)`, the exact floor of the square root of `n`.
+
+  Example: `courtyard_side(145)` returns `12`, because `12 * 12` is `144` (which
+  fits) but `13 * 13` is `169` (too many tiles). `courtyard_side(-25)` returns
+  `-1`.
+starter_code: |
+  import math
+
+
+  def courtyard_side(n):
+      return 0
+function_name: courtyard_side
+input_mode: function
+solution_sketch: Guard the negative case by returning -1, otherwise return math.isqrt(n) for the exact integer floor of the square root.
+sample_solution: |
+  import math
+
+
+  def courtyard_side(n):
+      if n < 0:
+          return -1
+      return math.isqrt(n)
+hints:
+  - level: 1
+    text: math.isqrt gives the exact floor of a square root for integers of any size, unlike int(math.sqrt(n)) which can drift on large values.
+  - level: 2
+    text: math.isqrt raises ValueError for negative inputs, so check n < 0 before calling it.
+  - level: 3
+    text: Return -1 when n is negative; otherwise return math.isqrt(n) directly.
+tests:
+  public:
+    - name: perfect_square
+      input: 144
+      expected: 12
+    - name: floors_down
+      input: 145
+      expected: 12
+    - name: zero
+      input: 0
+      expected: 0
+  validation:
+    - name: negative_sentinel
+      input: -25
+      expected: -1
+    - name: huge_exact_square
+      input: 1000000000000000000
+      expected: 1000000000
+    - name: huge_just_below
+      input: 999999999999999999
+      expected: 999999999
+    - name: one
+      input: 1
+      expected: 1
+    - name: floors_eight
+      input: 8
+      expected: 2
+explanation_markdown: |
+  `math.isqrt` computes the integer square root purely with integers, so it stays
+  exact even when `n` has dozens of digits. That is why the tests include
+  `1000000000000000000` (ten to the eighteenth), whose true square root is exactly
+  `1000000000`, and its neighbour one below, whose floor drops to `999999999`. A
+  float-based `int(math.sqrt(n))` cannot be trusted to split those two apart
+  because a 64-bit float only carries about 15-16 significant decimal digits.
+
+  The negative guard matters because `math.isqrt` treats a negative argument as a
+  domain error and raises `ValueError` rather than returning a value. Returning a
+  sentinel like `-1` lets the caller detect the impossible request without the
+  whole program crashing on a single bad tile count.
+common_mistakes:
+  - Using int(math.sqrt(n)) instead of math.isqrt, which loses precision on large n and can return a value that is off by one.
+  - Forgetting the negative guard, so math.isqrt raises ValueError on a bad reading instead of returning the sentinel.
+  - Returning math.isqrt(n) + 1 or rounding, which overshoots; the largest square that fits is the floor, not the nearest, square root.

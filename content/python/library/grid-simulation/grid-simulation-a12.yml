@@ -1,0 +1,117 @@
+id: exercise.library.grid_simulation.a12
+kind: exercise
+version: 1
+language: python
+title: The Embroidery Machine
+slug: grid-simulation-a12
+difficulty: hard
+concepts:
+  - patterns.simulation
+  - patterns.state_machine
+prerequisites:
+  - python.lists
+  - python.conditionals
+estimated_time_minutes: 24
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.grid_simulation.a12
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original wandering-agent grid simulation with wraparound, themed around an embroidery head stitching and unpicking cloth.
+prompt_markdown: |
+  An embroidery machine works over a square `size` x `size` cloth, tracked as a
+  grid where each cell is `0` (bare) or `1` (stitched). The head starts on the
+  centre cell, `[size // 2, size // 2]`, facing **up**. It then performs `steps`
+  moves. On each move it looks at the cell it is currently on and follows one of
+  two rules:
+
+  - If the current cell is **bare** (`0`): stitch it (set it to `1`), turn
+    **right** 90 degrees, then step forward one cell.
+  - If the current cell is **stitched** (`1`): unpick it (set it to `0`), turn
+    **left** 90 degrees, then step forward one cell.
+
+  The cloth is mounted on a loop: the grid **wraps around** at every edge. Moving
+  up from row `0` lands on the last row, moving left from column `0` lands on the
+  last column, and likewise off the bottom and right edges.
+
+  Write `stitch_count(job)` where `job` is a single dictionary with keys
+  `"size"` (the grid side length, at least `1`) and `"steps"` (the number of
+  moves to perform). Run the machine for exactly `steps` moves and **return the
+  number of stitched (`1`) cells** remaining on the cloth. With `steps` equal to
+  `0` the head never moves and the answer is `0`.
+starter_code: |
+  def stitch_count(job):
+      return 0
+function_name: stitch_count
+input_mode: function
+solution_sketch: Keep the head's (r, c) and a facing index into a clockwise list of the four direction vectors. Each move flips the current cell, rotates the facing left or right by one, then advances with modular arithmetic so movement wraps around the edges.
+sample_solution: |
+  def stitch_count(job):
+      size = job["size"]
+      steps = job["steps"]
+      grid = [[0] * size for _ in range(size)]
+      r = c = size // 2
+      dirs = [(-1, 0), (0, 1), (1, 0), (0, -1)]  # up, right, down, left
+      facing = 0
+      for _ in range(steps):
+          if grid[r][c] == 0:
+              grid[r][c] = 1
+              facing = (facing + 1) % 4
+          else:
+              grid[r][c] = 0
+              facing = (facing - 1) % 4
+          dr, dc = dirs[facing]
+          r = (r + dr) % size
+          c = (c + dc) % size
+      return sum(sum(row) for row in grid)
+hints:
+  - level: 1
+    text: Store the four directions in clockwise order (up, right, down, left) and track the facing as an index. Turning right adds one to that index; turning left subtracts one.
+  - level: 2
+    text: Use `% 4` so the facing index stays in range as it rotates. Flip the current cell and update the facing before you step, matching the stated order stitch/turn/move.
+  - level: 3
+    text: Advance with `r = (r + dr) % size` and `c = (c + dc) % size` so stepping off any edge wraps to the opposite side. After the loop, count the ones with `sum(sum(row) for row in grid)`.
+tests:
+  public:
+    - name: no_steps
+      input: {size: 3, steps: 0}
+      expected: 0
+    - name: first_stitch
+      input: {size: 5, steps: 1}
+      expected: 1
+    - name: four_stitches
+      input: {size: 3, steps: 4}
+      expected: 4
+  validation:
+    - name: two_moves
+      input: {size: 3, steps: 2}
+      expected: 2
+    - name: unpicks_a_stitch
+      input: {size: 3, steps: 5}
+      expected: 3
+    - name: wraps_across_edges
+      input: {size: 3, steps: 11}
+      expected: 7
+    - name: many_moves
+      input: {size: 3, steps: 10}
+      expected: 6
+explanation_markdown: |
+  The head is a tiny state machine: its state is `(row, column, facing)` and each
+  move both reacts to the cloth and rewrites it. Encoding the four headings as a
+  clockwise list `[up, right, down, left]` turns "turn right" into `+1` and "turn
+  left" into `-1` on an index, and `% 4` keeps that index valid as it cycles.
+  Following the stated order, flip the cell, then rotate, then advance, matters,
+  because the turn direction depends on the cell's value *before* it is flipped.
+
+  Wraparound falls straight out of modular arithmetic: `(r + dr) % size` sends row
+  `-1` to `size - 1` and row `size` back to `0`, and the same for columns. The
+  work is one constant-cost move repeated `steps` times, so the routine is
+  O(steps) plus O(size * size) to allocate the grid and tally the result. This is
+  a classic wandering-agent automaton whose simple local rule produces
+  surprisingly intricate patterns.
+common_mistakes:
+  - Turning before reading the cell, or flipping the cell after turning, so the turn uses the wrong value and the path diverges.
+  - Clamping positions at the edges instead of wrapping them, which stalls the head against a wall rather than reappearing on the far side.
+  - Ordering the direction list so that +1 turns left instead of right, silently mirroring every path.

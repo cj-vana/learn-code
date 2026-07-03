@@ -1,0 +1,143 @@
+id: exercise.library.caching_performance.a08
+kind: exercise
+version: 1
+language: python
+title: Estimating the Batch Job's Growth
+slug: caching-performance-a08
+difficulty: hard
+concepts:
+  - concepts.performance
+  - concepts.big_o
+prerequisites:
+  - patterns.recursion
+  - python.dictionaries
+estimated_time_minutes: 24
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.caching_performance.a08
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original Big-O reading drill framed as a print shop estimating how a nightly batch job scales, using a small recursive cost grammar of nested loops instead of any textbook code-tracing prompt.
+prompt_markdown: |
+  A print shop schedules a nightly batch job and wants to predict how its running
+  time grows as the number of orders `n` climbs. Instead of profiling, an analyst
+  sketches the job's structure as a small nested description, and you turn that
+  description into a Big-O label.
+
+  Write `classify_complexity(node)`. A `node` is a dict describing one piece of
+  the algorithm, using exactly these four shapes:
+
+  - `{"op": "work"}` — one unit of constant work, `O(1)`.
+  - `{"op": "loop", "body": <node>}` — a loop that runs about `n` times, repeating
+    the work inside `body`. This multiplies the growth of `body` by a factor of `n`.
+  - `{"op": "halve", "body": <node>}` — a loop that halves the remaining range each
+    step, so it runs about `log n` times, repeating `body`. This multiplies the
+    growth of `body` by a factor of `log n`.
+  - `{"op": "sequence", "steps": [<node>, ...]}` — several pieces run one after
+    another; the whole sequence grows as fast as its single most expensive step
+    (the dominant term). An empty `steps` list is `O(1)`.
+
+  Track the cost as a power of `n` and a power of `log n`. Then format the answer:
+
+  - Constant work is `"O(1)"`.
+  - A power of `n`: `n` when the exponent is 1, otherwise `n^k` (for example `n^2`).
+  - A power of `log n`: `log n` when the exponent is 1, otherwise `log^k n`
+    (for example `log^2 n`).
+  - When both an `n` term and a `log` term are present, join them with a single
+    space in that order, for example `"O(n log n)"` or `"O(n^3 log n)"`.
+
+  For `sequence`, the dominant step is the one with the largest power of `n`;
+  ties are broken by the larger power of `log n`.
+starter_code: |
+  def classify_complexity(node):
+      return "O(1)"
+function_name: classify_complexity
+input_mode: function
+solution_sketch: Recursively reduce each node to a pair (n_exponent, log_exponent). work is (0, 0); loop adds one to the n exponent of its body; halve adds one to the log exponent of its body; sequence takes the max pair over its steps using tuple ordering. Then format the pair into the O(...) string.
+sample_solution: |
+  def _cost(node):
+      op = node["op"]
+      if op == "work":
+          return (0, 0)
+      if op == "loop":
+          n_exp, log_exp = _cost(node["body"])
+          return (n_exp + 1, log_exp)
+      if op == "halve":
+          n_exp, log_exp = _cost(node["body"])
+          return (n_exp, log_exp + 1)
+      if op == "sequence":
+          best = (0, 0)
+          for step in node["steps"]:
+              cost = _cost(step)
+              if cost > best:
+                  best = cost
+          return best
+      raise ValueError("unknown op: " + str(op))
+
+
+  def classify_complexity(node):
+      n_exp, log_exp = _cost(node)
+      if n_exp == 0 and log_exp == 0:
+          return "O(1)"
+      parts = []
+      if n_exp == 1:
+          parts.append("n")
+      elif n_exp > 1:
+          parts.append("n^" + str(n_exp))
+      if log_exp == 1:
+          parts.append("log n")
+      elif log_exp > 1:
+          parts.append("log^" + str(log_exp) + " n")
+      return "O(" + " ".join(parts) + ")"
+hints:
+  - level: 1
+    text: Reduce every node to two numbers — how many powers of n and how many powers of log n it costs. work is (0, 0).
+  - level: 2
+    text: loop bumps the n exponent of whatever its body costs; halve bumps the log exponent. Recurse into the body first, then adjust the returned pair.
+  - level: 3
+    text: For a sequence, compare the (n_exp, log_exp) pairs of the steps with plain tuple comparison and keep the maximum — Python already breaks ties by the second element, which is exactly the log tie-break you want.
+tests:
+  public:
+    - name: constant
+      input: {op: work}
+      expected: 'O(1)'
+    - name: single_loop
+      input: {op: loop, body: {op: work}}
+      expected: 'O(n)'
+    - name: nested_loops
+      input: {op: loop, body: {op: loop, body: {op: work}}}
+      expected: 'O(n^2)'
+  validation:
+    - name: logarithmic
+      input: {op: halve, body: {op: work}}
+      expected: 'O(log n)'
+    - name: linearithmic
+      input: {op: loop, body: {op: halve, body: {op: work}}}
+      expected: 'O(n log n)'
+    - name: sequence_takes_dominant
+      input: {op: sequence, steps: [{op: loop, body: {op: work}}, {op: loop, body: {op: loop, body: {op: work}}}]}
+      expected: 'O(n^2)'
+    - name: log_squared
+      input: {op: halve, body: {op: halve, body: {op: work}}}
+      expected: 'O(log^2 n)'
+    - name: cubic_with_log
+      input: {op: loop, body: {op: loop, body: {op: loop, body: {op: halve, body: {op: work}}}}}
+      expected: 'O(n^3 log n)'
+explanation_markdown: |
+  Big-O is compositional, which is exactly what makes this tractable as a
+  recursion. Wrapping a body in a `loop` multiplies its cost by `n`; wrapping it
+  in a `halve` multiplies by `log n`. Because multiplication of powers just adds
+  exponents, the entire cost of any nested structure collapses to a single pair
+  `(n_exponent, log_exponent)`.
+
+  The `sequence` rule is where dominance lives: `O(n^2) + O(n log n)` is just
+  `O(n^2)`, because for large `n` the biggest term swallows the rest. Representing
+  each cost as a tuple lets Python's built-in tuple comparison pick the dominant
+  term for free — it compares the `n` exponent first and only consults the `log`
+  exponent to break a tie, which is precisely the ordering of complexity classes.
+common_mistakes:
+  - Adding the costs of sequence steps instead of taking the maximum, which invents complexity classes like O(n^2 + n) that Big-O never keeps.
+  - Formatting the n^1 case as "n^1" instead of the bare "n", or emitting "O()" for constant work instead of "O(1)".
+  - Comparing sequence steps only by the n exponent and dropping the log tie-break, so O(n log n) and O(n) look equally dominant.

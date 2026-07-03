@@ -1,0 +1,95 @@
+id: lesson.library.tokenization_bpe.a03
+kind: lesson
+version: 1
+language: python
+title: 'Using a Trained Tokenizer: Encoding, Decoding, and the Unknown'
+slug: lesson-tokenization-bpe-a03
+difficulty: medium
+concepts:
+  - ai.tokenization
+prerequisites:
+  - ai.tokenization
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.tokenization_bpe.a03
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original walkthrough of BPE encoding order, detokenization, and unknown handling with fresh examples.
+body_markdown: |
+  Training produced an ordered merge list. This lesson is about the other
+  half of a tokenizer's life: applying it — encoding new text, decoding
+  tokens back, and handling what training never saw.
+
+  ### Encoding: replay the merges, in order
+
+  To tokenize a new word, split it into characters (plus `</w>`) and replay
+  the learned merges **in their training order**:
+
+  ```python
+  def apply_merges(word_symbols, merges):
+      symbols = list(word_symbols)
+      for pair in merges:
+          symbols = merge_pair(symbols, pair)   # same rewriting as training
+      return symbols
+  ```
+
+  Order is not a detail — it is the algorithm. Later merges were learned on
+  top of earlier ones: the merge `("mas", "t")` can only fire if `("m",
+  "as")` already ran, which needed `("a", "s")` first. Apply merges in the
+  wrong order (or worst, by "whichever fits") and common words shatter into
+  the wrong pieces. Encoding is deterministic replay of training history.
+
+  A pleasing consequence: a word the corpus knew well collapses to one
+  token; a novel word simply stops merging early and comes out as several
+  smaller pieces. **Nothing is ever unrepresentable** — the character floor
+  guarantees it. This graceful degradation is BPE's whole reason to exist.
+
+  ### Decoding: the marker pays off
+
+  Tokens back to text is mechanical *because* of the end-of-word marker:
+  concatenate all tokens, then turn each `</w>` into a space:
+
+  ```python
+  def detokenize(tokens):
+      return "".join(tokens).replace("</w>", " ").strip()
+  ```
+
+  Round-trip — `detokenize(tokenize(text)) == text` (for well-formed
+  input) — is the property test that catches most tokenizer bugs, exactly
+  the round-trip oracle from your testing unit. The exercises hold you to
+  it.
+
+  ### The unknown, again
+
+  BPE shrinks the unknown-word problem but character-level gaps can remain:
+  if the training corpus never contained "ø", no merge or base character
+  covers it. Implementations map uncovered tokens to `<unk>` — and yours
+  collapses *adjacent* `<unk>`s into one, since three unknown characters in
+  a row convey no more than one marker of "something foreign here". (Real
+  systems close even this hole by operating on *bytes* — all 256 values —
+  so nothing on Earth is out of vocabulary; the principle is the same
+  floor, one level down.)
+
+  ### Reading real-world behavior with builder's eyes
+
+  Why does an LLM bill "tokenization" costs per token and not per word? Why
+  does "strawberry" tokenize as one piece but a rare surname as four? Why do
+  models struggle to count letters inside a word? All of it is now
+  mechanical to you: models see merge-list outputs, not letters — frequent
+  strings ride as single units, rare ones split, and characters inside a
+  merged token are invisible to the sequence. The tokenizer you built in
+  these exercises is, at internet scale, the exact machine drawing those
+  boundaries.
+checkpoints:
+  - question: Why must encoding apply the learned merges in their original training order?
+    answer: Later merges operate on symbols created by earlier ones — ("mas","t") can only fire after ("m","as"), which needed ("a","s"); replaying out of order leaves prerequisite symbols unbuilt and shatters words into wrong pieces.
+    explanation: The merge list is a dependency chain, not a set — encoding is a deterministic replay of training history.
+  - question: How does BPE handle a word it never saw in training, and why is that "graceful"?
+    answer: Merging simply stops early — the word comes out as several smaller known pieces, down to single characters if necessary, so nothing is unrepresentable and rarity costs only extra tokens, not failure.
+    explanation: The character floor converts the hard out-of-vocabulary failure of word models into a soft efficiency cost.
+  - question: What single property test catches most tokenizer implementation bugs, and where does its guarantee come from?
+    answer: 'The round trip detokenize(tokenize(text)) == text; it works because the </w> marker preserves word boundaries exactly, so concatenation plus marker-to-space reconstructs the original.'
+    explanation: The encode/decode round-trip oracle from the testing unit applies verbatim — tokenizers are encoders, and the marker is what makes the inverse exist.

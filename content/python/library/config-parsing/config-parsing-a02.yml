@@ -1,0 +1,150 @@
+id: exercise.library.config_parsing.a02
+kind: exercise
+version: 1
+language: python
+title: Loading the Roastery's TOML Settings
+slug: config-parsing-a02
+difficulty: easy
+concepts:
+  - python.config_parsing
+  - python.dictionaries
+prerequisites:
+  - python.dictionaries
+  - python.strings
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.config_parsing.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original TOML-loading drill framed around a coffee roastery's config file, teaching learners to reach for the stdlib tomllib parser rather than hand-rolling TOML.
+prompt_markdown: |
+  A coffee roastery keeps its machine settings in a TOML file. TOML is the format
+  Python's own `pyproject.toml` uses, and the standard library ships a parser for
+  it: `tomllib` (added in Python 3.11). You should **not** hand-roll TOML parsing —
+  reach for the right tool.
+
+  Write `parse_toml_string(text)` that parses a TOML string into a dictionary using
+  `tomllib.loads`. TOML gives you native Python types automatically:
+
+  - `name = "ethiopia"` becomes a string.
+  - `temperature = 218` becomes an int.
+  - `ratio = 0.5` becomes a float.
+  - `active = true` becomes a bool.
+  - `stages = ["dry", "first"]` becomes a list.
+  - A `[section]` header nests its keys inside a sub-dictionary.
+
+  Example call:
+
+  ```python
+  parse_toml_string('name = "ethiopia"\ntemperature = 218')
+  # -> {"name": "ethiopia", "temperature": 218}
+  ```
+
+  An empty string returns an empty dictionary. You only need one line inside the
+  function body once you import the parser.
+starter_code: |
+  import tomllib
+
+
+  def parse_toml_string(text):
+      return {}
+function_name: parse_toml_string
+input_mode: function
+solution_sketch: Import tomllib and return tomllib.loads(text); the parser produces the nested dictionary with correctly typed values.
+sample_solution: |
+  import tomllib
+
+
+  def parse_toml_string(text):
+      return tomllib.loads(text)
+hints:
+  - level: 1
+    text: The standard library already parses TOML for you; the module is tomllib and the string entry point is tomllib.loads.
+  - level: 2
+    text: tomllib.loads takes the TOML text and hands back a plain dict with ints, floats, bools, strings, lists, and nested dicts already typed.
+  - level: 3
+    text: The whole body is return tomllib.loads(text); an empty string yields an empty dict with no special-casing needed.
+tests:
+  public:
+    - name: empty_text
+      input: ""
+      expected: {}
+    - name: typed_scalars
+      input: |
+        name = "ethiopia"
+        temperature = 218
+        active = true
+      expected:
+        name: "ethiopia"
+        temperature: 218
+        active: true
+    - name: float_and_array
+      input: |
+        ratio = 0.5
+        stages = ["dry", "first"]
+      expected:
+        ratio: 0.5
+        stages:
+          - "dry"
+          - "first"
+  validation:
+    - name: nested_table
+      input: |
+        [drum]
+        speed = 60
+        material = "steel"
+      expected:
+        drum:
+          speed: 60
+          material: "steel"
+    - name: multiple_tables
+      input: |
+        [intake]
+        grams = 350
+        [exhaust]
+        open = false
+      expected:
+        intake:
+          grams: 350
+        exhaust:
+          open: false
+    - name: negative_and_bool
+      input: |
+        offset = -12
+        vented = false
+      expected:
+        offset: -12
+        vented: false
+    - name: string_with_spaces
+      input: |
+        label = "single origin roast"
+      expected:
+        label: "single origin roast"
+    - name: array_of_strings
+      input: |
+        tags = ["light", "fruity", "washed"]
+      expected:
+        tags:
+          - "light"
+          - "fruity"
+          - "washed"
+explanation_markdown: |
+  The lesson here is restraint: TOML has enough grammar (quoting, arrays, nested
+  tables, typed literals) that a from-scratch parser would be long and bug-prone,
+  and the standard library already solved it. `tomllib.loads` reads a TOML string
+  and returns a ready-made dictionary where every value already has the right
+  Python type, so `temperature = 218` arrives as an `int` and `active = true` as a
+  `bool` without any coercion on your side.
+
+  `tomllib` is read-only and parse-only by design — there is no `dumps`. That is
+  fine for configuration loading, which is the one direction you need: text on
+  disk into structured settings your program can branch on. Knowing which battles
+  the stdlib has already fought for you is a real engineering skill.
+common_mistakes:
+  - Trying to hand-parse TOML with string splitting instead of calling tomllib.loads.
+  - Reaching for a json or yaml function; TOML is its own format with its own stdlib parser (tomllib).
+  - Forgetting to import tomllib, so the function raises NameError at call time.
+  - Expecting numbers to come back as strings; tomllib already types 218 as int and 0.5 as float.

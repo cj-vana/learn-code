@@ -1,0 +1,129 @@
+id: exercise.library.datetime_handling.a10
+kind: exercise
+version: 1
+language: python
+title: Greenhouse Feeding Schedule
+slug: datetime-handling-a10
+difficulty: hard
+concepts:
+  - python.datetime_module
+prerequisites:
+  - python.lists
+  - python.conditionals
+estimated_time_minutes: 20
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.datetime_handling.a10
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original recurrence-expansion drill framed around a greenhouse generating its plant-feeding dates at a fixed interval.
+prompt_markdown: |
+  A greenhouse feeds its plants on a fixed cadence, and the head grower wants the
+  full list of feeding dates laid out from a start date onward, one every so many
+  days, up to and including a cut-off date.
+
+  Write `expand_recurrence(job)` that takes a single dictionary with three keys:
+
+  - `"start"`: an ISO date string for the first feeding, always included when it
+    is valid.
+  - `"every_days"`: the interval in days between feedings.
+  - `"until"`: an ISO date string; feedings on or before this date are kept,
+    later ones are dropped.
+
+  Return a **list of ISO date strings** beginning at `"start"` and stepping
+  forward by `"every_days"` each time, including any date that lands exactly on
+  `"until"`. Rules for the edge cases the tests cover:
+
+  - If `"every_days"` is less than 1, return an empty list (guard against a
+    non-advancing or backward interval).
+  - If `"until"` is earlier than `"start"`, return an empty list.
+  - If `"start"` equals `"until"`, return just `["start"]` (when the interval is
+    valid).
+
+  Example:
+
+  ```python
+  expand_recurrence({"start": "2026-03-01", "every_days": 7, "until": "2026-03-20"})
+  # -> ["2026-03-01", "2026-03-08", "2026-03-15"]
+  ```
+
+  The next step, `2026-03-22`, is past `"until"`, so it is left off.
+starter_code: |
+  from datetime import date, timedelta
+
+
+  def expand_recurrence(job):
+      return []
+function_name: expand_recurrence
+input_mode: function
+solution_sketch: Guard every_days < 1 up front, then walk a cursor date from start, appending its ISO string and adding the interval each loop while the cursor is still on or before until.
+sample_solution: |
+  from datetime import date, timedelta
+
+
+  def expand_recurrence(job):
+      every = job["every_days"]
+      if every < 1:
+          return []
+      current = date.fromisoformat(job["start"])
+      until = date.fromisoformat(job["until"])
+      result = []
+      while current <= until:
+          result.append(current.isoformat())
+          current = current + timedelta(days=every)
+      return result
+hints:
+  - level: 1
+    text: Check every_days < 1 before doing any date work and return an empty list immediately if so, since a non-positive step could loop forever.
+  - level: 2
+    text: Parse start and until into date objects and keep a moving cursor that begins at start.
+  - level: 3
+    text: Loop while cursor <= until, appending cursor.isoformat() and then advancing the cursor by timedelta(days=every_days); the "until is earlier than start" case falls out because the loop body never runs.
+tests:
+  public:
+    - name: weekly
+      input: {"start": "2026-03-01", "every_days": 7, "until": "2026-03-20"}
+      expected: ["2026-03-01", "2026-03-08", "2026-03-15"]
+    - name: daily_short_span
+      input: {"start": "2026-03-01", "every_days": 1, "until": "2026-03-03"}
+      expected: ["2026-03-01", "2026-03-02", "2026-03-03"]
+    - name: single_day
+      input: {"start": "2026-03-01", "every_days": 5, "until": "2026-03-01"}
+      expected: ["2026-03-01"]
+  validation:
+    - name: until_before_start
+      input: {"start": "2026-03-01", "every_days": 5, "until": "2026-02-01"}
+      expected: []
+    - name: guard_zero_interval
+      input: {"start": "2026-03-01", "every_days": 0, "until": "2026-03-20"}
+      expected: []
+    - name: month_boundary
+      input: {"start": "2026-02-25", "every_days": 2, "until": "2026-03-05"}
+      expected: ["2026-02-25", "2026-02-27", "2026-03-01", "2026-03-03", "2026-03-05"]
+    - name: year_boundary
+      input: {"start": "2026-12-30", "every_days": 1, "until": "2027-01-02"}
+      expected: ["2026-12-30", "2026-12-31", "2027-01-01", "2027-01-02"]
+    - name: ten_day_cadence
+      input: {"start": "2026-01-01", "every_days": 10, "until": "2026-02-01"}
+      expected: ["2026-01-01", "2026-01-11", "2026-01-21", "2026-01-31"]
+explanation_markdown: |
+  Expanding a recurrence is a guarded walk. The guard comes first: if
+  `every_days` is zero or negative the cursor would never move forward (or would
+  move backward), so the only safe answer is an empty list, and checking it before
+  the loop also prevents an infinite loop. After that, the pattern is a simple
+  cursor that starts at `start` and advances by `timedelta(days=every_days)` each
+  iteration.
+
+  Using `while current <= until` makes the inclusive cut-off automatic: a feeding
+  that lands exactly on `until` is appended before the next step pushes the cursor
+  past it. The same condition quietly handles `until` earlier than `start`,
+  because the loop body simply never runs and you get `[]`. Leaning on
+  `timedelta` for the stepping means month lengths, the non-leap February of 2026,
+  and the year rollover into 2027 are all handled for you rather than by manual
+  day arithmetic. The work is proportional to the number of dates produced.
+common_mistakes:
+  - Skipping the every_days < 1 guard, which risks an infinite loop when the interval is 0 and never terminates the while.
+  - Using a strict current < until comparison, which drops a feeding that falls exactly on the until date.
+  - Advancing the cursor before recording it, so the start date itself is missing from the result.

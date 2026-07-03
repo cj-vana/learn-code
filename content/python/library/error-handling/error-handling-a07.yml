@@ -1,0 +1,123 @@
+id: exercise.library.error_handling.a07
+kind: exercise
+version: 1
+language: python
+title: A Payment Error Family
+slug: error-handling-a07
+difficulty: medium
+concepts:
+  - python.exceptions
+  - python.classes
+prerequisites:
+  - python.functions
+  - python.classes
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.error_handling.a07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original payment-terminal scenario built on a small custom exception hierarchy caught by its shared base class.
+prompt_markdown: |
+  A market stall's card terminal should decline for different reasons but let one
+  handler catch them all. Build a small exception hierarchy:
+
+  - `TransactionError` subclasses `Exception`.
+  - `CardExpiredError` subclasses `TransactionError`.
+  - `InsufficientFundsError` subclasses `TransactionError`.
+
+  Then write `authorize(txn)` where `txn` is a dict with `balance`, `amount`, and
+  `expired` (a bool). Check in this order:
+
+  1. If `expired` is true, raise `CardExpiredError("card expired")`.
+  2. If `amount` is greater than `balance`, raise `InsufficientFundsError("insufficient funds")`.
+  3. Otherwise the charge clears and the remaining balance is `balance - amount`.
+
+  Catch the shared base `TransactionError`. Return `"approved:R"` on success (where
+  `R` is the remaining balance) or `"declined:<ClassName>"` using the exception's
+  class name when a transaction error was raised.
+starter_code: |
+  class TransactionError(Exception):
+      pass
+
+
+  class CardExpiredError(TransactionError):
+      pass
+
+
+  class InsufficientFundsError(TransactionError):
+      pass
+
+
+  def authorize(txn):
+      # Raise the matching subclass; catch the base TransactionError.
+      # Return "approved:<remaining>" or "declined:<ClassName>".
+      return ""
+function_name: authorize
+input_mode: function
+solution_sketch: Raise the right subclass, catch the base class, and report type(exc).__name__ on failure.
+sample_solution: |
+  class TransactionError(Exception):
+      pass
+
+
+  class CardExpiredError(TransactionError):
+      pass
+
+
+  class InsufficientFundsError(TransactionError):
+      pass
+
+
+  def authorize(txn):
+      try:
+          if txn["expired"]:
+              raise CardExpiredError("card expired")
+          if txn["amount"] > txn["balance"]:
+              raise InsufficientFundsError("insufficient funds")
+          remaining = txn["balance"] - txn["amount"]
+      except TransactionError as exc:
+          return f"declined:{type(exc).__name__}"
+      return f"approved:{remaining}"
+hints:
+  - level: 1
+    text: A subclass of TransactionError is still a TransactionError, so one except clause can catch either specific error.
+  - level: 2
+    text: Raise CardExpiredError or InsufficientFundsError, but write `except TransactionError as exc`.
+  - level: 3
+    text: "Use `type(exc).__name__` to get the specific class name for the \"declined:...\" string."
+tests:
+  public:
+    - name: clean_charge
+      input: {balance: 100, amount: 40, expired: false}
+      expected: 'approved:60'
+    - name: short_funds
+      input: {balance: 30, amount: 50, expired: false}
+      expected: 'declined:InsufficientFundsError'
+    - name: expired_card
+      input: {balance: 100, amount: 10, expired: true}
+      expected: 'declined:CardExpiredError'
+  validation:
+    - name: exact_balance
+      input: {balance: 20, amount: 20, expired: false}
+      expected: 'approved:0'
+    - name: zero_charge
+      input: {balance: 0, amount: 0, expired: false}
+      expected: 'approved:0'
+    - name: expired_beats_funds
+      input: {balance: 500, amount: 600, expired: true}
+      expected: 'declined:CardExpiredError'
+explanation_markdown: |
+  Because both specific errors inherit from `TransactionError`, a single
+  `except TransactionError` catches either one; the exception object still knows
+  its real class, which `type(exc).__name__` reads back. This is the payoff of an
+  exception hierarchy: callers that care about the category catch the base, while
+  callers that need the detail can inspect the subclass. The expiry check runs
+  first, so an expired card with too little money is still reported as
+  `CardExpiredError`, matching the written order of the rules.
+common_mistakes:
+  - Making the subclasses inherit from Exception directly, so catching TransactionError no longer covers them.
+  - Catching each subclass separately when the task is to handle them through their common base.
+  - Hard-coding the class name string instead of deriving it from the raised exception.

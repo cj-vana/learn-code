@@ -1,0 +1,103 @@
+id: exercise.library.intervals_greedy.a08
+kind: exercise
+version: 1
+language: python
+title: Slot a New Delivery Into the Route
+slug: intervals-greedy-a08
+difficulty: medium
+concepts:
+  - patterns.intervals
+  - python.lists
+prerequisites:
+  - python.sorting
+estimated_time_minutes: 18
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.intervals_greedy.a08
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original courier-route framing for inserting one interval into a sorted disjoint list and merging in place.
+prompt_markdown: |
+  A courier's day is a list of `[start, end]` delivery blocks that are already
+  sorted by start time and never overlap. A new rush delivery comes in. Write
+  `insert_delivery(data)` where `data` is a dict with:
+
+  - `"route"`: the existing sorted, non-overlapping blocks.
+  - `"rush"`: the new `[start, end]` block to add.
+
+  Return the updated route, still sorted and non-overlapping, merging the rush
+  block with any blocks it overlaps. Blocks that merely touch the rush block at
+  an endpoint stay separate. Do it in one left-to-right pass, not by re-sorting
+  from scratch.
+starter_code: |
+  def insert_delivery(data):
+      return []
+function_name: insert_delivery
+input_mode: function
+solution_sketch: Copy blocks that end before the rush starts, absorb every block that overlaps it, then copy the rest.
+sample_solution: |
+  def insert_delivery(data):
+      route = data["route"]
+      new_start, new_end = data["rush"]
+      result = []
+      i = 0
+      n = len(route)
+      while i < n and route[i][1] <= new_start:
+          result.append(list(route[i]))
+          i += 1
+      while i < n and route[i][0] < new_end:
+          new_start = min(new_start, route[i][0])
+          new_end = max(new_end, route[i][1])
+          i += 1
+      result.append([new_start, new_end])
+      while i < n:
+          result.append(list(route[i]))
+          i += 1
+      return result
+hints:
+  - level: 1
+    text: Split the work into three phases — blocks entirely before the rush, blocks that overlap it, and blocks entirely after.
+  - level: 2
+    text: A block is entirely before if its end <= rush start; it overlaps if its start < rush end.
+  - level: 3
+    text: While overlapping, widen the rush block with min of starts and max of ends; append it once, then copy the remaining blocks unchanged.
+tests:
+  public:
+    - name: no_overlap_middle
+      input: {"route": [[1, 2], [8, 9]], "rush": [4, 5]}
+      expected: [[1, 2], [4, 5], [8, 9]]
+    - name: merge_one
+      input: {"route": [[1, 3], [6, 9]], "rush": [2, 5]}
+      expected: [[1, 5], [6, 9]]
+    - name: empty_route
+      input: {"route": [], "rush": [4, 5]}
+      expected: [[4, 5]]
+  validation:
+    - name: swallow_several
+      input: {"route": [[1, 2], [3, 5], [6, 7], [10, 12]], "rush": [4, 8]}
+      expected: [[1, 2], [3, 8], [10, 12]]
+    - name: touch_stays_separate
+      input: {"route": [[1, 3], [5, 7]], "rush": [3, 5]}
+      expected: [[1, 3], [3, 5], [5, 7]]
+    - name: before_everything
+      input: {"route": [[5, 6], [8, 9]], "rush": [1, 2]}
+      expected: [[1, 2], [5, 6], [8, 9]]
+    - name: after_everything
+      input: {"route": [[1, 2], [3, 4]], "rush": [9, 10]}
+      expected: [[1, 2], [3, 4], [9, 10]]
+explanation_markdown: |
+  Because the route is already sorted and disjoint, you can insert in one pass by
+  thinking in three phases. First, copy every block that ends at or before the
+  rush block starts (`route[i][1] <= new_start`) — these lie safely to the left,
+  and the `<=` leaves a merely-touching earlier block separate. Second, absorb
+  every block that starts before the rush block ends (`route[i][0] < new_end`),
+  widening the rush block with `min` of the starts and `max` of the ends as you
+  go. Append the widened block once. Third, copy whatever remains to the right.
+  No re-sort is needed because you preserved the existing order throughout, so
+  the whole insert is O(n).
+common_mistakes:
+  - Appending the whole route then re-sorting and re-merging, which throws away the given order and does redundant work.
+  - Using route[i][1] < new_start for the first phase, which drops a touching earlier block into the merge stage by mistake.
+  - Forgetting to widen new_start with min, so an overlapping block that starts earlier than the rush loses its left edge.

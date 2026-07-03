@@ -1,0 +1,161 @@
+id: exercise.library.caching_performance.a06
+kind: exercise
+version: 1
+language: python
+title: The Beacon's Endless Signal
+slug: caching-performance-a06
+difficulty: medium
+concepts:
+  - concepts.performance
+  - python.iterators_generators
+  - python.itertools_module
+prerequisites:
+  - python.dictionaries
+  - python.functions
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.caching_performance.a06
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original infinite-generator drill framed as a coastal beacon emitting an endless signal, where named infinite generators are truncated to the first n values with itertools.islice.
+prompt_markdown: |
+  A coastal beacon can emit an endless numeric signal, but a listening station
+  only ever wants the first few readings. That is the classic pairing of an
+  infinite generator with a "take the first n" step.
+
+  Write `take_from_beacon(request)` where `request` is a dict with:
+
+  - `"sequence"`: the name of an infinite sequence (a string).
+  - `"count"`: how many leading values to take, an integer `>= 0`.
+
+  Return a list with the first `"count"` values of the named sequence. The
+  supported sequences, all starting from their first term, are:
+
+  - `"naturals"`: 1, 2, 3, 4, ...
+  - `"odds"`: 1, 3, 5, 7, ...
+  - `"squares"`: 1, 4, 9, 16, ...
+  - `"powers_of_two"`: 1, 2, 4, 8, 16, ...
+  - `"triangulars"`: 1, 3, 6, 10, 15, ... (the running totals 1, 1+2, 1+2+3, ...)
+
+  Build each sequence as an infinite generator and take only the first `"count"`
+  values (for example with `itertools.islice`) so the generator is never run past
+  what is needed. A `"count"` of 0 returns an empty list.
+
+  Example: `{"sequence": "squares", "count": 4}` returns `[1, 4, 9, 16]`.
+starter_code: |
+  from itertools import islice
+
+
+  def take_from_beacon(request):
+      return []
+function_name: take_from_beacon
+input_mode: function
+solution_sketch: Define an infinite generator for each named sequence using a while True loop, look the requested name up in a dict of generator factories, and slice the first count values off it with itertools.islice before returning them as a list.
+sample_solution: |
+  from itertools import islice
+
+
+  def take_from_beacon(request):
+      def naturals():
+          value = 1
+          while True:
+              yield value
+              value += 1
+
+      def odds():
+          value = 1
+          while True:
+              yield value
+              value += 2
+
+      def squares():
+          value = 1
+          while True:
+              yield value * value
+              value += 1
+
+      def powers_of_two():
+          value = 1
+          while True:
+              yield value
+              value *= 2
+
+      def triangulars():
+          total = 0
+          value = 1
+          while True:
+              total += value
+              yield total
+              value += 1
+
+      factories = {
+          "naturals": naturals,
+          "odds": odds,
+          "squares": squares,
+          "powers_of_two": powers_of_two,
+          "triangulars": triangulars,
+      }
+      generator = factories[request["sequence"]]()
+      return list(islice(generator, request["count"]))
+hints:
+  - level: 1
+    text: An infinite generator is just a function with a while True loop that yields the next term and updates its running state each pass.
+  - level: 2
+    text: Keep the generators in a dict keyed by name so you can pick the right one from request["sequence"] without a long if/elif chain.
+  - level: 3
+    text: itertools.islice(generator, count) pulls exactly count values and then stops, so the endless loop never runs forever; wrap it in list() to return them.
+tests:
+  public:
+    - name: squares_four
+      input:
+        sequence: squares
+        count: 4
+      expected: [1, 4, 9, 16]
+    - name: naturals_five
+      input:
+        sequence: naturals
+        count: 5
+      expected: [1, 2, 3, 4, 5]
+    - name: zero_count
+      input:
+        sequence: powers_of_two
+        count: 0
+      expected: []
+  validation:
+    - name: odds_four
+      input:
+        sequence: odds
+        count: 4
+      expected: [1, 3, 5, 7]
+    - name: powers_six
+      input:
+        sequence: powers_of_two
+        count: 6
+      expected: [1, 2, 4, 8, 16, 32]
+    - name: triangulars_five
+      input:
+        sequence: triangulars
+        count: 5
+      expected: [1, 3, 6, 10, 15]
+    - name: naturals_one
+      input:
+        sequence: naturals
+        count: 1
+      expected: [1]
+explanation_markdown: |
+  A generator with a `while True` loop describes an infinite sequence without
+  ever computing all of it, because each `yield` suspends the function until the
+  next value is pulled. The bounded part of the work lives entirely in the
+  consumer: `itertools.islice(generator, count)` requests exactly `count` values
+  and then stops, so the endless loop only advances as far as it is asked to. A
+  `count` of 0 pulls nothing at all, which is why the loop's non-termination is
+  harmless. Storing the generator factories in a dict keyed by name is a small
+  dispatch table that keeps the selection flat and easy to extend, instead of a
+  growing if/elif chain.
+common_mistakes:
+  - Trying to build the whole sequence into a list first, which never finishes because the generator is infinite.
+  - Calling next() in a hand-written loop but forgetting to stop after count values, or mishandling a count of 0.
+  - Computing triangular numbers as value*value or squares as a running sum, mixing up which sequence each generator produces.

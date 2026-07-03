@@ -1,0 +1,172 @@
+id: exercise.library.data_wrangling_python.a07
+kind: exercise
+version: 1
+language: python
+title: Matching Cards to Checkouts
+slug: data-wrangling-python-a07
+difficulty: medium
+concepts:
+  - concepts.grouping_aggregation
+  - python.dictionaries
+prerequisites:
+  - python.dictionaries
+  - python.loops
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.data_wrangling_python.a07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original inner-join drill framed around a public library reconciling card records with checkout logs.
+prompt_markdown: |
+  A branch library keeps two in-memory tables: one row per library **card** and a
+  separate log of **checkout** records. Both tables share a key field, and the
+  librarian wants a single combined row wherever the same key value appears on
+  both sides.
+
+  Write `inner_join(payload)` that takes **one dictionary** with three entries:
+
+  - `"left"`: a list of dictionaries (the card rows).
+  - `"right"`: a list of dictionaries (the checkout rows).
+  - `"key"`: the string name of the field to join on.
+
+  Example call:
+
+  ```python
+  inner_join({
+      "left": [{"card": "C1", "holder": "Ada"}],
+      "right": [{"card": "C1", "title": "Dune"}],
+      "key": "card",
+  })
+  # -> [{"card": "C1", "holder": "Ada", "title": "Dune"}]
+  ```
+
+  Return a **list of merged dictionaries**, one for every left row whose key value
+  also appears among the right rows (an *inner* join). Rules:
+
+  - Merge by laying the matched right row on top of the left row, so on any field
+    both rows share, the **right value wins**.
+  - Keep the output in **left row order**.
+  - If the same key value appears in several right rows, match the **first**
+    right occurrence only.
+  - Left rows with no matching right key are dropped entirely.
+  - If either list is empty, return an empty list.
+starter_code: |
+  def inner_join(payload):
+      return []
+function_name: inner_join
+input_mode: function
+solution_sketch: Index the right rows by key (first occurrence wins), then walk the left rows in order and, for each whose key is in the index, emit a copy updated with the matched right row.
+sample_solution: |
+  def inner_join(payload):
+      left = payload["left"]
+      right = payload["right"]
+      key = payload["key"]
+      index = {}
+      for row in right:
+          k = row[key]
+          if k not in index:
+              index[k] = row
+      result = []
+      for row in left:
+          k = row[key]
+          if k in index:
+              merged = dict(row)
+              merged.update(index[k])
+              result.append(merged)
+      return result
+hints:
+  - level: 1
+    text: Build a lookup dictionary from the right rows first so each match is a single read instead of a nested scan.
+  - level: 2
+    text: When indexing the right rows, only store a key the first time you see it so duplicates keep their first occurrence.
+  - level: 3
+    text: For each left row, copy it with dict(row) and call .update(matched_right) so right-side fields overwrite left-side ones on collision.
+tests:
+  public:
+    - name: both_present
+      input:
+        left:
+          - {card: "C1", holder: "Ada"}
+          - {card: "C2", holder: "Ben"}
+        right:
+          - {card: "C1", title: "Dune"}
+          - {card: "C2", title: "Sula"}
+        key: card
+      expected:
+        - {card: "C1", holder: "Ada", title: "Dune"}
+        - {card: "C2", holder: "Ben", title: "Sula"}
+    - name: collision_right_wins
+      input:
+        left:
+          - {card: "C1", holder: "Ada", branch: "central"}
+        right:
+          - {card: "C1", branch: "annex", title: "Dune"}
+        key: card
+      expected:
+        - {card: "C1", holder: "Ada", branch: "annex", title: "Dune"}
+    - name: empty_left
+      input:
+        left: []
+        right:
+          - {card: "C1", title: "Dune"}
+        key: card
+      expected: []
+  validation:
+    - name: unmatched_left_dropped
+      input:
+        left:
+          - {card: "C1", holder: "Ada"}
+          - {card: "C9", holder: "Zed"}
+        right:
+          - {card: "C1", title: "Dune"}
+        key: card
+      expected:
+        - {card: "C1", holder: "Ada", title: "Dune"}
+    - name: duplicate_right_first_wins
+      input:
+        left:
+          - {card: "C1", holder: "Ada"}
+        right:
+          - {card: "C1", title: "Dune"}
+          - {card: "C1", title: "Sula"}
+        key: card
+      expected:
+        - {card: "C1", holder: "Ada", title: "Dune"}
+    - name: order_follows_left
+      input:
+        left:
+          - {card: "C3", holder: "Cy"}
+          - {card: "C1", holder: "Ada"}
+        right:
+          - {card: "C1", title: "Dune"}
+          - {card: "C3", title: "Moon"}
+        key: card
+      expected:
+        - {card: "C3", holder: "Cy", title: "Moon"}
+        - {card: "C1", holder: "Ada", title: "Dune"}
+    - name: empty_right
+      input:
+        left:
+          - {card: "C1", holder: "Ada"}
+        right: []
+        key: card
+      expected: []
+explanation_markdown: |
+  The efficient shape for a join is to index one side once and then stream the
+  other. Here the right rows become a `key -> row` dictionary, and because we only
+  store a key the first time we meet it, later duplicates are ignored and the
+  first right occurrence is the one that matches.
+
+  Walking the left rows in order preserves the requested output order for free.
+  For each left row we copy it with `dict(row)` and then `update` it with the
+  matched right row; since `update` overwrites existing keys, shared fields take
+  the right value. Building the index is one pass over the right rows and the main
+  loop is one pass over the left rows, so the whole join is linear rather than the
+  quadratic cost of comparing every pair.
+common_mistakes:
+  - Merging left onto right (right first) so left values overwrite right and the collision rule is reversed.
+  - Overwriting the index on every right row, which keeps the last duplicate instead of the required first occurrence.
+  - Mutating the left row in place with .update, which corrupts the caller's input instead of returning a fresh merged dict.

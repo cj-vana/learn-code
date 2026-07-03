@@ -1,0 +1,130 @@
+id: exercise.library.oop_internals.a05
+kind: exercise
+version: 1
+language: python
+title: Which Sensor Pods Carry a Dict
+slug: oop-internals-a05
+difficulty: easy
+concepts:
+  - python.descriptors_mro
+  - python.introspection
+prerequisites:
+  - python.classes
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.oop_internals.a05
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original __slots__ introspection drill framed as greenhouse sensor pods, testing which instances still carry a per-instance __dict__.
+prompt_markdown: |
+  A greenhouse ships several models of sensor pod. Memory-lean models declare
+  `__slots__` so their instances carry no per-instance `__dict__`; the flexible
+  models omit `__slots__` and keep the usual `__dict__`. You are auditing which
+  models still allocate a dict per instance.
+
+  Write `pods_with_dict(spec)`. The single argument is a dict shaped like:
+
+  ```python
+  {"classes": [
+      {"name": "Plain", "slots": None},
+      {"name": "Slotted", "slots": ["temp", "humidity"]},
+      {"name": "Empty", "slots": []},
+  ]}
+  ```
+
+  Each entry describes one pod model that inherits only from `object`:
+
+  - `slots` is `None` — the class declares no `__slots__`.
+  - `slots` is a list (possibly empty) — the class declares
+    `__slots__ = tuple(that list)`.
+
+  For each model, build the class, create an instance, and determine whether that
+  instance has a `__dict__`. Return a dict mapping each model name to `True` (has a
+  per-instance dict) or `False` (does not).
+
+  For the example the answer is `{"Plain": True, "Slotted": False, "Empty": False}`.
+  Note that an **empty** `__slots__` still removes the dict — declaring the slots at
+  all is what matters, not how many there are.
+starter_code: |
+  def pods_with_dict(spec):
+      return {}
+function_name: pods_with_dict
+input_mode: function
+solution_sketch: |
+  For each entry build a class with type(name, (), {}) when slots is None, else type(name, (), {"__slots__": tuple(slots)}); instantiate it and record hasattr(instance, "__dict__").
+sample_solution: |
+  def pods_with_dict(spec):
+      result = {}
+      for entry in spec["classes"]:
+          name = entry["name"]
+          slots = entry["slots"]
+          if slots is None:
+              cls = type(name, (), {})
+          else:
+              cls = type(name, (), {"__slots__": tuple(slots)})
+          result[name] = hasattr(cls(), "__dict__")
+      return result
+hints:
+  - level: 1
+    text: Declaring __slots__ on a class tells Python to reserve fixed storage per instance and skip creating the usual __dict__.
+  - level: 2
+    text: Build each class at runtime with type(name, (), namespace). Put "__slots__" into the namespace only when the entry provides a slots list.
+  - level: 3
+    text: Create an instance and test hasattr(instance, "__dict__"). A slotted instance returns False; a plain one returns True. An empty slots list still counts as slotted.
+tests:
+  public:
+    - name: mixed_models
+      input:
+        classes:
+          - {name: Plain, slots: null}
+          - {name: Slotted, slots: [temp, humidity]}
+          - {name: Empty, slots: []}
+      expected: {Plain: true, Slotted: false, Empty: false}
+    - name: single_slotted
+      input:
+        classes:
+          - {name: Solo, slots: [only]}
+      expected: {Solo: false}
+    - name: single_plain
+      input:
+        classes:
+          - {name: Flexible, slots: null}
+      expected: {Flexible: true}
+  validation:
+    - name: all_plain
+      input:
+        classes:
+          - {name: A, slots: null}
+          - {name: B, slots: null}
+      expected: {A: true, B: true}
+    - name: empty_slots_still_no_dict
+      input:
+        classes:
+          - {name: Locked, slots: []}
+      expected: {Locked: false}
+    - name: many_slots
+      input:
+        classes:
+          - {name: Wide, slots: [a, b, c, d, e]}
+          - {name: Open, slots: null}
+      expected: {Wide: false, Open: true}
+explanation_markdown: |
+  Normally each instance stores its attributes in a per-instance `__dict__`, which
+  is flexible but costs memory. Declaring `__slots__` replaces that dict with a
+  fixed set of C-level slots: attribute access on a slotted class goes through
+  **member descriptors** (data descriptors that Python creates for each slot name),
+  and no `__dict__` is allocated at all.
+
+  The audit is a one-line introspection: `hasattr(instance, "__dict__")`. It stays
+  `True` for ordinary classes and flips to `False` the moment `__slots__` is present
+  — even when the slot list is empty, because it is the declaration itself, not the
+  count, that suppresses the dict. (A subclass of a slotted class that omits its own
+  `__slots__` would regain a `__dict__`, which is why slots savings only hold if the
+  whole inheritance chain cooperates.)
+common_mistakes:
+  - Treating an empty __slots__ list as if it were no slots at all; an empty list still removes the __dict__.
+  - Checking hasattr on the class object rather than an instance — the class itself always has a mapping proxy, which is not the per-instance __dict__ being asked about.
+  - Confusing the presence of __slots__ with the absence of attributes; slotted instances still have attributes, just no __dict__ to hold arbitrary ones.

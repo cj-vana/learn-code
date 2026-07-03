@@ -1,0 +1,111 @@
+id: exercise.library.testing_concepts.a12
+kind: exercise
+version: 1
+language: python
+title: Hunting Flaky Tests on the Bench
+slug: testing-concepts-a12
+difficulty: hard
+concepts:
+  - concepts.testing
+  - python.sets
+prerequisites:
+  - python.lists
+  - python.loops
+estimated_time_minutes: 20
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.testing_concepts.a12
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original flaky-test detector framed as scanning a grid of repeated test-bench runs for gremlins that both pass and fail.
+prompt_markdown: |
+  A test bench runs the same suite over and over, hunting for **flaky** tests --
+  the intermittent gremlins that pass on some runs and fail on others for no honest
+  reason. A test that always passes is fine; one that always fails is a real,
+  reproducible bug. The troublemakers are the ones that do **both** across the runs.
+
+  Write `flaky_detector(runs)` where `runs` is a list of runs. Each run is a list of
+  results for the suite, one entry per test, where each entry is the string `"pass"`
+  or `"fail"`. Every run reports the same tests in the same positions, so `runs[r][t]`
+  is the result of test `t` on run `r`.
+
+  Return a **sorted** list of the test indices that are flaky -- the indices `t` for
+  which, across all the runs, that test recorded **at least one `"pass"` and at least
+  one `"fail"`**. Tests that were always `"pass"` or always `"fail"` are not flaky and
+  are excluded.
+
+  Edge cases: with fewer than two runs no test can be both, so the result is empty;
+  if `runs` is empty, or the runs contain no tests, return an empty list.
+
+  For example, `[["pass", "pass"], ["fail", "pass"]]` returns `[0]`, because test 0
+  passed once and failed once while test 1 always passed.
+starter_code: |
+  def flaky_detector(runs):
+      # Return the sorted indices of tests that both passed and failed across runs.
+      return []
+function_name: flaky_detector
+input_mode: function
+solution_sketch: For each test column, gather the set of results seen across all runs and keep the index when that set contains both "pass" and "fail".
+sample_solution: |
+  def flaky_detector(runs):
+      if not runs:
+          return []
+      num_tests = len(runs[0])
+      flaky = []
+      for t in range(num_tests):
+          seen = {run[t] for run in runs}
+          if "pass" in seen and "fail" in seen:
+              flaky.append(t)
+      return flaky
+hints:
+  - level: 1
+    text: Flakiness is a property of a single test across many runs, so look down each test's column rather than across a single run's row.
+  - level: 2
+    text: For a given test index t, collect the distinct results run[t] over every run; a set makes "did it ever pass" and "did it ever fail" easy to check.
+  - level: 3
+    text: Keep index t when its result set contains both "pass" and "fail"; iterate t in ascending order so the returned list is already sorted.
+tests:
+  public:
+    - name: one_flaky
+      input: [['pass', 'pass'], ['fail', 'pass']]
+      expected: [0]
+    - name: none_flaky_stable
+      input: [['pass', 'fail'], ['pass', 'fail']]
+      expected: []
+    - name: both_flaky
+      input: [['pass', 'fail'], ['fail', 'pass']]
+      expected: [0, 1]
+  validation:
+    - name: single_run
+      input: [['pass', 'fail', 'pass']]
+      expected: []
+    - name: empty_runs
+      input: []
+      expected: []
+    - name: no_tests
+      input: [[], []]
+      expected: []
+    - name: three_runs_middle_flaky
+      input: [['pass', 'pass', 'fail'], ['pass', 'fail', 'fail'], ['pass', 'pass', 'fail']]
+      expected: [1]
+    - name: all_flaky_three_tests
+      input: [['pass', 'fail', 'pass'], ['fail', 'pass', 'fail'], ['pass', 'pass', 'fail']]
+      expected: [0, 1, 2]
+explanation_markdown: |
+  Flakiness is not visible in any single run -- you have to look at a test's history
+  *across* runs. That means scanning column-by-column: fix a test index `t`, then
+  gather every result `run[t]` produced over all the runs. A set is the natural tool,
+  because you only care whether the test *ever* passed and *ever* failed, not how
+  many times; if the set holds both `"pass"` and `"fail"`, the test is a gremlin. A
+  test with a single-element set (`{"pass"}` or `{"fail"}`) is deterministic and
+  therefore not flaky, which is why a lone run can never surface one -- there is no
+  second data point to disagree with the first. Iterating `t` in ascending order
+  makes the output sorted without an extra step, and guarding the empty-`runs` case
+  keeps `runs[0]` from blowing up when there is nothing to scan. This column-wise,
+  set-based view is exactly how a CI dashboard separates real failures from noise.
+common_mistakes:
+  - Scanning each run (row) independently instead of each test (column) across runs, which cannot detect a mix that only shows up over time.
+  - Reading runs[0] to count tests without first handling an empty runs list, causing an IndexError.
+  - Flagging tests that only ever failed as flaky; a consistent failure is a real bug, not an intermittent one.

@@ -1,0 +1,158 @@
+id: exercise.library.http_shapes.a08
+kind: exercise
+version: 1
+language: python
+title: Reading the Harbor Log's Pagination Trail
+slug: http-shapes-a08
+difficulty: hard
+concepts:
+  - python.http_model
+  - python.strings
+prerequisites:
+  - python.strings
+  - python.dictionaries
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.http_shapes.a08
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original Link-header parser themed around a harbor berth-log API, exercising case-insensitive header lookup and relation-to-URL extraction without regex.
+prompt_markdown: |
+  The Harbor Log API pages its berth records and advertises where the neighboring
+  pages live through a `Link` response header, in the same style GitHub uses.
+  Write `extract_pagination_links(headers)` that turns that header into a lookup
+  of relation to URL. `headers` is a dict mapping header name to header value.
+
+  A `Link` header value is a comma-separated list of entries. Each entry looks
+  like:
+
+  ```
+  <URL>; rel="RELATION"
+  ```
+
+  Parse it with these rules:
+
+  - Find the `Link` header **case-insensitively** (a server might send `Link`,
+    `link`, or `LINK`). If no such header exists, or its value is empty or only
+    whitespace, return `{}`.
+  - For each comma-separated entry: the URL is the text between `<` and `>`, and
+    the relation is the value of the `rel="..."` parameter. Surrounding
+    whitespace around entries and parameters may be present and must be ignored.
+  - An entry may carry extra parameters after `rel`, such as
+    `; title="Older"`. Ignore every parameter except `rel`.
+  - Skip any entry that is empty or that lacks either a `<...>` URL or a `rel`
+    parameter.
+  - If the same relation appears more than once, the **last** occurrence wins.
+  - Return a dict mapping each relation (for example `"next"`, `"prev"`,
+    `"first"`, `"last"`) to its URL. You may assume the URLs themselves contain
+    no commas.
+
+  Example: `{"Link": '<https://api.harborlog.test/berths?page=2>; rel="next"'}`
+  returns `{"next": "https://api.harborlog.test/berths?page=2"}`.
+starter_code: |
+  def extract_pagination_links(headers):
+      return {}
+function_name: extract_pagination_links
+input_mode: function
+solution_sketch: Scan the headers for a key equal to "link" ignoring case, split its value on commas, and for each part slice out the URL between angle brackets and the rel value from a semicolon-separated parameter, letting later relations overwrite earlier ones.
+sample_solution: |
+  def extract_pagination_links(headers):
+      link_value = None
+      for name, value in headers.items():
+          if name.lower() == "link":
+              link_value = value
+              break
+      links = {}
+      if not link_value or not link_value.strip():
+          return links
+      for entry in link_value.split(","):
+          entry = entry.strip()
+          if not entry:
+              continue
+          open_at = entry.find("<")
+          close_at = entry.find(">", open_at + 1)
+          if open_at == -1 or close_at == -1:
+              continue
+          url = entry[open_at + 1:close_at]
+          relation = None
+          for param in entry[close_at + 1:].split(";"):
+              param = param.strip()
+              if param.startswith("rel="):
+                  relation = param[len("rel="):].strip().strip('"').strip("'")
+          if relation:
+              links[relation] = url
+      return links
+hints:
+  - level: 1
+    text: Header names are case-insensitive, so compare name.lower() to "link" rather than looking up the exact key.
+  - level: 2
+    text: Split the header value on commas to get one entry per link, then within each entry find the URL between "<" and ">".
+  - level: 3
+    text: Split the part after ">" on ";" to inspect parameters; keep the one that starts with "rel=" and strip its surrounding quotes. Assign into the dict so a repeated relation overwrites the earlier value.
+tests:
+  public:
+    - name: next_and_last
+      input:
+        Link: '<https://api.harborlog.test/berths?page=2>; rel="next", <https://api.harborlog.test/berths?page=7>; rel="last"'
+      expected:
+        next: 'https://api.harborlog.test/berths?page=2'
+        last: 'https://api.harborlog.test/berths?page=7'
+    - name: no_link_header
+      input:
+        Content-Type: application/json
+      expected: {}
+    - name: single_next
+      input:
+        Link: '<https://api.harborlog.test/berths?page=3>; rel="next"'
+      expected:
+        next: 'https://api.harborlog.test/berths?page=3'
+  validation:
+    - name: case_insensitive_name
+      input:
+        link: '<https://api.harborlog.test/berths?page=1>; rel="first"'
+      expected:
+        first: 'https://api.harborlog.test/berths?page=1'
+    - name: extra_param_ignored
+      input:
+        Link: '<https://api.harborlog.test/berths?page=4>; rel="next"; title="Later berths"'
+      expected:
+        next: 'https://api.harborlog.test/berths?page=4'
+    - name: empty_value
+      input:
+        Link: '   '
+      expected: {}
+    - name: duplicate_rel_last_wins
+      input:
+        Link: '<https://api.harborlog.test/berths?page=2>; rel="next", <https://api.harborlog.test/berths?page=9>; rel="next"'
+      expected:
+        next: 'https://api.harborlog.test/berths?page=9'
+    - name: four_relations_messy_spacing
+      input:
+        Link: '  <https://api.harborlog.test/berths?page=1>; rel="first" ,<https://api.harborlog.test/berths?page=3>;rel="prev", <https://api.harborlog.test/berths?page=5>; rel="next" , <https://api.harborlog.test/berths?page=8>; rel="last"'
+      expected:
+        first: 'https://api.harborlog.test/berths?page=1'
+        prev: 'https://api.harborlog.test/berths?page=3'
+        next: 'https://api.harborlog.test/berths?page=5'
+        last: 'https://api.harborlog.test/berths?page=8'
+explanation_markdown: |
+  The `Link` header is a compact way for a paginated API to describe its own
+  navigation without forcing the client to construct page URLs by hand. Parsing
+  it is a real-world string problem: you split on commas to separate entries,
+  then within each entry pull out two pieces that live in different delimiters,
+  the URL inside angle brackets and the relation inside a quoted `rel`
+  parameter.
+
+  Two details make this robust. First, HTTP header names are case-insensitive,
+  so the lookup compares a lower-cased name rather than assuming the exact
+  spelling the server chose. Second, real headers carry stray whitespace and
+  optional parameters like `title`, so the parser strips each piece and only
+  acts on the `rel` parameter, ignoring everything else. Letting a later
+  relation overwrite an earlier one matches how a dict naturally behaves on
+  reassignment.
+common_mistakes:
+  - Looking up `headers["Link"]` directly and missing a server that sent `link` or `LINK`.
+  - Forgetting to strip the surrounding double quotes from the `rel="next"` value.
+  - Splitting the entry incorrectly so that an extra parameter like `title` leaks into the URL or relation.

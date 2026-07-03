@@ -1,0 +1,105 @@
+id: exercise.library.embeddings_similarity_search.a01
+kind: exercise
+version: 1
+language: python
+title: Overlap of Two Tea Blends
+slug: embeddings-similarity-search-a01
+difficulty: easy
+concepts:
+  - ai.embeddings_retrieval
+prerequisites:
+  - python.lists
+  - python.loops
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.embeddings_similarity_search.a01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original dot-product drill framed around tea-blend taste-probe vectors.
+prompt_markdown: |
+  An embedding turns something (a word, a song, a cup of tea) into a list of
+  numbers so a computer can compare items with plain arithmetic. The most basic
+  comparison is the **dot product**. For two vectors
+  `a = [a0, a1, ..., a(n-1)]` and `b = [b0, b1, ..., b(n-1)]` of the same
+  length, it is the sum of the products of matching components:
+
+      a . b = a0*b0 + a1*b1 + ... + a(n-1)*b(n-1)
+
+  A tea shop describes each blend by how strongly it registers on a few taste
+  probes (floral, malty, smoky). Write `dot(job)` that takes a single
+  dictionary holding two equal-length vectors under the keys `"a"` and `"b"`,
+  for example `{"a": [1, 2, 3], "b": [4, 5, 6]}`, and returns their dot product
+  rounded to 6 decimal places. Both vectors have the same length; an empty pair
+  sums to 0.
+starter_code: |
+  def dot(job):
+      return 0.0
+function_name: dot
+input_mode: function
+solution_sketch: Pair up matching components with zip, multiply each pair, sum the products, and round to 6 places.
+sample_solution: |
+  def dot(job):
+      a = job["a"]
+      b = job["b"]
+      total = sum(x * y for x, y in zip(a, b))
+      return round(total, 6)
+hints:
+  - level: 1
+    text: Pull the two vectors out of the dictionary with job["a"] and job["b"], then walk both lists together.
+  - level: 2
+    text: zip(a, b) hands you matching pairs; multiply each pair and add the results into a running total.
+  - level: 3
+    text: sum(x * y for x, y in zip(a, b)) gives the dot product in one line; wrap it in round(total, 6) before returning.
+tests:
+  public:
+    - name: simple_positive
+      input:
+        a: [1, 2, 3]
+        b: [4, 5, 6]
+      expected: 32
+    - name: with_zero
+      input:
+        a: [0, 0, 0]
+        b: [1, 2, 3]
+      expected: 0
+    - name: two_dim
+      input:
+        a: [2, 3]
+        b: [4, 1]
+      expected: 11
+  validation:
+    - name: negatives
+      input:
+        a: [-1, 2]
+        b: [3, -4]
+      expected: -11
+    - name: floats
+      input:
+        a: [0.5, 1.5]
+        b: [2.0, 4.0]
+      expected: 7.0
+    - name: four_dim
+      input:
+        a: [1, 0, 2, 1]
+        b: [3, 5, 1, 2]
+      expected: 7
+    - name: fractional
+      input:
+        a: [1.2, 3.4]
+        b: [0.5, 2.0]
+      expected: 7.4
+explanation_markdown: |
+  The dot product multiplies each pair of matching components and adds the
+  results, so it grows when two vectors are large and point the same way, and
+  shrinks (even going negative) when they disagree. It is the workhorse behind
+  almost every similarity score you will meet later. Using zip keeps the two
+  lists aligned by position, and summing a generator expression avoids building
+  an intermediate list. Rounding to 6 places keeps floating-point noise from
+  leaking into the answer.
+common_mistakes:
+  - Adding the components (a0 + b0 + ...) instead of multiplying matching pairs and then summing.
+  - Looping over a single index range but forgetting one of the vectors, so only one list is used.
+  - Returning the raw float without rounding, which can differ from the expected value in its last digits.

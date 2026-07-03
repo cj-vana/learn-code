@@ -1,0 +1,100 @@
+id: lesson.library.files_formats.a03
+kind: lesson
+version: 1
+language: python
+title: 'CSV Without Tears'
+slug: lesson-files-formats-a03
+difficulty: medium
+concepts:
+  - python.json_csv
+prerequisites:
+  - python.strings
+  - python.dictionaries
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.files_formats.a03
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original csv-module walkthrough framed around a seed catalogue export, with fresh worked code and an original quoting example.
+body_markdown: |
+  CSV looks so simple that everyone's first instinct is `line.split(",")` —
+  and that instinct is a trap. Consider one line from a seed catalogue export:
+
+  ```text
+  SKU-114,"Beans, Scarlet Runner",4.50
+  ```
+
+  That row has three fields, but `split(",")` produces four, cutting the
+  variety name in half. Quoted fields containing commas (and quotes escaped as
+  doubled quotes, and even embedded newlines) are all legal CSV. The `csv`
+  module handles every one of these cases, which is why the rule is absolute:
+  **never hand-split CSV**.
+
+  ### Reading
+
+  The `csv` module reads from any file-like object. For text you already hold
+  in a string, wrap it in `io.StringIO`:
+
+  ```python
+  import csv, io
+
+  text = 'sku,variety,price\nSKU-114,"Beans, Scarlet Runner",4.50\n'
+  reader = csv.reader(io.StringIO(text))
+  rows = list(reader)        # [['sku','variety','price'], ['SKU-114','Beans, Scarlet Runner','4.50']]
+  ```
+
+  When the first row is a header, `csv.DictReader` turns each following row
+  into a dict keyed by that header — usually what you actually want:
+
+  ```python
+  for record in csv.DictReader(io.StringIO(text)):
+      print(record["variety"], float(record["price"]))
+  ```
+
+  Every value arrives as a string; converting `price` to `float` is your job,
+  at the boundary, just like with hand-parsed text.
+
+  ### Writing
+
+  Writing mirrors reading. Two details matter:
+
+  ```python
+  out = io.StringIO()
+  writer = csv.writer(out, lineterminator="\n")
+  writer.writerow(["sku", "variety", "price"])
+  writer.writerow(["SKU-114", "Beans, Scarlet Runner", 4.50])
+  csv_text = out.getvalue()
+  ```
+
+  - **`lineterminator="\n"`** — by default the writer emits `\r\n`, which
+    surprises anyone comparing output strings on macOS or Linux. Pick one and
+    say so.
+  - **Quoting is automatic.** The writer sees the comma inside
+    `"Beans, Scarlet Runner"` and quotes the field for you. This is exactly the
+    logic you would get wrong by hand.
+
+  `csv.DictWriter` is the mirror of `DictReader`: give it `fieldnames`, call
+  `writeheader()`, then pass dicts. Fields missing from a dict raise unless
+  you set `restval=""` — a deliberate design nudge to make you decide what a
+  hole in your data means.
+
+  ### Dialects, briefly
+
+  Not all "CSV" uses commas: European exports often use `;`, tab-separated
+  files use `\t`. The `delimiter=` argument covers those. When you receive a
+  mystery file, look at the first line before writing any code — thirty
+  seconds of inspection saves an hour of debugging a wrong-delimiter parse
+  that "works" but produces one giant column.
+checkpoints:
+  - question: Why does line.split(",") fail on the row SKU-114,"Beans, Scarlet Runner",4.50 and what handles it correctly?
+    answer: The comma inside the quoted variety name is data, not a separator, so split produces four fields instead of three; csv.reader understands CSV quoting rules and returns the three real fields.
+    explanation: Quoting, escaped quotes, and embedded newlines are all legal CSV that no naive split can handle — that's the entire reason the csv module exists.
+  - question: You need csv functions to read text you already have in a variable. What bridges the gap, given the module wants a file-like object?
+    answer: io.StringIO wraps the string in an in-memory file-like object that csv.reader and DictReader can consume.
+    explanation: StringIO implements the same read interface as an open file, so the csv module can't tell the difference — a standard trick for parsing and for testing.
+  - question: Your CSV-writing function's output has \r\n at the end of every line and a string comparison test fails. What happened?
+    answer: csv.writer's default lineterminator is \r\n; pass lineterminator="\n" to get plain newlines and deterministic output.
+    explanation: The default follows the CSV spec's Windows-style convention, which is invisible until an exact string comparison or a diff exposes it.

@@ -1,0 +1,150 @@
+id: exercise.library.functional_style.a08
+kind: exercise
+version: 1
+language: python
+title: Blending Two Bakery Batches
+slug: functional-style-a08
+difficulty: medium
+concepts:
+  - python.functional_style
+  - python.functools_operator
+prerequisites:
+  - python.lists
+  - python.dictionaries
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.functional_style.a08
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original element-wise combine drill framed around a bakery reconciling two ingredient batches, taught through map over two sequences with an operator-module dispatch table instead of hand-written lambdas.
+prompt_markdown: |
+  A bakery weighs ingredients twice: once for the morning batch and once for the
+  afternoon batch. The two batches are recorded as parallel lists of gram amounts,
+  and the head baker wants them combined **position by position** with one chosen
+  operation.
+
+  Write `blend_batches(payload)` that takes **one dictionary** with three entries:
+
+  - `"left"`: the morning batch, a list of integers.
+  - `"right"`: the afternoon batch, a list of integers.
+  - `"op"`: the operation name, always one of `"add"`, `"subtract"`,
+    `"multiply"`, `"max"`, or `"min"`.
+
+  Return a **new list** where position `i` is the chosen operation applied to
+  `left[i]` and `right[i]`. For `"subtract"` it is `left[i] - right[i]`.
+
+  Example call:
+
+  ```python
+  blend_batches({"left": [5, 5], "right": [1, 2], "op": "subtract"})
+  # -> [4, 3]
+  ```
+
+  Rules:
+
+  - If the two lists have **different lengths**, stop at the end of the shorter
+    one and ignore the extra tail.
+  - If either list is empty, return an empty list.
+  - Select the operation from a small **lookup table** rather than an if/elif
+    chain, and lean on the `operator` module so no arithmetic lambdas are needed.
+starter_code: |
+  import operator
+
+
+  def blend_batches(payload):
+      return []
+function_name: blend_batches
+input_mode: function
+solution_sketch: Build a dict mapping each op name to an operator-module function (or the built-in max/min), look up the chosen combiner, then map it over the two lists at once so the pairing stops at the shorter list, and materialize the map into a list.
+sample_solution: |
+  import operator
+
+
+  def blend_batches(payload):
+      combiners = {
+          "add": operator.add,
+          "subtract": operator.sub,
+          "multiply": operator.mul,
+          "max": max,
+          "min": min,
+      }
+      combine = combiners[payload["op"]]
+      return list(map(combine, payload["left"], payload["right"]))
+hints:
+  - level: 1
+    text: map can take more than one iterable, calling its function with one item from each list per step and stopping when the shortest iterable runs out.
+  - level: 2
+    text: The operator module gives you ready-made two-argument functions like operator.add and operator.sub, and the built-ins max and min already take two arguments too.
+  - level: 3
+    text: Store the five combiners in a dict keyed by op name, pull out combiners[payload['op']], then return list(map(that, payload['left'], payload['right'])).
+tests:
+  public:
+    - name: add_equal_length
+      input:
+        left: [1, 2, 3]
+        right: [10, 20, 30]
+        op: "add"
+      expected: [11, 22, 33]
+    - name: subtract
+      input:
+        left: [5, 5]
+        right: [1, 2]
+        op: "subtract"
+      expected: [4, 3]
+    - name: max_pairwise
+      input:
+        left: [1, 9, 3]
+        right: [4, 2, 6]
+        op: "max"
+      expected: [4, 9, 6]
+  validation:
+    - name: multiply
+      input:
+        left: [2, 3, 4]
+        right: [5, 6, 7]
+        op: "multiply"
+      expected: [10, 18, 28]
+    - name: min_pairwise
+      input:
+        left: [4, 2, 9]
+        right: [1, 8, 3]
+        op: "min"
+      expected: [1, 2, 3]
+    - name: unequal_left_longer_truncates
+      input:
+        left: [1, 2, 3, 4]
+        right: [10, 20]
+        op: "add"
+      expected: [11, 22]
+    - name: right_shorter_subtract
+      input:
+        left: [7, 8, 9]
+        right: [1]
+        op: "subtract"
+      expected: [6]
+    - name: empty_lists
+      input:
+        left: []
+        right: []
+        op: "add"
+      expected: []
+explanation_markdown: |
+  `map(func, a, b)` walks two sequences together, calling `func(a[i], b[i])` at
+  each step and stopping as soon as the shorter sequence is exhausted -- which is
+  exactly the truncation rule, so you get it without writing any length checks.
+  The `operator` module supplies the arithmetic as plain functions (`operator.add`
+  is just `+` as a callable), and `max`/`min` are already two-argument built-ins,
+  so the whole computation needs no hand-written lambdas.
+
+  Choosing the combiner through a dict keyed by name is the functional-dispatch
+  move: the data (`op`) selects a behavior (a function) from a table, and adding a
+  sixth operation later is one new entry rather than another `elif`. Wrapping the
+  `map` in `list(...)` materializes the lazy iterator into the concrete list the
+  caller expects.
+common_mistakes:
+  - Iterating with range(len(left)) and indexing both lists, which raises IndexError when the lists differ in length instead of truncating cleanly.
+  - Returning the map object directly, so an equality check against a list fails because a map iterator is not a list.
+  - Replacing the lookup table with a long if/elif chain, which works but throws away the functional-dispatch point of the exercise.

@@ -1,0 +1,81 @@
+id: exercise.library.collections_itertools.a01
+kind: exercise
+version: 1
+language: python
+title: Seed Packet Bins
+slug: collections-itertools-a01
+difficulty: easy
+concepts:
+  - python.collections_module
+  - concepts.grouping_aggregation
+prerequisites:
+  - python.dictionaries
+  - python.loops
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.collections_itertools.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original greenhouse seed-sorting task drilling defaultdict(list) grouping.
+prompt_markdown: |
+  A greenhouse sorts seed packets into bins labelled by the first letter of the
+  plant's name. Write `group_by_initial(names)` where `names` is a list of
+  lowercase plant names. Return a dictionary mapping each first letter to the
+  list of names that start with it, preserving the order in which the names
+  appear. An empty input returns an empty dictionary.
+starter_code: |
+  def group_by_initial(names):
+      return {}
+function_name: group_by_initial
+input_mode: function
+solution_sketch: Use a defaultdict(list) and append each name under its first letter.
+sample_solution: |
+  from collections import defaultdict
+
+
+  def group_by_initial(names):
+      bins = defaultdict(list)
+      for name in names:
+          bins[name[0]].append(name)
+      return dict(bins)
+hints:
+  - level: 1
+    text: Each bin holds several names, so the value under each letter should be a list.
+  - level: 2
+    text: A defaultdict(list) lets you append without first checking whether the letter's bin exists.
+  - level: 3
+    text: Loop over names, append each name to bins[name[0]], then return dict(bins) so it compares equal to a plain dictionary.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: {}
+    - name: two_letters
+      input: [basil, borage, chive]
+      expected: {b: [basil, borage], c: [chive]}
+    - name: single
+      input: [dill]
+      expected: {d: [dill]}
+  validation:
+    - name: preserves_order
+      input: [chive, chamomile, basil]
+      expected: {c: [chive, chamomile], b: [basil]}
+    - name: three_groups
+      input: [mint, marjoram, oregano, sage]
+      expected: {m: [mint, marjoram], o: [oregano], s: [sage]}
+    - name: all_same_initial
+      input: [thyme, tarragon, tansy]
+      expected: {t: [thyme, tarragon, tansy]}
+explanation_markdown: |
+  `defaultdict(list)` supplies an empty list the first time you touch a new
+  first-letter key, so `bins[name[0]].append(name)` never needs a guard clause.
+  Iterating in input order means each bin naturally preserves the order the names
+  arrived in. Converting with `dict(bins)` at the end yields an ordinary
+  dictionary for a clean equality comparison.
+common_mistakes:
+  - Using a plain dict and forgetting to initialise `bins[letter] = []` before appending, causing a KeyError.
+  - Sorting the names or the bins and breaking the required arrival order.
+  - Storing a single name instead of a list when a letter first appears.

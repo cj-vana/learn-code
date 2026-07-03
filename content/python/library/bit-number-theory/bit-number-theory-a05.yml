@@ -1,0 +1,95 @@
+id: exercise.library.bit_number_theory.a05
+kind: exercise
+version: 1
+language: python
+title: Sizing the Memory Buffer
+slug: bit-number-theory-a05
+difficulty: medium
+concepts:
+  - patterns.bit_manipulation
+  - concepts.number_theory
+prerequisites:
+  - python.operators
+  - python.conditionals
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.bit_number_theory.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original round-up-to-a-power-of-two drill framed around allocating a buffer whose capacity must double.
+prompt_markdown: |
+  A streaming service allocates its input buffer in capacities that are always
+  powers of two — `1`, `2`, `4`, `8`, `16`, and so on — because the hardware can
+  only address blocks that double in size. Given the number of slots actually
+  needed, you must pick the smallest power-of-two capacity that fits them all.
+
+  Write `next_buffer_size(n)` that takes a single integer `n` and returns the
+  smallest power of two greater than or equal to `n`. If `n` is `1` or less
+  (including `0`), return `1`, since the smallest buffer the hardware offers holds
+  one slot.
+
+  For example, `next_buffer_size(5)` returns `8`, and `next_buffer_size(8)`
+  returns `8` because `8` is already a power of two.
+starter_code: |
+  def next_buffer_size(n):
+      return 1
+function_name: next_buffer_size
+input_mode: function
+solution_sketch: Return 1 for n <= 1; otherwise start a size at 1 and double it (left-shift) until it reaches or passes n.
+sample_solution: |
+  def next_buffer_size(n):
+      if n <= 1:
+          return 1
+      size = 1
+      while size < n:
+          size <<= 1
+      return size
+hints:
+  - level: 1
+    text: Every candidate answer is a power of two, so you can generate them in order by repeatedly doubling starting from 1.
+  - level: 2
+    text: Handle n <= 1 up front by returning 1, then keep doubling a running size while it is still smaller than n.
+  - level: 3
+    text: Doubling is a left shift, `size <<= 1`; stop the loop the first time `size >= n` and return that size.
+tests:
+  public:
+    - name: exact_one
+      input: 1
+      expected: 1
+    - name: rounds_up
+      input: 5
+      expected: 8
+    - name: already_power
+      input: 8
+      expected: 8
+  validation:
+    - name: zero
+      input: 0
+      expected: 1
+    - name: just_over_four
+      input: 6
+      expected: 8
+    - name: seventeen
+      input: 17
+      expected: 32
+    - name: large_exact
+      input: 1024
+      expected: 1024
+    - name: one_below_power
+      input: 1023
+      expected: 1024
+explanation_markdown: |
+  The powers of two are exactly the numbers you can reach by doubling `1`, so
+  walking `1, 2, 4, 8, ...` and stopping the moment you meet or exceed `n` gives
+  the smallest one that fits. Doubling is a single left shift, and the loop runs
+  about `log2(n)` times, so even a huge request finishes in a handful of steps. The
+  `n <= 1` guard covers the boundary cleanly: `0` and `1` both map to the smallest
+  real capacity, `1`. When `n` is already a power of two, the loop condition
+  `size < n` fails at exactly that value, so it is returned unchanged.
+common_mistakes:
+  - Returning a value strictly greater than n even when n is already a power of two, by using `size <= n` in the loop.
+  - Forgetting the n <= 1 case, so a start value of 1 with the loop skipped still needs to be returned for n = 0.
+  - Multiplying past n and overshooting because the loop keeps doubling after the condition should have stopped it.

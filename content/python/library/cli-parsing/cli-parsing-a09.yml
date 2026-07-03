@@ -1,0 +1,147 @@
+id: exercise.library.cli_parsing.a09
+kind: exercise
+version: 1
+language: python
+title: Printing the Orchard Tool's Usage Card
+slug: cli-parsing-a09
+difficulty: medium
+concepts:
+  - python.cli_args
+  - python.string_formatting
+prerequisites:
+  - python.lists
+  - python.strings
+  - python.loops
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.cli_parsing.a09
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original usage-line renderer framed as an orchard harvest tool printing its own help card; metavar derivation rules written fresh, not lifted from argparse docs.
+prompt_markdown: |
+  Every command-line tool in the orchard co-op prints a one-line usage card when a
+  picker asks for help. You are building the renderer that turns a tool's
+  specification into that single line.
+
+  The grader calls your function with one argument: a spec dict shaped like
+
+  ```python
+  {
+      "prog": "harvest",
+      "positionals": ["field", "crop"],
+      "options": [
+          {"name": "--limit", "takes_value": True},
+          {"name": "--dry-run", "takes_value": False}
+      ]
+  }
+  ```
+
+  Write `build_usage_string(spec)` that returns the usage line as a string. Assemble
+  it from these pieces, separated by single spaces, in this order:
+
+  1. The literal word `usage:` followed by the program name (`usage: harvest`).
+  2. Each option, in the given order, wrapped in square brackets because options are
+     optional:
+     - An option with `"takes_value": True` shows a metavar: `[--limit LIMIT]`. The
+       metavar is the option name with its leading dashes stripped, every remaining
+       dash turned into an underscore, uppercased -- so `--max-count` yields
+       `[--max-count MAX_COUNT]`.
+     - An option with `"takes_value": False` is just its bracketed name:
+       `[--dry-run]`.
+  3. Each positional, in order, printed bare (no brackets), because positionals are
+     required: `field crop`.
+
+  The example above renders to:
+
+  ```
+  usage: harvest [--limit LIMIT] [--dry-run] field crop
+  ```
+
+  Edge cases: a spec with no options and no positionals returns just
+  `usage: <prog>` (for example `usage: run`). Every option name begins with `--`.
+starter_code: |
+  def build_usage_string(spec):
+      return ""
+function_name: build_usage_string
+input_mode: function
+solution_sketch: Start a parts list with "usage:" and the program name, append a bracketed fragment per option (with a derived metavar when it takes a value), append each positional bare, then join the parts with single spaces.
+sample_solution: |
+  def build_usage_string(spec):
+      parts = ["usage:", spec["prog"]]
+      for option in spec["options"]:
+          name = option["name"]
+          if option["takes_value"]:
+              metavar = name.lstrip("-").replace("-", "_").upper()
+              parts.append(f"[{name} {metavar}]")
+          else:
+              parts.append(f"[{name}]")
+      for positional in spec["positionals"]:
+          parts.append(positional)
+      return " ".join(parts)
+hints:
+  - level: 1
+    text: Build a list of fragments, then join with single spaces at the very end so you never fuss over trailing spaces.
+  - level: 2
+    text: The metavar is derived from the option name; strip leading dashes with lstrip("-"), swap remaining dashes for underscores, then uppercase.
+  - level: 3
+    text: Options are bracketed and come first; positionals are printed bare and come last. When there are neither, the list is just ["usage:", prog].
+tests:
+  public:
+    - name: full_line
+      input:
+        prog: "harvest"
+        positionals: ["field", "crop"]
+        options:
+          - {name: "--limit", takes_value: true}
+          - {name: "--dry-run", takes_value: false}
+      expected: "usage: harvest [--limit LIMIT] [--dry-run] field crop"
+    - name: bare_program
+      input:
+        prog: "run"
+        positionals: []
+        options: []
+      expected: "usage: run"
+    - name: positionals_only
+      input:
+        prog: "show"
+        positionals: ["item"]
+        options: []
+      expected: "usage: show item"
+  validation:
+    - name: options_only
+      input:
+        prog: "build"
+        positionals: []
+        options:
+          - {name: "--verbose", takes_value: false}
+      expected: "usage: build [--verbose]"
+    - name: multiword_metavar
+      input:
+        prog: "sync"
+        positionals: ["src"]
+        options:
+          - {name: "--max-count", takes_value: true}
+      expected: "usage: sync [--max-count MAX_COUNT] src"
+    - name: many_options_and_positionals
+      input:
+        prog: "plant"
+        positionals: ["bed", "seed", "depth"]
+        options:
+          - {name: "--water", takes_value: false}
+          - {name: "--rows", takes_value: true}
+      expected: "usage: plant [--water] [--rows ROWS] bed seed depth"
+explanation_markdown: |
+  A usage line is pure string assembly once you separate the three regions:
+  the program name, the bracketed optionals, and the bare required positionals.
+  Collecting fragments into a list and joining once is what keeps the spacing exact
+  -- concatenating with `+=` and manual spaces is where trailing-space bugs creep
+  in. The metavar convention (dashes to underscores, uppercased) mirrors what real
+  parsers auto-generate, so the card reads like tool output rather than a raw dump
+  of the spec.
+common_mistakes:
+  - Emitting a leading or trailing space by concatenating fragments manually instead of joining a list.
+  - Bracketing positionals or forgetting to bracket options, reversing the required-vs-optional convention.
+  - Deriving the metavar from the raw name (keeping dashes or lowercase) instead of stripping dashes, swapping to underscores, and uppercasing.

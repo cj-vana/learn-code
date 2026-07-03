@@ -1,0 +1,88 @@
+id: exercise.library.collections_itertools.a06
+kind: exercise
+version: 1
+language: python
+title: Food Truck Combos Under Budget
+slug: collections-itertools-a06
+difficulty: medium
+concepts:
+  - python.itertools_module
+  - patterns.brute_force
+prerequisites:
+  - python.lists
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.collections_itertools.a06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original food-truck pricing scenario using itertools.product to enumerate one-from-each-menu combinations.
+prompt_markdown: |
+  A food truck builds a meal by choosing exactly one base, one side, and one
+  drink. Each choice has a whole-number price. Write
+  `combos_under_budget(payload)` where `payload` is a dict with keys `bases`,
+  `sides`, `drinks` (each a list of integer prices) and `budget` (an integer).
+  Return the number of `(base, side, drink)` combinations whose three prices sum
+  to *at most* the budget. If any menu is empty, no meal can be built, so return
+  0.
+starter_code: |
+  def combos_under_budget(payload):
+      return 0
+function_name: combos_under_budget
+input_mode: function
+solution_sketch: Enumerate every base/side/drink triple with itertools.product and count those within budget.
+sample_solution: |
+  from itertools import product
+
+
+  def combos_under_budget(payload):
+      bases = payload["bases"]
+      sides = payload["sides"]
+      drinks = payload["drinks"]
+      budget = payload["budget"]
+      count = 0
+      for base, side, drink in product(bases, sides, drinks):
+          if base + side + drink <= budget:
+              count += 1
+      return count
+hints:
+  - level: 1
+    text: You need every way to pick one item from each of the three menus.
+  - level: 2
+    text: itertools.product(bases, sides, drinks) yields each (base, side, drink) triple, like three nested loops.
+  - level: 3
+    text: Loop the product, and count a triple whenever base + side + drink <= budget.
+tests:
+  public:
+    - name: only_option_fits
+      input: {bases: [1], sides: [1], drinks: [1], budget: 10}
+      expected: 1
+    - name: nothing_fits
+      input: {bases: [5], sides: [5], drinks: [5], budget: 10}
+      expected: 0
+    - name: some_fit
+      input: {bases: [2, 4], sides: [3], drinks: [1, 5], budget: 8}
+      expected: 2
+  validation:
+    - name: exact_boundary
+      input: {bases: [3], sides: [3], drinks: [4], budget: 10}
+      expected: 1
+    - name: many_combos
+      input: {bases: [1, 2], sides: [1, 2], drinks: [1, 2], budget: 4}
+      expected: 4
+    - name: empty_menu
+      input: {bases: [], sides: [1], drinks: [1], budget: 100}
+      expected: 0
+explanation_markdown: |
+  `product(bases, sides, drinks)` produces the cartesian product -- exactly the
+  triples you would get from three nested `for` loops, but flattened into one
+  clean iteration. Each triple is tested against the budget with a `<=` so the
+  boundary case (a meal costing precisely the budget) is included. When any menu
+  is empty the product is empty, so the loop never runs and the count stays 0,
+  which matches "no meal can be built".
+common_mistakes:
+  - Using a strict `<` and missing meals that cost exactly the budget.
+  - Nesting three manual loops incorrectly (for example reusing the same loop variable) instead of leaning on product.
+  - Counting items rather than combinations by summing menu lengths.

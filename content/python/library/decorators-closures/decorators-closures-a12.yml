@@ -1,0 +1,116 @@
+id: exercise.library.decorators_closures.a12
+kind: exercise
+version: 1
+language: python
+title: Fold A Row Of Machines Into One Pipeline
+slug: decorators-closures-a12
+difficulty: medium
+concepts:
+  - python.closures_decorators
+prerequisites:
+  - python.functions
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.decorators_closures.a12
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original conveyor-belt scenario where per-op closures are folded left to right into a single composed transform.
+prompt_markdown: |
+  A candy factory lines up small tuning machines along a conveyor belt. Each
+  machine nudges the running number that passes through it: an `"add"` machine
+  adds its dial value, a `"mul"` machine multiplies by its dial value, and a
+  `"sub"` machine subtracts its dial value. A blank the size of `value` enters
+  the first machine, and whatever comes out feeds straight into the next.
+
+  Write `apply_pipeline(data)`, where `data` is a dict with two keys:
+
+  - `"ops"`: a list of `[name, k]` pairs. `name` is one of `"add"`, `"mul"`,
+    or `"sub"`, and `k` is the machine's integer dial value.
+  - `"value"`: the starting number that enters the belt.
+
+  For each pair, build a small **closure** that captures its own `name` and `k`
+  and performs that one machine's step. Then **compose those closures left to
+  right into a single function** (the first machine runs first, and its output
+  feeds the second, and so on), and return that composed function applied to
+  `value`.
+
+  For `{"ops": [["add", 3], ["mul", 2]], "value": 1}` the belt computes
+  `(1 + 3) * 2`, so the result is `8`. An empty belt changes nothing:
+  `{"ops": [], "value": 5}` returns `5`.
+starter_code: |
+  def apply_pipeline(data):
+      # Build one closure per op, compose them left to right, then apply to value.
+      return None
+function_name: apply_pipeline
+input_mode: function
+solution_sketch: Turn each [name, k] into a closure, fold them with a compose helper so the first op runs first, then apply the composed function to value.
+sample_solution: |
+  def apply_pipeline(data):
+      ops = data["ops"]
+      value = data["value"]
+
+      def make_step(name, k):
+          if name == "add":
+              return lambda x: x + k
+          if name == "mul":
+              return lambda x: x * k
+          return lambda x: x - k
+
+      def compose(first, second):
+          # Run first, feed its result into second.
+          return lambda x: second(first(x))
+
+      pipeline = lambda x: x
+      for name, k in ops:
+          pipeline = compose(pipeline, make_step(name, k))
+      return pipeline(value)
+hints:
+  - level: 1
+    text: Write a helper that, given one [name, k] pair, returns a small function of x that captures k and does just that machine's step.
+  - level: 2
+    text: Start with an identity function (lambda x x) and, for each op, wrap it so the running pipeline is applied first and the new step is applied to that output.
+  - level: 3
+    text: A compose(first, second) that returns lambda x second(first(x)) keeps left-to-right order; fold every make_step over the identity, then call the result on value.
+tests:
+  public:
+    - name: add_then_mul
+      input: {"ops": [["add", 3], ["mul", 2]], "value": 1}
+      expected: 8
+    - name: empty_belt
+      input: {"ops": [], "value": 5}
+      expected: 5
+    - name: single_sub
+      input: {"ops": [["sub", 4]], "value": 10}
+      expected: 6
+  validation:
+    - name: three_machines_in_order
+      input: {"ops": [["add", 1], ["sub", 2], ["mul", 3]], "value": 5}
+      expected: 12
+    - name: order_matters
+      input: {"ops": [["mul", 2], ["add", 3]], "value": 1}
+      expected: 5
+    - name: two_subtractions
+      input: {"ops": [["sub", 1], ["sub", 2]], "value": 10}
+      expected: 7
+    - name: mul_by_zero_then_add
+      input: {"ops": [["mul", 0], ["add", 7]], "value": 9}
+      expected: 7
+explanation_markdown: |
+  Each machine is a one-argument closure that captured its own `k` when
+  `make_step` returned it, so `add` with dial `3` is permanently the function
+  `lambda x: x + 3`. Composition is where the belt takes shape: `compose(first,
+  second)` returns `lambda x: second(first(x))`, meaning `first` runs before
+  `second`. By folding each new step onto the running `pipeline` starting from
+  the identity function, the earliest op ends up innermost and therefore runs
+  first, exactly matching the conveyor order. Applying the final composed
+  function to `value` streams the blank through every machine in one call. The
+  empty-`ops` case falls out for free: no steps are folded on, so `pipeline`
+  stays the identity and returns `value` unchanged.
+common_mistakes:
+  - Composing in the wrong direction so the last op runs first instead of the first.
+  - Reading k from the loop variable inside the wrapper instead of capturing it per closure, so every step uses the final dial value.
+  - Forgetting the empty-ops case and returning None or 0 instead of value.

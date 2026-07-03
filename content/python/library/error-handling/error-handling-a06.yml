@@ -1,0 +1,103 @@
+id: exercise.library.error_handling.a06
+kind: exercise
+version: 1
+language: python
+title: A Custom Error for Book Renewals
+slug: error-handling-a06
+difficulty: medium
+concepts:
+  - python.exceptions
+  - python.classes
+prerequisites:
+  - python.functions
+  - python.dictionaries
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.error_handling.a06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original library-renewal task that defines and raises a domain-specific exception subclass.
+prompt_markdown: |
+  A neighbourhood library wants renewal failures to be a distinct, named kind of
+  error rather than a generic one. Define a custom exception class
+  `RenewalError` (subclass of `Exception`), then write `process_renewal(loan)`.
+
+  `loan` is a dict with `renewals_used`, `max_renewals`, and `days`.
+
+  - If `renewals_used` is already at or above `max_renewals`, raise
+    `RenewalError("renewal limit reached")`.
+  - If `days` is outside 1 to 21 inclusive, raise `RenewalError("invalid loan length")`.
+  - Otherwise the renewal succeeds and the new count is `renewals_used + 1`.
+
+  Catch `RenewalError` inside the function. Return `"renewed:N"` on success (where
+  `N` is the new count) or `"denied:<message>"` when a `RenewalError` was raised.
+starter_code: |
+  class RenewalError(Exception):
+      pass
+
+
+  def process_renewal(loan):
+      # Raise RenewalError for a broken rule; catch it and return "denied:<message>".
+      # On success return "renewed:<new count>".
+      return ""
+function_name: process_renewal
+input_mode: function
+solution_sketch: Define RenewalError, raise it per rule, and translate success or that specific error into a tagged string.
+sample_solution: |
+  class RenewalError(Exception):
+      pass
+
+
+  def process_renewal(loan):
+      try:
+          if loan["renewals_used"] >= loan["max_renewals"]:
+              raise RenewalError("renewal limit reached")
+          if loan["days"] < 1 or loan["days"] > 21:
+              raise RenewalError("invalid loan length")
+          new_count = loan["renewals_used"] + 1
+      except RenewalError as exc:
+          return f"denied:{exc}"
+      return f"renewed:{new_count}"
+hints:
+  - level: 1
+    text: A custom exception is just a class that inherits from Exception; `pass` in the body is enough.
+  - level: 2
+    text: Raise `RenewalError("...")` for each broken rule and catch that same class.
+  - level: 3
+    text: "Format results as f\"renewed:{new_count}\" and f\"denied:{exc}\" (str of the exception is its message)."
+tests:
+  public:
+    - name: normal_renewal
+      input: {renewals_used: 1, max_renewals: 3, days: 14}
+      expected: 'renewed:2'
+    - name: at_limit
+      input: {renewals_used: 3, max_renewals: 3, days: 14}
+      expected: 'denied:renewal limit reached'
+    - name: too_long
+      input: {renewals_used: 0, max_renewals: 2, days: 30}
+      expected: 'denied:invalid loan length'
+  validation:
+    - name: first_renewal
+      input: {renewals_used: 0, max_renewals: 1, days: 7}
+      expected: 'renewed:1'
+    - name: over_limit
+      input: {renewals_used: 5, max_renewals: 5, days: 10}
+      expected: 'denied:renewal limit reached'
+    - name: zero_days
+      input: {renewals_used: 1, max_renewals: 4, days: 0}
+      expected: 'denied:invalid loan length'
+explanation_markdown: |
+  Defining `RenewalError` gives the domain its own error vocabulary: callers can
+  catch a renewal problem specifically, without accidentally trapping unrelated
+  `ValueError`s or `KeyError`s. Because the limit check comes first, a loan that is
+  both maxed out and too long reports the limit, matching the order the rules are
+  written. Converting the caught exception with an f-string reuses the message you
+  passed to `raise`, so the human-readable reason travels with the error object
+  instead of being duplicated.
+common_mistakes:
+  - Subclassing the wrong base (or forgetting to subclass Exception), so the class cannot be raised or caught normally.
+  - Checking `days` before the renewal limit, which changes which reason a doubly-invalid loan reports.
+  - Building the "denied" string by hand instead of reusing the message stored on the exception.

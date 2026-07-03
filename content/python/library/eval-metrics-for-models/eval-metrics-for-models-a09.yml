@@ -1,0 +1,107 @@
+id: exercise.library.eval_metrics_for_models.a09
+kind: exercise
+version: 1
+language: python
+title: Reciprocal Rank of the Right Answer
+slug: eval-metrics-for-models-a09
+difficulty: medium
+concepts:
+  - ai.model_evaluation
+prerequisites:
+  - python.lists
+  - python.loops
+  - python.conditionals
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.eval_metrics_for_models.a09
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original reciprocal-rank drill framed around a star-catalog search returning ranked identifiers, focused on the single-query building block of MRR.
+prompt_markdown: |
+  A search system over a star catalog returns candidate identifiers ordered from
+  most to least relevant. To score one query we ask: how far down the list is the
+  single correct answer? **Reciprocal rank** rewards putting it near the top.
+
+  You are given a single dictionary `job` with two keys:
+
+  - `"ranked"`: a list of returned items, best first (index 0 is rank 1).
+  - `"correct"`: the one item that is the right answer.
+
+  Write `reciprocal_rank(job)`. Let `rank` be the **1-based position** of the
+  **first** occurrence of `correct` in `ranked`. The reciprocal rank is `1 / rank`,
+  returned **rounded to 4 decimal places**. If `correct` does not appear in
+  `ranked` at all, return `0.0`.
+
+  Because index 0 is rank 1, an answer in the first slot scores `1.0`, the second
+  slot scores `0.5`, the third `0.3333`, and so on. Only the first match matters if
+  the item somehow repeats.
+
+  ```python
+  reciprocal_rank({"ranked": ["nova", "comet", "quasar"], "correct": "quasar"})
+  # -> 0.3333
+  ```
+starter_code: |
+  def reciprocal_rank(job):
+      return 0.0
+function_name: reciprocal_rank
+input_mode: function
+solution_sketch: Enumerate the ranked list, and on the first item equal to correct return round(1/(index+1), 4); if the loop finishes with no match, return 0.0.
+sample_solution: |
+  def reciprocal_rank(job):
+      ranked = job["ranked"]
+      correct = job["correct"]
+      for index, item in enumerate(ranked):
+          if item == correct:
+              return round(1.0 / (index + 1), 4)
+      return 0.0
+hints:
+  - level: 1
+    text: Rank is 1-based but list indexes are 0-based, so the item at index i sits at rank i + 1.
+  - level: 2
+    text: Walk the list with enumerate and stop at the first item equal to correct, returning its reciprocal rank right away.
+  - level: 3
+    text: Return round(1.0 / (index + 1), 4) on the first match; if the loop ends without ever matching, return 0.0.
+tests:
+  public:
+    - name: top_slot
+      input: {"ranked": ["nova", "comet", "quasar"], "correct": "nova"}
+      expected: 1.0
+    - name: third_slot
+      input: {"ranked": ["nova", "comet", "quasar"], "correct": "quasar"}
+      expected: 0.3333
+    - name: not_present
+      input: {"ranked": ["nova", "comet", "quasar"], "correct": "pulsar"}
+      expected: 0.0
+  validation:
+    - name: seventh_slot
+      input: {"ranked": ["a", "b", "c", "d", "e", "f", "g"], "correct": "g"}
+      expected: 0.1429
+    - name: first_of_duplicates
+      input: {"ranked": ["x", "y", "y", "z"], "correct": "y"}
+      expected: 0.5
+    - name: empty_list
+      input: {"ranked": [], "correct": "z"}
+      expected: 0.0
+    - name: second_slot
+      input: {"ranked": ["p", "q", "r"], "correct": "q"}
+      expected: 0.5
+explanation_markdown: |
+  Reciprocal rank is the per-query piece that, averaged over many queries, becomes
+  Mean Reciprocal Rank. Its shape encodes a strong opinion: moving the right answer
+  from rank 2 to rank 1 lifts the score from `0.5` to `1.0`, but moving it from
+  rank 9 to rank 8 barely changes anything (`0.1111` to `0.125`). Users mostly look
+  near the top, so the metric front-loads the reward.
+
+  The implementation leans on the fact that `enumerate` yields items in order, so
+  the first equality you hit is the best (smallest) rank by construction; returning
+  immediately means duplicates further down never matter. Converting a 0-based
+  index to a 1-based rank with `index + 1` is the one detail that trips people up,
+  and the `0.0` fall-through cleanly handles "the answer was never retrieved",
+  which is different from "retrieved in last place".
+common_mistakes:
+  - Using the raw 0-based index as the rank, so the top result scores an undefined 1/0 or an off-by-one value.
+  - Continuing past the first match and reporting a later duplicate's worse rank.
+  - Returning None or raising when the correct item is absent instead of the defined 0.0.

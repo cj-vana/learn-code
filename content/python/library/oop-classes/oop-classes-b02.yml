@@ -1,0 +1,172 @@
+id: exercise.library.oop_classes.b02
+kind: exercise
+version: 1
+language: python
+title: Replaying the Manuscript Editor
+slug: oop-classes-b02
+difficulty: hard
+concepts:
+  - python.classes
+  - python.strings
+prerequisites:
+  - python.classes
+  - python.strings
+estimated_time_minutes: 24
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.oop_classes.b02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original scriptorium editor scenario where a document class keeps a history stack of prior states so undo walks backwards through insert and delete edits.
+prompt_markdown: |
+  A scriptorium runs a tiny text editor for transcribing manuscripts, and it can
+  undo mistakes by remembering every previous state of the page. Write
+  `apply_edits(job)` where `job` is a dictionary with keys:
+
+  - `"text"`: the starting document string, and
+  - `"edits"`: a list of edit dictionaries applied in order.
+
+  Build a document object **inside** the function (define and use your own class)
+  that keeps a **history stack** of prior states, apply each edit to it, and return
+  the final text as a string.
+
+  Each edit has a `"kind"`:
+
+  - `{"kind": "insert", "pos": i, "text": s}` -- save the current text on the
+    history stack, then insert string `s` so that it begins at index `i`
+    (`i` is between `0` and the current length inclusive).
+  - `{"kind": "delete", "pos": i, "count": n}` -- save the current text on the
+    history stack, then remove up to `n` characters starting at index `i`. If
+    fewer than `n` characters remain from `i`, delete everything through the end.
+  - `{"kind": "undo"}` -- pop the most recently saved state off the history stack
+    and restore it. An undo when the history stack is empty does nothing. An undo
+    is **not** itself saved, so consecutive undos step further and further back
+    through the edit history.
+
+  For example, on `job = {"text": "logbook", "edits": [{"kind": "insert", "pos": 7, "text": "s"}, {"kind": "delete", "pos": 0, "count": 3}, {"kind": "undo"}]}`
+  the insert makes `"logbooks"`, the delete makes `"books"`, and the undo restores
+  `"logbooks"`, so the function returns `"logbooks"`.
+starter_code: |
+  def apply_edits(job):
+      # Define a document class that keeps a history stack of prior states.
+      # Apply each edit, then return the final text string.
+      return job["text"]
+function_name: apply_edits
+input_mode: function
+solution_sketch: A Document class stores the current text plus a list used as a history stack; insert and delete push a snapshot before slicing the string, and undo pops the stack to restore the previous state. Dispatch each edit by its kind and return the final text.
+sample_solution: |
+  def apply_edits(job):
+      class Document:
+          def __init__(self, text):
+              self.text = text
+              self.history = []
+
+          def insert(self, pos, snippet):
+              self.history.append(self.text)
+              self.text = self.text[:pos] + snippet + self.text[pos:]
+
+          def delete(self, pos, count):
+              self.history.append(self.text)
+              self.text = self.text[:pos] + self.text[pos + count:]
+
+          def undo(self):
+              if self.history:
+                  self.text = self.history.pop()
+
+      doc = Document(job["text"])
+      for edit in job["edits"]:
+          kind = edit["kind"]
+          if kind == "insert":
+              doc.insert(edit["pos"], edit["text"])
+          elif kind == "delete":
+              doc.delete(edit["pos"], edit["count"])
+          elif kind == "undo":
+              doc.undo()
+      return doc.text
+hints:
+  - level: 1
+    text: Before any insert or delete changes the text, push a copy of the current text onto a list you treat as a stack. That saved snapshot is exactly what undo will restore.
+  - level: 2
+    text: String slicing does the editing cleanly. An insert is text[:pos] + snippet + text[pos:]; a delete is text[:pos] + text[pos + count:], which automatically stops at the end when count runs past the remaining characters.
+  - level: 3
+    text: Undo just pops the stack and assigns it back to the current text, doing nothing when the stack is empty. Because undo does not push anything, two undos in a row walk back through two earlier states.
+tests:
+  public:
+    - name: insert_delete_undo
+      input:
+        text: logbook
+        edits:
+          - {"kind": "insert", "pos": 7, "text": "s"}
+          - {"kind": "delete", "pos": 0, "count": 3}
+          - {"kind": "undo"}
+      expected: logbooks
+    - name: no_edits
+      input:
+        text: hello
+        edits: []
+      expected: hello
+    - name: stacked_inserts
+      input:
+        text: ""
+        edits:
+          - {"kind": "insert", "pos": 0, "text": "a"}
+          - {"kind": "insert", "pos": 1, "text": "b"}
+          - {"kind": "insert", "pos": 1, "text": "X"}
+      expected: aXb
+  validation:
+    - name: undo_on_empty_history
+      input:
+        text: seed
+        edits:
+          - {"kind": "undo"}
+      expected: seed
+    - name: two_undos_step_back
+      input:
+        text: ab
+        edits:
+          - {"kind": "insert", "pos": 2, "text": "c"}
+          - {"kind": "insert", "pos": 3, "text": "d"}
+          - {"kind": "undo"}
+          - {"kind": "undo"}
+      expected: ab
+    - name: delete_clamps_to_end
+      input:
+        text: tunnel
+        edits:
+          - {"kind": "delete", "pos": 2, "count": 100}
+      expected: tu
+    - name: delete_then_undo_then_insert
+      input:
+        text: grid
+        edits:
+          - {"kind": "delete", "pos": 0, "count": 2}
+          - {"kind": "undo"}
+          - {"kind": "insert", "pos": 4, "text": "s"}
+      expected: grids
+    - name: no_redo_after_undo
+      input:
+        text: x
+        edits:
+          - {"kind": "insert", "pos": 1, "text": "y"}
+          - {"kind": "undo"}
+          - {"kind": "undo"}
+      expected: x
+explanation_markdown: |
+  The whole design turns on one discipline: every destructive edit saves a snapshot
+  of the document before it changes anything. Storing those snapshots on a stack
+  gives undo its natural shape -- the most recent state to restore is always the one
+  on top, so a `pop` reverses exactly one edit. Because an undo never pushes a
+  snapshot of its own, running two undos in a row peels back two edits, which is why
+  there is no accidental "redo".
+
+  String slicing keeps the edits themselves short and total. `text[:pos] + snippet
+  + text[pos:]` opens a gap at `pos` and drops the new text in, while `text[:pos] +
+  text[pos + count:]` closes a gap -- and since a slice that runs past the end just
+  stops at the end, a delete with an oversized count safely trims to the tail. Each
+  edit copies the string once, so the work is linear in the document size per edit.
+common_mistakes:
+  - Pushing the snapshot after mutating the text, so undo restores the already-edited version instead of the previous one.
+  - Letting undo push its own snapshot, which creates a redo loop and stops repeated undos from stepping back through history.
+  - Assuming a delete count always fits, and indexing out of range instead of relying on slicing to stop at the end of the string.

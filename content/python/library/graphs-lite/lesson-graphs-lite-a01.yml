@@ -1,0 +1,81 @@
+id: lesson.library.graphs_lite.a01
+kind: lesson
+version: 1
+language: python
+title: Modelling a Network as an Adjacency List
+slug: lesson-graphs-lite-a01
+difficulty: easy
+concepts:
+  - patterns.graph_traversal
+  - python.dictionaries
+prerequisites:
+  - python.dictionaries
+  - python.lists
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.graphs_lite.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original explanation of adjacency-list construction framed around a delivery-route network.
+body_markdown: |
+  A **graph** is nothing more than a set of things (called *vertices* or *nodes*)
+  and the connections between them (called *edges*). A road map, a friend list, a
+  build pipeline, and a maze are all graphs. Before you can answer any question
+  about a graph in code, you have to store it in a shape that is easy to walk. The
+  workhorse shape is the **adjacency list**: a dictionary that maps each node to
+  the list of nodes it connects to directly.
+
+  Most data arrives instead as an **edge list** -- a flat list of pairs. Your
+  first job is almost always to convert. Suppose a courier gives you two-way road
+  links between hubs:
+
+  ```python
+  def build_adjacency(edges):
+      graph = {}
+      for a, b in edges:
+          graph.setdefault(a, [])
+          graph.setdefault(b, [])
+          graph[a].append(b)
+          graph[b].append(a)   # undirected: add both directions
+      return graph
+
+  roads = [["depot", "north"], ["depot", "east"], ["north", "east"]]
+  print(build_adjacency(roads))
+  # {'depot': ['north', 'east'], 'north': ['depot', 'east'], 'east': ['depot', 'north']}
+  ```
+
+  Two decisions define the graph. First, **direction**. In an *undirected* graph
+  every edge goes both ways, so `[a, b]` adds `b` to `a`'s list *and* `a` to `b`'s.
+  In a *directed* graph an edge `[a, b]` means "a points to b" and only one entry
+  is added -- this is how you model dependencies, one-way streets, or "must finish
+  before." Getting this wrong silently loses half your connections.
+
+  Second, `setdefault` earns its keep here. A node that only ever appears on the
+  right-hand side of an edge still needs a key, or later code that writes
+  `graph[node]` will raise a `KeyError`. Creating an empty list for both endpoints
+  before appending guarantees every mentioned node exists, even one with no
+  outgoing edges.
+
+  Grids are secretly graphs too. In a grid of cells you rarely build an explicit
+  dictionary; instead each cell `(r, c)` is a node and its neighbours are computed
+  on the fly as the four tiles `(r-1, c)`, `(r+1, c)`, `(r, c-1)`, `(r, c+1)` that
+  stay inside the bounds. Keeping that "neighbours of a node" idea abstract lets
+  the same traversal code work whether the graph is a dictionary or an implicit
+  grid.
+
+  Once the adjacency structure exists, every later technique -- depth-first search,
+  breadth-first search, cycle detection, ordering -- is just a disciplined way of
+  asking each node for its neighbours and deciding where to go next.
+checkpoints:
+  - question: In an undirected graph, how many entries does a single edge [a, b] add to the adjacency list, and where?
+    answer: Two entries -- b is appended to a's neighbour list and a is appended to b's neighbour list.
+    explanation: Undirected edges are traversable both ways, so each endpoint must list the other; adding only one direction loses half the connectivity.
+  - question: Why call setdefault(b, []) for the endpoint b even when b never appears as the first element of any edge?
+    answer: So that b exists as a key with an empty list; otherwise later code that reads graph[b] would raise a KeyError.
+    explanation: A node with no outgoing edges is still a real vertex, and traversal code expects every node to have a (possibly empty) neighbour list.
+  - question: How are the neighbours of a grid cell (r, c) usually found without building an explicit dictionary?
+    answer: By computing the four in-bounds tiles (r-1, c), (r+1, c), (r, c-1), and (r, c+1) at the moment they are needed.
+    explanation: A grid is an implicit graph, so neighbours are generated on demand from the coordinates rather than stored, which keeps traversal code identical to the dictionary case.

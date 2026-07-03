@@ -1,0 +1,102 @@
+id: quiz.library.classic_ml_from_scratch.a02
+kind: quiz
+version: 1
+language: python
+title: Gradient Descent Mechanics
+slug: quiz-classic-ml-from-scratch-a02
+difficulty: medium
+concepts:
+  - ai.classic_ml
+prerequisites:
+  - ai.classic_ml
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.classic_ml_from_scratch.a02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax quiz on the mechanics of loss functions, updates, learning rates, and numerical stability in pure-Python ML code.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: |
+      With parameter w = 3.0, gradient dw = 2.0, and learning rate 0.1, what is
+      w after one gradient descent step?
+    choices:
+      - '2.8'
+      - '3.2'
+      - '1.0'
+      - '2.94'
+    correct_choice: '2.8'
+    explanation: |
+      w -= lr * dw gives 3.0 - 0.1 * 2.0 = 2.8; adding instead of subtracting
+      (3.2) walks uphill and worsens the loss.
+    concepts:
+      - ai.classic_ml
+  - id: q2
+    prompt: Why do loss functions square the prediction errors rather than just summing them?
+    choices:
+      - Squaring keeps misses from cancelling (+5 and -5 would sum to zero) and makes the loss smoothly differentiable
+      - Squared numbers are faster to compute than absolute values
+      - It guarantees the loss stays below 1.0
+      - Squaring converts all values to integers
+    correct_choice: Squaring keeps misses from cancelling (+5 and -5 would sum to zero) and makes the loss smoothly differentiable
+    explanation: |
+      Signed errors cancel, hiding badness; absolute values fix that but kink
+      at zero. Squares are positive AND smooth, which gradient-based learning
+      needs.
+    concepts:
+      - ai.classic_ml
+  - id: q3
+    prompt: |
+      A naive sigmoid `1 / (1 + math.exp(-x))` crashes with OverflowError for
+      x = -1000. What is the standard fix?
+    choices:
+      - Branch on the sign of x so exp is only ever called on a non-positive value
+      - Wrap the call in try/except and return 0.5
+      - Use x % 100 to keep inputs small
+      - Compute in integers instead of floats
+    correct_choice: Branch on the sign of x so exp is only ever called on a non-positive value
+    explanation: |
+      exp(1000) overflows but exp(-1000) just underflows to 0.0; rewriting the
+      formula per sign (e.g. exp(x)/(1+exp(x)) for negative x) keeps every
+      intermediate finite.
+    concepts:
+      - ai.classic_ml
+      - python.types
+  - id: q4
+    prompt: |
+      The perceptron rule updates weights ONLY when a point is misclassified.
+      What happens to a correctly classified point's update, and why does that
+      make sense?
+    choices:
+      - No update at all — the model is right about that point, so there is nothing to learn from it
+      - A half-strength update, for reinforcement
+      - The weights are rescaled to unit length
+      - The point is removed from the training set
+    correct_choice: No update at all — the model is right about that point, so there is nothing to learn from it
+    explanation: |
+      The perceptron is error-driven: correct predictions produce zero
+      correction. This "learn only from mistakes" shape reappears in modern
+      losses as small-gradients-when-right.
+    concepts:
+      - ai.classic_ml
+  - id: q5
+    prompt: |
+      Z-score standardization computes (x - mean) / stdev per column. What must
+      the implementation do when a column is constant, and why?
+    choices:
+      - Guard the zero stdev explicitly (e.g. output zeros) — the formula divides by zero otherwise
+      - Skip the column silently
+      - Raise an exception — constant columns are invalid data
+      - Use the column's mean as the divisor instead
+    correct_choice: Guard the zero stdev explicitly (e.g. output zeros) — the formula divides by zero otherwise
+    explanation: |
+      A constant feature has stdev 0, and real datasets contain them; a stated
+      rule (all zeros is common — the feature carries no information) beats a
+      ZeroDivisionError at row 40,000.
+    concepts:
+      - ai.classic_ml
+      - concepts.testing

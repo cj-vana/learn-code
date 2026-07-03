@@ -1,0 +1,225 @@
+id: exercise.library.introspection_metaprogramming.a08
+kind: exercise
+version: 1
+language: python
+title: Reading a Watch Movement
+slug: introspection-metaprogramming-a08
+difficulty: hard
+concepts:
+  - python.introspection
+  - python.sets
+prerequisites:
+  - python.functions
+  - python.loops
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.introspection_metaprogramming.a08
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: >-
+    Original watchmaker framing that audits a routine's bytecode for coarse
+    behavioural traits. Follows the research plan's contains_opcode_name idea but
+    uses loose opcode-family presence only (never exact opcode names or counts),
+    so the answer is stable across CPython point releases as the topic map
+    requires.
+prompt_markdown: |
+  A watchmaker inspects the *movement* inside each routine — not what it computes,
+  but which mechanisms it uses. You will audit a routine's compiled bytecode and
+  report the coarse traits it shows.
+
+  Six routines are defined and collected in a `_ROUTINES` dictionary mapping each
+  name to its function object. Write `inspect_movement(name)`, which looks up the
+  named routine and returns the **sorted list of trait strings** it exhibits,
+  drawn from exactly this vocabulary:
+
+  - `"arithmetic"` — some instruction's `opname` is `"BINARY_OP"` (it does math)
+  - `"compares"` — some instruction's `opname` is `"COMPARE_OP"` (it compares)
+  - `"iterates"` — some instruction's `opname` contains `"FOR_ITER"` (it loops
+    over something, including inside a list comprehension)
+  - `"builds_list"` — some instruction's `opname` is `"BUILD_LIST"` (it assembles
+    a list literal or comprehension)
+  - `"calls"` — some instruction's `opname` contains the substring `"CALL"` (it
+    invokes another callable, such as a built-in)
+
+  Read the instructions with `dis.get_instructions(func)` and check the presence
+  of each trait using the rules above. This is deliberately a **loose presence**
+  check on opcode families, not an exact opcode listing, so it stays stable across
+  Python versions. Return the traits sorted alphabetically. A routine that shows
+  none of them returns an empty list. The given `name` is always a key in
+  `_ROUTINES`.
+starter_code: |
+  import dis
+
+
+  def escapement(a, b):
+      return a > b
+
+
+  def balance_wheel(x):
+      return x
+
+
+  def gear_train(ticks):
+      total = 0
+      for t in ticks:
+          total = total + t
+      return total
+
+
+  def complication(parts):
+      return [p for p in parts]
+
+
+  def chime(x):
+      return abs(x)
+
+
+  def regulator(a, b):
+      if a > b:
+          return a - b
+      return b - a
+
+
+  _ROUTINES = {
+      "escapement": escapement,
+      "balance_wheel": balance_wheel,
+      "gear_train": gear_train,
+      "complication": complication,
+      "chime": chime,
+      "regulator": regulator,
+  }
+
+
+  def inspect_movement(name):
+      return []
+function_name: inspect_movement
+input_mode: function
+solution_sketch: >-
+  Collect the set of opnames from dis.get_instructions for the named routine,
+  then test each vocabulary trait against that set (exact match for BINARY_OP,
+  COMPARE_OP, BUILD_LIST; substring match for FOR_ITER and CALL) and return the
+  matching trait names sorted.
+sample_solution: |
+  import dis
+
+
+  def escapement(a, b):
+      return a > b
+
+
+  def balance_wheel(x):
+      return x
+
+
+  def gear_train(ticks):
+      total = 0
+      for t in ticks:
+          total = total + t
+      return total
+
+
+  def complication(parts):
+      return [p for p in parts]
+
+
+  def chime(x):
+      return abs(x)
+
+
+  def regulator(a, b):
+      if a > b:
+          return a - b
+      return b - a
+
+
+  _ROUTINES = {
+      "escapement": escapement,
+      "balance_wheel": balance_wheel,
+      "gear_train": gear_train,
+      "complication": complication,
+      "chime": chime,
+      "regulator": regulator,
+  }
+
+
+  def inspect_movement(name):
+      func = _ROUTINES[name]
+      opnames = {instr.opname for instr in dis.get_instructions(func)}
+      traits = []
+      if "BINARY_OP" in opnames:
+          traits.append("arithmetic")
+      if "COMPARE_OP" in opnames:
+          traits.append("compares")
+      if any("FOR_ITER" in op for op in opnames):
+          traits.append("iterates")
+      if "BUILD_LIST" in opnames:
+          traits.append("builds_list")
+      if any("CALL" in op for op in opnames):
+          traits.append("calls")
+      return sorted(traits)
+hints:
+  - level: 1
+    text: >-
+      Build a set of the opnames a routine uses with
+      {instr.opname for instr in dis.get_instructions(func)}, then decide each
+      trait from that set.
+  - level: 2
+    text: >-
+      arithmetic/compares/builds_list are exact opname matches (BINARY_OP,
+      COMPARE_OP, BUILD_LIST); iterates and calls are substring checks
+      ("FOR_ITER" and "CALL") because those families have several concrete names.
+  - level: 3
+    text: >-
+      Append the matching trait strings to a list and return it sorted; a routine
+      with no matching opcodes yields an empty list.
+tests:
+  public:
+    - name: comparison_only
+      input: escapement
+      expected: [compares]
+    - name: passthrough_none
+      input: balance_wheel
+      expected: []
+    - name: loop_and_math
+      input: gear_train
+      expected: [arithmetic, iterates]
+    - name: builtin_call
+      input: chime
+      expected: [calls]
+  validation:
+    - name: comprehension_traits
+      input: complication
+      expected: [builds_list, iterates]
+    - name: branch_math_and_compare
+      input: regulator
+      expected: [arithmetic, compares]
+    - name: passthrough_again
+      input: balance_wheel
+      expected: []
+    - name: comparison_again
+      input: escapement
+      expected: [compares]
+    - name: loop_and_math_again
+      input: gear_train
+      expected: [arithmetic, iterates]
+explanation_markdown: |
+  Disassembly exposes the *shape* of a routine's work. A single arithmetic
+  expression compiles to a `BINARY_OP`, a comparison to `COMPARE_OP`, any `for`
+  loop (including the hidden loop inside a list comprehension) to a `FOR_ITER`,
+  a list literal or comprehension to `BUILD_LIST`, and invoking a callable to a
+  member of the `CALL` family.
+
+  The key discipline is staying loose. Exact opcode names and their counts drift
+  between CPython releases — 3.14, for instance, adds superinstructions like
+  `LOAD_FAST_BORROW` — so a grader that demanded exact bytecode would be fragile.
+  By asking only whether a *family* is present, the audit reports the same traits
+  on 3.12 and later. That is why `gear_train` reads as arithmetic-and-iterating
+  while `balance_wheel`, which only hands its argument straight back, shows no
+  traits at all.
+common_mistakes:
+  - Comparing full opcode names for the CALL and FOR_ITER families instead of using a substring test, so version-specific spellings are missed.
+  - Counting how many times an opcode appears rather than testing mere presence, which makes results vary by Python version.
+  - Forgetting that a list comprehension both builds a list and iterates, so it should report two traits.

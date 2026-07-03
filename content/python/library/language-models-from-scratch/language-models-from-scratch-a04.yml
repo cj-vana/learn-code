@@ -1,0 +1,100 @@
+id: exercise.library.language_models_from_scratch.a04
+kind: exercise
+version: 1
+language: python
+title: Add-One Smoothing the Bigrams
+slug: language-models-from-scratch-a04
+difficulty: medium
+concepts:
+  - ai.language_models
+  - concepts.probability
+prerequisites:
+  - python.dictionaries
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.language_models_from_scratch.a04
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original Laplace add-one smoothing drill computing smoothed bigram probabilities from supplied totals.
+prompt_markdown: |
+  A bigram probability of exactly 0 is dangerous: a single unseen pair makes an
+  entire sentence impossible. **Add-one (Laplace) smoothing** fixes this by
+  pretending every possible next token was seen one extra time. For a context `a`
+  and next token `b`,
+
+      P_smooth(b | a) = (count(a, b) + 1) / (total(a) + V)
+
+  where `total(a)` is how many times `a` appeared as a context and `V` is the
+  vocabulary size (the number of distinct token types).
+
+  Write `laplace_smooth(job)` where `job` is a dict with keys:
+  - `counts`: a dict mapping `"first|second"` to its integer count,
+  - `vocab_size`: the integer `V`,
+  - `context_total`: a dict mapping each context token to its `total(a)`.
+
+  Return a dict mapping every `"first|second"` key to its smoothed probability,
+  **rounded to 6 decimal places**.
+
+  Example: `{"counts": {"a|b": 3, "a|c": 1}, "vocab_size": 2, "context_total":
+  {"a": 4}}` gives `P(b|a) = (3+1)/(4+2) = 0.666667` and
+  `P(c|a) = (1+1)/(4+2) = 0.333333`.
+starter_code: |
+  def laplace_smooth(job):
+      return {}
+function_name: laplace_smooth
+input_mode: function
+solution_sketch: For each pair, read its context from the key, look up total(a) in context_total, and compute (count+1)/(total+V) rounded to 6 places.
+sample_solution: |
+  def laplace_smooth(job):
+      counts = job["counts"]
+      vocab_size = job["vocab_size"]
+      context_total = job["context_total"]
+      probs = {}
+      for key, n in counts.items():
+          context = key.split("|")[0]
+          denom = context_total[context] + vocab_size
+          probs[key] = round((n + 1) / denom, 6)
+      return probs
+hints:
+  - level: 1
+    text: Every probability has the same shape (count+1)/(total+V); only the numbers change per pair.
+  - level: 2
+    text: Read the context from the key (the part before the "|") to look up its total in context_total.
+  - level: 3
+    text: Compute (n + 1) / (context_total[context] + vocab_size) and round the result to 6 decimal places.
+tests:
+  public:
+    - name: example
+      input: {counts: {"a|b": 3, "a|c": 1}, vocab_size: 2, context_total: {"a": 4}}
+      expected: {"a|b": 0.666667, "a|c": 0.333333}
+    - name: one_pair
+      input: {counts: {"the|cat": 2}, vocab_size: 3, context_total: {"the": 2}}
+      expected: {"the|cat": 0.6}
+    - name: even
+      input: {counts: {"sun|rise": 1, "sun|set": 1}, vocab_size: 4, context_total: {"sun": 2}}
+      expected: {"sun|rise": 0.333333, "sun|set": 0.333333}
+  validation:
+    - name: big_count
+      input: {counts: {"a|b": 5}, vocab_size: 5, context_total: {"a": 5}}
+      expected: {"a|b": 0.6}
+    - name: two_contexts
+      input: {counts: {"a|b": 2, "a|c": 1, "b|a": 1}, vocab_size: 3, context_total: {"a": 3, "b": 1}}
+      expected: {"a|b": 0.5, "a|c": 0.333333, "b|a": 0.5}
+    - name: fog
+      input: {counts: {"fog|horn": 4, "fog|bank": 2}, vocab_size: 2, context_total: {"fog": 6}}
+      expected: {"fog|horn": 0.625, "fog|bank": 0.375}
+explanation_markdown: |
+  Add-one smoothing shifts a little probability mass off the tokens you did see and
+  onto the ones you did not, so no next token is ever assigned probability 0. The
+  `+1` in the numerator credits every pair one phantom sighting, and the `+ V` in
+  the denominator keeps the distribution normalized (it accounts for one phantom
+  sighting of each of the `V` vocabulary tokens). A larger `V` spreads more of the
+  mass onto unseen events. As always, rounding to 6 places is what makes the
+  floating-point results match the expected values under `==`.
+common_mistakes:
+  - Adding V to the numerator or only 1 to the denominator, breaking normalization.
+  - Using the raw context total without adding V, so unseen tokens still get no mass.
+  - Forgetting to round the smoothed probability to 6 decimal places.

@@ -30,13 +30,13 @@ units:
   - exercise.library.brute_force_bigo.a01
   - exercise.library.brute_force_bigo.a02
   - exercise.library.brute_force_bigo.a03
+  - quiz.library.brute_force_bigo.a01
   - exercise.library.brute_force_bigo.a04
   - exercise.library.brute_force_bigo.a05
   - exercise.library.brute_force_bigo.a06
+  - quiz.library.brute_force_bigo.a02
   - exercise.library.brute_force_bigo.a07
   - exercise.library.brute_force_bigo.a08
-  - quiz.library.brute_force_bigo.a01
-  - quiz.library.brute_force_bigo.a02
 - id: unit.hashmap_set
   title: Hash Maps & Sets
   description: Lessons, drills, and quizzes for hash maps & sets.
@@ -47,18 +47,18 @@ units:
   - exercise.library.hashmap_set.a01
   - exercise.library.hashmap_set.a02
   - exercise.library.hashmap_set.a03
+  - quiz.library.hashmap_set.a01
   - exercise.library.hashmap_set.a04
   - exercise.library.hashmap_set.a05
   - exercise.library.hashmap_set.a06
+  - quiz.library.hashmap_set.a02
   - exercise.library.hashmap_set.a07
   - exercise.library.hashmap_set.a08
   - exercise.library.hashmap_set.b01
+  - quiz.library.hashmap_set.a03
   - exercise.library.hashmap_set.b02
   - exercise.library.hashmap_set.b03
   - exercise.library.hashmap_set.b04
-  - quiz.library.hashmap_set.a01
-  - quiz.library.hashmap_set.a02
-  - quiz.library.hashmap_set.a03
 - id: unit.two_pointers
   title: Two Pointers
   description: Lessons, drills, and quizzes for two pointers.
@@ -69,18 +69,18 @@ units:
   - exercise.library.two_pointers.a01
   - exercise.library.two_pointers.a02
   - exercise.library.two_pointers.a03
+  - quiz.library.two_pointers.a01
   - exercise.library.two_pointers.a04
   - exercise.library.two_pointers.a05
   - exercise.library.two_pointers.a06
+  - quiz.library.two_pointers.a02
   - exercise.library.two_pointers.a07
   - exercise.library.two_pointers.a08
   - exercise.library.two_pointers.b01
+  - quiz.library.two_pointers.a03
   - exercise.library.two_pointers.b02
   - exercise.library.two_pointers.b03
   - exercise.library.two_pointers.b04
-  - quiz.library.two_pointers.a01
-  - quiz.library.two_pointers.a02
-  - quiz.library.two_pointers.a03
 - id: unit.sliding_window
   title: Sliding Window
   description: Lessons, drills, and quizzes for sliding window.
@@ -91,15 +91,15 @@ units:
   - exercise.library.sliding_window.a01
   - exercise.library.sliding_window.a02
   - exercise.library.sliding_window.a03
+  - quiz.library.sliding_window.a01
   - exercise.library.sliding_window.a04
   - exercise.library.sliding_window.a05
   - exercise.library.sliding_window.a06
+  - quiz.library.sliding_window.a02
   - exercise.library.sliding_window.a07
   - exercise.library.sliding_window.a08
   - exercise.library.sliding_window.b01
+  - quiz.library.sliding_window.a03
   - exercise.library.sliding_window.b02
   - exercise.library.sliding_window.b03
   - exercise.library.sliding_window.b04
-  - quiz.library.sliding_window.a01
-  - quiz.library.sliding_window.a02
-  - quiz.library.sliding_window.a03

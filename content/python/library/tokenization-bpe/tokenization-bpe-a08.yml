@@ -1,0 +1,109 @@
+id: exercise.library.tokenization_bpe.a08
+kind: exercise
+version: 1
+language: python
+title: The Archivist's Symbol Table
+slug: tokenization-bpe-a08
+difficulty: medium
+concepts:
+  - ai.tokenization
+  - python.sets
+  - python.sorting
+prerequisites:
+  - python.lists
+  - python.strings
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.tokenization_bpe.a08
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original framing around a manuscript archivist assembling a compression symbol table; the base-plus-merges vocabulary construction is a standard BPE step shown with invented glyph sets.
+prompt_markdown: |
+  When a byte-pair encoding (BPE) tokenizer finishes training, its **vocabulary**
+  is the set of every symbol it can emit: the original base symbols plus one new
+  symbol for each merge it learned. A manuscript archivist wants that full symbol
+  table so she can size her storage.
+
+  Write `build_vocab(job)` where `job` is a dict with:
+
+  - `"base"`: a list of the starting symbols (single glyphs), e.g. `["l", "o", "w"]`.
+  - `"merges"`: a list of learned merges, each a two-item list `[x, y]`. A merge
+    contributes the joined symbol `x + y` to the vocabulary.
+
+  Build the vocabulary as the collection of all base symbols together with every
+  joined merge symbol `x + y`. Duplicates (a merge that reproduces an existing
+  symbol) count once. Return the vocabulary as a list sorted with Python's
+  default string ordering.
+
+  Example: `job = {"base": ["l", "o", "w"], "merges": [["l", "o"], ["lo", "w"]]}`
+  returns `["l", "lo", "low", "o", "w"]` — the base glyphs plus `"lo"` and
+  `"low"`, all sorted.
+starter_code: |
+  def build_vocab(job):
+      vocab = set(job["base"])
+      return sorted(vocab)
+function_name: build_vocab
+input_mode: function
+solution_sketch: Put the base symbols in a set, add the concatenation of each merge pair, then return the set sorted with the default string sort.
+sample_solution: |
+  def build_vocab(job):
+      vocab = set(job["base"])
+      for pair in job["merges"]:
+          vocab.add(pair[0] + pair[1])
+      return sorted(vocab)
+hints:
+  - level: 1
+    text: The vocabulary is just the base symbols plus one new symbol per merge, so a set is the natural container.
+  - level: 2
+    text: Each merge [x, y] adds the single string x + y. Add every such string to the set that already holds the base symbols.
+  - level: 3
+    text: A set automatically drops duplicates, so a merge that recreates an existing symbol is harmless; finish with sorted(vocab) for the default lexicographic order.
+tests:
+  public:
+    - name: no_merges
+      input:
+        base: ["a", "b"]
+        merges: []
+      expected: ["a", "b"]
+    - name: two_merges
+      input:
+        base: ["l", "o", "w"]
+        merges: [["l", "o"], ["lo", "w"]]
+      expected: ["l", "lo", "low", "o", "w"]
+    - name: several_units
+      input:
+        base: ["a", "b", "c"]
+        merges: [["a", "b"], ["b", "c"], ["ab", "c"]]
+      expected: ["a", "ab", "abc", "b", "bc", "c"]
+  validation:
+    - name: single_merge
+      input:
+        base: ["t", "e", "a"]
+        merges: [["t", "e"]]
+      expected: ["a", "e", "t", "te"]
+    - name: duplicate_symbol
+      input:
+        base: ["a", "ab"]
+        merges: [["a", "b"]]
+      expected: ["a", "ab"]
+    - name: end_of_word_marker
+      input:
+        base: ["r", "u", "n", "</w>"]
+        merges: [["n", "</w>"], ["u", "n</w>"]]
+      expected: ["</w>", "n", "n</w>", "r", "u", "un</w>"]
+explanation_markdown: |
+  A trained BPE tokenizer can only produce symbols it knows about: the base
+  alphabet it started from and, for every merge it learned, the fused symbol that
+  merge creates. Collecting them into a set gives you the vocabulary for free and
+  silently absorbs the case where a merge reproduces a symbol that already
+  exists. Sorting matters because vocabularies are often stored as an ordered
+  list whose position doubles as each token's integer id, and the default string
+  sort compares character by character — note that `"</w>"` sorts before letters
+  because `'<'` has a smaller code point than `'a'`.
+common_mistakes:
+  - Appending merge symbols to a list without de-duplicating, so a merge that recreates a base symbol appears twice.
+  - Sorting by length or by merge order instead of the default lexicographic string order.
+  - Forgetting that each merge contributes exactly one joined symbol, the concatenation x + y, not the two pieces separately.

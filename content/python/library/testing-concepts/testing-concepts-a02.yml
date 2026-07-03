@@ -1,0 +1,99 @@
+id: exercise.library.testing_concepts.a02
+kind: exercise
+version: 1
+language: python
+title: Calibrating the Double-Reading Scale
+slug: testing-concepts-a02
+difficulty: easy
+concepts:
+  - concepts.testing
+  - python.loops
+prerequisites:
+  - python.lists
+  - python.dictionaries
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.testing_concepts.a02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original scale-calibration framing for a case runner that checks recorded readouts against a fixed doubling rule.
+prompt_markdown: |
+  A calibration bench tests a specialty scale whose specification is simple: for a
+  load of `n` grams the readout must be exactly `2 * n` grams — the pan is
+  double-counted by design. A technician places a series of known loads, writes
+  down what the display showed, and hands you the log to check.
+
+  Write `run_cases(job)` where `job` is a dict with one key, `cases`, whose value
+  is a list of case dicts. Each case has:
+
+  - `input` — the load in grams that was placed on the pan
+  - `expected` — the readout that was recorded from the display
+
+  Return a list with one string per case, in the same order. For each case the
+  entry is `"pass"` when the recorded `expected` equals `2 * input` (the value the
+  specification requires), and `"fail"` otherwise.
+
+  An empty `cases` list returns an empty list. Loads may be zero or negative.
+starter_code: |
+  def run_cases(job):
+      # For each case, check the recorded readout against 2 * input.
+      return []
+function_name: run_cases
+input_mode: function
+solution_sketch: Loop over job["cases"], compare 2 * case["input"] to case["expected"], and append "pass" or "fail" to a result list.
+sample_solution: |
+  def run_cases(job):
+      results = []
+      for case in job["cases"]:
+          if case["input"] * 2 == case["expected"]:
+              results.append("pass")
+          else:
+              results.append("fail")
+      return results
+hints:
+  - level: 1
+    text: The rule under test is fixed — the correct readout for a load is always twice the load.
+  - level: 2
+    text: Walk through job["cases"] one dict at a time and compare 2 * case["input"] against case["expected"].
+  - level: 3
+    text: Append "pass" when they match and "fail" when they do not, keeping the cases in their original order.
+tests:
+  public:
+    - name: empty
+      input: {cases: []}
+      expected: []
+    - name: single_pass
+      input: {cases: [{input: 5, expected: 10}]}
+      expected: [pass]
+    - name: mixed
+      input: {cases: [{input: 0, expected: 0}, {input: 3, expected: 6}, {input: 4, expected: 9}]}
+      expected: [pass, pass, fail]
+  validation:
+    - name: single_fail
+      input: {cases: [{input: 5, expected: 11}]}
+      expected: [fail]
+    - name: negatives
+      input: {cases: [{input: -2, expected: -4}, {input: -2, expected: 4}]}
+      expected: [pass, fail]
+    - name: all_pass
+      input: {cases: [{input: 1, expected: 2}, {input: 2, expected: 4}, {input: 10, expected: 20}]}
+      expected: [pass, pass, pass]
+    - name: all_fail
+      input: {cases: [{input: 1, expected: 3}, {input: 2, expected: 5}]}
+      expected: [fail, fail]
+explanation_markdown: |
+  This is a test runner in miniature. The "system under test" is a fixed rule you
+  already know (`2 * input`), and each case pairs an input with the answer someone
+  asserted for it. Running the suite means applying the rule to every input and
+  comparing against the recorded expectation, collecting one verdict per case in
+  order. Real runners do exactly this loop — call the function, compare to the
+  expected value, record pass or fail — just with more machinery around reporting.
+  Keeping the results in input order is what lets a reader line each verdict up
+  with the case that produced it.
+common_mistakes:
+  - Comparing input directly to expected instead of applying the 2 * input rule first.
+  - Returning a single "pass"/"fail" for the whole suite rather than one entry per case.
+  - Reordering or filtering the results so they no longer line up with the input cases.

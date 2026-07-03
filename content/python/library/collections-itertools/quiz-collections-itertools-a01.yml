@@ -1,0 +1,110 @@
+id: quiz.library.collections_itertools.a01
+kind: quiz
+version: 1
+language: python
+title: Choosing the Right Collection or Combinator
+slug: quiz-collections-itertools-a01
+difficulty: easy
+concepts:
+  - python.collections_module
+  - python.itertools_module
+prerequisites:
+  - python.dictionaries
+  - python.lists
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.collections_itertools.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original tool-selection scenarios written from scratch for this area.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      You are tallying how many times each word appears in a long list. Which
+      approach is the cleanest, guard-free choice?
+    choices:
+      - 'A defaultdict(int), doing counts[word] += 1 for each word'
+      - 'A list, appending every word and checking length later'
+      - 'A deque, rotating once per word'
+      - 'A namedtuple with one field per distinct word'
+    correct_choice: 'A defaultdict(int), doing counts[word] += 1 for each word'
+    explanation: |
+      defaultdict(int) returns 0 for any unseen word, so the increment works on
+      the first sighting with no "have I seen this?" guard. Lists, deques, and
+      namedtuples do not express per-key counting.
+    concepts:
+      - python.collections_module
+      - concepts.grouping_aggregation
+  - id: q2
+    prompt: |
+      Your breadth-first search repeatedly removes the next node from the front
+      of a frontier while adding neighbours to the back. Which structure keeps
+      both operations O(1)?
+    choices:
+      - 'collections.deque, using append and popleft'
+      - 'A list, using insert(0, x) and pop(0)'
+      - 'A set, using add and pop'
+      - 'A namedtuple of the pending nodes'
+    correct_choice: 'collections.deque, using append and popleft'
+    explanation: |
+      A deque adds and removes at both ends in O(1). A list pays O(n) every time
+      you touch its front, a set is unordered, and a namedtuple is a fixed
+      immutable record.
+    concepts:
+      - python.collections_module
+      - patterns.queue_bfs
+  - id: q3
+    prompt: |
+      You want every (shirt, tie) pairing drawn from a list of shirts and a list
+      of ties. Which itertools function produces that cartesian product?
+    choices:
+      - 'itertools.product(shirts, ties)'
+      - 'itertools.combinations(shirts, 2)'
+      - 'itertools.groupby(shirts)'
+      - 'itertools.chain(shirts, ties)'
+    correct_choice: 'itertools.product(shirts, ties)'
+    explanation: |
+      product yields one item from each input in every combination, exactly like
+      nested loops. combinations picks subsets of one list, groupby collapses
+      runs, and chain concatenates the two lists end to end.
+    concepts:
+      - python.itertools_module
+      - patterns.brute_force
+  - id: q4
+    prompt: |
+      You have a list of orders already sorted by status and want to collapse
+      each block of same-status orders into one group. Which tool fits?
+    choices:
+      - 'itertools.groupby(orders, key=lambda o: o.status)'
+      - 'itertools.permutations(orders)'
+      - 'collections.deque(orders)'
+      - 'itertools.product(orders, orders)'
+    correct_choice: 'itertools.groupby(orders, key=lambda o: o.status)'
+    explanation: |
+      groupby collapses consecutive equal keys into groups, which is why the data
+      is sorted by status first. Permutations, deque, and product do not group
+      consecutive runs.
+    concepts:
+      - python.itertools_module
+      - concepts.grouping_aggregation
+  - id: q5
+    prompt: |
+      You are parsing rows like ("Vega", 0.03, 25) and want readable field names
+      such as star.magnitude without writing a full class. Which fits best?
+    choices:
+      - 'collections.namedtuple or typing.NamedTuple'
+      - 'A plain list read by numeric index'
+      - 'A defaultdict(list) keyed by row number'
+      - 'itertools.chain over the rows'
+    correct_choice: 'collections.namedtuple or typing.NamedTuple'
+    explanation: |
+      A namedtuple keeps tuple speed and immutability while giving each position
+      a name, so star.magnitude replaces the mystery of star[1]. The other
+      options do not add named fields.
+    concepts:
+      - python.collections_module
+      - python.tuples

@@ -1,0 +1,87 @@
+id: lesson.library.bit_number_theory.a01
+kind: lesson
+version: 1
+language: python
+title: Reading and Writing Individual Bits
+slug: lesson-bit-number-theory-a01
+difficulty: medium
+concepts:
+  - patterns.bit_manipulation
+  - python.operators
+prerequisites:
+  - python.operators
+  - python.loops
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.bit_number_theory.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original bitwise primer framed around a greenhouse vent controller with its own worked code.
+body_markdown: |
+  A single integer can carry dozens of yes/no answers at once if you treat its
+  binary digits as independent switches. Imagine a greenhouse controller that
+  packs eight vent states into one byte: bit 0 is the roof vent, bit 1 is the
+  east wall, and so on. Working at the bit level means learning four operators.
+
+  `&` (AND) keeps a bit only when *both* inputs have it set, so it is the tool
+  for **testing** and **masking**. `|` (OR) sets a bit when *either* input has
+  it, so it **turns switches on**. `^` (XOR) sets a bit when the inputs
+  *differ*, which makes it a **toggle**. And the shift operators `<<` and `>>`
+  slide bits left or right, multiplying or dividing by powers of two while
+  moving a chosen bit into position.
+
+  The everyday move is building a *mask*: `1 << k` is an integer with a single 1
+  in position `k`. Line that mask up against your state to test, set, clear, or
+  flip exactly one switch.
+
+  ```python
+  def is_on(state, k):
+      return (state >> k) & 1 == 1   # shift bit k down, keep the low bit
+
+  def turn_on(state, k):
+      return state | (1 << k)        # OR forces bit k to 1
+
+  def turn_off(state, k):
+      return state & ~(1 << k)       # AND with the inverted mask clears bit k
+
+  def toggle(state, k):
+      return state ^ (1 << k)        # XOR flips bit k, leaving others alone
+  ```
+
+  Two properties of XOR make it worth memorising. First, `x ^ x == 0`: a value
+  cancels itself. Second, `x ^ 0 == x`: zero is the neutral element. Together
+  they mean that if you XOR a whole pile of numbers and every value appears an
+  even number of times, the pairs annihilate and only the odd-one-out survives.
+  That is how you find a lone unpaired sensor reading in linear time with no
+  extra memory.
+
+  Counting how many switches are on is just as tidy. The trick `n & (n - 1)`
+  clears the lowest set bit of `n`, because subtracting one flips that bit to 0
+  and turns every zero below it into a one, which the AND then wipes away. Loop
+  until `n` reaches zero and the number of loops equals the number of set bits,
+  with no need to convert to a string.
+
+  ```python
+  def count_on(n):
+      total = 0
+      while n:
+          n &= n - 1        # drop the lowest set bit
+          total += 1
+      return total
+  ```
+
+  Every one of these operations touches the number in place using constant extra
+  space, which is exactly why bit tricks show up in memory-tight systems code.
+checkpoints:
+  - question: Which single expression tests whether bit `k` of `state` is currently set to 1?
+    answer: '(state >> k) & 1 == 1 (equivalently state & (1 << k) != 0).'
+    explanation: Shifting bit k down to position 0 and masking with 1 isolates that switch, ignoring every other bit.
+  - question: Why does XOR-ing together a list where all values but one appear exactly twice leave just the unique value?
+    answer: Because x ^ x is 0 and x ^ 0 is x, so each duplicated pair cancels to zero and only the unpaired value remains.
+    explanation: XOR is associative and commutative, so the order does not matter and the paired values annihilate regardless of position.
+  - question: What does the expression n & (n - 1) do to the binary form of n, and why is it useful for counting?
+    answer: It clears the lowest set bit of n, so repeating it until n is zero counts how many bits were set.
+    explanation: Subtracting one flips the lowest 1 to 0 and the trailing 0s to 1s; AND-ing with n erases exactly that lowest 1, so each loop removes one set bit.

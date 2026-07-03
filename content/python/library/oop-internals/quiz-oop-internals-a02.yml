@@ -1,0 +1,98 @@
+id: quiz.library.oop_internals.a02
+kind: quiz
+version: 1
+language: python
+title: Descriptor and MRO Mechanics
+slug: quiz-oop-internals-a02
+difficulty: hard
+concepts:
+  - python.descriptors_mro
+prerequisites:
+  - python.descriptors_mro
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.oop_internals.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax quiz on descriptor protocol methods, __set_name__, cached properties, and slots declarations.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: Which methods make a class attribute a DATA descriptor, as opposed to a non-data one?
+    choices:
+      - Defining __set__ (or __delete__), with or without __get__ — non-data descriptors define only __get__
+      - Defining __get__ alone — __set__ is optional decoration
+      - Defining __init__ and __call__
+      - Inheriting from the descriptor base class in types
+    correct_choice: Defining __set__ (or __delete__), with or without __get__ — non-data descriptors define only __get__
+    explanation: |
+      The data/non-data distinction is purely about which protocol methods
+      exist, and it controls precedence against the instance dict — the single
+      most consequential rule in attribute lookup.
+    concepts:
+      - python.descriptors_mro
+  - id: q2
+    prompt: |
+      In a descriptor's __get__(self, obj, objtype=None), what does the
+      standard `if obj is None: return self` guard handle?
+    choices:
+      - Access through the class itself (Tank.temperature) rather than an instance — returning the descriptor lets tools inspect it
+      - Instances whose attribute is unset
+      - Recursive descriptor lookups
+      - Subclass access to parent slots
+    correct_choice: Access through the class itself (Tank.temperature) rather than an instance — returning the descriptor lets tools inspect it
+    explanation: |
+      When accessed on the class, there is no instance, so obj is None; the
+      convention of returning the descriptor object itself is what makes
+      help(), documentation tools, and introspection work.
+    concepts:
+      - python.descriptors_mro
+  - id: q3
+    prompt: |
+      A Lazy descriptor caches by writing obj.__dict__[self.name] = value in
+      __get__. Why must it NOT define __set__ for the cache to work?
+    choices:
+      - Defining __set__ would make it a data descriptor, which outranks the instance dict — the cached value would never be read
+      - __set__ would overwrite the compute function
+      - Descriptors may only define one protocol method
+      - __set__ is called during class creation and would fail
+    correct_choice: Defining __set__ would make it a data descriptor, which outranks the instance dict — the cached value would never be read
+    explanation: |
+      The bypass-after-first-read trick depends on losing to the instance dict,
+      which only non-data descriptors do. Adding __set__ silently turns the
+      cache into a recompute-every-time.
+    concepts:
+      - python.descriptors_mro
+  - id: q4
+    prompt: What does print(SomeClass.__mro__) give you, and when should you reach for it?
+    choices:
+      - The exact linearized lookup order as a tuple — the ground truth whenever multiple inheritance behaves surprisingly
+      - The list of abstract methods remaining
+      - The instance attribute layout
+      - The registered virtual subclasses
+    correct_choice: The exact linearized lookup order as a tuple — the ground truth whenever multiple inheritance behaves surprisingly
+    explanation: |
+      Rather than simulating C3 in your head during a debugging session, print
+      the computed order — one of the highest-value, least-used introspection
+      tools.
+    concepts:
+      - python.descriptors_mro
+  - id: q5
+    prompt: |
+      class Node: __slots__ = ("value", "next") — which statement about Node
+      instances is TRUE?
+    choices:
+      - vars(instance) raises TypeError because instances have no __dict__
+      - Instances can still gain new attributes if assigned via setattr
+      - The class cannot define methods
+      - Subclasses automatically inherit the no-__dict__ property regardless of their own declarations
+    correct_choice: vars(instance) raises TypeError because instances have no __dict__
+    explanation: |
+      Slots eliminate the per-instance dict, so vars() has nothing to return;
+      setattr obeys the same rules as normal assignment, and a subclass without
+      its own __slots__ reintroduces a dict.
+    concepts:
+      - python.descriptors_mro

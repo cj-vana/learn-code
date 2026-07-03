@@ -1,0 +1,102 @@
+id: lesson.library.typing_runtime.a01
+kind: lesson
+version: 1
+language: python
+title: 'What Type Hints Do at Runtime (Almost Nothing — and Then Some)'
+slug: lesson-typing-runtime-a01
+difficulty: hard
+concepts:
+  - python.type_hints
+  - python.introspection
+prerequisites:
+  - python.type_hints
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.typing_runtime.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original runtime-typing walkthrough covering annotation storage, get_type_hints, and validation-at-boundaries with fresh examples.
+body_markdown: |
+  The type-hints unit established that annotations are inert at runtime.
+  This advanced sequel is about the "almost" — because annotations *are*
+  stored, tools *do* read them at runtime, and an entire ecosystem
+  (dataclasses, pydantic, FastAPI) is built in that gap.
+
+  ### Where annotations live
+
+  ```python
+  def dispatch(cargo: str, weight: float) -> bool: ...
+
+  dispatch.__annotations__
+  # {'cargo': <class 'str'>, 'weight': <class 'float'>, 'return': <class 'bool'>}
+  ```
+
+  Annotations are evaluated at `def` time and stored in a plain dict on
+  the function (classes and modules have one too). That is the entire
+  runtime footprint — and the entire opportunity: any code can read the
+  dict and *act* on it. `@dataclass` reads class annotations to generate
+  `__init__`. Validation libraries read them to build parsers.
+
+  The robust reader is `typing.get_type_hints(obj)`, not raw
+  `__annotations__`: it resolves string annotations (from
+  `from __future__ import annotations`, where all hints are stored as
+  strings for forward references), merges class hierarchies, and
+  evaluates deferred names. Raw dict access hands you the strings;
+  `get_type_hints` hands you the types. (Python 3.14's lazy-annotation
+  regime makes this distinction permanent — the accessor function is the
+  API.)
+
+  ### Taking hints apart
+
+  A generic hint like `list[int | None]` is a data structure, and
+  `typing` provides the disassembly tools:
+
+  ```python
+  from typing import get_origin, get_args
+
+  hint = dict[str, list[int]]
+  get_origin(hint)     # dict
+  get_args(hint)       # (str, list[int])  — recurse for deeper structure
+  ```
+
+  With `get_origin`/`get_args`, a small recursive function can walk any
+  hint tree — which is exactly how your exercise implements a runtime
+  validator: given a value and a hint, check `isinstance` against the
+  origin, then recurse into the args for element types. Building it once
+  demystifies every "validation from annotations" library you will meet.
+
+  ### The isinstance boundary
+
+  Two rules govern what you can check directly at runtime:
+
+  ```python
+  isinstance(x, list[int])      # TypeError! subscripted generics can't isinstance
+  isinstance(x, list)           # fine — check the origin, then the elements
+  ```
+
+  Parameterized generics are erased for isinstance purposes — a runtime
+  list does not know it is a "list of ints"; element types must be
+  checked by inspecting elements (your validator's recursion). And plain
+  `x: int` annotations on variables do even less than function ones —
+  an un-assigned annotated name stores only an entry in
+  `__annotations__`, no variable at all.
+
+  The design lesson assembling itself across these exercises: hints are
+  a *declarative layer* that runtime tools may consume at **boundaries** —
+  construction, deserialization, API edges — while the interior of the
+  program trusts the checker. Validate where data enters; annotate
+  everywhere; enforce nowhere else. That split is how typed Python
+  codebases actually run.
+checkpoints:
+  - question: Why should runtime tools call typing.get_type_hints() rather than reading __annotations__ directly?
+    answer: 'Annotations may be stored as strings (future-import or 3.14 lazy semantics) and may reference forward names; get_type_hints resolves the strings, evaluates deferred references, and merges base-class annotations — the raw dict hands you unevaluated text.'
+    explanation: 'The accessor is the supported API for the string-versus-type gap, which grows more important as lazy annotations become the default.'
+  - question: isinstance(value, list[int]) raises TypeError. How does a runtime validator check that hint anyway?
+    answer: 'Split the hint with get_origin (list) and get_args ((int,)): isinstance against the origin, then recurse over the value''s elements against the args — parameterized element types exist only in the hint, not in the runtime object.'
+    explanation: Origin/args disassembly plus recursion is the entire architecture of annotation-driven validators like pydantic, in miniature.
+  - question: Where does typed-Python practice place runtime validation, and why not everywhere?
+    answer: 'At boundaries where untrusted data enters — deserialization, API edges, construction; interior code trusts the static checker instead, because validating every call would duplicate the checker''s work at runtime cost.'
+    explanation: '"Validate at the edges, trust the types inside" is the operating agreement between the static and runtime halves of the ecosystem.'

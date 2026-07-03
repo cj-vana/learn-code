@@ -1,0 +1,104 @@
+id: exercise.library.dp_recognition.a05
+kind: exercise
+version: 1
+language: python
+title: Longest Rising Streak of Readings
+slug: dp-recognition-a05
+difficulty: medium
+concepts:
+  - patterns.dynamic_programming
+prerequisites:
+  - python.lists
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dp_recognition.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original weather-sensor framing for the classic longest strictly increasing subsequence length, with fresh prompt, tests, and explanation.
+prompt_markdown: |
+  A weather station logs a raw list of hourly temperature readings. An analyst
+  wants the length of the longest *rising streak* they can extract by keeping
+  some readings in their original order and dropping the rest. A streak is
+  valid only when every kept reading is STRICTLY greater than the one before
+  it (equal readings cannot both stay).
+
+  Write `lis_length(nums)` where `nums` is a list of integers. Return a single
+  integer: the length of the longest strictly increasing subsequence of
+  `nums`. The readings need not be contiguous, but their relative order must be
+  preserved.
+
+  If `nums` is empty, return `0`. If every reading is identical (for example
+  `[7, 7, 7]`), the longest valid streak keeps just one of them, so return `1`.
+starter_code: |
+  def lis_length(nums):
+      return 0
+function_name: lis_length
+input_mode: function
+solution_sketch: DP where best[i] is the longest strictly increasing subsequence ending at index i; take the max.
+sample_solution: |
+  def lis_length(nums):
+      if not nums:
+          return 0
+      best = [1] * len(nums)
+      for i in range(len(nums)):
+          for j in range(i):
+              if nums[j] < nums[i] and best[j] + 1 > best[i]:
+                  best[i] = best[j] + 1
+      return max(best)
+hints:
+  - level: 1
+    text: For each reading, think about the longest rising streak that ENDS exactly at that reading.
+  - level: 2
+    text: Keep an array best[i]; a reading can extend any earlier streak whose last value is strictly smaller.
+  - level: 3
+    text: best[i] = 1 + max(best[j]) over all j < i with nums[j] < nums[i], defaulting to 1; answer is max(best).
+tests:
+  public:
+    - name: mixed_example
+      input: [10, 9, 2, 5, 3, 7, 101, 18]
+      expected: 4
+    - name: empty_list
+      input: []
+      expected: 0
+    - name: all_equal
+      input: [7, 7, 7]
+      expected: 1
+  validation:
+    - name: single_reading
+      input: [42]
+      expected: 1
+    - name: already_increasing
+      input: [1, 2, 3, 4, 5]
+      expected: 5
+    - name: strictly_decreasing
+      input: [9, 7, 5, 3, 1]
+      expected: 1
+    - name: plateau_then_climb
+      input: [3, 3, 3, 4, 5]
+      expected: 3
+    - name: negatives_and_zero
+      input: [-5, -1, -1, 0, 2]
+      expected: 4
+explanation_markdown: |
+  This is the classic "longest strictly increasing subsequence" problem, solved
+  with dynamic programming. Define `best[i]` as the length of the longest rising
+  streak that ends at index `i`. Every reading is a streak of length 1 on its
+  own, so `best` starts filled with `1`.
+
+  For each index `i`, look at every earlier index `j`. If `nums[j] < nums[i]`,
+  the reading at `i` can be appended to the streak ending at `j`, giving a
+  candidate length of `best[j] + 1`. Keep the largest such candidate. Because we
+  require a *strict* increase, equal readings never chain together, which is why
+  `[7, 7, 7]` yields `1`.
+
+  The answer is the maximum value across `best`, since the best streak can end at
+  any position. The double loop runs in O(n^2) time using O(n) extra space, which
+  is plenty for a station's hourly log.
+common_mistakes:
+  - Using <= instead of < and letting equal readings chain, which overcounts plateaus.
+  - Returning best[-1] (the streak ending at the last reading) instead of max(best).
+  - Forgetting the empty-list case and calling max() on an empty sequence.
+  - Looking only at the immediately previous reading instead of all earlier ones.

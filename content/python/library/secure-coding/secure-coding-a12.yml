@@ -1,0 +1,169 @@
+id: exercise.library.secure_coding.a12
+kind: exercise
+version: 1
+language: python
+title: Scrubbing Imported Observation Notes
+slug: secure-coding-a12
+difficulty: hard
+concepts:
+  - python.secure_coding
+  - patterns.filtering
+  - python.strings
+prerequisites:
+  - python.strings
+  - python.loops
+  - python.conditionals
+estimated_time_minutes: 24
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.secure_coding.a12
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original defensive input-normalization drill that strips null bytes and C0/DEL control characters with a newline policy and length cap, themed around an observatory ingesting untrusted observation notes.
+prompt_markdown: |
+  An observatory ingests observation notes exported from all sorts of instruments
+  and old field laptops. Before a note is stored or shown on a dashboard it must
+  be scrubbed: raw control characters can smuggle a null byte that truncates a C
+  string, a carriage return that forges a log line, or a terminal escape that
+  rewrites what an operator sees. Your job is the defensive normalization pass.
+
+  Write `sanitize_note(request)` where `request` is a dict with three keys:
+
+  - `"text"`: the untrusted note string.
+  - `"allow_newlines"`: a bool, whether real line breaks are permitted.
+  - `"max_length"`: either an integer cap or `None` for no cap.
+
+  Walk the text one character at a time and build the cleaned result with these
+  rules, applied in this order per character:
+
+  - A tab (`"\t"`) is converted to a single space `" "`.
+  - A newline (`"\n"`) is kept **only if** `allow_newlines` is true; otherwise it
+    is dropped.
+  - Any other control character is removed entirely. "Control character" means a
+    code point below `0x20` (this covers the null byte `"\x00"` and the carriage
+    return `"\r"`, which is **always** dropped) or the delete character at `0x7f`.
+  - Every other character — ordinary letters, digits, punctuation, spaces, and
+    non-ASCII letters like `é` — is kept unchanged.
+
+  After building the cleaned string, if `max_length` is not `None` and the
+  cleaned string is longer than `max_length`, truncate it to the first
+  `max_length` characters. The cap is applied **after** cleaning, so removed
+  control characters never count toward the limit.
+
+  An empty `text` returns `""`.
+
+  Example: `{"text": "a\x00b\tc", "allow_newlines": false, "max_length": None}`
+  returns `"ab c"` — the null byte is dropped and the tab becomes a space.
+starter_code: |
+  def sanitize_note(request):
+      # Drop control characters, apply the newline policy, then cap the length.
+      return ""
+function_name: sanitize_note
+input_mode: function
+solution_sketch: Iterate characters; map tab to space, keep newline only when allowed, skip any char with ord below 0x20 or equal to 0x7f, keep everything else; join, then slice to max_length when it is not None.
+sample_solution: |
+  def sanitize_note(request):
+      text = request["text"]
+      allow_newlines = request["allow_newlines"]
+      max_length = request["max_length"]
+
+      cleaned = []
+      for char in text:
+          if char == "\t":
+              cleaned.append(" ")
+          elif char == "\n":
+              if allow_newlines:
+                  cleaned.append("\n")
+          elif ord(char) < 0x20 or ord(char) == 0x7F:
+              continue
+          else:
+              cleaned.append(char)
+
+      result = "".join(cleaned)
+      if max_length is not None and len(result) > max_length:
+          result = result[:max_length]
+      return result
+hints:
+  - level: 1
+    text: Build the result character by character so you can decide independently, for each one, whether to keep it, replace it, or drop it.
+  - level: 2
+    text: Handle tab and newline as special cases first (tab to a space, newline only when allow_newlines), then drop anything with ord(char) < 0x20 or ord(char) == 0x7f, and keep the rest.
+  - level: 3
+    text: Apply max_length last, after the string is cleaned, using result[:max_length] only when max_length is not None and the result is longer than the cap.
+tests:
+  public:
+    - name: strips_null_bytes
+      input:
+        text: "\x00secret\x00"
+        allow_newlines: false
+        max_length: null
+      expected: 'secret'
+    - name: keeps_newline_when_allowed
+      input:
+        text: "line1\nline2"
+        allow_newlines: true
+        max_length: null
+      expected: "line1\nline2"
+    - name: truncates_after_cleaning
+      input:
+        text: "a\x00bcdef"
+        allow_newlines: false
+        max_length: 3
+      expected: 'abc'
+  validation:
+    - name: drops_newline_when_not_allowed
+      input:
+        text: "line1\nline2"
+        allow_newlines: false
+        max_length: null
+      expected: 'line1line2'
+    - name: tab_becomes_space
+      input:
+        text: "a\tb"
+        allow_newlines: false
+        max_length: null
+      expected: 'a b'
+    - name: carriage_return_dropped_newline_kept
+      input:
+        text: "a\r\nb"
+        allow_newlines: true
+        max_length: null
+      expected: "a\nb"
+    - name: delete_char_removed
+      input:
+        text: "a\x7fb"
+        allow_newlines: false
+        max_length: null
+      expected: 'ab'
+    - name: unicode_letters_preserved
+      input:
+        text: 'café!'
+        allow_newlines: false
+        max_length: null
+      expected: 'café!'
+explanation_markdown: |
+  Control-character injection is a quietly dangerous class of bug because the
+  characters are invisible. A null byte can cut a string short in any C-backed
+  layer downstream; a bare carriage return can overwrite the start of a rendered
+  line and forge log entries; terminal escape sequences (which begin with control
+  bytes) can move the cursor and rewrite what an operator reads. Normalizing at
+  the trust boundary — the moment untrusted text enters your system — means every
+  layer after it can assume the text is printable and line-break policy is already
+  enforced.
+
+  The per-character decision order is what keeps it correct. Tab and newline are
+  handled explicitly first because they are control characters you have opinions
+  about (tab becomes a visible space; newline obeys the caller's policy). Only
+  then do you sweep away everything else below `0x20` plus the `0x7f` delete
+  character, which is how `"\r"` and `"\x00"` disappear without needing to be
+  named individually. Applying `max_length` last is deliberate: capping the
+  cleaned string means stripped control bytes can never eat into the visible
+  budget, so a note padded with hidden characters cannot shrink its real content
+  below the limit you intended.
+common_mistakes:
+  - Removing only the null byte and forgetting the other control characters like carriage return and delete.
+  - Applying max_length to the raw text before cleaning, so removed control characters wrongly count against the cap.
+  - Dropping newlines unconditionally (or keeping them unconditionally) instead of honouring allow_newlines.
+  - Deleting tabs entirely instead of converting each to a single space, silently joining words that should stay separated.

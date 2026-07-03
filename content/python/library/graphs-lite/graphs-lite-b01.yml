@@ -1,0 +1,148 @@
+id: exercise.library.graphs_lite.b01
+kind: exercise
+version: 1
+language: python
+title: The Guild's Apprenticeship Ladder
+slug: graphs-lite-b01
+difficulty: hard
+concepts:
+  - patterns.graph_traversal
+  - patterns.queue_bfs
+  - python.heapq_bisect
+prerequisites:
+  - python.dictionaries
+  - python.lists
+estimated_time_minutes: 24
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.graphs_lite.b01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: >-
+    Original blacksmith-guild framing where the graph arrives as a
+    prerequisite map (craft -> the crafts that must come first) rather than an
+    edge list, so the solver must invert the map to build indegrees before
+    running Kahn's algorithm with an alphabetical tie-break.
+prompt_markdown: |
+  A blacksmith guild trains apprentices through a ladder of crafts. Before an
+  apprentice may attempt a craft, they must already have mastered every craft it
+  builds on. The guild hands you its curriculum as a dictionary that maps each
+  craft to the list of crafts that must be finished **first**:
+
+  ```
+  {"temper": ["forge"], "forge": [], "hilt": ["temper"]}
+  ```
+
+  Here `forge` has no prerequisites, `temper` requires `forge`, and `hilt`
+  requires `temper`. Every craft named anywhere is guaranteed to appear as a key
+  (a craft with no prerequisites maps to an empty list).
+
+  Write `course_order(catalog)` that returns a single list containing every craft
+  in an order where each craft appears only after all of its prerequisites. When
+  more than one craft is eligible at the same moment, the guild always teaches the
+  **alphabetically smallest** one next, so the ordering is fully determined. If the
+  prerequisites contradict each other so that no complete order exists (a cycle),
+  return an empty list.
+
+  Notes on the cases the tests cover:
+
+  - A curriculum with no prerequisites at all returns every craft in alphabetical
+    order.
+  - A two-craft cycle, and a cycle that also has an unrelated standalone craft,
+    both return `[]`.
+  - The alphabetical rule can force a craft that is alphabetically early to wait,
+    because one of its prerequisites has not been taught yet.
+starter_code: |
+  def course_order(catalog):
+      # Return a full teaching order, or [] if the prerequisites form a cycle.
+      return []
+function_name: course_order
+input_mode: function
+solution_sketch: >-
+  Turn the prerequisite map into indegrees (each craft's count of prerequisites)
+  and a forward adjacency map (prerequisite -> crafts that need it), then run
+  Kahn's algorithm with a min-heap of eligible crafts so ties resolve
+  alphabetically; if fewer crafts come out than went in, a cycle exists.
+sample_solution: |
+  import heapq
+
+
+  def course_order(catalog):
+      indegree = {craft: len(prereqs) for craft, prereqs in catalog.items()}
+      unlocks = {craft: [] for craft in catalog}
+      for craft, prereqs in catalog.items():
+          for needed in prereqs:
+              unlocks[needed].append(craft)
+
+      ready = [craft for craft in catalog if indegree[craft] == 0]
+      heapq.heapify(ready)
+      order = []
+      while ready:
+          craft = heapq.heappop(ready)
+          order.append(craft)
+          for nxt in unlocks[craft]:
+              indegree[nxt] -= 1
+              if indegree[nxt] == 0:
+                  heapq.heappush(ready, nxt)
+
+      if len(order) != len(catalog):
+          return []
+      return order
+hints:
+  - level: 1
+    text: The map points from a craft to what it needs. To decide what is teachable, you want the reverse -- for each craft, how many prerequisites it still has (its indegree) and which crafts each prerequisite unlocks.
+  - level: 2
+    text: A craft is eligible when its indegree hits zero. Teaching a craft lowers the indegree of every craft it unlocks by one. Keep the eligible crafts in a min-heap so you always pull the alphabetically smallest.
+  - level: 3
+    text: After the loop, compare the length of your output to the number of crafts. If some crafts never became eligible, they were trapped in a cycle, so return []. Otherwise return the order you built.
+tests:
+  public:
+    - name: linear_ladder
+      input: {"forge": [], "temper": ["forge"], "hilt": ["temper"]}
+      expected: ["forge", "temper", "hilt"]
+    - name: all_independent_alphabetical
+      input: {"weld": [], "cast": [], "polish": []}
+      expected: ["cast", "polish", "weld"]
+    - name: two_craft_cycle
+      input: {"brazing": ["riveting"], "riveting": ["brazing"]}
+      expected: []
+  validation:
+    - name: diamond_merges
+      input: {"base": [], "left": ["base"], "right": ["base"], "cap": ["left", "right"]}
+      expected: ["base", "left", "right", "cap"]
+    - name: early_name_must_wait
+      input: {"alpha": ["gamma"], "gamma": [], "beta": []}
+      expected: ["beta", "gamma", "alpha"]
+    - name: fan_out_tie_break
+      input: {"iron": [], "wood": [], "grip": ["iron", "wood"], "edge": ["iron"]}
+      expected: ["iron", "edge", "wood", "grip"]
+    - name: cycle_with_standalone
+      input: {"prep": [], "loop_a": ["loop_b"], "loop_b": ["loop_a"], "finish": ["prep"]}
+      expected: []
+explanation_markdown: |
+  The curriculum is a directed graph, but it arrives pointing the "wrong" way:
+  each craft lists what it depends on. The first move is to convert that into two
+  structures. The **indegree** of a craft is simply the length of its
+  prerequisite list -- how many crafts still block it. The **unlocks** map is the
+  reversed adjacency: for every `craft -> [prereqs]` entry you append `craft` to
+  each prerequisite's unlock list, so you know who becomes closer to eligible once
+  a prerequisite is taught.
+
+  With those in hand this is Kahn's algorithm. Every craft with indegree zero is
+  eligible immediately; keeping the eligible set in a **min-heap** guarantees you
+  always emit the alphabetically smallest, which is what makes the answer unique.
+  Teaching a craft satisfies one prerequisite for each craft it unlocks, so you
+  decrement those indegrees and push any that reach zero.
+
+  The cycle check falls out for free. If a group of crafts all depend on each
+  other, none of them ever reaches indegree zero, so none is ever emitted. When
+  the loop ends, the output is shorter than the catalog, and that length mismatch
+  is your signal to return `[]`. In `early_name_must_wait`, notice `alpha` is
+  alphabetically first yet comes last, because it cannot be taught until `gamma`
+  releases it.
+common_mistakes:
+  - Treating the prerequisite list as outgoing edges and never reversing it, which computes the ordering backwards.
+  - Using a plain queue or list instead of a heap, producing a valid order that ignores the alphabetical tie-break rule.
+  - Forgetting the cycle case and returning a partial ordering instead of an empty list when some crafts never become eligible.

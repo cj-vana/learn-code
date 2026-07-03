@@ -1,0 +1,105 @@
+id: quiz.library.iterators_generators.a01
+kind: quiz
+version: 1
+language: python
+title: Choosing Lazy or Eager Iteration
+slug: quiz-iterators-generators-a01
+difficulty: medium
+concepts:
+  - python.iterators_generators
+  - python.comprehensions
+prerequisites:
+  - python.iterators_generators
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.iterators_generators.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pattern-recognition questions on when laziness helps and when a materialized list is needed.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      You need to loop over the results once, computing a running sum of squares
+      from a very large sequence of sensor readings, and memory is tight. Which
+      tool fits best?
+    choices:
+      - A generator expression passed straight into sum()
+      - A list comprehension stored in a variable, then summed
+      - A tuple built from a list comprehension
+      - A set comprehension, then summed
+    correct_choice: A generator expression passed straight into sum()
+    explanation: |
+      A generator expression computes one value at a time and stores none of them,
+      so piping it into sum() aggregates a huge stream without ever building an
+      intermediate collection.
+    concepts:
+      - python.iterators_generators
+      - python.comprehensions
+  - id: q2
+    prompt: |
+      You will need to index into the results, iterate them three separate times,
+      and print their length. Generator expression or list comprehension?
+    choices:
+      - List comprehension, because you need indexing, length, and multiple passes
+      - Generator expression, because it is always more efficient
+      - Generator expression, because it can be reused freely
+      - Either one works identically
+    correct_choice: List comprehension, because you need indexing, length, and multiple passes
+    explanation: |
+      Generators are single-pass and have no indexing or len(). Needing random
+      access, a count, and repeated iteration all call for a materialized list.
+    concepts:
+      - python.iterators_generators
+      - python.comprehensions
+  - id: q3
+    prompt: |
+      What happens if you call list() on a generator whose loop is `while True:`
+      yielding values forever?
+    choices:
+      - It runs forever (or until memory is exhausted), because nothing stops the pulling
+      - It returns an empty list
+      - It returns the first value only
+      - It raises StopIteration immediately
+    correct_choice: It runs forever (or until memory is exhausted), because nothing stops the pulling
+    explanation: |
+      An infinite generator is safe only when the consumer stops pulling. list()
+      pulls until StopIteration, which never comes, so it never finishes.
+    concepts:
+      - python.iterators_generators
+  - id: q4
+    prompt: |
+      You want the first reading that exceeds a threshold in a long stream, and you
+      want to stop scanning as soon as you find it. Which approach avoids wasted
+      work?
+    choices:
+      - 'next((r for r in stream if r > threshold), None)'
+      - '[r for r in stream if r > threshold][0]'
+      - 'sorted(r for r in stream if r > threshold)[0]'
+      - 'list(r for r in stream if r > threshold)[0]'
+    correct_choice: 'next((r for r in stream if r > threshold), None)'
+    explanation: |
+      Feeding a generator expression to next() pulls values only until the first
+      match, then stops. The list-building alternatives scan and store the whole
+      stream before taking one element.
+    concepts:
+      - python.iterators_generators
+      - patterns.filtering
+  - id: q5
+    prompt: |
+      A colleague materializes a generator with `data = list(gen)`, iterates
+      `data` once, then iterates `gen` again and gets nothing. Why?
+    choices:
+      - The generator was already exhausted by list(); generators cannot be rewound
+      - list() secretly deletes the generator object
+      - Generators only yield on even-numbered passes
+      - The second loop needs a different variable name
+    correct_choice: The generator was already exhausted by list(); generators cannot be rewound
+    explanation: |
+      A generator is single-use. Once list() drains it, it is empty forever; to
+      iterate again you keep the materialized list or build a fresh generator.
+    concepts:
+      - python.iterators_generators

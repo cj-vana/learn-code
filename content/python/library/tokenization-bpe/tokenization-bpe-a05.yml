@@ -1,0 +1,105 @@
+id: exercise.library.tokenization_bpe.a05
+kind: exercise
+version: 1
+language: python
+title: Applying a Merge Across the Corpus
+slug: tokenization-bpe-a05
+difficulty: medium
+concepts:
+  - ai.tokenization
+prerequisites:
+  - python.lists
+  - python.comprehensions
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.tokenization_bpe.a05
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original corpus-wide merge drill that composes the single-word merge over an entire list of tokenized words.
+prompt_markdown: |
+  A single BPE merge has to touch every word in the corpus, not just one. Having
+  built a single-word merge, you now apply it everywhere.
+
+  Write `merge_corpus(job)` where `job` is a dict with two keys:
+
+  - `"corpus"`: a list of words, each word a list of symbol strings
+  - `"pair"`: a two-element list `[x, y]` naming the pair to merge
+
+  Return a **new** list holding each word after the pair `[x, y]` has been merged
+  inside it. Use the same rule as before: scan each word left to right and, every
+  time symbol `x` is immediately followed by symbol `y`, replace the two with the
+  glued symbol `x + y`, continuing after the merge so occurrences never overlap.
+  Words with no occurrence are copied unchanged. An empty corpus returns an empty
+  list.
+
+  For example, merging `["l", "o"]` across
+  `[["l", "o", "w", "</w>"], ["l", "o", "w", "e", "r", "</w>"]]` gives
+  `[["lo", "w", "</w>"], ["lo", "w", "e", "r", "</w>"]]`.
+starter_code: |
+  def merge_corpus(job):
+      return []
+function_name: merge_corpus
+input_mode: function
+solution_sketch: Reuse the single-word non-overlapping merge and map it over every word in the corpus, collecting the rewritten words into a new list.
+sample_solution: |
+  def merge_corpus(job):
+      corpus = job["corpus"]
+      x, y = job["pair"]
+
+      def merge_word(symbols):
+          result = []
+          i = 0
+          n = len(symbols)
+          while i < n:
+              if i < n - 1 and symbols[i] == x and symbols[i + 1] == y:
+                  result.append(x + y)
+                  i += 2
+              else:
+                  result.append(symbols[i])
+                  i += 1
+          return result
+
+      return [merge_word(word) for word in corpus]
+hints:
+  - level: 1
+    text: The per-word logic is identical to the previous exercise; here you just run it once for every word in the corpus.
+  - level: 2
+    text: Write a small helper that merges one symbol list with the non-overlapping left-to-right rule, then call it on each word.
+  - level: 3
+    text: A list comprehension [merge_word(word) for word in corpus] builds the new corpus, and it naturally yields [] when the corpus is empty.
+tests:
+  public:
+    - name: two_words
+      input: {corpus: [["l", "o", "w", "</w>"], ["l", "o", "w", "</w>"]], pair: ["l", "o"]}
+      expected: [["lo", "w", "</w>"], ["lo", "w", "</w>"]]
+    - name: mixed_lengths
+      input: {corpus: [["l", "o", "w", "</w>"], ["l", "o", "w", "e", "r", "</w>"]], pair: ["l", "o"]}
+      expected: [["lo", "w", "</w>"], ["lo", "w", "e", "r", "</w>"]]
+    - name: empty_corpus
+      input: {corpus: [], pair: ["a", "b"]}
+      expected: []
+  validation:
+    - name: only_some_match
+      input: {corpus: [["c", "a", "t", "</w>"], ["c", "o", "t", "</w>"]], pair: ["c", "a"]}
+      expected: [["ca", "t", "</w>"], ["c", "o", "t", "</w>"]]
+    - name: overlapping_within_words
+      input: {corpus: [["a", "a", "a", "</w>"], ["a", "a", "</w>"]], pair: ["a", "a"]}
+      expected: [["aa", "a", "</w>"], ["aa", "</w>"]]
+    - name: merge_before_marker
+      input: {corpus: [["t", "e", "a", "</w>"], ["s", "e", "a", "</w>"]], pair: ["e", "a"]}
+      expected: [["t", "ea", "</w>"], ["s", "ea", "</w>"]]
+explanation_markdown: |
+  A BPE training round is "pick a pair, then apply that pair to the whole
+  corpus," and this function is the second half. Because each word merges
+  independently, the corpus-wide step is just the single-word merge mapped over
+  every word, which is why factoring the per-word logic into a helper keeps the
+  code clean. Building a brand-new list rather than mutating the input matters:
+  the training loop compares symbol counts before and after, so the caller relies
+  on the original corpus staying intact until it chooses to replace it.
+common_mistakes:
+  - Mutating each word list in place instead of returning freshly built lists, which can corrupt the caller's data.
+  - Re-implementing the merge slightly differently per word and reintroducing the overlapping-match bug.
+  - Returning a flat list of symbols instead of a list of per-word symbol lists.

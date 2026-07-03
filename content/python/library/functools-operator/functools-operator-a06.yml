@@ -1,0 +1,110 @@
+id: exercise.library.functools_operator.a06
+kind: exercise
+version: 1
+language: python
+title: The Print Shop's Word Sorter
+slug: functools-operator-a06
+difficulty: medium
+concepts:
+  - python.functools_operator
+  - python.sorting
+prerequisites:
+  - python.strings
+  - python.lists
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.functools_operator.a06
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original operator.methodcaller sort-key drill themed around a print shop ordering a word list by a chosen string method.
+prompt_markdown: |
+  A print shop reorders a list of words, but the *rule* for ordering is chosen at
+  run time by naming a string method to call on each word. Write
+  `sort_words(job)` where `job` is a dict with:
+
+  - `"words"`: a list of strings to sort
+  - `"method"`: the name of a string method to call on each word to produce its
+    sort key (for example `"lower"`, `"upper"`, `"strip"`, or `"count"`)
+  - `"args"`: a list of extra arguments to pass to that method (often empty; for
+    `"count"` it holds the substring to count)
+
+  Sort the words **ascending** by the value each word produces when that method is
+  called with those arguments, and return the reordered list of the original word
+  strings. Words whose keys are equal keep their original input order (a stable
+  sort). An empty `words` list returns an empty list.
+
+  Build the sort key with `operator.methodcaller(method, *args)`, which produces a
+  callable that invokes `word.method(*args)` for you — no `lambda` and no manual
+  `getattr`.
+
+  Example: with `method` `"lower"` and empty `args`, the words are ordered
+  case-insensitively; with `method` `"count"` and `args` `["a"]`, they are ordered
+  by how many `"a"`s each word contains.
+starter_code: |
+  import operator
+
+
+  def sort_words(job):
+      return []
+function_name: sort_words
+input_mode: function
+solution_sketch: |
+  Build operator.methodcaller(job["method"], *job["args"]) as the key and return
+  sorted(job["words"], key=that_caller); the sort is stable for equal keys.
+sample_solution: |
+  import operator
+
+
+  def sort_words(job):
+      key_func = operator.methodcaller(job["method"], *job["args"])
+      return sorted(job["words"], key=key_func)
+hints:
+  - level: 1
+    text: operator.methodcaller("lower") returns a function f where f(word) is the same as word.lower().
+  - level: 2
+    text: Extra arguments go straight into methodcaller, so methodcaller("count", "a")(word) is word.count("a").
+  - level: 3
+    text: Pass operator.methodcaller(job["method"], *job["args"]) as the key to sorted(job["words"], ...); unpack args so count and similar methods receive their parameter.
+tests:
+  public:
+    - name: case_insensitive
+      input: {words: [Banana, apple, Cherry], method: lower, args: []}
+      expected: [apple, Banana, Cherry]
+    - name: count_letter_a
+      input: {words: [aaa, ba, cccc], method: count, args: [a]}
+      expected: [cccc, ba, aaa]
+    - name: empty_words
+      input: {words: [], method: lower, args: []}
+      expected: []
+  validation:
+    - name: upper_key
+      input: {words: [bob, Ann, cad], method: upper, args: []}
+      expected: [Ann, bob, cad]
+    - name: strip_whitespace_key
+      input: {words: ["  bee ", " ant", "cat "], method: strip, args: []}
+      expected: [" ant", "  bee ", "cat "]
+    - name: count_missing_substring_stable
+      input: {words: [xy, ab, zz], method: count, args: [q]}
+      expected: [xy, ab, zz]
+    - name: count_multichar_substring
+      input: {words: [abab, ab, cabc], method: count, args: [ab]}
+      expected: [ab, cabc, abab]
+explanation_markdown: |
+  `operator.methodcaller(name, *args)` captures a method name and its arguments up
+  front and hands back a callable that runs `obj.name(*args)` on whatever object
+  you give it. As a `sorted` key it lets the *ordering rule itself* be data: swap
+  `"lower"` for `"upper"` or `"count"` and the same code sorts differently, without
+  touching the sort call. It is the mirror image of `itemgetter`/`attrgetter` —
+  those read data off an object, while `methodcaller` invokes behavior on it.
+
+  Unpacking `*args` is what lets parameterized methods like `str.count` work: the
+  substring rides along inside the caller. And because `sorted` is stable, words
+  that map to the same key (for example every word containing zero `"q"`s) come
+  back in their original order.
+common_mistakes:
+  - Forgetting to unpack args, so methods like count never receive their substring and raise a TypeError.
+  - Reaching for getattr or a lambda when methodcaller expresses the same intent as a reusable, named callable.
+  - Returning the transformed keys (the lowercased or stripped strings) instead of reordering the original word strings.

@@ -1,0 +1,141 @@
+id: exercise.library.attention_mechanics.a05
+kind: exercise
+version: 1
+language: python
+title: One Attention Head, End to End
+slug: attention-mechanics-a05
+difficulty: hard
+concepts:
+  - ai.attention_transformers
+prerequisites:
+  - python.lists
+  - python.functions
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.attention_mechanics.a05
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original end-to-end single-head attention drill framed around a tide-pool survey, composing the four earlier steps.
+prompt_markdown: |
+  Now assemble a full single-head attention computation for one query. Picture a
+  tide-pool survey: the query describes what you are looking for, each surveyed
+  pool contributes a key (how well it matches) and a value (what you record if
+  you attend to it). The output is the attention-weighted summary of the values.
+
+  Run the four steps in order:
+
+  1. **Score** each key against the query with a dot product:
+     `score_i = sum_d query[d] * keys[i][d]`.
+  2. **Scale** every score by `1 / sqrt(dim_k)`: `scaled_i = score_i / sqrt(dim_k)`.
+  3. **Softmax** the scaled scores into weights using the stable form
+     `weight_i = exp(scaled_i - m) / sum_j exp(scaled_j - m)` where `m = max(scaled)`.
+  4. **Blend** the value vectors: `out[j] = sum_i weight_i * values[i][j]`.
+
+  Write `single_head(job)` where `job` is a single dict:
+
+      {"query": [1.0, 0.0], "keys": [[1.0, 0.0], [0.0, 1.0]],
+       "values": [[2.0, 0.0], [0.0, 4.0]], "dim_k": 2}
+
+  `keys` and `values` have the same number of vectors (one key and one value per
+  pool). Do the rounding **only at the very end**: return the output vector with
+  each component rounded to 6 decimal places, and keep full precision through the
+  intermediate steps.
+starter_code: |
+  import math
+
+
+  def single_head(job):
+      return []
+function_name: single_head
+input_mode: function
+solution_sketch: Dot-product each key with the query, divide by sqrt(dim_k), apply a stable softmax, then take the weighted sum of the value vectors, rounding only the final components.
+sample_solution: |
+  import math
+
+
+  def single_head(job):
+      query = job["query"]
+      keys = job["keys"]
+      values = job["values"]
+      root = math.sqrt(job["dim_k"])
+
+      scaled = [sum(q * k for q, k in zip(query, key)) / root for key in keys]
+      m = max(scaled)
+      exps = [math.exp(s - m) for s in scaled]
+      total = sum(exps)
+      weights = [e / total for e in exps]
+
+      dim = len(values[0])
+      out = []
+      for j in range(dim):
+          blended = sum(weights[i] * values[i][j] for i in range(len(weights)))
+          out.append(round(blended, 6))
+      return out
+hints:
+  - level: 1
+    text: Keep the four stages separate; the output of each feeds the next, exactly like the a01 to a04 drills.
+  - level: 2
+    text: Carry full precision through scoring, scaling, and softmax; only round when you build the final blended vector.
+  - level: 3
+    text: The weights from softmax must line up with the value vectors so weights[i] multiplies values[i] in the closing sum.
+tests:
+  public:
+    - name: two_keys
+      input:
+        query: [1.0, 0.0]
+        keys: [[1.0, 0.0], [0.0, 1.0]]
+        values: [[2.0, 0.0], [0.0, 4.0]]
+        dim_k: 1
+      expected: [1.462117, 1.075766]
+    - name: equal_scores
+      input:
+        query: [0.0, 0.0]
+        keys: [[1.0, 1.0], [2.0, 2.0]]
+        values: [[1.0, 0.0], [0.0, 1.0]]
+        dim_k: 4
+      expected: [0.5, 0.5]
+    - name: peaked
+      input:
+        query: [3.0, 0.0]
+        keys: [[2.0, 0.0], [0.0, 2.0]]
+        values: [[10.0, 0.0], [0.0, 10.0]]
+        dim_k: 1
+      expected: [9.975274, 0.024726]
+  validation:
+    - name: dim4_three
+      input:
+        query: [2.0, 2.0]
+        keys: [[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]
+        values: [[1.0, 1.0], [2.0, 2.0], [3.0, 3.0]]
+        dim_k: 4
+      expected: [2.364175, 2.364175]
+    - name: three_keys_dim9
+      input:
+        query: [1.0, 1.0, 0.0]
+        keys: [[1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]]
+        values: [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]]
+        dim_k: 9
+      expected: [2.791301, 3.791301]
+    - name: negative_query
+      input:
+        query: [-1.0, 1.0]
+        keys: [[1.0, 1.0], [-1.0, -1.0]]
+        values: [[4.0, 0.0], [0.0, 4.0]]
+        dim_k: 2
+      expected: [2.0, 2.0]
+explanation_markdown: |
+  This is the computation a single attention head performs for one position:
+  scores measure query-key similarity, scaling keeps softmax responsive, softmax
+  turns the scores into a probability distribution over the keys, and the
+  weighted sum reads out a blend of the values. When one key matches far better
+  than the rest (the peaked case) almost all the weight lands on its value; when
+  the scores tie (the equal-scores and negative-query cases) the output is the
+  plain average of the values. Rounding only at the end avoids accumulating the
+  small errors that early rounding would inject into the softmax.
+common_mistakes:
+  - Rounding intermediate scores or weights, which perturbs the softmax and shifts the final components.
+  - Scaling by dim_k instead of sqrt(dim_k), so wide heads collapse toward a uniform blend.
+  - Misaligning weights and values so weights[i] no longer multiplies the matching values[i].

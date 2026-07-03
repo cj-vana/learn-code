@@ -1,0 +1,92 @@
+id: exercise.library.error_handling.a09
+kind: exercise
+version: 1
+language: python
+title: Strict or Forgiving Printer Settings
+slug: error-handling-a09
+difficulty: medium
+concepts:
+  - python.exceptions
+  - python.dictionaries
+  - python.conditionals
+prerequisites:
+  - python.functions
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.error_handling.a09
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original 3D-printer config loader that chooses between failing loudly and falling back based on a strict flag.
+prompt_markdown: |
+  A 3D printer reads settings from text. Some deployments want a bad value to fail
+  loudly (surface the problem), while others want it to fall back quietly to a
+  default. Write `load_setting(request)` where `request` is a dict with `raw` (a
+  string), `strict` (a bool), and `default` (an int).
+
+  Try to convert `raw` to an integer.
+
+  - If it converts, return `{"status": "ok", "value": <int>}`.
+  - If conversion raises `ValueError` and `strict` is true, fail loudly by
+    returning `{"status": "error", "message": "invalid value: <raw>"}`.
+  - If conversion raises `ValueError` and `strict` is false, fall back gracefully
+    by returning `{"status": "fallback", "value": <default>}`.
+starter_code: |
+  def load_setting(request):
+      # Convert request["raw"]; on failure, branch on request["strict"].
+      return {}
+function_name: load_setting
+input_mode: function
+solution_sketch: Convert in a try; in the except, branch on the strict flag to fail loudly or fall back to the default.
+sample_solution: |
+  def load_setting(request):
+      raw = request["raw"]
+      try:
+          value = int(raw)
+      except ValueError:
+          if request["strict"]:
+              return {"status": "error", "message": f"invalid value: {raw}"}
+          return {"status": "fallback", "value": request["default"]}
+      return {"status": "ok", "value": value}
+hints:
+  - level: 1
+    text: The same failure should behave differently depending on the strict flag.
+  - level: 2
+    text: Do the conversion in a try; put the strict-vs-forgiving decision inside the except block.
+  - level: 3
+    text: On ValueError, return the error dict when strict is true, otherwise return the fallback dict with the default.
+tests:
+  public:
+    - name: parses_strict
+      input: {raw: '120', strict: true, default: 0}
+      expected: {status: ok, value: 120}
+    - name: bad_forgiving
+      input: {raw: nope, strict: false, default: 50}
+      expected: {status: fallback, value: 50}
+    - name: bad_strict
+      input: {raw: nope, strict: true, default: 50}
+      expected: {status: error, message: 'invalid value: nope'}
+  validation:
+    - name: zero_value
+      input: {raw: '0', strict: false, default: 9}
+      expected: {status: ok, value: 0}
+    - name: empty_forgiving
+      input: {raw: '', strict: false, default: 7}
+      expected: {status: fallback, value: 7}
+    - name: alnum_strict
+      input: {raw: x1, strict: true, default: 3}
+      expected: {status: error, message: 'invalid value: x1'}
+explanation_markdown: |
+  "Fail loudly versus fail gracefully" is a policy decision, not a coding accident.
+  The conversion still fails the same way every time, but the `strict` flag decides
+  whether that failure becomes a visible error record or a silent fallback to a
+  sane default. Keeping both behaviours in one `except` block makes the trade-off
+  explicit and easy to audit. Note that `int("")` raises `ValueError` as well, so
+  the empty string flows through the exact same path as any other unparseable
+  input.
+common_mistakes:
+  - Guarding with `.isdigit()` before converting, which never triggers the exception path the exercise is about.
+  - Returning the default even in strict mode, hiding a problem the operator asked to see.
+  - Forgetting that an empty string also raises `ValueError`, and special-casing it separately.

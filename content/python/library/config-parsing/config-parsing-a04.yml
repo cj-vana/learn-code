@@ -1,0 +1,161 @@
+id: exercise.library.config_parsing.a04
+kind: exercise
+version: 1
+language: python
+title: Flattening the Greenhouse Control Tree
+slug: config-parsing-a04
+difficulty: medium
+concepts:
+  - python.config_parsing
+  - python.dictionaries
+  - patterns.recursion
+prerequisites:
+  - python.dictionaries
+  - patterns.recursion
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.config_parsing.a04
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original dotted-key flattening of a nested config tree, framed around a greenhouse controller, with lists treated as leaves and empty sub-sections collapsing away.
+prompt_markdown: |
+  The Fernvale greenhouse controller stores its settings as a nested dictionary,
+  but its telemetry endpoint wants them as flat, dotted keys like
+  `"zones.north.humidity"`. Write `flatten_nested_config(config)` that walks a
+  nested config dict and returns a new **flat** dict, following these rules:
+
+  - Walk into every dict value, joining the key path with a single `.` between
+    levels. A value that is **not** a dict is a leaf: store it under its full
+    dotted path.
+  - **Lists are leaves.** Do not descend into them or index into them; keep the
+    list as the value under its dotted key.
+  - An **empty dict** has no leaves beneath it, so it contributes nothing to the
+    result — its key simply does not appear.
+  - Top-level keys whose values are already leaves keep their plain name (no
+    dot).
+  - An empty input dict returns an empty dict `{}`.
+
+  Example: the config
+
+  ```python
+  {"zones": {"north": {"humidity": 55}}, "fan": "auto"}
+  ```
+
+  flattens to `{"zones.north.humidity": 55, "fan": "auto"}`.
+starter_code: |
+  def flatten_nested_config(config):
+      return {}
+function_name: flatten_nested_config
+input_mode: function
+solution_sketch: Recurse with a running dotted prefix; when the current value is a dict, descend into each child, and otherwise record the value at the accumulated prefix.
+sample_solution: |
+  def flatten_nested_config(config):
+      flat = {}
+
+      def walk(prefix, value):
+          if isinstance(value, dict):
+              for key, sub in value.items():
+                  child = f"{prefix}.{key}" if prefix else key
+                  walk(child, sub)
+          else:
+              flat[prefix] = value
+
+      walk("", config)
+      return flat
+hints:
+  - level: 1
+    text: Recurse through the tree carrying the dotted key path built so far, and only record a value when you reach something that is not a dict.
+  - level: 2
+    text: Build the next prefix as prefix + "." + key, but at the top level (empty prefix) just use the key itself so leaves are not prefixed with a stray dot.
+  - level: 3
+    text: Check isinstance(value, dict) to decide whether to descend; lists and every other type are leaves, and an empty dict simply loops zero times and adds nothing.
+tests:
+  public:
+    - name: single_level
+      input:
+        fan: "auto"
+        target: 22
+      expected:
+        fan: "auto"
+        target: 22
+    - name: two_levels
+      input:
+        db:
+          host: "localhost"
+          port: 5432
+      expected:
+        db.host: "localhost"
+        db.port: 5432
+    - name: three_levels
+      input:
+        zones:
+          north:
+            humidity: 55
+      expected:
+        zones.north.humidity: 55
+  validation:
+    - name: empty_config
+      input: {}
+      expected: {}
+    - name: mixed_depth
+      input:
+        name: "fernvale"
+        db:
+          host: "h1"
+          creds:
+            user: "admin"
+      expected:
+        name: "fernvale"
+        db.host: "h1"
+        db.creds.user: "admin"
+    - name: lists_are_leaves
+      input:
+        ports:
+          - 80
+          - 443
+        meta:
+          tags:
+            - "a"
+            - "b"
+      expected:
+        ports:
+          - 80
+          - 443
+        meta.tags:
+          - "a"
+          - "b"
+    - name: empty_subsection_dropped
+      input:
+        cache: {}
+        level: 3
+      expected:
+        level: 3
+    - name: deep_single_chain
+      input:
+        a:
+          b:
+            c:
+              d: 9
+      expected:
+        a.b.c.d: 9
+explanation_markdown: |
+  Flattening is the inverse of the deep-merge move: instead of combining nested
+  sections, you collapse a path through the tree into one dotted key. The
+  recursion carries a running prefix and only commits a value when it hits a
+  non-dict leaf, which is why the empty-prefix special case matters — without it,
+  top-level leaves would come out as `".fan"` with a leading dot.
+
+  Two design decisions define the shape of the output. Treating lists as leaves
+  keeps the contract simple: config values that happen to be arrays stay intact
+  rather than exploding into `"ports.0"`, `"ports.1"` keys. And letting empty
+  sub-dicts vanish is the honest result of "record only leaves" — there is no
+  value beneath them to record. Flat, dotted keys are exactly the format that
+  environment variables and many monitoring systems expect, so this transform
+  shows up whenever structured config meets a flat key/value world.
+common_mistakes:
+  - Descending into lists and producing indexed keys instead of keeping the list as a single leaf value.
+  - Forgetting the empty-prefix case, so top-level keys pick up a leading dot like ".fan".
+  - Emitting a key for an empty sub-dict rather than letting it drop out because it has no leaves.

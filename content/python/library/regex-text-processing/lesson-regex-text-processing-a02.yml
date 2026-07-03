@@ -1,0 +1,90 @@
+id: lesson.library.regex_text_processing.a02
+kind: lesson
+version: 1
+language: python
+title: Capturing Pieces and Rewriting Text
+slug: lesson-regex-text-processing-a02
+difficulty: medium
+concepts:
+  - python.regex
+prerequisites:
+  - python.regex
+  - python.strings
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.regex_text_processing.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original print-shop ticket scenario for teaching groups, named groups, and backreference substitution.
+body_markdown: |
+  Matching tells you *whether* text fits a shape. Capturing tells you *which
+  parts* fit, so you can pull them out or rewrite them. You capture by wrapping a
+  piece of a pattern in parentheses. Each pair of parentheses becomes a numbered
+  group, counting from 1 in the order the opening parentheses appear.
+
+  Picture a print shop whose job tickets look like `"J204-blue-12"`: a job
+  number, an ink colour, and a copy count. One pattern with three groups splits
+  the whole thing apart:
+
+  ```python
+  import re
+
+  ticket = "J204-blue-12"
+  m = re.search(r"J(\d+)-(\w+)-(\d+)", ticket)
+  print(m.group(0))   # "J204-blue-12"  -- group 0 is the ENTIRE match
+  print(m.group(1))   # "204"
+  print(m.group(2))   # "blue"
+  print(m.group(3))   # "12"
+  print(m.groups())   # ('204', 'blue', '12')  -- every group as a tuple
+  ```
+
+  Group 0 is always the full match; the numbered groups are the captured
+  fragments. Counting parentheses gets error-prone once a pattern grows, so name
+  the groups instead with `(?P<name>...)`. You then read them back with
+  `m.group("name")`, which stays readable no matter how the pattern shifts:
+
+  ```python
+  pattern = r"J(?P<job>\d+)-(?P<colour>\w+)-(?P<count>\d+)"
+  m = re.search(pattern, "J204-blue-12")
+  print(m.group("colour"))   # "blue"
+  print(m.groupdict())       # {'job': '204', 'colour': 'blue', 'count': '12'}
+  ```
+
+  Captured groups shine brightest during substitution. `re.sub(pattern, repl,
+  text)` replaces every match with `repl`, and inside `repl` a backreference like
+  `\1` or `\g<colour>` stands for whatever that group captured. That lets you
+  reorder or reshape text without ever slicing strings by hand:
+
+  ```python
+  # Swap "Last, First" into "First Last"
+  print(re.sub(r"(\w+),\s*(\w+)", r"\2 \1", "Rivera, Sam"))   # "Sam Rivera"
+  ```
+
+  The replacement can also be a *function*. `re.sub` calls it once per match,
+  passing the match object, and uses whatever string you return. That is how you
+  transform matched text rather than merely rearranging it:
+
+  ```python
+  def shout(m):
+      return m.group().upper()
+
+  print(re.sub(r"\bbay-\d+\b", shout, "check bay-3 and bay-7"))
+  # "check BAY-3 and BAY-7"
+  ```
+
+  Two ideas to keep: parentheses capture, and a backreference replays a capture.
+  Numbered groups are quick for small patterns; named groups keep larger ones
+  legible. With `re.sub` you move from reading text to actively rewriting it.
+checkpoints:
+  - question: In the pattern r"J(\d+)-(\w+)-(\d+)", what does group 0 refer to, and what does group 2 capture for the input "J204-blue-12"?
+    answer: Group 0 is the entire matched substring "J204-blue-12", and group 2 captures "blue".
+    explanation: Group 0 always holds the full match, while numbered groups follow the left-to-right order of their opening parentheses.
+  - question: Why might you prefer named groups like (?P<count>\d+) over numbered ones in a longer pattern?
+    answer: Named groups let you read a value with m.group("count") regardless of position, so adding or removing earlier groups will not silently shift the numbers.
+    explanation: Names decouple access from parenthesis order, which keeps complex patterns maintainable.
+  - question: In re.sub(r"(\w+),\s*(\w+)", r"\2 \1", "Rivera, Sam"), what does \2 stand for and what is the result?
+    answer: '\2 stands for the second captured group ("Sam"), so the result is "Sam Rivera".'
+    explanation: A backreference in the replacement string replays the text that the corresponding group captured, letting you reorder the pieces.

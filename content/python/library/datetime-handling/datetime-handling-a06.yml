@@ -1,0 +1,123 @@
+id: exercise.library.datetime_handling.a06
+kind: exercise
+version: 1
+language: python
+title: Rehearsal Room Double-Booking
+slug: datetime-handling-a06
+difficulty: medium
+concepts:
+  - python.datetime_module
+prerequisites:
+  - python.dictionaries
+  - python.lists
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.datetime_handling.a06
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original rehearsal-studio framing for computing the overlap in minutes between two same-day time ranges.
+prompt_markdown: |
+  A rehearsal studio accidentally booked two bands into the same room on the same
+  day and needs to know how badly the slots collide. Write `meeting_overlap(job)`
+  that returns the number of minutes the two time ranges overlap, as an integer.
+
+  The input is a single dictionary shaped like:
+
+  ```python
+  {"a": ["09:00", "10:00"], "b": ["09:30", "11:00"]}
+  ```
+
+  Each value is a `[start, end]` pair of `"HH:MM"` times on the **same day**, with
+  start before end. Return the length of the shared stretch in minutes. Rules the
+  tests rely on:
+
+  - If the ranges do not overlap at all, return `0`.
+  - Ranges that only touch at an endpoint (one ends at `"10:00"` and the other
+    starts at `"10:00"`) share no minutes, so return `0`.
+  - When one range sits entirely inside the other, the overlap is the length of
+    the inner range.
+starter_code: |
+  from datetime import datetime
+
+
+  def meeting_overlap(job):
+      return 0
+function_name: meeting_overlap
+input_mode: function
+solution_sketch: Parse the four times with strptime and "%H:%M", take the later of the two starts and the earlier of the two ends, and return max(0, end - start) converted to whole minutes.
+sample_solution: |
+  from datetime import datetime
+
+
+  def meeting_overlap(job):
+      def parse(text):
+          return datetime.strptime(text, "%H:%M")
+
+      a_start, a_end = parse(job["a"][0]), parse(job["a"][1])
+      b_start, b_end = parse(job["b"][0]), parse(job["b"][1])
+      start = max(a_start, b_start)
+      end = min(a_end, b_end)
+      overlap = (end - start).total_seconds() / 60
+      return max(0, int(overlap))
+hints:
+  - level: 1
+    text: strptime with "%H:%M" turns each time string into a datetime you can compare and subtract.
+  - level: 2
+    text: The overlap starts at the later of the two start times and ends at the earlier of the two end times.
+  - level: 3
+    text: Compute (min_end - max_start) as minutes via total_seconds() / 60, then clamp with max(0, ...) so non-overlapping pairs give 0.
+tests:
+  public:
+    - name: partial_overlap
+      input:
+        a: ['09:00', '10:00']
+        b: ['09:30', '11:00']
+      expected: 30
+    - name: touching_no_overlap
+      input:
+        a: ['09:00', '10:00']
+        b: ['10:00', '11:00']
+      expected: 0
+    - name: one_inside_other
+      input:
+        a: ['09:00', '12:00']
+        b: ['10:00', '11:00']
+      expected: 60
+  validation:
+    - name: identical_ranges
+      input:
+        a: ['14:00', '15:30']
+        b: ['14:00', '15:30']
+      expected: 90
+    - name: fully_disjoint
+      input:
+        a: ['13:00', '14:00']
+        b: ['09:00', '10:00']
+      expected: 0
+    - name: shared_start
+      input:
+        a: ['09:00', '10:00']
+        b: ['09:00', '09:15']
+      expected: 15
+    - name: crossing_noon
+      input:
+        a: ['11:30', '12:30']
+        b: ['12:00', '13:00']
+      expected: 30
+explanation_markdown: |
+  Two ranges overlap on the stretch that begins at the later of their two starts
+  and ends at the earlier of their two ends. Parsing each `"HH:MM"` string into a
+  `datetime` (they all default to the same date, so they are directly comparable)
+  lets `max` and `min` pick those two boundaries for you. Subtracting gives a
+  `timedelta`, and dividing `total_seconds()` by 60 converts it to minutes. The
+  final `max(0, ...)` is what turns a negative span — which happens whenever the
+  ranges are disjoint or only touch at an endpoint — into a clean `0`. When one
+  range is nested inside the other, `max` of the starts and `min` of the ends both
+  come from the inner range, so the answer is exactly the inner range's length.
+common_mistakes:
+  - Returning a negative number for disjoint ranges instead of clamping the result to 0 with max.
+  - Swapping max and min (using the earlier start or later end), which overstates the overlap.
+  - Comparing the "HH:MM" strings or hours alone and ignoring the minutes, giving wrong overlaps for times like 09:30.

@@ -1,0 +1,149 @@
+id: exercise.library.oop_internals.a06
+kind: exercise
+version: 1
+language: python
+title: The Ballast Console's Locked Panel
+slug: oop-internals-a06
+difficulty: medium
+concepts:
+  - python.descriptors_mro
+  - python.classes
+prerequisites:
+  - python.exceptions
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.oop_internals.a06
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original __slots__ enforcement drill framed as a submarine ballast console that rejects writes to undeclared controls.
+prompt_markdown: |
+  A submarine's ballast console exposes a fixed panel of controls declared through
+  `__slots__`. Because the class has no `__dict__`, assigning to any control that was
+  not declared raises `AttributeError`. You are replaying an operator's session and
+  reporting which writes the console accepted.
+
+  Write `ballast_console(job)`. The single argument is a dict shaped like:
+
+  ```python
+  {
+      "slots": ["depth", "temp"],
+      "assignments": [["depth", 5], ["temp", 9], ["salinity", 3], ["depth", 7]],
+  }
+  ```
+
+  - `slots` is the list of declared control names; build a class with
+    `__slots__ = tuple(slots)`.
+  - `assignments` is an ordered list of `[name, value]` writes applied to one
+    console instance.
+
+  For each assignment, attempt `setattr(instance, name, value)`. Record `"ok"` if it
+  succeeds and `"rejected"` if it raises `AttributeError` (the name is not a declared
+  slot). Later assignments to a declared slot simply overwrite the earlier value.
+
+  Return a dict:
+
+  ```python
+  {"results": ["ok", "ok", "rejected", "ok"],
+   "stored": {"depth": 7, "temp": 9}}
+  ```
+
+  `results` has one entry per assignment in order. `stored` maps each **declared**
+  slot that currently holds a value to that value; declared slots that were never
+  assigned are omitted. In the example, `salinity` is rejected (undeclared), and
+  `depth` ends at `7` after being overwritten.
+starter_code: |
+  def ballast_console(job):
+      return {"results": [], "stored": {}}
+function_name: ballast_console
+input_mode: function
+solution_sketch: |
+  Build a class with __slots__ = tuple(slots); for each [name, value] try setattr and append "ok", catching AttributeError to append "rejected"; then collect stored = {slot: getattr(inst, slot) for slot in slots if hasattr(inst, slot)}.
+sample_solution: |
+  def ballast_console(job):
+      slots = job["slots"]
+      assignments = job["assignments"]
+
+      console_cls = type("Console", (), {"__slots__": tuple(slots)})
+      console = console_cls()
+
+      results = []
+      for name, value in assignments:
+          try:
+              setattr(console, name, value)
+              results.append("ok")
+          except AttributeError:
+              results.append("rejected")
+
+      stored = {slot: getattr(console, slot) for slot in slots if hasattr(console, slot)}
+      return {"results": results, "stored": stored}
+hints:
+  - level: 1
+    text: A class with __slots__ and no __dict__ only permits attributes whose names appear in the slots; other assignments raise AttributeError.
+  - level: 2
+    text: Wrap each setattr in try/except AttributeError. Append "ok" on success and "rejected" when the exception fires; keep going either way.
+  - level: 3
+    text: After the loop, a declared slot that was never assigned still raises AttributeError on access, so guard stored with hasattr before reading each slot.
+tests:
+  public:
+    - name: example_session
+      input:
+        slots: [depth, temp]
+        assignments: [[depth, 5], [temp, 9], [salinity, 3], [depth, 7]]
+      expected:
+        results: [ok, ok, rejected, ok]
+        stored: {depth: 7, temp: 9}
+    - name: repeated_overwrite
+      input:
+        slots: [load]
+        assignments: [[load, 1], [load, 2]]
+      expected:
+        results: [ok, ok]
+        stored: {load: 2}
+    - name: undeclared_then_declared
+      input:
+        slots: [a, b]
+        assignments: [[c, 1], [a, 4]]
+      expected:
+        results: [rejected, ok]
+        stored: {a: 4}
+  validation:
+    - name: unassigned_slot_omitted
+      input:
+        slots: [x, y, z]
+        assignments: [[x, 10], [z, 30]]
+      expected:
+        results: [ok, ok]
+        stored: {x: 10, z: 30}
+    - name: all_rejected
+      input:
+        slots: [only]
+        assignments: [[ghost, 1], [phantom, 2]]
+      expected:
+        results: [rejected, rejected]
+        stored: {}
+    - name: no_assignments
+      input:
+        slots: [p, q]
+        assignments: []
+      expected:
+        results: []
+        stored: {}
+explanation_markdown: |
+  When a class declares `__slots__` and gains no `__dict__`, each slot name becomes a
+  data descriptor on the class, and those descriptors are the *only* attributes an
+  instance can hold. Assigning an undeclared name has nowhere to go — there is no
+  fallback dict — so Python raises `AttributeError`. That is the enforcement people
+  reach for `__slots__` to get, beyond the memory savings.
+
+  Two subtleties show up in the audit. First, a declared slot that has never been
+  assigned raises `AttributeError` on read, which is why `stored` is built with a
+  `hasattr` guard rather than assuming every slot has a value. Second, reassigning a
+  slot just overwrites it through the same descriptor, so `depth` ending at `7`
+  reflects the last accepted write, not the first.
+common_mistakes:
+  - Letting the AttributeError from an undeclared write escape instead of catching it and recording "rejected".
+  - Reading every declared slot for the stored map without a hasattr guard, which raises AttributeError for slots that were never assigned.
+  - Assuming a rejected write still lands somewhere; with no __dict__ the value is simply discarded.

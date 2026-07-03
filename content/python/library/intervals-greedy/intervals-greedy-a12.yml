@@ -1,0 +1,116 @@
+id: exercise.library.intervals_greedy.a12
+kind: exercise
+version: 1
+language: python
+title: Will the Shuttle Bus Stay Under Capacity?
+slug: intervals-greedy-a12
+difficulty: medium
+concepts:
+  - patterns.intervals
+  - patterns.greedy
+prerequisites:
+  - python.sorting
+  - python.lists
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.intervals_greedy.a12
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original airport-shuttle framing for a sweep-line capacity check over boarding and alighting events.
+prompt_markdown: |
+  An airport shuttle runs a fixed loop, and dispatch has a list of booked
+  trips for the day. Each trip is `[passengers, start, end]`: that many
+  passengers board the shuttle at stop number `start` and get off at stop
+  number `end`. The `end` is exclusive — a passenger who alights at stop `5`
+  frees their seat for anyone boarding at stop `5`.
+
+  Write `car_pooling(data)` where `data` is a dict with:
+
+  - `"trips"`: the list of `[passengers, start, end]` bookings (may be empty).
+  - `"capacity"`: the maximum number of passengers the shuttle can hold.
+
+  Return `True` if the shuttle can serve every booking without ever exceeding
+  `capacity` at any point along the loop, and `False` otherwise. The count is
+  allowed to reach `capacity` exactly — only going over it is a problem. With
+  no trips at all, the shuttle trivially stays under capacity, so return `True`.
+
+  For example, `{"trips": [[2, 1, 5], [3, 3, 7]], "capacity": 4}` returns
+  `False` (5 passengers are aboard between stops 3 and 5), while the same
+  trips with `"capacity": 5` return `True`.
+starter_code: |
+  def car_pooling(data):
+      return None
+function_name: car_pooling
+input_mode: function
+solution_sketch: Turn each trip into a +passengers boarding event and a -passengers alighting event, sweep left to right, and check the running load never exceeds capacity.
+sample_solution: |
+  def car_pooling(data):
+      trips = data["trips"]
+      capacity = data["capacity"]
+      events = []
+      for passengers, start, end in trips:
+          events.append((start, passengers))
+          events.append((end, -passengers))
+      events.sort()
+      aboard = 0
+      for _stop, delta in events:
+          aboard += delta
+          if aboard > capacity:
+              return False
+      return True
+hints:
+  - level: 1
+    text: Instead of tracking whole intervals, track only the moments the passenger count changes — a boarding adds passengers, an alighting removes them.
+  - level: 2
+    text: Build one event per boarding (+passengers at start) and one per alighting (-passengers at end), then sort all events by stop.
+  - level: 3
+    text: Sorting the (stop, delta) tuples puts negative deltas before positive ones at the same stop, so alightings are processed before boardings and the exclusive end works out. Sweep the events and return False the moment the running total tops capacity.
+tests:
+  public:
+    - name: over_capacity_overlap
+      input: {"trips": [[2, 1, 5], [3, 3, 7]], "capacity": 4}
+      expected: false
+    - name: fits_exactly
+      input: {"trips": [[2, 1, 5], [3, 3, 7]], "capacity": 5}
+      expected: true
+    - name: no_trips
+      input: {"trips": [], "capacity": 3}
+      expected: true
+  validation:
+    - name: single_trip_over
+      input: {"trips": [[5, 1, 10]], "capacity": 4}
+      expected: false
+    - name: single_trip_exact
+      input: {"trips": [[4, 1, 10]], "capacity": 4}
+      expected: true
+    - name: adjacent_end_exclusive
+      input: {"trips": [[3, 1, 5], [3, 5, 9]], "capacity": 3}
+      expected: true
+    - name: three_stack_over
+      input: {"trips": [[2, 1, 5], [2, 2, 6], [2, 3, 7]], "capacity": 5}
+      expected: false
+    - name: three_stack_fits
+      input: {"trips": [[2, 1, 5], [2, 2, 6], [2, 3, 7]], "capacity": 6}
+      expected: true
+explanation_markdown: |
+  Checking every stop against every trip would be slow and fiddly. The sweep-line
+  trick is to stop thinking about intervals and think about *changes* to the
+  passenger count. Each trip contributes exactly two moments: at `start` the load
+  goes up by `passengers`, and at `end` it goes back down by `passengers`.
+
+  Collect those as `(stop, delta)` events and sort them. Because Python sorts
+  tuples by the first element and then the second, events at the same stop are
+  ordered with the negative deltas first — so alightings are applied before
+  boardings. That is exactly what the exclusive `end` demands: a seat freed at
+  stop `5` is available to someone boarding at stop `5`. Sweeping left to right
+  and keeping a running `aboard` total, the shuttle is over capacity precisely
+  when that total exceeds `capacity`, so you can bail out with `False` the instant
+  it happens; if the sweep finishes, every stop was safe and you return `True`.
+  With no trips there are no events, `aboard` stays `0`, and the answer is `True`.
+common_mistakes:
+  - Processing boardings before alightings at the same stop, which double-counts a seat and wrongly rejects back-to-back trips that share an endpoint.
+  - Using `aboard >= capacity` instead of `aboard > capacity`, which rejects trips that fill the shuttle to exactly its limit.
+  - Comparing each trip to every other trip in nested loops instead of sweeping sorted events, which is both slower and easy to get wrong at the boundaries.

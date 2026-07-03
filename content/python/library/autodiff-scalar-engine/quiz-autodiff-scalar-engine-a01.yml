@@ -1,0 +1,99 @@
+id: quiz.library.autodiff_scalar_engine.a01
+kind: quiz
+version: 1
+language: python
+title: Reading Gradients Off a Graph
+slug: quiz-autodiff-scalar-engine-a01
+difficulty: hard
+concepts:
+  - ai.gradients_autodiff
+prerequisites:
+  - ai.gradients_autodiff
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.autodiff_scalar_engine.a01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pattern-recognition quiz on hand-computing gradients through small computation graphs.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: 'For loss = a * b with a = 4 and b = 7, what is d(loss)/da?'
+    choices:
+      - '7'
+      - '4'
+      - '28'
+      - '1'
+    correct_choice: '7'
+    explanation: |
+      The multiplication rule swaps operands: the gradient with respect to a is
+      the other factor, b = 7. Nudging a by 1 moves the product by 7.
+    concepts:
+      - ai.gradients_autodiff
+  - id: q2
+    prompt: |
+      In loss = (x + y) * x with x = 2, y = 5, the variable x reaches the loss
+      by two paths. What is d(loss)/dx?
+    choices:
+      - '9'
+      - '7'
+      - '2'
+      - '5'
+    correct_choice: '9'
+    explanation: |
+      Through the product directly x receives s = x + y = 7; through the sum it
+      receives 1 * x = 2. Path contributions add: 7 + 2 = 9. Check: x = 2.001
+      gives 7.001 * 2.001 ≈ 14.009, moving ~9 per unit.
+    concepts:
+      - ai.gradients_autodiff
+  - id: q3
+    prompt: Why does the backward pass seed the output node's gradient with exactly 1.0?
+    choices:
+      - The loss changes one-for-one with itself — every other gradient is expressed in loss units per unit of that variable
+      - Any nonzero constant would work; 1.0 is a style convention
+      - It normalizes gradients into the range [0, 1]
+      - It prevents division by zero in the chain rule
+    correct_choice: The loss changes one-for-one with itself — every other gradient is expressed in loss units per unit of that variable
+    explanation: |
+      d(loss)/d(loss) = 1 by definition; seeding with c would compute c times
+      every gradient — mathematically consistent scaling, but no longer THE
+      gradients of the loss, so it is not a mere convention.
+    concepts:
+      - ai.gradients_autodiff
+  - id: q4
+    prompt: |
+      A hand-written engine produces gradients that are wrong only for
+      variables used by MORE than one operation. What is the almost certain
+      bug?
+    choices:
+      - Gradients are assigned with = instead of accumulated with +=, so one path overwrites the other
+      - The topological sort is alphabetical instead of structural
+      - The learning rate is applied during the backward pass
+      - tanh saturated and zeroed the gradients
+    correct_choice: Gradients are assigned with = instead of accumulated with +=, so one path overwrites the other
+    explanation: |
+      Single-consumer variables are correct because there is nothing to
+      accumulate; multi-consumer variables need the sum of path contributions,
+      which assignment silently discards. The symptom pattern is diagnostic.
+    concepts:
+      - ai.gradients_autodiff
+  - id: q5
+    prompt: |
+      tanh's derivative is 1 - tanh(x)**2. For a unit whose input has drifted
+      to x = 10, roughly what gradient flows backward through it, and what is
+      the consequence?
+    choices:
+      - Almost zero — the unit is saturated, so upstream parameters stop learning
+      - Almost one — large inputs pass gradient freely
+      - Exactly 10 — the gradient scales with the input
+      - Negative — gradients flip sign past x = 1
+    correct_choice: Almost zero — the unit is saturated, so upstream parameters stop learning
+    explanation: |
+      tanh(10) ≈ 1, so the derivative ≈ 1 - 1 = 0; a saturated nonlinearity
+      strangles the gradient and freezes everything behind it — the motivation
+      for input scaling throughout deep learning.
+    concepts:
+      - ai.gradients_autodiff

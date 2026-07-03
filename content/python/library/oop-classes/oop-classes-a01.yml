@@ -1,0 +1,93 @@
+id: exercise.library.oop_classes.a01
+kind: exercise
+version: 1
+language: python
+title: Filling the Greenhouse Water Tank
+slug: oop-classes-a01
+difficulty: easy
+concepts:
+  - python.classes
+prerequisites:
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.oop_classes.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original greenhouse water-tank scenario drilling __init__ plus a capped instance method.
+prompt_markdown: |
+  A greenhouse keeps a rainwater tank with a fixed capacity. Rain is added in
+  pours, but the tank never holds more than its capacity -- any overflow spills
+  out and is lost.
+
+  Complete `fill_tank(spec)`. The input is a dict with:
+
+  - `"capacity"`: an integer, the most water the tank can hold.
+  - `"pours"`: a list of integers, each the litres added in one pour, applied in
+    order.
+
+  Inside the function, define a small `WaterTank` class whose `__init__` stores the
+  capacity and starts the level at 0, and whose method adds a pour while clamping
+  the level to the capacity. Return the tank's final water level as an integer.
+starter_code: |
+  def fill_tank(spec):
+      # Define a WaterTank class, apply each pour, and return the final level.
+      return 0
+function_name: fill_tank
+input_mode: function
+solution_sketch: Build a WaterTank whose add method caps the level at capacity, then apply every pour.
+sample_solution: |
+  def fill_tank(spec):
+      class WaterTank:
+          def __init__(self, capacity):
+              self.capacity = capacity
+              self.level = 0
+
+          def add(self, litres):
+              self.level = min(self.capacity, self.level + litres)
+
+      tank = WaterTank(spec["capacity"])
+      for pour in spec["pours"]:
+          tank.add(pour)
+      return tank.level
+hints:
+  - level: 1
+    text: Store capacity and a level starting at 0 in __init__, then update the level for each pour.
+  - level: 2
+    text: The add method should set self.level to min(self.capacity, self.level + litres) so overflow is discarded.
+  - level: 3
+    text: 'Loop over spec["pours"] calling tank.add(pour), then return tank.level after the loop.'
+tests:
+  public:
+    - name: overflow_caps
+      input: {capacity: 10, pours: [3, 4, 5]}
+      expected: 10
+    - name: no_pours
+      input: {capacity: 5, pours: []}
+      expected: 0
+    - name: room_to_spare
+      input: {capacity: 100, pours: [20, 30]}
+      expected: 50
+  validation:
+    - name: exact_fill
+      input: {capacity: 8, pours: [8, 1]}
+      expected: 8
+    - name: many_small
+      input: {capacity: 12, pours: [2, 2, 2]}
+      expected: 6
+    - name: zero_capacity
+      input: {capacity: 0, pours: [5]}
+      expected: 0
+explanation_markdown: |
+  `__init__` sets up each tank's own `capacity` and `level`. The `add` method
+  enforces the overflow rule in one place with `min(self.capacity, self.level +
+  litres)`, so no caller can push the level past capacity. Because the state lives
+  on the instance, the loop simply applies each pour and reads `tank.level` at the
+  end.
+common_mistakes:
+  - Adding every pour to the level and only clamping once at the end, which mishandles pours that overflow mid-sequence.
+  - Forgetting to initialise self.level to 0, so the first add raises an error.
+  - Returning self.capacity instead of the actual final level.

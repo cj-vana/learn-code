@@ -1,0 +1,86 @@
+id: lesson.library.trees_lite.a02
+kind: lesson
+version: 1
+language: python
+title: Depth-First Traversals - Pre, In, and Post-Order
+slug: lesson-trees-lite-a02
+difficulty: medium
+concepts:
+  - patterns.tree_traversal
+  - patterns.dfs
+  - patterns.recursion
+prerequisites:
+  - python.trees_as_data
+  - python.functions
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.trees_lite.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original DFS traversal walkthrough framed as an observatory dome inspection route.
+body_markdown: |
+  A depth-first traversal walks all the way down one branch before backing up to
+  explore the next. Because a subtree is itself a tree, the cleanest way to visit
+  every node is recursion: handle the current node, then recurse into the left
+  subtree and the right subtree. The only thing that changes between the three
+  classic orders is *when* you record the current node relative to those two
+  recursive calls.
+
+  Imagine an inspector walking an observatory with a central dome and two wings.
+
+  - **Pre-order** records the node **before** its children: root, then the whole
+    left subtree, then the whole right subtree. Use it when you must see a parent
+    before its descendants, such as copying a tree top-down.
+  - **In-order** records the node **between** its children: left subtree, then
+    the node, then right subtree. For a binary search tree this yields values in
+    sorted order, which is a fact we lean on later.
+  - **Post-order** records the node **after** its children: left subtree, right
+    subtree, then the node. Use it when a parent's result depends on its
+    children first, such as evaluating a formula tree or freeing memory.
+
+  Here are all three, each returning a flat list of values:
+
+  ```python
+  def preorder(tree):
+      if tree is None:
+          return []
+      return [tree["value"]] + preorder(tree["left"]) + preorder(tree["right"])
+
+  def inorder(tree):
+      if tree is None:
+          return []
+      return inorder(tree["left"]) + [tree["value"]] + inorder(tree["right"])
+
+  def postorder(tree):
+      if tree is None:
+          return []
+      return postorder(tree["left"]) + postorder(tree["right"]) + [tree["value"]]
+  ```
+
+  Every version shares the same base case: an empty tree contributes an empty
+  list. That single guard is what stops the recursion at each dead-end branch.
+
+  Trace pre-order on a tree whose root is 5, with left subtree (3 over 2 and 4)
+  and right subtree (8 with right child 9). You record 5 first, dive left to get
+  3, 2, 4, then dive right to get 8, 9, producing `[5, 3, 2, 4, 8, 9]`. Run
+  in-order on the same tree and you get `[2, 3, 4, 5, 8, 9]`; because that tree
+  happens to be a search tree, the values come out sorted. Post-order gives
+  `[2, 4, 3, 9, 8, 5]`, where the root is always last.
+
+  The mental model is small: three lines, one base case, and a single decision
+  about where the current value goes in the concatenation. Learn to move that
+  `[tree["value"]]` term to the front, the middle, or the back, and you can
+  produce any depth-first order on demand.
+checkpoints:
+  - question: In which traversal does the root value appear first, and in which does it appear last?
+    answer: The root appears first in pre-order and last in post-order.
+    explanation: Pre-order records the node before recursing into children; post-order records it only after both child subtrees are done.
+  - question: Why does an in-order traversal of a binary search tree produce sorted values?
+    answer: Because in-order visits the entire left subtree (all smaller values) before the node, then the right subtree (all larger values), yielding ascending order.
+    explanation: A BST keeps smaller values left and larger values right, so visiting left, node, right walks values from least to greatest.
+  - question: What is the shared base case of all three recursive traversals, and why is it necessary?
+    answer: If the tree is None, return an empty list; it stops the recursion at empty branches.
+    explanation: Without the None guard the function would try to index None["value"] and crash, so the empty-tree case is what terminates each descent.

@@ -31,16 +31,16 @@ units:
   - exercise.library.debugging.a01
   - exercise.library.debugging.a02
   - exercise.library.debugging.a03
+  - quiz.library.debugging.a01
   - exercise.library.debugging.a04
   - exercise.library.debugging.a05
   - exercise.library.debugging.a06
+  - quiz.library.debugging.a02
   - exercise.library.debugging.a07
   - exercise.library.debugging.a08
   - exercise.library.debugging.b01
-  - exercise.library.debugging.b02
-  - quiz.library.debugging.a01
-  - quiz.library.debugging.a02
   - quiz.library.debugging.a03
+  - exercise.library.debugging.b02
 - id: unit.debugging_w2
   title: 'Debugging: Round Two'
   description: Lessons, drills, and quizzes for debugging.
@@ -52,13 +52,13 @@ units:
   - exercise.library.debugging_w2.a01
   - exercise.library.debugging_w2.a02
   - exercise.library.debugging_w2.a03
+  - quiz.library.debugging_w2.a01
   - exercise.library.debugging_w2.a04
   - exercise.library.debugging_w2.a05
   - exercise.library.debugging_w2.a06
+  - quiz.library.debugging_w2.a02
   - exercise.library.debugging_w2.a07
   - exercise.library.debugging_w2.a08
   - exercise.library.debugging_w2.b01
-  - exercise.library.debugging_w2.b02
-  - quiz.library.debugging_w2.a01
-  - quiz.library.debugging_w2.a02
   - quiz.library.debugging_w2.a03
+  - exercise.library.debugging_w2.b02

@@ -1,0 +1,207 @@
+id: exercise.library.concurrency_foundations.a01
+kind: exercise
+version: 1
+language: python
+title: The Cannery's Fixed-Length Belt
+slug: concurrency-foundations-a01
+difficulty: medium
+concepts:
+  - python.concurrency_model
+  - patterns.queue_bfs
+prerequisites:
+  - python.lists
+  - python.dictionaries
+  - python.loops
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.concurrency_foundations.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: >-
+    Original bounded-buffer producer/consumer drill themed around a sardine
+    cannery packing belt; models queue.Queue(maxsize) non-blocking put_nowait /
+    get_nowait semantics as a deterministic pure function, no real threads.
+prompt_markdown: |
+  A sardine cannery runs a single conveyor belt between the filling machine
+  (the producer) and the labelling station (the consumer). The belt holds at
+  most `capacity` crates at once and is strictly first-in-first-out. Because the
+  two machines never block and wait for each other, a crate that arrives at a
+  full belt is simply turned away, and a labelling grab at an empty belt comes
+  up with nothing. This is exactly how a bounded `queue.Queue(maxsize)` behaves
+  when you use `put_nowait` / `get_nowait` instead of the blocking calls.
+
+  Write `run_loading_belt(job)`. The single argument `job` is a dict with:
+
+  - `"capacity"`: a non-negative integer, the maximum number of crates the belt
+    can hold at one time.
+  - `"operations"`: a list of strings processed left to right. Each string is
+    either the exact text `"get"` (the labeller tries to take the front crate)
+    or `"put:LABEL"` (the filler tries to place a crate named `LABEL` onto the
+    back of the belt). Split only on the first colon, so `LABEL` is everything
+    after `"put:"`.
+
+  Process every operation in order and return a dict with four keys:
+
+  - `"delivered"`: the crate labels successfully taken off the belt, in the
+    order they were taken.
+  - `"rejected"`: the crate labels turned away because the belt was full when
+    their `put` was attempted, in order.
+  - `"remaining"`: the labels still on the belt at the end, front to back.
+  - `"starved"`: an integer count of `get` operations that found the belt
+    empty.
+
+  Edge cases you must handle: a `capacity` of `0` means every `put` is rejected;
+  a `get` on an empty belt adds one to `"starved"` and delivers nothing; an
+  empty `"operations"` list returns empty lists and a `"starved"` count of `0`.
+starter_code: |
+  def run_loading_belt(job):
+      return {}
+function_name: run_loading_belt
+input_mode: function
+solution_sketch: >-
+  Keep a FIFO list as the belt. For "get", pop index 0 into delivered when
+  non-empty else bump the starved counter; for "put:LABEL", append when
+  len(belt) < capacity else record the label in rejected. Return the four
+  tallies with the belt itself as "remaining".
+sample_solution: |
+  def run_loading_belt(job):
+      capacity = job["capacity"]
+      belt = []
+      delivered = []
+      rejected = []
+      starved = 0
+      for op in job["operations"]:
+          if op == "get":
+              if belt:
+                  delivered.append(belt.pop(0))
+              else:
+                  starved += 1
+          else:
+              label = op.split(":", 1)[1]
+              if len(belt) < capacity:
+                  belt.append(label)
+              else:
+                  rejected.append(label)
+      return {
+          "delivered": delivered,
+          "rejected": rejected,
+          "remaining": belt,
+          "starved": starved,
+      }
+hints:
+  - level: 1
+    text: >-
+      A bounded belt is just a list you never let grow past `capacity`. Decide
+      per operation whether it is a get or a put by checking the string.
+  - level: 2
+    text: >-
+      For a put, compare `len(belt) < capacity` before appending; otherwise the
+      crate belongs in `rejected`. For a get, only pop when the belt is
+      non-empty, else increment `starved`.
+  - level: 3
+    text: >-
+      FIFO means the labeller takes `belt.pop(0)` (the front), while the filler
+      does `belt.append(label)` (the back). Parse the label with
+      `op.split(":", 1)[1]` so labels containing colons stay intact.
+tests:
+  public:
+    - name: simple_flow
+      input:
+        capacity: 2
+        operations: ["put:a", "put:b", "get", "get"]
+      expected:
+        delivered: ["a", "b"]
+        rejected: []
+        remaining: []
+        starved: 0
+    - name: overflow_rejects
+      input:
+        capacity: 1
+        operations: ["put:a", "put:b", "get"]
+      expected:
+        delivered: ["a"]
+        rejected: ["b"]
+        remaining: []
+        starved: 0
+    - name: starve_on_empty
+      input:
+        capacity: 2
+        operations: ["get", "put:x", "get", "get"]
+      expected:
+        delivered: ["x"]
+        rejected: []
+        remaining: []
+        starved: 2
+  validation:
+    - name: capacity_zero
+      input:
+        capacity: 0
+        operations: ["put:a", "get"]
+      expected:
+        delivered: []
+        rejected: ["a"]
+        remaining: []
+        starved: 1
+    - name: interleaved
+      input:
+        capacity: 2
+        operations: ["put:a", "put:b", "get", "put:c", "put:d", "get", "get"]
+      expected:
+        delivered: ["a", "b", "c"]
+        rejected: ["d"]
+        remaining: []
+        starved: 0
+    - name: leftover_remaining
+      input:
+        capacity: 3
+        operations: ["put:x", "put:y", "put:z", "get"]
+      expected:
+        delivered: ["x"]
+        rejected: []
+        remaining: ["y", "z"]
+        starved: 0
+    - name: reject_then_starve
+      input:
+        capacity: 1
+        operations: ["put:a", "put:b", "put:c", "get", "get"]
+      expected:
+        delivered: ["a"]
+        rejected: ["b", "c"]
+        remaining: []
+        starved: 1
+    - name: empty_operations
+      input:
+        capacity: 4
+        operations: []
+      expected:
+        delivered: []
+        rejected: []
+        remaining: []
+        starved: 0
+explanation_markdown: |
+  A bounded queue is the backbone of every producer/consumer pipeline, and its
+  defining feature is *backpressure*: the belt cannot grow without limit, so
+  something has to give when it fills. The non-blocking model here mirrors
+  `queue.Queue(maxsize).put_nowait()`, which raises `queue.Full` rather than
+  waiting, and `get_nowait()`, which raises `queue.Empty`. Here we record those
+  conditions as `rejected` crates and `starved` grabs instead of raising.
+
+  The FIFO discipline matters: `belt.pop(0)` removes the oldest crate while
+  `belt.append(label)` adds to the back, so crates leave in the same order they
+  entered. Each operation is O(1) except `pop(0)`, which is O(n) on a list; a
+  real system would use `collections.deque` for O(1) removal from both ends, but
+  the observable behaviour is identical.
+
+  The `capacity == 0` case is the clean edge: the guard `len(belt) < capacity`
+  is `0 < 0`, which is always false, so every crate is turned away and the belt
+  stays empty for the whole run.
+common_mistakes:
+  - Using `belt.pop()` (the back) instead of `belt.pop(0)` (the front), which
+    turns the FIFO belt into a LIFO stack and reverses delivery order.
+  - Appending on a put without first checking `len(belt) < capacity`, so the
+    belt overflows past capacity instead of rejecting crates.
+  - Splitting the label with `op.split(":")` and taking index 1, which drops
+    part of any label that itself contains a colon; use `split(":", 1)`.

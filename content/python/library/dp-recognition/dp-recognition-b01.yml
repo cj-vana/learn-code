@@ -1,0 +1,124 @@
+id: exercise.library.dp_recognition.b01
+kind: exercise
+version: 1
+language: python
+title: The Zigzag Tide Log
+slug: dp-recognition-b01
+difficulty: hard
+concepts:
+  - patterns.dynamic_programming
+prerequisites:
+  - python.lists
+  - python.loops
+estimated_time_minutes: 20
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dp_recognition.b01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original tide-gauge framing of the longest alternating (zigzag) subsequence solved with the two-counter O(n) DP.
+prompt_markdown: |
+  A harbor tide gauge records the water level once an hour as a list of integers.
+  The keeper wants the longest *zigzag* stretch hidden in the log: a subsequence
+  whose consecutive differences strictly alternate between rising and falling. The
+  chosen readings do **not** have to sit next to each other in the log; you may
+  skip any readings, but the ones you keep must go up, then down, then up, and so
+  on (or down, then up, then down, ...). A single reading counts as a zigzag of
+  length 1.
+
+  Write `longest_zigzag(readings)` where `readings` is a list of integers. Return a
+  single integer: the length of the longest such alternating subsequence.
+
+  Rules and edges:
+
+  - An empty log returns `0`.
+  - Two equal readings in a row provide no direction (neither up nor down), so a
+    flat stretch like `[4, 4, 4]` has a longest zigzag of just `1`.
+  - A strictly rising (or strictly falling) log has a longest zigzag of `2`,
+    because you can always pick its first and last readings for one up (or down)
+    step.
+
+  Example: for `readings = [1, 7, 4, 9, 2, 5]` every step already alternates
+  (up, down, up, down, up), so the whole log is a zigzag of length `6`. For
+  `readings = [1, 4, 7, 2, 5]` one longest zigzag is `1, 7, 2, 5`, length `4`.
+starter_code: |
+  def longest_zigzag(readings):
+      return 0
+function_name: longest_zigzag
+input_mode: function
+solution_sketch: Track two running lengths, one for zigzags that end on a rising step and one that end on a falling step; a rise refreshes the up counter from the down counter plus one, and a fall does the mirror. The answer is the larger of the two.
+sample_solution: |
+  def longest_zigzag(readings):
+      if not readings:
+          return 0
+      up = 1
+      down = 1
+      for i in range(1, len(readings)):
+          if readings[i] > readings[i - 1]:
+              up = down + 1
+          elif readings[i] < readings[i - 1]:
+              down = up + 1
+      return max(up, down)
+hints:
+  - level: 1
+    text: You never need the whole subsequence, only its length, and the only thing that matters going forward is whether the last kept step went up or down.
+  - level: 2
+    text: Keep two counters. up is the longest zigzag so far that ends with a rise, down the longest that ends with a fall. Both start at 1 for the first reading.
+  - level: 3
+    text: When readings[i] > readings[i-1], a new rise can extend the best falling zigzag, so up = down + 1. When it is smaller, down = up + 1. Equal readings change nothing. Answer is max(up, down).
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: 0
+    - name: single
+      input: [5]
+      expected: 1
+    - name: full_zigzag
+      input: [1, 7, 4, 9, 2, 5]
+      expected: 6
+    - name: strictly_up
+      input: [1, 2, 3, 4, 5]
+      expected: 2
+  validation:
+    - name: all_equal
+      input: [4, 4, 4, 4]
+      expected: 1
+    - name: decreasing_pair
+      input: [10, 1]
+      expected: 2
+    - name: plateaus
+      input: [2, 2, 5, 5, 1]
+      expected: 3
+    - name: mixed_negatives
+      input: [-5, -2, -8, 0]
+      expected: 4
+    - name: interior_run
+      input: [1, 4, 7, 2, 5]
+      expected: 4
+explanation_markdown: |
+  The brute-force instinct is to try every subsequence, which is exponential. The
+  DP insight is that when you are scanning left to right, the only state that
+  matters for extending a zigzag is the *direction of its last step*. That collapses
+  the whole problem into two numbers.
+
+  Let `up` be the length of the longest zigzag ending at the current position with a
+  rising step, and `down` the longest ending with a falling step. Both begin at `1`,
+  since a lone reading is a valid zigzag of length one. When the next reading is
+  higher than the previous one, you have a fresh rise; the best thing to attach it to
+  is a zigzag that most recently *fell*, so `up = down + 1`. A lower reading is the
+  mirror case, `down = up + 1`. Equal readings give no direction, so both counters
+  stay put. Crucially you only ever overwrite the counter matching the new
+  direction, so the other one keeps the best value seen so far.
+
+  Reading the two counters as "best chain ending in an up-step / down-step" is what
+  makes the greedy-looking update actually a dynamic program: each value is built
+  from a previously computed subproblem. The answer is `max(up, down)`, and the whole
+  pass is O(n) time and O(1) space.
+common_mistakes:
+  - Treating equal consecutive readings as a rise or a fall, which invents direction changes that are not there and overcounts flat runs.
+  - Resetting both counters on every step instead of only the one matching the current direction, which forgets the alternation built up so far.
+  - Solving for the longest strictly increasing run (or the longest contiguous alternating block) rather than an order-preserving subsequence that may skip readings.
+  - Returning up (or down) alone instead of the max of the two, missing zigzags that happen to end on the other direction.

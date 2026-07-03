@@ -1,0 +1,89 @@
+id: lesson.library.testing_concepts.a02
+kind: lesson
+version: 1
+language: python
+title: 'Edge Cases: Where the Bugs Live'
+slug: lesson-testing-concepts-a02
+difficulty: medium
+concepts:
+  - concepts.testing
+prerequisites:
+  - concepts.testing
+  - python.lists
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.testing_concepts.a02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original edge-case and boundary-analysis walkthrough framed around a funicular railway's age gate, with fresh worked examples.
+body_markdown: |
+  Bugs are not spread evenly through input space. They cluster at the edges —
+  empty inputs, single elements, boundaries, duplicates — because that is
+  where the programmer's mental model was busiest simplifying. Testing well
+  is mostly the skill of finding those edges on purpose.
+
+  ### Boundary value analysis
+
+  A funicular railway offers free travel under 6 and senior fares from 65.
+  The interesting ages are not 30 and 50 — they are the values *at and
+  adjacent to* each boundary:
+
+  ```python
+  # boundaries at 6 and 65 -> test 5, 6, 7 and 64, 65, 66
+  assert fare(5) == "free"
+  assert fare(6) == "standard"     # the classic off-by-one hides here
+  assert fare(64) == "standard"
+  assert fare(65) == "senior"
+  ```
+
+  The recipe is mechanical: for every boundary b in the spec, test `b - 1`,
+  `b`, and `b + 1`. Nearly every `<` versus `<=` mistake in existence is
+  caught by exactly this triple.
+
+  ### The standard checklist
+
+  For a function taking a list, the edges are so predictable they form a
+  checklist worth memorizing:
+
+  - the **empty** list — the single most bug-productive input in programming
+  - a **single element** — loops that compare neighbours often assume two
+  - **all elements equal** — breaks naive min/max and dedupe logic
+  - **duplicates** at the interesting positions — first, last, adjacent
+  - **already sorted / reverse sorted** — degenerate cases for anything that reorders
+  - **negatives and zero** for numeric content — `if x:` treats 0 as falsy
+
+  For strings: empty, one character, all whitespace, leading/trailing spaces,
+  a separator with nothing after it. For dicts: missing keys, `None` values
+  (which are present-but-empty — a different thing than absent).
+
+  ### Equivalence classes: test the categories, not the numbers
+
+  Between boundaries, inputs behave alike: a 30-year-old and a 40-year-old
+  take the same code path, so testing both adds nothing. Divide the input
+  space into classes that behave the same (under 6, 6-64, 65+), then test one
+  representative per class plus the boundary triples. Ten thoughtful cases
+  beat a hundred random ones because each targets a *different way the code
+  could be wrong*.
+
+  ### Reading the spec adversarially
+
+  The exercise prompts in this course state edge behavior precisely — "an
+  empty list returns 0", "ties keep input order" — and every such sentence is
+  a test case someone once got wrong. Train the reflex: each time a spec
+  makes a promise about an edge, imagine the implementation that would break
+  that promise, and write the case that would catch it. That adversarial
+  reading — "how could this code lie to me?" — is the difference between
+  testing to confirm and testing to *discover*.
+checkpoints:
+  - question: A discount applies to orders of 50 units or more. Which quantities does boundary value analysis demand you test, and what bug class does the triple catch?
+    answer: 49, 50, and 51 — the triple around the boundary — which catches nearly every < versus <= off-by-one in the threshold check.
+    explanation: Boundary mistakes produce code that is correct almost everywhere, so only values adjacent to the boundary expose them.
+  - question: Why does testing both a 30-year-old and a 40-year-old add almost no value for an age-gate function with brackets at 6 and 65?
+    answer: Both fall in the same equivalence class (6-64) and exercise the identical code path, so the second test can only fail if the first does.
+    explanation: Coverage grows by touching new behavior categories, not new numbers — one representative per class plus the boundaries is the efficient set.
+  - question: For a function that takes a list of numbers, name four inputs from the standard edge checklist and the failure each targets.
+    answer: 'The empty list (unguarded indexing or wrong base value), a single element (neighbour-comparison loops), all-equal elements (naive min/max or dedupe logic), and a list containing zero (truthiness checks like "if x:" that treat 0 as missing).'
+    explanation: These edges recur because common idioms — indexing first elements, pairwise loops, truthiness — all embed silent assumptions that these inputs violate.

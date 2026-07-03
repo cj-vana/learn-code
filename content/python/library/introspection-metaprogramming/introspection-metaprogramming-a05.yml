@@ -1,0 +1,187 @@
+id: exercise.library.introspection_metaprogramming.a05
+kind: exercise
+version: 1
+language: python
+title: Normalising the Bakery's Orders
+slug: introspection-metaprogramming-a05
+difficulty: medium
+concepts:
+  - python.introspection
+  - python.functions
+prerequisites:
+  - python.dictionaries
+  - python.exceptions
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.introspection_metaprogramming.a05
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original Signature.bind + apply_defaults drill framed as a bakery counter normalising mixed positional and keyword orders into a full argument record.
+prompt_markdown: |
+  A bakery's counter takes orders in a jumble of positional and keyword form, but
+  the kitchen ticket needs every field spelled out with defaults filled in. You will
+  normalise a raw call against a routine's signature.
+
+  Write `call_with_bound_args(request)`. The single argument is a dict shaped like:
+
+  ```python
+  {"routine": "brew_order", "args": ["large"], "kwargs": {"oat_milk": True}}
+  ```
+
+  - `routine` names a function in the counter's catalog.
+  - `args` is the list of positional arguments and `kwargs` the dict of keyword
+    arguments to apply.
+
+  Use `inspect.signature(fn).bind(*args, **kwargs)` to match the call to the
+  signature, then `apply_defaults()` to fill in any missing defaults, and return the
+  resulting `{parameter_name: value}` dict.
+
+  The catalog (already defined for you) contains:
+
+  - `brew_order(size, roast="medium", oat_milk=False)`
+  - `schedule_pickup(day, hour, note="none")`
+
+  So `{"routine": "brew_order", "args": ["large"], "kwargs": {}}` returns
+  `{"size": "large", "roast": "medium", "oat_milk": False}` — the two defaults are
+  filled in. Handle the error cases explicitly:
+
+  - If `routine` is not in the catalog, return `{"error": "unknown routine"}`.
+  - If the provided arguments do not fit the signature (a required argument is
+    missing, or there are too many), `bind` raises `TypeError`; catch it and return
+    `{"error": "cannot bind"}`.
+starter_code: |
+  import inspect
+
+
+  def brew_order(size, roast="medium", oat_milk=False):
+      return (size, roast, oat_milk)
+
+
+  def schedule_pickup(day, hour, note="none"):
+      return (day, hour, note)
+
+
+  CATALOG = {"brew_order": brew_order, "schedule_pickup": schedule_pickup}
+
+
+  def call_with_bound_args(request):
+      return {}
+function_name: call_with_bound_args
+input_mode: function
+solution_sketch: Resolve the routine from the catalog (return an unknown-routine error if missing). Wrap signature.bind(*args, **kwargs) in a try/except TypeError, returning a cannot-bind error on failure. On success call apply_defaults() and return dict(bound.arguments).
+sample_solution: |
+  import inspect
+
+
+  def brew_order(size, roast="medium", oat_milk=False):
+      return (size, roast, oat_milk)
+
+
+  def schedule_pickup(day, hour, note="none"):
+      return (day, hour, note)
+
+
+  CATALOG = {"brew_order": brew_order, "schedule_pickup": schedule_pickup}
+
+
+  def call_with_bound_args(request):
+      fn = CATALOG.get(request["routine"])
+      if fn is None:
+          return {"error": "unknown routine"}
+      args = request.get("args", [])
+      kwargs = request.get("kwargs", {})
+      try:
+          bound = inspect.signature(fn).bind(*args, **kwargs)
+      except TypeError:
+          return {"error": "cannot bind"}
+      bound.apply_defaults()
+      return dict(bound.arguments)
+hints:
+  - level: 1
+    text: signature.bind(*args, **kwargs) matches a call to the parameters and returns a BoundArguments object whose .arguments maps parameter names to the values supplied.
+  - level: 2
+    text: bind only records the arguments you actually passed; call apply_defaults() on the BoundArguments to fill in parameters that were left to their defaults.
+  - level: 3
+    text: bind raises TypeError when the call does not fit (missing required argument or too many positionals), so wrap it in try/except and return the cannot-bind error there. Guard the catalog lookup separately for the unknown-routine case.
+tests:
+  public:
+    - name: defaults_filled_in
+      input:
+        routine: brew_order
+        args: [large]
+        kwargs: {}
+      expected:
+        size: large
+        roast: medium
+        oat_milk: false
+    - name: positional_and_keyword_mix
+      input:
+        routine: brew_order
+        args: [small, dark]
+        kwargs:
+          oat_milk: true
+      expected:
+        size: small
+        roast: dark
+        oat_milk: true
+    - name: all_keyword
+      input:
+        routine: brew_order
+        args: []
+        kwargs:
+          size: medium
+          roast: light
+      expected:
+        size: medium
+        roast: light
+        oat_milk: false
+  validation:
+    - name: other_routine_with_int
+      input:
+        routine: schedule_pickup
+        args: [mon, 9]
+        kwargs: {}
+      expected:
+        day: mon
+        hour: 9
+        note: none
+    - name: missing_required_argument
+      input:
+        routine: brew_order
+        args: []
+        kwargs: {}
+      expected:
+        error: cannot bind
+    - name: too_many_positional
+      input:
+        routine: brew_order
+        args: [a, b, c, d]
+        kwargs: {}
+      expected:
+        error: cannot bind
+    - name: unknown_routine
+      input:
+        routine: knead_dough
+        args: []
+        kwargs: {}
+      expected:
+        error: unknown routine
+explanation_markdown: |
+  `Signature.bind` is the same matching Python performs when it calls a function: it
+  pairs your positional and keyword arguments with the declared parameters and
+  raises `TypeError` if they cannot be reconciled. What it does **not** do on its own
+  is invent defaults — a bound object only remembers what you actually passed. That
+  is why `apply_defaults()` is a separate step; it walks the signature and inserts
+  each missing parameter's default so the kitchen ticket is complete.
+
+  Catching `TypeError` around `bind` gives you a clean, testable validation layer
+  without ever calling the real function, and separating the catalog lookup keeps the
+  two failure modes — an unknown routine versus a malformed call — distinct. The
+  result is a normalised `{name: value}` record no matter how the order was phrased.
+common_mistakes:
+  - Skipping apply_defaults(), so parameters left at their defaults are missing from the returned dict.
+  - Letting bind's TypeError propagate instead of catching it and returning the cannot-bind error.
+  - Conflating the two error paths, so an unknown routine and an unbindable call return the same message.

@@ -1,0 +1,120 @@
+id: exercise.library.regex_text_processing.a10
+kind: exercise
+version: 1
+language: python
+title: Build a Route Weight Report
+slug: regex-text-processing-a10
+difficulty: hard
+concepts:
+  - python.regex
+  - python.string_formatting
+  - concepts.grouping_aggregation
+prerequisites:
+  - python.regex
+  - python.dictionaries
+estimated_time_minutes: 20
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.regex_text_processing.a10
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original courier-depot capstone that parses scan lines with named groups and formats an aggregated report with f-strings.
+prompt_markdown: |
+  A courier depot scans each parcel onto a route, writing one line per parcel:
+
+      ROUTE-7 weight=1200
+
+  That is a route label (`ROUTE-` plus digits) and the parcel's weight in grams.
+  Write `summarize_routes(lines)` where `lines` is a list of such strings. Parse
+  each line with a single regex that uses **named groups**, then return a report
+  string with one line per route, in the order each route is **first seen**,
+  formatted exactly as:
+
+      ROUTE-7: 2 parcels, 2000g total
+
+  Join the report lines with `"\n"` (no trailing newline). If `lines` is empty,
+  return the empty string `""`. You may assume every input line is well-formed.
+starter_code: |
+  import re
+
+
+  def summarize_routes(lines):
+      return ""
+function_name: summarize_routes
+input_mode: function
+solution_sketch: Match each line with named groups, tally count and total weight per route in a dict, then format each route with an f-string and join with newlines.
+sample_solution: |
+  import re
+
+
+  def summarize_routes(lines):
+      pattern = re.compile(r"(?P<route>ROUTE-\d+) weight=(?P<grams>\d+)")
+      counts = {}
+      totals = {}
+      for line in lines:
+          m = pattern.match(line)
+          route = m.group("route")
+          grams = int(m.group("grams"))
+          if route not in counts:
+              counts[route] = 0
+              totals[route] = 0
+          counts[route] += 1
+          totals[route] += grams
+      return "\n".join(
+          f"{route}: {counts[route]} parcels, {totals[route]}g total"
+          for route in counts
+      )
+hints:
+  - level: 1
+    text: Parse each line once into a route label and an integer weight, then accumulate a running count and total per route.
+  - level: 2
+    text: A regular dict preserves insertion order, so tallying into a dict keyed by route gives you the first-seen ordering for free.
+  - level: 3
+    text: Use named groups (?P<route>ROUTE-\d+) and (?P<grams>\d+), build the report with an f-string per route, and join the lines with "\n".
+tests:
+  public:
+    - name: two_routes
+      input:
+        - 'ROUTE-7 weight=1200'
+        - 'ROUTE-7 weight=800'
+        - 'ROUTE-3 weight=500'
+      expected: "ROUTE-7: 2 parcels, 2000g total\nROUTE-3: 1 parcels, 500g total"
+    - name: single_parcel
+      input:
+        - 'ROUTE-5 weight=640'
+      expected: 'ROUTE-5: 1 parcels, 640g total'
+    - name: empty_list
+      input: []
+      expected: ''
+  validation:
+    - name: preserves_first_seen
+      input:
+        - 'ROUTE-2 weight=100'
+        - 'ROUTE-9 weight=100'
+        - 'ROUTE-2 weight=50'
+      expected: "ROUTE-2: 2 parcels, 150g total\nROUTE-9: 1 parcels, 100g total"
+    - name: three_on_one_route
+      input:
+        - 'ROUTE-1 weight=10'
+        - 'ROUTE-1 weight=20'
+        - 'ROUTE-1 weight=30'
+      expected: 'ROUTE-1: 3 parcels, 60g total'
+    - name: zero_weight
+      input:
+        - 'ROUTE-4 weight=0'
+      expected: 'ROUTE-4: 1 parcels, 0g total'
+explanation_markdown: |
+  Each line is parsed once with a named-group pattern, which keeps the code
+  readable: `m.group("route")` and `m.group("grams")` say what they return. The
+  weight is converted to `int` so the totals add up numerically. Tallying into two
+  dictionaries keyed by route gives both a per-route count and a running sum, and
+  because an ordinary dict preserves insertion order, iterating it later yields the
+  routes in first-seen order with no extra bookkeeping. Finally an f-string drops
+  each route's numbers into the required sentence, and `"\n".join(...)` stitches
+  the lines together without a trailing newline.
+common_mistakes:
+  - Leaving the weight as a string, so totals concatenate ("1200800") instead of adding.
+  - Sorting the routes or using a set, which loses the required first-seen ordering.
+  - Adding a trailing newline (for example with a final "\n"), so the report no longer matches exactly.

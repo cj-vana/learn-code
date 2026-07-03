@@ -1,0 +1,82 @@
+id: exercise.library.regex_text_processing.a06
+kind: exercise
+version: 1
+language: python
+title: Rewrite Dates to ISO Form
+slug: regex-text-processing-a06
+difficulty: medium
+concepts:
+  - python.regex
+  - python.strings
+prerequisites:
+  - python.regex
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.regex_text_processing.a06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original archive-migration date-rewriting task exercising re.sub backreferences.
+prompt_markdown: |
+  An archive stores dates in day-first form like `03/11/2026` (that is
+  `DD/MM/YYYY`). To load them into a new system they must become ISO form
+  `2026-11-03` (`YYYY-MM-DD`). Write `to_iso_dates(text)` that rewrites **every**
+  such date found in `text` using a single `re.sub` call with backreferences, and
+  leaves all other characters untouched. You may assume every date already has two
+  digits for the day, two for the month, and four for the year.
+starter_code: |
+  import re
+
+
+  def to_iso_dates(text):
+      return text
+function_name: to_iso_dates
+input_mode: function
+solution_sketch: Capture day, month, and year in three groups and reorder them in the replacement string with backreferences.
+sample_solution: |
+  import re
+
+
+  def to_iso_dates(text):
+      return re.sub(r"(\d{2})/(\d{2})/(\d{4})", r"\3-\2-\1", text)
+hints:
+  - level: 1
+    text: Wrap the day, month, and year in separate capture groups so you can refer to each one.
+  - level: 2
+    text: In the replacement string, \1, \2, and \3 stand for the first, second, and third captured groups.
+  - level: 3
+    text: Use re.sub(r"(\d{2})/(\d{2})/(\d{4})", r"\3-\2-\1", text) to place the year first, then month, then day.
+tests:
+  public:
+    - name: two_dates
+      input: 'Shipped 03/11/2026 and logged 09/11/2026.'
+      expected: 'Shipped 2026-11-03 and logged 2026-11-09.'
+    - name: single_date
+      input: 'Due 31/12/1999 sharp'
+      expected: 'Due 1999-12-31 sharp'
+    - name: no_dates
+      input: no dates in this line
+      expected: no dates in this line
+  validation:
+    - name: date_at_start
+      input: '01/01/2000 was the rollover'
+      expected: '2000-01-01 was the rollover'
+    - name: empty
+      input: ''
+      expected: ''
+    - name: three_dates
+      input: '15/08/2021, 16/08/2021, 17/08/2021'
+      expected: '2021-08-15, 2021-08-16, 2021-08-17'
+explanation_markdown: |
+  The pattern `(\d{2})/(\d{2})/(\d{4})` captures the day, month, and year into
+  groups 1, 2, and 3. In the replacement string `\3-\2-\1`, each backreference
+  replays the text that its group captured, so the year moves to the front,
+  followed by the month and then the day, and the separators become hyphens. Because `re.sub` replaces every non-overlapping
+  match, one call rewrites all the dates in the string at once, and any text that
+  does not fit the pattern is copied through unchanged.
+common_mistakes:
+  - Forgetting the parentheses, so there are no groups for \1, \2, and \3 to reference.
+  - Writing the replacement as a normal string "\3-\1-\2" without the r prefix, so the backslashes get misread.
+  - Reordering the groups incorrectly and producing MM-DD or DD-MM instead of ISO YYYY-MM-DD.

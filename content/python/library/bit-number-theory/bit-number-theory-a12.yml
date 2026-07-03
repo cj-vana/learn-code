@@ -1,0 +1,143 @@
+id: exercise.library.bit_number_theory.a12
+kind: exercise
+version: 1
+language: python
+title: Every Tasting Flight on the Menu
+slug: bit-number-theory-a12
+difficulty: hard
+concepts:
+  - patterns.bit_manipulation
+  - patterns.brute_force
+prerequisites:
+  - python.lists
+  - python.loops
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.bit_number_theory.a12
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original bitmask-subset-enumeration drill framed as listing every possible tasting flight from a tap-room menu.
+prompt_markdown: |
+  A tap room lets guests build a "tasting flight" from the day's menu: a flight is
+  any selection of the listed drinks, including the empty flight (order nothing)
+  and the full flight (one of everything). The staff want a catalogue of every
+  possible flight.
+
+  Write `all_flights(menu)` that takes a list of distinct drink names (strings) and
+  returns a list of every subset. Enumerate the subsets with a bitmask counter:
+  for each integer `mask` from `0` to `2**n - 1` (where `n` is the number of
+  drinks), include `menu[i]` in that subset whenever bit `i` of `mask` is set.
+
+  Rules:
+
+  - Each subset is itself a list of drink names, kept in the **same order** they
+    appear in `menu`.
+  - The subsets in your returned list must be ordered by their `mask` value, so the
+    empty flight (mask `0`) comes first.
+  - The menu has at most 10 drinks. An empty menu still has one subset: the empty
+    flight, so return `[[]]`.
+
+  Example: `all_flights(["sour", "hazy"])` returns
+  `[[], ["sour"], ["hazy"], ["sour", "hazy"]]`.
+starter_code: |
+  def all_flights(menu):
+      return []
+function_name: all_flights
+input_mode: function
+solution_sketch: Loop mask over range(2 ** n); for each mask, scan bit positions 0..n-1 and collect menu[i] where the bit is set, appending each built subset.
+sample_solution: |
+  def all_flights(menu):
+      n = len(menu)
+      flights = []
+      for mask in range(1 << n):
+          flight = []
+          for i in range(n):
+              if mask & (1 << i):
+                  flight.append(menu[i])
+          flights.append(flight)
+      return flights
+hints:
+  - level: 1
+    text: With n drinks there are 2**n possible flights; each integer from 0 to 2**n - 1 encodes one of them in binary.
+  - level: 2
+    text: Let bit i of the mask decide whether menu[i] is in that subset; loop the mask over range(2 ** n).
+  - level: 3
+    text: For each mask, walk i from 0 to n - 1 and append menu[i] when mask & (1 << i) is non-zero; collect the subset and move to the next mask.
+tests:
+  public:
+    - name: empty_menu
+      input: []
+      expected:
+        - []
+    - name: single_drink
+      input: ["espresso"]
+      expected:
+        - []
+        - ["espresso"]
+    - name: two_drinks
+      input: ["sour", "hazy"]
+      expected:
+        - []
+        - ["sour"]
+        - ["hazy"]
+        - ["sour", "hazy"]
+  validation:
+    - name: three_drinks
+      input: ["cider", "mead", "perry"]
+      expected:
+        - []
+        - ["cider"]
+        - ["mead"]
+        - ["cider", "mead"]
+        - ["perry"]
+        - ["cider", "perry"]
+        - ["mead", "perry"]
+        - ["cider", "mead", "perry"]
+    - name: lone_item
+      input: ["stout"]
+      expected:
+        - []
+        - ["stout"]
+    - name: pair
+      input: ["red", "white"]
+      expected:
+        - []
+        - ["red"]
+        - ["white"]
+        - ["red", "white"]
+    - name: four_drinks
+      input: ["w", "x", "y", "z"]
+      expected:
+        - []
+        - ["w"]
+        - ["x"]
+        - ["w", "x"]
+        - ["y"]
+        - ["w", "y"]
+        - ["x", "y"]
+        - ["w", "x", "y"]
+        - ["z"]
+        - ["w", "z"]
+        - ["x", "z"]
+        - ["w", "x", "z"]
+        - ["y", "z"]
+        - ["w", "y", "z"]
+        - ["x", "y", "z"]
+        - ["w", "x", "y", "z"]
+explanation_markdown: |
+  There is a clean one-to-one match between the subsets of an `n`-item list and the
+  integers `0` to `2**n - 1`: read each integer as `n` bits, and bit `i` answers
+  "is item `i` in this subset?" Counting the mask upward therefore visits every
+  subset exactly once, in a fixed, reproducible order, with the empty set (all bits
+  `0`) first. The inner scan walks the bit positions in increasing order, so each
+  subset comes out in the menu's original order. The whole enumeration is
+  `O(n * 2**n)` work, which is why the menu is capped at 10 drinks — that is still
+  only 1024 flights, but the count doubles with every drink you add.
+common_mistakes:
+  - Looping the mask only to 2 ** n - 1 exclusive by using range(2 ** n - 1), which drops the full-set subset.
+  - Building each subset by scanning bits from high to low, which reverses the item order within a subset.
+  - Returning [] for an empty menu instead of [[]] (there is always the empty subset).
+  - Reusing one shared subset list across masks instead of starting a fresh list each iteration.

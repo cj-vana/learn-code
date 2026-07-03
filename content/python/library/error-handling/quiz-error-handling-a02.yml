@@ -1,0 +1,102 @@
+id: quiz.library.error_handling.a02
+kind: quiz
+version: 1
+language: python
+title: Exception Syntax - Raising, Catching, Subclassing
+slug: quiz-error-handling-a02
+difficulty: easy
+concepts:
+  - python.exceptions
+  - python.classes
+prerequisites: []
+estimated_time_minutes: 6
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.error_handling.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax questions on raise, as-binding, custom exception definition, and with.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: |
+      Which statement raises a ValueError carrying the message "bad rate"?
+    choices:
+      - raise ValueError("bad rate")
+      - throw ValueError("bad rate")
+      - raise ValueError = "bad rate"
+      - error ValueError("bad rate")
+    correct_choice: raise ValueError("bad rate")
+    explanation: |
+      Python uses the `raise` keyword followed by an exception instance. `throw`
+      and `error` are not Python keywords, and `raise` takes an object, not an
+      assignment.
+    concepts:
+      - python.exceptions
+  - id: q2
+    prompt: |
+      You want to catch a ValueError and read its message text into a variable
+      named `exc`. Which clause is correct?
+    choices:
+      - 'except ValueError as exc:'
+      - 'except ValueError, exc:'
+      - 'except exc = ValueError:'
+      - 'catch ValueError as exc:'
+    correct_choice: 'except ValueError as exc:'
+    explanation: |
+      Modern Python binds the caught exception with `as`: `except ValueError as
+      exc:`. The comma form is old Python 2 syntax, and `catch` is not a Python
+      keyword.
+    concepts:
+      - python.exceptions
+  - id: q3
+    prompt: |
+      Which definition creates a usable custom exception type for a domain error?
+    choices:
+      - "class QuotaError(Exception): pass"
+      - "class QuotaError(): pass"
+      - "def QuotaError(Exception): pass"
+      - "QuotaError = raise Exception"
+    correct_choice: "class QuotaError(Exception): pass"
+    explanation: |
+      A custom exception is a class that inherits from `Exception` (or a subclass of
+      it). Inheriting from `Exception` is what makes it raisable and catchable as an
+      exception; an empty body with `pass` is enough.
+    concepts:
+      - python.classes
+      - python.exceptions
+  - id: q4
+    prompt: |
+      Which line correctly enters a context manager `session` in a with statement
+      and binds it to the name `s`?
+    choices:
+      - 'with session as s:'
+      - 'with session, s:'
+      - 'using session as s:'
+      - 'with s = session:'
+    correct_choice: 'with session as s:'
+    explanation: |
+      The `with` statement uses `as` to bind whatever `__enter__` returns to a name:
+      `with session as s:`. `using` is not a Python keyword, and the other forms are
+      not valid with-statement syntax.
+    concepts:
+      - python.exceptions
+  - id: q5
+    prompt: |
+      Inside `except SomeError as exc`, which expression gives the exception's class
+      name as a string (for example "SomeError")?
+    choices:
+      - type(exc).__name__
+      - exc.name
+      - str(exc)
+      - exc.__class__()
+    correct_choice: type(exc).__name__
+    explanation: |
+      `type(exc)` is the exception's class and `.__name__` is that class's name as a
+      string. `str(exc)` returns the message, not the type name, and `exc.name` is
+      not a standard attribute.
+    concepts:
+      - python.exceptions
+      - python.classes

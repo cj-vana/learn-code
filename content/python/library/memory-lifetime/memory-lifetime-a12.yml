@@ -1,0 +1,160 @@
+id: exercise.library.memory_lifetime.a12
+kind: exercise
+version: 1
+language: python
+title: Retained Weight of the Loaded Crates
+slug: memory-lifetime-a12
+difficulty: hard
+concepts:
+  - python.memory_model
+  - patterns.graph_traversal
+  - concepts.space_complexity
+prerequisites:
+  - python.dictionaries
+  - python.sets
+estimated_time_minutes: 24
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.memory_lifetime.a12
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original retained-memory estimate framed as a shipping hold where crates hold other crates, summing the weight reachable from the manifest roots.
+prompt_markdown: |
+  A shipping hold is loaded from a manifest. Each crate has a weight, and a crate
+  may hold other crates nested inside it. The dock master wants the total weight
+  that would leave on the ship if only the crates named on the manifest (the
+  roots) are loaded: every crate reachable from a root travels too, and its
+  weight counts exactly once no matter how many crates hold it. Crates not
+  reachable from any root stay on the dock and add nothing.
+
+  This models estimating an object's *retained memory*: the total size of
+  everything that would be freed if the roots were released, following references
+  and counting each reachable object once even when several paths lead to it.
+
+  Write `object_graph_memory_estimate(scenario)` taking one dict:
+
+  - `sizes`: a dict mapping a crate id (a string) to its integer weight
+  - `graph`: a dict mapping a crate id to a list of the crate ids it holds
+  - `roots`: a list of crate ids that are loaded first
+
+  Return the integer sum of the weights of every crate reachable from the roots,
+  including the roots themselves, counting each distinct crate once. Follow the
+  edges in `graph`. Handle reference cycles without looping forever. If a
+  reachable crate id has no entry in `sizes`, treat its weight as 0. If `roots`
+  is empty, return 0.
+starter_code: |
+  def object_graph_memory_estimate(scenario):
+      return 0
+function_name: object_graph_memory_estimate
+input_mode: function
+solution_sketch: Depth-first search from the roots over the graph, collecting each distinct reachable id into a visited set, then sum the sizes of those ids treating missing sizes as zero.
+sample_solution: |
+  def object_graph_memory_estimate(scenario):
+      sizes = scenario["sizes"]
+      graph = scenario["graph"]
+      visited = set()
+      stack = list(scenario["roots"])
+      while stack:
+          node = stack.pop()
+          if node in visited:
+              continue
+          visited.add(node)
+          for child in graph.get(node, ()):
+              if child not in visited:
+                  stack.append(child)
+      return sum(sizes.get(node, 0) for node in visited)
+hints:
+  - level: 1
+    text: This is one reachability walk from the roots; first collect the distinct set of crates that can be reached, then add up their weights.
+  - level: 2
+    text: Use a visited set so shared crates are counted once and cycles terminate; push a root's held crates only when you first visit it.
+  - level: 3
+    text: After the walk, sum sizes.get(node, 0) over the visited set so a reachable crate with no listed weight contributes zero.
+tests:
+  public:
+    - name: simple_reach
+      input:
+        sizes: {A: 100, B: 50, C: 30, D: 10}
+        graph:
+          A: [B, C]
+          B: [C]
+          C: []
+          D: []
+        roots: [A]
+      expected: 180
+    - name: single_root_no_edges
+      input:
+        sizes: {X: 42}
+        graph:
+          X: []
+        roots: [X]
+      expected: 42
+    - name: two_roots_shared_child
+      input:
+        sizes: {A: 10, B: 20, C: 5}
+        graph:
+          A: [C]
+          B: [C]
+          C: []
+        roots: [A, B]
+      expected: 35
+  validation:
+    - name: cycle_terminates
+      input:
+        sizes: {A: 1, B: 2, C: 3}
+        graph:
+          A: [B]
+          B: [C]
+          C: [A]
+        roots: [A]
+      expected: 6
+    - name: unreachable_excluded
+      input:
+        sizes: {A: 100, B: 50, Z: 999}
+        graph:
+          A: [B]
+          B: []
+          Z: []
+        roots: [A]
+      expected: 150
+    - name: missing_size_is_zero
+      input:
+        sizes: {A: 100}
+        graph:
+          A: [B]
+          B: []
+        roots: [A]
+      expected: 100
+    - name: empty_roots
+      input:
+        sizes: {A: 100}
+        graph:
+          A: []
+        roots: []
+      expected: 0
+    - name: shared_child_counted_once
+      input:
+        sizes: {A: 5, B: 5, C: 5, D: 5}
+        graph:
+          A: [C, D]
+          B: [C]
+          C: []
+          D: []
+        roots: [A, B]
+      expected: 20
+explanation_markdown: |
+  Retained size answers a practical question: how much memory would actually come
+  back if you dropped these roots? It is not the size of one object but of the
+  whole subgraph only it keeps alive, so the computation is a graph traversal, not
+  a lookup. The visited set is what makes the sum correct: a crate reachable by
+  two paths, like a shared child, must be counted once, and a cycle must not spin
+  forever. Treating a missing size as zero keeps the function total when the size
+  table is sparser than the reference graph. This same reachable-set idea is what
+  a tracing collector uses to decide what survives, and reasoning about its growth
+  is the heart of space-complexity analysis.
+common_mistakes:
+  - Summing along paths so a crate reachable by several routes is counted more than once.
+  - Omitting the visited guard, so a reference cycle loops forever or double-counts.
+  - Adding the weight of every crate in sizes rather than only those reachable from the roots.

@@ -1,0 +1,78 @@
+id: lesson.library.collections_itertools.a02
+kind: lesson
+version: 1
+language: python
+title: The Two-Ended Queue With deque
+slug: lesson-collections-itertools-a02
+difficulty: easy
+concepts:
+  - python.collections_module
+  - patterns.queue_bfs
+prerequisites:
+  - python.lists
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.collections_itertools.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original service-desk queue scenario motivating deque's O(1) double-ended operations.
+body_markdown: |
+  A Python `list` is superb at the right-hand end: `append` and `pop()` are
+  fast. The left-hand end is a trap. `my_list.pop(0)` or
+  `my_list.insert(0, x)` has to shift *every* remaining element one slot over,
+  so removing from the front of an n-item list costs O(n). Do that inside a loop
+  and an innocent-looking queue quietly becomes O(n squared).
+
+  `collections.deque` (pronounced "deck", for double-ended queue) fixes this. It
+  is built to add and remove from *both* ends in O(1):
+
+  ```python
+  from collections import deque
+
+  line = deque(["Ada", "Ben"])
+  line.append("Cass")        # add to the right  -> Ada, Ben, Cass
+  line.appendleft("Dev")     # add to the left   -> Dev, Ada, Ben, Cass
+  first = line.popleft()     # remove from left  -> "Dev"
+  last = line.pop()          # remove from right -> "Cass"
+  ```
+
+  That symmetry is the whole point. A service desk that serves people from the
+  front (`popleft`) while letting a rush ticket cut to the front
+  (`appendleft`) maps directly onto a deque, and every operation stays constant
+  time no matter how long the line grows. This is also why breadth-first search
+  uses a deque for its frontier: you enqueue neighbours on the right and dequeue
+  the next node from the left.
+
+  deque has one more move worth knowing: `rotate`. `d.rotate(1)` pops items off
+  the right and pushes them onto the left, shifting everything one step to the
+  right; a negative argument rotates left.
+
+  ```python
+  from collections import deque
+
+  carousel = deque([10, 20, 30, 40])
+  carousel.rotate(1)         # -> deque([40, 10, 20, 30])
+  carousel.rotate(-2)        # -> deque([20, 30, 40, 10])
+  ```
+
+  You can also cap a deque's length with `deque(maxlen=n)`. Once it is full,
+  each new item on one end silently drops the item on the far end -- a ready-made
+  "last n readings" sliding buffer.
+
+  The mental rule is simple: if your algorithm touches the *front* of a sequence
+  even once inside a loop, stop reaching for a list and reach for a deque. You
+  keep the same familiar `append`/`pop`, gain `appendleft`/`popleft`, and trade
+  a hidden O(n) shift for a guaranteed O(1) operation.
+checkpoints:
+  - question: Why is `list.pop(0)` slower than `deque.popleft()` on a long sequence?
+    answer: Removing the first list element shifts every remaining element left, costing O(n), while `deque.popleft` is O(1).
+    explanation: Lists store items in contiguous positions, so front removal must re-index everything after it; a deque is a linked structure optimized for both ends.
+  - question: What does `deque([1, 2, 3, 4]).rotate(1)` produce?
+    answer: '`deque([4, 1, 2, 3])` -- the rightmost item moves to the front.'
+    explanation: A positive rotate argument shifts elements toward the right by that many steps, wrapping the tail around to the head.
+  - question: How does `deque(maxlen=3)` behave when you append a fourth item?
+    answer: It drops the item on the opposite end, keeping only the three most recent entries.
+    explanation: A bounded deque automatically discards from the far end on overflow, which makes it a compact sliding buffer of the last n items.

@@ -1,0 +1,184 @@
+id: exercise.library.capstone_dispatch.c06
+kind: exercise
+version: 1
+language: python
+title: 'The Courier Dispatch Board: The Full Day''s Run'
+slug: capstone-dispatch-c06
+difficulty: hard
+concepts:
+  - patterns.graph_traversal
+  - patterns.greedy
+  - patterns.intervals
+  - python.heapq_bisect
+prerequisites:
+  - python.dictionaries
+  - python.lists
+estimated_time_minutes: 28
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.capstone_dispatch.c06
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: >-
+    Capstone finale of the courier path; a single rider greedily clears
+    time-windowed deliveries, travelling by shortest path, combining Dijkstra,
+    interval feasibility, and a deterministic greedy choice.
+prompt_markdown: |
+  This is the finale: one rider clears as much of the day as the greedy rule allows.
+  Write `dispatch_day(job)` where `job` is a dictionary with:
+
+  - `"map_edges"`: the two-way lane list `[junction_a, junction_b, minutes]`, as in
+    every earlier stage.
+  - `"depot"`: the junction the rider starts at, at time `t = 0`.
+  - `"deliveries"`: a list of deliveries, each a dictionary with a `"node"`
+    (the junction to reach), a `"window"` `[open, close]` (the delivery may only be
+    completed at a time `>= open` and `<= close`), and a `"pay"`.
+
+  Travel time between two junctions is the fewest total lane minutes between them
+  (a shortest path by time, using the same idea as Stage 2 — here you only need the
+  distance, so no path tie-break is required). Simulate the day with these exact
+  rules, repeated in a loop:
+
+  1. Start at `depot`, time `0`, earnings `0`, nothing completed.
+  2. Among the deliveries **not yet completed**, a delivery at `node` is *feasible*
+     if there is a route from the rider's current junction to `node` and the arrival
+     time — current time plus that shortest travel time — is `<= close`.
+  3. If no delivery is feasible, stop.
+  4. Otherwise pick the feasible delivery whose window `close` is **earliest**. If
+     several tie on `close`, pick the one with the alphabetically smallest `node`.
+  5. Ride there. If arrival is before `open`, the rider waits and the delivery
+     completes at `open`; otherwise it completes at arrival. So the new time is
+     `max(arrival, open)`. Move the rider to `node`, add `pay` to earnings, and append
+     `node` to the completed list.
+  6. Repeat from step 2.
+
+  Return a dictionary `{"completed": [...], "earned": ..., "final_time": ...}` where
+  `completed` lists the delivered nodes in the order they were completed, `earned`
+  is the summed pay, and `final_time` is the clock when the rider stops. A delivery
+  whose window has already closed by the time the rider could reach it is skipped
+  forever. Because the rule is greedy, chasing the earliest-closing window can mean
+  missing a richer job — that is the intended behaviour.
+starter_code: |
+  import heapq
+
+
+  def dispatch_day(job):
+      return {"completed": [], "earned": 0, "final_time": 0}
+function_name: dispatch_day
+input_mode: function
+solution_sketch: Loop; each round run Dijkstra from the current junction, gather feasible pending deliveries, pick the earliest-closing (then smallest node), advance the clock with a wait if early, and stop when nothing is feasible.
+sample_solution: |
+  import heapq
+
+
+  def dispatch_day(job):
+      adjacency = {}
+      for a, b, w in job["map_edges"]:
+          adjacency.setdefault(a, []).append((b, w))
+          adjacency.setdefault(b, []).append((a, w))
+
+      def distances_from(source):
+          dist = {source: 0}
+          heap = [(0, source)]
+          while heap:
+              d, node = heapq.heappop(heap)
+              if d > dist.get(node, float("inf")):
+                  continue
+              for neighbour, w in adjacency.get(node, []):
+                  nd = d + w
+                  if nd < dist.get(neighbour, float("inf")):
+                      dist[neighbour] = nd
+                      heapq.heappush(heap, (nd, neighbour))
+          return dist
+
+      pending = list(job["deliveries"])
+      done = [False] * len(pending)
+      location = job["depot"]
+      time = 0
+      earned = 0
+      completed = []
+
+      while True:
+          dist = distances_from(location)
+          best = None
+          for i, delivery in enumerate(pending):
+              if done[i]:
+                  continue
+              node = delivery["node"]
+              if node not in dist:
+                  continue
+              arrival = time + dist[node]
+              close = delivery["window"][1]
+              if arrival <= close:
+                  key = (close, node)
+                  if best is None or key < best[0]:
+                      best = (key, i, arrival)
+          if best is None:
+              break
+          (close, node), index, arrival = best
+          delivery = pending[index]
+          done[index] = True
+          time = max(arrival, delivery["window"][0])
+          location = delivery["node"]
+          earned += delivery["pay"]
+          completed.append(delivery["node"])
+
+      return {"completed": completed, "earned": earned, "final_time": time}
+hints:
+  - level: 1
+    text: Each round has two parts — figure out how far every pending delivery is from where the rider stands now, then pick one by the greedy rule and advance the clock.
+  - level: 2
+    text: Run Dijkstra from the current junction to get shortest travel times to everywhere, then a delivery is feasible when current_time + distance is at most its window close.
+  - level: 3
+    text: Among feasible deliveries pick the smallest (close, node) pair. Set the clock to max(arrival, open) so an early rider waits, move there, bank the pay, mark it done, and loop until nothing is feasible.
+tests:
+  public:
+    - name: one_delivery
+      input: {"map_edges": [["depot", "a", 5]], "depot": "depot", "deliveries": [{"node": "a", "window": [0, 100], "pay": 10}]}
+      expected: {"completed": ["a"], "earned": 10, "final_time": 5}
+    - name: wait_for_window
+      input: {"map_edges": [["depot", "a", 3]], "depot": "depot", "deliveries": [{"node": "a", "window": [10, 20], "pay": 7}]}
+      expected: {"completed": ["a"], "earned": 7, "final_time": 10}
+    - name: window_already_closed
+      input: {"map_edges": [["depot", "a", 8]], "depot": "depot", "deliveries": [{"node": "a", "window": [0, 5], "pay": 50}]}
+      expected: {"completed": [], "earned": 0, "final_time": 0}
+  validation:
+    - name: earliest_close_first
+      input: {"map_edges": [["depot", "b", 2], ["b", "c", 2], ["depot", "c", 10]], "depot": "depot", "deliveries": [{"node": "b", "window": [0, 50], "pay": 5}, {"node": "c", "window": [0, 8], "pay": 9}]}
+      expected: {"completed": ["c", "b"], "earned": 14, "final_time": 6}
+    - name: greedy_misses_richer_job
+      input: {"map_edges": [["depot", "x", 4], ["depot", "y", 6], ["x", "y", 6]], "depot": "depot", "deliveries": [{"node": "x", "window": [0, 5], "pay": 8}, {"node": "y", "window": [0, 9], "pay": 100}]}
+      expected: {"completed": ["x"], "earned": 8, "final_time": 4}
+    - name: tie_breaks_on_node_name
+      input: {"map_edges": [["depot", "alpha", 3], ["depot", "beta", 3]], "depot": "depot", "deliveries": [{"node": "beta", "window": [0, 20], "pay": 5}, {"node": "alpha", "window": [0, 20], "pay": 5}]}
+      expected: {"completed": ["alpha", "beta"], "earned": 10, "final_time": 9}
+    - name: nothing_reachable_in_time
+      input: {"map_edges": [["depot", "a", 50], ["a", "b", 50]], "depot": "depot", "deliveries": [{"node": "a", "window": [0, 10], "pay": 5}, {"node": "b", "window": [0, 10], "pay": 5}]}
+      expected: {"completed": [], "earned": 0, "final_time": 0}
+    - name: three_stop_run
+      input: {"map_edges": [["depot", "p", 2], ["p", "q", 2], ["q", "r", 2], ["depot", "r", 10]], "depot": "depot", "deliveries": [{"node": "r", "window": [0, 30], "pay": 3}, {"node": "q", "window": [0, 20], "pay": 4}, {"node": "p", "window": [0, 10], "pay": 5}]}
+      expected: {"completed": ["p", "q", "r"], "earned": 12, "final_time": 6}
+explanation_markdown: |
+  The finale stitches the earlier stages together. Travel cost is a shortest-path
+  query, so each round begins by running Dijkstra from wherever the rider currently
+  stands — the distances change as the rider moves, which is why you recompute them
+  rather than caching once. Feasibility is an interval check: a delivery can still be
+  made only if the earliest possible arrival lands at or before its window closes.
+  The choice among feasible deliveries is the greedy heart of the problem — take the
+  one that closes soonest, breaking ties by node name so the simulation is fully
+  deterministic.
+
+  Two behaviours are worth internalising. First, waiting: arriving before a window
+  opens is fine, the clock simply jumps to `open`, modelled as `max(arrival, open)`.
+  Second, greedy myopia: in `greedy_misses_richer_job` the rider grabs `x` because it
+  closes at minute 5, which then pushes arrival at `y` to minute 10 — one minute past
+  its window — so the 100-pay job is lost and the day earns only 8. A globally optimal
+  planner would have skipped `x`, but the dispatch board runs the simple rule on
+  purpose. The loop ends the moment no pending delivery is reachable in time, and the
+  clock at that instant is the reported `final_time`.
+common_mistakes:
+  - Computing distances once from the depot instead of recomputing from the rider's current junction each round.
+  - Setting the completion time to the raw arrival and forgetting the wait, so early arrivals do not advance the clock to the window open.
+  - Breaking window-close ties inconsistently (or not at all), which makes the completed order nondeterministic.

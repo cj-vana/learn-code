@@ -1,0 +1,98 @@
+id: exercise.library.trees_lite.a05
+kind: exercise
+version: 1
+language: python
+title: Transit Stops Grouped By Distance
+slug: trees-lite-a05
+difficulty: medium
+concepts:
+  - patterns.tree_traversal
+  - patterns.queue_bfs
+  - python.collections_module
+prerequisites:
+  - python.trees_as_data
+  - python.lists
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.trees_lite.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original level-order grouping drill themed as a transit network reported one distance ring at a time.
+prompt_markdown: |
+  A transit planner wants every station grouped by how many hops it sits from the
+  central hub: the hub alone, then all stations one hop away, then all two hops
+  away, and so on. The network is a binary tree of nested dictionaries
+  (`{"value", "left", "right"}`, empty branch is `None`).
+
+  Write `stops_by_level(tree)` returning a list of lists, one inner list per
+  level, top to bottom and left to right within each level. An empty tree
+  returns `[]`.
+starter_code: |
+  def stops_by_level(tree):
+      # Return values grouped level by level, top to bottom, left to right.
+      return []
+function_name: stops_by_level
+input_mode: function
+solution_sketch: Run a BFS with a queue, freezing the queue length each round so you drain exactly one level before the next.
+sample_solution: |
+  from collections import deque
+
+  def stops_by_level(tree):
+      if tree is None:
+          return []
+      rows = []
+      queue = deque([tree])
+      while queue:
+          row = []
+          for _ in range(len(queue)):
+              node = queue.popleft()
+              row.append(node["value"])
+              if node["left"] is not None:
+                  queue.append(node["left"])
+              if node["right"] is not None:
+                  queue.append(node["right"])
+          rows.append(row)
+      return rows
+hints:
+  - level: 1
+    text: Process nodes in the order you discover them, pushing children to the back of a queue.
+  - level: 2
+    text: Before draining a level, record how many nodes are currently in the queue - that count is the level's width.
+  - level: 3
+    text: Loop range(len(queue)) times per level, popleft each node into the current row, and append its non-None children.
+tests:
+  public:
+    - name: empty
+      input: null
+      expected: []
+    - name: single
+      input: {value: 7, left: null, right: null}
+      expected: [[7]]
+    - name: full_tree
+      input: {value: 5, left: {value: 3, left: {value: 2, left: null, right: null}, right: {value: 4, left: null, right: null}}, right: {value: 8, left: null, right: {value: 9, left: null, right: null}}}
+      expected: [[5], [3, 8], [2, 4, 9]]
+  validation:
+    - name: left_chain
+      input: {value: 1, left: {value: 2, left: {value: 3, left: null, right: null}, right: null}, right: null}
+      expected: [[1], [2], [3]]
+    - name: two_children
+      input: {value: 10, left: {value: 4, left: null, right: null}, right: {value: 15, left: null, right: null}}
+      expected: [[10], [4, 15]]
+    - name: uneven_levels
+      input: {value: 1, left: {value: 2, left: {value: 4, left: null, right: null}, right: null}, right: {value: 3, left: null, right: null}}
+      expected: [[1], [2, 3], [4]]
+explanation_markdown: |
+  A queue processes nodes in discovery order, which is exactly first-in-first-out
+  and therefore level by level. The one subtle move is snapshotting
+  `len(queue)` before the inner loop: children get appended *during* the loop, so
+  freezing the count is what tells you where the current level ends and the next
+  begins. The `uneven_levels` case shows why left-to-right order matters - node 4
+  lands alone on the third row even though it descends from the left branch. A
+  `collections.deque` gives O(1) `popleft`, keeping the whole traversal O(n).
+common_mistakes:
+  - Reading len(queue) inside the loop after children were appended, mixing two levels together.
+  - Using a list and pop(0), which is O(n) per removal instead of O(1).
+  - Appending None children, then crashing when you later index them.

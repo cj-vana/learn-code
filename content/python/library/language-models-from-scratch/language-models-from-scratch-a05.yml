@@ -1,0 +1,93 @@
+id: exercise.library.language_models_from_scratch.a05
+kind: exercise
+version: 1
+language: python
+title: Sliding a Window for N-Gram Counts
+slug: language-models-from-scratch-a05
+difficulty: medium
+concepts:
+  - ai.language_models
+  - patterns.hash_map_counting
+prerequisites:
+  - python.dictionaries
+  - python.slicing
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.language_models_from_scratch.a05
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original n-gram counting drill generalizing bigrams to a configurable sliding window over a toy motif.
+prompt_markdown: |
+  A bigram model only looks back one token; an **n-gram** model looks back `n-1`.
+  Counting n-grams means sliding a window of `n` consecutive tokens across the
+  sequence and tallying each window.
+
+  Write `ngram_counts(job)` where `job` is a dict with keys `tokens` (a list of
+  token strings) and `n` (a positive integer window size). For every position
+  where a full window of `n` tokens fits, form the key by joining those tokens
+  with `|` (for example the tokens `["a", "b", "c"]` become `"a|b|c"`). Return a
+  dict mapping each n-gram key to how many times it occurs.
+
+  If `n` is larger than the number of tokens, no window fits, so return an empty
+  dict `{}`. With `n = 1` you simply count individual tokens.
+
+  Example: `{"tokens": ["a", "b", "a", "b"], "n": 2}` gives windows `a|b`, `b|a`,
+  `a|b`, so the result is `{"a|b": 2, "b|a": 1}`.
+starter_code: |
+  def ngram_counts(job):
+      return {}
+function_name: ngram_counts
+input_mode: function
+solution_sketch: Slide a start index over range(len(tokens) - n + 1), join tokens[i:i+n] with "|", and tally each window.
+sample_solution: |
+  def ngram_counts(job):
+      tokens = job["tokens"]
+      n = job["n"]
+      counts = {}
+      for i in range(len(tokens) - n + 1):
+          gram = "|".join(tokens[i:i + n])
+          counts[gram] = counts.get(gram, 0) + 1
+      return counts
+hints:
+  - level: 1
+    text: A sequence of length L has L - n + 1 windows of size n (which can be zero or negative).
+  - level: 2
+    text: For each start index i, slice tokens[i:i+n] and "|".join it to build the key.
+  - level: 3
+    text: When len(tokens) - n + 1 is not positive, range(...) is empty and you correctly return {} with no special-casing.
+tests:
+  public:
+    - name: bigram
+      input: {tokens: ["a", "b", "c"], n: 2}
+      expected: {"a|b": 1, "b|c": 1}
+    - name: bigram_repeat
+      input: {tokens: ["a", "b", "a", "b"], n: 2}
+      expected: {"a|b": 2, "b|a": 1}
+    - name: unigram
+      input: {tokens: ["a", "b", "a"], n: 1}
+      expected: {"a": 2, "b": 1}
+  validation:
+    - name: trigram
+      input: {tokens: ["x", "y", "z", "x", "y", "z"], n: 3}
+      expected: {"x|y|z": 2, "y|z|x": 1, "z|x|y": 1}
+    - name: window_too_big
+      input: {tokens: ["a", "b"], n: 3}
+      expected: {}
+    - name: window_equals_length
+      input: {tokens: ["p", "q", "r"], n: 3}
+      expected: {"p|q|r": 1}
+explanation_markdown: |
+  The window starts run from index 0 up to `len(tokens) - n`, giving
+  `len(tokens) - n + 1` windows; when that count is zero or negative, `range`
+  produces nothing and the empty dict falls out for free. Joining the window with
+  `|` gives a single hashable string key, just like the bigram case generalized to
+  `n` tokens. Higher `n` captures more context but the data gets sparse fast — most
+  long grams appear only once — which is exactly why smoothing (the previous
+  exercise) becomes important.
+common_mistakes:
+  - Iterating over range(len(tokens) - n) instead of range(len(tokens) - n + 1), dropping the final window.
+  - Joining the window without a separator, so ["a", "bc"] and ["ab", "c"] collide into the same key.
+  - Special-casing n greater than the token count instead of letting the empty range handle it.

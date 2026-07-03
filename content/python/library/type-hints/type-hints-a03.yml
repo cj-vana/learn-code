@@ -1,0 +1,132 @@
+id: exercise.library.type_hints.a03
+kind: exercise
+version: 1
+language: python
+title: Sorting the Junk Drawer
+slug: type-hints-a03
+difficulty: medium
+concepts:
+  - python.type_hints
+  - python.types
+prerequisites:
+  - python.lists
+  - python.conditionals
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.type_hints.a03
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original runtime type-narrowing drill framed around emptying a kitchen junk drawer, with a deliberate focus on the bool-is-a-subclass-of-int trap.
+prompt_markdown: |
+  You are emptying a kitchen junk drawer onto the table and sorting what falls out.
+  Some items are whole numbers, some are labels (text), and the rest is
+  miscellaneous. You will do the same in code using runtime type narrowing.
+
+  Read the signature:
+
+  ```python
+  def narrow_types(values: list[Any]) -> dict[str, Any]:
+  ```
+
+  `values` is a mixed list. Walk it in order and sort each element:
+
+  - Integers go into a list under `"ints"`.
+  - Strings go into a list under `"strs"`.
+  - Everything else (floats, `None`, lists, and so on) is only counted.
+
+  Return a dictionary shaped exactly like:
+
+  ```python
+  {"ints": [...], "strs": [...], "others_count": <int>}
+  ```
+
+  Both lists preserve the original left-to-right order.
+
+  The trap: in Python, `bool` is a **subclass** of `int`, so `isinstance(True, int)`
+  is `True`. For this drawer, a boolean is **not** a number, it belongs in the
+  miscellaneous count. Check for `bool` **before** you check for `int` so that
+  `True` and `False` are counted in `"others_count"` and never land in `"ints"`.
+
+  Example:
+
+  ```python
+  narrow_types([7, "lid", True, 3.5])
+  # -> {"ints": [7], "strs": ["lid"], "others_count": 2}
+  ```
+starter_code: |
+  from typing import Any
+
+
+  def narrow_types(values: list[Any]) -> dict[str, Any]:
+      return {"ints": [], "strs": [], "others_count": 0}
+function_name: narrow_types
+input_mode: function
+solution_sketch: Loop once, testing isinstance(value, bool) first so booleans are counted as others, then isinstance(value, int) and isinstance(value, str) to fill the two lists; everything else increments the counter.
+sample_solution: |
+  from typing import Any
+
+
+  def narrow_types(values: list[Any]) -> dict[str, Any]:
+      ints: list[int] = []
+      strs: list[str] = []
+      others_count = 0
+      for value in values:
+          if isinstance(value, bool):
+              others_count += 1
+          elif isinstance(value, int):
+              ints.append(value)
+          elif isinstance(value, str):
+              strs.append(value)
+          else:
+              others_count += 1
+      return {"ints": ints, "strs": strs, "others_count": others_count}
+hints:
+  - level: 1
+    text: Make three accumulators, a list for ints, a list for strs, and a running count for everything else, then classify each element in a single pass.
+  - level: 2
+    text: Because bool is a subclass of int, checking isinstance(value, bool) first prevents True and False from being mistaken for integers.
+  - level: 3
+    text: Order the branches bool, then int, then str, with a final else that increments others_count for floats, None, lists, and anything unmatched.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: {"ints": [], "strs": [], "others_count": 0}
+    - name: ints_and_strs
+      input: [1, "a", 2, "b"]
+      expected: {"ints": [1, 2], "strs": ["a", "b"], "others_count": 0}
+    - name: with_others
+      input: [1, 3.5, "x", null]
+      expected: {"ints": [1], "strs": ["x"], "others_count": 2}
+  validation:
+    - name: bool_not_int
+      input: [true, false, 1, 0]
+      expected: {"ints": [1, 0], "strs": [], "others_count": 2}
+    - name: all_others
+      input: [1.0, 2.5, null]
+      expected: {"ints": [], "strs": [], "others_count": 3}
+    - name: mixed_bag
+      input: ["hi", true, 7, "yo", 9, 4.0]
+      expected: {"ints": [7, 9], "strs": ["hi", "yo"], "others_count": 2}
+    - name: preserves_order
+      input: [3, "z", 1, "a", 2]
+      expected: {"ints": [3, 1, 2], "strs": ["z", "a"], "others_count": 0}
+explanation_markdown: |
+  Runtime type narrowing is how you turn a `list[Any]` into something you can act
+  on with confidence. Each `isinstance` check narrows the possibilities until you
+  know exactly how to file the value.
+
+  The whole point of this drill is branch order. Python models `bool` as a subclass
+  of `int` (historically, `True` really is `1`), so `isinstance(True, int)` returns
+  `True`. If you test `int` first, both booleans slide silently into `"ints"`.
+  Putting the `bool` check ahead of the `int` check intercepts them so they are
+  counted as miscellaneous instead. Everything the three specific branches do not
+  catch, floats, `None`, nested lists, falls through to the final `else` and only
+  bumps the counter, keeping the two lists clean.
+common_mistakes:
+  - Checking isinstance(value, int) before isinstance(value, bool), so True and False are wrongly collected as integers.
+  - Appending non-int, non-str values to a list instead of only counting them in others_count.
+  - Reordering the input while filing values, breaking the required left-to-right order of the ints and strs lists.

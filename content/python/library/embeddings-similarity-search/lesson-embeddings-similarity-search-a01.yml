@@ -1,0 +1,96 @@
+id: lesson.library.embeddings_similarity_search.a01
+kind: lesson
+version: 1
+language: python
+title: 'Meaning as Geometry: Vectors and Similarity'
+slug: lesson-embeddings-similarity-search-a01
+difficulty: medium
+concepts:
+  - ai.embeddings_retrieval
+prerequisites:
+  - python.lists
+  - ai.classic_ml
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.embeddings_similarity_search.a01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original embeddings introduction framed around a botanical library's card catalogue, with fresh worked vector examples.
+body_markdown: |
+  A botanical library wants "find me books like this one" — not matching
+  titles, matching *subject matter*. The modern answer, powering every
+  semantic search box and every RAG pipeline, is to turn each item into a
+  **vector of numbers** positioned so that similar meanings land near each
+  other. Such a vector is an **embedding**, and the geometry is the point:
+  once meaning is position, "similar" becomes "close", and search becomes
+  arithmetic you can implement in an afternoon.
+
+  Where do the numbers come from? At the frontier, from neural networks —
+  which you will not build here. What you build is everything *around* the
+  vectors: the similarity math, ranking, and scoring — which is exactly the
+  part that stays in pure Python even in production systems, and the part
+  this area's exercises implement. (A hand-built miniature: represent each
+  book as counts of its key terms. Crude, but it *is* an embedding, and it
+  is where the field started.)
+
+  ### The dot product: the atom of similarity
+
+  Every similarity measure here is built from one operation:
+
+  ```python
+  def dot(a, b):
+      return sum(x * y for x, y in zip(a, b))
+  ```
+
+  Geometrically, the dot product is large and positive when vectors point
+  the same way, near zero when perpendicular (unrelated), negative when
+  opposed. It couples two things, though: *direction* (what the vector is
+  about) and *length* (how much of it there is).
+
+  ### Cosine similarity: direction only
+
+  A 300-page monograph and a 3-page pamphlet on the same subject should
+  count as similar — but the monograph's raw counts are hundreds of times
+  larger, so its dot products dominate on length alone. The fix divides
+  length out:
+
+  ```text
+  cosine(a, b) = dot(a, b) / (|a| · |b|)
+  ```
+
+  where `|v|` is the magnitude `sqrt(dot(v, v))`. The result lands in
+  [-1, 1]: 1 for same direction, 0 for unrelated, -1 for opposite. Cosine
+  compares *what vectors are about*, ignoring *how big* they are — which is
+  why it is the default for text. An equivalent framing you will implement:
+  **normalize** every vector to unit length once, and cosine becomes a
+  plain dot product. Vector databases do exactly this at index time.
+
+  Watch the two edge cases the exercises pin down: the zero vector has no
+  direction, so its cosine is undefined (your functions return a sentinel,
+  not a crash); and cosine versus Euclidean distance genuinely disagree on
+  unnormalized vectors — the pamphlet/monograph pair is cosine-close but
+  Euclidean-far. Choosing the metric is choosing what "similar" means, the
+  same modeling decision as in k-NN.
+
+  ### Search is argmax over similarity
+
+  With a similarity in hand, semantic search is three lines: score the
+  query vector against every stored vector, sort, take the top k — with
+  deterministic tie-breaks, because two books can score identically. That
+  brute-force scan is real (it is `faiss.IndexFlat`, the baseline of the
+  most-used vector search library); everything fancier is an approximation
+  of it for scale. You will build the exact version, plus the ranking and
+  scoring layers — then the next lesson handles the documents themselves.
+checkpoints:
+  - question: The dot product of a long document's vector with anything is huge simply because the document is long. What does cosine similarity do about this, geometrically?
+    answer: It divides the dot product by both magnitudes, discarding length and comparing pure direction — so a pamphlet and a monograph about the same subject score as similar despite their size difference.
+    explanation: 'Direction encodes topic, length encodes amount; cosine keeps the former and deliberately erases the latter, which is why it is the text-similarity default.'
+  - question: Why do production vector databases normalize embeddings to unit length at index time?
+    answer: For unit vectors, cosine similarity IS the dot product — normalizing once turns every later query into the cheapest possible operation with identical rankings.
+    explanation: Precomputing the division out of the hot path is a classic engineering move; the math guarantees nothing changes but the speed.
+  - question: What must cosine_similarity do when handed a zero vector, and why?
+    answer: 'Return a defined sentinel (such as None) rather than computing — the zero vector has no direction, the magnitude in the denominator is zero, and a naive implementation divides by zero.'
+    explanation: Zero vectors arise routinely (empty documents, all-stopword chunks), so the undefined case needs a designed answer, not a crash.

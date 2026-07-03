@@ -5,11 +5,13 @@ version: 1
 language: python
 title: Data Structures in Python
 slug: data-structures-in-python
-description: "Dictionaries, sets, tuples, and sorting \u2014 the containers interviews lean on."
+description: "Dictionaries, sets, tuples, and sorting \u2014 then the structures they build: objects,\
+  \ linked lists, and trees."
 outcomes:
 - Pick the right container for the job
 - Sort with keys and reason about lookup costs
-estimated_hours: 10
+- Model data with classes and traverse linked and tree-shaped structures
+estimated_hours: 23
 review_status: published
 source_status: original
 provenance:
@@ -33,24 +35,24 @@ units:
   - exercise.library.dicts_sets_tuples.a02
   - exercise.library.dicts_sets_tuples.a03
   - exercise.library.dicts_sets_tuples.a04
+  - quiz.library.dicts_sets_tuples.a01
   - exercise.library.dicts_sets_tuples.a05
   - exercise.library.dicts_sets_tuples.a06
   - exercise.library.dicts_sets_tuples.a07
   - exercise.library.dicts_sets_tuples.a08
+  - quiz.library.dicts_sets_tuples.a02
   - exercise.library.dicts_sets_tuples.b01
   - exercise.library.dicts_sets_tuples.b02
   - exercise.library.dicts_sets_tuples.b03
   - exercise.library.dicts_sets_tuples.b04
+  - quiz.library.dicts_sets_tuples.a03
   - exercise.library.dicts_sets_tuples.b05
   - exercise.library.dicts_sets_tuples.b06
   - exercise.library.dicts_sets_tuples.b07
   - exercise.library.dicts_sets_tuples.b08
+  - quiz.library.dicts_sets_tuples.a04
   - exercise.library.dicts_sets_tuples.c01
   - exercise.library.dicts_sets_tuples.c02
-  - quiz.library.dicts_sets_tuples.a01
-  - quiz.library.dicts_sets_tuples.a02
-  - quiz.library.dicts_sets_tuples.a03
-  - quiz.library.dicts_sets_tuples.a04
 - id: unit.dicts_sets_tuples_w2
   title: 'Dicts, Sets & Tuples: Round Two'
   description: Lessons, drills, and quizzes for dicts, sets & tuples.
@@ -64,21 +66,94 @@ units:
   - exercise.library.dicts_sets_tuples_w2.a02
   - exercise.library.dicts_sets_tuples_w2.a03
   - exercise.library.dicts_sets_tuples_w2.a04
+  - quiz.library.dicts_sets_tuples_w2.a01
   - exercise.library.dicts_sets_tuples_w2.a05
   - exercise.library.dicts_sets_tuples_w2.a06
   - exercise.library.dicts_sets_tuples_w2.a07
   - exercise.library.dicts_sets_tuples_w2.a08
+  - quiz.library.dicts_sets_tuples_w2.a02
   - exercise.library.dicts_sets_tuples_w2.b01
   - exercise.library.dicts_sets_tuples_w2.b02
   - exercise.library.dicts_sets_tuples_w2.b03
   - exercise.library.dicts_sets_tuples_w2.b04
+  - quiz.library.dicts_sets_tuples_w2.a03
   - exercise.library.dicts_sets_tuples_w2.b05
   - exercise.library.dicts_sets_tuples_w2.b06
   - exercise.library.dicts_sets_tuples_w2.b07
   - exercise.library.dicts_sets_tuples_w2.b08
+  - quiz.library.dicts_sets_tuples_w2.a04
   - exercise.library.dicts_sets_tuples_w2.c01
   - exercise.library.dicts_sets_tuples_w2.c02
-  - quiz.library.dicts_sets_tuples_w2.a01
-  - quiz.library.dicts_sets_tuples_w2.a02
-  - quiz.library.dicts_sets_tuples_w2.a03
-  - quiz.library.dicts_sets_tuples_w2.a04
+- id: unit.oop_classes
+  title: Object-Oriented Python
+  description: Lessons, drills, and quizzes for object-oriented python.
+  items:
+  - lesson.library.oop_classes.a01
+  - lesson.library.oop_classes.a02
+  - lesson.library.oop_classes.a03
+  - lesson.library.oop_classes.a04
+  - exercise.library.oop_classes.a01
+  - exercise.library.oop_classes.a02
+  - exercise.library.oop_classes.a03
+  - exercise.library.oop_classes.a04
+  - quiz.library.oop_classes.a01
+  - exercise.library.oop_classes.a05
+  - exercise.library.oop_classes.a06
+  - exercise.library.oop_classes.a07
+  - exercise.library.oop_classes.a08
+  - quiz.library.oop_classes.a02
+  - exercise.library.oop_classes.a09
+  - exercise.library.oop_classes.a10
+  - exercise.library.oop_classes.a11
+  - exercise.library.oop_classes.a12
+  - quiz.library.oop_classes.a03
+  - exercise.library.oop_classes.b01
+  - exercise.library.oop_classes.b02
+- id: unit.linked_lists_patterns
+  title: Linked Lists
+  description: Lessons, drills, and quizzes for linked lists.
+  items:
+  - lesson.library.linked_lists_patterns.a01
+  - lesson.library.linked_lists_patterns.a02
+  - lesson.library.linked_lists_patterns.a03
+  - exercise.library.linked_lists_patterns.a01
+  - exercise.library.linked_lists_patterns.a02
+  - exercise.library.linked_lists_patterns.a03
+  - exercise.library.linked_lists_patterns.a04
+  - exercise.library.linked_lists_patterns.a05
+  - quiz.library.linked_lists_patterns.a01
+  - exercise.library.linked_lists_patterns.a06
+  - exercise.library.linked_lists_patterns.a07
+  - exercise.library.linked_lists_patterns.a08
+  - exercise.library.linked_lists_patterns.a09
+  - exercise.library.linked_lists_patterns.a10
+  - quiz.library.linked_lists_patterns.a02
+  - exercise.library.linked_lists_patterns.a11
+  - exercise.library.linked_lists_patterns.a12
+  - exercise.library.linked_lists_patterns.b01
+  - exercise.library.linked_lists_patterns.b02
+- id: unit.trees_lite
+  title: Trees
+  description: Lessons, drills, and quizzes for trees.
+  items:
+  - lesson.library.trees_lite.a01
+  - lesson.library.trees_lite.a02
+  - lesson.library.trees_lite.a03
+  - lesson.library.trees_lite.a04
+  - exercise.library.trees_lite.a01
+  - exercise.library.trees_lite.a02
+  - exercise.library.trees_lite.a03
+  - exercise.library.trees_lite.a04
+  - quiz.library.trees_lite.a01
+  - exercise.library.trees_lite.a05
+  - exercise.library.trees_lite.a06
+  - exercise.library.trees_lite.a07
+  - exercise.library.trees_lite.a08
+  - quiz.library.trees_lite.a02
+  - exercise.library.trees_lite.a09
+  - exercise.library.trees_lite.a10
+  - exercise.library.trees_lite.a11
+  - exercise.library.trees_lite.a12
+  - quiz.library.trees_lite.a03
+  - exercise.library.trees_lite.b01
+  - exercise.library.trees_lite.b02

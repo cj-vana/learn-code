@@ -1,0 +1,164 @@
+id: exercise.library.functional_style.a11
+kind: exercise
+version: 1
+language: python
+title: Composing the Coffee Roast Line
+slug: functional-style-a11
+difficulty: hard
+concepts:
+  - python.functional_style
+  - python.closures_decorators
+  - python.functools_operator
+prerequisites:
+  - python.functions
+  - python.lists
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.functional_style.a11
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original function-composition drill framed around a coffee roastery assembling an ordered line of numeric stations, taught by building one closure per station and folding them into a single point-free pipeline with functools.reduce.
+prompt_markdown: |
+  A coffee roastery runs each batch through an ordered line of stations. Every
+  station applies one numeric transform, and the roast master describes the whole
+  line as a list of station specs, then feeds a starting reading through it.
+
+  Write `run_roast_line(payload)` that takes **one dictionary** with two entries:
+
+  - `"start"`: the starting integer reading.
+  - `"stages"`: a list of station specs. Each spec is a **two-element list**
+    `[name, arg]` where `arg` is an integer and `name` is one of:
+    - `"add"` -> add `arg`
+    - `"subtract"` -> subtract `arg`
+    - `"scale"` -> multiply by `arg`
+    - `"floor_at"` -> raise the value up to `arg` if it is below `arg`
+      (i.e. `max(value, arg)`)
+    - `"cap_at"` -> pull the value down to `arg` if it is above `arg`
+      (i.e. `min(value, arg)`)
+
+  Apply the stations **left to right**: the first spec transforms `start`, the
+  second transforms that result, and so on. Return the final integer.
+
+  Example call:
+
+  ```python
+  run_roast_line({"start": 5, "stages": [["add", 3], ["scale", 2]]})
+  # -> (5 + 3) * 2 -> 16
+  ```
+
+  Order matters: `[["scale", 2], ["add", 3]]` on the same start of `5` gives `13`,
+  not `16`. If `stages` is empty, return `start` unchanged.
+
+  Build this the functional way: turn each spec into its own **one-argument
+  function** (a closure that has captured its `arg`), then **compose** those
+  functions into a single pipeline with `functools.reduce`, seeded with an identity
+  function, and finally apply the pipeline to `start`.
+starter_code: |
+  from functools import reduce
+
+
+  def run_roast_line(payload):
+      return payload["start"]
+function_name: run_roast_line
+input_mode: function
+solution_sketch: Map each spec to a closure capturing its arg via a builder table (add/subtract/scale/floor_at/cap_at). Fold the list of stage functions with functools.reduce using a compose combiner (lambda f, g -> lambda x -> g(f(x))) seeded with the identity lambda x -> x so composition runs left to right, then call the resulting pipeline on start.
+sample_solution: |
+  from functools import reduce
+
+
+  def run_roast_line(payload):
+      builders = {
+          "add": lambda arg: (lambda x: x + arg),
+          "subtract": lambda arg: (lambda x: x - arg),
+          "scale": lambda arg: (lambda x: x * arg),
+          "floor_at": lambda arg: (lambda x: arg if x < arg else x),
+          "cap_at": lambda arg: (lambda x: arg if x > arg else x),
+      }
+      stage_fns = [builders[name](arg) for name, arg in payload["stages"]]
+      pipeline = reduce(lambda f, g: (lambda x: g(f(x))), stage_fns, lambda x: x)
+      return pipeline(payload["start"])
+hints:
+  - level: 1
+    text: Each station is really a one-argument function of the current reading; the station's arg is fixed when you build that function, so it becomes a captured value inside a closure.
+  - level: 2
+    text: A builder table maps each name to a function that takes arg and returns the actual transform, e.g. "add" -> lambda arg -> (lambda x -> x + arg); calling the builder with arg freezes that arg per station.
+  - level: 3
+    text: Compose the stage functions with reduce(lambda f, g -> (lambda x -> g(f(x))), stage_fns, lambda x -> x); the identity seed makes an empty line a no-op, and g(f(x)) applies them in list order. Then call the composed pipeline on start.
+tests:
+  public:
+    - name: empty_stages_returns_start
+      input:
+        start: 7
+        stages: []
+      expected: 7
+    - name: add_then_scale
+      input:
+        start: 5
+        stages:
+          - ["add", 3]
+          - ["scale", 2]
+      expected: 16
+    - name: order_matters_scale_then_add
+      input:
+        start: 5
+        stages:
+          - ["scale", 2]
+          - ["add", 3]
+      expected: 13
+  validation:
+    - name: single_add
+      input:
+        start: 0
+        stages:
+          - ["add", 5]
+      expected: 5
+    - name: cap_pulls_value_down
+      input:
+        start: 20
+        stages:
+          - ["cap_at", 10]
+      expected: 10
+    - name: floor_raises_value_up
+      input:
+        start: -3
+        stages:
+          - ["floor_at", 0]
+      expected: 0
+    - name: long_chain_with_clamp
+      input:
+        start: 2
+        stages:
+          - ["add", 1]
+          - ["scale", 3]
+          - ["subtract", 4]
+          - ["cap_at", 5]
+      expected: 5
+    - name: scale_by_zero_then_add
+      input:
+        start: 9
+        stages:
+          - ["scale", 0]
+          - ["add", 7]
+      expected: 7
+explanation_markdown: |
+  The exercise pushes you from "loop and mutate a running value" to "assemble a
+  function and apply it once". Each station spec is turned into a **closure**: the
+  builder for `"add"` takes `arg` and returns `lambda x: x + arg`. Because `arg` is
+  the builder's own parameter, every station captures its own frozen value -- which
+  sidesteps the classic late-binding trap where lambdas built in a loop all share
+  the final loop variable.
+
+  Composition is then a fold over functions. `reduce(compose, stage_fns, identity)`
+  starts from `lambda x: x` and, step by step, wraps the accumulated pipeline `f`
+  with the next stage `g` as `lambda x: g(f(x))`. Because each new stage goes on the
+  outside as `g(f(x))`, the stations fire in list order. The identity seed is what
+  makes an empty `stages` list compose to a do-nothing function that returns `start`
+  untouched. The final `pipeline(start)` is the only place a concrete value flows --
+  everything before it is point-free, working with functions rather than numbers.
+common_mistakes:
+  - Building the stage lambdas so they read a shared loop variable instead of a captured argument, so every station ends up using the last spec's arg (late binding).
+  - Composing right-to-left (f(g(x))), which runs the stations in reverse and breaks any order-sensitive line.
+  - Seeding reduce with the first stage instead of an identity function, which crashes on an empty stages list rather than returning start.

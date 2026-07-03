@@ -1,0 +1,97 @@
+id: exercise.library.tokenization_bpe.a03
+kind: exercise
+version: 1
+language: python
+title: Choosing the Pair to Merge
+slug: tokenization-bpe-a03
+difficulty: medium
+concepts:
+  - ai.tokenization
+  - python.sorting
+prerequisites:
+  - python.dictionaries
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.tokenization_bpe.a03
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original argmax-with-tie-break drill framed as a merge planner selecting the single most frequent glyph pair to fuse next.
+prompt_markdown: |
+  A BPE tokenizer merges one pair at a time, always the pair that currently
+  appears most often. When two pairs are tied for most frequent, real
+  implementations need a **deterministic** rule so the same corpus always
+  produces the same tokenizer. We break ties alphabetically by the pair's key.
+
+  Write `best_pair(counts)` where `counts` is a dictionary mapping a space-joined
+  pair key (like `"l o"`) to its integer frequency. Return the single key string
+  with the highest count. If several keys share the highest count, return the one
+  that comes **first in alphabetical (ascending string) order**. If `counts` is
+  empty, return `None`.
+
+  For example `{"l o": 5, "o w": 5, "w </w>": 2}` returns `"l o"`, because `l o`
+  and `o w` are tied at 5 and `"l o"` sorts before `"o w"`.
+starter_code: |
+  def best_pair(counts):
+      return None
+function_name: best_pair
+input_mode: function
+solution_sketch: Iterate keys in sorted (alphabetical) order and keep the first key whose count strictly exceeds the best seen so far, which yields the max with an alphabetical tie-break.
+sample_solution: |
+  def best_pair(counts):
+      if not counts:
+          return None
+      best_key = None
+      best_count = None
+      for key in sorted(counts):
+          count = counts[key]
+          if best_count is None or count > best_count:
+              best_count = count
+              best_key = key
+      return best_key
+hints:
+  - level: 1
+    text: The answer is an argmax over the dictionary values, but ties must be resolved the same way every time.
+  - level: 2
+    text: If you walk the keys in sorted() order and only replace your best when you find a strictly larger count, the earliest alphabetical key among the maxima wins.
+  - level: 3
+    text: Handle the empty dict up front by returning None, then loop with a strict > comparison so equal counts never overwrite an earlier (smaller) key.
+tests:
+  public:
+    - name: tie_broken_alphabetically
+      input: {"l o": 5, "o w": 5, "w </w>": 2}
+      expected: "l o"
+    - name: clear_winner
+      input: {"a b": 1, "b c": 4, "c d": 2}
+      expected: "b c"
+    - name: empty
+      input: {}
+      expected: null
+  validation:
+    - name: all_tied
+      input: {"z z": 3, "a a": 3, "m m": 3}
+      expected: "a a"
+    - name: single_pair
+      input: {"q r": 9}
+      expected: "q r"
+    - name: tie_two_keys
+      input: {"b c": 2, "a d": 2}
+      expected: "a d"
+    - name: marker_key_sorts_first
+      input: {"e </w>": 4, "a b": 4}
+      expected: "a b"
+explanation_markdown: |
+  Greedy BPE always fuses the most frequent adjacent pair, so this argmax is the
+  decision maker for every training round. The subtlety is reproducibility: with
+  no tie-break, dictionary iteration order could hand back different pairs on
+  different runs and produce different tokenizers. Sorting the keys first and
+  replacing the running best only on a **strict** increase guarantees that among
+  all pairs sharing the maximum count, the alphabetically smallest key is
+  returned. Scanning costs `O(m log m)` for `m` pairs because of the sort, which
+  is negligible compared to the rest of a training loop.
+common_mistakes:
+  - Using >= instead of > so a later, larger-sorting key overwrites the correct alphabetical winner on a tie.
+  - Returning the count or the (key, count) pair instead of just the key string.
+  - Forgetting the empty-dictionary case, which should return None rather than raising.

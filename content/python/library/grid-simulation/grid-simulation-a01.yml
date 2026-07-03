@@ -1,0 +1,125 @@
+id: exercise.library.grid_simulation.a01
+kind: exercise
+version: 1
+language: python
+title: Moisture Around One Greenhouse Bed
+slug: grid-simulation-a01
+difficulty: easy
+concepts:
+  - patterns.grid_traversal
+prerequisites:
+  - python.lists
+  - python.loops
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.grid_simulation.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original 4-neighbour sum drill framed as reading moisture sensors around a single greenhouse planting bed.
+prompt_markdown: |
+  A greenhouse floor is a rectangular tray of planting beds stored as a grid of
+  moisture readings, where `grid[r][c]` is the reading for row `r`, column `c`.
+  To check whether one bed is drying out, you compare it against the beds that
+  touch it edge-to-edge: the beds directly up, down, left, and right. Diagonal
+  beds do not count.
+
+  Write `neighbor_sum(readings)` where `readings` is a single dictionary with
+  three keys:
+
+  - `"grid"`: a non-empty rectangular list of lists of integers
+  - `"row"`: the integer row index of the target bed
+  - `"col"`: the integer column index of the target bed
+
+  Return the sum of the up/down/left/right neighbours that actually exist inside
+  the grid. Beds on an edge have three neighbours and beds in a corner have only
+  two, so simply skip any neighbour whose row or column falls outside the grid. A
+  single-cell grid has no neighbours and returns `0`.
+
+  Example: for `{"grid": [[1, 2, 3], [4, 5, 6], [7, 8, 9]], "row": 1, "col": 1}`
+  the neighbours are `2` (up), `8` (down), `4` (left), and `6` (right), so the
+  result is `20`.
+starter_code: |
+  def neighbor_sum(readings):
+      return 0
+function_name: neighbor_sum
+input_mode: function
+solution_sketch: Read grid, row, and col from the dict, then add each of the four orthogonal neighbours whose indices stay inside the grid bounds.
+sample_solution: |
+  def neighbor_sum(readings):
+      grid = readings["grid"]
+      r = readings["row"]
+      c = readings["col"]
+      rows, cols = len(grid), len(grid[0])
+      total = 0
+      for dr, dc in ((-1, 0), (1, 0), (0, -1), (0, 1)):
+          nr, nc = r + dr, c + dc
+          if 0 <= nr < rows and 0 <= nc < cols:
+              total += grid[nr][nc]
+      return total
+hints:
+  - level: 1
+    text: The four orthogonal neighbours of (r, c) sit at (r-1, c), (r+1, c), (r, c-1), and (r, c+1).
+  - level: 2
+    text: Loop over the four (dr, dc) offsets and compute nr = r + dr, nc = c + dc for each.
+  - level: 3
+    text: Before adding grid[nr][nc], guard with 0 <= nr < rows and 0 <= nc < cols so edges and corners skip the missing neighbours.
+tests:
+  public:
+    - name: interior_bed
+      input:
+        grid: [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+        row: 1
+        col: 1
+      expected: 20
+    - name: top_left_corner
+      input:
+        grid: [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+        row: 0
+        col: 0
+      expected: 6
+    - name: top_edge
+      input:
+        grid: [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+        row: 0
+        col: 1
+      expected: 9
+  validation:
+    - name: single_cell
+      input:
+        grid: [[7]]
+        row: 0
+        col: 0
+      expected: 0
+    - name: single_row_middle
+      input:
+        grid: [[2, 4, 6, 8]]
+        row: 0
+        col: 2
+      expected: 12
+    - name: single_column_middle
+      input:
+        grid: [[5], [10], [15]]
+        row: 1
+        col: 0
+      expected: 20
+    - name: bottom_right_corner
+      input:
+        grid: [[1, 2, 3], [4, 5, 6], [7, 8, 9]]
+        row: 2
+        col: 2
+      expected: 14
+explanation_markdown: |
+  Every grid task leans on the same bounds check, `0 <= nr < rows and 0 <= nc <
+  cols`. By looping over the four offset pairs and testing each candidate before
+  reading it, you get correct behaviour on interior cells, edges, and corners
+  without writing separate cases for each. Interior beds contribute all four
+  neighbours, edge beds drop one because a candidate index lands outside the
+  grid, and corner beds drop two the same way. The work is a constant four checks
+  per call, so this runs in O(1) time regardless of grid size.
+common_mistakes:
+  - Forgetting the bounds check and reading a negative index, which silently wraps around to the far side of the row instead of skipping.
+  - Including diagonal beds, which are not edge-to-edge neighbours and should not be counted.
+  - Assuming every cell has four neighbours and hard-coding four additions, which crashes or over-counts at the borders.

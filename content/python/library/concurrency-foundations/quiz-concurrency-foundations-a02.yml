@@ -1,0 +1,102 @@
+id: quiz.library.concurrency_foundations.a02
+kind: quiz
+version: 1
+language: python
+title: Coroutines and the GIL, Mechanically
+slug: quiz-concurrency-foundations-a02
+difficulty: hard
+concepts:
+  - python.concurrency_model
+prerequisites:
+  - python.concurrency_model
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.concurrency_foundations.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax quiz on coroutine mechanics, gather ordering, GIL semantics, and thread-safety subtleties.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: |
+      A function calls fetch_data() where fetch_data is async, never awaits
+      it, and returns. What actually happened?
+    choices:
+      - A coroutine object was created and discarded — none of fetch_data's body ever ran
+      - fetch_data ran synchronously to completion
+      - fetch_data runs later on a background thread
+      - Python raised SyntaxError at the call
+    correct_choice: A coroutine object was created and discarded — none of fetch_data's body ever ran
+    explanation: |
+      Calling an async function only builds the suspended coroutine, exactly
+      like calling a generator function; without an await (or task creation)
+      it is dead weight — Python even emits a "never awaited" warning.
+    concepts:
+      - python.concurrency_model
+  - id: q2
+    prompt: |
+      counter += 1 in Python is NOT thread-safe despite the GIL. Why not?
+    choices:
+      - It compiles to several bytecode ops (load, add, store), and the GIL can hand off between them, losing an update
+      - The GIL only protects strings
+      - Integers are immutable, so threads see stale copies forever
+      - It is thread-safe — the GIL serializes everything
+    correct_choice: It compiles to several bytecode ops (load, add, store), and the GIL can hand off between them, losing an update
+    explanation: |
+      The GIL makes individual bytecode operations atomic, not statements;
+      read-modify-write sequences interleave. The GIL protects the
+      interpreter's internals, never your invariants.
+    concepts:
+      - python.concurrency_model
+  - id: q3
+    prompt: |
+      Driving a generator-coroutine by hand: after gen.send(value) resumes it
+      and the function RETURNS, how does the result reach you?
+    choices:
+      - A StopIteration is raised whose .value attribute carries the return value
+      - send() returns the function's return value directly
+      - The value is stored on gen.result
+      - Generators cannot return values
+    correct_choice: A StopIteration is raised whose .value attribute carries the return value
+    explanation: |
+      "return x" in a generator raises StopIteration(x) — the exact mechanism
+      await uses under the hood to deliver coroutine results; hand-driving it
+      once makes async execution concrete.
+    concepts:
+      - python.concurrency_model
+      - python.iterators_generators
+  - id: q4
+    prompt: |
+      results = await asyncio.gather(t1, t2, return_exceptions=True) where t2
+      raised ValueError. What is in results?
+    choices:
+      - "[t1's result, the ValueError instance] — failures arrive as values in their positional slots"
+      - Only t1's result — failures are dropped
+      - The call itself raises ValueError immediately
+      - "[t1's result, None]"
+    correct_choice: "[t1's result, the ValueError instance] — failures arrive as values in their positional slots"
+    explanation: |
+      return_exceptions=True isolates per-task failure: the batch completes,
+      order is argument order, and callers branch with isinstance — one bad
+      task costs one slot, not the batch.
+    concepts:
+      - python.concurrency_model
+  - id: q5
+    prompt: |
+      A queue simulation processes ops on a bounded queue of capacity 2:
+      put, put, put, get. Under standard blocking semantics, what happens to
+      the third put?
+    choices:
+      - It waits until the get frees a slot, then completes — put on full blocks
+      - It raises QueueFull immediately
+      - It overwrites the oldest item
+      - It succeeds — capacity is advisory
+    correct_choice: It waits until the get frees a slot, then completes — put on full blocks
+    explanation: |
+      Blocking put-on-full is the backpressure mechanism itself; the
+      non-blocking variants (put_nowait) exist separately and raise instead.
+    concepts:
+      - python.concurrency_model

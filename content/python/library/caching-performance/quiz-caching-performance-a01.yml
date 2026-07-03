@@ -1,0 +1,102 @@
+id: quiz.library.caching_performance.a01
+kind: quiz
+version: 1
+language: python
+title: Performance Judgment
+slug: quiz-caching-performance-a01
+difficulty: medium
+concepts:
+  - concepts.performance
+prerequisites:
+  - concepts.performance
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.caching_performance.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pattern-recognition quiz on caching validity, lazy/eager choice, and spotting complexity bugs.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      A developer adds @lru_cache to a function that returns the current
+      exchange rate from a live feed. What breaks?
+    choices:
+      - The function is not pure — it caches the first rate and serves it forever, ignoring the changing feed
+      - The cache overflows immediately
+      - Nothing — caching always helps
+      - The feed connection leaks
+    correct_choice: The function is not pure — it caches the first rate and serves it forever, ignoring the changing feed
+    explanation: |
+      Memoization requires same-input-same-output; caching a function whose
+      answer changes under fixed inputs serves stale data indefinitely.
+    concepts:
+      - concepts.performance
+      - concepts.memoization
+  - id: q2
+    prompt: |
+      A pipeline must sum a computed field over a 50-million-row file that
+      barely fits in memory. Which construction survives?
+    choices:
+      - A generator chain summed lazily — one row in memory at a time
+      - A list comprehension materializing all matching rows, then sum
+      - Loading the whole file into a list first
+      - Sorting the rows before summing
+    correct_choice: A generator chain summed lazily — one row in memory at a time
+    explanation: |
+      Lazy evaluation keeps memory flat regardless of size; materializing
+      50M rows is exactly the warehouse that crashes.
+    concepts:
+      - concepts.performance
+      - python.iterators_generators
+  - id: q3
+    prompt: |
+      Deduplicating IDs with `if id not in seen: seen.append(id)` is instant
+      in tests and takes minutes on the real dataset. Diagnosis and fix?
+    choices:
+      - O(n^2) from list membership inside the loop — make seen a set for O(1) membership, giving O(n)
+      - The dataset is corrupt
+      - append is the bottleneck; use insert
+      - Add an lru_cache to the loop
+    correct_choice: O(n^2) from list membership inside the loop — make seen a set for O(1) membership, giving O(n)
+    explanation: |
+      A linear scan inside a linear loop over growing data is the accidental
+      quadratic; the set changes membership from O(n) to O(1).
+    concepts:
+      - concepts.performance
+      - concepts.big_o
+  - id: q4
+    prompt: |
+      Building a big report string with `report += line` for 200,000 lines
+      is slow. Why, and what is the fix?
+    choices:
+      - Immutable strings make each += copy the whole accumulator (O(n^2)); collect lines in a list and "".join once (O(n))
+      - The lines are too long individually
+      - += leaks memory each iteration
+      - Strings should be bytes for speed
+    correct_choice: Immutable strings make each += copy the whole accumulator (O(n^2)); collect lines in a list and "".join once (O(n))
+    explanation: |
+      Repeated concatenation rebuilds a growing immutable string; join
+      builds the result in a single pass.
+    concepts:
+      - concepts.performance
+      - concepts.big_o
+  - id: q5
+    prompt: |
+      Before optimizing a slow report generator, a senior engineer profiles
+      it and finds 95% of time is in one date-parsing call. What principle
+      is this?
+    choices:
+      - Measure before optimizing — intuition about the hot spot is often wrong, so profile to target the real one
+      - Optimize the imports first
+      - Rewrite the whole module in C
+      - Cache everything preemptively
+    correct_choice: Measure before optimizing — intuition about the hot spot is often wrong, so profile to target the real one
+    explanation: |
+      Effort spent guessing optimizes code that may run once; the profile
+      points at the 95% where fixing actually matters.
+    concepts:
+      - concepts.performance

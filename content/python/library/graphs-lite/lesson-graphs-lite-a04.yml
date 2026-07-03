@@ -1,0 +1,87 @@
+id: lesson.library.graphs_lite.a04
+kind: lesson
+version: 1
+language: python
+title: Ordering a Directed Acyclic Graph
+slug: lesson-graphs-lite-a04
+difficulty: hard
+concepts:
+  - patterns.graph_traversal
+  - python.heapq_bisect
+prerequisites:
+  - python.dictionaries
+  - python.heapq_bisect
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.graphs_lite.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original topological-sort lesson using indegree counting and a min-heap to produce a lexicographically smallest ordering.
+body_markdown: |
+  Some directed graphs encode *prerequisites*: an edge `[a, b]` means "a must come
+  before b." Course requirements, build steps, and assembly instructions all look
+  like this. A **topological sort** flattens such a graph into a single line where
+  every arrow still points forward. It is possible if and only if the graph is a
+  **directed acyclic graph** (a DAG) -- a cycle would demand that some step come
+  before itself.
+
+  The cleanest construction is **Kahn's algorithm**, which works from *indegrees*.
+  A node's indegree is how many edges point *into* it -- how many prerequisites it
+  is still waiting on. Any node with indegree zero is ready to go. Place it, then
+  "release" its dependents by lowering each of their indegrees by one; any that
+  drop to zero become ready in turn.
+
+  ```python
+  import heapq
+
+  def topo_order(nodes, edges):
+      graph = {n: [] for n in nodes}
+      indegree = {n: 0 for n in nodes}
+      for a, b in edges:
+          graph[a].append(b)
+          indegree[b] += 1
+
+      ready = [n for n in nodes if indegree[n] == 0]
+      heapq.heapify(ready)                  # min-heap for tie-breaks
+      order = []
+      while ready:
+          node = heapq.heappop(ready)
+          order.append(node)
+          for nxt in graph[node]:
+              indegree[nxt] -= 1
+              if indegree[nxt] == 0:
+                  heapq.heappush(ready, nxt)
+
+      return order if len(order) == len(nodes) else []
+  ```
+
+  Using a plain list for `ready` would give *a* valid order; using a **min-heap**
+  gives the *alphabetically smallest* valid order, because whenever several nodes
+  are ready at once the heap hands back the smallest first. That is a common
+  requirement when a deterministic answer is needed.
+
+  The final line doubles as **cycle detection**. If the graph has a cycle, the
+  nodes trapped in it never reach indegree zero -- each is forever waiting on
+  another -- so they never enter `ready` and never get placed. When the loop ends,
+  `order` is shorter than the node list, and you return `[]` to signal that no
+  valid ordering exists. This is why Kahn's algorithm is often the single tool you
+  reach for: it produces the ordering when one exists and proves impossibility when
+  it does not, in one pass.
+
+  Kahn's is not the only route -- a depth-first search that records nodes as it
+  *finishes* them and reverses the result also produces a topological order -- but
+  the indegree method makes the "smallest valid order" and "is it even a DAG?"
+  questions especially easy to answer together.
+checkpoints:
+  - question: What does a node's indegree represent, and what does an indegree of zero mean for topological sorting?
+    answer: Indegree is the number of edges pointing into the node -- its count of unmet prerequisites; indegree zero means nothing blocks it, so it is ready to be placed next.
+    explanation: Kahn's algorithm places ready (indegree-zero) nodes and decrements their dependents' indegrees, freeing new nodes as prerequisites are satisfied.
+  - question: Why use a min-heap for the set of ready nodes instead of an ordinary list or queue?
+    answer: A min-heap always returns the smallest ready node first, producing the alphabetically smallest valid ordering; a list or queue gives a valid but not necessarily smallest order.
+    explanation: When several nodes are simultaneously ready, the tie-break is decided by whichever structure you pop from, so a heap enforces the lexicographic rule.
+  - question: How does Kahn's algorithm reveal that a graph contains a cycle?
+    answer: The nodes in a cycle never reach indegree zero, so they are never placed; when the loop ends, the output list is shorter than the node list, which signals the cycle.
+    explanation: A cycle means mutual waiting, so those nodes can never become ready, and the length mismatch is the impossibility signal.

@@ -1,0 +1,106 @@
+id: exercise.library.modern_syntax.a04
+kind: exercise
+version: 1
+language: python
+title: The Harbor Master's Event Log
+slug: modern-syntax-a04
+difficulty: medium
+concepts:
+  - python.modern_syntax
+  - python.dictionaries
+prerequisites:
+  - python.conditionals
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.modern_syntax.a04
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original mapping-pattern drill themed around a harbor master's event log, showing that mapping patterns match a subset of keys and ignore extras.
+prompt_markdown: |
+  A harbor master's console receives events as dictionaries and renders each one as
+  a short line for the log. Write `describe_event(event)` that uses a `match`/`case`
+  statement with **mapping patterns** (for example `case {"type": "delay", "minutes": mins}:`)
+  and returns a string:
+
+  - `{"type": "arrival", "ship": <name>, "berth": <berth>}` returns `"<name> docking at berth <berth>"`
+  - `{"type": "departure", "ship": <name>}` returns `"<name> leaving port"`
+  - `{"type": "delay", "minutes": <mins>}` returns `"delayed <mins> minutes"`
+  - any other dictionary that still has a `"type"` key returns `"unknown event: <type>"`
+  - anything with no `"type"` key returns `"malformed"`
+
+  Two behaviors to rely on: a mapping pattern matches when the listed keys are
+  present, so **extra keys are ignored** (an arrival that also carries a `"cargo"`
+  key still matches the arrival case). And an empty dict `{}` has no `"type"` key,
+  so it returns `"malformed"`. For example,
+  `describe_event({"type": "arrival", "ship": "Aurora", "berth": 9, "cargo": "grain"})`
+  returns `"Aurora docking at berth 9"`.
+starter_code: |
+  def describe_event(event):
+      return "malformed"
+function_name: describe_event
+input_mode: function
+solution_sketch: Match the fully specified event shapes first (arrival needs ship and berth, departure needs ship, delay needs minutes), then a catch-all mapping with just a captured type key, then a wildcard for anything lacking a type.
+sample_solution: |
+  def describe_event(event):
+      match event:
+          case {"type": "arrival", "ship": name, "berth": berth}:
+              return f"{name} docking at berth {berth}"
+          case {"type": "departure", "ship": name}:
+              return f"{name} leaving port"
+          case {"type": "delay", "minutes": mins}:
+              return f"delayed {mins} minutes"
+          case {"type": kind}:
+              return f"unknown event: {kind}"
+          case _:
+              return "malformed"
+hints:
+  - level: 1
+    text: 'A mapping pattern such as `case {"type": "delay", "minutes": mins}:` matches a dict that has those keys, binding mins to the value under "minutes".'
+  - level: 2
+    text: Mapping patterns only require the keys you list, so extra keys in the event are ignored. List the specific event shapes before the general fallback.
+  - level: 3
+    text: 'Use `case {"type": kind}:` as a fallback that captures the type of any still-unmatched event, and `case _:` as the final wildcard for dicts with no "type" key.'
+tests:
+  public:
+    - name: arrival
+      input: {"type": "arrival", "ship": "Meridian", "berth": 4}
+      expected: "Meridian docking at berth 4"
+    - name: departure
+      input: {"type": "departure", "ship": "Kestrel"}
+      expected: "Kestrel leaving port"
+    - name: delay
+      input: {"type": "delay", "minutes": 15}
+      expected: "delayed 15 minutes"
+  validation:
+    - name: arrival_ignores_extra_keys
+      input: {"type": "arrival", "ship": "Aurora", "berth": 9, "cargo": "grain"}
+      expected: "Aurora docking at berth 9"
+    - name: unknown_type
+      input: {"type": "storm"}
+      expected: "unknown event: storm"
+    - name: empty_dict_is_malformed
+      input: {}
+      expected: "malformed"
+    - name: no_type_key_is_malformed
+      input: {"ship": "Nomad", "berth": 2}
+      expected: "malformed"
+    - name: delay_zero_minutes
+      input: {"type": "delay", "minutes": 0}
+      expected: "delayed 0 minutes"
+explanation_markdown: |
+  A mapping pattern is a subset check: `case {"type": "arrival", "ship": name, "berth": berth}:`
+  matches any dict that contains at least those three keys with `"type"` equal to
+  `"arrival"`, and it binds the other two values. Keys the event carries beyond the
+  ones you name are simply not inspected, which is why an arrival with an extra
+  `"cargo"` key still matches. Ordering runs from most specific to least: the fully
+  described shapes come first, then `case {"type": kind}:` captures the type of
+  anything else that at least declares one, and the final `case _:` catches dicts
+  with no `"type"` key at all. That last split is what separates an unrecognized but
+  well-formed event from a genuinely malformed one.
+common_mistakes:
+  - Expecting a mapping pattern to fail on extra keys; it matches on the listed keys only and ignores the rest.
+  - 'Placing `case {"type": kind}:` before the specific cases, so every typed event is reported as "unknown".'
+  - 'Assuming `{}` reaches the `case {"type": kind}:` branch; with no "type" key it falls through to the wildcard and returns "malformed".'

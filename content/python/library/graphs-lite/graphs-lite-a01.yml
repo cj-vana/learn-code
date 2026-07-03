@@ -1,0 +1,90 @@
+id: exercise.library.graphs_lite.a01
+kind: exercise
+version: 1
+language: python
+title: Wiring the Tram Map
+slug: graphs-lite-a01
+difficulty: easy
+concepts:
+  - patterns.graph_traversal
+  - python.dictionaries
+prerequisites:
+  - python.lists
+  - python.loops
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.graphs_lite.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original tram-network scenario that turns an undirected edge list into a sorted adjacency dictionary.
+prompt_markdown: |
+  A small city publishes its tram map as a list of two-way connections between
+  stops, for example `["central", "harbour"]`. Before you can plan any trips you
+  need the map in a friendlier shape: an *adjacency list*.
+
+  Write `build_adjacency_list(edges)` where `edges` is a list of `[stop_a, stop_b]`
+  pairs. Return a dictionary mapping every stop that appears to a list of its
+  directly connected neighbours. Because tracks run both ways, each edge adds
+  two entries. Sort every neighbour list alphabetically, and never list the same
+  neighbour twice even if a connection is repeated in the input.
+starter_code: |
+  def build_adjacency_list(edges):
+      adjacency = {}
+      return adjacency
+function_name: build_adjacency_list
+input_mode: function
+solution_sketch: For each edge add both endpoints as keys and append each to the other's neighbour list, then sort and de-duplicate.
+sample_solution: |
+  def build_adjacency_list(edges):
+      adjacency = {}
+      for stop_a, stop_b in edges:
+          adjacency.setdefault(stop_a, [])
+          adjacency.setdefault(stop_b, [])
+          if stop_b not in adjacency[stop_a]:
+              adjacency[stop_a].append(stop_b)
+          if stop_a not in adjacency[stop_b]:
+              adjacency[stop_b].append(stop_a)
+      return {stop: sorted(neighbours) for stop, neighbours in adjacency.items()}
+hints:
+  - level: 1
+    text: Every edge is undirected, so it should appear in two places in your dictionary.
+  - level: 2
+    text: Use setdefault to make sure both stops exist as keys before appending, and skip a neighbour you have already recorded.
+  - level: 3
+    text: After building raw lists, return a new dict comprehension that maps each stop to sorted(neighbours) so the order is deterministic.
+tests:
+  public:
+    - name: simple_chain
+      input: [[a, b], [b, c]]
+      expected: {"a": [b], "b": [a, c], "c": [b]}
+    - name: triangle
+      input: [[hub, north], [hub, south], [north, south]]
+      expected: {"hub": [north, south], "north": [hub, south], "south": [hub, north]}
+    - name: single_edge
+      input: [[x, y]]
+      expected: {"x": [y], "y": [x]}
+  validation:
+    - name: empty
+      input: []
+      expected: {}
+    - name: duplicate_edge
+      input: [[a, b], [a, b]]
+      expected: {"a": [b], "b": [a]}
+    - name: star_with_triangle
+      input: [[r, s], [s, t], [t, r], [r, u]]
+      expected: {"r": [s, t, u], "s": [r, t], "t": [r, s], "u": [r]}
+explanation_markdown: |
+  An adjacency list stores, for each vertex, the vertices it touches directly.
+  It is the workhorse representation for sparse graphs because it uses only as
+  much space as there are edges. Since tram tracks are bidirectional, every pair
+  `[a, b]` contributes `b` to `a`'s neighbours *and* `a` to `b`'s. Guarding each
+  append with a membership check keeps repeated connections from creating
+  duplicates, and sorting at the end gives a stable, predictable output that the
+  traversal exercises can rely on.
+common_mistakes:
+  - Recording each edge in only one direction, which loses half of the connections.
+  - Forgetting to create a key for a stop that only ever appears on the right side of an edge.
+  - Allowing duplicate neighbours when the same edge is listed more than once.

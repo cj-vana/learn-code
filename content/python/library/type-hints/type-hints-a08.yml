@@ -1,0 +1,172 @@
+id: exercise.library.type_hints.a08
+kind: exercise
+version: 1
+language: python
+title: Reconciling Two Catalogue Drafts
+slug: type-hints-a08
+difficulty: medium
+concepts:
+  - python.type_hints
+prerequisites:
+  - python.dictionaries
+  - python.types
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.type_hints.a08
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original type-aware dictionary merge framed around a librarian reconciling two catalogue drafts without ever raising an error.
+prompt_markdown: |
+  Two volunteers each typed up a draft of the same catalogue, and now the drafts
+  must be reconciled into one. Rather than crash on a disagreement, the merge tool
+  should quietly record which fields the drafts describe with **different kinds of
+  value** so a human can settle them later.
+
+  Write `merge_typed(job)` that takes **one dictionary** with two entries:
+
+  - `"a"`: the first draft, a dictionary of field names to values
+  - `"b"`: the second draft, a dictionary of field names to values
+
+  Build the merged catalogue by these rules, starting from a copy of draft `a`:
+
+  - A field only in `a` keeps `a`'s value; a field only in `b` takes `b`'s value.
+  - A field in **both** drafts whose two values have the **same Python type**
+    (compared with `type()`) takes `b`'s value -- the second draft overrides.
+  - A field in **both** drafts whose two values have **different Python types** is
+    a conflict: keep `a`'s value in the merged result and record the field name.
+
+  Note that `type()` treats a boolean and an integer as different types, so a
+  field that is `True` in one draft and `1` in the other is a conflict.
+
+  Example call:
+
+  ```python
+  merge_typed({"a": {"title": "Ferns", "pages": 12},
+               "b": {"pages": "twelve", "shelf": 3}})
+  # -> {"merged": {"title": "Ferns", "pages": 12, "shelf": 3},
+  #     "conflicts": ["pages"]}
+  ```
+
+  The function must **never raise**. Return a dictionary with `"merged"` (the
+  merged catalogue) and `"conflicts"` (the conflicting field names as a list
+  sorted in ascending order, or an empty list when there are none).
+starter_code: |
+  from typing import Any
+
+
+  def merge_typed(job: dict[str, dict[str, Any]]) -> dict[str, Any]:
+      return {"merged": {}, "conflicts": []}
+function_name: merge_typed
+input_mode: function
+solution_sketch: Copy draft a, then walk draft b; new keys are added, keys present in both with the same type() override, and keys with differing type() are left as a's value and collected as conflicts, which are returned sorted alongside the merged dict.
+sample_solution: |
+  from typing import Any
+
+
+  def merge_typed(job: dict[str, dict[str, Any]]) -> dict[str, Any]:
+      a = job["a"]
+      b = job["b"]
+      merged: dict[str, Any] = dict(a)
+      conflicts: list[str] = []
+      for key, value in b.items():
+          if key not in a:
+              merged[key] = value
+          elif type(a[key]) == type(value):
+              merged[key] = value
+          else:
+              conflicts.append(key)
+      return {"merged": merged, "conflicts": sorted(conflicts)}
+hints:
+  - level: 1
+    text: Start the merged result as a copy of draft a, then decide what to do with each field of draft b.
+  - level: 2
+    text: For a shared field compare type(a[key]) with type(value); equal types let b override, differing types make it a conflict where a's value stays.
+  - level: 3
+    text: Collect conflicting keys in a list and return sorted(conflicts) so the order is deterministic; the function never raises.
+tests:
+  public:
+    - name: both_empty
+      input:
+        a: {}
+        b: {}
+      expected:
+        merged: {}
+        conflicts: []
+    - name: disjoint_keys
+      input:
+        a: {"x": 1}
+        b: {"y": 2}
+      expected:
+        merged: {"x": 1, "y": 2}
+        conflicts: []
+    - name: same_type_override
+      input:
+        a: {"x": 1}
+        b: {"x": 5}
+      expected:
+        merged: {"x": 5}
+        conflicts: []
+    - name: type_conflict_keeps_first
+      input:
+        a: {"x": 1}
+        b: {"x": "one"}
+      expected:
+        merged: {"x": 1}
+        conflicts: ["x"]
+  validation:
+    - name: multiple_conflicts_sorted
+      input:
+        a: {"b": 1, "a": 2, "c": 3}
+        b: {"b": "z", "a": 9, "c": 3.0}
+      expected:
+        merged: {"b": 1, "a": 9, "c": 3}
+        conflicts: ["b", "c"]
+    - name: bool_vs_int_conflict
+      input:
+        a: {"flag": true}
+        b: {"flag": 1}
+      expected:
+        merged: {"flag": true}
+        conflicts: ["flag"]
+    - name: float_vs_int_conflict
+      input:
+        a: {"ratio": 2}
+        b: {"ratio": 2.0}
+      expected:
+        merged: {"ratio": 2}
+        conflicts: ["ratio"]
+    - name: all_shared_same_type
+      input:
+        a: {"p": 1, "q": 2}
+        b: {"p": 3, "q": 4}
+      expected:
+        merged: {"p": 3, "q": 4}
+        conflicts: []
+    - name: only_b_has_keys
+      input:
+        a: {}
+        b: {"k": "v"}
+      expected:
+        merged: {"k": "v"}
+        conflicts: []
+explanation_markdown: |
+  The merge is total rather than partial: it always returns a value instead of
+  raising, and it separates the clean overrides from the genuine disagreements.
+  Starting from a copy of `a` keeps the first draft intact and lets `b` layer on
+  top. For a shared field, comparing `type(a[key])` with `type(value)` is a
+  lightweight structural check -- if both drafts agree on the shape of the data,
+  the newer value wins; if they disagree, the tool refuses to guess and records
+  the field for review while preserving `a`'s original value.
+
+  The boolean case is the instructive one: `type(True)` is `bool` and `type(1)`
+  is `int`, so despite `True == 1` being true, they are different types and the
+  field is flagged. Sorting the conflict list makes the output deterministic,
+  which matters for tests and for showing a human a stable list. The whole routine
+  is one pass over draft `b`, O(n) in its size.
+common_mistakes:
+  - Using == to compare the values instead of type(), which treats True and 1 as equal and misses the conflict.
+  - Overwriting a's value for a conflicting field instead of keeping it, losing the first draft's data.
+  - Returning the conflicts in insertion order rather than sorted, producing a non-deterministic result.

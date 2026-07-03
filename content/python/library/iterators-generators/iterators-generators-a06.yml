@@ -1,0 +1,96 @@
+id: exercise.library.iterators_generators.a06
+kind: exercise
+version: 1
+language: python
+title: Vineyard Ripeness Pipeline
+slug: iterators-generators-a06
+difficulty: medium
+concepts:
+  - python.iterators_generators
+  - patterns.filtering
+prerequisites:
+  - python.iterators_generators
+  - python.loops
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.iterators_generators.a06
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original vineyard brix scenario chaining a filter generator into a shift generator.
+prompt_markdown: |
+  A vineyard measures the sugar level (in brix) of grape samples. Readings outside
+  an acceptable band are sensor noise and should be dropped; the survivors are
+  reported relative to the band's floor. Write `ripeness_pipeline(spec)` where
+  `spec` is a dict with keys `"readings"` (a list of numbers), `"low"` and
+  `"high"` (the inclusive band), and `"base"` (a number to subtract). Return a
+  **list** of the kept readings, each with `base` subtracted, in original order.
+
+  Build this as a **chain of two generators**: one that yields only the readings
+  inside `[low, high]`, and one that yields each of those minus `base`. Feed the
+  first generator straight into the second, then materialize with `list()`.
+
+  For example, `ripeness_pipeline({"readings": [15, 22, 30, 25], "low": 18,
+  "high": 26, "base": 18})` returns `[4, 7]`.
+starter_code: |
+  def ripeness_pipeline(spec):
+      # Chain a filtering generator into a shifting generator, then return list(...).
+      return []
+function_name: ripeness_pipeline
+input_mode: function
+solution_sketch: One generator yields readings within the band, a second yields each minus base, and the first pipes into the second before list() collects the result.
+sample_solution: |
+  def ripeness_pipeline(spec):
+      def in_band(readings, low, high):
+          for r in readings:
+              if low <= r <= high:
+                  yield r
+
+      def shift(readings, base):
+          for r in readings:
+              yield r - base
+
+      filtered = in_band(spec["readings"], spec["low"], spec["high"])
+      return list(shift(filtered, spec["base"]))
+hints:
+  - level: 1
+    text: Write two small generators, one that filters and one that transforms, then wire the first into the second.
+  - level: 2
+    text: The filter generator yields r only when low <= r <= high; the shift generator yields r - base for each value it receives.
+  - level: 3
+    text: Pass in_band(...) as the iterable argument to shift(...), then return list() of that chained generator.
+tests:
+  public:
+    - name: example
+      input: {readings: [15, 22, 30, 25], low: 18, high: 26, base: 18}
+      expected: [4, 7]
+    - name: all_kept
+      input: {readings: [20, 21, 22], low: 20, high: 22, base: 20}
+      expected: [0, 1, 2]
+    - name: none_kept
+      input: {readings: [5, 40], low: 18, high: 26, base: 18}
+      expected: []
+  validation:
+    - name: boundaries_inclusive
+      input: {readings: [18, 26, 27, 17], low: 18, high: 26, base: 18}
+      expected: [0, 8]
+    - name: empty
+      input: {readings: [], low: 0, high: 10, base: 0}
+      expected: []
+    - name: zero_base
+      input: {readings: [3, 9, 12], low: 4, high: 10, base: 0}
+      expected: [9]
+explanation_markdown: |
+  Each stage is a lazy generator, and connecting them means a reading flows all
+  the way through, filtered and then shifted, before the next one is pulled. No
+  intermediate list of filtered readings is ever built; `shift` simply iterates
+  whatever `in_band` hands it. The band check uses an inclusive `low <= r <= high`,
+  so the endpoints are kept, and iterating the source in order preserves the
+  original order of the survivors. `list()` at the very end drives the whole
+  pipeline to completion.
+common_mistakes:
+  - Subtracting base before filtering, so the band comparison runs on already-shifted numbers.
+  - Using an exclusive comparison and dropping readings exactly on the boundary.
+  - Materializing the filtered readings into a list first, which defeats the point of chaining lazy generators.

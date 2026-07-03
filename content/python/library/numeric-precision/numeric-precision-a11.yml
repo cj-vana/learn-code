@@ -1,0 +1,115 @@
+id: exercise.library.numeric_precision.a11
+kind: exercise
+version: 1
+language: python
+title: Compounding the Greenhouse Season
+slug: numeric-precision-a11
+difficulty: hard
+concepts:
+  - python.numeric_precision
+  - python.functional_style
+prerequisites:
+  - python.lists
+  - python.loops
+estimated_time_minutes: 21
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.numeric_precision.a11
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original exact-product drill that folds a list of rational growth factors with math.prod over fractions.Fraction to avoid float drift, framed around compounding weekly greenhouse growth multipliers into one season factor.
+prompt_markdown: |
+  A greenhouse tracks how a seedbed grows week by week. Each week's growth is an
+  exact ratio, like "grew by three-halves" written as the pair `[3, 2]` meaning
+  the numerator `3` over the denominator `2`. Over a season the overall growth is
+  the product of every week's factor, and it must stay **exact** — chaining these
+  as floats would let rounding error creep in and drift away from the true value.
+
+  Fold the factors with `math.prod`, but over `fractions.Fraction` values instead
+  of floats so the arithmetic is exact and reduces to lowest terms automatically.
+  Start the product from `Fraction(1)` so an empty season correctly yields the
+  identity `1` (that is, `1/1`).
+
+  Write `season_factor(factors)` where `factors` is a list of two-element lists.
+  Each inner list is `[numerator, denominator]`, where the numerator is an integer
+  (which may be zero or negative) and the denominator is a positive integer.
+
+  Return the total growth as a two-element list `[numerator, denominator]` in
+  lowest terms, taking the sign and the reduction from `Fraction`. An empty list
+  returns `[1, 1]`.
+
+  Example: `season_factor([[3, 2], [4, 3]])` returns `[2, 1]`, because
+  `(3/2) * (4/3)` is `12/6`, which reduces to `2/1`.
+starter_code: |
+  import math
+  from fractions import Fraction
+
+
+  def season_factor(factors):
+      return [1, 1]
+function_name: season_factor
+input_mode: function
+solution_sketch: Turn each [num, den] pair into a Fraction, fold them with math.prod starting from Fraction(1), then return the result's numerator and denominator as a two-element list already in lowest terms.
+sample_solution: |
+  import math
+  from fractions import Fraction
+
+
+  def season_factor(factors):
+      pieces = [Fraction(num, den) for num, den in factors]
+      total = math.prod(pieces, start=Fraction(1))
+      return [total.numerator, total.denominator]
+hints:
+  - level: 1
+    text: Build a Fraction from each [num, den] pair so every multiplication stays exact and self-reducing.
+  - level: 2
+    text: math.prod accepts a start keyword; pass start=Fraction(1) so the empty case returns the identity 1 as a Fraction.
+  - level: 3
+    text: After the product, return [total.numerator, total.denominator]; Fraction already keeps lowest terms with the sign carried in the numerator.
+tests:
+  public:
+    - name: two_factors
+      input: [[3, 2], [4, 3]]
+      expected: [2, 1]
+    - name: empty_identity
+      input: []
+      expected: [1, 1]
+    - name: single_factor
+      input: [[5, 4]]
+      expected: [5, 4]
+  validation:
+    - name: reduces_to_one
+      input: [[2, 3], [3, 2]]
+      expected: [1, 1]
+    - name: three_halves_cubed
+      input: [[1, 2], [1, 2], [1, 2]]
+      expected: [1, 8]
+    - name: negative_factor
+      input: [[-1, 2], [4, 3]]
+      expected: [-2, 3]
+    - name: contains_zero
+      input: [[0, 1], [5, 2]]
+      expected: [0, 1]
+    - name: mixed_reduce
+      input: [[10, 4], [2, 5]]
+      expected: [1, 1]
+explanation_markdown: |
+  `math.prod` is the multiplicative twin of `sum`: it folds an iterable into a
+  single product. The trick here is what it folds *over*. By converting each pair
+  to a `fractions.Fraction`, every multiplication is exact rational arithmetic, so
+  `(3/2) * (4/3)` is computed as `12/6` and stored in lowest terms as `2/1` with no
+  floating-point noise. Chaining the same factors as floats would accumulate tiny
+  representation errors that a long season could magnify.
+
+  Two details make it robust. Passing `start=Fraction(1)` means an empty list
+  returns the identity `Fraction(1)` rather than a plain `int`, and it keeps the
+  running product a `Fraction` throughout. And because `Fraction` normalises sign
+  and reduces on every step, a factor of `[0, 1]` collapses the whole product to
+  `0/1`, and a negative numerator like `[-1, 2]` keeps its sign in the numerator
+  while the denominator stays positive.
+common_mistakes:
+  - Multiplying the raw numerators and denominators separately without reducing, so the result is a correct value in un-reduced terms like [12, 6] instead of [2, 1].
+  - Folding over floats (dividing num by den first), which reintroduces the rounding drift the exercise exists to avoid.
+  - Forgetting start=Fraction(1), so the empty list returns a plain int 1 with no .numerator/.denominator to unpack, or the running product falls back to int math.

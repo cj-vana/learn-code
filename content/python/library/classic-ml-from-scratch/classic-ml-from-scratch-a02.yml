@@ -1,0 +1,110 @@
+id: exercise.library.classic_ml_from_scratch.a02
+kind: exercise
+version: 1
+language: python
+title: City-Block Distance Between Tea Blends
+slug: classic-ml-from-scratch-a02
+difficulty: easy
+concepts:
+  - ai.classic_ml
+prerequisites:
+  - python.lists
+  - python.loops
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.classic_ml_from_scratch.a02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original L1-distance drill framed around gram-by-gram tea blend recipes.
+prompt_markdown: |
+  Euclidean distance is not the only way to measure how far apart two feature
+  vectors are. The **Manhattan** (or L1, or city-block) distance adds up the
+  absolute coordinate gaps instead of squaring them. It answers "how many total
+  grams differ across the recipe" rather than "what is the straight-line gap".
+
+  A tea shop describes each blend as a vector of grams per ingredient, for
+  example `[black_tea, dried_orange, cardamom]`. Write `manhattan(job)` that takes
+  a single dictionary with two keys:
+
+  - `"a"`: the first vector, a list of numbers.
+  - `"b"`: the second vector, the same length as `"a"`.
+
+  Return the Manhattan distance, defined for vectors of length `n` as:
+
+  ```
+  distance = |a[0]-b[0]| + |a[1]-b[1]| + ... + |a[n-1]-b[n-1]|
+  ```
+
+  Take the absolute value of each coordinate difference and add them up. **Round
+  the result to 6 decimal places** and return it as a float. Identical vectors are
+  distance `0.0`.
+
+  Example:
+
+  ```python
+  manhattan({"a": [4.0, 1.5, 2.0], "b": [3.0, 2.5, 2.0]})
+  # -> 2.0   (|4-3| + |1.5-2.5| + |2-2| = 1 + 1 + 0)
+  ```
+starter_code: |
+  def manhattan(job):
+      return 0.0
+function_name: manhattan
+input_mode: function
+solution_sketch: Sum abs(x - y) over the paired coordinates from zip, then round to 6 decimals.
+sample_solution: |
+  def manhattan(job):
+      a = job["a"]
+      b = job["b"]
+      total = 0.0
+      for x, y in zip(a, b):
+          total += abs(x - y)
+      return round(total, 6)
+hints:
+  - level: 1
+    text: Walk the two vectors together with zip(a, b) so you can look at one coordinate pair at a time.
+  - level: 2
+    text: For each pair add abs(x - y) to a running total; the absolute value stops positive and negative gaps from cancelling.
+  - level: 3
+    text: Start the total as 0.0 so the result is a float, then return round(total, 6) after the loop.
+tests:
+  public:
+    - name: identical
+      input: {"a": [2.0, 5.0], "b": [2.0, 5.0]}
+      expected: 0.0
+    - name: simple
+      input: {"a": [0.0, 0.0], "b": [3.0, 4.0]}
+      expected: 7.0
+    - name: fractions
+      input: {"a": [1.25, 2.5], "b": [0.75, 1.0]}
+      expected: 2.0
+  validation:
+    - name: three_dim_with_zero_gap
+      input: {"a": [1.0, 2.0, 3.0], "b": [4.0, 0.0, 3.0]}
+      expected: 5.0
+    - name: negatives
+      input: {"a": [-1.0, -2.0], "b": [2.0, 2.0]}
+      expected: 7.0
+    - name: four_dim
+      input: {"a": [5.0, 5.0, 5.0, 5.0], "b": [1.0, 2.0, 3.0, 4.0]}
+      expected: 10.0
+    - name: tea_blend
+      input: {"a": [4.0, 1.5, 2.0], "b": [3.0, 2.5, 2.0]}
+      expected: 2.0
+explanation_markdown: |
+  Manhattan distance treats each feature independently: it simply totals how far
+  apart the two vectors are along every axis, like the number of blocks a taxi
+  drives on a street grid. Because it never squares anything, a single large gap
+  contributes proportionally rather than being amplified, which makes L1 distance
+  more forgiving of outliers than Euclidean distance.
+
+  The `abs` on each term is the whole trick. Without it, a coordinate where `a`
+  overshoots `b` would cancel one where `b` overshoots `a`, and two very different
+  blends could report a distance of zero. Starting the total at `0.0` keeps the
+  return type a float even when every gap happens to be a whole number.
+common_mistakes:
+  - Dropping the abs, so positive and negative gaps cancel and unlike vectors look identical.
+  - Squaring the differences, which computes Euclidean-style distance instead of L1.
+  - Initialising the total as 0 (int) and never rounding, so the type or value can drift from the expected float.

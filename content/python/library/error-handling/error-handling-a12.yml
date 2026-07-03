@@ -1,0 +1,128 @@
+id: exercise.library.error_handling.a12
+kind: exercise
+version: 1
+language: python
+title: Salvaging a Half-Broken Config File
+slug: error-handling-a12
+difficulty: medium
+concepts:
+  - python.exceptions
+prerequisites:
+  - python.strings
+  - python.dictionaries
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.error_handling.a12
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original key=value config salvager that raises and catches a locally-defined ConfigError to route malformed lines.
+prompt_markdown: |
+  A tiny desktop app stores its settings in a text file, one setting per line in
+  `key=value` form. Real files get messy: someone leaves a stray note on its own
+  line, or fat-fingers a line with nothing before the `=`. Your job is to salvage
+  everything usable and keep a record of what you had to skip, without letting one
+  bad line abort the whole load.
+
+  Write `parse_config(lines)` where `lines` is a list of strings, each *meant* to
+  be a `key=value` setting. Process the lines in order and return a dict with
+  exactly two keys:
+
+  - `"parsed"`: a dict mapping each valid setting's key to its value.
+  - `"errors"`: a list of the raw lines you had to reject, in the order you saw them.
+
+  A line is **malformed** when either it contains no `=` at all, or its key is
+  empty once you strip surrounding whitespace (for example `=5` or `   = x`). When
+  you hit a malformed line, raise a `ConfigError` that you define *inside*
+  `parse_config`, catch it right there, and append the original raw line (exactly
+  as given, untouched) to `"errors"`.
+
+  For a valid line, split on the **first** `=` only, strip whitespace from both
+  the key and the value, and store them in `"parsed"`. An empty value is fine
+  (`flag=` maps `"flag"` to `""`). A value may itself contain `=` characters. If
+  the same key appears more than once, the later line overwrites the earlier one.
+
+  An empty input list must return `{"parsed": {}, "errors": []}`.
+
+  Example: `['a=1', 'oops', 'b = 2', 'a=9']` returns
+  `{"parsed": {"a": "9", "b": "2"}, "errors": ["oops"]}`.
+starter_code: |
+  def parse_config(lines):
+      # Walk the lines, routing malformed ones into errors and valid ones into parsed.
+      return {"parsed": {}, "errors": []}
+function_name: parse_config
+input_mode: function
+solution_sketch: Loop the raw lines, raise a local ConfigError for a missing '=' or empty key, catch it to record the raw line, else split once and store the stripped key/value.
+sample_solution: |
+  def parse_config(lines):
+      class ConfigError(Exception):
+          pass
+
+      parsed = {}
+      errors = []
+      for raw in lines:
+          try:
+              if "=" not in raw:
+                  raise ConfigError("missing '=' separator")
+              key, value = raw.split("=", 1)
+              key = key.strip()
+              value = value.strip()
+              if key == "":
+                  raise ConfigError("empty key")
+              parsed[key] = value
+          except ConfigError:
+              errors.append(raw)
+      return {"parsed": parsed, "errors": errors}
+hints:
+  - level: 1
+    text: Handle one line at a time so a single bad line only affects itself, never the lines that come after it.
+  - level: 2
+    text: Split on the first '=' with raw.split("=", 1) so a value that contains '=' stays intact; then strip both halves before checking whether the key is empty.
+  - level: 3
+    text: "Define `class ConfigError(Exception): pass` inside the function, raise it when there is no '=' or the stripped key is empty, and catch it to append the original raw line to errors."
+tests:
+  public:
+    - name: mixed_valid_and_bad
+      input: ['a=1', 'oops', 'b = 2', 'a=9']
+      expected: {parsed: {a: '9', b: '2'}, errors: ['oops']}
+    - name: empty_input
+      input: []
+      expected: {parsed: {}, errors: []}
+    - name: empty_key_rejected
+      input: ['=5', 'host=local']
+      expected: {parsed: {host: local}, errors: ['=5']}
+  validation:
+    - name: whitespace_trimmed
+      input: ['  name  =  Ada  ']
+      expected: {parsed: {name: Ada}, errors: []}
+    - name: duplicate_keys_overwrite
+      input: ['x=1', 'x=2', 'x=3']
+      expected: {parsed: {x: '3'}, errors: []}
+    - name: value_may_contain_equals
+      input: ['url=http://a=b', 'k=v']
+      expected: {parsed: {url: 'http://a=b', k: v}, errors: []}
+    - name: empty_value_is_valid
+      input: ['flag=', 'blank note', '  = x']
+      expected: {parsed: {flag: ''}, errors: ['blank note', '  = x']}
+explanation_markdown: |
+  The core idea is to make each line independently recoverable. By wrapping the
+  per-line work in a `try` and raising a locally-defined `ConfigError` for the two
+  malformed cases, you get a single, clear place to reject a line and move on
+  instead of letting an exception unwind the whole loop. Defining `ConfigError`
+  inside the function keeps this signalling private to the parser: nothing outside
+  can accidentally trip the same catch.
+
+  Two details make the parser robust. Splitting with `raw.split("=", 1)` divides on
+  only the first `=`, so a value like `http://a=b` survives intact rather than
+  being chopped apart. And because you write straight into a dict, a repeated key
+  naturally overwrites its earlier entry, so the last line wins for free. Stripping
+  the key before the empty check is what lets `   = x` be caught as an empty-key
+  error while `name = Ada` still parses cleanly.
+common_mistakes:
+  - Splitting on every '=' instead of just the first, which corrupts values that legitimately contain '='.
+  - Storing a stripped or reconstructed version of a bad line in errors instead of the original raw string.
+  - Treating an empty value like `flag=` as malformed, when only a missing '=' or an empty key should be rejected.
+  - Letting an uncaught exception escape the loop, which drops every remaining line after the first bad one.

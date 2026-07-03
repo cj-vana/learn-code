@@ -1,0 +1,106 @@
+id: quiz.library.binary_data_struct.a01
+kind: quiz
+version: 1
+language: python
+title: Binary Judgment Calls
+slug: quiz-binary-data-struct-a01
+difficulty: hard
+concepts:
+  - python.binary_data
+prerequisites:
+  - python.binary_data
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.binary_data_struct.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pattern-recognition quiz on choosing binary-data tools and diagnosing byte-level failures.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      A device manual says each record is "u16 id, u32 timestamp
+      little-endian, s16 reading" — fixed 8 bytes. Which parsing approach
+      matches the spec most directly?
+    choices:
+      - struct.unpack("<HIh", chunk) per 8-byte slice — the format string IS the spec, with validation for free
+      - Manual bit-shifting of individual bytes
+      - Decode as latin-1 and split the string
+      - json.loads after base64-decoding
+    correct_choice: struct.unpack("<HIh", chunk) per 8-byte slice — the format string IS the spec, with validation for free
+    explanation: |
+      Fixed-width typed fields with declared endianness are struct's exact
+      domain; the format string transcribes the manual's sentence, and size
+      mismatches raise instead of corrupting.
+    concepts:
+      - python.binary_data
+  - id: q2
+    prompt: |
+      Timestamps parsed from a partner's binary feed are absurd — dates in
+      the year 30,000 — but the byte layout looks right in a hex dump. First
+      hypothesis?
+    choices:
+      - Endianness mismatch — the field is being unpacked with the wrong byte order, scrambling significance
+      - The partner's clock is wrong
+      - Python integers overflowed
+      - The file is base64-encoded twice
+    correct_choice: Endianness mismatch — the field is being unpacked with the wrong byte order, scrambling significance
+    explanation: |
+      Structured-but-wrong values (huge where small expected, byte-swap
+      patterns) are endianness's signature; flipping < to > in the format is
+      the 30-second test.
+    concepts:
+      - python.binary_data
+  - id: q3
+    prompt: |
+      A parser slices a 200 MB capture into 50,000 record chunks with
+      data[i:j] and is slow with high memory churn. What is the zero-copy
+      fix?
+    choices:
+      - Wrap the buffer in a memoryview and slice windows from it — views share the underlying memory
+      - Convert the buffer to a list of ints first
+      - Read the file twice with smaller buffers
+      - Compress the buffer before slicing
+    correct_choice: Wrap the buffer in a memoryview and slice windows from it — views share the underlying memory
+    explanation: |
+      bytes slicing copies; memoryview slicing creates windows. Fifty
+      thousand allocations become fifty thousand pointer-arithmetic
+      operations.
+    concepts:
+      - python.binary_data
+      - concepts.performance
+  - id: q4
+    prompt: |
+      A million sensor floats must be held in memory and periodically
+      shipped as raw bytes. Which stdlib container fits both requirements?
+    choices:
+      - array.array("d", values) — packed machine doubles with .tobytes() for shipping
+      - A list of floats with str() serialization
+      - A dict keyed by index
+      - A tuple, since it is immutable
+    correct_choice: array.array("d", values) — packed machine doubles with .tobytes() for shipping
+    explanation: |
+      array stores unboxed machine values (an order of magnitude smaller
+      than a list of float objects) and speaks the buffer protocol, so raw
+      export is one call.
+    concepts:
+      - python.binary_data
+  - id: q5
+    prompt: |
+      b"caf\xc3\xa9".decode("utf-8") gives "café" but .decode("latin-1")
+      gives "cafÃ©". What principle does this demonstrate?
+    choices:
+      - Bytes have no inherent text meaning — the codec is an interpretation, and the wrong one garbles silently rather than erroring
+      - UTF-8 is the only valid codec for accented text
+      - latin-1 cannot decode two-byte sequences
+      - The bytes were corrupted in transit
+    correct_choice: Bytes have no inherent text meaning — the codec is an interpretation, and the wrong one garbles silently rather than erroring
+    explanation: |
+      latin-1 maps every byte to SOME character, so it never fails — it just
+      lies. Mojibake like Ã© is the visible fingerprint of UTF-8 bytes read
+      through a one-byte codec.
+    concepts:
+      - python.binary_data

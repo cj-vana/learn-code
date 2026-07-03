@@ -1,0 +1,105 @@
+id: exercise.library.decorators_closures.a04
+kind: exercise
+version: 1
+language: python
+title: The Receipt Decorator
+slug: decorators-closures-a04
+difficulty: medium
+concepts:
+  - python.closures_decorators
+  - python.string_formatting
+prerequisites:
+  - python.closures_decorators
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.decorators_closures.a04
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original print-shop receipt scenario where a decorator reshapes a wrapped function's numeric return into a formatted string.
+prompt_markdown: |
+  A print shop prices jobs by page count and wants every price wrapped into a
+  tidy receipt line. Write a decorator named `as_receipt` that wraps a function
+  returning an integer price and instead returns the string
+  `"Total: $<price>"`. Use `functools.wraps` so the wrapped function keeps its
+  name.
+
+  Then finish `make_receipts(page_counts)`, which decorates a pricing function
+  with `as_receipt` and returns one receipt string per page count. Pricing is
+  `pages * 3`.
+
+  For `make_receipts([1, 4])` the result is `["Total: $3", "Total: $12"]`.
+starter_code: |
+  import functools
+
+
+  def as_receipt(func):
+      # Wrap func so its integer result becomes "Total: $<result>".
+      return func
+
+
+  def make_receipts(page_counts):
+      @as_receipt
+      def price(pages):
+          return pages * 3
+      return [price(count) for count in page_counts]
+function_name: make_receipts
+input_mode: function
+solution_sketch: Define as_receipt returning a wraps-decorated wrapper that formats func's result as a receipt string.
+sample_solution: |
+  import functools
+
+
+  def as_receipt(func):
+      @functools.wraps(func)
+      def wrapper(*args, **kwargs):
+          return f"Total: ${func(*args, **kwargs)}"
+      return wrapper
+
+
+  def make_receipts(page_counts):
+      @as_receipt
+      def price(pages):
+          return pages * 3
+      return [price(count) for count in page_counts]
+hints:
+  - level: 1
+    text: A decorator returns a new function that calls the original and reshapes its result.
+  - level: 2
+    text: Inside as_receipt, define wrapper(*args, **kwargs) that returns an f-string built from func(*args, **kwargs), and decorate it with functools.wraps(func).
+  - level: 3
+    text: 'Return f"Total: ${func(*args, **kwargs)}" from the wrapper, then return wrapper from as_receipt.'
+tests:
+  public:
+    - name: two_jobs
+      input: [1, 4]
+      expected: ["Total: $3", "Total: $12"]
+    - name: single_job
+      input: [10]
+      expected: ["Total: $30"]
+    - name: empty
+      input: []
+      expected: []
+  validation:
+    - name: zero_pages
+      input: [0]
+      expected: ["Total: $0"]
+    - name: several
+      input: [2, 5, 7]
+      expected: ["Total: $6", "Total: $15", "Total: $21"]
+    - name: repeats
+      input: [3, 3]
+      expected: ["Total: $9", "Total: $9"]
+explanation_markdown: |
+  `as_receipt` follows the canonical decorator shape: accept `func`, define a
+  `wrapper` that calls it and transforms the result, and return `wrapper`. The
+  `@functools.wraps(func)` line copies the original's metadata so the decorated
+  `price` still reports its real name and docstring. Because the wrapper accepts
+  `*args, **kwargs`, the same decorator would work for any pricing signature,
+  not just this one.
+common_mistakes:
+  - Returning func unchanged instead of returning a new wrapper.
+  - 'Formatting the price but forgetting the exact "Total: $" prefix.'
+  - Omitting functools.wraps, which silently strips the wrapped function's name and docstring.

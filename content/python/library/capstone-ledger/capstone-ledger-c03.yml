@@ -1,0 +1,177 @@
+id: exercise.library.capstone_ledger.c03
+kind: exercise
+version: 1
+language: python
+title: The Market Ledger - Vendor Statements
+slug: capstone-ledger-c03
+difficulty: hard
+concepts:
+  - concepts.grouping_aggregation
+  - python.dictionaries
+prerequisites:
+  - python.dictionaries
+  - python.sets
+estimated_time_minutes: 20
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.capstone_ledger.c03
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original third stage of the market ledger capstone; folds parsed entries into per-vendor statements with a gross total, per-item quantities, and a distinct-day count.
+prompt_markdown: |
+  Stage 3 of the Market Ledger capstone: the parsed entries from Stage 2 are a
+  flat stream of sales, but each vendor wants their own statement. Time to group.
+
+  Write `vendor_statements(entries)` where `entries` is a list of parsed sale
+  dicts, each with the keys `"date"`, `"vendor"`, `"item"`, `"qty"` (int),
+  `"unit_price"` (float) and `"total"` (float) - exactly the Stage 1 shape.
+
+  Return a dictionary that maps each distinct vendor to a statement dictionary
+  with exactly these keys:
+
+  - `"gross"`: the sum of that vendor's `"total"` values, rounded to 2 decimals.
+  - `"items"`: a dictionary mapping each item the vendor sold to the total `"qty"`
+    of that item across all their sales.
+  - `"days_active"`: the number of **distinct** dates on which the vendor made a
+    sale (an integer count, not the dates themselves).
+
+  Vendors appear as keys in the order each vendor is **first seen** in `entries`.
+  An empty `entries` list returns an empty dictionary `{}`.
+
+  Example:
+
+  ```python
+  vendor_statements([
+      {"date": "2026-06-01", "vendor": "Rosewood Farm", "item": "heirloom tomatoes",
+       "qty": 12, "unit_price": 3.5, "total": 42.0},
+      {"date": "2026-06-01", "vendor": "Rosewood Farm", "item": "basil",
+       "qty": 7, "unit_price": 1.15, "total": 8.05},
+  ])
+  # -> {"Rosewood Farm": {"gross": 50.05,
+  #                       "items": {"heirloom tomatoes": 12, "basil": 7},
+  #                       "days_active": 1}}
+  ```
+starter_code: |
+  def vendor_statements(entries):
+      return {}
+function_name: vendor_statements
+input_mode: function
+solution_sketch: Keep one statement per vendor plus a side set of that vendor's dates; fold each entry's total, per-item qty, and date in, then convert each date set to its length and round the gross at the end.
+sample_solution: |
+  def vendor_statements(entries):
+      statements = {}
+      dates = {}
+      for entry in entries:
+          vendor = entry["vendor"]
+          if vendor not in statements:
+              statements[vendor] = {"gross": 0.0, "items": {}, "days_active": 0}
+              dates[vendor] = set()
+          statement = statements[vendor]
+          statement["gross"] += entry["total"]
+          item = entry["item"]
+          statement["items"][item] = statement["items"].get(item, 0) + entry["qty"]
+          dates[vendor].add(entry["date"])
+      for vendor, statement in statements.items():
+          statement["gross"] = round(statement["gross"], 2)
+          statement["days_active"] = len(dates[vendor])
+      return statements
+hints:
+  - level: 1
+    text: Create a vendor's statement the first time you see them, seeding gross at 0.0, items at an empty dict, and tracking their dates in a set on the side.
+  - level: 2
+    text: For each entry add total to gross, and update the item count with statement["items"].get(item, 0) + qty so a repeated item accumulates.
+  - level: 3
+    text: A set automatically discards duplicate dates, so days_active is just len(that vendor's date set). Round gross once at the end to avoid a floating-point tail.
+tests:
+  public:
+    - name: no_entries
+      input: []
+      expected: {}
+    - name: single_sale
+      input:
+        - {"date": "2026-06-01", "vendor": "Rosewood Farm", "item": "heirloom tomatoes", "qty": 12, "unit_price": 3.5, "total": 42.0}
+      expected:
+        Rosewood Farm:
+          gross: 42.0
+          items: {"heirloom tomatoes": 12}
+          days_active: 1
+    - name: two_vendors
+      input:
+        - {"date": "2026-06-01", "vendor": "Rosewood Farm", "item": "heirloom tomatoes", "qty": 12, "unit_price": 3.5, "total": 42.0}
+        - {"date": "2026-06-01", "vendor": "Hillside Dairy", "item": "butter", "qty": 2, "unit_price": 4.0, "total": 8.0}
+      expected:
+        Rosewood Farm:
+          gross: 42.0
+          items: {"heirloom tomatoes": 12}
+          days_active: 1
+        Hillside Dairy:
+          gross: 8.0
+          items: {"butter": 2}
+          days_active: 1
+  validation:
+    - name: multiple_items_one_day
+      input:
+        - {"date": "2026-06-01", "vendor": "Rosewood Farm", "item": "heirloom tomatoes", "qty": 12, "unit_price": 3.5, "total": 42.0}
+        - {"date": "2026-06-01", "vendor": "Rosewood Farm", "item": "basil", "qty": 7, "unit_price": 1.15, "total": 8.05}
+      expected:
+        Rosewood Farm:
+          gross: 50.05
+          items: {"heirloom tomatoes": 12, "basil": 7}
+          days_active: 1
+    - name: same_item_across_days
+      input:
+        - {"date": "2026-06-01", "vendor": "Rosewood Farm", "item": "basil", "qty": 7, "unit_price": 1.15, "total": 8.05}
+        - {"date": "2026-06-03", "vendor": "Rosewood Farm", "item": "basil", "qty": 7, "unit_price": 1.15, "total": 8.05}
+      expected:
+        Rosewood Farm:
+          gross: 16.1
+          items: {"basil": 14}
+          days_active: 2
+    - name: gross_needs_rounding
+      input:
+        - {"date": "2026-06-01", "vendor": "Bramble Orchard", "item": "cider", "qty": 1, "unit_price": 0.1, "total": 0.1}
+        - {"date": "2026-06-02", "vendor": "Bramble Orchard", "item": "cider", "qty": 1, "unit_price": 0.2, "total": 0.2}
+      expected:
+        Bramble Orchard:
+          gross: 0.3
+          items: {"cider": 2}
+          days_active: 2
+    - name: three_vendors
+      input:
+        - {"date": "2026-06-01", "vendor": "Rosewood Farm", "item": "basil", "qty": 5, "unit_price": 1.0, "total": 5.0}
+        - {"date": "2026-06-01", "vendor": "Hillside Dairy", "item": "butter", "qty": 2, "unit_price": 4.0, "total": 8.0}
+        - {"date": "2026-06-02", "vendor": "Bramble Orchard", "item": "cider", "qty": 3, "unit_price": 2.5, "total": 7.5}
+        - {"date": "2026-06-02", "vendor": "Rosewood Farm", "item": "basil", "qty": 4, "unit_price": 1.0, "total": 4.0}
+      expected:
+        Rosewood Farm:
+          gross: 9.0
+          items: {"basil": 9}
+          days_active: 2
+        Hillside Dairy:
+          gross: 8.0
+          items: {"butter": 2}
+          days_active: 1
+        Bramble Orchard:
+          gross: 7.5
+          items: {"cider": 3}
+          days_active: 1
+explanation_markdown: |
+  Grouping turns a stream into a summary, and the shape of the accumulator is the
+  whole design. Each vendor needs three different kinds of running state at once:
+  a single number (gross), a nested tally (items), and a set of things seen
+  (dates). Trying to force all three into one structure gets awkward, so the clean
+  move is a statement dict for the two results the caller wants plus a side set of
+  dates while you work.
+
+  The set is doing real work here: `days_active` is not "how many sales" but "how
+  many distinct days", and a set collapses repeats for free, so two sales on the
+  same date count once. `items.get(item, 0) + qty` is the standard fold for a
+  count that has no natural starting value per key. Rounding gross a single time
+  at the end keeps the arithmetic exact right up to the moment you present it.
+common_mistakes:
+  - Counting total sales instead of distinct dates for days_active, so two sales on one day report 2.
+  - Overwriting an item's quantity instead of adding to it, losing earlier sales of the same item.
+  - Rounding gross on every addition, which can still drift; round once at the end instead.
+  - Reordering vendors (for example by sorting) when the caller expects first-seen order.

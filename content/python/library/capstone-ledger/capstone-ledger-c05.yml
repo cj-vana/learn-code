@@ -1,0 +1,179 @@
+id: exercise.library.capstone_ledger.c05
+kind: exercise
+version: 1
+language: python
+title: The Market Ledger - Flagging Anomalies
+slug: capstone-ledger-c05
+difficulty: hard
+concepts:
+  - concepts.grouping_aggregation
+  - python.sorting
+prerequisites:
+  - python.dictionaries
+  - python.tuples
+estimated_time_minutes: 24
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.capstone_ledger.c05
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original fifth stage of the market ledger capstone; audits parsed entries for over-limit quantities, over-limit totals, and duplicate lines, returning a deduplicated sorted flag list.
+prompt_markdown: |
+  Stage 5 of the Market Ledger capstone: before the statements go out, the
+  treasurer wants an audit pass that flags anything suspicious - a quantity that
+  looks like a typo, a total that is too large, or the same sale keyed in twice.
+
+  Write `flag_anomalies(job)` where `job` is a dictionary with two keys:
+
+  - `"entries"`: a list of parsed sale dicts (the Stage 1 shape, with `"date"`,
+    `"vendor"`, `"item"`, `"qty"` int, `"unit_price"` float and `"total"` float).
+  - `"limits"`: a dict with `"max_qty"` and `"max_total"` numbers.
+
+  Produce a flag `[date, vendor, reason]` for each of these conditions:
+
+  - `"qty over limit"` - the entry's `"qty"` is **strictly greater** than
+    `"max_qty"`.
+  - `"total over limit"` - the entry's `"total"` is **strictly greater** than
+    `"max_total"`.
+  - `"duplicate entry"` - the entry shares its `"date"`, `"vendor"`, `"item"` and
+    `"qty"` with at least one other entry in the list (unit price is ignored for
+    this check).
+
+  A single entry can trigger more than one condition, and each condition it
+  triggers is its own flag. Return the flags as a **sorted** list of
+  `[date, vendor, reason]` lists (Python's default list ordering: by date, then
+  vendor, then reason). The result must contain **no duplicate rows** - if the
+  same `[date, vendor, reason]` would be produced more than once, it appears only
+  once. When nothing is suspicious, return an empty list `[]`.
+
+  Example:
+
+  ```python
+  flag_anomalies({
+      "entries": [
+          {"date": "2026-06-02", "vendor": "Rosewood Farm", "item": "heirloom tomatoes",
+           "qty": 200, "unit_price": 4.5, "total": 900.0},
+      ],
+      "limits": {"max_qty": 100, "max_total": 500},
+  })
+  # qty 200 > 100 and total 900.0 > 500 -> two flags
+  # -> [["2026-06-02", "Rosewood Farm", "qty over limit"],
+  #     ["2026-06-02", "Rosewood Farm", "total over limit"]]
+  ```
+starter_code: |
+  def flag_anomalies(job):
+      return []
+function_name: flag_anomalies
+input_mode: function
+solution_sketch: First tally how many entries share each (date, vendor, item, qty) signature; then scan entries adding flags into a set for over-qty, over-total, and any signature seen at least twice; finally sort the set into a list of lists.
+sample_solution: |
+  def flag_anomalies(job):
+      entries = job["entries"]
+      max_qty = job["limits"]["max_qty"]
+      max_total = job["limits"]["max_total"]
+      counts = {}
+      for entry in entries:
+          signature = (entry["date"], entry["vendor"], entry["item"], entry["qty"])
+          counts[signature] = counts.get(signature, 0) + 1
+      flags = set()
+      for entry in entries:
+          date = entry["date"]
+          vendor = entry["vendor"]
+          if entry["qty"] > max_qty:
+              flags.add((date, vendor, "qty over limit"))
+          if entry["total"] > max_total:
+              flags.add((date, vendor, "total over limit"))
+          signature = (date, vendor, entry["item"], entry["qty"])
+          if counts[signature] >= 2:
+              flags.add((date, vendor, "duplicate entry"))
+      return [list(flag) for flag in sorted(flags)]
+hints:
+  - level: 1
+    text: Do a first pass to count how many entries share each (date, vendor, item, qty) tuple, so you can tell later whether an entry is a duplicate.
+  - level: 2
+    text: Collect flags in a set of (date, vendor, reason) tuples. A set removes duplicate rows for free, which matters because two identical entries would each try to add the same duplicate flag.
+  - level: 3
+    text: Use strictly greater than for both limit checks, then return [list(flag) for flag in sorted(flags)] so the tuples become lists in Python's default sorted order.
+tests:
+  public:
+    - name: nothing_suspicious
+      input:
+        entries:
+          - {"date": "2026-06-01", "vendor": "Rosewood Farm", "item": "basil", "qty": 5, "unit_price": 1.0, "total": 5.0}
+        limits: {"max_qty": 100, "max_total": 1000}
+      expected: []
+    - name: quantity_over_limit
+      input:
+        entries:
+          - {"date": "2026-06-01", "vendor": "Rosewood Farm", "item": "heirloom tomatoes", "qty": 50, "unit_price": 3.0, "total": 150.0}
+        limits: {"max_qty": 20, "max_total": 1000}
+      expected:
+        - ["2026-06-01", "Rosewood Farm", "qty over limit"]
+    - name: duplicate_line
+      input:
+        entries:
+          - {"date": "2026-06-01", "vendor": "Hillside Dairy", "item": "butter", "qty": 2, "unit_price": 4.0, "total": 8.0}
+          - {"date": "2026-06-01", "vendor": "Hillside Dairy", "item": "butter", "qty": 2, "unit_price": 4.0, "total": 8.0}
+        limits: {"max_qty": 100, "max_total": 1000}
+      expected:
+        - ["2026-06-01", "Hillside Dairy", "duplicate entry"]
+  validation:
+    - name: total_over_limit
+      input:
+        entries:
+          - {"date": "2026-06-02", "vendor": "Bramble Orchard", "item": "cider", "qty": 3, "unit_price": 100.0, "total": 300.0}
+        limits: {"max_qty": 100, "max_total": 100}
+      expected:
+        - ["2026-06-02", "Bramble Orchard", "total over limit"]
+    - name: two_reasons_one_entry
+      input:
+        entries:
+          - {"date": "2026-06-02", "vendor": "Rosewood Farm", "item": "heirloom tomatoes", "qty": 200, "unit_price": 4.5, "total": 900.0}
+        limits: {"max_qty": 100, "max_total": 500}
+      expected:
+        - ["2026-06-02", "Rosewood Farm", "qty over limit"]
+        - ["2026-06-02", "Rosewood Farm", "total over limit"]
+    - name: duplicate_collapses_to_one_row
+      input:
+        entries:
+          - {"date": "2026-06-01", "vendor": "Rosewood Farm", "item": "basil", "qty": 7, "unit_price": 1.15, "total": 8.05}
+          - {"date": "2026-06-01", "vendor": "Rosewood Farm", "item": "basil", "qty": 7, "unit_price": 1.15, "total": 8.05}
+          - {"date": "2026-06-02", "vendor": "Hillside Dairy", "item": "butter", "qty": 2, "unit_price": 4.0, "total": 8.0}
+        limits: {"max_qty": 100, "max_total": 1000}
+      expected:
+        - ["2026-06-01", "Rosewood Farm", "duplicate entry"]
+    - name: flags_sorted_by_date
+      input:
+        entries:
+          - {"date": "2026-06-03", "vendor": "Zenith Farm", "item": "kale", "qty": 500, "unit_price": 0.1, "total": 50.0}
+          - {"date": "2026-06-01", "vendor": "Ash Grove", "item": "plums", "qty": 5, "unit_price": 1000.0, "total": 5000.0}
+        limits: {"max_qty": 100, "max_total": 1000}
+      expected:
+        - ["2026-06-01", "Ash Grove", "total over limit"]
+        - ["2026-06-03", "Zenith Farm", "qty over limit"]
+    - name: boundary_values_not_flagged
+      input:
+        entries:
+          - {"date": "2026-06-01", "vendor": "Rosewood Farm", "item": "basil", "qty": 100, "unit_price": 10.0, "total": 1000.0}
+        limits: {"max_qty": 100, "max_total": 1000}
+      expected: []
+explanation_markdown: |
+  An audit that only walks the list once cannot spot duplicates, because you do not
+  know an entry is repeated until you have seen the whole batch. So this is a
+  two-pass job: the first pass builds a tally of every `(date, vendor, item, qty)`
+  signature, and the second pass consults that tally to decide whether an entry is
+  a duplicate while it also checks the two numeric limits.
+
+  Collecting flags in a set is the quiet hero. Two identical duplicate lines would
+  each independently produce the same `duplicate entry` flag, and the treasurer
+  wants that reported once, not once per copy - a set enforces exactly that. Using
+  strictly-greater-than for the limits means a value sitting right on the limit is
+  allowed, which is why the boundary test produces no flags. Sorting the tuples at
+  the end gives a stable, readable report regardless of input order.
+common_mistakes:
+  - Trying to detect duplicates in a single pass, so the first copy of a repeated line is never flagged.
+  - Using >= for the limits, which wrongly flags an entry that lands exactly on max_qty or max_total.
+  - Collecting flags in a list, so two identical duplicate lines emit the same row twice.
+  - Including unit_price in the duplicate signature, so genuine keyed-twice sales with a mistyped price slip through.

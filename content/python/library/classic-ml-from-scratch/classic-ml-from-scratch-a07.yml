@@ -1,0 +1,137 @@
+id: exercise.library.classic_ml_from_scratch.a07
+kind: exercise
+version: 1
+language: python
+title: Naming the Pebble by Its Neighbours
+slug: classic-ml-from-scratch-a07
+difficulty: medium
+concepts:
+  - ai.classic_ml
+prerequisites:
+  - python.lists
+  - python.sorting
+  - python.dictionaries
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.classic_ml_from_scratch.a07
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original k-nearest-neighbours drill themed around identifying beach pebbles from measured features, with explicit deterministic tie-break rules.
+prompt_markdown: |
+  A geology tutor labels beach pebbles by their mineral type. Each pebble is
+  described by a small feature vector (for example `[width_mm, mass_g]`), and a
+  handful of already-labelled pebbles form the training set. Given one new
+  pebble, you classify it with **k-nearest-neighbours (kNN)**: find the `k`
+  closest labelled pebbles and let them vote on the label.
+
+  Write `knn_predict(job)` that takes a single dictionary:
+
+  ```
+  {
+    "train": [[[3.0, 3.0], "quartz"], [[9.0, 9.0], "basalt"]],
+    "query": [3.5, 3.2],
+    "k": 1
+  }
+  ```
+
+  - `train` is a list of `[point, label]` pairs. `point` is a list of numbers;
+    `label` is a string.
+  - `query` is the feature vector to classify (same length as each `point`).
+  - `k` is how many nearest neighbours vote (`1 <= k <= len(train)`).
+
+  Measure closeness with **Euclidean distance**: for two vectors `p` and `q`,
+  `dist = sqrt(sum((p[i] - q[i]) ** 2 for i in range(len(p))))`.
+
+  Selecting the `k` nearest and breaking ties deterministically:
+
+  - Sort the training points by distance, ascending. If two points are exactly
+    the same distance from the query, the one that appears **earlier in `train`**
+    comes first (a stable, index-based tie-break).
+  - Take the first `k` after that ordering. Count how many times each label
+    appears among them.
+  - Return the label with the most votes. If several labels tie for the most
+    votes, return the one that is **alphabetically first**.
+
+  Return the winning label as a string.
+starter_code: |
+  import math
+
+
+  def knn_predict(job):
+      return ""
+function_name: knn_predict
+input_mode: function
+solution_sketch: Compute each training point's Euclidean distance to the query, sort by (distance, original index), take the first k labels, tally them in a dict, then return the label with the highest count breaking ties alphabetically.
+sample_solution: |
+  import math
+
+
+  def knn_predict(job):
+      train = job["train"]
+      query = job["query"]
+      k = job["k"]
+      distances = []
+      for index, (point, label) in enumerate(train):
+          d = math.sqrt(sum((a - b) ** 2 for a, b in zip(point, query)))
+          distances.append((d, index, label))
+      distances.sort(key=lambda item: (item[0], item[1]))
+      counts = {}
+      for _, _, label in distances[:k]:
+          counts[label] = counts.get(label, 0) + 1
+      most = max(counts.values())
+      winners = sorted(label for label, c in counts.items() if c == most)
+      return winners[0]
+hints:
+  - level: 1
+    text: For each training pair build a tuple of (distance, original_index, label). Keeping the index lets you reproduce the stable, train-order tie-break when distances are equal.
+  - level: 2
+    text: Sort the tuples using a sort key of (distance, index) so equal distances fall back to the earlier training index, then slice the first k neighbours.
+  - level: 3
+    text: Tally the k labels in a dictionary. Find the maximum count, collect every label with that count, sort those alphabetically, and return the first one.
+tests:
+  public:
+    - name: single_nearest
+      input: {train: [[[3.0, 3.0], "quartz"], [[9.0, 9.0], "basalt"]], query: [3.5, 3.2], k: 1}
+      expected: "quartz"
+    - name: majority_of_three
+      input: {train: [[[1.0, 1.0], "quartz"], [[2.0, 1.0], "quartz"], [[1.0, 2.0], "basalt"], [[9.0, 9.0], "granite"]], query: [1.0, 1.0], k: 3}
+      expected: "quartz"
+    - name: distance_tie_train_order
+      input: {train: [[[2.0, 0.0], "basalt"], [[0.0, 2.0], "quartz"]], query: [0.0, 0.0], k: 1}
+      expected: "basalt"
+  validation:
+    - name: vote_tie_alphabetical
+      input: {train: [[[0.0, 0.0], "quartz"], [[3.0, 0.0], "basalt"]], query: [1.5, 0.0], k: 2}
+      expected: "basalt"
+    - name: all_points_vote
+      input: {train: [[[0.0, 0.0], "quartz"], [[5.0, 0.0], "basalt"], [[5.0, 5.0], "basalt"]], query: [10.0, 10.0], k: 3}
+      expected: "basalt"
+    - name: three_features
+      input: {train: [[[1.0, 2.0, 3.0], "marble"], [[2.0, 3.0, 4.0], "granite"], [[8.0, 8.0, 8.0], "marble"]], query: [1.0, 2.0, 2.0], k: 1}
+      expected: "marble"
+    - name: count_tie_alphabetical
+      input: {train: [[[0.0, 0.0], "granite"], [[1.0, 1.0], "basalt"], [[2.0, 2.0], "granite"], [[3.0, 3.0], "basalt"], [[9.0, 9.0], "quartz"]], query: [0.0, 0.0], k: 4}
+      expected: "basalt"
+explanation_markdown: |
+  kNN is the simplest possible classifier: it stores the training data and, at
+  prediction time, lets the closest examples vote. There is no "training" step
+  beyond remembering the points, which is why it is called a *lazy* learner.
+
+  The whole exercise is really about making the algorithm **deterministic**.
+  Floating-point distances can tie, and vote counts can tie, so a robust
+  implementation must define exactly what happens then. Here we pin down two
+  rules: equal distances keep training order (so we carry the original index in
+  each tuple and sort on `(distance, index)`), and equal vote counts fall back to
+  alphabetical order. Sorting the tied labels and taking the first gives a single,
+  reproducible answer every time.
+
+  Cost is `O(n)` distance computations plus `O(n log n)` to sort, for `n`
+  training points -- fine for the tiny datasets here, and the honest baseline
+  every fancier classifier is measured against.
+common_mistakes:
+  - Breaking distance ties by label instead of by training-set order, which changes which neighbours are selected.
+  - Returning the first label seen at the maximum count without sorting, so the alphabetical tie-break is skipped.
+  - Forgetting to slice to the first k neighbours and letting every training point vote.

@@ -1,0 +1,157 @@
+id: quiz.library.graphs_lite.a02
+kind: quiz
+version: 1
+language: python
+title: Tracing Graph Traversals
+slug: quiz-graphs-lite-a02
+difficulty: medium
+concepts:
+  - patterns.graph_traversal
+  - patterns.dfs
+  - patterns.queue_bfs
+prerequisites: []
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.graphs_lite.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original hand-traced traversal snippets and their outputs.
+quiz_type: mixed_review
+questions:
+  - id: q1
+    prompt: |
+      What does this print?
+
+          edges = [["p", "q"], ["q", "r"]]
+          graph = {}
+          for a, b in edges:
+              graph.setdefault(a, []).append(b)
+              graph.setdefault(b, []).append(a)
+          print(graph["q"])
+    choices:
+      - "['p', 'r']"
+      - "['q']"
+      - "['r', 'p']"
+      - "['p']"
+    correct_choice: "['p', 'r']"
+    explanation: |
+      The first edge appends p to q's list, and the second appends r, so q's
+      neighbours are ['p', 'r'] in that order because the edges are processed in
+      order.
+    concepts:
+      - python.dictionaries
+      - patterns.graph_traversal
+  - id: q2
+    prompt: |
+      What does this print?
+
+          graph = {"a": ["b", "c"], "b": ["a", "d"], "c": ["a"], "d": ["b"]}
+          visited = set()
+          order = []
+          def visit(node):
+              visited.add(node)
+              order.append(node)
+              for nxt in sorted(graph[node]):
+                  if nxt not in visited:
+                      visit(nxt)
+          visit("a")
+          print(order)
+    choices:
+      - "['a', 'b', 'd', 'c']"
+      - "['a', 'b', 'c', 'd']"
+      - "['a', 'c', 'b', 'd']"
+      - "['a', 'd', 'b', 'c']"
+    correct_choice: "['a', 'b', 'd', 'c']"
+    explanation: |
+      Depth-first search dives from a into b, then into d, exhausting that branch
+      before backtracking to a and finally visiting c.
+    concepts:
+      - patterns.dfs
+      - patterns.graph_traversal
+  - id: q3
+    prompt: |
+      What does this print?
+
+          from collections import deque
+          graph = {"a": ["b", "c"], "b": ["a", "d"], "c": ["a", "d"], "d": ["b", "c"]}
+          seen = {"a"}
+          queue = deque([("a", 0)])
+          while queue:
+              node, dist = queue.popleft()
+              if node == "d":
+                  print(dist)
+                  break
+              for nxt in graph[node]:
+                  if nxt not in seen:
+                      seen.add(nxt)
+                      queue.append((nxt, dist + 1))
+    choices:
+      - "2"
+      - "1"
+      - "3"
+      - "0"
+    correct_choice: "2"
+    explanation: |
+      Breadth-first search reaches b and c at distance 1, then d at distance 2, so
+      d is dequeued with distance 2.
+    concepts:
+      - patterns.queue_bfs
+      - patterns.graph_traversal
+  - id: q4
+    prompt: |
+      What does this print?
+
+          nodes = ["a", "b", "c", "d"]
+          edges = [["a", "b"]]
+          graph = {n: [] for n in nodes}
+          for a, b in edges:
+              graph[a].append(b)
+              graph[b].append(a)
+          seen = set()
+          components = 0
+          for n in nodes:
+              if n not in seen:
+                  components += 1
+                  stack = [n]
+                  seen.add(n)
+                  while stack:
+                      cur = stack.pop()
+                      for nxt in graph[cur]:
+                          if nxt not in seen:
+                              seen.add(nxt)
+                              stack.append(nxt)
+          print(components)
+    choices:
+      - "3"
+      - "4"
+      - "1"
+      - "2"
+    correct_choice: "3"
+    explanation: |
+      a and b form one component; c and d are isolated, giving three components in
+      total. Iterating over every node is what counts the isolated ones.
+    concepts:
+      - patterns.graph_traversal
+      - patterns.dfs
+  - id: q5
+    prompt: |
+      Using Kahn's algorithm with a min-heap of ready nodes, what ordering does
+      this dependency graph produce?
+
+          nodes = ["a", "b", "c", "d"]
+          edges = [["a", "c"], ["b", "c"], ["c", "d"]]
+    choices:
+      - "['a', 'b', 'c', 'd']"
+      - "['a', 'c', 'b', 'd']"
+      - "['c', 'a', 'b', 'd']"
+      - "[]"
+    correct_choice: "['a', 'b', 'c', 'd']"
+    explanation: |
+      Both a and b start with indegree zero; the heap emits a then b. That drops
+      c to indegree zero, then c releases d, giving a, b, c, d.
+    concepts:
+      - patterns.graph_traversal
+      - python.heapq_bisect

@@ -1,0 +1,90 @@
+id: exercise.library.typing_runtime.a05
+kind: exercise
+version: 1
+language: python
+title: Mirroring the Sky Coordinate
+slug: typing-runtime-a05
+difficulty: easy
+concepts:
+  - python.type_hints
+  - python.tuples
+prerequisites:
+  - python.lists
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.typing_runtime.a05
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original generic Pair[A, B] swap drill framed as an observatory mirroring a two-slot sky coordinate, returning a list because tuples are not permitted in test output.
+prompt_markdown: |
+  An observatory records readings as a two-slot pairing. In code the container is a
+  generic `Pair[A, B]` and swapping it produces a `Pair[B, A]`. At runtime the
+  parameters `A` and `B` are erased, so a swap is nothing more than reordering two
+  values — it works no matter what types sit in the two slots.
+
+  Write `swap_pair(pair)`. The single argument `pair` is a list of exactly two
+  elements `[a, b]`. Return a new list `[b, a]` with the two elements exchanged.
+
+  Rules and edge cases:
+
+  - The two elements may be different types (a string and a number), the same
+    value, nested lists, booleans, or `None` — swapping only reorders them.
+  - Return a **list**, not a tuple.
+
+  Example: `pair = ["az", 90]` returns `[90, "az"]`.
+starter_code: |
+  def swap_pair(pair):
+      return pair
+function_name: swap_pair
+input_mode: function
+solution_sketch: Unpack the two elements and return them in reversed order as a new list.
+sample_solution: |
+  def swap_pair(pair):
+      a, b = pair
+      return [b, a]
+hints:
+  - level: 1
+    text: A generic Pair loses its type parameters at runtime, so swapping is purely about reordering the two stored values.
+  - level: 2
+    text: The pair always has exactly two elements, so you can unpack it as a, b = pair.
+  - level: 3
+    text: Return a fresh list [b, a] so the two positions are exchanged.
+tests:
+  public:
+    - name: ints
+      input: [1, 2]
+      expected: [2, 1]
+    - name: mixed_types
+      input: [az, 90]
+      expected: [90, az]
+    - name: same_value
+      input: [3, 3]
+      expected: [3, 3]
+  validation:
+    - name: strings
+      input: [dawn, dusk]
+      expected: [dusk, dawn]
+    - name: nested_lists
+      input: [[1, 2], [3, 4]]
+      expected: [[3, 4], [1, 2]]
+    - name: bool_and_int
+      input: [true, 0]
+      expected: [0, true]
+    - name: none_and_value
+      input: [null, 5]
+      expected: [5, null]
+explanation_markdown: |
+  A `class Pair[A, B]` documents that the first and second slots may hold different
+  types, but those parameters exist only for the type checker; at runtime the
+  object is just two positions you can reorder freely. That is why one `swap_pair`
+  handles ints, strings, nested lists, booleans, and `None` without any per-type
+  code. Unpacking with `a, b = pair` reads the two positions once, and returning a
+  brand-new `[b, a]` leaves the caller's list untouched. The result is a list
+  rather than a tuple because the grader compares list values.
+common_mistakes:
+  - Reversing in place with pair.reverse(), which mutates the caller's list and returns None.
+  - Returning a tuple (b, a) instead of a list, so the compared value has the wrong type.
+  - Hardcoding index math that assumes both elements are numbers, which breaks on strings, None, or nested lists.

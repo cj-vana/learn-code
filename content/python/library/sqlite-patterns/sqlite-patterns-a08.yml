@@ -1,0 +1,226 @@
+id: exercise.library.sqlite_patterns.a08
+kind: exercise
+version: 1
+language: python
+title: Restocking the Seed Vault
+slug: sqlite-patterns-a08
+difficulty: medium
+concepts:
+  - python.sqlite_sql
+  - python.dictionaries
+prerequisites:
+  - python.lists
+  - python.dictionaries
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sqlite_patterns.a08
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original UPSERT drill framed around a botanical seed vault's lot inventory, using SQLite's INSERT ... ON CONFLICT DO UPDATE against an in-memory table.
+prompt_markdown: |
+  A botanical seed vault tracks one row per seed lot: a dict like
+  `{"lot": "TOM-19", "grams": 40, "shelf": "A3"}`. When a new shipment of an
+  existing lot arrives you do not want a duplicate row — you want that lot's row
+  updated in place. When the lot is brand new, you want it appended. That combined
+  "update if present, otherwise insert" move is an **upsert**.
+
+  Write `upsert_record(request)` where `request` is a single dict:
+
+  - `"rows"`: the current inventory, a list of lot dicts. These are already unique
+    on the key column, and every row shares the same keys.
+  - `"record"`: one incoming lot dict with the same keys as the rows.
+  - `"key_col"`: the name of the identifying column, for example `"lot"`.
+
+  Load the current rows into an in-memory SQLite table whose key column carries a
+  `UNIQUE` constraint, then apply the incoming `record` with a single
+  `INSERT ... ON CONFLICT(key_col) DO UPDATE` statement. Return the full table
+  afterward as a list of dicts, sorted ascending by the key column.
+
+  Behavior to guarantee:
+
+  - If `record`'s key already exists, every non-key column of that row is
+    overwritten with the incoming values.
+  - If `record`'s key is new, it is added as another row.
+  - If `"rows"` is empty, the result is just the incoming record.
+
+  Each record has the key column plus at least one other column. Open
+  `sqlite3.connect` on an in-memory database inside the function; touch no files.
+starter_code: |
+  import sqlite3
+
+
+  def upsert_record(request):
+      return []
+function_name: upsert_record
+input_mode: function
+solution_sketch: "Create an in-memory table where the key column is declared UNIQUE, insert the existing rows, then run one INSERT ... ON CONFLICT(key) DO UPDATE SET col=excluded.col for each non-key column; finally SELECT everything ordered by the key column and rebuild dicts."
+sample_solution: |
+  import sqlite3
+
+
+  def upsert_record(request):
+      rows = request["rows"]
+      record = request["record"]
+      key_col = request["key_col"]
+      columns = list(record.keys())
+      defs = []
+      for c in columns:
+          if c == key_col:
+              defs.append('"%s" UNIQUE' % c)
+          else:
+              defs.append('"%s"' % c)
+      col_list = ", ".join('"%s"' % c for c in columns)
+      placeholders = ", ".join("?" for _ in columns)
+      conn = sqlite3.connect(":memory:")
+      conn.execute("CREATE TABLE lots(%s)" % ", ".join(defs))
+      conn.executemany(
+          "INSERT INTO lots(%s) VALUES(%s)" % (col_list, placeholders),
+          [tuple(row[c] for c in columns) for row in rows],
+      )
+      updates = ", ".join(
+          '"%s"=excluded."%s"' % (c, c) for c in columns if c != key_col
+      )
+      conn.execute(
+          'INSERT INTO lots(%s) VALUES(%s) ON CONFLICT("%s") DO UPDATE SET %s'
+          % (col_list, placeholders, key_col, updates),
+          tuple(record[c] for c in columns),
+      )
+      fetched = conn.execute(
+          'SELECT %s FROM lots ORDER BY "%s" ASC' % (col_list, key_col)
+      ).fetchall()
+      return [dict(zip(columns, row)) for row in fetched]
+hints:
+  - level: 1
+    text: Declare the key column with a UNIQUE constraint when you CREATE the table, so a colliding insert can be caught and redirected into an update.
+  - level: 2
+    text: Use INSERT ... ON CONFLICT(key_col) DO UPDATE SET, and build the SET clause from every column except the key.
+  - level: 3
+    text: Inside DO UPDATE, refer to the incoming values as excluded.column; then SELECT everything ORDER BY the key column and zip tuples back into dicts.
+tests:
+  public:
+    - name: update_existing_lot
+      input:
+        rows:
+          - lot: TOM-19
+            grams: 40
+            shelf: A3
+          - lot: BAS-02
+            grams: 12
+            shelf: B1
+        record:
+          lot: TOM-19
+          grams: 90
+          shelf: A9
+        key_col: lot
+      expected:
+        - lot: BAS-02
+          grams: 12
+          shelf: B1
+        - lot: TOM-19
+          grams: 90
+          shelf: A9
+    - name: insert_new_lot
+      input:
+        rows:
+          - lot: TOM-19
+            grams: 40
+            shelf: A3
+        record:
+          lot: CHV-07
+          grams: 25
+          shelf: C2
+        key_col: lot
+      expected:
+        - lot: CHV-07
+          grams: 25
+          shelf: C2
+        - lot: TOM-19
+          grams: 40
+          shelf: A3
+    - name: empty_inventory
+      input:
+        rows: []
+        record:
+          lot: DIL-01
+          grams: 8
+          shelf: D4
+        key_col: lot
+      expected:
+        - lot: DIL-01
+          grams: 8
+          shelf: D4
+  validation:
+    - name: overwrites_all_non_key_fields
+      input:
+        rows:
+          - lot: MNT-05
+            grams: 30
+            shelf: E1
+        record:
+          lot: MNT-05
+          grams: 30
+          shelf: Z9
+        key_col: lot
+      expected:
+        - lot: MNT-05
+          grams: 30
+          shelf: Z9
+    - name: sorted_by_key
+      input:
+        rows:
+          - lot: ZUC-01
+            grams: 5
+            shelf: A1
+          - lot: APR-01
+            grams: 7
+            shelf: A2
+        record:
+          lot: MEL-01
+          grams: 9
+          shelf: A3
+        key_col: lot
+      expected:
+        - lot: APR-01
+          grams: 7
+          shelf: A2
+        - lot: MEL-01
+          grams: 9
+          shelf: A3
+        - lot: ZUC-01
+          grams: 5
+          shelf: A1
+    - name: numeric_key_column
+      input:
+        rows:
+          - bin: 3
+            count: 100
+          - bin: 1
+            count: 40
+        record:
+          bin: 3
+          count: 250
+        key_col: bin
+      expected:
+        - bin: 1
+          count: 40
+        - bin: 3
+          count: 250
+explanation_markdown: |
+  An upsert collapses a read-then-branch dance ("does this key exist? if yes
+  UPDATE, else INSERT") into one atomic statement. SQLite spells it
+  `INSERT ... ON CONFLICT(target) DO UPDATE`. The conflict target has to be a
+  column the database can police for collisions, which is why the key column is
+  declared `UNIQUE`. Inside the `DO UPDATE SET` clause, the pseudo-table
+  `excluded` holds the row you *tried* to insert, so `shelf = excluded.shelf`
+  copies the incoming value over the stored one.
+
+  Building the `SET` clause from "every column except the key" is the general
+  version of the pattern: the key stays fixed (that is the whole point of matching
+  on it) while the rest of the record is refreshed.
+common_mistakes:
+  - Forgetting the UNIQUE constraint on the key column, so the conflict never triggers and you silently get a duplicate row instead of an update.
+  - Including the key column in the DO UPDATE SET clause; it should stay fixed while only the other columns are refreshed from excluded.
+  - Reaching for a manual "SELECT then decide" round trip instead of the single ON CONFLICT statement, which is both slower and not atomic.

@@ -1,0 +1,108 @@
+id: exercise.library.memory_lifetime.a04
+kind: exercise
+version: 1
+language: python
+title: Hunting the Reference Loop
+slug: memory-lifetime-a04
+difficulty: medium
+concepts:
+  - python.memory_model
+  - patterns.graph_traversal
+  - patterns.dfs
+prerequisites:
+  - python.dictionaries
+  - patterns.recursion
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.memory_lifetime.a04
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original object-graph cycle-detection drill framed as the job of Python's cyclic garbage collector.
+prompt_markdown: |
+  Plain reference counting can free an object the instant nothing points at it --
+  except when objects point at *each other* in a loop. A pair (or ring) of objects
+  that only reference one another keeps its own counts above zero forever, so
+  Python ships a separate cyclic garbage collector whose whole job is to find those
+  loops. In this drill you play the collector.
+
+  You are given an object graph as an adjacency dict: each key is an object id, and
+  its value is the list of object ids it holds references to. Every referenced id
+  also appears as a key. Write `find_reference_cycle(graph)` that returns `True` if
+  the graph contains any reference cycle and `False` otherwise.
+
+  A cycle can be a self-reference (`{"a": ["a"]}` is `True`), a two-object loop, or
+  a longer ring reached partway through the graph. An empty graph, and any graph of
+  pure chains or trees, is `False`.
+starter_code: |
+  def find_reference_cycle(graph):
+      return False
+function_name: find_reference_cycle
+input_mode: function
+solution_sketch: Depth-first search with three colours; a cycle exists when the search reaches a node that is still on the current path (grey).
+sample_solution: |
+  def find_reference_cycle(graph):
+      WHITE, GREY, BLACK = 0, 1, 2
+      colour = {node: WHITE for node in graph}
+
+      def visit(node):
+          colour[node] = GREY
+          for target in graph[node]:
+              if colour[target] == GREY:
+                  return True
+              if colour[target] == WHITE and visit(target):
+                  return True
+          colour[node] = BLACK
+          return False
+
+      return any(visit(node) for node in graph if colour[node] == WHITE)
+hints:
+  - level: 1
+    text: A cycle exists when, while exploring a path, you reach a node that is already on that same path.
+  - level: 2
+    text: Colour nodes white, grey, and black. Grey means "currently on the DFS path"; reaching a grey node means you closed a loop.
+  - level: 3
+    text: Start the DFS from every still-white node so cycles in separate components are not missed, and treat a self-reference as an immediate cycle.
+tests:
+  public:
+    - name: simple_ring
+      input: {"a": ["b"], "b": ["c"], "c": ["a"]}
+      expected: true
+    - name: pure_chain
+      input: {"a": ["b"], "b": ["c"], "c": []}
+      expected: false
+    - name: self_loop
+      input: {"a": ["a"]}
+      expected: true
+  validation:
+    - name: empty_graph
+      input: {}
+      expected: false
+    - name: diamond_acyclic
+      input: {"a": ["b", "c"], "b": ["d"], "c": ["d"], "d": []}
+      expected: false
+    - name: deep_back_edge
+      input: {"a": ["b"], "b": ["c"], "c": ["d"], "d": ["b"]}
+      expected: true
+    - name: cycle_in_second_component
+      input: {"a": ["b"], "b": [], "c": ["d"], "d": ["c"]}
+      expected: true
+    - name: all_isolated
+      input: {"a": [], "b": [], "c": []}
+      expected: false
+explanation_markdown: |
+  This three-colour depth-first search is the same idea Python's cyclic collector
+  uses to decide that a clump of objects is unreachable garbage even though their
+  reference counts are non-zero. White means unvisited, grey means "on the path I
+  am currently exploring", and black means "fully explored". A cycle is precisely a
+  *back edge* -- an edge into a grey node -- because that node is an ancestor still
+  waiting for this branch to finish. Restarting from every white node matters: a
+  diamond shares a child through two different paths but has no back edge, so it is
+  acyclic, whereas a loop tucked in a disconnected component would be missed if you
+  only launched the search from one root.
+common_mistakes:
+  - Marking a node visited permanently and treating any revisit as a cycle, which wrongly flags the shared child in a diamond.
+  - Forgetting self-loops, where a node lists its own id in its adjacency list.
+  - Launching the search from only one starting node and missing a cycle in a separate component.

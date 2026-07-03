@@ -1,0 +1,199 @@
+id: exercise.library.concurrency_foundations.a12
+kind: exercise
+version: 1
+language: python
+title: The Observatory's Overnight Capture Report
+slug: concurrency-foundations-a12
+difficulty: hard
+concepts:
+  - python.concurrency_model
+  - python.exceptions
+  - concepts.grouping_aggregation
+prerequisites:
+  - python.dictionaries
+  - python.lists
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.concurrency_foundations.a12
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original ExceptionGroup-style summary of a batch of concurrent sub-tasks, framed as an observatory's overnight frame captures where some succeed and some fail with different error types.
+prompt_markdown: |
+  An observatory runs an overnight batch: many automated frame captures fire off
+  together, and by morning some have succeeded and some have failed with different
+  error types. Instead of a single traceback, you want the kind of grouped summary a
+  task group produces — how many ran, which succeeded, which failed, and a tally of
+  failures by type.
+
+  Write `exception_group_summary(results)`. The single argument is a list of result
+  dicts, each describing one capture, in the order they were collected. Every result
+  has:
+
+  - `"task"`: the capture's name (a string).
+  - `"status"`: either `"ok"` or `"error"`.
+  - `"error_type"`: present only when status is `"error"`, the name of the failure
+    (a string such as `"TimeoutError"`).
+
+  Return a summary dict with exactly these keys:
+
+  - `"total"`: the number of results.
+  - `"ok_count"`: how many succeeded.
+  - `"error_count"`: how many failed.
+  - `"succeeded"`: the list of task names with status `"ok"`, in input order.
+  - `"failed"`: the list of task names with status `"error"`, in input order.
+  - `"errors_by_type"`: a dict mapping each `error_type` to how many times it occurred.
+  - `"first_error"`: the task name of the first failure in input order, or `None`
+    if nothing failed.
+
+  An empty input returns totals of 0, empty lists, an empty `errors_by_type`, and
+  `first_error` of `None`.
+
+  Example: for captures `frame-01` (ok), `frame-02` (error, TimeoutError),
+  `frame-03` (ok), `frame-04` (error, TimeoutError), `frame-05` (error, ValueError),
+  the summary reports `total` 5, `ok_count` 2, `error_count` 3, `succeeded`
+  `["frame-01", "frame-03"]`, `failed` `["frame-02", "frame-04", "frame-05"]`,
+  `errors_by_type` `{"TimeoutError": 2, "ValueError": 1}`, and `first_error`
+  `"frame-02"`.
+starter_code: |
+  def exception_group_summary(results):
+      return {}
+function_name: exception_group_summary
+input_mode: function
+solution_sketch: Walk the results once, appending task names to succeeded or failed, counting error types in a dict, and recording the first failing task; then assemble the summary dict.
+sample_solution: |
+  def exception_group_summary(results):
+      succeeded = []
+      failed = []
+      errors_by_type = {}
+      first_error = None
+      for item in results:
+          if item["status"] == "ok":
+              succeeded.append(item["task"])
+          else:
+              failed.append(item["task"])
+              error_type = item["error_type"]
+              errors_by_type[error_type] = errors_by_type.get(error_type, 0) + 1
+              if first_error is None:
+                  first_error = item["task"]
+      return {
+          "total": len(results),
+          "ok_count": len(succeeded),
+          "error_count": len(failed),
+          "succeeded": succeeded,
+          "failed": failed,
+          "errors_by_type": errors_by_type,
+          "first_error": first_error,
+      }
+hints:
+  - level: 1
+    text: A single left-to-right pass can collect everything — you never need to scan the list more than once.
+  - level: 2
+    text: Keep separate accumulators as you go — a succeeded list, a failed list, an errors_by_type dict, and a first_error that you set only the first time you meet a failure.
+  - level: 3
+    text: Set first_error only when it is still None, so it keeps the earliest failing task. Then ok_count and error_count are just the lengths of your two lists, and total is len(results).
+tests:
+  public:
+    - name: mixed_batch
+      input:
+        - {task: frame-01, status: ok}
+        - {task: frame-02, status: error, error_type: TimeoutError}
+        - {task: frame-03, status: ok}
+        - {task: frame-04, status: error, error_type: TimeoutError}
+        - {task: frame-05, status: error, error_type: ValueError}
+      expected:
+        total: 5
+        ok_count: 2
+        error_count: 3
+        succeeded: [frame-01, frame-03]
+        failed: [frame-02, frame-04, frame-05]
+        errors_by_type: {TimeoutError: 2, ValueError: 1}
+        first_error: frame-02
+    - name: all_ok
+      input:
+        - {task: a, status: ok}
+        - {task: b, status: ok}
+      expected:
+        total: 2
+        ok_count: 2
+        error_count: 0
+        succeeded: [a, b]
+        failed: []
+        errors_by_type: {}
+        first_error: null
+    - name: empty
+      input: []
+      expected:
+        total: 0
+        ok_count: 0
+        error_count: 0
+        succeeded: []
+        failed: []
+        errors_by_type: {}
+        first_error: null
+  validation:
+    - name: all_errors_same_type
+      input:
+        - {task: x, status: error, error_type: OSError}
+        - {task: y, status: error, error_type: OSError}
+      expected:
+        total: 2
+        ok_count: 0
+        error_count: 2
+        succeeded: []
+        failed: [x, y]
+        errors_by_type: {OSError: 2}
+        first_error: x
+    - name: single_ok
+      input:
+        - {task: solo, status: ok}
+      expected:
+        total: 1
+        ok_count: 1
+        error_count: 0
+        succeeded: [solo]
+        failed: []
+        errors_by_type: {}
+        first_error: null
+    - name: single_error
+      input:
+        - {task: boom, status: error, error_type: ConnectionError}
+      expected:
+        total: 1
+        ok_count: 0
+        error_count: 1
+        succeeded: []
+        failed: [boom]
+        errors_by_type: {ConnectionError: 1}
+        first_error: boom
+    - name: varied_error_types
+      input:
+        - {task: t1, status: error, error_type: TimeoutError}
+        - {task: t2, status: ok}
+        - {task: t3, status: error, error_type: KeyError}
+        - {task: t4, status: error, error_type: TimeoutError}
+        - {task: t5, status: error, error_type: KeyError}
+      expected:
+        total: 5
+        ok_count: 1
+        error_count: 4
+        succeeded: [t2]
+        failed: [t1, t3, t4, t5]
+        errors_by_type: {TimeoutError: 2, KeyError: 2}
+        first_error: t1
+explanation_markdown: |
+  When a group of concurrent sub-tasks runs together, a single exception is the
+  wrong mental model — several can fail at once, for different reasons. Python 3.11's
+  `ExceptionGroup` and `TaskGroup` capture exactly that: a bundle of failures you
+  triage as a set. This summary is the reporting layer over such a bundle. The key
+  design move is a single pass with independent accumulators, so succeeded and
+  failed stay in input order and the error tally builds incrementally. Guarding
+  `first_error` with an `is None` check preserves the earliest failure rather than
+  the latest, and deriving the counts from list lengths keeps them consistent with
+  the lists they describe — no separate counter to drift out of sync.
+common_mistakes:
+  - Overwriting first_error on every failure instead of only when it is still None, so it ends up holding the last error rather than the first.
+  - Reading error_type on ok results, which have no such key, causing a KeyError.
+  - Recomputing ok_count and error_count independently from the lists, letting them disagree with succeeded and failed if the logic drifts.

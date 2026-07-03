@@ -1,0 +1,107 @@
+id: quiz.library.datetime_handling.a01
+kind: quiz
+version: 1
+language: python
+title: Calendar Reasoning Under Pressure
+slug: quiz-datetime-handling-a01
+difficulty: medium
+concepts:
+  - python.datetime_module
+prerequisites:
+  - python.datetime_module
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.datetime_handling.a01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pattern-recognition quiz on moments versus durations, testability, and recurrence reasoning.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      A shipping estimator must answer "what date is 10 business days after the
+      order date?" Which combination of tools is the right shape?
+    choices:
+      - A loop adding timedelta(days=1), counting only dates whose weekday() < 5
+      - order_date + timedelta(days=14), since two weekends always intervene
+      - Multiplying 10 by 1.4 and rounding to add calendar days
+      - strftime with a %B code to skip weekend names
+    correct_choice: A loop adding timedelta(days=1), counting only dates whose weekday() < 5
+    explanation: |
+      Business-day arithmetic has no closed formula that survives edge cases
+      (starting on a weekend, holidays later); stepping day by day and counting
+      weekdays is the reliable, auditable shape.
+    concepts:
+      - python.datetime_module
+  - id: q2
+    prompt: |
+      Why do experienced developers write report(as_of: date) instead of
+      calling date.today() inside report()?
+    choices:
+      - A function receiving the date is deterministic and testable; one consulting the clock gives different answers every run
+      - date.today() is slow enough to matter in loops
+      - today() returns a datetime, which cannot be compared to dates
+      - Passing dates avoids importing the datetime module twice
+    correct_choice: A function receiving the date is deterministic and testable; one consulting the clock gives different answers every run
+    explanation: |
+      Moving the clock read to the caller turns hidden global state into an
+      explicit input — the difference between a function you can test with any
+      date and one you can only test today.
+    concepts:
+      - python.datetime_module
+      - concepts.testing
+  - id: q3
+    prompt: |
+      Ticket sales per ISO week must be totalled. Which bucket key groups
+      records correctly even when a week spans two calendar years?
+    choices:
+      - The (year, week) pair from each date's isocalendar()
+      - The date's .month attribute divided by 4
+      - The string produced by strftime("%Y-%m")
+      - The day-of-year integer divided by 7
+    correct_choice: The (year, week) pair from each date's isocalendar()
+    explanation: |
+      isocalendar() implements the ISO week rules, including the year-boundary
+      subtlety where Dec 29 can belong to week 1 of the next year; day-counting
+      approximations get exactly those boundaries wrong.
+    concepts:
+      - python.datetime_module
+      - concepts.grouping_aggregation
+  - id: q4
+    prompt: |
+      Two same-day shifts are given as ("14:00", "18:00") and ("16:30", "20:00").
+      What is the standard first move for computing their overlap?
+    choices:
+      - Convert each time to minutes since midnight, reducing it to integer interval math
+      - Parse both into full datetimes with today's date attached
+      - Compare the strings directly, since HH:MM sorts correctly
+      - Subtract the strings after removing the colons
+    correct_choice: Convert each time to minutes since midnight, reducing it to integer interval math
+    explanation: |
+      Once times are integers, overlap is max(0, min(ends) - max(starts)) — the
+      interval toolkit applies unchanged. String comparison sorts correctly but
+      cannot measure durations.
+    concepts:
+      - python.datetime_module
+      - patterns.intervals
+  - id: q5
+    prompt: |
+      A recurrence generator produced one date too many at the end of the
+      series, and one too few at the start. What kind of bug is this, almost
+      certainly?
+    choices:
+      - Boundary contract bugs — inclusive/exclusive confusion at "until" and whether "start" itself counts
+      - A leap-year miscalculation inside timedelta
+      - Integer overflow in the day counter
+      - A timezone conversion applied twice
+    correct_choice: Boundary contract bugs — inclusive/exclusive confusion at "until" and whether "start" itself counts
+    explanation: |
+      timedelta arithmetic handles the calendar perfectly; recurrence bugs are
+      nearly always at the edges of the contract — which endpoints are included
+      — not in the date math itself.
+    concepts:
+      - python.datetime_module
+      - concepts.testing

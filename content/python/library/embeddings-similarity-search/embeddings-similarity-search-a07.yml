@@ -1,0 +1,159 @@
+id: exercise.library.embeddings_similarity_search.a07
+kind: exercise
+version: 1
+language: python
+title: Windowing the Reef Survey Log
+slug: embeddings-similarity-search-a07
+difficulty: medium
+concepts:
+  - ai.embeddings_retrieval
+prerequisites:
+  - python.lists
+  - python.slicing
+  - python.loops
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.embeddings_similarity_search.a07
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original sliding-window chunking drill themed on a tide-pool reef survey word log, framed as the pre-embedding step of a retrieval pipeline.
+prompt_markdown: |
+  Before you can embed a long document, you split it into overlapping **chunks**
+  so that ideas straddling a boundary still land inside at least one chunk. Here
+  the "document" is already tokenised into a list of words from a reef survey log.
+
+  Write `chunk_text(job)` where `job` is a single dict:
+
+  ```
+  {"words": ["urchin", "kelp", "otter", "crab", "eel"], "size": 3, "overlap": 1}
+  ```
+
+  - `size` is the number of words per chunk.
+  - `overlap` is how many words a chunk shares with the one before it.
+  - The **step** between chunk starts is `step = size - overlap`.
+
+  Produce chunks that start at positions `0, step, 2*step, ...`. Each chunk is the
+  slice `words[i:i + size]`. **Stop after the first chunk that reaches or passes
+  the end of the list** (that is, once `i + size >= len(words)`), and include that
+  final chunk even if it is shorter than `size`.
+
+  Return a list of chunks, where each chunk is itself a list of words.
+
+  Guards: if `words` is empty, if `size <= 0`, or if `overlap` is **not** strictly
+  less than `size` (which would make `step <= 0` and never terminate), return an
+  empty list `[]`.
+
+  Example: with the input above, `step = 2`, so you take `words[0:3]` =
+  `["urchin", "kelp", "otter"]`, then `words[2:5]` = `["otter", "crab", "eel"]`,
+  which reaches the end, giving
+  `[["urchin", "kelp", "otter"], ["otter", "crab", "eel"]]`.
+starter_code: |
+  def chunk_text(job):
+      return []
+function_name: chunk_text
+input_mode: function
+solution_sketch: Guard invalid configs, then walk a start index by step = size - overlap, appending words[i:i+size] each time and breaking once i + size reaches the end.
+sample_solution: |
+  def chunk_text(job):
+      words = job["words"]
+      size = job["size"]
+      overlap = job["overlap"]
+      if not words or size <= 0 or overlap >= size:
+          return []
+      step = size - overlap
+      chunks = []
+      i = 0
+      n = len(words)
+      while i < n:
+          chunks.append(words[i:i + size])
+          if i + size >= n:
+              break
+          i += step
+      return chunks
+hints:
+  - level: 1
+    text: The distance between the start of one chunk and the start of the next is size minus overlap. Compute that step first, then move a start index forward by it.
+  - level: 2
+    text: Slicing past the end of a list is safe in Python, so words[i:i+size] automatically returns a short final chunk. You only need to decide when to stop.
+  - level: 3
+    text: Append words[i:i+size], then break out of the loop when i + size >= len(words); otherwise add step to i and continue. Return [] up front when words is empty, size <= 0, or overlap >= size.
+tests:
+  public:
+    - name: overlap_one
+      input:
+        words: [urchin, kelp, otter, crab, eel]
+        size: 3
+        overlap: 1
+      expected:
+        - [urchin, kelp, otter]
+        - [otter, crab, eel]
+    - name: no_overlap_partial_tail
+      input:
+        words: [urchin, kelp, otter, crab, eel]
+        size: 2
+        overlap: 0
+      expected:
+        - [urchin, kelp]
+        - [otter, crab]
+        - [eel]
+    - name: empty_words
+      input:
+        words: []
+        size: 3
+        overlap: 1
+      expected: []
+  validation:
+    - name: overlap_not_less_than_size
+      input:
+        words: [urchin, kelp]
+        size: 2
+        overlap: 2
+      expected: []
+    - name: size_larger_than_list
+      input:
+        words: [urchin, kelp]
+        size: 5
+        overlap: 1
+      expected:
+        - [urchin, kelp]
+    - name: dense_overlap
+      input:
+        words: [otter, crab, eel, cod]
+        size: 3
+        overlap: 2
+      expected:
+        - [otter, crab, eel]
+        - [crab, eel, cod]
+    - name: exact_multiple
+      input:
+        words: [otter, crab, eel, cod]
+        size: 2
+        overlap: 0
+      expected:
+        - [otter, crab]
+        - [eel, cod]
+    - name: single_word
+      input:
+        words: [urchin]
+        size: 3
+        overlap: 1
+      expected:
+        - [urchin]
+explanation_markdown: |
+  Overlapping chunking is the standard first stage of a retrieval pipeline: each
+  chunk becomes one embedded vector, and the overlap keeps a sentence that spans a
+  boundary retrievable from either side. The whole trick is the step size
+  `size - overlap`. A larger overlap means a smaller step, more chunks, and more
+  redundancy; an overlap of zero gives disjoint windows.
+
+  The stopping rule (`break` once `i + size >= len(words)`) matters: without it you
+  would keep advancing and emit extra tail chunks that repeat words already
+  covered. Guarding `overlap >= size` is essential too, because then
+  `step <= 0` and the start index would never move, looping forever.
+common_mistakes:
+  - Forgetting the guard when overlap is greater than or equal to size, which makes step zero or negative and loops forever.
+  - Continuing to add chunks after the window already reached the end, producing redundant trailing chunks.
+  - Dropping the final partial chunk because it is shorter than size, losing the last words of the document.

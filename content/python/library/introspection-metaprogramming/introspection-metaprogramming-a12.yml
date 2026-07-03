@@ -1,0 +1,178 @@
+id: exercise.library.introspection_metaprogramming.a12
+kind: exercise
+version: 1
+language: python
+title: Which Tea Routines Brew Lazily
+slug: introspection-metaprogramming-a12
+difficulty: medium
+concepts:
+  - python.introspection
+  - python.iterators_generators
+prerequisites:
+  - python.functions
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.introspection_metaprogramming.a12
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: >-
+    Original tea-house framing of inspect.isgeneratorfunction, including the
+    trap that a routine which merely returns a generator expression is not itself
+    a generator function.
+prompt_markdown: |
+  A tea house has two styles of service routine. A **lazy** routine brews one cup
+  at a time — it is a generator function, written with `yield`. An **eager**
+  routine hands over everything at once, or returns a plain value. You want to
+  label a routine without running it, because some lazy routines never stop
+  brewing.
+
+  Five routines are defined and collected in a `_ROUTINES` dictionary mapping each
+  name to its function object. Write `brews_lazily(name)`, which returns `True` if
+  the named routine is a generator function and `False` otherwise.
+
+  Use `inspect.isgeneratorfunction(func)`, which inspects the routine's code flags
+  — it never executes the routine, so even a routine that would yield forever is
+  safe to classify. Watch the trap: a routine whose body is `return (c for c in
+  cups)` **returns** a generator object but contains no `yield`, so it is *not* a
+  generator function and must be labelled `False`. Only routines that actually
+  contain `yield` are lazy. The given `name` is always a key in `_ROUTINES`.
+starter_code: |
+  import inspect
+
+
+  def steep_one_by_one():
+      yield "green"
+      yield "oolong"
+
+
+  def infinite_kettle():
+      while True:
+          yield "refill"
+
+
+  def pour_tray():
+      return ["green", "oolong", "white"]
+
+
+  def lazy_tray(cups):
+      return (cup for cup in cups)
+
+
+  def single_cup():
+      return "genmaicha"
+
+
+  _ROUTINES = {
+      "steep_one_by_one": steep_one_by_one,
+      "infinite_kettle": infinite_kettle,
+      "pour_tray": pour_tray,
+      "lazy_tray": lazy_tray,
+      "single_cup": single_cup,
+  }
+
+
+  def brews_lazily(name):
+      return False
+function_name: brews_lazily
+input_mode: function
+solution_sketch: >-
+  Look up the routine and return inspect.isgeneratorfunction of it, which is True
+  only for routines whose body contains yield.
+sample_solution: |
+  import inspect
+
+
+  def steep_one_by_one():
+      yield "green"
+      yield "oolong"
+
+
+  def infinite_kettle():
+      while True:
+          yield "refill"
+
+
+  def pour_tray():
+      return ["green", "oolong", "white"]
+
+
+  def lazy_tray(cups):
+      return (cup for cup in cups)
+
+
+  def single_cup():
+      return "genmaicha"
+
+
+  _ROUTINES = {
+      "steep_one_by_one": steep_one_by_one,
+      "infinite_kettle": infinite_kettle,
+      "pour_tray": pour_tray,
+      "lazy_tray": lazy_tray,
+      "single_cup": single_cup,
+  }
+
+
+  def brews_lazily(name):
+      func = _ROUTINES[name]
+      return inspect.isgeneratorfunction(func)
+hints:
+  - level: 1
+    text: >-
+      inspect.isgeneratorfunction reports whether a routine's own body contains
+      yield, purely from its code flags.
+  - level: 2
+    text: >-
+      It never runs the routine, so infinite_kettle (which would yield forever)
+      is safe to classify.
+  - level: 3
+    text: >-
+      Return inspect.isgeneratorfunction(_ROUTINES[name]); a routine that only
+      returns a generator expression has no yield and is False.
+tests:
+  public:
+    - name: yields_cups
+      input: steep_one_by_one
+      expected: true
+    - name: returns_full_list
+      input: pour_tray
+      expected: false
+    - name: returns_genexpr_not_generator
+      input: lazy_tray
+      expected: false
+    - name: infinite_generator
+      input: infinite_kettle
+      expected: true
+  validation:
+    - name: returns_plain_value
+      input: single_cup
+      expected: false
+    - name: yields_cups_again
+      input: steep_one_by_one
+      expected: true
+    - name: genexpr_again
+      input: lazy_tray
+      expected: false
+    - name: infinite_again
+      input: infinite_kettle
+      expected: true
+explanation_markdown: |
+  Whether a routine is a generator function is fixed the moment it is compiled:
+  if its body contains `yield`, CPython sets a flag on the code object, and
+  `inspect.isgeneratorfunction` reads that flag. No call happens, so classifying
+  `infinite_kettle` is perfectly safe even though iterating it would never end.
+
+  The subtle case is `lazy_tray`. It *returns* a generator expression, so calling
+  it hands back a generator object — but the routine itself contains no `yield`,
+  its flag is unset, and it is therefore an ordinary function. The lazy behaviour
+  lives in the generator expression it constructs, not in the routine's own code.
+  This is exactly why you inspect the routine rather than its return value: the
+  question "is this a generator function?" is about how the routine was written,
+  not about what a call produces.
+common_mistakes:
+  - Calling the routine and checking whether the result is a generator, which mislabels lazy_tray as lazy and can hang on infinite_kettle.
+  - Assuming any routine that produces a generator is a generator function, ignoring that only yield in the body counts.
+  - Using isfunction instead of isgeneratorfunction, which is True for every plain routine and never distinguishes the two styles.

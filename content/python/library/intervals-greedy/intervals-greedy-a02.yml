@@ -1,0 +1,85 @@
+id: exercise.library.intervals_greedy.a02
+kind: exercise
+version: 1
+language: python
+title: Is the Booking Sheet Clean?
+slug: intervals-greedy-a02
+difficulty: easy
+concepts:
+  - patterns.intervals
+  - python.sorting
+prerequisites:
+  - python.lists
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.intervals_greedy.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original tennis-court booking-sheet conflict check via a sort-then-adjacent-compare sweep.
+prompt_markdown: |
+  A tennis club keeps one court and a booking sheet of slots, each a `[start,
+  end]` pair, arriving in no particular order. Write `sheet_has_conflict(slots)`
+  that returns `True` if any two bookings overlap, and `False` if the whole
+  sheet is conflict-free.
+
+  Back-to-back bookings that share an endpoint (one ending at 3, the next
+  starting at 3) do **not** conflict. An empty sheet or a single booking is
+  always clean.
+starter_code: |
+  def sheet_has_conflict(slots):
+      return False
+function_name: sheet_has_conflict
+input_mode: function
+solution_sketch: Sort by start time, then a conflict exists if any booking starts before the previous one ends.
+sample_solution: |
+  def sheet_has_conflict(slots):
+      ordered = sorted(slots)
+      for i in range(1, len(ordered)):
+          if ordered[i][0] < ordered[i - 1][1]:
+              return True
+      return False
+hints:
+  - level: 1
+    text: In a random order, conflicting bookings can be anywhere; sorting brings neighbours next to each other.
+  - level: 2
+    text: After sorting by start time, you only need to compare each booking with the one right before it.
+  - level: 3
+    text: A conflict exists when ordered[i][0] < ordered[i-1][1]; scan once and return True on the first such pair.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: false
+    - name: single
+      input: [[9, 10]]
+      expected: false
+    - name: obvious_clash
+      input: [[9, 11], [10, 12]]
+      expected: true
+  validation:
+    - name: unsorted_clean
+      input: [[13, 14], [9, 11], [11, 13]]
+      expected: false
+    - name: unsorted_conflict
+      input: [[13, 15], [9, 12], [11, 13]]
+      expected: true
+    - name: all_back_to_back
+      input: [[1, 2], [2, 3], [3, 4]]
+      expected: false
+    - name: conflict_at_end
+      input: [[1, 2], [3, 5], [4, 6]]
+      expected: true
+explanation_markdown: |
+  Sorting by start time is the move that makes this easy. Once the bookings are
+  in order, any overlap must involve two *adjacent* entries: if booking `i`
+  starts before booking `i-1` ends, they share time. You never have to look
+  further back, because everything earlier ends no later than booking `i-1`
+  begins would allow. A single left-to-right scan after the sort finds a
+  conflict in O(n) time, and the strict `<` keeps back-to-back slots legal.
+common_mistakes:
+  - Comparing bookings in their original order without sorting first, missing conflicts between distant entries.
+  - Using <= so that legal back-to-back bookings are reported as conflicts.
+  - Comparing starts to starts (or ends to ends) instead of the next start to the previous end.

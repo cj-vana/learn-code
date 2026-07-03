@@ -1,0 +1,119 @@
+id: exercise.library.functools_operator.a07
+kind: exercise
+version: 1
+language: python
+title: Reading the Bakery Conveyor
+slug: functools-operator-a07
+difficulty: medium
+concepts:
+  - python.functools_operator
+  - python.itertools_module
+  - concepts.grouping_aggregation
+prerequisites:
+  - python.lists
+  - python.sorting
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.functools_operator.a07
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original drill on the itertools.groupby sorted-input precondition, framed as a bakery cooling conveyor.
+prompt_markdown: |
+  A bakery's cooling conveyor carries labelled pastry trays past a counter, and
+  you want a compact tally of each unbroken *run* of identical trays as they roll
+  by. `itertools.groupby` is the right tool, but it only groups items that are
+  already **adjacent** — it never reorders anything. That precondition is the
+  whole lesson here.
+
+  Write `summarize_tray_runs(data)` where `data` is a dict with two keys:
+
+  - `"trays"`: a list of tray labels (strings), in conveyor order.
+  - `"presort"`: a boolean. When `True`, sort the labels ascending *before*
+    grouping; when `False`, group the labels exactly as they arrive.
+
+  Group consecutive equal labels with `itertools.groupby` and return a list of
+  `[label, run_length]` pairs (each a two-element list), in the order the groups
+  are produced.
+
+  Edge cases you must handle:
+
+  - An empty `"trays"` list returns `[]`.
+  - With `"presort"` `False`, a label that reappears after a different label
+    starts a brand-new run — so `["rye", "rye", "oat", "rye"]` yields
+    `[["rye", 2], ["oat", 1], ["rye", 1]]`, with `"rye"` counted twice. This is
+    the classic groupby trap.
+  - With `"presort"` `True`, the same input sorts to `["oat", "rye", "rye",
+    "rye"]` and collapses to `[["oat", 1], ["rye", 3]]`.
+
+  Example: `summarize_tray_runs({"trays": ["a", "b", "a"], "presort": False})`
+  returns `[["a", 1], ["b", 1], ["a", 1]]`.
+starter_code: |
+  import itertools
+
+
+  def summarize_tray_runs(data):
+      return []
+function_name: summarize_tray_runs
+input_mode: function
+solution_sketch: Optionally sort the labels, then walk itertools.groupby and record [label, count] for each consecutive run, counting group members with sum(1 for _ in group).
+sample_solution: |
+  import itertools
+
+
+  def summarize_tray_runs(data):
+      trays = data["trays"]
+      if data["presort"]:
+          trays = sorted(trays)
+      result = []
+      for label, group in itertools.groupby(trays):
+          result.append([label, sum(1 for _ in group)])
+      return result
+hints:
+  - level: 1
+    text: itertools.groupby only merges neighbours that are already next to each other; it does not sort. Decide first whether presort is set.
+  - level: 2
+    text: Iterating groupby yields (key, group) pairs where group is a one-shot iterator. Count it with sum(1 for _ in group) rather than len().
+  - level: 3
+    text: When presort is True, call sorted(trays) before grouping so equal labels sit together; otherwise pass the original list straight to groupby.
+tests:
+  public:
+    - name: empty
+      input: {trays: [], presort: false}
+      expected: []
+    - name: unsorted_fragments
+      input: {trays: ["rye", "rye", "oat", "rye"], presort: false}
+      expected: [["rye", 2], ["oat", 1], ["rye", 1]]
+    - name: presorted_collapses
+      input: {trays: ["rye", "rye", "oat", "rye"], presort: true}
+      expected: [["oat", 1], ["rye", 3]]
+  validation:
+    - name: single
+      input: {trays: ["bun"], presort: false}
+      expected: [["bun", 1]]
+    - name: all_same
+      input: {trays: ["tart", "tart", "tart"], presort: false}
+      expected: [["tart", 3]]
+    - name: presort_merges_alternating
+      input: {trays: ["a", "b", "a", "b", "a"], presort: true}
+      expected: [["a", 3], ["b", 2]]
+    - name: unsorted_alternating
+      input: {trays: ["a", "b", "a", "b", "a"], presort: false}
+      expected: [["a", 1], ["b", 1], ["a", 1], ["b", 1], ["a", 1]]
+explanation_markdown: |
+  `itertools.groupby` scans left to right and starts a fresh group every time the
+  key changes from the previous item. It never sorts, so grouping unsorted data
+  gives you *runs*, not totals — the same key can appear in several groups. That
+  is exactly why the unsorted `["rye", "rye", "oat", "rye"]` reports `"rye"`
+  twice: the trailing `"rye"` is a new run after `"oat"` interrupts it.
+
+  Sorting first (`presort=True`) guarantees every equal label is adjacent, so
+  each key produces exactly one group and you get true per-label totals. The
+  group object handed back is a one-shot sub-iterator sharing state with the
+  outer loop, so you consume it immediately with `sum(1 for _ in group)`.
+common_mistakes:
+  - Assuming groupby sorts for you and expecting one group per label even on unsorted input.
+  - Calling len(group) on the group object, which is an iterator with no length.
+  - Skipping the presort branch, so sorted and unsorted inputs return identical results.

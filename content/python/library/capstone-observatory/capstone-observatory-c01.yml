@@ -1,0 +1,134 @@
+id: exercise.library.capstone_observatory.c01
+kind: exercise
+version: 1
+language: python
+title: 'The Observatory Night Logs: Reading One Line'
+slug: capstone-observatory-c01
+difficulty: medium
+concepts:
+  - python.regex
+prerequisites:
+  - python.strings
+  - python.dictionaries
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.capstone_observatory.c01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Capstone stage one; original regex line-parser for a mountaintop observatory's instrument log, returning a structured record or null on malformed input.
+prompt_markdown: |
+  Welcome to the first stage of **The Observatory Night Logs**. A mountaintop
+  observatory writes one line to disk each time its main instrument locks onto a
+  target. Every well-formed line looks exactly like this:
+
+      [2026-07-01 22:14] TELESCOPE target=vega mag=0.03 seeing=1.20
+
+  That is, in order:
+
+  - a timestamp `[YYYY-MM-DD HH:MM]` inside square brackets,
+  - the literal word `TELESCOPE`,
+  - `target=` followed by a name of letters, digits, underscores, or hyphens,
+  - `mag=` followed by a decimal that may be negative (bright stars go below zero),
+  - `seeing=` followed by a non-negative decimal.
+
+  Write `parse_log_line(line)` that returns a dictionary:
+
+      {"timestamp": "2026-07-01 22:14", "target": "vega", "mag": 0.03, "seeing": 1.2}
+
+  where `timestamp` and `target` are strings and `mag` and `seeing` are floats.
+
+  A line is **malformed** if it does not match this shape *exactly* end to end.
+  That includes: a missing bracket, the wrong keyword, a `mag` or `seeing` written
+  as a bare integer with no decimal point, or any trailing junk after the seeing
+  value. For a malformed line, return `None` (do not raise). Both `mag` and
+  `seeing` must contain a decimal point to count as valid.
+starter_code: |
+  import re
+
+
+  def parse_log_line(line):
+      return None
+function_name: parse_log_line
+input_mode: function
+solution_sketch: Build one anchored regex with four capture groups (timestamp, target, mag, seeing), match the whole line with re.fullmatch, return None on no match, otherwise assemble the dict converting mag and seeing to float.
+sample_solution: |
+  import re
+
+
+  def parse_log_line(line):
+      pattern = (
+          r"\[(\d{4}-\d{2}-\d{2} \d{2}:\d{2})\] TELESCOPE "
+          r"target=([\w-]+) mag=(-?\d+\.\d+) seeing=(\d+\.\d+)"
+      )
+      match = re.fullmatch(pattern, line)
+      if match is None:
+          return None
+      return {
+          "timestamp": match.group(1),
+          "target": match.group(2),
+          "mag": float(match.group(3)),
+          "seeing": float(match.group(4)),
+      }
+hints:
+  - level: 1
+    text: Use re.fullmatch so the whole line must match; anything left over at the end means the line is malformed and you return None.
+  - level: 2
+    text: Wrap the four fields you need in capture groups. Require a decimal point in the numbers with patterns like -?\d+\.\d+ so a bare integer fails to match.
+  - level: 3
+    text: 'Pattern: \[(\d{4}-\d{2}-\d{2} \d{2}:\d{2})\] TELESCOPE target=([\w-]+) mag=(-?\d+\.\d+) seeing=(\d+\.\d+). Convert groups 3 and 4 with float().'
+tests:
+  public:
+    - name: well_formed
+      input: '[2026-07-01 22:14] TELESCOPE target=vega mag=0.03 seeing=1.20'
+      expected:
+        timestamp: '2026-07-01 22:14'
+        target: vega
+        mag: 0.03
+        seeing: 1.2
+    - name: negative_magnitude
+      input: '[2026-07-01 23:05] TELESCOPE target=sirius mag=-1.46 seeing=0.90'
+      expected:
+        timestamp: '2026-07-01 23:05'
+        target: sirius
+        mag: -1.46
+        seeing: 0.9
+    - name: missing_opening_bracket
+      input: '2026-07-01 22:14] TELESCOPE target=vega mag=0.03 seeing=1.20'
+      expected: null
+  validation:
+    - name: integer_magnitude_is_malformed
+      input: '[2026-07-01 22:14] TELESCOPE target=vega mag=3 seeing=1.20'
+      expected: null
+    - name: hyphenated_target
+      input: '[2026-07-02 01:30] TELESCOPE target=ngc-7000 mag=6.00 seeing=2.15'
+      expected:
+        timestamp: '2026-07-02 01:30'
+        target: ngc-7000
+        mag: 6.0
+        seeing: 2.15
+    - name: wrong_keyword
+      input: '[2026-07-01 22:14] SCOPE target=vega mag=0.03 seeing=1.20'
+      expected: null
+    - name: trailing_junk
+      input: '[2026-07-01 22:14] TELESCOPE target=vega mag=0.03 seeing=1.20 extra'
+      expected: null
+explanation_markdown: |
+  A single anchored pattern captures every field at once. `re.fullmatch` requires
+  the pattern to consume the entire string, so trailing junk automatically fails,
+  which is why an explicit end anchor is not needed. Each field lives in its own
+  parenthesised group, numbered 1 to 4 left to right, so `match.group(1)` is the
+  timestamp and `match.group(4)` is the seeing value.
+
+  The two numeric patterns insist on `\d+\.\d+`: at least one digit, a literal
+  dot, then at least one digit. That forces a decimal point, so `mag=3` never
+  matches and the function reports the line as malformed. Only after a successful
+  match do we convert the numeric groups with `float(...)`; on failure the guard
+  returns `None` instead of raising, which keeps the parser safe to run over a
+  whole noisy log file.
+common_mistakes:
+  - Using re.match instead of re.fullmatch, so a line with trailing junk still matches its prefix and is wrongly accepted.
+  - Writing the number pattern as \d+ instead of \d+\.\d+, which lets a bare integer like mag=3 slip through.
+  - Letting the function raise on a non-matching line instead of returning None, which crashes the batch when one bad line appears.

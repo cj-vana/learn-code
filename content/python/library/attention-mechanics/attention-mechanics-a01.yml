@@ -1,0 +1,107 @@
+id: exercise.library.attention_mechanics.a01
+kind: exercise
+version: 1
+language: python
+title: Aroma Affinity Scores
+slug: attention-mechanics-a01
+difficulty: easy
+concepts:
+  - ai.attention_transformers
+prerequisites:
+  - python.lists
+  - python.loops
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.attention_mechanics.a01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original framing of raw attention scores as aroma-affinity dot products in a tea-blending workshop.
+prompt_markdown: |
+  In a tea-blending workshop, a target cup is described by a short numeric
+  "aroma vector" (its query). Each candidate leaf on the shelf has its own
+  aroma vector (a key). Attention begins by scoring how well each key matches
+  the query using a **dot product**: the more the two vectors point the same
+  way, the higher the score.
+
+  For a query `q` and a key `k` of the same length, the raw attention score is
+
+      score = q[0]*k[0] + q[1]*k[1] + ... + q[d-1]*k[d-1]
+
+  Write `attention_scores(job)` where `job` is a single dict:
+
+      {"query": [0.4, 0.6], "keys": [[1.0, 0.0], [0.5, 0.5]]}
+
+  `query` is one vector and `keys` is a list of key vectors, all the same
+  length as the query. Return a list holding the dot product of the query with
+  each key, in the same order as `keys`. Round every score to 6 decimal places.
+  These raw scores are the un-normalised starting point of an attention head.
+starter_code: |
+  def attention_scores(job):
+      return []
+function_name: attention_scores
+input_mode: function
+solution_sketch: For each key vector, sum the elementwise products with the query, round to 6 decimals, and collect the results in order.
+sample_solution: |
+  def attention_scores(job):
+      query = job["query"]
+      keys = job["keys"]
+      scores = []
+      for key in keys:
+          dot = sum(q * k for q, k in zip(query, key))
+          scores.append(round(dot, 6))
+      return scores
+hints:
+  - level: 1
+    text: A dot product multiplies matching positions of two vectors and adds the products into a single number.
+  - level: 2
+    text: Loop over the key vectors; for each one, pair it with the query using zip and sum q*k across the pairs.
+  - level: 3
+    text: Append round(dot, 6) for each key so the returned list lines up one-to-one with job["keys"].
+tests:
+  public:
+    - name: two_keys
+      input:
+        query: [1.0, 2.0]
+        keys: [[2.0, 0.5], [1.0, 3.0]]
+      expected: [3.0, 7.0]
+    - name: single_key
+      input:
+        query: [0.5, 0.5, 0.5]
+        keys: [[2.0, 4.0, 6.0]]
+      expected: [6.0]
+    - name: orthogonal
+      input:
+        query: [1.0, 0.0]
+        keys: [[0.0, 1.0], [1.0, 0.0]]
+      expected: [0.0, 1.0]
+  validation:
+    - name: decimals
+      input:
+        query: [0.1, 0.2, 0.3]
+        keys: [[1.0, 1.0, 1.0]]
+      expected: [0.6]
+    - name: negatives
+      input:
+        query: [1.5, -2.0]
+        keys: [[2.0, 3.0], [-1.0, -1.0]]
+      expected: [-3.0, 0.5]
+    - name: three_keys
+      input:
+        query: [0.4, 0.6, -0.2]
+        keys: [[1.0, 0.0, 2.0], [0.5, 0.5, 0.5], [-1.0, 2.0, 1.0]]
+      expected: [0.0, 0.4, 0.6]
+explanation_markdown: |
+  The dot product is the similarity measure at the heart of attention. When two
+  vectors point in the same direction their products are large and positive, so
+  the score is high; when they are orthogonal the products cancel to near zero;
+  when they point opposite ways the score goes negative. Computing one score per
+  key gives a vector of raw affinities that later stages will scale and turn into
+  attention weights. Rounding to 6 decimals keeps the output comparable across
+  machines without changing the ranking.
+common_mistakes:
+  - Zipping the query with itself instead of with each key, which just returns the query's squared norm every time.
+  - Returning the scores in a different order than the keys, breaking the one-to-one correspondence downstream stages rely on.
+  - Forgetting to round, so floating-point noise like 0.6000000000000001 slips into the result.

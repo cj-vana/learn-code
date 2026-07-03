@@ -1,0 +1,171 @@
+id: exercise.library.config_parsing.a12
+kind: exercise
+version: 1
+language: python
+title: Reading the Board-Game Cafe's Dotenv File
+slug: config-parsing-a12
+difficulty: medium
+concepts:
+  - python.config_parsing
+  - python.strings
+prerequisites:
+  - python.strings
+  - python.dictionaries
+  - python.loops
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.config_parsing.a12
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original .env parser drill framed as a board-game cafe's server settings file, handling export prefixes, quoting, double-quote escape sequences, and last-key-wins semantics.
+prompt_markdown: |
+  A board-game cafe boots its table-booking server from a `.env` file — flat
+  `KEY=value` lines, one per setting. Write `parse_env_file_string(text)` that
+  parses that text into a dictionary of string values.
+
+  ```python
+  parse_env_file_string('HOST=localhost\nPORT=8080')
+  # -> {"HOST": "localhost", "PORT": "8080"}
+  ```
+
+  Process the text line by line (split on newlines) with these rules:
+
+  - Strip leading and trailing whitespace from each line first.
+  - Skip a line that is empty, or whose first character is `#` (a comment).
+  - If the line begins with `export ` (the word `export` and a space), drop that
+    prefix before parsing the rest.
+  - Split on the **first** `=`. The key is the left side, stripped. If the line has
+    no `=`, or the key is empty, skip the line.
+  - Every value is a **string**. Strip surrounding whitespace from the raw value,
+    then interpret quoting:
+    - **Double-quoted** (`"..."`): remove the quotes and process escape sequences
+      inside — `\n` -> newline, `\t` -> tab, `\r` -> carriage return, `\\` ->
+      backslash, `\"` -> double quote. Any other backslash pair is left as written.
+    - **Single-quoted** (`'...'`): remove the quotes and keep the contents
+      **literal** — no escape processing at all.
+    - **Unquoted**: use the stripped text exactly (its inner spaces are kept; there
+      is no comment stripping mid-value).
+  - When the same key appears more than once, the **last** value wins.
+
+  An empty string returns an empty dictionary.
+starter_code: |
+  def parse_env_file_string(text):
+      return {}
+function_name: parse_env_file_string
+input_mode: function
+solution_sketch: Loop the lines, stripping and skipping blanks and comments, then drop an optional "export " prefix. Partition on the first "=", strip the key, and skip empties. Strip the value, then branch on double quotes (unescape), single quotes (literal), or unquoted (as-is). Last assignment to a key wins because dict writes overwrite.
+sample_solution: |
+  def _unescape_double(text):
+      mapping = {"n": "\n", "t": "\t", "r": "\r", "\\": "\\", '"': '"'}
+      out = []
+      i = 0
+      while i < len(text):
+          ch = text[i]
+          if ch == "\\" and i + 1 < len(text) and text[i + 1] in mapping:
+              out.append(mapping[text[i + 1]])
+              i += 2
+          else:
+              out.append(ch)
+              i += 1
+      return "".join(out)
+
+
+  def parse_env_file_string(text):
+      result = {}
+      for raw_line in text.splitlines():
+          line = raw_line.strip()
+          if not line or line.startswith("#"):
+              continue
+          if line.startswith("export "):
+              line = line[len("export "):].strip()
+          if "=" not in line:
+              continue
+          raw_key, _, raw_value = line.partition("=")
+          key = raw_key.strip()
+          if not key:
+              continue
+          value = raw_value.strip()
+          if len(value) >= 2 and value[0] == '"' and value[-1] == '"':
+              value = _unescape_double(value[1:-1])
+          elif len(value) >= 2 and value[0] == "'" and value[-1] == "'":
+              value = value[1:-1]
+          result[key] = value
+      return result
+hints:
+  - level: 1
+    text: Walk the lines one at a time, stripping each and skipping blanks and lines that start with "#" before you try to parse anything.
+  - level: 2
+    text: Use line.partition("=") to split on the first equals sign; strip the key, and remember to drop a leading "export " prefix first so "export TOKEN=abc" parses like "TOKEN=abc".
+  - level: 3
+    text: After stripping the value, check its first and last character. If both are double quotes, run an unescape pass over the inside (\\n to newline, and so on). If both are single quotes, keep the inside literal. Otherwise use the stripped text as-is; writing the same key twice naturally keeps the last value.
+tests:
+  public:
+    - name: basic_pairs
+      input: |
+        HOST=localhost
+        PORT=8080
+      expected:
+        HOST: "localhost"
+        PORT: "8080"
+    - name: comments_and_blanks_skipped
+      input: |
+        # table booking config
+
+        DEBUG=1
+      expected:
+        DEBUG: "1"
+    - name: double_quoted_value
+      input: |
+        NAME="Meeple Lounge"
+      expected:
+        NAME: "Meeple Lounge"
+  validation:
+    - name: export_prefix_stripped
+      input: |
+        export TOKEN=abc123
+      expected:
+        TOKEN: "abc123"
+    - name: single_quotes_are_literal
+      input: |
+        SEAT_PATH='/tables/$SECTION:back'
+      expected:
+        SEAT_PATH: "/tables/$SECTION:back"
+    - name: double_quote_escape_sequences
+      input: |
+        BANNER="game\tnight\nstarts"
+      expected:
+        BANNER: "game\tnight\nstarts"
+    - name: unquoted_keeps_inner_spaces
+      input: |
+        TITLE=  board game night
+      expected:
+        TITLE: "board game night"
+    - name: last_assignment_wins
+      input: |
+        MODE=1
+        MODE=2
+      expected:
+        MODE: "2"
+explanation_markdown: |
+  A `.env` reader is a line-oriented parser, and the discipline is deciding what to
+  strip and what to preserve. Stripping the whole line first cleans up blank lines,
+  comments, and the `export ` prefix, but the *value* needs care: quoting is how a
+  `.env` file protects meaningful whitespace and special characters, so you look at
+  the quotes before deciding how much to trust.
+
+  The double- versus single-quote split mirrors the shell and real dotenv loaders.
+  Double quotes are "cooked": `\n` and `\t` become real control characters, which
+  is why booking a banner across two lines works. Single quotes are "raw": a value
+  like `/tables/$SECTION:back` stays exactly as typed, with no interpolation or
+  escape handling — perfect for paths and secrets that contain `$` or backslashes.
+  Because assigning the same dictionary key twice just overwrites it, "last one
+  wins" comes for free, matching how a later line in a real `.env` shadows an
+  earlier one.
+common_mistakes:
+  - Stripping quotes without processing escapes, so a double-quoted "\n" stays two literal characters instead of a newline.
+  - Running escape processing inside single quotes, which corrupts literal values like paths containing backslashes or "$".
+  - Splitting on every "=" instead of the first, truncating values that legitimately contain an equals sign.
+  - Forgetting the "export " prefix, so "export TOKEN=abc" produces a key of "export TOKEN".

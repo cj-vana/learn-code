@@ -34,24 +34,24 @@ units:
   - exercise.library.python_refresh.a02
   - exercise.library.python_refresh.a03
   - exercise.library.python_refresh.a04
+  - quiz.library.python_refresh.a01
   - exercise.library.python_refresh.a05
   - exercise.library.python_refresh.a06
   - exercise.library.python_refresh.a07
   - exercise.library.python_refresh.a08
+  - quiz.library.python_refresh.a02
   - exercise.library.python_refresh.b01
   - exercise.library.python_refresh.b02
   - exercise.library.python_refresh.b03
   - exercise.library.python_refresh.b04
+  - quiz.library.python_refresh.a03
   - exercise.library.python_refresh.b05
   - exercise.library.python_refresh.b06
   - exercise.library.python_refresh.b07
   - exercise.library.python_refresh.b08
+  - quiz.library.python_refresh.a04
   - exercise.library.python_refresh.c01
   - exercise.library.python_refresh.c02
-  - quiz.library.python_refresh.a01
-  - quiz.library.python_refresh.a02
-  - quiz.library.python_refresh.a03
-  - quiz.library.python_refresh.a04
 - id: unit.python_refresh_w2
   title: 'Python Refresh: Round Two'
   description: Lessons, drills, and quizzes for python refresh.
@@ -66,21 +66,21 @@ units:
   - exercise.library.python_refresh_w2.a02
   - exercise.library.python_refresh_w2.a03
   - exercise.library.python_refresh_w2.a04
+  - quiz.library.python_refresh_w2.a01
   - exercise.library.python_refresh_w2.a05
   - exercise.library.python_refresh_w2.a06
   - exercise.library.python_refresh_w2.a07
   - exercise.library.python_refresh_w2.a08
+  - quiz.library.python_refresh_w2.a02
   - exercise.library.python_refresh_w2.b01
   - exercise.library.python_refresh_w2.b02
   - exercise.library.python_refresh_w2.b03
   - exercise.library.python_refresh_w2.b04
+  - quiz.library.python_refresh_w2.a03
   - exercise.library.python_refresh_w2.b05
   - exercise.library.python_refresh_w2.b06
   - exercise.library.python_refresh_w2.b07
   - exercise.library.python_refresh_w2.b08
+  - quiz.library.python_refresh_w2.a04
   - exercise.library.python_refresh_w2.c01
   - exercise.library.python_refresh_w2.c02
-  - quiz.library.python_refresh_w2.a01
-  - quiz.library.python_refresh_w2.a02
-  - quiz.library.python_refresh_w2.a03
-  - quiz.library.python_refresh_w2.a04

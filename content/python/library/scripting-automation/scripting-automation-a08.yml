@@ -1,0 +1,143 @@
+id: exercise.library.scripting_automation.a08
+kind: exercise
+version: 1
+language: python
+title: Packing the Harbor Upload Crates
+slug: scripting-automation-a08
+difficulty: medium
+concepts:
+  - python.pathlib_os
+  - patterns.greedy
+prerequisites:
+  - python.lists
+  - python.dictionaries
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.scripting_automation.a08
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original greedy batching drill framed around a harbor office packing export files into size-limited upload crates.
+prompt_markdown: |
+  A harbor office ships its daily export files to headquarters in "upload crates",
+  and every crate has a strict size budget the network link can carry at once. The
+  packing rule is simple and greedy: walk the files in the order given and keep
+  dropping each one into the current crate; only start a new crate when adding the
+  next file would push the current crate **over** the budget.
+
+  Write `plan_upload_batches(request)` that takes a single dictionary:
+
+  - `"files"`: a list of record dictionaries, each with a `"path"` string and a
+    positive integer `"size"`.
+  - `"limit"`: the integer size budget for one crate.
+
+  Return a list of crates. Each crate is a list of file **base names** (the final
+  path component, e.g. `docs/report.pdf` packs as `report.pdf`), in the order the
+  files were packed.
+
+  Packing rules and edge cases the tests cover:
+
+  - An empty `"files"` list returns `[]`.
+  - A crate may be filled up to exactly `"limit"`; only a running total that would
+    become **strictly greater** than `"limit"` forces a new crate.
+  - A single file whose `"size"` already exceeds `"limit"` still gets packed — it
+    simply sits alone in its own crate.
+  - The original file order is preserved across and within crates.
+
+  Example:
+
+  ```python
+  plan_upload_batches({
+      "files": [
+          {"path": "a/one.bin", "size": 60},
+          {"path": "a/two.bin", "size": 50},
+          {"path": "a/three.bin", "size": 30},
+      ],
+      "limit": 100,
+  })
+  # -> [["one.bin"], ["two.bin", "three.bin"]]
+  ```
+starter_code: |
+  from pathlib import PurePosixPath
+
+
+  def plan_upload_batches(request):
+      return []
+function_name: plan_upload_batches
+input_mode: function
+solution_sketch: Track the current crate and its running total; before adding a file, flush the crate to the result if it is non-empty and the total would exceed the limit, then append the file's base name and add its size. Flush any leftover crate at the end.
+sample_solution: |
+  from pathlib import PurePosixPath
+
+
+  def plan_upload_batches(request):
+      files = request["files"]
+      limit = request["limit"]
+      crates = []
+      current = []
+      total = 0
+      for record in files:
+          size = record["size"]
+          if current and total + size > limit:
+              crates.append(current)
+              current = []
+              total = 0
+          current.append(PurePosixPath(record["path"]).name)
+          total += size
+      if current:
+          crates.append(current)
+      return crates
+hints:
+  - level: 1
+    text: Keep two running pieces of state as you scan the files - the crate you are filling and the sum of its sizes so far.
+  - level: 2
+    text: Before packing a file, if the current crate already has items and total + size would exceed the limit, close the current crate and start an empty one.
+  - level: 3
+    text: Pack PurePosixPath(record["path"]).name (the base name), and remember to append the last non-empty crate after the loop ends.
+tests:
+  public:
+    - name: empty_input
+      input: {"files": [], "limit": 100}
+      expected: []
+    - name: two_crates
+      input: {"files": [{"path": "a/one.bin", "size": 60}, {"path": "a/two.bin", "size": 50}, {"path": "a/three.bin", "size": 30}], "limit": 100}
+      expected: [["one.bin"], ["two.bin", "three.bin"]]
+    - name: exact_fit_stays_together
+      input: {"files": [{"path": "x.dat", "size": 40}, {"path": "y.dat", "size": 60}], "limit": 100}
+      expected: [["x.dat", "y.dat"]]
+  validation:
+    - name: oversize_file_alone
+      input: {"files": [{"path": "big.iso", "size": 500}, {"path": "small.txt", "size": 10}], "limit": 100}
+      expected: [["big.iso"], ["small.txt"]]
+    - name: everything_fits_in_one
+      input: {"files": [{"path": "dir/p.a", "size": 10}, {"path": "dir/q.b", "size": 10}, {"path": "dir/r.c", "size": 10}], "limit": 100}
+      expected: [["p.a", "q.b", "r.c"]]
+    - name: each_over_limit
+      input: {"files": [{"path": "m/one", "size": 100}, {"path": "m/two", "size": 100}], "limit": 50}
+      expected: [["one"], ["two"]]
+    - name: deep_base_name
+      input: {"files": [{"path": "a/b/c/deep.log", "size": 10}], "limit": 100}
+      expected: [["deep.log"]]
+    - name: fills_then_overflows
+      input: {"files": [{"path": "f1", "size": 70}, {"path": "f2", "size": 30}, {"path": "f3", "size": 1}], "limit": 100}
+      expected: [["f1", "f2"], ["f3"]]
+explanation_markdown: |
+  This is first-fit-decreasing's simpler cousin: a single greedy pass that never
+  looks back. The invariant is that `total` always equals the sum of the sizes in
+  `current`. When the next file would break the budget, you seal the current crate
+  and open a fresh one — but only if the current crate has something in it, which
+  is exactly what lets an oversize file land alone instead of forcing an empty
+  crate in front of it.
+
+  Two details make the greedy rule correct. First, the comparison is `>` not `>=`,
+  so a file that brings the total up to precisely `limit` still fits. Second, the
+  post-loop flush matters: the last crate is still open when the loop ends, so it
+  must be appended explicitly or the final files vanish. Reducing each path to
+  `PurePosixPath(...).name` keeps the manifest readable regardless of how deep the
+  source directories were. The pass is O(n).
+common_mistakes:
+  - Forgetting to append the final `current` crate after the loop, dropping the last group of files.
+  - Using `>=` instead of `>`, which splits a crate that lands exactly on the limit.
+  - Flushing an empty crate when the very first file is oversize, producing a stray empty list at the front.

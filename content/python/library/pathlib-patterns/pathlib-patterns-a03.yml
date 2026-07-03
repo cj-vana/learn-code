@@ -1,0 +1,101 @@
+id: exercise.library.pathlib_patterns.a03
+kind: exercise
+version: 1
+language: python
+title: Building Warehouse Storage Keys
+slug: pathlib-patterns-a03
+difficulty: medium
+concepts:
+  - python.pathlib_os
+  - python.lists
+prerequisites:
+  - python.lists
+  - python.strings
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.pathlib_patterns.a03
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original parts-warehouse framing for joining path segments with PurePosixPath, including the absolute-reset gotcha.
+prompt_markdown: |
+  A parts warehouse builds a storage key by joining a list of segments, so
+  `["aisle7", "binC", "bolt.m8"]` becomes `aisle7/binC/bolt.m8`.
+
+  Write `join_paths(parts)` that joins a list of segment strings into a single
+  path string using `pathlib.PurePosixPath`. The rules, which are exactly how
+  `PurePosixPath` combines its arguments:
+
+  - `["aisle7", "binC", "bolt.m8"]` returns `aisle7/binC/bolt.m8`.
+  - An empty list has no segments; return `'.'` (the current-directory marker an
+    empty `PurePosixPath()` produces).
+  - If a segment is an absolute path (it starts with `/`), it **resets** the key:
+    `["home/ada", "/var", "log"]` returns `/var/log`.
+  - Redundant and trailing slashes collapse: `["a//b", "c"]` returns `a/b/c` and
+    `["a/", "b"]` returns `a/b`.
+  - Empty-string segments are skipped: `["ledger", "", "notes.txt"]` returns
+    `ledger/notes.txt`.
+
+  Pass the segments straight into `PurePosixPath(*parts)` and return its string
+  form. No filesystem is ever touched.
+starter_code: |
+  from pathlib import PurePosixPath
+
+
+  def join_paths(parts):
+      return ""
+function_name: join_paths
+input_mode: function
+solution_sketch: Splat the list into PurePosixPath(*parts) so every joining rule is applied, then return str() of the result; an empty list yields PurePosixPath('.').
+sample_solution: |
+  from pathlib import PurePosixPath
+
+
+  def join_paths(parts):
+      return str(PurePosixPath(*parts))
+hints:
+  - level: 1
+    text: PurePosixPath accepts many segment arguments at once and combines them using POSIX joining rules, all without touching a disk.
+  - level: 2
+    text: Use the splat operator to pass the whole list as separate arguments, PurePosixPath(*parts), then convert to a string.
+  - level: 3
+    text: Return str(PurePosixPath(*parts)); an empty list gives PurePosixPath() which stringifies to ".", and an absolute segment discards everything before it.
+tests:
+  public:
+    - name: simple_join
+      input: ["aisle7", "binC", "bolt.m8"]
+      expected: "aisle7/binC/bolt.m8"
+    - name: empty_list
+      input: []
+      expected: "."
+    - name: absolute_resets
+      input: ["home/ada", "/var", "log"]
+      expected: "/var/log"
+  validation:
+    - name: collapse_double_slash
+      input: ["a//b", "c"]
+      expected: "a/b/c"
+    - name: trailing_slash
+      input: ["a/", "b"]
+      expected: "a/b"
+    - name: skip_empty_segment
+      input: ["ledger", "", "notes.txt"]
+      expected: "ledger/notes.txt"
+    - name: single_segment
+      input: ["solo"]
+      expected: "solo"
+explanation_markdown: |
+  `PurePosixPath(*parts)` is the pure-path way to join segments, and it bakes in
+  several POSIX rules for free. Adjacent and trailing slashes collapse, empty
+  strings are dropped, and — the surprising one — a segment that begins with `/`
+  is absolute and **resets** the whole path, throwing away everything before it.
+  That reset behaviour is why blindly concatenating user-supplied segments with
+  `"/".join(...)` can silently produce the wrong key. An empty argument list
+  yields `PurePosixPath()`, whose string form is `.`. Splatting the list lets one
+  constructor call handle every case instead of a hand-rolled loop.
+common_mistakes:
+  - Using "/".join(parts), which keeps doubled slashes and does not apply the absolute-segment reset rule.
+  - Passing the list itself, PurePosixPath(parts), instead of splatting it with PurePosixPath(*parts).
+  - Returning the PurePosixPath object rather than str(...) of it, so the value never matches the expected string.

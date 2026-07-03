@@ -1,0 +1,133 @@
+id: exercise.library.files_formats.a08
+kind: exercise
+version: 1
+language: python
+title: Flattening the Sensor Telemetry Envelope
+slug: files-formats-a08
+difficulty: medium
+concepts:
+  - python.json_csv
+  - patterns.recursion
+prerequisites:
+  - python.dictionaries
+  - python.strings
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.files_formats.a08
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original nested-JSON flattening drill framed around a weather-station telemetry envelope with dotted key paths.
+prompt_markdown: |
+  A weather station reports each reading as a nested JSON **envelope**, but the
+  archive that stores them only accepts a flat dictionary. Write
+  `flatten_json(payload)` that takes a **JSON string** describing nested objects
+  and returns a flat dictionary whose keys are the full path to each value, joined
+  with dots.
+
+  Example call:
+
+  ```python
+  flatten_json('{"device": {"id": "b1", "battery": {"pct": 88}}}')
+  # -> {"device.id": "b1", "device.battery.pct": 88}
+  ```
+
+  Rules:
+
+  - Parse the string with `json.loads` first.
+  - Every leaf value is a **scalar** (string, number, boolean, or `null`); there
+    are **no lists** anywhere in the envelope.
+  - For a nested object, join the parent key and child key with a `"."` and keep
+    descending. A value three levels deep like `a.b.c` uses two dots.
+  - Keep each scalar exactly as JSON decoded it (a JSON `null` becomes Python
+    `None`, `true` becomes `True`).
+  - Assume every object you meet has at least one entry, so there are no empty
+    sub-objects to worry about.
+  - An empty top-level object (`"{}"`) returns an empty dictionary.
+starter_code: |
+  import json
+
+
+  def flatten_json(payload):
+      return {}
+function_name: flatten_json
+input_mode: function
+solution_sketch: json.loads the string, then walk the structure recursively carrying a prefix; on a dict, recurse into each child with prefix + "." + key (or just key at the top), and on a scalar store flat[prefix] = value.
+sample_solution: |
+  import json
+
+
+  def flatten_json(payload):
+      data = json.loads(payload)
+      flat = {}
+
+      def walk(prefix, value):
+          if isinstance(value, dict):
+              for key, sub in value.items():
+                  child = f"{prefix}.{key}" if prefix else key
+                  walk(child, sub)
+          else:
+              flat[prefix] = value
+
+      walk("", data)
+      return flat
+hints:
+  - level: 1
+    text: Call json.loads(payload) to turn the string into nested dicts, then process that structure with a recursive helper.
+  - level: 2
+    text: The helper carries a prefix string; when it meets a dict it recurses into each key, and when it meets a scalar it records flat[prefix] = value.
+  - level: 3
+    text: Build each child key as f"{prefix}.{key}" but use just key when the prefix is still empty at the top level so paths do not start with a stray dot.
+tests:
+  public:
+    - name: two_levels
+      input: '{"device": {"id": "b1", "battery": {"pct": 88}}}'
+      expected:
+        "device.id": "b1"
+        "device.battery.pct": 88
+    - name: single_scalar
+      input: '{"status": "ok"}'
+      expected:
+        "status": "ok"
+    - name: empty_object
+      input: '{}'
+      expected: {}
+  validation:
+    - name: keeps_null_and_bool
+      input: '{"link": {"online": true, "note": null}}'
+      expected:
+        "link.online": true
+        "link.note": null
+    - name: three_levels_deep
+      input: '{"cal": {"gain": {"raw": 1.5}}}'
+      expected:
+        "cal.gain.raw": 1.5
+    - name: mixed_flat_and_nested
+      input: '{"site": "pier", "env": {"temp": 4, "humidity": 61}}'
+      expected:
+        "site": "pier"
+        "env.temp": 4
+        "env.humidity": 61
+    - name: several_top_keys
+      input: '{"a": {"b": 1}, "c": {"d": {"e": 2}}}'
+      expected:
+        "a.b": 1
+        "c.d.e": 2
+explanation_markdown: |
+  Flattening a tree is a natural fit for recursion: the same "descend into an
+  object, joining keys as you go" step applies at every depth. The helper carries
+  a `prefix` that is the dotted path built so far. When the current value is a
+  dictionary, you extend the prefix with each child key and recurse; when it is a
+  scalar, you have reached a leaf and record it under its full path.
+
+  The one subtlety is the very first level, where the prefix is still empty. The
+  guard `f"{prefix}.{key}" if prefix else key` avoids emitting a leading dot on
+  top-level keys. Because `json.loads` already returns real Python scalars,
+  booleans and `null` pass through untouched as `True`/`False`/`None`, so you do
+  not convert or stringify anything on the way out.
+common_mistakes:
+  - Forgetting to parse the string first and trying to index the raw JSON text as if it were a dictionary.
+  - Always prefixing with a dot, so top-level keys come out as ".device" instead of "device".
+  - Recursing only one level deep instead of at every object, leaving inner dictionaries unflattened.

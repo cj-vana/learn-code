@@ -1,0 +1,95 @@
+id: quiz.library.config_parsing.a02
+kind: quiz
+version: 1
+language: python
+title: Config Mechanics
+slug: quiz-config-parsing-a02
+difficulty: medium
+concepts:
+  - python.config_parsing
+prerequisites:
+  - python.config_parsing
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.config_parsing.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax quiz on configparser accessors, tomllib, os.environ, and merge mechanics.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: 'To read an integer port from a configparser section, which is correct?'
+    choices:
+      - cfg.getint("server", "port")
+      - int(cfg["server"]["port"]) — works but manual; getint is the idiom
+      - cfg.get("server", "port", type=int)
+      - cfg["server"].port
+    correct_choice: cfg.getint("server", "port")
+    explanation: |
+      getint/getfloat/getboolean are the typed accessors that encapsulate
+      coercion (and getboolean's truthy-string vocabulary); manual int()
+      works but reimplements what the accessor provides.
+    concepts:
+      - python.config_parsing
+  - id: q2
+    prompt: 'What does tomllib.load require, and why the specific mode?'
+    choices:
+      - A file opened in binary mode ("rb") — tomllib decodes bytes to enforce UTF-8 correctly
+      - A file in text mode ("r")
+      - A string path directly
+      - A dict of overrides
+    correct_choice: A file opened in binary mode ("rb") — tomllib decodes bytes to enforce UTF-8 correctly
+    explanation: |
+      tomllib.load reads bytes (the spec mandates UTF-8); the binary-mode
+      requirement is a common first-use surprise. (tomllib.loads takes a
+      string.)
+    concepts:
+      - python.config_parsing
+  - id: q3
+    prompt: 'os.environ.get("APP_WORKERS") returns what type, and why does it matter?'
+    choices:
+      - Always a string (or None) — env values need coercion just like INI, so "8" must be int()ed before arithmetic
+      - An int if the value is numeric
+      - The Python object that was exported
+      - A bytes object
+    correct_choice: Always a string (or None) — env values need coercion just like INI, so "8" must be int()ed before arithmetic
+    explanation: |
+      The environment is an all-strings source; forgetting to coerce is the
+      same class of bug as reading INI without typed accessors.
+    concepts:
+      - python.config_parsing
+  - id: q4
+    prompt: |
+      In the layered merge, why filter out {k: v for k, v in layer.items()
+      if v is not None} before update?
+    choices:
+      - So a layer that did not specify a key (None) does not overwrite a lower layer's real value
+      - To remove empty strings
+      - To speed up the merge
+      - To convert None to defaults
+    correct_choice: So a layer that did not specify a key (None) does not overwrite a lower layer's real value
+    explanation: |
+      None encodes "unspecified"; without the filter an absent higher-layer
+      setting would clobber a present lower-layer one — the unset-versus-null
+      distinction in action.
+    concepts:
+      - python.config_parsing
+  - id: q5
+    prompt: |
+      Mapping the env var name STATION_INTERVAL to the config key interval
+      requires which transformation?
+    choices:
+      - Strip the prefix and lowercase — STATION_INTERVAL -> interval (a documented, reversible convention)
+      - Reverse the string
+      - Hash the name
+      - Take the first word only
+    correct_choice: Strip the prefix and lowercase — STATION_INTERVAL -> interval (a documented, reversible convention)
+    explanation: |
+      Prefixed screaming-snake env vars map to config keys by a stated rule;
+      the prefix prevents collisions and the transform must be predictable
+      so operators can guess the var name.
+    concepts:
+      - python.config_parsing

@@ -1,0 +1,171 @@
+id: exercise.library.oop_internals.a04
+kind: exercise
+version: 1
+language: python
+title: Which Keeper Answers the Bell
+slug: oop-internals-a04
+difficulty: medium
+concepts:
+  - python.descriptors_mro
+  - python.classes
+prerequisites:
+  - python.dictionaries
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.oop_internals.a04
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original method-resolution drill framed as a lighthouse-keeper duty lineage, resolved by walking a real MRO and checking each class namespace.
+prompt_markdown: |
+  A chain of lighthouse keepers inherits duties from senior keepers. When the bell
+  rings for the duty `sound_horn`, Python finds the responder by walking the ringing
+  role's **method resolution order** and taking the first ancestor that actually
+  defines that duty in its own body. Your job is to name that responder.
+
+  Write `which_keeper_responds(job)`. The single argument is a dict shaped like:
+
+  ```python
+  {
+      "bases": {"A": [], "B": ["A"], "C": ["A"], "D": ["B", "C"]},
+      "defines": ["A", "C"],
+      "start": "D",
+  }
+  ```
+
+  - `bases` maps each role to the ordered list of its direct parent roles (empty
+    list means it inherits only from `object`).
+  - `defines` is the set of roles that define the `sound_horn` duty in their own
+    class body.
+  - `start` is the role whose bell rings.
+
+  Build the real classes, attaching the `sound_horn` method to exactly the roles in
+  `defines`. Then walk `start`'s MRO and return the **name** of the first class that
+  defines `sound_horn` in its own namespace. If no class in that MRO defines it,
+  return `None`.
+
+  For the example, `start` `D` has MRO `D, B, C, A, object`; the first of those that
+  defines the duty is `C`, so return `"C"`. A duty defined only on a role that is
+  not in the ringing role's ancestry does not count.
+starter_code: |
+  def which_keeper_responds(job):
+      return None
+function_name: which_keeper_responds
+input_mode: function
+solution_sketch: Build the classes, putting a sound_horn entry in the namespace of each role listed in defines; then iterate start_cls.__mro__ and return the first class whose own __dict__ contains "sound_horn", else None.
+sample_solution: |
+  def which_keeper_responds(job):
+      spec = job["bases"]
+      defines = set(job["defines"])
+      start = job["start"]
+
+      def sound_horn(self):
+          return type(self).__name__
+
+      built = {}
+      remaining = dict(spec)
+      while remaining:
+          progressed = False
+          for name in list(remaining):
+              parent_names = remaining[name]
+              if all(parent in built for parent in parent_names):
+                  bases = tuple(built[parent] for parent in parent_names)
+                  namespace = {"sound_horn": sound_horn} if name in defines else {}
+                  built[name] = type(name, bases, namespace)
+                  del remaining[name]
+                  progressed = True
+          if not progressed:
+              raise ValueError("unresolvable lineage")
+
+      for ancestor in built[start].__mro__:
+          if "sound_horn" in ancestor.__dict__:
+              return ancestor.__name__
+      return None
+hints:
+  - level: 1
+    text: Method resolution walks the class's __mro__ and stops at the first class that has the method in its own __dict__ — not merely inherited.
+  - level: 2
+    text: When building each class, only put "sound_horn" in its namespace if its name is in defines. That mirrors "defines it in its own body".
+  - level: 3
+    text: Loop over built[start].__mro__ and check "sound_horn" in ancestor.__dict__ (the class's own namespace, not getattr, which would follow inheritance). Return the first match's __name__, else None.
+tests:
+  public:
+    - name: diamond_c_wins
+      input:
+        bases:
+          A: []
+          B: [A]
+          C: [A]
+          D: [B, C]
+        defines: [A, C]
+        start: D
+      expected: C
+    - name: only_ancestor_in_scope
+      input:
+        bases:
+          A: []
+          B: [A]
+          C: [A]
+          D: [B, C]
+        defines: [A]
+        start: B
+      expected: A
+    - name: nobody_defines
+      input:
+        bases:
+          A: []
+          B: [A]
+          C: [A]
+          D: [B, C]
+        defines: []
+        start: D
+      expected: null
+  validation:
+    - name: start_itself_defines
+      input:
+        bases:
+          A: []
+          B: [A]
+          C: [A]
+          D: [B, C]
+        defines: [B]
+        start: D
+      expected: B
+    - name: right_branch_precedes_shared_base
+      input:
+        bases:
+          Base: []
+          Left: [Base]
+          Right: [Base]
+          Leaf: [Left, Right]
+        defines: [Right, Base]
+        start: Leaf
+      expected: Right
+    - name: falls_through_to_base
+      input:
+        bases:
+          Base: []
+          Left: [Base]
+          Right: [Base]
+          Leaf: [Left, Right]
+        defines: [Base]
+        start: Leaf
+      expected: Base
+explanation_markdown: |
+  Looking up `instance.sound_horn()` sends Python down the class's MRO, and the
+  lookup stops at the **first** class whose own namespace (`__dict__`) holds
+  `sound_horn`. Checking `__dict__` rather than `getattr`/`hasattr` is the crux:
+  `hasattr` would report `True` on a subclass that merely inherits the method, which
+  would not tell you which class actually owns it.
+
+  In the diamond, `D`'s MRO is `D, B, C, A, object`. With the duty on `A` and `C`,
+  the walk reaches `C` before `A`, so `C` responds — this is exactly why cooperative
+  `super()` calls flow `B -> C -> A` rather than `B -> A` directly. A duty defined
+  only on a class outside `start`'s ancestry (as in the `start=B` case) is never
+  reached, because that class is not in `B`'s MRO at all.
+common_mistakes:
+  - Using hasattr/getattr instead of checking each class's own __dict__, which reports inherited methods and returns the wrong owner.
+  - Scanning the bases dict in declaration order instead of the start class's actual MRO, giving wrong results for diamonds.
+  - Forgetting the None case when no class in the MRO defines the duty.

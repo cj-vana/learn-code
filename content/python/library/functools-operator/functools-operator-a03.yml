@@ -1,0 +1,116 @@
+id: exercise.library.functools_operator.a03
+kind: exercise
+version: 1
+language: python
+title: The Toll Booth Ledger
+slug: functools-operator-a03
+difficulty: medium
+concepts:
+  - python.functools_operator
+  - concepts.memoization
+prerequisites:
+  - python.functions
+  - python.dictionaries
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.functools_operator.a03
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original lru_cache cache_info drill themed around a harbor toll booth caching per-vehicle fare lookups.
+prompt_markdown: |
+  A harbor toll booth memoizes its fare calculation so repeat vehicles are not
+  recomputed. The cache is a bounded LRU (least-recently-used) cache: once it is
+  full, computing a fare for a brand-new vehicle evicts whichever cached vehicle
+  was used least recently.
+
+  Write `booth_ledger(job)` where `job` is a dict with:
+
+  - `"maxsize"`: the LRU cache capacity — an integer, or `null` for an unbounded
+    cache
+  - `"calls"`: a list of vehicle ids (integers), each representing one fare
+    lookup, processed left to right
+
+  Wrap a fare function with `functools.lru_cache(maxsize=...)`, call the wrapped
+  function once per id in `calls` (in order), then return the cache statistics as
+  the list `[hits, misses, maxsize, currsize]` — exactly the four fields of
+  `cache_info()`, in that order, as a plain list. When `maxsize` is `null`, the
+  `maxsize` field stays `null`.
+
+  The fare function's actual math does not matter for the statistics; what matters
+  is that the same id repeated is a cache **hit** and a fresh id is a **miss**,
+  with LRU eviction once the cache is full.
+
+  Example: `{"maxsize": 2, "calls": [1, 2, 1, 3, 1]}` yields `[2, 3, 2, 2]` — two
+  hits (the repeated `1`s), three misses (`1`, `2`, `3`), capacity `2`, and two
+  entries still cached (`3` evicted `2`).
+starter_code: |
+  from functools import lru_cache
+
+
+  def booth_ledger(job):
+      return [0, 0, 0, 0]
+function_name: booth_ledger
+input_mode: function
+solution_sketch: |
+  Build a fare function wrapped by lru_cache(maxsize=job["maxsize"]), call it for
+  each id in job["calls"], then return list(fare.cache_info()).
+sample_solution: |
+  from functools import lru_cache
+
+
+  def booth_ledger(job):
+      fare = lru_cache(maxsize=job["maxsize"])(lambda vehicle_id: vehicle_id * vehicle_id)
+      for vehicle_id in job["calls"]:
+          fare(vehicle_id)
+      info = fare.cache_info()
+      return [info.hits, info.misses, info.maxsize, info.currsize]
+hints:
+  - level: 1
+    text: lru_cache can be applied as a function, not just a decorator - lru_cache(maxsize=n)(some_func) returns the wrapped, memoized version.
+  - level: 2
+    text: Every time you call the wrapped function with an id it has seen recently it counts as a hit; a new id is a miss and may evict the least-recently-used entry once the cache is full.
+  - level: 3
+    text: After replaying all calls, read fare.cache_info(), which is a named tuple (hits, misses, maxsize, currsize); return those four values as a plain list.
+tests:
+  public:
+    - name: two_hits_one_evict
+      input: {maxsize: 2, calls: [1, 2, 1, 3, 1]}
+      expected: [2, 3, 2, 2]
+    - name: all_distinct
+      input: {maxsize: 3, calls: [1, 2, 3]}
+      expected: [0, 3, 3, 3]
+    - name: no_calls
+      input: {maxsize: 3, calls: []}
+      expected: [0, 0, 3, 0]
+  validation:
+    - name: unbounded_repeats
+      input: {maxsize: null, calls: [5, 5, 5]}
+      expected: [2, 1, null, 1]
+    - name: capacity_one_thrash
+      input: {maxsize: 1, calls: [1, 1, 2, 1]}
+      expected: [1, 3, 1, 1]
+    - name: warm_then_reuse
+      input: {maxsize: 4, calls: [1, 2, 3, 2, 1, 4]}
+      expected: [2, 4, 4, 4]
+    - name: unbounded_growth
+      input: {maxsize: null, calls: [1, 2, 3, 1, 2, 3]}
+      expected: [3, 3, null, 3]
+explanation_markdown: |
+  `functools.lru_cache` wraps a function in a memoization layer and tracks four
+  counters you can read through `cache_info()`: `hits` (calls served from the
+  cache), `misses` (calls that had to compute), `maxsize` (the configured
+  capacity, or `None` when unbounded), and `currsize` (how many entries are
+  currently stored). Applying it as `lru_cache(maxsize=...)(func)` — rather than
+  with `@` — lets you choose the capacity from data at runtime.
+
+  With a bounded cache, once `currsize` reaches `maxsize`, each miss evicts the
+  least-recently-used key before inserting the new one, so `currsize` never
+  exceeds `maxsize`. Repeated keys refresh their recency, which is why in the
+  worked example the second `1` kept `1` alive while `2` (older) was evicted.
+common_mistakes:
+  - Returning the raw cache_info() named tuple; the runner compares against a plain list, so unpack the four fields into a list.
+  - Passing maxsize through in the wrong place or hardcoding it, instead of reading job["maxsize"] (which may be null for unbounded).
+  - Assuming currsize keeps climbing past maxsize; a bounded LRU cache evicts on every miss once it is full.

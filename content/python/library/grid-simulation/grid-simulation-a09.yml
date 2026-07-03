@@ -1,0 +1,117 @@
+id: exercise.library.grid_simulation.a09
+kind: exercise
+version: 1
+language: python
+title: Moss on the Patio
+slug: grid-simulation-a09
+difficulty: medium
+concepts:
+  - patterns.simulation
+  - patterns.grid_traversal
+prerequisites:
+  - python.lists
+  - python.loops
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.grid_simulation.a09
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original single-generation cellular automaton themed around moss spreading across patio flagstones.
+prompt_markdown: |
+  A stone patio is laid out as a rectangular grid of flagstones. Each stone is
+  either bare (`0`) or carries a patch of moss (`1`). Overnight the moss follows
+  two simple growth rules based on a stone's eight surrounding neighbours (the
+  orthogonal and diagonal cells that exist inside the grid):
+
+  - A mossy stone (`1`) **survives** to the next morning only if it has exactly
+    `2` or `3` mossy neighbours. With fewer it dries out; with more it is
+    smothered. Either way it becomes bare (`0`).
+  - A bare stone (`0`) **sprouts** new moss (becomes `1`) only if it has exactly
+    `3` mossy neighbours. Otherwise it stays bare.
+
+  Every stone is evaluated at the same instant using the *current* layout, so you
+  must not let changes you make ripple into the neighbour counts for other stones.
+
+  Write `next_generation(grid)`, taking the patio as a list of rows (each a list
+  of `0`/`1` values), and **return the next morning's grid as a new list of
+  lists**. Do not mutate the input grid. The grid is rectangular and has at least
+  one row and one column.
+
+  For example, a horizontal strip of three mossy stones
+  `[[0, 0, 0], [1, 1, 1], [0, 0, 0]]` becomes the vertical strip
+  `[[0, 1, 0], [0, 1, 0], [0, 1, 0]]`.
+starter_code: |
+  def next_generation(grid):
+      return []
+function_name: next_generation
+input_mode: function
+solution_sketch: Build a fresh output grid. For each cell, count mossy neighbours across the eight offsets using the original grid, then apply the survive/sprout rules to decide the new value.
+sample_solution: |
+  def next_generation(grid):
+      rows, cols = len(grid), len(grid[0])
+      result = [[0] * cols for _ in range(rows)]
+      for r in range(rows):
+          for c in range(cols):
+              live = 0
+              for dr in (-1, 0, 1):
+                  for dc in (-1, 0, 1):
+                      if dr == 0 and dc == 0:
+                          continue
+                      nr, nc = r + dr, c + dc
+                      if 0 <= nr < rows and 0 <= nc < cols:
+                          live += grid[nr][nc]
+              if grid[r][c] == 1:
+                  result[r][c] = 1 if live in (2, 3) else 0
+              else:
+                  result[r][c] = 1 if live == 3 else 0
+      return result
+hints:
+  - level: 1
+    text: Write the answer into a brand new grid so that every neighbour count still reads the original, unchanged layout.
+  - level: 2
+    text: To count a cell's neighbours, loop over the offsets (-1, 0, 1) for both row and column, skip (0, 0), and only count positions that fall inside the grid bounds.
+  - level: 3
+    text: A mossy cell survives when its live count is 2 or 3; a bare cell sprouts only on a live count of exactly 3. Store each decision in the new grid at the same coordinates.
+tests:
+  public:
+    - name: blinker_flips
+      input: [[0, 0, 0], [1, 1, 1], [0, 0, 0]]
+      expected: [[0, 1, 0], [0, 1, 0], [0, 1, 0]]
+    - name: bare_stays_bare
+      input: [[0, 0], [0, 0]]
+      expected: [[0, 0], [0, 0]]
+    - name: block_is_stable
+      input: [[1, 1], [1, 1]]
+      expected: [[1, 1], [1, 1]]
+  validation:
+    - name: lone_patch_dies
+      input: [[0, 0, 0], [0, 1, 0], [0, 0, 0]]
+      expected: [[0, 0, 0], [0, 0, 0], [0, 0, 0]]
+    - name: corner_fills_to_block
+      input: [[1, 1], [1, 0]]
+      expected: [[1, 1], [1, 1]]
+    - name: rectangular_patio
+      input: [[1, 1, 0], [0, 1, 1]]
+      expected: [[1, 1, 1], [1, 1, 1]]
+    - name: overcrowded_center_clears
+      input: [[0, 1, 0], [1, 1, 1], [0, 1, 0]]
+      expected: [[1, 1, 1], [1, 0, 1], [1, 1, 1]]
+explanation_markdown: |
+  The one rule that makes this correct is separating *reading* from *writing*.
+  Because a cell's fate depends on its neighbours' current values, updating the
+  patio in place would corrupt the counts for stones you have not visited yet.
+  Writing every result into a fresh grid keeps the original snapshot intact for
+  the whole pass.
+
+  Counting neighbours with the nested `(-1, 0, 1)` offsets and a `(0, 0)` skip is
+  a clean way to sweep all eight surrounding cells, and the bounds check quietly
+  handles edges and corners, which simply have fewer neighbours. Each cell does a
+  constant amount of work (at most eight look-ups), so the routine runs in
+  O(rows * cols) time and uses O(rows * cols) space for the output.
+common_mistakes:
+  - Mutating the grid while scanning it, so later cells count neighbours that were already updated this generation.
+  - Forgetting the diagonal neighbours and counting only the four orthogonal cells.
+  - Counting the cell itself as one of its neighbours by not skipping the (0, 0) offset.

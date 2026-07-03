@@ -1,0 +1,94 @@
+id: exercise.library.collections_itertools.a12
+kind: exercise
+version: 1
+language: python
+title: Heaviest Cargo That Still Fits
+slug: collections-itertools-a12
+difficulty: hard
+concepts:
+  - python.itertools_module
+  - patterns.brute_force
+prerequisites:
+  - python.lists
+estimated_time_minutes: 18
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.collections_itertools.a12
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original cargo-loading scenario building a powerset from chain over combinations of every subset size.
+prompt_markdown: |
+  A courier drone can carry any subset of the waiting crates as long as the
+  total weight does not exceed its capacity. Write `best_load(payload)` where
+  `payload` is a dict with keys `weights` (a list of positive integer crate
+  weights) and `capacity` (a non-negative integer). Return the largest total
+  weight of any subset of crates that fits within the capacity. Carrying nothing
+  is always allowed, so the answer is at least 0. The crate list is short (at
+  most a handful of crates), so it is fine to examine every possible subset.
+starter_code: |
+  def best_load(payload):
+      return 0
+function_name: best_load
+input_mode: function
+solution_sketch: Generate every subset by chaining combinations of each size, then take the largest subset sum that fits.
+sample_solution: |
+  from itertools import chain, combinations
+
+
+  def best_load(payload):
+      weights = payload["weights"]
+      capacity = payload["capacity"]
+      subsets = chain.from_iterable(
+          combinations(weights, size) for size in range(len(weights) + 1)
+      )
+      best = 0
+      for subset in subsets:
+          total = sum(subset)
+          if total <= capacity:
+              best = max(best, total)
+      return best
+hints:
+  - level: 1
+    text: With only a few crates you can afford to look at every possible subset and keep the best that fits.
+  - level: 2
+    text: combinations(weights, size) gives every subset of a fixed size; chaining over sizes 0..len builds the full powerset.
+  - level: 3
+    text: For each subset compute sum(subset); track the max total that is still <= capacity, starting from 0 for the empty load.
+tests:
+  public:
+    - name: fills_exactly
+      input: {weights: [3, 4, 5], capacity: 9}
+      expected: 9
+    - name: everything_fits
+      input: {weights: [1, 2, 3], capacity: 100}
+      expected: 6
+    - name: nothing_fits
+      input: {weights: [10, 20], capacity: 5}
+      expected: 0
+  validation:
+    - name: best_is_a_pair
+      input: {weights: [2, 2, 2], capacity: 5}
+      expected: 4
+    - name: no_crates
+      input: {weights: [], capacity: 10}
+      expected: 0
+    - name: tight_capacity
+      input: {weights: [4, 5, 6], capacity: 10}
+      expected: 10
+    - name: zero_capacity
+      input: {weights: [1, 2], capacity: 0}
+      expected: 0
+explanation_markdown: |
+  Every subset of the crates is one entry in the powerset. You build it by
+  asking `combinations(weights, size)` for each size from `0` to the number of
+  crates and gluing those streams together with `chain.from_iterable` -- a tidy
+  way to enumerate all subsets without recursion. Each subset's sum is checked
+  against the capacity, and the best fitting total wins. Seeding `best` at `0`
+  covers the empty load, which is why a zero capacity or all-too-heavy crates
+  correctly returns 0.
+common_mistakes:
+  - Only considering subsets of one fixed size instead of chaining across every size.
+  - Forgetting the empty subset (size 0), so a zero-capacity load has no valid answer.
+  - Returning the first subset that fits rather than the maximum fitting total.

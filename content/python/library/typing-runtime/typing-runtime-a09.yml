@@ -1,0 +1,119 @@
+id: exercise.library.typing_runtime.a09
+kind: exercise
+version: 1
+language: python
+title: Vetting Readings at the Observatory Gate
+slug: typing-runtime-a09
+difficulty: medium
+concepts:
+  - python.type_hints
+  - python.introspection
+prerequisites:
+  - python.types
+  - python.dictionaries
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.typing_runtime.a09
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original observatory-reading scenario for a hand-rolled runtime type guard that honors the bool-is-not-int trap.
+prompt_markdown: |
+  An observatory's data gate receives raw instrument readings tagged with the type
+  they are *supposed* to be. Since annotations are never enforced at runtime, the
+  gate needs a hand-written guard that decides whether a value truly matches its
+  declared type before it enters the pipeline.
+
+  Write `check_reading_type(reading)`, where `reading` is a dict shaped like
+  `{"value": <any>, "expected": <type name>}`. The `expected` name is one of the
+  strings `"int"`, `"bool"`, `"float"`, `"str"`, or `"list"`. Return `True` if
+  `value`'s **exact** runtime type matches the expected name, otherwise `False`.
+
+  Match on the exact type, not the class hierarchy, so:
+
+  - `"int"` matches only values whose type is exactly `int`. A `bool` does **not**
+    match `"int"`, even though `bool` is a subclass of `int`.
+  - `"bool"` matches only `True`/`False`.
+  - `"float"` matches only floats; an integer like `7` does **not** match `"float"`.
+  - `"str"` matches only strings, `"list"` only lists.
+
+  If `expected` is not one of the five known names, return `False`.
+
+  For example, `check_reading_type({"value": 7, "expected": "int"})` returns `True`,
+  `check_reading_type({"value": True, "expected": "int"})` returns `False`, and
+  `check_reading_type({"value": 7, "expected": "float"})` returns `False`.
+starter_code: |
+  def check_reading_type(reading):
+      # Map each expected name to a type and compare against the value's exact type.
+      return False
+function_name: check_reading_type
+input_mode: function
+solution_sketch: Look the expected name up in a name-to-type table and compare with type(value) is <type>, returning False for unknown names.
+sample_solution: |
+  def check_reading_type(reading):
+      value = reading["value"]
+      expected = reading["expected"]
+      known = {
+          "int": int,
+          "bool": bool,
+          "float": float,
+          "str": str,
+          "list": list,
+      }
+      if expected not in known:
+          return False
+      return type(value) is known[expected]
+hints:
+  - level: 1
+    text: Build a dict that maps each expected name string to the actual type object it stands for.
+  - level: 2
+    text: Compare with type(value) is known[expected] rather than isinstance, so exact-type matching is enforced.
+  - level: 3
+    text: Because bool is a subclass of int, type(True) is int is False; exact-type comparison is exactly what keeps a bool out of the int bucket. Return False when the expected name is not in your table.
+tests:
+  public:
+    - name: int_matches
+      input: {value: 42, expected: 'int'}
+      expected: true
+    - name: bool_not_int
+      input: {value: true, expected: 'int'}
+      expected: false
+    - name: str_matches
+      input: {value: 'hi', expected: 'str'}
+      expected: true
+  validation:
+    - name: bool_matches_bool
+      input: {value: false, expected: 'bool'}
+      expected: true
+    - name: int_not_float
+      input: {value: 7, expected: 'float'}
+      expected: false
+    - name: float_matches
+      input: {value: 2.5, expected: 'float'}
+      expected: true
+    - name: list_matches
+      input: {value: [1, 2, 3], expected: 'list'}
+      expected: true
+    - name: unknown_type_name
+      input: {value: 9, expected: 'number'}
+      expected: false
+explanation_markdown: |
+  The guard turns a type *name* into a runtime decision. Mapping each name to its
+  type object keeps the branching flat, and `type(value) is known[expected]` performs
+  an exact-type check: the value's runtime type must be that one class, not a
+  subclass of it.
+
+  Exactness is what makes the `bool_not_int` and `bool_matches_bool` cases behave
+  differently. `True` has type `bool`, and `bool` is a subclass of `int`, so
+  `isinstance(True, int)` would be `True` and quietly admit a boolean where an integer
+  was expected. Comparing the exact type with `is` sidesteps that: `type(True) is int`
+  is `False`, while `type(True) is bool` is `True`. Likewise `7` is an `int`, not a
+  `float`, so it fails an exact `"float"` check even though the two are numerically
+  compatible. Unknown expected names fall through to `False`, so a typo never
+  accidentally passes.
+common_mistakes:
+  - Using isinstance(value, expected_type), which lets a bool satisfy an int check because bool subclasses int.
+  - Treating 7 as a valid float; an exact-type check keeps int and float distinct.
+  - Forgetting to return False for an expected name that is not one of the five known types.

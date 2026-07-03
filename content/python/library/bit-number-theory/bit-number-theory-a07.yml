@@ -1,0 +1,102 @@
+id: exercise.library.bit_number_theory.a07
+kind: exercise
+version: 1
+language: python
+title: The Biggest Square Tile
+slug: bit-number-theory-a07
+difficulty: medium
+concepts:
+  - concepts.number_theory
+prerequisites:
+  - python.loops
+  - python.functions
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.bit_number_theory.a07
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original Euclidean-GCD drill framed as choosing the largest square tile that evenly covers several wall panels.
+prompt_markdown: |
+  A tiling crew is covering several rectangular wall panels with identical square
+  tiles. To avoid cutting any tile, the side length of the square must divide the
+  width of every panel exactly. The crew wants the *largest* such square, which is
+  the greatest common divisor of all the panel widths.
+
+  Write `largest_tile(widths)` that takes a list of positive integers (the panel
+  widths, all measured in the same whole units) and returns the greatest common
+  divisor of every width, computed with Euclid's algorithm (`gcd(a, b)` equals
+  `gcd(b, a % b)`). Do **not** call `math.gcd`; implement the shrinking loop
+  yourself.
+
+  Rules:
+
+  - Fold the GCD across the list one width at a time.
+  - If the list is empty, return `0` (there is nothing to tile).
+  - A single width returns that width itself.
+
+  Example: `largest_tile([24, 36, 48])` returns `12`, because 12 is the largest
+  side length that divides 24, 36, and 48 with no leftover.
+starter_code: |
+  def largest_tile(widths):
+      return 1
+function_name: largest_tile
+input_mode: function
+solution_sketch: Fold a two-number Euclidean gcd across the list, starting the running result at 0 so the first width becomes the seed.
+sample_solution: |
+  def largest_tile(widths):
+      result = 0
+      for width in widths:
+          a, b = result, width
+          while b:
+              a, b = b, a % b
+          result = a
+      return result
+hints:
+  - level: 1
+    text: The largest tile that fits every panel is the greatest common divisor of all the widths.
+  - level: 2
+    text: Euclid's algorithm reduces gcd(a, b) to gcd(b, a % b); loop until the second number is 0, then the first is the gcd.
+  - level: 3
+    text: Start a running result at 0 (gcd of 0 and n is n), then combine it with each width in turn using the two-number gcd.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: 0
+    - name: pair
+      input: [12, 18]
+      expected: 6
+    - name: triple
+      input: [24, 36, 48]
+      expected: 12
+  validation:
+    - name: single
+      input: [42]
+      expected: 42
+    - name: coprime
+      input: [7, 13]
+      expected: 1
+    - name: larger_set
+      input: [100, 80, 60]
+      expected: 20
+    - name: contains_one
+      input: [1, 5, 9]
+      expected: 1
+    - name: all_equal
+      input: [30, 30, 30]
+      expected: 30
+explanation_markdown: |
+  Euclid's algorithm shrinks a pair `(a, b)` to `(b, a % b)` until the second
+  entry is zero; whatever remains in the first slot is the GCD, because every
+  common divisor of `a` and `b` also divides `a % b`. Extending it to a whole list
+  works because `gcd(x, y, z)` equals `gcd(gcd(x, y), z)`, so you can fold the
+  two-number version across the widths. Seeding the running result at `0` is a
+  tidy trick: `gcd(0, n)` is `n`, so the first width simply becomes the starting
+  value, and an empty list never enters the loop and returns the seed `0`.
+common_mistakes:
+  - Seeding the running result at 1 instead of 0, which forces every answer down to 1.
+  - Returning 1 (or crashing) on an empty list instead of the required 0.
+  - Writing the update as gcd(a % b, b) so the pair never shrinks and the loop spins forever.

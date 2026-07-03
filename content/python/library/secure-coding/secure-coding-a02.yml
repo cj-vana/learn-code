@@ -1,0 +1,102 @@
+id: exercise.library.secure_coding.a02
+kind: exercise
+version: 1
+language: python
+title: Screening Uploads at the Harbor Records Desk
+slug: secure-coding-a02
+difficulty: easy
+concepts:
+  - python.secure_coding
+  - python.strings
+prerequisites:
+  - python.functions
+  - python.strings
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.secure_coding.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original path-traversal screening drill framed around a harbor records desk accepting uploaded document names, rejecting separators, parent-directory sequences, and null bytes.
+prompt_markdown: |
+  A harbor records desk accepts uploaded documents, and each upload arrives with a
+  client-supplied file name. Before that name is ever joined onto a storage
+  directory, it must be screened so it cannot escape into other folders. Write
+  `is_safe_filename(name)` that returns `True` only when the name is safe to use
+  as a plain file name inside one directory, and `False` otherwise.
+
+  A name is **safe** only when ALL of these hold:
+
+  - it is not empty,
+  - it contains no forward slash `/` and no backslash `\`,
+  - it contains no `..` sequence anywhere,
+  - it contains no null byte (`\x00`),
+  - it is not exactly `.` (the current-directory name).
+
+  Any name that fails even one rule is unsafe. For example, `manifest.pdf` is
+  safe, but `../secrets.txt`, `/etc/passwd`, `logs\\jan`, `..hidden`, `.`, and the
+  empty string are all rejected. A name like `cargo.log.2026` is safe: it has
+  dots, but never two in a row.
+starter_code: |
+  def is_safe_filename(name):
+      return False
+function_name: is_safe_filename
+input_mode: function
+solution_sketch: Return False if the name is empty, is ".", or contains any of "/", "\\", "..", or a null byte; otherwise True.
+sample_solution: |
+  def is_safe_filename(name):
+      if not name or name == ".":
+          return False
+      forbidden = ("/", "\\", "..", "\x00")
+      return not any(token in name for token in forbidden)
+hints:
+  - level: 1
+    text: Think in terms of rejection rules; the name is safe only if it survives every check.
+  - level: 2
+    text: An empty string and a lone "." are unsafe up front; after that, look for dangerous substrings.
+  - level: 3
+    text: Reject the name if any of "/", "\\", "..", or "\x00" appears in it using the `in` operator.
+tests:
+  public:
+    - name: plain_name
+      input: manifest.pdf
+      expected: true
+    - name: parent_traversal
+      input: ../secrets.txt
+      expected: false
+    - name: absolute_unix
+      input: /etc/passwd
+      expected: false
+  validation:
+    - name: backslash_and_dotdot
+      input: ..\windows\system32
+      expected: false
+    - name: dotdot_no_slash
+      input: ..hidden
+      expected: false
+    - name: single_dot
+      input: .
+      expected: false
+    - name: empty
+      input: ''
+      expected: false
+    - name: dots_but_no_run
+      input: cargo.log.2026
+      expected: true
+explanation_markdown: |
+  Path traversal happens when an attacker supplies a name like `../../etc/passwd`
+  that, once joined onto a base directory, climbs out of it. The defense is to
+  reject anything that could act as a path instead of a plain name. Forward and
+  back slashes turn a name into a multi-segment path, `..` means "go up a level",
+  and an embedded null byte can truncate the string inside lower-level C calls, so
+  all of them are refused. The lone `.` is also refused because it names the
+  current directory rather than a file. Everything else — including names with
+  dots that never form a `..` run, like `cargo.log.2026` — is allowed through.
+  Screening the name before combining it with a directory is far safer than trying
+  to sanitize a path after the fact.
+common_mistakes:
+  - Checking only for a leading "../" and missing traversal sequences buried later in the name.
+  - Forgetting the backslash, which lets Windows-style traversal like ..\\windows through.
+  - Rejecting every dot instead of only the ".." run, which would wrongly block ordinary names like cargo.log.2026.

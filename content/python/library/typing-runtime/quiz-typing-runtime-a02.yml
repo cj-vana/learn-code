@@ -1,0 +1,96 @@
+id: quiz.library.typing_runtime.a02
+kind: quiz
+version: 1
+language: python
+title: Runtime Typing Mechanics
+slug: quiz-typing-runtime-a02
+difficulty: hard
+concepts:
+  - python.type_hints
+prerequisites:
+  - python.type_hints
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.typing_runtime.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax quiz on annotation access, get_origin/get_args, generic erasure, and runtime_checkable mechanics.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: 'What do get_origin and get_args return for the hint dict[str, list[int]]?'
+    choices:
+      - origin dict; args (str, list[int]) — recurse into the args for deeper structure
+      - origin dict[str, list[int]]; args ()
+      - origin str; args (list, int)
+      - Both raise — dict hints are not introspectable
+    correct_choice: origin dict; args (str, list[int]) — recurse into the args for deeper structure
+    explanation: |
+      The pair disassembles one layer of a hint tree; recursive application
+      walks arbitrarily nested generics — the architecture of every
+      annotation-driven validator.
+    concepts:
+      - python.type_hints
+  - id: q2
+    prompt: isinstance([1, 2], list[int]) does what?
+    choices:
+      - Raises TypeError — subscripted generics cannot be used with isinstance; check list, then elements
+      - Returns True — the elements are ints
+      - Returns False — lists erase their parameters
+      - Returns True only under future annotations
+    correct_choice: Raises TypeError — subscripted generics cannot be used with isinstance; check list, then elements
+    explanation: |
+      Runtime objects carry no element-type knowledge; the check must split
+      into origin isinstance plus element inspection — generic erasure made
+      concrete.
+    concepts:
+      - python.type_hints
+  - id: q3
+    prompt: |
+      With `from __future__ import annotations`, what does
+      func.__annotations__["x"] contain for x: int, and what fixes it?
+    choices:
+      - The STRING "int"; typing.get_type_hints(func) evaluates it back to the int type
+      - The int type directly
+      - A ForwardRef object that cannot be resolved
+      - Nothing — future annotations discard the dict
+    correct_choice: The STRING "int"; typing.get_type_hints(func) evaluates it back to the int type
+    explanation: |
+      Deferred annotations store source text; the accessor resolves strings
+      in the right namespaces — the reason tools must never trust the raw
+      dict.
+    concepts:
+      - python.type_hints
+  - id: q4
+    prompt: |
+      A @runtime_checkable Protocol declares two methods. isinstance returns
+      True for an object whose methods have completely wrong signatures. Why?
+    choices:
+      - The runtime check verifies attribute PRESENCE only — signatures and return types are checker-territory
+      - The object registered itself as a virtual subclass
+      - runtime_checkable caches a stale result
+      - Protocols check names case-insensitively
+    correct_choice: The runtime check verifies attribute PRESENCE only — signatures and return types are checker-territory
+    explanation: |
+      Shallow presence semantics make the check cheap and suitable for
+      dispatch — and unsuitable as a correctness validator, the boundary the
+      lesson draws.
+    concepts:
+      - python.type_hints
+  - id: q5
+    prompt: 'After queue = JobQueue[RepairJob](), what does type(queue) report, and which hook recorded the subscription?'
+    choices:
+      - Plain JobQueue — the parameter is erased; __class_getitem__ handled the JobQueue[RepairJob] expression
+      - A dynamically created JobQueue_RepairJob class
+      - typing.GenericAlias as the instance type
+      - RepairJob — the parameter becomes the type
+    correct_choice: Plain JobQueue — the parameter is erased; __class_getitem__ handled the JobQueue[RepairJob] expression
+    explanation: |
+      Subscribing a class calls __class_getitem__ (returning an alias used
+      by the checker), but instantiation produces an ordinary instance — the
+      generic structure lives statically.
+    concepts:
+      - python.type_hints

@@ -1,0 +1,113 @@
+id: exercise.library.functools_operator.a02
+kind: exercise
+version: 1
+language: python
+title: The Bakery's Scaling Bench
+slug: functools-operator-a02
+difficulty: easy
+concepts:
+  - python.functools_operator
+  - python.functions
+prerequisites:
+  - python.lists
+  - python.loops
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.functools_operator.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original functools.partial pipeline drill themed around a bakery adjusting a batch quantity through fixed steps.
+prompt_markdown: |
+  A bakery scales a batch quantity through a fixed sequence of adjustment steps.
+  Each step is written as a two-item list `[op, operand]`, where `op` is either
+  `"add"` or `"mul"` and `operand` is an integer. The steps are applied left to
+  right, starting from a whole-number `start`.
+
+  Write `scale_batch(job)` where `job` is a dict with two keys:
+
+  - `"start"`: the integer quantity to begin from
+  - `"steps"`: a list of `[op, operand]` steps
+
+  Return the final integer after every step has been applied. If `"steps"` is
+  empty, return `start` unchanged.
+
+  Build each step as a one-argument function using `functools.partial` over the
+  matching function from the `operator` module (`operator.add` for `"add"`,
+  `operator.mul` for `"mul"`), then feed the running value through the chain.
+
+  Example: with `{"start": 5, "steps": [["add", 3], ["mul", 2]]}` you compute
+  `(5 + 3) = 8`, then `8 * 2 = 16`, so the result is `16`.
+starter_code: |
+  from functools import partial
+  import operator
+
+
+  def scale_batch(job):
+      return 0
+function_name: scale_batch
+input_mode: function
+solution_sketch: |
+  Map "add"/"mul" to operator.add/operator.mul, build partial(op_func, operand)
+  for each step, then apply each partial to the running value in order.
+sample_solution: |
+  from functools import partial
+  import operator
+
+
+  def scale_batch(job):
+      op_funcs = {"add": operator.add, "mul": operator.mul}
+      value = job["start"]
+      for op_name, operand in job["steps"]:
+          step = partial(op_funcs[op_name], operand)
+          value = step(value)
+      return value
+hints:
+  - level: 1
+    text: functools.partial(func, x) makes a new function that calls func with x already supplied as the first argument, so partial(operator.add, 3) adds 3.
+  - level: 2
+    text: operator.add and operator.mul are commutative, so partial(operator.add, operand)(value) equals value + operand no matter the argument order.
+  - level: 3
+    text: Look up the operator function by name, build partial(op_func, operand) per step, and reassign value = step(value) each loop; return value at the end.
+tests:
+  public:
+    - name: add_then_mul
+      input: {start: 5, steps: [["add", 3], ["mul", 2]]}
+      expected: 16
+    - name: no_steps
+      input: {start: 12, steps: []}
+      expected: 12
+    - name: three_steps
+      input: {start: 1, steps: [["add", 4], ["mul", 3], ["add", 2]]}
+      expected: 17
+  validation:
+    - name: single_multiply
+      input: {start: 7, steps: [["mul", 0]]}
+      expected: 0
+    - name: negative_operand
+      input: {start: 10, steps: [["add", -25]]}
+      expected: -15
+    - name: start_zero_chain
+      input: {start: 0, steps: [["add", 6], ["mul", 5], ["add", -30]]}
+      expected: 0
+    - name: many_adds
+      input: {start: 100, steps: [["add", 1], ["add", 1], ["add", 1], ["mul", 2]]}
+      expected: 206
+explanation_markdown: |
+  `functools.partial` freezes some of a function's arguments and returns a smaller
+  callable that only needs the rest. Here each step becomes
+  `partial(operator.add, operand)` or `partial(operator.mul, operand)`, a
+  one-argument function you can apply to the running quantity. Because addition
+  and multiplication are commutative, it does not matter that `partial` binds the
+  operand as the *first* argument — `partial(operator.add, 3)(value)` is
+  `operator.add(3, value)`, which equals `value + 3`.
+
+  Pulling the actual operators from the `operator` module (instead of writing
+  `lambda a, b: a + b`) is the idiomatic functional style: named, importable,
+  picklable functions that compose cleanly with `partial`.
+common_mistakes:
+  - Returning start even when steps exist, because the running value is never reassigned inside the loop.
+  - Using non-commutative operators like operator.sub with partial and getting operand - value instead of value - operand.
+  - Rebuilding the operator lookup with lambdas that shadow the point of the exercise instead of using operator.add and operator.mul.

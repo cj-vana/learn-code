@@ -1,0 +1,143 @@
+id: exercise.library.binary_data_struct.a07
+kind: exercise
+version: 1
+language: python
+title: Patching the Observatory Frame Buffer
+slug: binary-data-struct-a07
+difficulty: hard
+concepts:
+  - python.binary_data
+  - concepts.space_complexity
+prerequisites:
+  - python.lists
+  - python.slicing
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.binary_data_struct.a07
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original memoryview zero-copy drill themed around correcting calibration bytes inside a shared telescope frame buffer.
+prompt_markdown: |
+  A mountaintop observatory streams each sensor frame into one long rolling
+  buffer of raw byte readings. When the calibration crew spots drift, they do
+  not want to copy the whole frame just to fix a few bytes -- they open a
+  `memoryview` **window** onto the affected sub-range and overwrite bytes
+  through that window. Because a `memoryview` shares the underlying storage,
+  every edit lands directly in the original buffer with no copy made.
+
+  Write `zero_copy_mutate(payload)` that takes a single dictionary:
+
+  ```
+  {
+    "buffer":  [10, 20, 30, 40],   # byte values, each 0..255
+    "window":  [1, 3],             # [start, end): the sub-range the view covers
+    "patches": [[0, 255], [1, 9]]  # [offset, value] pairs, offset RELATIVE to window start
+  }
+  ```
+
+  Do the following:
+
+  - Build a `bytearray` from `buffer`, then create a `memoryview` over it and
+    slice that view down to `window` using `view[start:end]` (end is exclusive).
+  - For each `[offset, value]` in `patches`, assign `value` into the sliced
+    window at position `offset`, where `offset` is measured from the window's
+    start (so `offset` 0 is the byte at index `start` of the buffer). Every
+    write must go **through the memoryview window**, not straight into the
+    bytearray by absolute index.
+  - Apply patches left to right. If two patches target the same offset, the
+    later one wins.
+  - Return the full buffer after all edits as a **list of ints**.
+
+  Edge cases: an empty `patches` list leaves the buffer unchanged. The window
+  may cover the whole buffer (`[0, len(buffer)]`) or a single byte
+  (`[2, 3]`). Every `offset` is guaranteed to fall inside the window and every
+  `value` is in `0..255`.
+starter_code: |
+  def zero_copy_mutate(payload):
+      return []
+function_name: zero_copy_mutate
+input_mode: function
+solution_sketch: Build a bytearray, wrap it in a memoryview, slice the view to the window, assign each patch value at its relative offset through the sliced view, then return list(bytearray).
+sample_solution: |
+  def zero_copy_mutate(payload):
+      buffer = payload["buffer"]
+      start, end = payload["window"]
+      patches = payload["patches"]
+      backing = bytearray(buffer)
+      view = memoryview(backing)
+      window = view[start:end]
+      for offset, value in patches:
+          window[offset] = value
+      window.release()
+      view.release()
+      return list(backing)
+hints:
+  - level: 1
+    text: A memoryview does not own its bytes -- slicing it and writing through the slice edits the same bytearray the view was built from.
+  - level: 2
+    text: Create backing = bytearray(buffer), then window = memoryview(backing)[start:end]. Now window[0] is the byte at buffer index start.
+  - level: 3
+    text: Loop over patches doing window[offset] = value, letting later patches overwrite earlier ones at the same offset, then return list(backing).
+tests:
+  public:
+    - name: no_patches
+      input:
+        buffer: [10, 20, 30, 40]
+        window: [0, 4]
+        patches: []
+      expected: [10, 20, 30, 40]
+    - name: middle_window
+      input:
+        buffer: [0, 0, 0, 0, 0]
+        window: [1, 4]
+        patches: [[0, 255], [2, 9]]
+      expected: [0, 255, 0, 9, 0]
+    - name: full_overwrite
+      input:
+        buffer: [1, 2, 3]
+        window: [0, 3]
+        patches: [[0, 7], [1, 7], [2, 7]]
+      expected: [7, 7, 7]
+  validation:
+    - name: last_patch_wins
+      input:
+        buffer: [5, 5, 5]
+        window: [0, 3]
+        patches: [[1, 1], [1, 2], [1, 9]]
+      expected: [5, 9, 5]
+    - name: single_byte_window
+      input:
+        buffer: [100, 101, 102]
+        window: [2, 3]
+        patches: [[0, 0]]
+      expected: [100, 101, 0]
+    - name: tail_window
+      input:
+        buffer: [9, 9, 9, 9]
+        window: [2, 4]
+        patches: [[0, 1], [1, 2]]
+      expected: [9, 9, 1, 2]
+    - name: partial_window_no_patches
+      input:
+        buffer: [3, 1, 4, 1, 5]
+        window: [1, 3]
+        patches: []
+      expected: [3, 1, 4, 1, 5]
+explanation_markdown: |
+  The whole point of `memoryview` is avoiding copies. `bytearray(buffer)`
+  allocates the storage once; `memoryview(backing)` is a lightweight window
+  onto that same storage, and slicing the view with `view[start:end]` produces
+  another window that still points at the original bytes -- no data is
+  duplicated, so the extra memory is O(1) regardless of buffer size. Writing
+  `window[offset] = value` therefore mutates `backing` in place. Because
+  `offset` is relative to the window's start, offset 0 maps to absolute index
+  `start`, which is exactly what a sliced view gives you for free. Applying the
+  patches in order means a repeated offset simply overwrites itself, so the
+  final write is the one that sticks.
+common_mistakes:
+  - Copying the sliced bytes (for example list(view[start:end])) and editing the copy, so the original buffer never changes.
+  - Treating offset as an absolute buffer index instead of a position relative to the window start.
+  - Building the memoryview over a bytes object instead of a bytearray -- bytes is immutable, so item assignment raises TypeError.

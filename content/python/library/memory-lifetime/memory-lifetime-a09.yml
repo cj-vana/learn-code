@@ -1,0 +1,151 @@
+id: exercise.library.memory_lifetime.a09
+kind: exercise
+version: 1
+language: python
+title: Mooring Lines on the Harbor Buoy
+slug: memory-lifetime-a09
+difficulty: medium
+concepts:
+  - python.memory_model
+  - patterns.simulation
+prerequisites:
+  - python.sets
+  - python.dictionaries
+  - python.lists
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.memory_lifetime.a09
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original reference-counting simulation framed as boats tying and untying mooring lines to a single harbor buoy, with deallocation at zero.
+prompt_markdown: |
+  A harbor tracks how many mooring lines are currently tied to one particular
+  buoy. Each named boat can hold at most one line to the buoy, so tying a boat
+  that is already tied changes nothing, and untying a boat that was never tied
+  changes nothing. The count of tied lines is exactly the number of distinct
+  boats currently moored to the buoy.
+
+  This mirrors CPython reference counting: the buoy is an object, each boat name
+  is a reference to it, and the reference count is how many distinct references
+  currently point at the object. Crucially, the moment the count drops to zero
+  the buoy is cut loose and floats away for good: once the count hits 0 the
+  object is deallocated and can never come back, so every later tie or untie
+  leaves the count at 0.
+
+  Write `refcount_delta_predict(scenario)` taking one dict:
+
+  - `initial_refs`: a list of boat names already tied to the buoy at the start
+    (duplicates count once)
+  - `operations`: a list of steps, each a dict `{"op": "bind", "name": <boat>}`
+    to tie a line or `{"op": "unbind", "name": <boat>}` to untie one
+
+  Return a list of integers giving the reference count **after each operation**,
+  in order (one number per operation). Start from the count implied by
+  `initial_refs`. A `bind` for an already-tied boat and an `unbind` for a boat
+  that is not tied both leave the count unchanged. Once the count reaches 0 the
+  object is gone: record 0 for that step and for every step after it, and ignore
+  all further ties and unties. If `operations` is empty, return an empty list.
+starter_code: |
+  def refcount_delta_predict(scenario):
+      return []
+function_name: refcount_delta_predict
+input_mode: function
+solution_sketch: Track the live references as a set seeded from initial_refs; each bind adds a name and each unbind discards one, and once the set empties latch a collected flag that pins the count at 0.
+sample_solution: |
+  def refcount_delta_predict(scenario):
+      refs = set(scenario["initial_refs"])
+      collected = len(refs) == 0
+      counts = []
+      for step in scenario["operations"]:
+          if not collected:
+              if step["op"] == "bind":
+                  refs.add(step["name"])
+              else:
+                  refs.discard(step["name"])
+              if not refs:
+                  collected = True
+          counts.append(0 if collected else len(refs))
+      return counts
+hints:
+  - level: 1
+    text: Because each boat can hold only one line, model the live references as a set of names; the count is just the size of that set.
+  - level: 2
+    text: A bind adds a name (set.add is a no-op if present) and an unbind removes it (set.discard is a no-op if absent); record the size after each step.
+  - level: 3
+    text: Keep a collected flag; the instant the set becomes empty, latch it so every remaining step records 0 and no further ties or unties take effect.
+tests:
+  public:
+    - name: simple_grow
+      input:
+        initial_refs: [dock_log]
+        operations:
+          - {op: bind, name: skiff}
+          - {op: bind, name: ketch}
+      expected: [2, 3]
+    - name: idempotent_bind
+      input:
+        initial_refs: [dock_log]
+        operations:
+          - {op: bind, name: skiff}
+          - {op: bind, name: skiff}
+      expected: [2, 2]
+    - name: unbind_missing_boat
+      input:
+        initial_refs: [dock_log]
+        operations:
+          - {op: unbind, name: ketch}
+          - {op: bind, name: skiff}
+      expected: [1, 2]
+  validation:
+    - name: collected_stays_zero
+      input:
+        initial_refs: [dock_log]
+        operations:
+          - {op: unbind, name: dock_log}
+          - {op: bind, name: skiff}
+          - {op: unbind, name: skiff}
+      expected: [0, 0, 0]
+    - name: grow_then_shrink
+      input:
+        initial_refs: [alpha, bravo]
+        operations:
+          - {op: bind, name: cato}
+          - {op: unbind, name: alpha}
+          - {op: unbind, name: bravo}
+      expected: [3, 2, 1]
+    - name: dedup_initial_refs
+      input:
+        initial_refs: [alpha, alpha, bravo]
+        operations:
+          - {op: unbind, name: alpha}
+      expected: [1]
+    - name: down_to_zero_exact
+      input:
+        initial_refs: [alpha]
+        operations:
+          - {op: bind, name: bravo}
+          - {op: unbind, name: alpha}
+          - {op: unbind, name: bravo}
+      expected: [2, 1, 0]
+    - name: no_operations
+      input:
+        initial_refs: [alpha]
+        operations: []
+      expected: []
+explanation_markdown: |
+  Reference counting is CPython's first-line memory manager: every object carries
+  a count of how many references point at it, and when a rebinding or deletion
+  drops that count to zero the object is freed immediately. Modelling references
+  as a set captures two subtleties for free: binding a name that already refers
+  to the object is a no-op (a name holds at most one reference to it), and
+  unbinding an absent name changes nothing. The latch at zero encodes the
+  irreversible nature of deallocation, which is why reviving a collected object
+  is impossible. Note this covers only acyclic references; objects trapped in a
+  reference cycle never reach zero on their own and need the cyclic collector.
+common_mistakes:
+  - Incrementing on every bind even when the boat is already tied, which overcounts references.
+  - Letting the count climb back up after it reached zero instead of latching the object as collected.
+  - Crashing or decrementing below zero on an unbind for a boat that was never tied.

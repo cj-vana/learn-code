@@ -1,0 +1,125 @@
+id: exercise.library.logging_diagnostics.a05
+kind: exercise
+version: 1
+language: python
+title: Scrubbing the Ferry Boarding Log
+slug: logging-diagnostics-a05
+difficulty: medium
+concepts:
+  - python.logging_diagnostics
+  - python.dictionaries
+  - python.secure_coding
+prerequisites:
+  - python.dictionaries
+  - patterns.recursion
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.logging_diagnostics.a05
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original log-redaction drill themed around a passenger-ferry boarding log; recursively masks sensitive keys in nested structured records without mutating the original.
+prompt_markdown: |
+  A passenger ferry writes structured boarding records, but before those records
+  leave the terminal they must have sensitive fields masked. Write
+  `redact_sensitive_fields(request)` where `request` is a dict with keys `entry`
+  (a structured log record, a possibly-nested dict) and `sensitive` (a list of
+  key names to mask).
+
+  Return a **new** record (do not mutate `entry`) built by these rules, applied to
+  the top-level dict and to every nested dict:
+
+  - If a key is in `sensitive`, replace its value with the string `"***"`,
+    whatever the value was — including if the value is itself a dict. A sensitive
+    key hides its entire subtree.
+  - Otherwise, if the value is a dict, redact it recursively by the same rules.
+  - Otherwise, copy the value unchanged.
+
+  Key matching is exact and case-sensitive. Values that are lists or scalars are
+  treated as ordinary values (copied unchanged unless their key is sensitive).
+  `sensitive` may be empty, in which case the record is copied verbatim.
+starter_code: |
+  def redact_sensitive_fields(request):
+      # Return a new record with sensitive keys masked as "***", recursing into nested dicts.
+      return {}
+function_name: redact_sensitive_fields
+input_mode: function
+solution_sketch: Recurse over the record building a fresh dict; a sensitive key becomes "***", a nested dict is scrubbed recursively, and everything else is copied.
+sample_solution: |
+  def redact_sensitive_fields(request):
+      sensitive = set(request["sensitive"])
+
+      def scrub(record):
+          out = {}
+          for key, value in record.items():
+              if key in sensitive:
+                  out[key] = "***"
+              elif isinstance(value, dict):
+                  out[key] = scrub(value)
+              else:
+                  out[key] = value
+          return out
+
+      return scrub(request["entry"])
+hints:
+  - level: 1
+    text: Build a brand-new dict rather than editing the incoming one, so the caller's record is left intact.
+  - level: 2
+    text: For each key, check the sensitive set first; a match masks the value outright even when that value is a nested dict.
+  - level: 3
+    text: When a value is a dict and its key is not sensitive, recurse into it so secrets buried deeper still get masked.
+tests:
+  public:
+    - name: flat_redact
+      input:
+        entry: {user: alice, password: hunter2, action: board}
+        sensitive: [password]
+      expected: {user: alice, password: '***', action: board}
+    - name: no_sensitive_present
+      input:
+        entry: {user: bob, action: view}
+        sensitive: [password, token]
+      expected: {user: bob, action: view}
+    - name: multiple_sensitive
+      input:
+        entry: {user: cara, password: p, token: t}
+        sensitive: [password, token]
+      expected: {user: cara, password: '***', token: '***'}
+  validation:
+    - name: nested_dict_field
+      input:
+        entry: {event: board, meta: {gate: 4, token: abc}}
+        sensitive: [token]
+      expected: {event: board, meta: {gate: 4, token: '***'}}
+    - name: sensitive_subtree_masked_whole
+      input:
+        entry: {creds: {password: x, note: y}, user: dan}
+        sensitive: [creds]
+      expected: {creds: '***', user: dan}
+    - name: deep_nesting
+      input:
+        entry: {a: {b: {secret: s, ok: 1}}}
+        sensitive: [secret]
+      expected: {a: {b: {secret: '***', ok: 1}}}
+    - name: empty_sensitive_copies
+      input:
+        entry: {password: p, user: eve}
+        sensitive: []
+      expected: {password: p, user: eve}
+explanation_markdown: |
+  Redaction is a trust-boundary operation: the record is fine inside the terminal
+  but must be sanitized before it crosses into logs that other systems (or people)
+  can read. Doing it recursively matters because structured records nest — a token
+  hidden two levels deep is exactly the one a naive top-level scrub would leak.
+  Checking the sensitive set *before* recursing is deliberate: when a whole subtree
+  is sensitive (a `creds` block, say), you mask the entire branch rather than
+  descending into it, so you never have to enumerate every secret field inside.
+  Building a fresh dict on the way down keeps the original record unmodified, which
+  is what lets the caller keep working with the real values after logging the safe
+  copy.
+common_mistakes:
+  - Mutating the incoming record in place, so the caller's real values are destroyed after logging.
+  - Recursing into a sensitive subtree instead of masking it whole, which can re-expose fields the caller wanted hidden.
+  - Only checking top-level keys, leaving secrets nested inside child dicts unmasked.

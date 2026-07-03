@@ -1,0 +1,172 @@
+id: exercise.library.sqlite_patterns.a06
+kind: exercise
+version: 1
+language: python
+title: Tallying the Orchard Deliveries
+slug: sqlite-patterns-a06
+difficulty: medium
+concepts:
+  - python.sqlite_sql
+  - concepts.grouping_aggregation
+prerequisites:
+  - python.dictionaries
+  - python.lists
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sqlite_patterns.a06
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original GROUP BY drill themed around a cider press summarising crate deliveries per orchard, returning both a COUNT and a SUM per group in a single grouped query.
+prompt_markdown: |
+  A cider press logs every apple delivery as it arrives, tagging each load with
+  the orchard it came from and the number of crates. At the end of the day the
+  press wants one line per orchard: how many deliveries arrived and how many
+  crates in total.
+
+  Write `aggregate_group_by(request)` where `request` is a single dictionary with
+  three keys:
+
+  - `"records"`: a list of row dictionaries (the delivery log)
+  - `"group_col"`: the column to group by (here, the orchard)
+  - `"agg_col"`: the numeric column to total
+
+  Load the records into an in-memory SQLite table and run a single grouped query.
+  Return a list of dictionaries, one per distinct group value, each with exactly
+  three keys: the group column (its value), `"count"` (how many rows fell in that
+  group, via `COUNT(*)`), and `"total"` (the `SUM` of the aggregate column for
+  that group). Order the result by the group value ascending. An empty record
+  list returns an empty list. Records may carry extra columns beyond the two you
+  use; ignore them. You may assume every row shares the same columns.
+starter_code: |
+  import sqlite3
+
+
+  def aggregate_group_by(request):
+      return []
+function_name: aggregate_group_by
+input_mode: function
+solution_sketch: Build a table from the first row's keys, insert every record with a parameterised INSERT, then SELECT the group column, COUNT(*), and SUM(agg_col) grouped by the group column and ordered ascending, mapping each tuple to a three-key dict.
+sample_solution: |
+  import sqlite3
+
+
+  def aggregate_group_by(request):
+      records = request["records"]
+      group_col = request["group_col"]
+      agg_col = request["agg_col"]
+      if not records:
+          return []
+      cols = list(records[0].keys())
+      conn = sqlite3.connect(":memory:")
+      col_defs = ", ".join(cols)
+      conn.execute(f"CREATE TABLE t ({col_defs})")
+      marks = ", ".join(["?"] * len(cols))
+      conn.executemany(
+          f"INSERT INTO t ({col_defs}) VALUES ({marks})",
+          [tuple(row[c] for c in cols) for row in records],
+      )
+      sql = (
+          f"SELECT {group_col}, COUNT(*), SUM({agg_col}) "
+          f"FROM t GROUP BY {group_col} ORDER BY {group_col} ASC"
+      )
+      rows = conn.execute(sql).fetchall()
+      conn.close()
+      return [
+          {group_col: group_value, "count": row_count, "total": crate_total}
+          for (group_value, row_count, crate_total) in rows
+      ]
+hints:
+  - level: 1
+    text: Read the column names from the first record so you can create the table and insert every row through one parameterised statement.
+  - level: 2
+    text: A single SELECT with GROUP BY on the group column collapses the rows into one per group; COUNT(*) and SUM(agg_col) are computed within each group.
+  - level: 3
+    text: Add ORDER BY on the group column so the groups come back ascending, then turn each returned tuple into a dict with the group value, count, and total.
+tests:
+  public:
+    - name: single_row
+      input:
+        records:
+          - {orchard: Brambly, crates: 4}
+        group_col: orchard
+        agg_col: crates
+      expected:
+        - {orchard: Brambly, count: 1, total: 4}
+    - name: two_orchards
+      input:
+        records:
+          - {orchard: Cobbler, crates: 2}
+          - {orchard: Brambly, crates: 5}
+        group_col: orchard
+        agg_col: crates
+      expected:
+        - {orchard: Brambly, count: 1, total: 5}
+        - {orchard: Cobbler, count: 1, total: 2}
+    - name: repeated_groups
+      input:
+        records:
+          - {orchard: Elderfield, crates: 6}
+          - {orchard: Brambly, crates: 4}
+          - {orchard: Elderfield, crates: 3}
+          - {orchard: Brambly, crates: 5}
+          - {orchard: Cobbler, crates: 2}
+        group_col: orchard
+        agg_col: crates
+      expected:
+        - {orchard: Brambly, count: 2, total: 9}
+        - {orchard: Cobbler, count: 1, total: 2}
+        - {orchard: Elderfield, count: 2, total: 9}
+  validation:
+    - name: empty_ledger
+      input:
+        records: []
+        group_col: orchard
+        agg_col: crates
+      expected: []
+    - name: all_one_orchard
+      input:
+        records:
+          - {orchard: Marsh, crates: 3}
+          - {orchard: Marsh, crates: 3}
+          - {orchard: Marsh, crates: 4}
+        group_col: orchard
+        agg_col: crates
+      expected:
+        - {orchard: Marsh, count: 3, total: 10}
+    - name: extra_column_ignored
+      input:
+        records:
+          - {orchard: Brambly, crates: 4, day: sat}
+          - {orchard: Brambly, crates: 6, day: sun}
+        group_col: orchard
+        agg_col: crates
+      expected:
+        - {orchard: Brambly, count: 2, total: 10}
+    - name: zero_crates
+      input:
+        records:
+          - {orchard: Ash, crates: 0}
+          - {orchard: Ash, crates: 0}
+        group_col: orchard
+        agg_col: crates
+      expected:
+        - {orchard: Ash, count: 2, total: 0}
+explanation_markdown: |
+  `GROUP BY` folds many rows into one row per distinct key, and the aggregate
+  functions run inside each fold: `COUNT(*)` counts the rows in the group and
+  `SUM(agg_col)` adds up the chosen column for just those rows. Doing both in a
+  single query is the whole point — the database makes one pass and hands back a
+  tidy per-orchard summary instead of you looping and bookkeeping by hand.
+
+  Columns you neither group by nor aggregate are simply left out of the SELECT,
+  which is why an extra `day` column rides along in storage but never touches the
+  result. The `ORDER BY` on the group column is what makes the output stable:
+  without it, the order of groups is not guaranteed, so sorting by the orchard
+  name turns the summary into a predictable, repeatable report.
+common_mistakes:
+  - Returning the raw grouped rows without ORDER BY, so the group order is left to SQLite and fails the expected ordering.
+  - Selecting a non-aggregated extra column alongside the group, which pulls in an arbitrary row's value instead of a clean summary.
+  - Forgetting that COUNT(*) counts rows while SUM adds values, and swapping which one feeds the count versus the total key.

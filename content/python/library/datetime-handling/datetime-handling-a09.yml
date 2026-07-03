@@ -1,0 +1,110 @@
+id: exercise.library.datetime_handling.a09
+kind: exercise
+version: 1
+language: python
+title: Darkroom Exposure Timers
+slug: datetime-handling-a09
+difficulty: medium
+concepts:
+  - python.datetime_module
+  - python.string_formatting
+prerequisites:
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.datetime_handling.a09
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original duration-formatting drill framed around a photographic darkroom logging exposure timers in seconds.
+prompt_markdown: |
+  A photographic darkroom records every print exposure as a whole number of
+  seconds, and the wall clock display needs each one rendered as an
+  hours-minutes-seconds string.
+
+  Write `format_durations(seconds_list)` that takes a **list of non-negative
+  integers**, each a duration in seconds, and returns a list of formatted strings
+  in the same order. Each string uses the layout `"H:MM:SS"`:
+
+  - the hours field has **no leading zero and no upper bound** (a 25-hour soak
+    reads `"25:01:01"`),
+  - the minutes and seconds fields are always **zero-padded to two digits**.
+
+  An empty input list returns an empty list.
+
+  Example:
+
+  ```python
+  format_durations([3661, 60, 0])
+  # -> ["1:01:01", "0:01:00", "0:00:00"]
+  ```
+
+  Here 3661 seconds is 1 hour, 1 minute, and 1 second.
+starter_code: |
+  def format_durations(seconds_list):
+      return []
+function_name: format_durations
+input_mode: function
+solution_sketch: For each total, split into hours, minutes, and seconds with integer division and modulo against 3600 and 60, then format with two-digit padding on minutes and seconds only.
+sample_solution: |
+  def format_durations(seconds_list):
+      result = []
+      for total in seconds_list:
+          hours = total // 3600
+          minutes = (total % 3600) // 60
+          secs = total % 60
+          result.append(f"{hours}:{minutes:02d}:{secs:02d}")
+      return result
+hints:
+  - level: 1
+    text: Hours come from total // 3600, and the leftover seconds after removing whole hours is total % 3600.
+  - level: 2
+    text: From that leftover, minutes are (total % 3600) // 60 and seconds are total % 60.
+  - level: 3
+    text: 'Format with an f-string where only minutes and seconds are padded: f"{hours}:{minutes:02d}:{secs:02d}".'
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: under_a_minute
+      input: [45]
+      expected: ["0:00:45"]
+    - name: multi
+      input: [3661, 60, 0]
+      expected: ["1:01:01", "0:01:00", "0:00:00"]
+  validation:
+    - name: boundary_fifty_nine
+      input: [59]
+      expected: ["0:00:59"]
+    - name: exact_hour
+      input: [3600]
+      expected: ["1:00:00"]
+    - name: max_within_a_day
+      input: [86399]
+      expected: ["23:59:59"]
+    - name: over_a_day
+      input: [90061]
+      expected: ["25:01:01"]
+    - name: mixed_list
+      input: [7325, 45, 86399]
+      expected: ["2:02:05", "0:00:45", "23:59:59"]
+explanation_markdown: |
+  Duration formatting is integer division layered twice. Dividing the total by
+  3600 peels off whole hours; the remainder `total % 3600` is what is left inside
+  the final hour, and dividing that by 60 peels off whole minutes, with the last
+  `total % 60` being the seconds. Padding only the minutes and seconds to two
+  digits matches how clocks display time, while the hours field stays bare so it
+  can grow past 24 without a leading zero.
+
+  It is tempting to reach for `str(datetime.timedelta(seconds=total))`, and that
+  even works below one day, but once a duration reaches 24 hours the timedelta
+  string switches to `"1 day, 1:01:01"`, which breaks the `"H:MM:SS"` contract.
+  Doing the arithmetic yourself keeps the hours field unbounded and the format
+  predictable. Each conversion is constant work, so the whole list is O(n).
+common_mistakes:
+  - Zero-padding the hours field, producing "01:01:01" instead of the required "1:01:01".
+  - Using str(timedelta(...)) and getting a "1 day, ..." prefix once a duration reaches 24 hours.
+  - Forgetting the two-digit padding on minutes or seconds, so 3661 renders as "1:1:1".

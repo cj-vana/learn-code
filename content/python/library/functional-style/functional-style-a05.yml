@@ -1,0 +1,136 @@
+id: exercise.library.functional_style.a05
+kind: exercise
+version: 1
+language: python
+title: The Letterpress Quote Sheet
+slug: functional-style-a05
+difficulty: medium
+concepts:
+  - python.functional_style
+  - python.functools_operator
+prerequisites:
+  - python.functions
+  - python.lists
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.functional_style.a05
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original functools.partial drill framed as a letterpress shop that pre-binds a job's fixed settings and quotes many run sizes with the resulting one-argument function.
+prompt_markdown: |
+  A letterpress shop quotes jobs with a small formula. Once a job's fixed settings
+  are chosen, only the run size changes from quote to quote, so the shop binds the
+  fixed settings up front with `functools.partial` and reuses the resulting
+  one-argument function for every run size.
+
+  Write `partial_apply_chain(spec)`. The single argument `spec` is a dict:
+
+  - `spec["op"]`: the name of a three-argument operation (see below).
+  - `spec["fixed"]`: a list of exactly two integers, the fixed arguments to bind
+    first, in order.
+  - `spec["values"]`: a list of integers; each becomes the final argument of one
+    call.
+
+  The operations, where the two fixed arguments come first and the run value `x`
+  comes last:
+
+  - `"linear"` -> `setup + rate * x`, with `fixed = [setup, rate]`
+  - `"clamp"` -> `min(max(x, lo), hi)`, with `fixed = [lo, hi]`
+  - `"scale_shift"` -> `scale * x + shift`, with `fixed = [scale, shift]`
+
+  Use `functools.partial` to bind the two fixed arguments once, producing a
+  function that still expects only `x`. Apply that bound function to each value in
+  order and return the list of results. An empty `spec["values"]` returns an empty
+  list.
+
+  Example: `{"op": "linear", "fixed": [5, 2], "values": [0, 1, 10]}` binds
+  `setup = 5`, `rate = 2` and returns `[5, 7, 25]`.
+starter_code: |
+  from functools import partial
+
+
+  def partial_apply_chain(spec):
+      return []
+function_name: partial_apply_chain
+input_mode: function
+solution_sketch: Resolve the named three-argument op, use functools.partial to bind the two fixed args positionally, then call the resulting one-argument function on each value.
+sample_solution: |
+  from functools import partial
+
+
+  def partial_apply_chain(spec):
+      ops = {
+          "linear": lambda setup, rate, x: setup + rate * x,
+          "clamp": lambda lo, hi, x: min(max(x, lo), hi),
+          "scale_shift": lambda scale, shift, x: scale * x + shift,
+      }
+      func = ops[spec["op"]]
+      bound = partial(func, *spec["fixed"])
+      return [bound(value) for value in spec["values"]]
+hints:
+  - level: 1
+    text: functools.partial freezes the leading arguments of a function and returns a new function that only needs the arguments you did not supply.
+  - level: 2
+    text: The two fixed values are the first two positional arguments, so unpack them into partial with partial(func, *spec["fixed"]).
+  - level: 3
+    text: Call the bound function once per value; because the fixed args are already baked in, each call passes only the run size and returns a plain number.
+tests:
+  public:
+    - name: linear_quote
+      input:
+        op: "linear"
+        fixed: [5, 2]
+        values: [0, 1, 10]
+      expected: [5, 7, 25]
+    - name: clamp_empty_values
+      input:
+        op: "clamp"
+        fixed: [0, 10]
+        values: []
+      expected: []
+    - name: clamp_bounds
+      input:
+        op: "clamp"
+        fixed: [0, 10]
+        values: [-5, 5, 15]
+      expected: [0, 5, 10]
+  validation:
+    - name: scale_shift_basic
+      input:
+        op: "scale_shift"
+        fixed: [3, 1]
+        values: [0, 2, -2]
+      expected: [1, 7, -5]
+    - name: linear_negative_rate
+      input:
+        op: "linear"
+        fixed: [10, -1]
+        values: [0, 5, 10]
+      expected: [10, 5, 0]
+    - name: clamp_all_inside
+      input:
+        op: "clamp"
+        fixed: [-100, 100]
+        values: [3, -7, 50]
+      expected: [3, -7, 50]
+    - name: scale_shift_single
+      input:
+        op: "scale_shift"
+        fixed: [2, 0]
+        values: [21]
+      expected: [42]
+explanation_markdown: |
+  `functools.partial` is the built-in tool for pre-configuring a function: it
+  captures the arguments you supply now and returns a callable that takes the
+  rest later. Binding the two fixed settings once means every quote call passes
+  only the run size, so the shared configuration lives in one place instead of
+  being repeated at each call site. Because `partial` binds positionally,
+  unpacking `spec["fixed"]` with `*` lines the two fixed values up with the
+  operation's first two parameters, leaving `x` open for each value in the list.
+common_mistakes:
+  - Passing spec["fixed"] as a single list argument instead of unpacking it with * so the two values bind separately.
+  - Binding the fixed args inside the loop, rebuilding the partial for every value instead of once.
+  - Getting the clamp order wrong, e.g. max(min(x, hi), lo) is equivalent but min(max(x, lo), hi) is the specified form; mixing lo and hi flips the bounds.

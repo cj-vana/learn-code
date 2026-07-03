@@ -1,0 +1,99 @@
+id: lesson.library.modern_syntax.a01
+kind: lesson
+version: 1
+language: python
+title: 'match/case: Structural Pattern Matching'
+slug: lesson-modern-syntax-a01
+difficulty: medium
+concepts:
+  - python.modern_syntax
+prerequisites:
+  - python.conditionals
+  - python.classes
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.modern_syntax.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original match/case walkthrough framed around dispatching messages in a model-railway control system, with fresh worked patterns.
+body_markdown: |
+  Since Python 3.10, `match`/`case` gives you dispatch on the *shape* of
+  data, not just its value. If you have ever written a ladder of
+  `isinstance` checks and key lookups to sort out mixed messages, this is
+  its replacement — and its semantics repay precise understanding, because
+  it looks like a switch statement and is not one.
+
+  A model-railway control system receives mixed command messages:
+
+  ```python
+  def handle(msg):
+      match msg:
+          case {"cmd": "stop"}:
+              return halt_all()
+          case {"cmd": "speed", "value": v} if 0 <= v <= 10:
+              return set_speed(v)
+          case ["route", start, *stops]:
+              return plan_route(start, stops)
+          case Signal(color="red"):
+              return brake()
+          case _:
+              return reject(msg)
+  ```
+
+  Read the cases: this is not equality testing. Each `case` is a
+  **pattern** — a template the subject is matched against, which
+  simultaneously *tests* the shape and *destructures* it into names.
+
+  ### The pattern vocabulary
+
+  - **Mapping patterns** — `{"cmd": "speed", "value": v}` — match any
+    dict containing at least these keys (extra keys are fine; a mapping
+    pattern is a subset test), binding `v` to the value.
+  - **Sequence patterns** — `["route", start, *stops]` — match length
+    and structure, with `*rest` capture just like unpacking.
+  - **Class patterns** — `Signal(color="red")` — an isinstance check plus
+    attribute constraints, no unpacking method needed.
+  - **Guards** — `if 0 <= v <= 10` — arbitrary conditions evaluated
+    *after* the pattern binds names; a failing guard falls through to the
+    next case.
+  - **Or-patterns** — `case "halt" | "stop" | "estop":` — several
+    alternatives in one case.
+  - **Wildcard** — `case _:` matches anything, the explicit default.
+
+  ### The trap every newcomer hits
+
+  A bare name in a pattern is a **capture**, not a comparison:
+
+  ```python
+  STOP = "stop"
+  match cmd:
+      case STOP:      # SyntaxError-adjacent trap: binds cmd to a NEW
+          ...         # name STOP — matches EVERYTHING
+  ```
+
+  A lone `case STOP:` does not compare against your constant — it
+  captures the subject *into* a variable named STOP, matching anything
+  and shadowing your constant. To compare against a named constant, use a
+  **dotted name** (`case Commands.STOP:`) — dots make it a value lookup,
+  not a capture. This single rule ("bare names bind, dotted names
+  compare") is the most common match/case bug in the wild.
+
+  Cases are tried top to bottom, first match wins, no fall-through. Put
+  specific patterns above general ones — a `case {"cmd": _}` above
+  `case {"cmd": "stop"}` makes the latter unreachable, and nothing warns
+  you. The exercises drive every pattern kind, the guard fall-through,
+  and the capture trap — the parts that make the difference between
+  admiring the feature and wielding it.
+checkpoints:
+  - question: 'How does `case {"cmd": "speed", "value": v}` treat a dict that ALSO contains a "priority" key, and why?'
+    answer: It matches — mapping patterns test that the listed keys exist with matching values (a subset test), ignoring extra keys, and v is bound to the "value" entry.
+    explanation: 'The subset semantics make mapping patterns robust to message evolution: new fields don''t break old handlers.'
+  - question: A guard `if 0 <= v <= 10` fails after its pattern matched. What happens next?
+    answer: 'Matching falls through to the NEXT case as if this one had not matched — guards are a second filter after binding, not an error.'
+    explanation: 'Pattern-then-guard ordering lets cases share a shape but split on conditions, with fall-through keeping the dispatch total.'
+  - question: 'Why does `case STOP:` (bare name, previously defined as a constant) match every subject, and what is the fix?'
+    answer: 'Bare names in patterns are captures — the case binds the subject to a fresh name STOP rather than comparing; use a dotted name like Commands.STOP (or a literal) so it is treated as a value to compare against.'
+    explanation: '"Bare names bind, dotted names compare" is the one rule that prevents the most common structural-matching bug.'

@@ -1,0 +1,197 @@
+id: exercise.library.cli_parsing.a11
+kind: exercise
+version: 1
+language: python
+title: Tagging the Distillery Batches
+slug: cli-parsing-a11
+difficulty: hard
+concepts:
+  - python.cli_args
+  - python.dictionaries
+  - python.strings
+prerequisites:
+  - python.loops
+  - python.conditionals
+  - python.lists
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.cli_parsing.a11
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original repeated --set parser framed as a distillery batch tagger, combining dotted-key nesting, first-equals splitting, and value type inference into one hard drill.
+prompt_markdown: |
+  A distillery tags each batch from the command line with repeated `--set` options.
+  Each one carries a `key=value` token, and the keys use dots to describe nested
+  structure, so the console can build a small settings tree in one pass.
+
+  The grader calls your function with one argument: `argv`, the list of tokens.
+  Write `parse_key_value_pairs(argv)` that scans for `--set` options and returns the
+  assembled nested dict.
+
+  Scanning rules:
+
+  - Whenever you see the token `--set`, the **next** token is its `key=value` pair.
+    Consume both and continue scanning after them.
+  - A `--set` that is the very last token (no pair follows) is ignored.
+  - Split the pair on its **first** `=` only: the key is everything before it, the
+    value is everything after. So `url=a=b=c` has key `url` and value `a=b=c`.
+  - A pair token with no `=` at all, or with an empty key (starts with `=`), is
+    malformed -- skip it and keep scanning.
+  - Any token that is not part of a `--set` pair is ignored entirely.
+
+  Value typing (applied to the raw value string):
+
+  - A run of digits, optionally led by a single `+` or `-`, becomes an `int`
+    (`"5432"` -> `5432`, `"-3"` -> `-3`).
+  - Digits, a single dot, then digits (both sides non-empty), optionally signed,
+    becomes a `float` rounded to 4 places (`"0.75"` -> `0.75`).
+  - `"true"` or `"false"` (case-insensitive) becomes the matching bool.
+  - Anything else stays a string, including the empty string from `key=`.
+
+  Nesting rules (keys split on `.`):
+
+  - `db.host=local` places `"local"` at `result["db"]["host"]`, creating the `db`
+    dict as needed.
+  - Repeats overwrite the leaf: a later `--set db.host=remote` replaces the earlier
+    value.
+  - If a later key needs a branch where a plain value currently sits (or a plain
+    value where a branch sits), the later `--set` wins and replaces whatever was
+    there. So `--set a=1` then `--set a.b=2` yields `{"a": {"b": 2}}`.
+
+  Worked example:
+
+  ```python
+  ["--set", "db.host=local", "--set", "db.port=5432", "ignored", "--set", "db.host=remote"]
+  # -> {"db": {"host": "remote", "port": 5432}}
+  ```
+starter_code: |
+  def parse_key_value_pairs(argv):
+      return {}
+function_name: parse_key_value_pairs
+input_mode: function
+solution_sketch: Walk argv with a manual index, and each time you meet --set consume the following pair token, split it on the first equals, infer the value's type, then descend the dotted key path creating or replacing dicts until you can set the leaf.
+sample_solution: |
+  def parse_key_value_pairs(argv):
+      result = {}
+      i = 0
+      n = len(argv)
+      while i < n:
+          if argv[i] != "--set":
+              i += 1
+              continue
+          if i + 1 >= n:
+              i += 1
+              continue
+          raw = argv[i + 1]
+          i += 2
+          if "=" not in raw:
+              continue
+          key, _, value = raw.partition("=")
+          if key == "":
+              continue
+          _assign(result, key.split("."), _infer(value))
+      return result
+
+
+  def _infer(value):
+      if _is_int(value):
+          return int(value)
+      if _is_float(value):
+          return round(float(value), 4)
+      low = value.lower()
+      if low == "true":
+          return True
+      if low == "false":
+          return False
+      return value
+
+
+  def _is_int(text):
+      body = text[1:] if text[:1] in "+-" else text
+      return body.isdigit()
+
+
+  def _is_float(text):
+      body = text[1:] if text[:1] in "+-" else text
+      if body.count(".") != 1:
+          return False
+      left, right = body.split(".")
+      return left.isdigit() and right.isdigit()
+
+
+  def _assign(root, parts, value):
+      node = root
+      for part in parts[:-1]:
+          if not isinstance(node.get(part), dict):
+              node[part] = {}
+          node = node[part]
+      node[parts[-1]] = value
+hints:
+  - level: 1
+    text: Use a manual index and advance by 2 when a --set consumes its pair, by 1 otherwise, so you never mistake a pair token for its own option.
+  - level: 2
+    text: Split each pair with str.partition("=") to honor only the first equals, then classify the value string as int, float, bool, or string before storing it.
+  - level: 3
+    text: For dotted keys, walk every part except the last, replacing any non-dict you find with a fresh dict so branch/leaf conflicts resolve last-write-wins, then set the final part.
+tests:
+  public:
+    - name: dotted_build
+      input: ["--set", "db.host=local", "--set", "db.port=5432"]
+      expected:
+        db:
+          host: "local"
+          port: 5432
+    - name: types_and_string
+      input: ["--set", "debug=true", "--set", "name=kiln"]
+      expected:
+        debug: true
+        name: "kiln"
+    - name: value_with_equals
+      input: ["--set", "query=a=b=c"]
+      expected:
+        query: "a=b=c"
+  validation:
+    - name: leaf_override
+      input: ["--set", "x=1", "--set", "x=2"]
+      expected:
+        x: 2
+    - name: empty_value_and_float
+      input: ["--set", "note=", "--set", "ratio=0.75"]
+      expected:
+        note: ""
+        ratio: 0.75
+    - name: malformed_and_trailing_set
+      input: ["--set", "noequals", "--set", "k=9", "--set"]
+      expected:
+        k: 9
+    - name: ignore_other_tokens
+      input: ["ship", "--set", "a.b=1", "extra", "--set", "a.c=3"]
+      expected:
+        a:
+          b: 1
+          c: 3
+    - name: leaf_becomes_branch
+      input: ["--set", "cfg=1", "--set", "cfg.deep=2"]
+      expected:
+        cfg:
+          deep: 2
+explanation_markdown: |
+  This one packs three independent parsing concerns into a single scan, which is why
+  it earns its difficulty. The manual index (rather than a `for` loop) is what lets
+  a `--set` reach forward and swallow its pair token so the pair is never re-read as
+  an option. `str.partition("=")` is the right tool for "split on the first
+  separator only" -- it hands back the value untouched even when the value itself
+  contains more equals signs. And walking the dotted key while replacing any
+  non-dict with a fresh dict gives clean last-write-wins semantics whether the clash
+  is leaf-over-branch or branch-over-leaf.
+
+  Inferring types with small predicate helpers keeps `_infer` readable and avoids
+  the `bool("false")` trap -- bools are matched by explicit spelling, not by
+  truthiness.
+common_mistakes:
+  - Splitting the pair with str.split("=") and unpacking two values, which raises when the value contains extra equals signs like a=b=c.
+  - Iterating with a plain for loop, so a --set option and its pair token get processed as two separate options.
+  - Assuming the parent dict already exists when assigning a dotted key, causing a KeyError or failing to replace a scalar that sits where a branch is needed.

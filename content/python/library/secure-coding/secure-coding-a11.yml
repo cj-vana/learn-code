@@ -1,0 +1,180 @@
+id: exercise.library.secure_coding.a11
+kind: exercise
+version: 1
+language: python
+title: Screening Makerspace Passwords
+slug: secure-coding-a11
+difficulty: hard
+concepts:
+  - python.secure_coding
+  - python.strings
+prerequisites:
+  - python.strings
+  - python.dictionaries
+  - python.conditionals
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.secure_coding.a11
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original configurable password-policy checker themed around a makerspace membership portal; returns a sorted list of violation codes so grading is order-independent.
+prompt_markdown: |
+  A makerspace lets its coordinator configure how strict member passwords must be,
+  because a shared laser cutter needs different rules than the front-door wiki. So
+  the policy is data, not hardcoded, and your checker reports **every** way a
+  password falls short — not just the first — so the sign-up form can list all the
+  fixes at once.
+
+  Write `check_password(request)` where `request` is a dict with two keys:
+
+  - `"password"`: the candidate password string.
+  - `"rules"`: a dict of policy settings. Only the settings that are present are
+    enforced; a missing setting is simply not checked.
+
+  The possible rule settings and the violation code each one produces when unmet:
+
+  - `"min_length"` (int): the password must be at least this many characters.
+    Code: `"too_short"`.
+  - `"require_upper"` (true): must contain at least one character `A`-`Z`.
+    Code: `"no_upper"`.
+  - `"require_lower"` (true): must contain at least one character `a`-`z`.
+    Code: `"no_lower"`.
+  - `"require_digit"` (true): must contain at least one digit `0`-`9`.
+    Code: `"no_digit"`.
+  - `"require_symbol"` (true): must contain at least one character that is neither
+    alphanumeric nor whitespace (for example `!`, `_`, or `#`). Code: `"no_symbol"`.
+  - `"forbid_spaces"` (true): must contain no whitespace at all. Code: `"has_space"`.
+  - `"forbidden"` (list of strings): the password must not contain any of these
+    substrings, compared **case-insensitively** (so a rule of `"summer"` also
+    rejects `"Summer2024"`). Code: `"contains_forbidden"`.
+
+  For the boolean-style rules (`require_*` and `forbid_spaces`), enforce the rule
+  only when its value is truthy; a value of `false` or an absent key means skip it.
+
+  Return a list of the violation codes that apply, **sorted alphabetically**, with
+  no duplicates. A password that satisfies the whole policy returns `[]`. An empty
+  `rules` dict means nothing is checked, so it always returns `[]`.
+
+  Example: `{"password": "short", "rules": {"min_length": 8, "require_upper": true}}`
+  returns `["no_upper", "too_short"]`.
+starter_code: |
+  def check_password(request):
+      # Collect every unmet rule as a violation code, then return them sorted.
+      return []
+function_name: check_password
+input_mode: function
+solution_sketch: Read password and rules; append a code for each unmet rule (length, character-class requirements via any(), space ban, and case-insensitive forbidden substrings); return sorted(set(codes)).
+sample_solution: |
+  def check_password(request):
+      password = request["password"]
+      rules = request["rules"]
+      violations = []
+
+      if "min_length" in rules and len(password) < rules["min_length"]:
+          violations.append("too_short")
+      if rules.get("require_upper") and not any(c.isupper() for c in password):
+          violations.append("no_upper")
+      if rules.get("require_lower") and not any(c.islower() for c in password):
+          violations.append("no_lower")
+      if rules.get("require_digit") and not any(c.isdigit() for c in password):
+          violations.append("no_digit")
+      if rules.get("require_symbol") and not any(
+          not c.isalnum() and not c.isspace() for c in password
+      ):
+          violations.append("no_symbol")
+      if rules.get("forbid_spaces") and any(c.isspace() for c in password):
+          violations.append("has_space")
+      if "forbidden" in rules:
+          lowered = password.lower()
+          if any(bad.lower() in lowered for bad in rules["forbidden"]):
+              violations.append("contains_forbidden")
+
+      return sorted(set(violations))
+hints:
+  - level: 1
+    text: Check each present rule independently and collect a code for every one that fails, rather than stopping at the first failure.
+  - level: 2
+    text: A character-class requirement is met when any(...) over the password is true, so it is violated when that any(...) is false; a symbol is a character that is not c.isalnum() and not c.isspace().
+  - level: 3
+    text: Use rules.get(name) so absent boolean rules are skipped, compare forbidden substrings on password.lower(), and finish with sorted(set(violations)) for an order-independent, de-duplicated result.
+tests:
+  public:
+    - name: passes_full_policy
+      input:
+        password: 'Thunder!Sky9'
+        rules:
+          min_length: 8
+          require_upper: true
+          require_lower: true
+          require_digit: true
+          require_symbol: true
+      expected: []
+    - name: short_and_no_upper
+      input:
+        password: 'short'
+        rules:
+          min_length: 8
+          require_upper: true
+      expected: ['no_upper', 'too_short']
+    - name: empty_rules_pass
+      input:
+        password: 'anything'
+        rules: {}
+      expected: []
+  validation:
+    - name: forbidden_case_insensitive
+      input:
+        password: 'Summer2024'
+        rules:
+          forbidden: ['summer', 'password']
+      expected: ['contains_forbidden']
+    - name: space_banned
+      input:
+        password: 'no spaces here'
+        rules:
+          forbid_spaces: true
+      expected: ['has_space']
+    - name: empty_password_multiple_violations
+      input:
+        password: ''
+        rules:
+          min_length: 4
+          require_digit: true
+      expected: ['no_digit', 'too_short']
+    - name: underscore_counts_as_symbol
+      input:
+        password: 'Alpha_1'
+        rules:
+          require_symbol: true
+      expected: []
+    - name: false_flags_are_skipped
+      input:
+        password: 'plainlowercase'
+        rules:
+          require_upper: false
+          require_digit: false
+      expected: []
+explanation_markdown: |
+  A good password policy is configuration, and a good checker is exhaustive. By
+  driving every rule from the `rules` dict and only enforcing keys that are
+  present, the same function serves a strict door and a lax wiki without code
+  changes. Reporting every violation instead of the first one is a usability-as-
+  security win: a form that says "too short and missing a digit" in one pass is
+  the one members actually fix, rather than bouncing them through failures one at
+  a time.
+
+  Two details make it robust. Testing a character class with `any(...)` and
+  negating it cleanly expresses "does this password lack an uppercase letter?",
+  and defining a symbol as "not alphanumeric and not whitespace" avoids
+  maintaining a brittle list of punctuation. Finishing with `sorted(set(...))`
+  guarantees the output is deterministic and de-duplicated no matter what order
+  you happened to run the checks in — which is exactly what makes the result
+  stable enough to test and to show a user.
+common_mistakes:
+  - Returning after the first failed rule instead of collecting every violation the password triggers.
+  - Enforcing a boolean rule whenever its key exists, so an explicit require_upper of false is wrongly applied.
+  - Comparing forbidden substrings without lowercasing both sides, so "Summer" slips past a "summer" rule.
+  - Returning the codes in check order instead of sorted, making the output order-dependent and hard to test.

@@ -1,0 +1,132 @@
+id: exercise.library.heaps_topk.b01
+kind: exercise
+version: 1
+language: python
+title: The Tide Gauge's Running Median
+slug: heaps-topk-b01
+difficulty: hard
+concepts:
+  - patterns.heap_topk
+  - python.heapq_bisect
+prerequisites:
+  - python.lists
+estimated_time_minutes: 24
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.heaps_topk.b01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: >-
+    Original tide-gauge framing for the two-heap running-median pattern, asking
+    for the median after every single reading so the solver must maintain a
+    balanced max-heap/min-heap pair incrementally rather than sort each prefix.
+prompt_markdown: |
+  A coastal tide gauge reports the water level one reading at a time, and the
+  station wants the **median** level updated after every reading so far -- not just
+  at the end. Sorting the whole history again after each reading would be wasteful,
+  so you keep the numbers balanced across two heaps and read the middle off the top.
+
+  Write `running_median(stream)` that takes a list of numbers and returns a list of
+  the same length: element `i` is the median of the first `i + 1` readings.
+
+  The median rule:
+
+  - When an odd number of readings have arrived, the median is the single middle
+    value.
+  - When an even number have arrived, the median is the average of the two middle
+    values, which may be a fraction. Return that average as produced by ordinary
+    division (so an even-count median is a float such as `1.5`, and `4.0` when the
+    two middles are both `4`).
+
+  Cases the tests cover: an empty stream returns an empty list; a single reading
+  returns that reading; readings may arrive out of order and may be negative or
+  repeated.
+starter_code: |
+  def running_median(stream):
+      # Return the median after each reading, in order.
+      return []
+function_name: running_median
+input_mode: function
+solution_sketch: >-
+  Keep a max-heap of the lower half and a min-heap of the upper half, rebalancing
+  after each insert so the low heap holds the same number of elements as the high
+  heap or exactly one more; the median is then the low heap's top (odd count) or
+  the average of the two tops (even count).
+sample_solution: |
+  import heapq
+
+
+  def running_median(stream):
+      lower = []  # max-heap (store negated values)
+      upper = []  # min-heap
+      medians = []
+      for value in stream:
+          if not lower or value <= -lower[0]:
+              heapq.heappush(lower, -value)
+          else:
+              heapq.heappush(upper, value)
+
+          if len(lower) > len(upper) + 1:
+              heapq.heappush(upper, -heapq.heappop(lower))
+          elif len(upper) > len(lower):
+              heapq.heappush(lower, -heapq.heappop(upper))
+
+          if len(lower) > len(upper):
+              medians.append(-lower[0])
+          else:
+              medians.append((-lower[0] + upper[0]) / 2)
+      return medians
+hints:
+  - level: 1
+    text: Keep the smaller half of the numbers in one heap and the larger half in another. If the two tops are the boundary of the halves, the median is right there without any sorting.
+  - level: 2
+    text: Use a max-heap for the lower half (push negated values so heapq gives you the largest) and a min-heap for the upper half. After each insert, move one element across if the sizes drift more than one apart.
+  - level: 3
+    text: Keep the lower heap either equal in size to the upper heap or exactly one larger. Then an odd total makes the lower top the median, and an even total makes the average of the two tops the median.
+tests:
+  public:
+    - name: empty_stream
+      input: []
+      expected: []
+    - name: single_reading
+      input: [5]
+      expected: [5]
+    - name: three_out_of_order
+      input: [2, 1, 3]
+      expected: [2, 1.5, 2]
+  validation:
+    - name: all_equal
+      input: [4, 4, 4, 4]
+      expected: [4, 4.0, 4, 4.0]
+    - name: increasing
+      input: [1, 2, 3, 4, 5, 6]
+      expected: [1, 1.5, 2, 2.5, 3, 3.5]
+    - name: negatives_mixed
+      input: [5, -1, 3, -2, 8]
+      expected: [5, 2.0, 3, 1.0, 3]
+    - name: round_tens
+      input: [10, 20, 30, 40]
+      expected: [10, 15.0, 20, 25.0]
+explanation_markdown: |
+  The trick is to never sort. Split the readings so far into a lower half and an
+  upper half, and store each half in the heap that puts its boundary element on
+  top: a **max-heap** for the lower half (so its largest value is on top) and a
+  **min-heap** for the upper half (so its smallest value is on top). Python's
+  `heapq` is a min-heap, so the lower half is stored as negated numbers.
+
+  After inserting each reading you rebalance so the lower heap is the same size as
+  the upper heap or exactly one element larger. That single invariant makes the
+  median trivial to read: with an odd total the extra element sits on top of the
+  lower heap and *is* the median; with an even total the two tops straddle the
+  middle and their average is the median. The average uses true division, so even
+  counts yield floats -- `15.0`, `1.5`, and so on -- while odd counts return the
+  stored value unchanged.
+
+  Each insert does a constant number of `O(log n)` heap operations, so producing
+  all n medians costs `O(n log n)`, far better than re-sorting each prefix.
+common_mistakes:
+  - Recomputing the median by sorting the whole prefix each step, which is correct but defeats the purpose of the two-heap structure.
+  - Letting the heaps drift out of balance so a top element is no longer the true boundary of the two halves.
+  - Using integer division for the even case, which drops the fractional half and reports the wrong median.

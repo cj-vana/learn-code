@@ -1,0 +1,177 @@
+id: exercise.library.functional_style.a10
+kind: exercise
+version: 1
+language: python
+title: Sorting Stalls by Market Zone
+slug: functional-style-a10
+difficulty: medium
+concepts:
+  - python.functional_style
+  - concepts.grouping_aggregation
+prerequisites:
+  - python.dictionaries
+  - python.lists
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.functional_style.a10
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original group-by drill framed around a farmers market bucketing stall records by a chosen field, taught as a dict-of-lists built with functools.reduce and setdefault rather than an imperative loop.
+prompt_markdown: |
+  A farmers market keeps one record per stall, and the organizers want those
+  records **bucketed** by a chosen field -- usually the market zone, but sometimes
+  the stall size -- so they can hand each bucket to the right steward.
+
+  Write `group_stalls(payload)` that takes **one dictionary** with two entries:
+
+  - `"records"`: a list of stall records, where each record is a dictionary.
+  - `"key"`: the field name to group by (a string present in every record).
+
+  Return a **dictionary of lists**: each distinct value of the chosen field maps
+  to the list of records that carry it, in the **order those records appear** in
+  the input. Groups themselves appear in the order their field value is first
+  seen.
+
+  Example call:
+
+  ```python
+  group_stalls({
+      "records": [
+          {"name": "a", "zone": "north"},
+          {"name": "b", "zone": "south"},
+          {"name": "c", "zone": "north"},
+      ],
+      "key": "zone",
+  })
+  # -> {"north": [{"name": "a", "zone": "north"}, {"name": "c", "zone": "north"}],
+  #     "south": [{"name": "b", "zone": "south"}]}
+  ```
+
+  If `records` is empty, return an empty dictionary. Build the result as a **left
+  fold** with `functools.reduce`, using `setdefault` to get-or-create each bucket.
+starter_code: |
+  from functools import reduce
+
+
+  def group_stalls(payload):
+      return {}
+function_name: group_stalls
+input_mode: function
+solution_sketch: Fold the records with functools.reduce over a dict accumulator seeded with {}; for each record, setdefault(record[key], []) returns the existing or a freshly-created bucket list, then append the record to it so encounter order is preserved, and return the accumulator each step.
+sample_solution: |
+  from functools import reduce
+
+
+  def group_stalls(payload):
+      key = payload["key"]
+
+      def place(groups, record):
+          groups.setdefault(record[key], []).append(record)
+          return groups
+
+      return reduce(place, payload["records"], {})
+hints:
+  - level: 1
+    text: A group-by result is a dict where each field value maps to the list of records that share it, so you are building a dict of lists.
+  - level: 2
+    text: groups.setdefault(record[key], []) returns the bucket list for that field value, creating an empty one the first time the value is seen, so you can append to it either way.
+  - level: 3
+    text: Seed reduce with an empty dict, and have the folding function append the record then return the dict so the accumulator carries forward to the next step.
+tests:
+  public:
+    - name: empty_records
+      input:
+        records: []
+        key: "zone"
+      expected: {}
+    - name: single_record
+      input:
+        records:
+          - {name: "a", zone: "north"}
+        key: "zone"
+      expected:
+        north:
+          - {name: "a", zone: "north"}
+    - name: two_zones_interleaved
+      input:
+        records:
+          - {name: "a", zone: "north"}
+          - {name: "b", zone: "south"}
+          - {name: "c", zone: "north"}
+        key: "zone"
+      expected:
+        north:
+          - {name: "a", zone: "north"}
+          - {name: "c", zone: "north"}
+        south:
+          - {name: "b", zone: "south"}
+  validation:
+    - name: all_one_group
+      input:
+        records:
+          - {name: "a", zone: "east"}
+          - {name: "b", zone: "east"}
+        key: "zone"
+      expected:
+        east:
+          - {name: "a", zone: "east"}
+          - {name: "b", zone: "east"}
+    - name: group_by_a_different_field
+      input:
+        records:
+          - {name: "a", zone: "north", size: "S"}
+          - {name: "b", zone: "south", size: "L"}
+          - {name: "c", zone: "east", size: "S"}
+        key: "size"
+      expected:
+        S:
+          - {name: "a", zone: "north", size: "S"}
+          - {name: "c", zone: "east", size: "S"}
+        L:
+          - {name: "b", zone: "south", size: "L"}
+    - name: three_singleton_groups
+      input:
+        records:
+          - {name: "a", zone: "n"}
+          - {name: "b", zone: "s"}
+          - {name: "c", zone: "e"}
+        key: "zone"
+      expected:
+        n:
+          - {name: "a", zone: "n"}
+        s:
+          - {name: "b", zone: "s"}
+        e:
+          - {name: "c", zone: "e"}
+    - name: within_group_order_preserved
+      input:
+        records:
+          - {name: "first", zone: "west"}
+          - {name: "second", zone: "west"}
+          - {name: "third", zone: "west"}
+        key: "zone"
+      expected:
+        west:
+          - {name: "first", zone: "west"}
+          - {name: "second", zone: "west"}
+          - {name: "third", zone: "west"}
+explanation_markdown: |
+  Grouping is a fold that threads a growing dictionary through the records.
+  `functools.reduce(place, records, {})` starts from a fresh empty dict and calls
+  `place(accumulator, record)` for each record, always returning the same
+  accumulator so it carries forward. The seed `{}` is what makes the empty-input
+  case return `{}` with no special handling.
+
+  The heart of the fold is `setdefault(record[key], [])`. On the first record for a
+  given field value it inserts a new empty list and returns it; on later records it
+  returns the existing list. Either way you `append` to that list, so records land
+  in their buckets in encounter order and groups appear in first-seen order. This
+  dict-of-lists shape is the canonical result of a group-by, and because the fold
+  only ever mutates its own accumulator, the input records are left untouched.
+common_mistakes:
+  - Rebinding the bucket with groups[value] = [record] on every record, which discards all earlier members of that group.
+  - Omitting the {} seed so reduce raises on an empty records list instead of returning an empty dict.
+  - Using groups.get(value, []) without assigning the result back, so the appended record is dropped when the group is new.

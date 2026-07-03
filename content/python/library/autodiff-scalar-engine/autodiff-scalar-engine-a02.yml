@@ -1,0 +1,113 @@
+id: exercise.library.autodiff_scalar_engine.a02
+kind: exercise
+version: 1
+language: python
+title: Backpropagating Through a Times Node
+slug: autodiff-scalar-engine-a02
+difficulty: easy
+concepts:
+  - ai.gradients_autodiff
+prerequisites:
+  - python.dictionaries
+  - python.operators
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.autodiff_scalar_engine.a02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: >-
+    Original tea-blend scaling scenario for the multiplication backward rule,
+    stressing the swap (each input's gradient uses the other operand). Math is
+    standard product-rule autodiff; presentation is new.
+prompt_markdown: |
+  You are still building your scalar autodiff engine. This time the node is a
+  **multiplication node**: a tea-blend model multiplies a strength `a` by an
+  amount `b` to get `product = a * b`.
+
+  The backward pass hands the node an incoming gradient `grad_out`, meaning
+  `dL/dproduct`. The local derivatives of `product = a * b` are
+
+  ```
+  d(product)/da = b        d(product)/db = a
+  ```
+
+  Notice the **swap**: the derivative with respect to `a` is the *other* factor
+  `b`, and vice versa. Applying the chain rule:
+
+  ```
+  dL/da = grad_out * b
+  dL/db = grad_out * a
+  ```
+
+  You are given `job` with this shape:
+
+  ```
+  {"a": 2.0, "b": -5.0, "grad_out": 1.0}
+  ```
+
+  Write `grads_mul(job)` that returns `[grad_a, grad_b]`, where
+  `grad_a = grad_out * b` and `grad_b = grad_out * a`. **Round each returned
+  value to 6 decimal places** with `round(value, 6)`.
+starter_code: |
+  def grads_mul(job):
+      a = job["a"]
+      b = job["b"]
+      grad_out = job["grad_out"]
+      # Each input's gradient uses the OTHER operand.
+      return []
+function_name: grads_mul
+input_mode: function
+solution_sketch: Multiply grad_out by b for a's gradient and by a for b's gradient, rounding each to 6 decimals.
+sample_solution: |
+  def grads_mul(job):
+      a = job["a"]
+      b = job["b"]
+      grad_out = job["grad_out"]
+      grad_a = round(grad_out * b, 6)
+      grad_b = round(grad_out * a, 6)
+      return [grad_a, grad_b]
+hints:
+  - level: 1
+    text: The derivative of a*b with respect to a is b, and with respect to b is a. That swap is the whole trick.
+  - level: 2
+    text: Compute grad_a = grad_out * b and grad_b = grad_out * a; do not pair each input with itself.
+  - level: 3
+    text: Wrap each result in round(value, 6) before returning them as [grad_a, grad_b].
+tests:
+  public:
+    - name: unit_gradient
+      input: {"a": 3, "b": 4, "grad_out": 1}
+      expected: [4, 3]
+    - name: negative_factor
+      input: {"a": 2.0, "b": -5.0, "grad_out": 1.0}
+      expected: [-5.0, 2.0]
+    - name: scaled_gradient
+      input: {"a": 0.5, "b": 0.25, "grad_out": 2.0}
+      expected: [0.5, 1.0]
+  validation:
+    - name: half_gradient
+      input: {"a": 1.5, "b": 2.0, "grad_out": 0.5}
+      expected: [1.0, 0.75]
+    - name: both_signs
+      input: {"a": -3.0, "b": 4.0, "grad_out": 2.0}
+      expected: [8.0, -6.0]
+    - name: zero_gradient
+      input: {"a": 9.0, "b": 9.0, "grad_out": 0.0}
+      expected: [0.0, 0.0]
+explanation_markdown: |
+  Multiplication is where autodiff starts to feel less obvious. The key fact is
+  the swap: when `product = a * b`, nudging `a` changes the product at a rate set
+  by `b` (its partner), so `d(product)/da = b`. The chain rule then gives
+  `dL/da = grad_out * b`, and symmetrically `dL/db = grad_out * a`.
+
+  A useful intuition: if `b` is large, then `a` has a lot of leverage over the
+  product, so a small change in `a` moves the loss a lot -- hence its gradient is
+  scaled by `b`. This cross-wiring is exactly what makes a real network's weights
+  and inputs push gradients onto each other during training.
+common_mistakes:
+  - Pairing each input with itself (grad_a = grad_out * a), which ignores the product rule's swap.
+  - Forgetting to multiply by grad_out, returning only the local derivatives b and a.
+  - Skipping round(value, 6), so a floating-point tail makes the exact comparison fail.

@@ -1,0 +1,131 @@
+id: exercise.library.decorators_closures.a08
+kind: exercise
+version: 1
+language: python
+title: Memoize From Scratch
+slug: decorators-closures-a08
+difficulty: hard
+concepts:
+  - python.closures_decorators
+  - concepts.memoization
+prerequisites:
+  - python.closures_decorators
+estimated_time_minutes: 16
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.decorators_closures.a08
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original relay-hop recurrence whose raw-call count proves a hand-written memoize cache eliminates recomputation.
+prompt_markdown: |
+  A relay network counts signal routes with a two-step recurrence:
+  `routes(k) = routes(k - 1) + routes(k - 2)` with `routes(0) = routes(1) = 1`.
+  Computed naively this recomputes the same sub-values an exponential number of
+  times. A memoizing decorator fixes that by caching each result the first time
+  it is produced.
+
+  Write a decorator `memoize` that caches results in a private dict keyed by the
+  argument. Then finish `raw_call_count(n)`, which decorates a `routes` function
+  with `memoize`, computes `routes(n)`, and returns **how many times the
+  underlying body actually ran** (the number of cache misses).
+
+  If your cache works, each `k` from `0` to `n` is computed exactly once, so
+  `raw_call_count(5)` returns `6`. A missing or broken cache produces a much
+  larger count and fails the tests.
+starter_code: |
+  import functools
+
+
+  def memoize(func):
+      # Cache results in a private dict so each argument is computed once.
+      @functools.wraps(func)
+      def wrapper(n):
+          return func(n)
+      return wrapper
+
+
+  def raw_call_count(n):
+      body_runs = {"count": 0}
+
+      @memoize
+      def routes(k):
+          body_runs["count"] += 1
+          if k < 2:
+              return 1
+          return routes(k - 1) + routes(k - 2)
+
+      routes(n)
+      return body_runs["count"]
+function_name: raw_call_count
+input_mode: function
+solution_sketch: memoize keeps a dict in its closure; on a miss it runs func and stores the result, on a hit it returns the cached value.
+sample_solution: |
+  import functools
+
+
+  def memoize(func):
+      cache = {}
+
+      @functools.wraps(func)
+      def wrapper(n):
+          if n not in cache:
+              cache[n] = func(n)
+          return cache[n]
+
+      return wrapper
+
+
+  def raw_call_count(n):
+      body_runs = {"count": 0}
+
+      @memoize
+      def routes(k):
+          body_runs["count"] += 1
+          if k < 2:
+              return 1
+          return routes(k - 1) + routes(k - 2)
+
+      routes(n)
+      return body_runs["count"]
+hints:
+  - level: 1
+    text: The recursive calls to routes go through your wrapper, so caching there stops every repeated subproblem.
+  - level: 2
+    text: Keep a dict in memoize's closure; on a cache miss compute and store func(n), on a hit return the stored value without calling func.
+  - level: 3
+    text: if n not in cache, set cache[n] = func(n); always return cache[n]. Because the recursion reuses the cache, each k runs its body once.
+tests:
+  public:
+    - name: base_zero
+      input: 0
+      expected: 1
+    - name: base_one
+      input: 1
+      expected: 1
+    - name: five
+      input: 5
+      expected: 6
+  validation:
+    - name: two
+      input: 2
+      expected: 3
+    - name: ten
+      input: 10
+      expected: 11
+    - name: twenty
+      input: 20
+      expected: 21
+explanation_markdown: |
+  The `cache` dict lives in `memoize`'s closure, private to the decorated
+  function yet persistent across calls. The first time an argument arrives it is
+  a cache miss, so the body runs and the result is stored; every later request
+  for that argument is a hit that skips the body entirely. Because the recursive
+  calls also pass through `wrapper`, each `k` from `0` to `n` is computed exactly
+  once, giving `n + 1` body runs and turning exponential work into a linear
+  walk. The count is the visible proof the cache did its job.
+common_mistakes:
+  - Storing the cache as a local inside wrapper, so it resets on every call and never helps.
+  - Returning func(n) directly on a hit instead of the cached value, defeating the point.
+  - Caching only the top-level call while letting the recursion bypass the wrapper.

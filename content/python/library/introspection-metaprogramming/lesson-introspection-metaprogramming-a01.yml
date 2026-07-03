@@ -1,0 +1,102 @@
+id: lesson.library.introspection_metaprogramming.a01
+kind: lesson
+version: 1
+language: python
+title: 'inspect: Programs That Read Programs'
+slug: lesson-introspection-metaprogramming-a01
+difficulty: hard
+concepts:
+  - python.introspection
+prerequisites:
+  - python.functions
+  - python.type_hints
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.introspection_metaprogramming.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original inspect-module walkthrough framed around building a plugin loader for a stage-lighting console, with fresh worked examples.
+body_markdown: |
+  Every framework that feels magical — pytest injecting fixtures by
+  parameter name, FastAPI turning annotations into request validation,
+  CLIs generated from function signatures — is built on one capability:
+  **functions are objects that describe themselves**, and the `inspect`
+  module is how you read the description.
+
+  ### Signatures as data
+
+  A stage-lighting console loads user-written cue plugins and must know
+  what each needs:
+
+  ```python
+  import inspect
+
+  def strobe(rate: float, duration: float = 2.0, color: str = "white"):
+      ...
+
+  sig = inspect.signature(strobe)
+  for name, p in sig.parameters.items():
+      print(name, p.default, p.annotation)
+  # rate    <empty>  float
+  # duration 2.0     float
+  # color   'white'  str
+  ```
+
+  `signature()` returns the function's interface *as a data structure*:
+  parameter names in order, kinds (positional-only, keyword-only,
+  *args...), defaults, and annotations. The sentinel for "no default" is
+  `inspect.Parameter.empty` — comparison against it, not against None
+  (a default *of* None is a legal default), is how you separate required
+  from optional parameters. With that, the console can validate a
+  plugin's shape at load time and produce its help text — no plugin
+  registry boilerplate, just reading what the author already wrote.
+
+  ### bind: call-checking without calling
+
+  `sig.bind(*args, **kwargs)` performs Python's full argument-matching
+  ritual — positional/keyword resolution, defaults, kind enforcement —
+  *without invoking the function*, raising the same TypeError a real
+  call would:
+
+  ```python
+  bound = sig.bind(3.5, color="amber")
+  bound.apply_defaults()
+  bound.arguments        # {'rate': 3.5, 'duration': 2.0, 'color': 'amber'}
+  ```
+
+  This is the tool for frameworks that must validate or transform calls
+  before making them — and for your exercise that normalizes any legal
+  call into its canonical argument dict.
+
+  ### Classifying and dissecting objects
+
+  The `is*` family — `inspect.ismethod`, `isfunction`,
+  `isgeneratorfunction`, `iscoroutinefunction` — answers "what kind of
+  callable is this?", which dispatchers and test frameworks need
+  constantly (a generator function must be *driven*, not just called —
+  your concurrency unit's distinction, made checkable).
+  `inspect.getmembers(obj, predicate)` walks an object's attributes with
+  a filter — the plugin loader's "find all cue functions in this module"
+  in one call. And deeper introspection reads the function's anatomy
+  directly: `func.__defaults__` (the tuple where mutable-default bugs
+  physically live — one shared list, visible), `__closure__` and
+  `__code__.co_freevars` (the captured variables of your closures unit,
+  inspectable).
+
+  The theme of the area: nothing about a Python program is opaque to a
+  Python program. Used sparingly — introspection is for *tools* and
+  *boundaries*, not everyday logic — it is how a few hundred lines of
+  framework replace thousands of lines of registration boilerplate.
+checkpoints:
+  - question: Why must "has no default" be tested with p.default is inspect.Parameter.empty rather than checking for None?
+    answer: 'None is a perfectly legal default value — def f(x=None) — so None cannot mean "missing"; the module provides a dedicated sentinel, and identity comparison against it is exact.'
+    explanation: 'The sentinel pattern from the memory unit, deployed by the stdlib: when every ordinary value is legal, absence needs its own object.'
+  - question: What does sig.bind(*args, **kwargs) let a framework do that calling the function cannot?
+    answer: 'Run the complete argument-matching ritual — including kind enforcement and TypeErrors — WITHOUT executing the function body, so calls can be validated, logged, or transformed before any side effects happen.'
+    explanation: bind separates "is this call legal and what does it mean" from "do it" — the primitive under dependency injection and call middleware.
+  - question: Where do default argument values physically live, and how does that explain the mutable-default bug?
+    answer: 'In func.__defaults__, a tuple created once at def time; a mutable default like a list is one shared object in that tuple, so every call without the argument mutates the same list — visible directly by inspecting __defaults__.'
+    explanation: Introspection turns the folklore bug into an observable fact — one list object, aging in the defaults tuple.

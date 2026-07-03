@@ -1,0 +1,115 @@
+id: exercise.library.datetime_handling.a05
+kind: exercise
+version: 1
+language: python
+title: Tide Table Corrections
+slug: datetime-handling-a05
+difficulty: medium
+concepts:
+  - python.datetime_module
+prerequisites:
+  - python.dictionaries
+  - python.strings
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.datetime_handling.a05
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original tide-table framing for shifting a timestamp by a signed minute offset with timedelta, crossing day boundaries.
+prompt_markdown: |
+  A harbour keeps a tide table where each high-water time is recorded as a
+  timestamp `"YYYY-MM-DD HH:MM"`. New survey data means every entry needs a
+  correction of some number of minutes, which can be positive (later) or negative
+  (earlier). Write `shift_minutes(job)` that applies the offset and returns the
+  corrected timestamp in the same `"YYYY-MM-DD HH:MM"` format.
+
+  The input is a single dictionary shaped like:
+
+  ```python
+  {"timestamp": "2026-07-02 23:50", "minutes": 20}
+  ```
+
+  Add `minutes` to the timestamp. The shift must roll the date correctly across
+  midnight, month ends, and year ends — a 20-minute correction to `23:50` on
+  2 July lands at `00:10` on 3 July. A `minutes` of `0` returns the timestamp
+  unchanged, and negative values move the time earlier, possibly into the previous
+  day. Offsets may exceed a full day.
+starter_code: |
+  from datetime import datetime, timedelta
+
+
+  def shift_minutes(job):
+      return ""
+function_name: shift_minutes
+input_mode: function
+solution_sketch: Parse the timestamp with strptime using "%Y-%m-%d %H:%M", add timedelta(minutes=...), and format the result back with strftime.
+sample_solution: |
+  from datetime import datetime, timedelta
+
+
+  def shift_minutes(job):
+      moment = datetime.strptime(job["timestamp"], "%Y-%m-%d %H:%M")
+      shifted = moment + timedelta(minutes=job["minutes"])
+      return shifted.strftime("%Y-%m-%d %H:%M")
+hints:
+  - level: 1
+    text: strptime with the format "%Y-%m-%d %H:%M" turns the timestamp string into a datetime you can do math on.
+  - level: 2
+    text: timedelta(minutes=job["minutes"]) works with negative values too, and adding it handles all the rollover for you.
+  - level: 3
+    text: After adding, reformat with strftime("%Y-%m-%d %H:%M") so the output matches the input layout exactly.
+tests:
+  public:
+    - name: cross_midnight_forward
+      input:
+        timestamp: '2026-07-02 23:50'
+        minutes: 20
+      expected: '2026-07-03 00:10'
+    - name: no_shift
+      input:
+        timestamp: '2026-07-02 08:15'
+        minutes: 0
+      expected: '2026-07-02 08:15'
+    - name: same_day_forward
+      input:
+        timestamp: '2026-07-02 08:15'
+        minutes: 45
+      expected: '2026-07-02 09:00'
+  validation:
+    - name: cross_midnight_backward
+      input:
+        timestamp: '2026-07-02 00:10'
+        minutes: -20
+      expected: '2026-07-01 23:50'
+    - name: more_than_a_day
+      input:
+        timestamp: '2026-01-31 12:00'
+        minutes: 1470
+      expected: '2026-02-01 12:30'
+    - name: cross_month_end_forward
+      input:
+        timestamp: '2026-02-28 23:30'
+        minutes: 60
+      expected: '2026-03-01 00:30'
+    - name: cross_year_boundary_backward
+      input:
+        timestamp: '2027-01-01 00:05'
+        minutes: -10
+      expected: '2026-12-31 23:55'
+explanation_markdown: |
+  Clock arithmetic is easy to get wrong by hand because a minute offset can spill
+  across hours, midnight, month ends, and even years. The reliable move is to lift
+  the string into a real `datetime` with `strptime`, add a `timedelta`, and let
+  the standard library carry all the borrowing and carrying for you. A `timedelta`
+  accepts negative minute counts, so the same one line handles corrections that
+  move the time earlier into the previous day. Offsets larger than a day are no
+  different: `1470` minutes is 24 hours and 30 minutes, so `12:00` on 31 January
+  becomes `12:30` on 1 February. Formatting the result back with the same
+  `"%Y-%m-%d %H:%M"` pattern guarantees the output layout matches the input.
+common_mistakes:
+  - Splitting hours and minutes by hand and forgetting to roll the date when minutes overflow past 24:00.
+  - Using timedelta(hours=...) or seconds instead of minutes, scaling the shift wrongly.
+  - Formatting the output with a different pattern (like seconds or a T separator) so it no longer matches "YYYY-MM-DD HH:MM".

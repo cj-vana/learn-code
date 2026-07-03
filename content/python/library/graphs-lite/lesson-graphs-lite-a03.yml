@@ -1,0 +1,95 @@
+id: lesson.library.graphs_lite.a03
+kind: lesson
+version: 1
+language: python
+title: Breadth-First Search for Shortest Paths
+slug: lesson-graphs-lite-a03
+difficulty: medium
+concepts:
+  - patterns.queue_bfs
+  - patterns.graph_traversal
+prerequisites:
+  - python.dictionaries
+  - python.collections_module
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.graphs_lite.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original breadth-first-search lesson covering shortest hops, path reconstruction, and multi-source spread on unweighted graphs and grids.
+body_markdown: |
+  Where depth-first search dives, **breadth-first search** (BFS) fans out. It
+  visits every node one step away, then every node two steps away, and so on, in
+  expanding rings. That ordering is the whole point: on an *unweighted* graph,
+  where every edge costs the same, the first time BFS reaches a node it has done so
+  by a shortest path. Swap DFS's stack for a **queue** and you have it.
+
+  ```python
+  from collections import deque
+
+  def shortest_hops(graph, start, goal):
+      if start == goal:
+          return 0
+      seen = {start}
+      queue = deque([(start, 0)])          # (node, distance)
+      while queue:
+          node, dist = queue.popleft()     # FIFO: nearest first
+          for nxt in graph[node]:
+              if nxt == goal:
+                  return dist + 1
+              if nxt not in seen:
+                  seen.add(nxt)
+                  queue.append((nxt, dist + 1))
+      return -1                            # goal unreachable
+  ```
+
+  Two habits keep BFS correct. Use `popleft()` on a `deque`, not `pop()` -- a
+  stack would turn this back into DFS and could report a longer path. And mark a
+  node `seen` **when you enqueue it**, not when you dequeue it. Enqueue-time
+  marking stops the same node from being added by two different neighbours, which
+  keeps every node in the queue once and the work linear in the number of edges.
+
+  To return the **actual path** rather than just its length, carry the path so far
+  through the queue instead of a bare distance. The first path that reaches the
+  goal is shortest; expanding neighbours in sorted order makes ties break
+  predictably:
+
+  ```python
+  def shortest_path(graph, start, goal):
+      seen = {start}
+      queue = deque([[start]])
+      while queue:
+          path = queue.popleft()
+          for nxt in sorted(graph[path[-1]]):
+              if nxt not in seen:
+                  if nxt == goal:
+                      return path + [nxt]
+                  seen.add(nxt)
+                  queue.append(path + [nxt])
+      return []
+  ```
+
+  BFS also shines when a spread starts from **many places at once** -- fire in
+  several cells, or several infected machines. *Multi-source* BFS simply seeds the
+  queue with every source at distance zero before the loop begins. Because the
+  queue still hands out nodes in nondecreasing distance order, the last node
+  reached tells you how long the spread took to cover everything, and any node
+  never reached signals something the spread could not touch.
+
+  All of this works unchanged on a grid: each open cell is a node, its neighbours
+  are the in-bounds open tiles beside it, and a wall is just a missing edge. Model
+  the grid as a graph and the same queue-based search finds the fewest moves
+  through a maze.
+checkpoints:
+  - question: Why does breadth-first search find shortest paths on an unweighted graph while depth-first search does not?
+    answer: BFS visits nodes in expanding rings of equal distance, so the first time it reaches a node is by a shortest path; DFS follows one branch deeply and may reach a node by a longer route first.
+    explanation: With every edge costing the same, distance equals ring number, and a queue processes nearer nodes before farther ones.
+  - question: Should you mark a node seen when you enqueue it or when you dequeue it, and why?
+    answer: When you enqueue it, so that two different neighbours cannot both add the same node to the queue.
+    explanation: Enqueue-time marking keeps each node in the queue exactly once, preserving the shortest-first ordering and linear running time.
+  - question: How do you adapt ordinary BFS into a multi-source BFS that measures how long a spread takes?
+    answer: Seed the queue with every source at distance zero before the loop starts, then run BFS normally; the largest distance reached is the total spread time.
+    explanation: Because all sources begin at distance zero, the ring ordering still holds and every node is reached at its true shortest distance from the nearest source.

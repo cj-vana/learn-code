@@ -1,0 +1,105 @@
+id: exercise.library.graphs_lite.a05
+kind: exercise
+version: 1
+language: python
+title: Printing the Metro Route
+slug: graphs-lite-a05
+difficulty: hard
+concepts:
+  - patterns.queue_bfs
+  - patterns.graph_traversal
+  - python.lists
+prerequisites:
+  - python.dictionaries
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.graphs_lite.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original metro scenario reconstructing an actual shortest path with a deterministic alphabetical tie-break.
+prompt_markdown: |
+  Counting hops is not enough for a passenger -- they need the actual list of
+  stations to ride through. Extend breadth-first search so it returns the route
+  itself.
+
+  You are given `data` with `adj` (an adjacency dictionary), `start`, and `goal`.
+  Write `shortest_route(data)` returning a list of stations, beginning with
+  `start` and ending with `goal`, that forms a shortest path. When two shortest
+  routes tie, choose the one that is alphabetically smaller by always expanding
+  neighbours in sorted order. Return `[start]` when start equals goal, and `[]`
+  when the goal is unreachable.
+starter_code: |
+  def shortest_route(data):
+      return []
+function_name: shortest_route
+input_mode: function
+solution_sketch: Run BFS where each queue entry is the whole path so far, expanding neighbours in sorted order and returning the first path that reaches the goal.
+sample_solution: |
+  from collections import deque
+
+
+  def shortest_route(data):
+      adjacency = data["adj"]
+      start = data["start"]
+      goal = data["goal"]
+      if start == goal:
+          return [start]
+      seen = {start}
+      queue = deque([[start]])
+      while queue:
+          path = queue.popleft()
+          station = path[-1]
+          for neighbour in sorted(adjacency.get(station, [])):
+              if neighbour in seen:
+                  continue
+              extended = path + [neighbour]
+              if neighbour == goal:
+                  return extended
+              seen.add(neighbour)
+              queue.append(extended)
+      return []
+hints:
+  - level: 1
+    text: Instead of storing just a station in the queue, store the whole path taken to reach it.
+  - level: 2
+    text: Because BFS dequeues shorter paths before longer ones, the first path that reaches the goal is a shortest one.
+  - level: 3
+    text: Expand neighbours with sorted() so ties break alphabetically, and mark a station seen when you enqueue its path so you keep the earliest (shortest, smallest) route to it.
+tests:
+  public:
+    - name: straight
+      input: {"adj": {"a": [b], "b": [a, c], "c": [b]}, "start": a, "goal": c}
+      expected: [a, b, c]
+    - name: diamond_tiebreak
+      input: {"adj": {"a": [b, c], "b": [a, d], "c": [a, d], "d": [b, c]}, "start": a, "goal": d}
+      expected: [a, b, d]
+    - name: unreachable
+      input: {"adj": {"a": [b], "b": [a], "c": [d], "d": [c]}, "start": a, "goal": d}
+      expected: []
+  validation:
+    - name: same_station
+      input: {"adj": {"a": []}, "start": a, "goal": a}
+      expected: [a]
+    - name: detour_ignored
+      input: {"adj": {"a": [b, z], "b": [a, c], "c": [b, d], "d": [c], "z": [a]}, "start": a, "goal": d}
+      expected: [a, b, c, d]
+    - name: longer_diamond
+      input: {"adj": {"a": [b, c], "b": [a, d], "c": [a, d], "d": [b, c, e], "e": [d]}, "start": a, "goal": e}
+      expected: [a, b, d, e]
+explanation_markdown: |
+  The trick is to carry the path, not just the frontier node, through the queue.
+  BFS still visits nodes in increasing distance order, so the first time a path
+  reaches the goal it is guaranteed to be shortest. Sorting the neighbours before
+  enqueueing makes the tie-break deterministic: among equally short routes, the
+  alphabetically smaller next station is always explored first, so it is the one
+  recorded in `seen` and returned. Marking `seen` at enqueue time is essential --
+  it locks in the first (best) path to each station and stops longer detours like
+  the `a -> z` branch from ever mattering. Carrying full paths costs more memory
+  than storing parent pointers, but it is the clearest way to see the idea.
+common_mistakes:
+  - Returning the hop count instead of the list of stations.
+  - Expanding neighbours in unsorted order, so the tie-break becomes unpredictable.
+  - Marking a station seen only at dequeue, which lets a longer path overwrite the shortest one.

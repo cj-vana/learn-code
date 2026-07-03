@@ -1,0 +1,116 @@
+id: exercise.library.autodiff_scalar_engine.a03
+kind: exercise
+version: 1
+language: python
+title: The Power Rule as a Backward Node
+slug: autodiff-scalar-engine-a03
+difficulty: medium
+concepts:
+  - ai.gradients_autodiff
+prerequisites:
+  - python.dictionaries
+  - python.operators
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.autodiff_scalar_engine.a03
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: >-
+    Original star-flux scenario applying the power rule as a single autodiff
+    node, covering integer, fractional, and negative exponents so learners see
+    the same formula handle squares, roots, and reciprocals.
+prompt_markdown: |
+  Your scalar autodiff engine needs a **power node**: raising one value to a
+  fixed exponent, `out = a ** n`. This single node covers squares (`n = 2`),
+  square roots (`n = 0.5`), and reciprocals (`n = -1`), which show up constantly
+  in normalization and distance calculations.
+
+  A star-brightness model computes `out = a ** n` from a measured flux `a`. On
+  the backward pass the node receives `grad_out = dL/dout`. The power rule gives
+  the local derivative
+
+  ```
+  d(out)/da = n * a ** (n - 1)
+  ```
+
+  so by the chain rule the gradient flowing back to `a` is
+
+  ```
+  dL/da = grad_out * n * a ** (n - 1)
+  ```
+
+  You are given `job` with this shape:
+
+  ```
+  {"a": 2.0, "n": 3, "grad_out": 1.0}
+  ```
+
+  Write `grads_pow(job)` that returns the single gradient
+  `dL/da = n * a ** (n - 1) * grad_out` as a number, **rounded to 6 decimal
+  places** with `round(value, 6)`. The exponent `n` may be a whole number, a
+  fraction like `0.5`, or negative like `-1`.
+starter_code: |
+  def grads_pow(job):
+      a = job["a"]
+      n = job["n"]
+      grad_out = job["grad_out"]
+      # Apply the power rule, then the chain rule.
+      return 0.0
+function_name: grads_pow
+input_mode: function
+solution_sketch: Compute n * a ** (n - 1) * grad_out and round to 6 decimals.
+sample_solution: |
+  def grads_pow(job):
+      a = job["a"]
+      n = job["n"]
+      grad_out = job["grad_out"]
+      return round(n * a ** (n - 1) * grad_out, 6)
+hints:
+  - level: 1
+    text: The derivative of a ** n is n * a ** (n - 1); bring the exponent down and reduce it by one.
+  - level: 2
+    text: Multiply that local derivative by grad_out to apply the chain rule.
+  - level: 3
+    text: Return round(n * a ** (n - 1) * grad_out, 6); the same formula works for n = 2, n = 0.5, and n = -1.
+tests:
+  public:
+    - name: cube
+      input: {"a": 2, "n": 3, "grad_out": 1}
+      expected: 12
+    - name: square_with_scale
+      input: {"a": 3.0, "n": 2, "grad_out": 0.5}
+      expected: 3.0
+    - name: reciprocal
+      input: {"a": 2.0, "n": -1, "grad_out": 1.0}
+      expected: -0.25
+  validation:
+    - name: square_root
+      input: {"a": 4.0, "n": 0.5, "grad_out": 1.0}
+      expected: 0.25
+    - name: linear_slope
+      input: {"a": 5.0, "n": 2, "grad_out": 1.0}
+      expected: 10.0
+    - name: fourth_power_negative_grad
+      input: {"a": 2.0, "n": 4, "grad_out": -1.0}
+      expected: -32.0
+    - name: cube_with_scale
+      input: {"a": 10.0, "n": 3, "grad_out": 0.1}
+      expected: 30.0
+explanation_markdown: |
+  The power rule `d(a ** n)/da = n * a ** (n - 1)` is the one derivative formula
+  that quietly does the most work in a numerical engine, because so many
+  operations are secretly powers. Squaring is `n = 2` (its gradient is the
+  familiar `2a`), taking a square root is `n = 0.5`, and taking a reciprocal is
+  `n = -1` (gradient `-1 / a**2`). Writing one node that trusts the formula means
+  you never special-case those.
+
+  After computing the local derivative you still owe the chain rule: multiply by
+  `grad_out`. That single multiplication is what stitches this node into the
+  larger network so the loss's influence flows correctly back to `a`.
+common_mistakes:
+  - Forgetting to subtract one from the exponent, computing n * a ** n instead of n * a ** (n - 1).
+  - Dropping the grad_out factor, which returns the local derivative rather than the backpropagated gradient.
+  - Assuming the formula only works for whole-number exponents; it is identical for roots and reciprocals.

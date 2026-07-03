@@ -1,0 +1,99 @@
+id: quiz.library.dataframe_thinking.a02
+kind: quiz
+version: 1
+language: python
+title: Table Mechanics
+slug: quiz-dataframe-thinking-a02
+difficulty: medium
+concepts:
+  - concepts.dataframe_thinking
+prerequisites:
+  - concepts.dataframe_thinking
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dataframe_thinking.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax quiz on row/column conversion, masking, and split-apply-combine mechanics in pure Python.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: |
+      Which converts row-oriented rows (list of dicts) to column-oriented
+      cols (dict of lists), assuming all rows share keys?
+    choices:
+      - "{k: [r[k] for r in rows] for k in rows[0]}"
+      - "{r: list(r.values()) for r in rows}"
+      - "dict(zip(rows, rows))"
+      - "[list(r.values()) for r in rows]"
+    correct_choice: "{k: [r[k] for r in rows] for k in rows[0]}"
+    explanation: |
+      For each key, gather that field across all rows into a column list;
+      the keys come from any row since all share them.
+    concepts:
+      - concepts.dataframe_thinking
+  - id: q2
+    prompt: |
+      Given cols (dict of parallel lists), which reconstructs the list of
+      row-dicts?
+    choices:
+      - "[dict(zip(cols, vals)) for vals in zip(*cols.values())]"
+      - "[dict(cols) for _ in cols]"
+      - "list(zip(cols.keys(), cols.values()))"
+      - "[{k: cols[k] for k in cols}]"
+    correct_choice: "[dict(zip(cols, vals)) for vals in zip(*cols.values())]"
+    explanation: |
+      zip(*values) transposes the columns back into per-row tuples, and
+      zipping each with the keys rebuilds the row dicts — the inverse of the
+      rows-to-cols move.
+    concepts:
+      - concepts.dataframe_thinking
+  - id: q3
+    prompt: |
+      A boolean mask [True, False, True] selects from a column [10, 20, 30].
+      Which expression yields [10, 30]?
+    choices:
+      - "[v for v, m in zip(col, mask) if m]"
+      - "[v for v in col if mask]"
+      - "col[mask]"
+      - "filter(mask, col)"
+    correct_choice: "[v for v, m in zip(col, mask) if m]"
+    explanation: |
+      Pure Python pairs each value with its mask flag and keeps the True
+      ones; col[mask] is the numpy spelling of the same idea.
+    concepts:
+      - concepts.dataframe_thinking
+  - id: q4
+    prompt: |
+      Combining two masks hot and dry into "hot AND dry" elementwise is:
+    choices:
+      - "[h and d for h, d in zip(hot, dry)]"
+      - hot and dry
+      - "hot & dry (on plain lists)"
+      - "[hot, dry]"
+    correct_choice: "[h and d for h, d in zip(hot, dry)]"
+    explanation: |
+      Elementwise boolean combination zips the masks; `hot and dry` on lists
+      returns one whole list by truthiness, and & is unsupported on plain
+      lists — pandas provides the & operator, pure Python needs the zip.
+    concepts:
+      - concepts.dataframe_thinking
+  - id: q5
+    prompt: |
+      In split-apply-combine with defaultdict(list), what does
+      groups[key].append(value) accomplish in the split phase?
+    choices:
+      - Buckets each row's value under its group key, auto-creating the list on first sight of a key
+      - Sorts the values by key
+      - Computes the aggregate immediately
+      - Removes duplicate keys
+    correct_choice: Buckets each row's value under its group key, auto-creating the list on first sight of a key
+    explanation: |
+      defaultdict(list) makes the split phase a one-liner — the apply
+      (aggregate each list) and combine (into a keyed result) follow.
+    concepts:
+      - concepts.dataframe_thinking
+      - concepts.grouping_aggregation

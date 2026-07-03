@@ -1,0 +1,87 @@
+id: path.skill.robust_and_fast
+kind: path
+path_type: skill
+version: 1
+language: python
+title: Robust & Fast Python
+slug: robust-and-fast-python
+description: 'Write code that is both safe and quick: functional-style composition, caching and Big-O
+  in practice, and secure coding against injection and secret leaks.'
+outcomes:
+- Compose transformations and know when a loop is clearer
+- Cache correctly and spot accidental quadratics
+- Validate at the boundary and defeat injection structurally
+estimated_hours: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: brief.paths.v1
+  author: agent
+  generated_at: '2026-07-02T18:00:00Z'
+  inspiration_sources: []
+  originality_notes: Curated ordering over the repository's original content bank; no external syllabus
+    copied.
+units:
+- id: unit.functional_style
+  title: Functional-Style Python
+  description: Lessons, drills, and quizzes for functional-style python.
+  items:
+  - lesson.library.functional_style.a01
+  - lesson.library.functional_style.a02
+  - lesson.library.functional_style.a03
+  - exercise.library.functional_style.a01
+  - exercise.library.functional_style.a02
+  - exercise.library.functional_style.a03
+  - exercise.library.functional_style.a04
+  - quiz.library.functional_style.a01
+  - exercise.library.functional_style.a05
+  - exercise.library.functional_style.a06
+  - exercise.library.functional_style.a07
+  - exercise.library.functional_style.a08
+  - quiz.library.functional_style.a02
+  - exercise.library.functional_style.a09
+  - exercise.library.functional_style.a10
+  - exercise.library.functional_style.a11
+  - exercise.library.functional_style.a12
+- id: unit.caching_performance
+  title: Caching & Performance
+  description: Lessons, drills, and quizzes for caching & performance.
+  items:
+  - lesson.library.caching_performance.a01
+  - lesson.library.caching_performance.a02
+  - lesson.library.caching_performance.a03
+  - exercise.library.caching_performance.a01
+  - exercise.library.caching_performance.a02
+  - exercise.library.caching_performance.a03
+  - exercise.library.caching_performance.a04
+  - quiz.library.caching_performance.a01
+  - exercise.library.caching_performance.a05
+  - exercise.library.caching_performance.a06
+  - exercise.library.caching_performance.a07
+  - exercise.library.caching_performance.a08
+  - quiz.library.caching_performance.a02
+  - exercise.library.caching_performance.a09
+  - exercise.library.caching_performance.a10
+  - exercise.library.caching_performance.a11
+  - exercise.library.caching_performance.a12
+- id: unit.secure_coding
+  title: Secure Coding
+  description: Lessons, drills, and quizzes for secure coding.
+  items:
+  - lesson.library.secure_coding.a01
+  - lesson.library.secure_coding.a02
+  - lesson.library.secure_coding.a03
+  - exercise.library.secure_coding.a01
+  - exercise.library.secure_coding.a02
+  - exercise.library.secure_coding.a03
+  - exercise.library.secure_coding.a04
+  - quiz.library.secure_coding.a01
+  - exercise.library.secure_coding.a05
+  - exercise.library.secure_coding.a06
+  - exercise.library.secure_coding.a07
+  - exercise.library.secure_coding.a08
+  - quiz.library.secure_coding.a02
+  - exercise.library.secure_coding.a09
+  - exercise.library.secure_coding.a10
+  - exercise.library.secure_coding.a11
+  - exercise.library.secure_coding.a12

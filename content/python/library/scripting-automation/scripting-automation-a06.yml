@@ -1,0 +1,175 @@
+id: exercise.library.scripting_automation.a06
+kind: exercise
+version: 1
+language: python
+title: Drafting a Rename Plan for the Photo Import
+slug: scripting-automation-a06
+difficulty: medium
+concepts:
+  - python.pathlib_os
+  - python.string_formatting
+prerequisites:
+  - python.lists
+  - python.dictionaries
+  - python.strings
+estimated_time_minutes: 16
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.scripting_automation.a06
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original dry-run rename planner themed around a photographer's card-import tool; computes new names from a template with no disk writes.
+prompt_markdown: |
+  A photographer's import tool never renames files blindly — it first drafts a plan
+  you can review, then applies it. Your job is the drafting step.
+
+  Because the grader calls your function with a single argument, the request arrives
+  as one dict:
+
+  ```python
+  {
+      "files": [{"name": "IMG_0001.cr2"}, {"name": "IMG_0002.cr2"}],
+      "pattern": "shoot-{index}.{ext}"
+  }
+  ```
+
+  Write `rename_plan(request)` that returns a list of `{"from": <old>, "to": <new>}`
+  dicts, one per file, in the same order as `files`. Compute each new name by filling
+  the `pattern` with these placeholders:
+
+  - `{name}` — the file's full original name (`IMG_0001.cr2`).
+  - `{stem}` — the name without its final extension. For a multi-dot name only the
+    last extension is removed, so `backup.tar.gz` has stem `backup.tar`. A name with
+    no extension is its own stem.
+  - `{ext}` — the final extension **without** the dot, with its original letter case
+    preserved (`cr2`, or `JPG` from `PIC.JPG`). A name with no extension has an empty
+    `ext`.
+  - `{index}` — the file's 1-based position in the list. Because it is a number, a
+    format spec like `{index:03d}` zero-pads it (`001`, `002`).
+
+  An empty `files` list returns an empty list `[]`. This is a dry run: you only build
+  the planned names as strings and never rename anything on disk.
+starter_code: |
+  from pathlib import PurePath
+
+
+  def rename_plan(request):
+      return []
+function_name: rename_plan
+input_mode: function
+solution_sketch: Enumerate the files from 1, parse each name with PurePath for stem and dotless suffix, then str.format the pattern with name, stem, ext, and index, collecting from/to dicts.
+sample_solution: |
+  from pathlib import PurePath
+
+
+  def rename_plan(request):
+      pattern = request["pattern"]
+      plan = []
+      for index, record in enumerate(request["files"], start=1):
+          name = record["name"]
+          path = PurePath(name)
+          new_name = pattern.format(
+              name=name,
+              stem=path.stem,
+              ext=path.suffix[1:],
+              index=index,
+          )
+          plan.append({"from": name, "to": new_name})
+      return plan
+hints:
+  - level: 1
+    text: enumerate(files, start=1) gives you the 1-based index alongside each record in a single loop.
+  - level: 2
+    text: PurePath(name).stem is the name minus its last extension and PurePath(name).suffix[1:] is the extension without its leading dot, keeping the original case.
+  - level: 3
+    text: Call pattern.format(name=name, stem=path.stem, ext=path.suffix[1:], index=index); passing index as an int lets a spec like {index:03d} zero-pad it.
+tests:
+  public:
+    - name: empty
+      input:
+        files: []
+        pattern: "x-{index}"
+      expected: []
+    - name: index_and_ext
+      input:
+        files:
+          - name: IMG_0001.cr2
+          - name: IMG_0002.cr2
+        pattern: "shoot-{index}.{ext}"
+      expected:
+        - from: IMG_0001.cr2
+          to: shoot-1.cr2
+        - from: IMG_0002.cr2
+          to: shoot-2.cr2
+    - name: stem_with_suffix
+      input:
+        files:
+          - name: report.pdf
+        pattern: "{stem}_final.{ext}"
+      expected:
+        - from: report.pdf
+          to: report_final.pdf
+  validation:
+    - name: multi_dot_stem
+      input:
+        files:
+          - name: backup.tar.gz
+        pattern: "{stem}-copy.{ext}"
+      expected:
+        - from: backup.tar.gz
+          to: backup.tar-copy.gz
+    - name: no_extension_appends_suffix
+      input:
+        files:
+          - name: LICENSE
+        pattern: "{stem}.bak"
+      expected:
+        - from: LICENSE
+          to: LICENSE.bak
+    - name: zero_padded_index
+      input:
+        files:
+          - name: a.jpg
+          - name: b.jpg
+        pattern: "img-{index:03d}.{ext}"
+      expected:
+        - from: a.jpg
+          to: img-001.jpg
+        - from: b.jpg
+          to: img-002.jpg
+    - name: keeps_full_name
+      input:
+        files:
+          - name: draft.md
+          - name: final.md
+        pattern: "{index}-{name}"
+      expected:
+        - from: draft.md
+          to: 1-draft.md
+        - from: final.md
+          to: 2-final.md
+    - name: extension_case_preserved
+      input:
+        files:
+          - name: PIC.JPG
+        pattern: "{stem}.{ext}"
+      expected:
+        - from: PIC.JPG
+          to: PIC.JPG
+explanation_markdown: |
+  Planning before acting is the core discipline of safe automation: build the full
+  list of `{"from": ..., "to": ...}` moves as strings, review it, and only then let a
+  separate step touch disk. `enumerate(files, start=1)` supplies the human-friendly
+  1-based counter, and `PurePath` does the string parsing — `.stem` peels off exactly
+  the last extension (so `backup.tar.gz` keeps `backup.tar`) and `.suffix[1:]` yields
+  the extension without its dot and without changing its case. `str.format` with
+  named fields fills the template, and because `index` is passed as a real integer, a
+  spec like `{index:03d}` can zero-pad it for sortable names. Nothing here mutates the
+  filesystem, which is what makes the plan reviewable and the whole operation
+  rerun-safe.
+common_mistakes:
+  - Starting the index at 0 (plain enumerate) so the first file is numbered 0 instead of 1.
+  - Passing index as a string, which makes a {index:03d} zero-pad spec raise instead of padding.
+  - Using name.split('.') for the stem, which mangles multi-dot names like backup.tar.gz.

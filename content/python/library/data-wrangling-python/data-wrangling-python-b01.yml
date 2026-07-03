@@ -1,0 +1,219 @@
+id: exercise.library.data_wrangling_python.b01
+kind: exercise
+version: 1
+language: python
+title: A Little Pipeline Interpreter
+slug: data-wrangling-python-b01
+difficulty: hard
+concepts:
+  - concepts.grouping_aggregation
+  - python.sorting
+prerequisites:
+  - python.dictionaries
+  - python.lists
+  - python.sorting
+estimated_time_minutes: 24
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.data_wrangling_python.b01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original mini query-pipeline interpreter (filter/select/group_sum/sort) applied in order to a table of dict rows, themed around a regional bakery chain's sales console.
+prompt_markdown: |
+  A regional bakery chain reviews each day's sales through a small console that
+  runs a **pipeline**: an ordered list of steps that each transform a table of
+  rows into a new table. Your job is to interpret that pipeline.
+
+  Write `pipeline_interpreter(job)` that takes **one dictionary**:
+
+  - `"rows"`: a list of dictionaries (the starting table). Every row has the same
+    set of string keys.
+  - `"steps"`: a list of step dictionaries, applied strictly in order. The output
+    of one step becomes the input to the next.
+
+  Return the final table as a **list of row dictionaries**. With no steps, return
+  the rows unchanged.
+
+  There are exactly four step kinds, each keyed by `"op"`:
+
+  - `{"op": "filter", "column": c, "min": v}` -- keep only rows whose `row[c]` is
+    **greater than or equal to** `v` (the values in `c` are numbers). Keep the
+    surviving rows in their current order.
+  - `{"op": "select", "columns": [...]}` -- replace every row with a new dict
+    containing **only** those columns, in the listed order. Row order is unchanged.
+  - `{"op": "group_sum", "group_by": g, "sum": s}` -- group rows by the value of
+    `row[g]`, and for each group total up the `row[s]` values. Produce one row per
+    group, `{g: <group value>, s: <total>}`, with groups in the order each group's
+    value **first appears** in the incoming table.
+  - `{"op": "sort", "column": c, "descending": bool}` -- return the rows sorted by
+    `row[c]`. Sort ascending when `"descending"` is `false` and descending when it
+    is `true`. The sort is **stable**: rows that tie on `row[c]` keep their
+    current relative order.
+
+  Example:
+
+  ```python
+  pipeline_interpreter({
+      "rows": [
+          {"shop": "east", "day": "mon", "loaves": 30},
+          {"shop": "west", "day": "mon", "loaves": 20},
+          {"shop": "east", "day": "tue", "loaves": 25},
+      ],
+      "steps": [
+          {"op": "filter", "column": "loaves", "min": 25},
+          {"op": "group_sum", "group_by": "shop", "sum": "loaves"},
+          {"op": "sort", "column": "loaves", "descending": True},
+      ],
+  })
+  # filter keeps the two east rows (30 and 25); group_sum totals east -> 55;
+  # -> [{"shop": "east", "loaves": 55}]
+  ```
+
+  If a step leaves no rows, later steps simply run on an empty table. You may
+  assume every referenced column exists on the rows a step receives, and that
+  `columns` for a select is non-empty.
+starter_code: |
+  def pipeline_interpreter(job):
+      # Start from job["rows"] and fold each step in job["steps"] over the table.
+      return job["rows"]
+function_name: pipeline_interpreter
+input_mode: function
+solution_sketch: Hold a current table and rebuild it per step -- comprehension for filter/select, a first-appearance ordered accumulator for group_sum, and a stable sorted() with reverse for sort.
+sample_solution: |
+  def pipeline_interpreter(job):
+      table = [dict(r) for r in job["rows"]]
+      for step in job["steps"]:
+          op = step["op"]
+          if op == "filter":
+              col = step["column"]
+              lo = step["min"]
+              table = [r for r in table if r[col] >= lo]
+          elif op == "select":
+              cols = step["columns"]
+              table = [{c: r[c] for c in cols} for r in table]
+          elif op == "group_sum":
+              gb = step["group_by"]
+              sm = step["sum"]
+              totals = {}
+              order = []
+              for r in table:
+                  key = r[gb]
+                  if key not in totals:
+                      totals[key] = 0
+                      order.append(key)
+                  totals[key] += r[sm]
+              table = [{gb: key, sm: totals[key]} for key in order]
+          elif op == "sort":
+              col = step["column"]
+              desc = step.get("descending", False)
+              table = sorted(table, key=lambda r: r[col], reverse=desc)
+      return table
+hints:
+  - level: 1
+    text: Keep one "current table" variable and reassign it once per step, so the steps naturally chain in order.
+  - level: 2
+    text: filter and select are one comprehension each; for group_sum, accumulate totals in a dict but also track first-appearance order in a separate list so the output rows come out in the right order.
+  - level: 3
+    text: "Use sorted(table, key=lambda r: r[col], reverse=desc) for sort -- sorted is stable so ties keep their order, and reverse handles descending without changing the tie behavior."
+tests:
+  public:
+    - name: filter_group_sort
+      input:
+        rows:
+          - {shop: "east", day: "mon", loaves: 30}
+          - {shop: "west", day: "mon", loaves: 20}
+          - {shop: "east", day: "tue", loaves: 25}
+        steps:
+          - {op: "filter", column: "loaves", min: 25}
+          - {op: "group_sum", group_by: "shop", sum: "loaves"}
+          - {op: "sort", column: "loaves", descending: true}
+      expected:
+        - {shop: "east", loaves: 55}
+    - name: no_steps_passthrough
+      input:
+        rows:
+          - {shop: "east", loaves: 5}
+        steps: []
+      expected:
+        - {shop: "east", loaves: 5}
+    - name: select_only
+      input:
+        rows:
+          - {shop: "east", day: "mon", loaves: 30}
+          - {shop: "west", day: "mon", loaves: 20}
+        steps:
+          - {op: "select", columns: ["shop", "loaves"]}
+      expected:
+        - {shop: "east", loaves: 30}
+        - {shop: "west", loaves: 20}
+  validation:
+    - name: filter_removes_everything
+      input:
+        rows:
+          - {shop: "east", loaves: 5}
+          - {shop: "west", loaves: 8}
+        steps:
+          - {op: "filter", column: "loaves", min: 100}
+      expected: []
+    - name: group_then_filter
+      input:
+        rows:
+          - {shop: "east", loaves: 10}
+          - {shop: "east", loaves: 15}
+          - {shop: "west", loaves: 4}
+          - {shop: "north", loaves: 30}
+        steps:
+          - {op: "group_sum", group_by: "shop", sum: "loaves"}
+          - {op: "filter", column: "loaves", min: 25}
+      expected:
+        - {shop: "east", loaves: 25}
+        - {shop: "north", loaves: 30}
+    - name: sort_ascending_is_stable
+      input:
+        rows:
+          - {shop: "east", loaves: 10}
+          - {shop: "west", loaves: 10}
+          - {shop: "north", loaves: 5}
+        steps:
+          - {op: "sort", column: "loaves"}
+      expected:
+        - {shop: "north", loaves: 5}
+        - {shop: "east", loaves: 10}
+        - {shop: "west", loaves: 10}
+    - name: full_four_step_chain
+      input:
+        rows:
+          - {shop: "a", region: "north", loaves: 12}
+          - {shop: "b", region: "north", loaves: 8}
+          - {shop: "c", region: "south", loaves: 30}
+          - {shop: "d", region: "south", loaves: 3}
+        steps:
+          - {op: "filter", column: "loaves", min: 8}
+          - {op: "group_sum", group_by: "region", sum: "loaves"}
+          - {op: "sort", column: "loaves", descending: true}
+          - {op: "select", columns: ["region"]}
+      expected:
+        - {region: "south"}
+        - {region: "north"}
+explanation_markdown: |
+  A pipeline interpreter is a fold: you carry one "current table" and let each step
+  rebuild it, so the plumbing is just reassigning that variable in a loop. Because
+  each step reads the previous step's output, order is everything -- filtering
+  before grouping sums a different set of rows than grouping before filtering.
+
+  Two steps hide the interesting details. `group_sum` needs both a running total
+  per key and the order the keys first appeared; a dict gives you the totals, but
+  dict insertion order alone is fragile to reason about, so tracking first
+  appearance in a separate list makes the output order explicit and correct. `sort`
+  leans on the fact that Python's `sorted` is stable: passing `reverse=desc`
+  flips ascending to descending without disturbing tied rows, which is why
+  `sort_ascending_is_stable` keeps east ahead of west when both have 10 loaves.
+  Rebuilding a fresh list at every step (rather than mutating rows in place) keeps
+  each stage independent and easy to trust.
+common_mistakes:
+  - Mutating rows in place instead of building a new table per step, so a select or group_sum corrupts data a later step needs.
+  - Emitting group_sum rows in dictionary-hash or sorted order instead of first-appearance order.
+  - Reversing the whole list to sort descending, which flips tied rows out of their required stable order.
+  - Hard-coding the column or key names instead of reading them from each step, so the interpreter only works on one specific table.

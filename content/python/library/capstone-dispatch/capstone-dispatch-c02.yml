@@ -1,0 +1,142 @@
+id: exercise.library.capstone_dispatch.c02
+kind: exercise
+version: 1
+language: python
+title: 'The Courier Dispatch Board: Fastest Route Across Town'
+slug: capstone-dispatch-c02
+difficulty: hard
+concepts:
+  - patterns.graph_traversal
+  - python.heapq_bisect
+prerequisites:
+  - python.dictionaries
+  - python.lists
+estimated_time_minutes: 25
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.capstone_dispatch.c02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: >-
+    Second stage of the courier capstone; Dijkstra shortest-path with a strict
+    lexicographic path tie-break, framed as routing a single rider between two
+    junctions.
+prompt_markdown: |
+  A rider needs the quickest way from one junction to another across the courier
+  street map. Write `fastest_route(job)` where `job` is a dictionary with three
+  keys:
+
+  - `"map_edges"`: the two-way lane list, each entry `[junction_a, junction_b, minutes]`
+    exactly as in Stage 1.
+  - `"from"`: the junction the rider starts at.
+  - `"to"`: the junction the rider must reach.
+
+  Return a two-element **list** `[total_minutes, path]`, where `path` is the list
+  of junction names travelled through, starting with `"from"` and ending with
+  `"to"`, and `total_minutes` is the summed lane time along that path.
+
+  Details the tests pin down:
+
+  - Find a route of the **fewest total minutes** (a shortest path by time).
+  - When several routes tie on total minutes, return the one whose sequence of
+    junction names is **alphabetically smallest**. Compare the paths element by
+    element: at the first position where two tied routes differ, the one with the
+    smaller junction name wins. This can even prefer a route with more stops if an
+    earlier name is smaller.
+  - If `"from"` equals `"to"`, the rider is already there: return `[0, [from]]`.
+  - If no route exists at all, return `[-1, []]`.
+
+  For example, with `map_edges` `[["a","b",1],["b","c",1],["a","c",5]]`, going
+  `"a"` to `"c"` returns `[2, ["a", "b", "c"]]` because `a → b → c` costs 2, beating
+  the direct lane's 5.
+starter_code: |
+  import heapq
+
+
+  def fastest_route(job):
+      return [-1, []]
+function_name: fastest_route
+input_mode: function
+solution_sketch: Build the adjacency map, then run Dijkstra with heap entries keyed on (distance, full_path) so equal-cost paths settle in lexicographic order.
+sample_solution: |
+  import heapq
+
+
+  def fastest_route(job):
+      edges = job["map_edges"]
+      start = job["from"]
+      goal = job["to"]
+      adjacency = {}
+      for a, b, w in edges:
+          adjacency.setdefault(a, []).append((b, w))
+          adjacency.setdefault(b, []).append((a, w))
+      if start == goal:
+          return [0, [start]]
+      heap = [(0, [start])]
+      settled = set()
+      while heap:
+          dist, path = heapq.heappop(heap)
+          node = path[-1]
+          if node in settled:
+              continue
+          settled.add(node)
+          if node == goal:
+              return [dist, path]
+          for neighbour, w in adjacency.get(node, []):
+              if neighbour not in settled:
+                  heapq.heappush(heap, (dist + w, path + [neighbour]))
+      return [-1, []]
+hints:
+  - level: 1
+    text: This is a shortest-path-by-time problem on a weighted graph, which is exactly what Dijkstra's algorithm solves with a min-heap.
+  - level: 2
+    text: Push (distance, path) tuples onto the heap and settle each junction the first time it is popped; the popped path to the goal is the answer.
+  - level: 3
+    text: Carry the whole path in the heap entry, so the heap orders equal-distance entries by their path lists — that automatically yields the lexicographically smallest shortest route. Since every lane costs at least one minute, a junction is always settled with its best path before it relaxes its neighbours.
+tests:
+  public:
+    - name: direct_lane
+      input: {"map_edges": [["a", "b", 5]], "from": "a", "to": "b"}
+      expected: [5, ["a", "b"]]
+    - name: already_there
+      input: {"map_edges": [["a", "b", 5]], "from": "a", "to": "a"}
+      expected: [0, ["a"]]
+    - name: unreachable
+      input: {"map_edges": [["a", "b", 5], ["c", "d", 2]], "from": "a", "to": "d"}
+      expected: [-1, []]
+  validation:
+    - name: prefer_cheaper_detour
+      input: {"map_edges": [["a", "b", 1], ["b", "c", 1], ["a", "c", 5]], "from": "a", "to": "c"}
+      expected: [2, ["a", "b", "c"]]
+    - name: lexicographic_tie_break
+      input: {"map_edges": [["s", "a", 1], ["a", "t", 1], ["s", "b", 1], ["b", "t", 1]], "from": "s", "to": "t"}
+      expected: [2, ["s", "a", "t"]]
+    - name: five_junction_network
+      input: {"map_edges": [["home", "mill", 2], ["home", "dock", 5], ["mill", "dock", 2], ["dock", "far", 1], ["mill", "far", 6]], "from": "home", "to": "far"}
+      expected: [5, ["home", "mill", "dock", "far"]]
+    - name: tie_prefers_smaller_name
+      input: {"map_edges": [["p", "q", 2], ["p", "r", 1], ["r", "q", 1]], "from": "p", "to": "q"}
+      expected: [2, ["p", "q"]]
+explanation_markdown: |
+  Dijkstra's algorithm grows a frontier of settled junctions outward from the
+  start, always expanding the cheapest-so-far unsettled junction next. A min-heap
+  keyed on distance makes "cheapest next" an `O(log n)` pop, and marking a junction
+  `settled` the first time it leaves the heap keeps you from reprocessing it.
+
+  The tie-break is the subtle part. By storing the **entire path** in each heap
+  entry — `(distance, path)` — the heap breaks distance ties by comparing the path
+  lists, which Python does element by element on the junction names. That is
+  exactly the alphabetical rule the prompt asks for. It is provably correct here
+  because every lane costs at least one minute: a junction's true shortest distance
+  is strictly greater than its predecessor's, so the predecessor is always settled
+  first and pushes the lexicographically smallest path before the junction is
+  popped. In `tie_prefers_smaller_name`, the direct `p → q` and the detour
+  `p → r → q` both cost 2, and `["p", "q"]` wins because `"q" < "r"` at the second
+  position. When start and goal coincide the answer is `[0, [from]]`, and a goal
+  that never leaves the heap is unreachable, giving `[-1, []]`.
+common_mistakes:
+  - Keying the heap only on distance and reconstructing an arbitrary path, which ignores the lexicographic tie-break.
+  - Settling a junction on push instead of on pop, so a later, cheaper path to it is discarded.
+  - Forgetting the `from == to` and unreachable cases, returning a wrong cost or crashing on a missing key.

@@ -1,0 +1,141 @@
+id: exercise.library.decorators_closures.a10
+kind: exercise
+version: 1
+language: python
+title: A Retry Decorator That Counts Attempts
+slug: decorators-closures-a10
+difficulty: hard
+concepts:
+  - python.closures_decorators
+  - python.exceptions
+prerequisites:
+  - python.closures_decorators
+estimated_time_minutes: 17
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.decorators_closures.a10
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original transit ticket-printer scenario whose attempt count verifies a retry decorator swallows failures until success.
+prompt_markdown: |
+  A transit kiosk's ticket printer sometimes jams on its first few tries before
+  succeeding. Write a decorator factory `retry(max_attempts)` that calls the
+  wrapped function, and if it raises `ValueError`, tries again up to
+  `max_attempts` total times. On the first success it returns that result; if
+  every attempt fails, it re-raises the last `ValueError`.
+
+  Then finish `attempts_until_success(data)`, where `data` is a dict with keys
+  `"fail_times"` (how many leading calls jam) and `"max_attempts"` (the retry
+  limit, always greater than `fail_times`). It decorates a `print_ticket`
+  function with `retry(max_attempts)`, calls it once, and returns **how many
+  attempts it took** to succeed.
+
+  For `{"fail_times": 2, "max_attempts": 5}` the printer jams on attempts 1 and
+  2 and succeeds on attempt 3, so the result is `3`.
+starter_code: |
+  import functools
+
+
+  def retry(max_attempts):
+      # Retry the wrapped call on ValueError up to max_attempts times.
+      def decorator(func):
+          @functools.wraps(func)
+          def wrapper():
+              return func()
+          return wrapper
+      return decorator
+
+
+  def attempts_until_success(data):
+      fail_times = data["fail_times"]
+      max_attempts = data["max_attempts"]
+      state = {"calls": 0}
+
+      @retry(max_attempts)
+      def print_ticket():
+          state["calls"] += 1
+          if state["calls"] <= fail_times:
+              raise ValueError("jam")
+          return "ticket"
+
+      print_ticket()
+      return state["calls"]
+function_name: attempts_until_success
+input_mode: function
+solution_sketch: The wrapper loops up to max_attempts, returning on the first success and re-raising the last ValueError if all attempts fail.
+sample_solution: |
+  import functools
+
+
+  def retry(max_attempts):
+      def decorator(func):
+          @functools.wraps(func)
+          def wrapper():
+              last = None
+              for _ in range(max_attempts):
+                  try:
+                      return func()
+                  except ValueError as exc:
+                      last = exc
+              raise last
+          return wrapper
+      return decorator
+
+
+  def attempts_until_success(data):
+      fail_times = data["fail_times"]
+      max_attempts = data["max_attempts"]
+      state = {"calls": 0}
+
+      @retry(max_attempts)
+      def print_ticket():
+          state["calls"] += 1
+          if state["calls"] <= fail_times:
+              raise ValueError("jam")
+          return "ticket"
+
+      print_ticket()
+      return state["calls"]
+hints:
+  - level: 1
+    text: The wrapper needs a loop that tries the call and catches ValueError, stopping as soon as a call succeeds.
+  - level: 2
+    text: Loop up to max_attempts times; inside the loop, try return func(), and on ValueError remember the exception and continue.
+  - level: 3
+    text: Use try/except ValueError inside a for loop; return on success, save the exception on failure, and after the loop re-raise the last saved exception.
+tests:
+  public:
+    - name: two_jams
+      input: {"fail_times": 2, "max_attempts": 5}
+      expected: 3
+    - name: no_jam
+      input: {"fail_times": 0, "max_attempts": 3}
+      expected: 1
+    - name: one_jam
+      input: {"fail_times": 1, "max_attempts": 4}
+      expected: 2
+  validation:
+    - name: succeeds_on_last_allowed_attempt
+      input: {"fail_times": 3, "max_attempts": 4}
+      expected: 4
+    - name: many_jams
+      input: {"fail_times": 5, "max_attempts": 10}
+      expected: 6
+    - name: single_attempt_no_jam
+      input: {"fail_times": 0, "max_attempts": 1}
+      expected: 1
+explanation_markdown: |
+  The `wrapper` runs the call inside a loop bounded by `max_attempts`. A
+  successful call returns immediately, so the attempt count settles at
+  `fail_times + 1`. Each `ValueError` is caught and remembered in `last`, then
+  the loop tries again; if the loop exhausts without a success it re-raises the
+  final error so a permanent failure is never silently hidden. The kiosk's
+  `state["calls"]` counter, captured in the closure, records exactly how many
+  attempts the retry loop consumed. The edge case worth noticing is a success on
+  the very last allowed attempt, where `fail_times` equals `max_attempts - 1`.
+common_mistakes:
+  - Catching a bare Exception (or all errors), which would swallow unrelated bugs.
+  - Retrying max_attempts extra times after the first call, giving one too many attempts.
+  - Returning None or swallowing the final error instead of re-raising when every attempt fails.

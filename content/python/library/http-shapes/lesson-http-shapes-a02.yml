@@ -1,0 +1,102 @@
+id: lesson.library.http_shapes.a02
+kind: lesson
+version: 1
+language: python
+title: 'Requests and Responses as Data'
+slug: lesson-http-shapes-a02
+difficulty: medium
+concepts:
+  - python.http_model
+prerequisites:
+  - python.http_model
+  - python.json_csv
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.http_shapes.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original request/response modeling walkthrough framed around the ferry API, with fresh worked header and method semantics.
+body_markdown: |
+  Strip the network away and an HTTP exchange is two data structures. A
+  request: method, URL, headers, body. A response: status code, headers,
+  body. Every client library (`requests`, `httpx`, `urllib.request`)
+  is a way of sending these dicts; every web framework is a way of
+  receiving them. Learn the shapes and the libraries become obvious.
+
+  ```python
+  request = {
+      "method": "POST",
+      "url": "https://api.harborlines.example/v2/bookings",
+      "headers": {"Content-Type": "application/json",
+                  "Authorization": "Bearer <token>"},
+      "body": '{"sailing_id": 88, "passengers": 2}',
+  }
+  ```
+
+  ### Methods carry contracts
+
+  The verb is not decoration — each one promises semantics:
+
+  - **GET** reads; no body; *safe* (no server state change) — which is
+    why crawlers follow GETs and caches store them.
+  - **POST** creates/acts; the one verb with no idempotence promise —
+    retrying a POST can double-book the ferry.
+  - **PUT** replaces at a known URL; **idempotent** — PUT the same
+    booking twice, one booking exists.
+  - **DELETE** removes; also idempotent — the second delete finds
+    nothing, changes nothing.
+
+  Your automation unit's idempotence vocabulary, now as protocol law:
+  retry logic may safely re-send GET/PUT/DELETE but must treat POST
+  retries as a *decision* (idempotency keys are the industry patch).
+
+  ### Headers: metadata with folklore
+
+  Header names are case-insensitive (`content-type` == `Content-Type`)
+  — so modeling them means normalizing keys, one of your exercises. The
+  daily four: `Content-Type` (what the body *is* — a JSON body with a
+  missing content type is the classic silent 400), `Accept` (what you
+  want back), `Authorization` (`Bearer <token>` shape), and
+  `Content-Length` (byte count of the encoded body — computed, never
+  hand-set).
+
+  ### Status codes: the response's first word
+
+  ```text
+  2xx success | 3xx redirect | 4xx you erred | 5xx server erred
+  ```
+
+  The load-bearing distinction is **4xx versus 5xx**: a 404 or 422 means
+  *your request* is wrong — retrying it unchanged is spam; a 502 or 503
+  means the *server* faltered — retrying with backoff is correct. Wire
+  that into the retry policy from your error-handling unit (retry 5xx
+  and 429 with backoff; fail fast on 4xx except perhaps 429's cousin
+  408) and you have written the core of every production HTTP client.
+  Individual codes worth knowing on sight: 200/201/204 (ok/created/no
+  body), 301/302 redirects + Location header, 400/401/403/404/422, 429
+  (rate limited — honor Retry-After), 500/502/503.
+
+  ### Response validation: trust nothing
+
+  A response is *input* — the boundary-validation rules apply: check
+  the status before parsing the body; check Content-Type before
+  `json.loads`; and validate the parsed shape (your TypedDict-style
+  validators) before touching fields. "The API returned 200 with an
+  HTML error page" is a Tuesday; clients that check layers survive it.
+
+  Your exercises build the pieces — method semantics tables, header
+  normalization, retry-decision functions, response validators — the
+  judgment layer of an HTTP client, minus only the socket.
+checkpoints:
+  - question: Why may a retry layer blindly re-send GET, PUT, and DELETE but not POST?
+    answer: 'GET is safe and PUT/DELETE are idempotent by contract — repeating them converges to the same state; POST carries no such promise, so a retried POST can create a duplicate booking, and needs an explicit strategy like idempotency keys.'
+    explanation: 'Method semantics are the protocol''s idempotence declarations — the automation unit''s safe-rerun property, encoded in verbs.'
+  - question: What does the 4xx/5xx split tell a retry policy?
+    answer: '4xx means the request itself is wrong — retrying unchanged is useless spam; 5xx (and 429) mean the server or its limits faltered — retrying with backoff is appropriate.'
+    explanation: '"Whose fault was it" is the first branch of every robust HTTP client, and it comes entirely from the status code''s first digit.'
+  - question: A client got a 200 and crashed in json.loads on an HTML maintenance page. Which validation layers were skipped?
+    answer: 'Content-Type checking (the body claimed to be text/html, not application/json) and shape validation after parsing; status alone does not certify the body — each layer must be checked before the next trusts it.'
+    explanation: 'Responses are untrusted input; the boundary-validation ladder (status, content type, parse, shape) is the HTTP version of validate-at-the-edges.'

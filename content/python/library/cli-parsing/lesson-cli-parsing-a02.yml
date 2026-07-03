@@ -1,0 +1,97 @@
+id: lesson.library.cli_parsing.a02
+kind: lesson
+version: 1
+language: python
+title: 'Grammar Decisions: Defaults, Precedence, and Validation'
+slug: lesson-cli-parsing-a02
+difficulty: medium
+concepts:
+  - python.cli_args
+  - python.config_parsing
+prerequisites:
+  - python.cli_args
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.cli_parsing.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original walkthrough of CLI semantics — repeated options, counting flags, mutual exclusion, and typed conversion — with fresh worked rules.
+body_markdown: |
+  Tokenizing a command line is mechanics; deciding what combinations
+  *mean* is design. This lesson collects the semantic rules mature CLIs
+  share — each one an exercise in this area, because each is a small
+  pure function over parsed arguments.
+
+  ### Repetition: last-wins or accumulate?
+
+  What does `--paper a4 --paper a3` mean? Two defensible answers, chosen
+  per option:
+
+  - **Last wins** — for scalar settings. Enables the workflow of
+    aliasing a base command and overriding: `printq-poster --paper a3`
+    where the alias already said `--paper a4`. This is why last-wins is
+    the default convention.
+  - **Accumulate** — for list-valued options like `--tag urgent --tag
+    reprint`. The spec must say which options collect.
+
+  And the famous third case: **counting switches**. `-v` verbose, `-vv`
+  debug, `-vvv` trace — repetition as intensity, a rule your parser
+  exercise implements (`count("v")` over bundled short flags included).
+
+  ### Typed values and choices
+
+  Tokens are strings; `--copies 3` needs an int, `--paper a3` needs
+  membership in a legal set, and both need *precise errors*:
+
+  ```text
+  error: --copies expects an integer, got 'three'
+  error: --paper must be one of: a4, a3, letter (got 'a5')
+  ```
+
+  The conversion-and-choices table is data — `{"--copies": int,
+  "--paper": {"choices": [...]}}` — and validation is a fold over it.
+  Note the error style: name the option, say what was expected, echo
+  what arrived. CLI errors are UI; they are read by a human mid-command,
+  and "invalid input" is contempt where "expected an integer, got
+  'three'" is help.
+
+  ### Mutual exclusion and requirements
+
+  `--rush` and `--economy` cannot both apply; `--paper` is required when
+  `--copies` exceeds 100 (bulk jobs need explicit stock). Combination
+  rules live *after* parsing, as predicates over the result dict —
+  which is why parse-then-validate beats validate-while-parsing: the
+  rules see the whole picture, and each rule is one testable function.
+  Your exercise implements an exclusion-groups checker with exact error
+  reporting ("--rush conflicts with --economy").
+
+  ### The precedence ladder
+
+  A real tool's effective config merges several sources. The convention,
+  weakest to strongest:
+
+  ```text
+  built-in defaults  <  config file  <  environment variables  <  CLI flags
+  ```
+
+  The rationale is *specificity of intent*: a flag typed for this
+  invocation outranks an env var set for this shell, which outranks a
+  file edited last month. The merge is dict layering (later wins) — a
+  five-line fold you will implement, and the same fold the
+  config-parsing area builds its precedence chains from. Track *where*
+  each value came from ("copies=3 from CLI") and your tool can explain
+  itself — `--show-config` output that has ended a thousand "why is it
+  doing that" debugging sessions.
+checkpoints:
+  - question: Why is last-wins the standard semantics for repeated scalar options?
+    answer: 'It enables layered invocation — wrappers, aliases, and scripts supply base options and callers override by appending — so `alias --paper a3` works even though the alias already set --paper.'
+    explanation: 'Append-to-override is how command composition actually happens in shells; accumulate semantics are reserved (explicitly) for list-valued options.'
+  - question: What three elements make a CLI validation error message professional, per the lesson's style?
+    answer: 'Name the option, state what was expected, and echo the offending value: "--copies expects an integer, got ''three''" — the reader can fix the command without consulting docs.'
+    explanation: 'CLI errors are user interface read under mild stress; the three-part shape converts frustration into a correction.'
+  - question: State the standard config precedence ladder and its rationale.
+    answer: 'Defaults < config file < environment variables < CLI flags — ordered by specificity of intent: a flag typed for THIS invocation expresses fresher, narrower intent than a shell-level env var, which beats a file edited long ago.'
+    explanation: 'The ladder is a convention users carry between tools; honoring it (and being able to report which layer won) is expected behavior.'

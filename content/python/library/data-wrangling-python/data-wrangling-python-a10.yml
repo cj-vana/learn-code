@@ -1,0 +1,185 @@
+id: exercise.library.data_wrangling_python.a10
+kind: exercise
+version: 1
+language: python
+title: Tidying the Market Ledger
+slug: data-wrangling-python-a10
+difficulty: hard
+concepts:
+  - concepts.grouping_aggregation
+  - python.strings
+prerequisites:
+  - python.strings
+  - python.dictionaries
+  - python.conditionals
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.data_wrangling_python.a10
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original data-cleaning drill framed around a hand-typed farmers' market ledger with a declared schema.
+prompt_markdown: |
+  A market stall's day-end ledger was typed by hand, so **every value is a
+  string** even when it represents a number, and some cells are blank or
+  scribbled wrong. You are given a **schema** that declares the expected type of
+  each field, and you must produce a clean, typed table.
+
+  Write `clean_records(payload)` that takes **one dictionary** with two entries:
+
+  - `"rows"`: a list of dictionaries (the raw ledger rows).
+  - `"schema"`: a dictionary mapping each field name to one of `"int"`, `"float"`, or `"str"`.
+
+  Example call:
+
+  ```python
+  clean_records({
+      "rows": [{"item": " apples ", "qty": "12", "price": "3.50"}],
+      "schema": {"item": "str", "qty": "int", "price": "float"},
+  })
+  # -> [{"item": "apples", "qty": 12, "price": 3.5}]
+  ```
+
+  For each row, process every field named in the schema:
+
+  - If the field is **missing** from the row (or its value is `null`), drop the whole row.
+  - Strip leading and trailing whitespace from the string value. If it is **empty** after stripping, drop the whole row.
+  - For a `"str"` field, keep the stripped string.
+  - For an `"int"` field, convert the stripped text with `int(...)`; if that raises, drop the whole row.
+  - For a `"float"` field, convert the stripped text with `float(...)`; if that raises, drop the whole row.
+
+  Return a **list of the surviving rows**, in their original order, where each kept
+  row is a **new dictionary containing exactly the schema's fields** with cleaned,
+  correctly typed values. A row is kept only if every schema field is present and
+  coercible. If `rows` is empty, return an empty list.
+starter_code: |
+  def clean_records(payload):
+      return []
+function_name: clean_records
+input_mode: function
+solution_sketch: For each row, try to build a cleaned dict field by field using the schema; strip strings, coerce ints and floats in a try/except, and abandon the row on the first missing, empty, or uncoercible field.
+sample_solution: |
+  def clean_records(payload):
+      rows = payload["rows"]
+      schema = payload["schema"]
+      kept = []
+      for row in rows:
+          cleaned = {}
+          ok = True
+          for field, kind in schema.items():
+              if field not in row or row[field] is None:
+                  ok = False
+                  break
+              raw = row[field]
+              text = raw.strip() if isinstance(raw, str) else raw
+              if isinstance(text, str) and text == "":
+                  ok = False
+                  break
+              if kind == "str":
+                  cleaned[field] = text
+              elif kind == "int":
+                  try:
+                      cleaned[field] = int(text)
+                  except (ValueError, TypeError):
+                      ok = False
+                      break
+              elif kind == "float":
+                  try:
+                      cleaned[field] = float(text)
+                  except (ValueError, TypeError):
+                      ok = False
+                      break
+              else:
+                  ok = False
+                  break
+          if ok:
+              kept.append(cleaned)
+      return kept
+hints:
+  - level: 1
+    text: Validate and build each row field by field, and abandon the whole row the moment any schema field fails a check.
+  - level: 2
+    text: Strip the string first; a value that is empty after stripping counts as missing data and disqualifies the row.
+  - level: 3
+    text: Wrap int(text) and float(text) in try/except so an uncoercible cell like "ten" drops the row instead of crashing.
+tests:
+  public:
+    - name: all_clean
+      input:
+        rows:
+          - {item: " apples ", qty: "12", price: "3.50"}
+        schema: {item: "str", qty: "int", price: "float"}
+      expected:
+        - {item: "apples", qty: 12, price: 3.5}
+    - name: drop_uncoercible_int
+      input:
+        rows:
+          - {item: "pears", qty: "ten", price: "2.0"}
+        schema: {item: "str", qty: "int", price: "float"}
+      expected: []
+    - name: drop_empty_keep_good
+      input:
+        rows:
+          - {item: "", qty: "3", price: "1.0"}
+          - {item: "kale", qty: "4", price: "2.25"}
+        schema: {item: "str", qty: "int", price: "float"}
+      expected:
+        - {item: "kale", qty: 4, price: 2.25}
+  validation:
+    - name: missing_field_drops_row
+      input:
+        rows:
+          - {item: "beets", qty: "5"}
+        schema: {item: "str", qty: "int", price: "float"}
+      expected: []
+    - name: whitespace_around_numbers
+      input:
+        rows:
+          - {item: "corn", qty: " 6 ", price: " 4 "}
+        schema: {item: "str", qty: "int", price: "float"}
+      expected:
+        - {item: "corn", qty: 6, price: 4.0}
+    - name: mixed_batch
+      input:
+        rows:
+          - {item: "figs", qty: "2", price: "9.0"}
+          - {item: "  ", qty: "1", price: "1.0"}
+          - {item: "nuts", qty: "x", price: "5.0"}
+          - {item: "oats", qty: "7", price: "3.3"}
+        schema: {item: "str", qty: "int", price: "float"}
+      expected:
+        - {item: "figs", qty: 2, price: 9.0}
+        - {item: "oats", qty: 7, price: 3.3}
+    - name: empty_rows
+      input:
+        rows: []
+        schema: {item: "str", qty: "int", price: "float"}
+      expected: []
+    - name: two_field_schema
+      input:
+        rows:
+          - {name: " Bo ", count: "3"}
+        schema: {name: "str", count: "int"}
+      expected:
+        - {name: "Bo", count: 3}
+explanation_markdown: |
+  Cleaning against a schema is a validate-then-build loop with an all-or-nothing
+  rule per row. Iterating over `schema.items()` guarantees you touch exactly the
+  declared fields and lets you assemble a fresh, correctly typed dictionary rather
+  than mutating the messy original. The moment a field is missing, blank, or fails
+  its conversion you set a flag and `break`, so a single bad cell disqualifies the
+  whole row.
+
+  Stripping before the empty check matters because a cell of pure spaces should
+  count as missing, not as the string `"   "`. Wrapping `int` and `float` in
+  `try/except` turns a garbage cell into a clean drop instead of a crash, and
+  catching both `ValueError` (like `int("ten")`) and `TypeError` keeps the loop
+  robust. Every kept row is a brand-new dict, so the caller's raw data is left
+  untouched.
+common_mistakes:
+  - Checking for emptiness before stripping, so a value of spaces slips through as a non-empty string.
+  - Appending the row anyway after a failed conversion, keeping half-cleaned or invalid records.
+  - Letting int() or float() raise instead of catching it, which crashes the whole run on one bad cell.
+  - Copying the original row and overwriting fields, which drags along stray keys not named in the schema.

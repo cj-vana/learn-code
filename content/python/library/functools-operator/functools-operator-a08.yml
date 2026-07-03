@@ -1,0 +1,99 @@
+id: exercise.library.functools_operator.a08
+kind: exercise
+version: 1
+language: python
+title: Overnight Temperature Swings
+slug: functools-operator-a08
+difficulty: medium
+concepts:
+  - python.functools_operator
+  - python.itertools_module
+prerequisites:
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.functools_operator.a08
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original itertools.pairwise drill framed as an observatory's night-by-night temperature log.
+prompt_markdown: |
+  A hilltop observatory records the air temperature (a whole number of degrees)
+  once per night while a telescope cools. Analysts care about the *change* from
+  one night to the next, not the raw values. That is a job for
+  `itertools.pairwise`, which walks a sequence as overlapping adjacent pairs:
+  `pairwise([a, b, c])` yields `(a, b)` then `(b, c)`.
+
+  Write `nightly_temperature_changes(readings)` where `readings` is a list of
+  integer temperatures in chronological order. Return a list holding, for each
+  adjacent pair, the *later* reading minus the *earlier* one — a positive number
+  for a warming night, negative for cooling, zero for no change.
+
+  Edge cases you must handle:
+
+  - An empty list returns `[]`.
+  - A single reading has no pair, so it also returns `[]`.
+  - Two equal readings produce a single `0`.
+
+  Example: `nightly_temperature_changes([10, 12, 15])` returns `[2, 3]`, and
+  `nightly_temperature_changes([20, 14, 9])` returns `[-6, -5]`.
+starter_code: |
+  import itertools
+
+
+  def nightly_temperature_changes(readings):
+      return []
+function_name: nightly_temperature_changes
+input_mode: function
+solution_sketch: Walk itertools.pairwise over the readings and, for each (earlier, later) pair, emit later - earlier.
+sample_solution: |
+  import itertools
+
+
+  def nightly_temperature_changes(readings):
+      return [later - earlier for earlier, later in itertools.pairwise(readings)]
+hints:
+  - level: 1
+    text: itertools.pairwise turns [a, b, c] into the pairs (a, b) and (b, c) — exactly the neighbours you need to subtract.
+  - level: 2
+    text: Unpack each pair as (earlier, later) inside a comprehension so the ordering of the subtraction is obvious.
+  - level: 3
+    text: Return [later - earlier for earlier, later in itertools.pairwise(readings)]; pairwise on a 0- or 1-element list yields nothing, giving [] for free.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: single
+      input: [15]
+      expected: []
+    - name: rising
+      input: [10, 12, 15]
+      expected: [2, 3]
+  validation:
+    - name: falling
+      input: [20, 14, 9]
+      expected: [-6, -5]
+    - name: mixed
+      input: [0, 5, 3, 3, -2]
+      expected: [5, -2, 0, -5]
+    - name: two_equal
+      input: [7, 7]
+      expected: [0]
+explanation_markdown: |
+  `itertools.pairwise` (added in Python 3.10) is the clean way to compare each
+  element with its successor. It produces `n - 1` pairs from an `n`-element
+  input, so a list of 0 or 1 items yields no pairs at all — the empty-result edge
+  cases fall out automatically without a special guard.
+
+  Because each pair arrives as `(earlier, later)`, subtracting `later - earlier`
+  gives a signed delta: positive for warming, negative for cooling, zero when the
+  temperature holds. Doing this by hand with indices (`readings[i+1] -
+  readings[i]`) works too, but pairwise removes the off-by-one risk and reads as
+  the intent: "compare each night to the next."
+common_mistakes:
+  - Computing earlier - later, which flips the sign of every change.
+  - Guarding the empty and single-element cases with extra code that pairwise already handles.
+  - Indexing readings[i+1] with a range that runs one step too far and raises IndexError.

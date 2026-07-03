@@ -1,0 +1,96 @@
+id: quiz.library.cli_parsing.a02
+kind: quiz
+version: 1
+language: python
+title: Parsing Mechanics
+slug: quiz-cli-parsing-a02
+difficulty: medium
+concepts:
+  - python.cli_args
+prerequisites:
+  - python.cli_args
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.cli_parsing.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax quiz on token consumption, the -- terminator, argparse actions, and testable CLI structure.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: |
+      In a hand-rolled parser loop, what must processing "--copies" do
+      beyond recording the option?
+    choices:
+      - Consume the NEXT token as its value (advancing the index past both) and fail clearly if no token follows
+      - Reset the positional list
+      - Lowercase the remaining tokens
+      - Nothing — values attach automatically
+    correct_choice: Consume the NEXT token as its value (advancing the index past both) and fail clearly if no token follows
+    explanation: |
+      Valued options are two-token constructs; forgetting the double
+      advance is the classic hand-parser bug (the value reappears as a
+      positional), and a trailing valueless option needs its own error.
+    concepts:
+      - python.cli_args
+  - id: q2
+    prompt: 'How does a correct parser handle: delete -- --all-my-files'
+    choices:
+      - Deletes the file literally named "--all-my-files" — after --, everything is positional
+      - Errors on the unknown --all-my-files option
+      - Treats -- as an empty positional
+      - Expands --all-my-files as a switch bundle
+    correct_choice: Deletes the file literally named "--all-my-files" — after --, everything is positional
+    explanation: |
+      The -- terminator ends option parsing; it is the standard escape for
+      values that look like options, and parsers must implement it before
+      the unknown-option check.
+    concepts:
+      - python.cli_args
+  - id: q3
+    prompt: Which argparse declaration implements a --force switch that is False unless present?
+    choices:
+      - parser.add_argument("--force", action="store_true")
+      - parser.add_argument("--force", type=bool)
+      - parser.add_argument("--force", default=False, required=True)
+      - parser.add_argument("force", choices=[True, False])
+    correct_choice: parser.add_argument("--force", action="store_true")
+    explanation: |
+      store_true is the switch action; type=bool is the famous trap —
+      bool("false") is True, since any non-empty string is truthy.
+    concepts:
+      - python.cli_args
+  - id: q4
+    prompt: Why does a testable CLI define main(argv=None) and pass argv to parse_args?
+    choices:
+      - Tests can call main(["cmd", "--opt", "x"]) directly — parse_args uses sys.argv only when handed None
+      - argv=None enables shell completion
+      - It silences the usage message
+      - parse_args requires an argument since 3.10
+    correct_choice: Tests can call main(["cmd", "--opt", "x"]) directly — parse_args uses sys.argv only when handed None
+    explanation: |
+      The injectable-argv seam turns full-grammar testing into ordinary
+      function calls — no subprocess, no shell, no monkeypatching sys.argv.
+    concepts:
+      - python.cli_args
+      - concepts.testing
+  - id: q5
+    prompt: |
+      argparse rejects a bad --paper value with: "argument --paper: invalid
+      choice: 'a5' (choose from 'a4', 'a3', 'letter')" and exits with status
+      2. What makes both halves conventional?
+    choices:
+      - The message names the option, the offender, and the legal set; status 2 is the standard usage-error code scripts can test
+      - Status 2 means two errors occurred
+      - The message format is required by POSIX
+      - Exit codes above zero all mean the same thing
+    correct_choice: The message names the option, the offender, and the legal set; status 2 is the standard usage-error code scripts can test
+    explanation: |
+      Human-fixable message plus machine-checkable status is the CLI error
+      contract — the same three-part message style the hand-built
+      validators used.
+    concepts:
+      - python.cli_args

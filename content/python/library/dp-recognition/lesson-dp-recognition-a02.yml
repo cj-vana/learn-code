@@ -1,0 +1,91 @@
+id: lesson.library.dp_recognition.a02
+kind: lesson
+version: 1
+language: python
+title: 'Bottom-Up Tabulation and Rolling Arrays'
+slug: lesson-dp-recognition-a02
+difficulty: medium
+concepts:
+  - patterns.dynamic_programming
+  - concepts.space_complexity
+prerequisites:
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.dp_recognition.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original solar-panel non-adjacent scenario used to contrast a full table with a two-variable rolling array.
+body_markdown: |
+  Memoization works top-down: you ask for the big answer and let recursion pull
+  the small ones out of a cache as it goes. **Tabulation** flips that around. You
+  fill in the small answers first, in order, into a table (usually a list), until
+  the entry you actually want is just sitting there. No recursion, no call stack,
+  and often less memory.
+
+  Consider a row of solar panels along a service road. Each panel has a daily
+  yield, but any two *adjacent* panels share one inverter and cannot both be
+  switched on. You want the maximum total yield from a legal selection. The
+  recurrence for the best yield using the first `i` panels is:
+
+  - skip panel `i`: you keep the best from the first `i - 1` panels, or
+  - use panel `i`: you take its yield plus the best from the first `i - 2`.
+
+  Take the larger of the two. Written as a table, `best[i]` depends only on
+  `best[i - 1]` and `best[i - 2]`:
+
+  ```python
+  def max_yield_table(yields):
+      n = len(yields)
+      if n == 0:
+          return 0
+      best = [0] * (n + 1)
+      best[0] = 0
+      best[1] = yields[0]
+      for i in range(2, n + 1):
+          best[i] = max(best[i - 1], best[i - 2] + yields[i - 1])
+      return best[n]
+  ```
+
+  This is O(n) time and O(n) space. But look closely at the loop: `best[i]` only
+  ever reads the previous two entries. Everything older is dead weight. That
+  observation is the key to a **rolling array** (also called a rolling window):
+  keep just the two values you still need and let the rest fall away.
+
+  ```python
+  def max_yield_rolling(yields):
+      prev, curr = 0, 0          # best[i-2], best[i-1]
+      for y in yields:
+          prev, curr = curr, max(curr, prev + y)
+      return curr
+  ```
+
+  Same answer, same O(n) time, but now O(1) space. The two variables `prev` and
+  `curr` slide forward one panel per iteration, always holding "best without this
+  panel" and "best with the option of this panel." When the loop ends, `curr` is
+  the answer.
+
+  The trade-off is worth naming out loud. The full table costs more memory but
+  lets you *reconstruct which panels you chose* by walking backwards through the
+  entries. The rolling array throws that history away in exchange for constant
+  space, so it can only report the final number, not the winning selection. When
+  an interviewer asks you to "optimize the space," they are almost always asking
+  you to notice how few of the older table entries a transition actually reads,
+  and to keep only those.
+
+  A reliable recipe: write the tabulated version first because it is easy to
+  reason about and easy to verify; then, if the recurrence reads only a fixed
+  handful of recent cells, collapse the table into that many rolling variables.
+checkpoints:
+  - question: In `max_yield_table`, which earlier entries does `best[i]` read, and why does that matter for space?
+    answer: It reads only `best[i - 1]` and `best[i - 2]`, which means all older entries are unnecessary and the table can be replaced by two variables.
+    explanation: A transition that touches only a fixed number of recent cells is exactly the signal that a rolling array can drop the O(n) table down to O(1) space.
+  - question: What can the full table do that the O(1) rolling version cannot?
+    answer: The full table lets you reconstruct which panels were selected by tracing back through the stored entries; the rolling version only reports the final maximum.
+    explanation: Space optimization discards the intermediate history, so you keep the optimal value but lose the ability to recover the choices that produced it.
+  - question: Why does tabulation avoid the call-stack overhead that top-down memoization has?
+    answer: Tabulation fills subproblems iteratively from smallest to largest, so there is no recursion and therefore no growing call stack.
+    explanation: By computing dependencies before the entries that need them, the loop replaces recursive descent with a simple forward pass.

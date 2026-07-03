@@ -1,0 +1,171 @@
+id: exercise.library.config_parsing.a07
+kind: exercise
+version: 1
+language: python
+title: Interpolating the Harbor Dispatch Templates
+slug: config-parsing-a07
+difficulty: hard
+concepts:
+  - python.config_parsing
+  - python.regex
+prerequisites:
+  - python.strings
+  - python.dictionaries
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.config_parsing.a07
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original ${VAR}-interpolation drill framed as a harbor dispatch board expanding placeholder templates, with fallback syntax, literal dollar handling, and single-pass semantics that a naive replace misses.
+prompt_markdown: |
+  A harbor dispatch board stores route templates with `${NAME}` placeholders that
+  get filled from an environment table at send time. Write
+  `resolve_env_var_reference(request)` that expands the placeholders.
+
+  The function receives **one dictionary** with two keys:
+
+  ```python
+  resolve_env_var_reference({
+      "value": "host=${HOST}",
+      "env": {"HOST": "dock-7"},
+  })
+  # -> "host=dock-7"
+  ```
+
+  - `"value"` is the template string.
+  - `"env"` is a dictionary mapping names to **string** values.
+
+  A reference is written `${...}`. Between the braces sits either a bare `NAME`
+  (one or more letters, digits, or underscores) or `NAME:-fallback`. Resolve each
+  reference with these rules:
+
+  - `${NAME}` — if `NAME` is a key in `env`, substitute its value.
+  - `${NAME:-fallback}` — if `NAME` is a key in `env`, use the env value and ignore
+    the fallback; otherwise substitute the literal `fallback` text (everything
+    after `:-` up to the closing `}`, which may itself be empty).
+  - `${NAME}` where `NAME` is **not** in `env` and no fallback was given resolves to
+    the empty string `""`.
+  - A `$` that is **not** immediately followed by `{` is a plain dollar sign and is
+    left untouched (so `$5` survives verbatim).
+  - A `${` with no matching closing `}` is not a reference at all — leave that run
+    of characters exactly as written.
+  - Substitution is a **single left-to-right pass**: text pulled in from `env` is
+    inserted literally and is **never** re-scanned for more `${...}`.
+
+  Return the fully expanded string. A template with no references comes back
+  unchanged.
+starter_code: |
+  import re
+
+
+  def resolve_env_var_reference(request):
+      return ""
+function_name: resolve_env_var_reference
+input_mode: function
+solution_sketch: Compile a regex that matches ${NAME} or ${NAME:-fallback}, then use re.sub with a replacement function that returns the env value when the name is present, otherwise the fallback (if any) or an empty string. re.sub scans the original template once, giving single-pass semantics for free.
+sample_solution: |
+  import re
+
+  _REFERENCE = re.compile(r"\$\{([A-Za-z0-9_]+)(?::-([^}]*))?\}")
+
+
+  def resolve_env_var_reference(request):
+      template = request["value"]
+      env = request["env"]
+
+      def replace(match):
+          name = match.group(1)
+          fallback = match.group(2)
+          if name in env:
+              return env[name]
+          if fallback is not None:
+              return fallback
+          return ""
+
+      return _REFERENCE.sub(replace, template)
+hints:
+  - level: 1
+    text: A regular expression is the right tool for spotting ${...} placeholders; match the name inside the braces and, optionally, a :- fallback section.
+  - level: 2
+    text: Use re.sub with a replacement function. The function receives each match and returns the text to splice in, so you decide there whether to use the env value, the fallback, or an empty string.
+  - level: 3
+    text: Pattern \$\{([A-Za-z0-9_]+)(?::-([^}]*))?\} captures the name in group 1 and the fallback in group 2 (None when absent). Because re.sub walks the original template, values you splice in are not re-scanned, which is exactly the single-pass rule.
+tests:
+  public:
+    - name: no_references
+      input:
+        value: "logs/collector.out"
+        env: {}
+      expected: "logs/collector.out"
+    - name: single_reference
+      input:
+        value: "host=${HOST}"
+        env:
+          HOST: "dock-7"
+      expected: "host=dock-7"
+    - name: literal_dollar_sign
+      input:
+        value: "toll is $5 per crate"
+        env: {}
+      expected: "toll is $5 per crate"
+    - name: missing_no_fallback_is_empty
+      input:
+        value: "tag=[${TAG}]"
+        env: {}
+      expected: "tag=[]"
+  validation:
+    - name: multiple_references
+      input:
+        value: "${SCHEME}://${HOST}/${BERTH}"
+        env:
+          SCHEME: "https"
+          HOST: "pier"
+          BERTH: "cargo"
+      expected: "https://pier/cargo"
+    - name: fallback_when_missing
+      input:
+        value: "port=${PORT:-8080}"
+        env: {}
+      expected: "port=8080"
+    - name: env_wins_over_fallback
+      input:
+        value: "port=${PORT:-8080}"
+        env:
+          PORT: "9000"
+      expected: "port=9000"
+    - name: unclosed_reference_stays_literal
+      input:
+        value: "raw ${OOPS and ${OK}"
+        env:
+          OK: "fine"
+      expected: "raw ${OOPS and fine"
+    - name: single_pass_no_rescan
+      input:
+        value: "${A}"
+        env:
+          A: "${B}"
+          B: "deep"
+      expected: "${B}"
+explanation_markdown: |
+  Placeholder expansion is a pattern-matching job, and hand-rolling a character
+  scanner for `${...}` is error-prone next to a small regex. The pattern
+  `\$\{([A-Za-z0-9_]+)(?::-([^}]*))?\}` matches a reference, captures the name, and
+  optionally captures a `:-` fallback. Handing `re.sub` a replacement *function*
+  lets you make the resolve/fallback/empty decision per match instead of building
+  the output string by hand.
+
+  Two properties fall out of using `re.sub` correctly. First, a lone `$` or an
+  unclosed `${` simply never matches the pattern, so those characters are copied
+  through untouched — no special-casing required. Second, `re.sub` scans the
+  *original* template exactly once and stitches replacements into the result, so a
+  value like `${B}` that you splice in for `${A}` is never itself expanded. That
+  single-pass rule is what stops interpolation from looping forever on
+  self-referential data, and it is the behavior real config loaders lean on.
+common_mistakes:
+  - Doing repeated str.replace passes so that a spliced-in value like "${B}" gets expanded again, breaking the single-pass rule.
+  - Treating every "$" as the start of a reference and mangling literal dollar signs such as "$5".
+  - Forgetting that env presence beats the fallback, so "${PORT:-8080}" wrongly returns 8080 even when PORT is set.
+  - Using group 2 being an empty string versus None interchangeably; None means no ":-" was written, empty string means the fallback was deliberately blank.

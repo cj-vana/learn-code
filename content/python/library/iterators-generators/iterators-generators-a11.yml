@@ -1,0 +1,98 @@
+id: exercise.library.iterators_generators.a11
+kind: exercise
+version: 1
+language: python
+title: Odometer Palindromes
+slug: iterators-generators-a11
+difficulty: hard
+concepts:
+  - python.iterators_generators
+  - patterns.filtering
+prerequisites:
+  - python.iterators_generators
+  - python.strings
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.iterators_generators.a11
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original odometer scenario filtering an infinite counter for palindromic readings and taking the first n.
+prompt_markdown: |
+  A vintage odometer ticks up through the whole numbers `1, 2, 3, ...`. A reading
+  is a *palindrome* when its digits read the same forwards and backwards (for
+  example `7`, `22`, and `131`). Write `first_palindromes(n)` that returns a
+  **list** of the first `n` palindromic odometer readings, in increasing order,
+  starting from `1`.
+
+  Do it lazily: build an **infinite counting generator**, pipe it through a
+  generator that keeps only palindromes, then take the first `n` with `next()`. An
+  `n` of `0` returns an empty list.
+
+  For example, `first_palindromes(12)` returns
+  `[1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 22, 33]`.
+starter_code: |
+  def first_palindromes(n):
+      # Infinite counter -> keep palindromes -> take first n with next().
+      return []
+function_name: first_palindromes
+input_mode: function
+solution_sketch: An infinite generator counts up, a second yields only values whose string equals its reverse, and next() pulls the first n.
+sample_solution: |
+  def first_palindromes(n):
+      def counting():
+          k = 1
+          while True:
+              yield k
+              k += 1
+
+      def palindromes(numbers):
+          for x in numbers:
+              text = str(x)
+              if text == text[::-1]:
+                  yield x
+
+      gen = palindromes(counting())
+      return [next(gen) for _ in range(n)]
+hints:
+  - level: 1
+    text: A number is a palindrome when str(x) equals str(x) reversed.
+  - level: 2
+    text: Chain two generators, an endless counter and a palindrome filter, so filtered values stream out on demand.
+  - level: 3
+    text: Build gen = palindromes(counting()), then take [next(gen) for _ in range(n)] to grab the first n without an infinite loop.
+tests:
+  public:
+    - name: twelve
+      input: 12
+      expected: [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 22, 33]
+    - name: one
+      input: 1
+      expected: [1]
+    - name: zero
+      input: 0
+      expected: []
+  validation:
+    - name: first_nine
+      input: 9
+      expected: [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    - name: crossing_into_three_digits
+      input: 19
+      expected: [1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 22, 33, 44, 55, 66, 77, 88, 99, 101]
+    - name: ten
+      input: 10
+      expected: [1, 2, 3, 4, 5, 6, 7, 8, 9, 11]
+explanation_markdown: |
+  The endless `counting` generator never stops, but that is fine: the `palindromes`
+  stage only pulls from it as needed, and the final `next()` loop pulls only `n`
+  palindromes before quitting. So although there are infinitely many candidates,
+  the code does a bounded amount of work. The palindrome test converts each number
+  to a string and compares it with its reverse, `text[::-1]`. Chaining a filter
+  onto an infinite source and capping consumption at the end is the standard way to
+  answer "give me the first n things with this property."
+common_mistakes:
+  - Trying to build a list of all palindromes up front, which never terminates.
+  - Comparing the number to its reverse numerically instead of comparing the digit strings.
+  - Taking n + 1 or n - 1 values because of an off-by-one in the range.

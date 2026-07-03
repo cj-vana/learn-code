@@ -1,0 +1,91 @@
+id: lesson.library.concurrency_foundations.a02
+kind: lesson
+version: 1
+language: python
+title: 'What await Actually Does'
+slug: lesson-concurrency-foundations-a02
+difficulty: hard
+concepts:
+  - python.concurrency_model
+  - python.iterators_generators
+prerequisites:
+  - python.concurrency_model
+  - python.iterators_generators
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.concurrency_foundations.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original event-loop mechanics walkthrough building coroutines from generators, with a fresh harbor-master framing.
+body_markdown: |
+  `async`/`await` looks like magic syntax, but you already own its moving
+  parts: a coroutine is a **generator wearing a uniform**, and the event
+  loop is a **scheduler driving paused generators** — machinery from your
+  iterators unit, repurposed.
+
+  ### Pausable functions
+
+  Recall what a generator really is: a function that can *suspend* at
+  `yield`, hold its local state, and resume later — plus `.send(value)`
+  to resume it with data. That is exactly the capability concurrency
+  needs: a task that can stop mid-function while it waits, letting
+  something else run, then continue where it left off.
+
+  ```python
+  def unload_ship():           # generator-as-task, the pre-async idiom
+      manifest = yield request_manifest()    # pause: I'm waiting for this
+      crane = yield request_crane()          # pause again
+      return unload(manifest, crane)
+  ```
+
+  A harbor-master loop can now juggle many such tasks: run one until it
+  yields a request, note what it is waiting for, switch to another; when
+  a wait completes, `.send()` the result back in and the function
+  continues *from the middle*. Before `async def` existed, real
+  frameworks were literally built this way. `async`/`await` is dedicated
+  syntax for the same machine: `await x` suspends the coroutine until x
+  completes and resumes with its result; the event loop is the
+  harbor-master.
+
+  Two properties fall out of this model, and both are exam-grade:
+
+  - **Calling a coroutine runs nothing.** `unload_ship()` returns a
+    suspended coroutine object — like calling a generator function —
+    and it executes only when the loop drives it. (The "forgot to await"
+    bug is a suspended object thrown away.)
+  - **Switches happen only at await.** Between awaits, a coroutine runs
+    uninterrupted — no other task can see half-finished state. This is
+    why async code needs far fewer locks than threads... and why one
+    long stretch without an `await` starves the whole loop.
+
+  ### gather: structured waiting
+
+  `asyncio.gather(a, b, c)` runs awaitables concurrently and returns
+  their results **in argument order, not completion order** — c may
+  finish first, but results arrive [a, b, c]. Your exercise simulates
+  precisely this ordering contract. With `return_exceptions=True`,
+  failures arrive *as values* in their slots instead of cancelling the
+  batch — the async version of "the unit of failure should match the
+  unit of data".
+
+  ### Driving the machine by hand
+
+  The exercises make you the event loop: manually `.send()` values
+  through generator-coroutines, schedule tasks by priority, and simulate
+  interleavings under stated rules. Once you have hand-driven a
+  coroutine to completion — StopIteration carrying the return value and
+  all — `await` stops being syntax you trust and becomes machinery you
+  have operated.
+checkpoints:
+  - question: What does calling an async function (without awaiting it) actually do, and what bug does this explain?
+    answer: 'It creates and returns a suspended coroutine object without executing any of its body — exactly like calling a generator function; the "forgot to await" bug is that object being discarded, so the work silently never runs.'
+    explanation: Coroutines are lazy by construction; execution belongs to whatever drives them, which is the event loop's job.
+  - question: Why does async code need fewer locks than threaded code for the same shared state?
+    answer: 'Task switches occur only at await points, so any code between awaits runs atomically with respect to other tasks — invariants can be temporarily broken and restored without another task observing them.'
+    explanation: 'Cooperative scheduling gives you large atomic sections for free — with the dual obligation that long await-free stretches starve every other task.'
+  - question: asyncio.gather(a, b, c) completes with c finishing long before a. What order are results delivered, and what does return_exceptions=True change?
+    answer: 'Always [result_a, result_b, result_c] — argument order, regardless of completion order; with return_exceptions=True, a failed awaitable''s exception is placed in its slot as a value instead of propagating and discarding the batch.'
+    explanation: 'The ordering contract makes gather results positionally addressable, and exception-as-value mode implements per-item failure isolation.'

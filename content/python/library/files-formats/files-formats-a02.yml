@@ -1,0 +1,97 @@
+id: exercise.library.files_formats.a02
+kind: exercise
+version: 1
+language: python
+title: Counting Lines on the Shipment Manifest
+slug: files-formats-a02
+difficulty: easy
+concepts:
+  - python.strings
+  - python.lists
+prerequisites:
+  - python.loops
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.files_formats.a02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original line-counting drill themed around a dock worker tallying entries on a shipment manifest whose first line is a header.
+prompt_markdown: |
+  A dock worker receives shipment manifests as plain text. The **first line** is
+  always a header describing the columns, and every line after it is one shipment
+  record. Blank lines sometimes creep in between records and should not be
+  counted.
+
+  Write `count_records(text)` that returns, as an integer, how many real data
+  records the manifest holds:
+
+  - Split `text` into lines.
+  - The first line is the header and is never counted.
+  - Among the remaining lines, count only those that are **not** empty once
+    stripped of whitespace (a line of just spaces does not count).
+
+  If `text` is empty, or contains only a header, or has only blank lines after
+  the header, return `0`.
+starter_code: |
+  def count_records(text):
+      return 0
+function_name: count_records
+input_mode: function
+solution_sketch: Split into lines, drop the first (header) line, and count the remaining lines whose stripped form is non-empty.
+sample_solution: |
+  def count_records(text):
+      lines = text.splitlines()
+      if not lines:
+          return 0
+      data_lines = lines[1:]
+      return sum(1 for line in data_lines if line.strip())
+hints:
+  - level: 1
+    text: text.splitlines() gives you a list of lines; if that list is empty there is not even a header, so the answer is 0.
+  - level: 2
+    text: Everything except the first element of the list is a candidate data record; slice with lines[1:].
+  - level: 3
+    text: A line counts only when line.strip() is truthy, so sum a 1 for each such line among the data lines.
+tests:
+  public:
+    - name: header_only
+      input: "id,port,weight"
+      expected: 0
+    - name: two_records
+      input: "id,port,weight\n1,Rotterdam,220\n2,Lisbon,180"
+      expected: 2
+    - name: blank_line_between_records
+      input: "id,port,weight\n1,Rotterdam,220\n\n2,Lisbon,180\n"
+      expected: 2
+  validation:
+    - name: empty_text
+      input: ""
+      expected: 0
+    - name: header_and_blanks_only
+      input: "id,port,weight\n\n\n"
+      expected: 0
+    - name: whitespace_only_line_skipped
+      input: "id,port,weight\n1,Rotterdam,220\n   \n3,Vigo,90"
+      expected: 2
+    - name: trailing_newline_one_record
+      input: "id,port,weight\n1,Rotterdam,220\n"
+      expected: 1
+    - name: four_records
+      input: "manifest\ncrate-a\ncrate-b\ncrate-c\ncrate-d"
+      expected: 4
+explanation_markdown: |
+  Counting records is really two ideas working together: the header is structural
+  metadata, not data, so it is dropped before counting; and a blank line carries
+  no record, so it is filtered out. `str.splitlines()` splits on newlines without
+  leaving a phantom empty entry for a trailing newline, which is why a manifest
+  that ends in `\n` still counts correctly. Guarding against an empty line list up
+  front means the `lines[1:]` slice never has to reason about a missing header,
+  and `line.strip()` collapses tabs-and-spaces-only lines to an empty string so
+  they are skipped like any other blank.
+common_mistakes:
+  - Counting the header line as a record by using len(lines) instead of dropping the first line.
+  - Treating whitespace-only lines as records because you test the raw line instead of line.strip().
+  - Crashing on empty input by slicing lines[1:] without first checking the list is non-empty (this returns [] safely, but assuming a header exists elsewhere can still bite).

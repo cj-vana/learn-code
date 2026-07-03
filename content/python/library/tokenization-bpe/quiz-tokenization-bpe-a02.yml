@@ -1,0 +1,98 @@
+id: quiz.library.tokenization_bpe.a02
+kind: quiz
+version: 1
+language: python
+title: Tokenizer Implementation Mechanics
+slug: quiz-tokenization-bpe-a02
+difficulty: medium
+concepts:
+  - ai.tokenization
+prerequisites:
+  - ai.tokenization
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.tokenization_bpe.a02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax quiz on the list-rewriting, ordering, and round-trip mechanics of a BPE implementation.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: 'Merging pair ("a", "a") in the symbol list ["a", "a", "a"] must produce what, and by what scanning rule?'
+    choices:
+      - '["aa", "a"] — scan left to right, and skip past each newly merged symbol so occurrences never overlap'
+      - '["aa", "aa"] — every adjacent pair merges, sharing the middle symbol'
+      - '["a", "aa"] — scan right to left by convention'
+      - '["aaa"] — merges cascade within one pass'
+    correct_choice: '["aa", "a"] — scan left to right, and skip past each newly merged symbol so occurrences never overlap'
+    explanation: |
+      Each symbol participates in at most one merge per pass; reusing the
+      middle "a" would fabricate an occurrence. Cascading (aaa) would require
+      the pair ("aa","a"), a different merge learned separately.
+    concepts:
+      - ai.tokenization
+  - id: q2
+    prompt: |
+      apply_merges replays the merge list with a loop `for pair in merges:`.
+      What property of the list makes this order mandatory?
+    choices:
+      - Later merges consume symbols produced by earlier merges, so the list is a dependency chain
+      - The list is sorted by pair frequency for efficiency
+      - Python lists can only be iterated forward
+      - Alphabetical order guarantees determinism
+    correct_choice: Later merges consume symbols produced by earlier merges, so the list is a dependency chain
+    explanation: |
+      ("mas","t") can only fire after ("m","as") built "mas", which needed
+      ("a","s") first — replaying history in order is the encoding algorithm.
+    concepts:
+      - ai.tokenization
+  - id: q3
+    prompt: What does "".join(tokens).replace("</w>", " ").strip() implement, and what makes it correct?
+    choices:
+      - Detokenization — the </w> markers preserved every word boundary, so replacing them with spaces reconstructs the text
+      - Tokenization — it splits text into subwords
+      - Vocabulary construction — it deduplicates symbols
+      - Normalization — it lowercases the corpus
+    correct_choice: Detokenization — the </w> markers preserved every word boundary, so replacing them with spaces reconstructs the text
+    explanation: |
+      Because every word ends in exactly one marker, concatenation plus
+      marker-to-space inverts tokenization — the round-trip property the
+      exercises test.
+    concepts:
+      - ai.tokenization
+  - id: q4
+    prompt: |
+      Pair counts are stored with space-joined string keys ("a s"). When
+      symbols themselves can contain merged multi-character strings ("as t"),
+      why does the joiner character matter?
+    choices:
+      - The key must be unambiguously splittable back into its two symbols — a joiner that can appear inside symbols corrupts parsing
+      - Spaces compress better in memory
+      - Dictionary keys must be shorter than 10 characters
+      - The joiner sets the merge priority
+    correct_choice: The key must be unambiguously splittable back into its two symbols — a joiner that can appear inside symbols corrupts parsing
+    explanation: |
+      Since base symbols are single characters and merges concatenate them
+      without spaces, a space joiner stays unambiguous — key design is a real
+      correctness decision, not formatting taste.
+    concepts:
+      - ai.tokenization
+  - id: q5
+    prompt: |
+      The unknown-handling exercise collapses ADJACENT <unk> tokens into one.
+      What is the reasoning?
+    choices:
+      - Three unknown symbols in a row convey no more information than one "something foreign here" marker, so collapsing reduces noise without losing meaning
+      - Multiple <unk> tokens would overflow the vocabulary
+      - Adjacent duplicates break the merge algorithm
+      - '<unk> tokens are whitespace and must be normalized'
+    correct_choice: Three unknown symbols in a row convey no more information than one "something foreign here" marker, so collapsing reduces noise without losing meaning
+    explanation: |
+      The token stream exists to inform a model; runs of identical
+      unknown-markers add length without adding signal, so the standard
+      convention collapses them.
+    concepts:
+      - ai.tokenization

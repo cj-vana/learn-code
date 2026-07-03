@@ -1,0 +1,145 @@
+id: exercise.library.decorators_closures.b01
+kind: exercise
+version: 1
+language: python
+title: The Call-In Show Switchboard
+slug: decorators-closures-b01
+difficulty: hard
+concepts:
+  - python.closures_decorators
+  - patterns.sliding_window
+prerequisites:
+  - python.closures_decorators
+  - python.lists
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.decorators_closures.b01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original sliding-window rate limiter built as a closure that remembers approved call timestamps, themed around a community radio phone-in show, with no real clock.
+prompt_markdown: |
+  A late-night community radio show takes listener calls, but the host can only
+  put so many callers *on air* within any short stretch of time. The switchboard
+  runs a sliding-window limiter: a caller is put on air only if fewer than
+  `limit` callers have already gone on air within the preceding `window` seconds.
+  A caller who is turned away simply hangs up and never counts against the limit.
+
+  Write `build_rate_limiter(job)` that takes **one dictionary**:
+
+  - `"limit"`: the most callers that may go on air within any window (an int,
+    possibly `0`).
+  - `"window"`: the length of the sliding window in seconds (a positive int).
+  - `"calls"`: a list of integer timestamps in seconds, given in **non-decreasing**
+    order, one per caller in the order they reach the switchboard.
+
+  Build an inner limiter **closure** that remembers the timestamps of the callers
+  it has already put on air, then apply that closure to each timestamp in `calls`.
+  Return a **list of booleans**, one per caller: `True` if the caller is put on
+  air, `False` if turned away.
+
+  The rule for a caller arriving at time `t`: count how many *already-approved*
+  callers have a timestamp **strictly greater than** `t - window`. If that count
+  is less than `limit`, put this caller on air (and remember `t`); otherwise turn
+  them away. In other words the window is the half-open span `(t - window, t]`, so
+  an approval made exactly `window` seconds earlier has just aged out and no
+  longer counts. Only approved callers occupy the window; a caller you turn away
+  leaves no trace, so it can never block a later caller.
+
+  Example:
+
+  ```python
+  build_rate_limiter({"limit": 2, "window": 5, "calls": [0, 1, 2, 6]})
+  # -> [True, True, False, True]
+  ```
+
+  The callers at 0 and 1 go on air. The caller at 2 is turned away because 0 and 1
+  are both still inside the 5-second window. By second 6 those two have aged out
+  (only approvals with a timestamp greater than 1 still count), so the fourth
+  caller goes on air.
+
+  An empty `calls` list returns `[]`.
+starter_code: |
+  def build_rate_limiter(job):
+      # Build an inner limiter closure that remembers approved timestamps,
+      # then apply it to each timestamp in job["calls"].
+      return []
+function_name: build_rate_limiter
+input_mode: function
+solution_sketch: Define an inner allow(t) closure over a list of approved timestamps; it counts approvals newer than t - window and admits t only when that count is below limit, recording t on approval.
+sample_solution: |
+  def build_rate_limiter(job):
+      limit = job["limit"]
+      window = job["window"]
+      calls = job["calls"]
+
+      def make_limiter():
+          allowed = []
+
+          def allow(t):
+              active = sum(1 for s in allowed if s > t - window)
+              if active < limit:
+                  allowed.append(t)
+                  return True
+              return False
+
+          return allow
+
+      limiter = make_limiter()
+      return [limiter(t) for t in calls]
+hints:
+  - level: 1
+    text: The limiter has to carry state between callers, so build an inner function that closes over a list of the timestamps you have already approved.
+  - level: 2
+    text: For a caller at time t, count the approved timestamps s with s > t - window; admit the caller only when that count is below limit, and append t to the approved list when you do.
+  - level: 3
+    text: Only approved timestamps go into the list, so a turned-away caller is never recorded. Map the closure over job["calls"] to collect one boolean per caller in order.
+tests:
+  public:
+    - name: example
+      input: {limit: 2, window: 5, calls: [0, 1, 2, 6]}
+      expected: [true, true, false, true]
+    - name: empty_calls
+      input: {limit: 2, window: 5, calls: []}
+      expected: []
+    - name: burst_of_five
+      input: {limit: 3, window: 4, calls: [1, 2, 3, 4, 5]}
+      expected: [true, true, true, false, true]
+  validation:
+    - name: zero_limit_blocks_all
+      input: {limit: 0, window: 3, calls: [0, 1, 2]}
+      expected: [false, false, false]
+    - name: ties_at_same_second
+      input: {limit: 1, window: 3, calls: [5, 5, 5]}
+      expected: [true, false, false]
+    - name: exactly_window_apart_ages_out
+      input: {limit: 1, window: 5, calls: [0, 5, 10]}
+      expected: [true, true, true]
+    - name: denied_never_counts
+      input: {limit: 1, window: 10, calls: [0, 3, 5]}
+      expected: [true, false, false]
+    - name: single_caller
+      input: {limit: 5, window: 100, calls: [7]}
+      expected: [true]
+explanation_markdown: |
+  The whole exercise turns on where the limiter keeps its memory. A plain function
+  cannot remember previous callers, so you build a closure: `allow` captures the
+  `allowed` list defined in the enclosing scope, and that list survives from one
+  call to the next. Each admitted caller appends its timestamp; each rejection
+  changes nothing.
+
+  The window test is a count, not a slice. For a caller at `t` you tally the
+  approvals with `s > t - window`, which is the half-open interval `(t - window, t]`.
+  Using strict `>` rather than `>=` is what makes an approval exactly `window`
+  seconds old drop out, so `[0, 5, 10]` with a 5-second window admits all three.
+  Because only approvals are recorded, a rejected caller leaves the state
+  untouched and can never crowd out someone who arrives later. Timestamps arrive
+  in non-decreasing order, so you never have to sort; you only ever look backward
+  at what you have already approved.
+common_mistakes:
+  - Storing the approved list inside allow itself, so it resets on every caller and the limiter never remembers anyone.
+  - Recording rejected callers too, which lets a turned-away caller wrongly block a later one.
+  - Using s >= t - window instead of s > t - window, so approvals exactly one window old still count and boundary cases fail.
+  - Comparing against limit with <= instead of <, admitting one caller too many in each window.

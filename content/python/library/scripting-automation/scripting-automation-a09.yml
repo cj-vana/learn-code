@@ -1,0 +1,125 @@
+id: exercise.library.scripting_automation.a09
+kind: exercise
+version: 1
+language: python
+title: Flattening the Print Shop Export Folder
+slug: scripting-automation-a09
+difficulty: medium
+concepts:
+  - python.pathlib_os
+  - patterns.hash_map_counting
+prerequisites:
+  - python.lists
+  - python.dictionaries
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.scripting_automation.a09
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original collision-detection drill framed around a print shop flattening nested job folders into one case-insensitive output directory.
+prompt_markdown: |
+  A print shop collects finished jobs from many nested folders and copies them all
+  into one flat output directory before burning a disc. That output directory lives
+  on a case-insensitive filesystem, so two source files whose **base names match
+  once lowercased** would silently overwrite each other. Before running the copy,
+  the shop wants a report of every colliding name so an operator can rename first.
+
+  Write `find_export_collisions(paths)` that takes a single list of source path
+  strings. Consider only each path's base name (the final component), lowercased.
+  Two or more paths collide when their lowercased base names are equal.
+
+  Return a sorted list of the **lowercased base names** that appear more than once
+  across the input. Each colliding name appears exactly once in the output.
+
+  Rules and edge cases the tests cover:
+
+  - An empty input list returns `[]`.
+  - Files in different source folders still collide if their base names match,
+    because the destination is flat: `exports/Report.PDF` and `archive/report.pdf`
+    both land on `report.pdf`.
+  - The comparison is case-insensitive, so `X.csv` and `x.CSV` collide.
+  - A name that appears three or more times is still reported once.
+  - When nothing collides, return `[]`.
+
+  Example:
+
+  ```python
+  find_export_collisions([
+      "exports/Report.PDF",
+      "archive/report.pdf",
+      "exports/summary.txt",
+  ])
+  # -> ["report.pdf"]
+  ```
+starter_code: |
+  from pathlib import PurePosixPath
+
+
+  def find_export_collisions(paths):
+      return []
+function_name: find_export_collisions
+input_mode: function
+solution_sketch: Reduce each path to its lowercased base name, tally the names in a counter, then return the sorted names whose tally exceeds one.
+sample_solution: |
+  from collections import Counter
+  from pathlib import PurePosixPath
+
+
+  def find_export_collisions(paths):
+      names = [PurePosixPath(path).name.lower() for path in paths]
+      counts = Counter(names)
+      return sorted(name for name, total in counts.items() if total > 1)
+hints:
+  - level: 1
+    text: The destination is flat, so only the base name matters - strip each path down to PurePosixPath(path).name.
+  - level: 2
+    text: Lowercase every base name so the tally treats "Report.PDF" and "report.pdf" as the same key.
+  - level: 3
+    text: Count the lowercased names, then return sorted(name for name, total in counts.items() if total > 1).
+tests:
+  public:
+    - name: empty_input
+      input: []
+      expected: []
+    - name: cross_folder_case_collision
+      input: ["exports/Report.PDF", "archive/report.pdf", "exports/summary.txt"]
+      expected: ["report.pdf"]
+    - name: no_collisions
+      input: ["a/one.txt", "b/two.txt"]
+      expected: []
+  validation:
+    - name: triple_reported_once
+      input: ["a/x.CSV", "b/x.csv", "c/X.csv"]
+      expected: ["x.csv"]
+    - name: multiple_groups_sorted
+      input: ["d1/a.txt", "d2/A.txt", "d3/b.log", "d4/B.LOG", "d5/c.md"]
+      expected: ["a.txt", "b.log"]
+    - name: same_folder_duplicate
+      input: ["logs/app.log", "logs/app.log"]
+      expected: ["app.log"]
+    - name: same_stem_different_ext
+      input: ["p/data.json", "q/data.csv"]
+      expected: []
+    - name: root_level_case_only
+      input: ["Photo.JPG", "photo.jpg", "note.md"]
+      expected: ["photo.jpg"]
+explanation_markdown: |
+  Collision detection is a counting problem in disguise. The trust boundary here is
+  the case-insensitive destination filesystem, so the *key* you tally on is not the
+  raw path but `PurePosixPath(path).name.lower()` — the flattened, case-folded base
+  name. Once every path is reduced to that key, a `Counter` gives you how many
+  sources map to each destination in one pass, and any key with a count above one
+  is a genuine overwrite risk.
+
+  Sorting the offenders makes the report deterministic and easy to scan. Note that
+  folders are deliberately ignored: because the copy flattens everything into one
+  directory, two files that were peacefully distinct in `exports/` and `archive/`
+  become rivals the moment they share a lowercased base name. Building the counter
+  is O(n) and the final sort is O(k log k) over the distinct names.
+common_mistakes:
+  - Comparing full path strings instead of base names, so files in different folders never register as colliding.
+  - Forgetting to lowercase, which lets "Report.PDF" and "report.pdf" slip through on a case-insensitive target.
+  - Reporting every occurrence of a repeated name instead of collapsing each colliding name to a single entry.

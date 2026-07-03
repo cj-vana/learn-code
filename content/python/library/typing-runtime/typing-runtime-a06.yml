@@ -1,0 +1,110 @@
+id: exercise.library.typing_runtime.a06
+kind: exercise
+version: 1
+language: python
+title: Printing the Dock Labels
+slug: typing-runtime-a06
+difficulty: medium
+concepts:
+  - python.type_hints
+  - python.types
+  - python.conditionals
+prerequisites:
+  - python.conditionals
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.typing_runtime.a06
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original @overload single-implementation dispatch drill framed as a harbor label printer, teaching that overloads share one runtime body that must order its isinstance checks (bool before int).
+prompt_markdown: |
+  A harbor's label printer accepts several kinds of value. In code it is written
+  with `@overload` signatures so a type checker knows each case, but overloads
+  share a **single runtime body** — the real function inspects the value's type
+  and dispatches with `isinstance`. Ordering those checks correctly is the whole
+  game.
+
+  Write `make_label(value)`. The single argument `value` is the thing to label.
+  Return a label string based on its runtime type:
+
+  - a `bool` `True` returns `"flag:true"`, and `False` returns `"flag:false"`.
+  - an `int` (that is not a bool) returns `"count:<n>"`, e.g. `5` gives
+    `"count:5"`.
+  - a `float` returns `"measure:<x>"` where `<x>` is the value rounded to 2
+    decimal places, e.g. `3.14159` gives `"measure:3.14"`.
+  - a `str` returns `"name:<s>"`, e.g. `"dock"` gives `"name:dock"`.
+  - a `list` returns `"batch:<k>"` where `<k>` is its length, e.g. `[1, 2, 3]`
+    gives `"batch:3"`.
+
+  The ordering trap: `bool` is a subclass of `int`, so `isinstance(True, int)` is
+  `True`. You must test `bool` **before** `int`, or every flag would be mislabeled
+  as a count.
+starter_code: |
+  def make_label(value):
+      return ""
+function_name: make_label
+input_mode: function
+solution_sketch: In one function body, isinstance-dispatch on the value, testing bool before int, then int, float, str, and list, formatting the matching label string.
+sample_solution: |
+  def make_label(value):
+      if isinstance(value, bool):
+          return "flag:true" if value else "flag:false"
+      if isinstance(value, int):
+          return f"count:{value}"
+      if isinstance(value, float):
+          return f"measure:{round(value, 2)}"
+      if isinstance(value, str):
+          return f"name:{value}"
+      if isinstance(value, list):
+          return f"batch:{len(value)}"
+      return "unknown"
+hints:
+  - level: 1
+    text: Overloaded signatures collapse to one runtime body, so branch on isinstance(value, ...) for each supported type.
+  - level: 2
+    text: Because bool is a subclass of int, checking int first would swallow True and False; put the bool branch above the int branch.
+  - level: 3
+    text: Format each branch as its label — "flag:true"/"flag:false", f"count:{value}", f"measure:{round(value, 2)}", f"name:{value}", and f"batch:{len(value)}".
+tests:
+  public:
+    - name: integer_count
+      input: 5
+      expected: 'count:5'
+    - name: text_name
+      input: dock
+      expected: 'name:dock'
+    - name: list_batch
+      input: [1, 2, 3]
+      expected: 'batch:3'
+  validation:
+    - name: bool_true_before_int
+      input: true
+      expected: 'flag:true'
+    - name: bool_false
+      input: false
+      expected: 'flag:false'
+    - name: float_measure
+      input: 3.14159
+      expected: 'measure:3.14'
+    - name: negative_float
+      input: -2.5
+      expected: 'measure:-2.5'
+    - name: empty_list
+      input: []
+      expected: 'batch:0'
+explanation_markdown: |
+  `@overload` lets a type checker see one signature per input shape, but Python
+  keeps only the final implementation at runtime; the decorated stubs carry no
+  behavior. So the real work is a single body that dispatches on the concrete
+  runtime type. The ordering matters because `bool` inherits from `int`:
+  `isinstance(True, int)` is `True`, so an int-first check would label every flag
+  as a count. Testing `bool` before `int` resolves the ambiguity, and the
+  remaining branches for `float`, `str`, and `list` each format their own label.
+  Rounding the float to two places keeps the measure output stable.
+common_mistakes:
+  - Checking isinstance(value, int) before bool, so True and False become "count:1" and "count:0".
+  - Forgetting to round the float, so measure labels carry a long unstable decimal tail.
+  - Using str(value) for lists instead of len(value), producing the wrong batch label.

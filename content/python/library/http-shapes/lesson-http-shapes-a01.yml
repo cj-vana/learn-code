@@ -1,0 +1,95 @@
+id: lesson.library.http_shapes.a01
+kind: lesson
+version: 1
+language: python
+title: 'URL Anatomy and the Query String'
+slug: lesson-http-shapes-a01
+difficulty: medium
+concepts:
+  - python.http_model
+prerequisites:
+  - python.strings
+  - python.dictionaries
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.http_shapes.a01
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original URL-anatomy walkthrough framed around a ferry timetable API, with fresh worked urllib.parse examples.
+body_markdown: |
+  Every API call, webhook, and web page starts with a URL, and URLs are
+  structured data with a precise grammar. Python's `urllib.parse` reads
+  and writes that grammar — no network required, which is why this whole
+  area is pure logic you can master before ever sending a request.
+
+  A ferry timetable API:
+
+  ```text
+  https://api.harborlines.example:8443/v2/sailings?from=oban&to=mull&date=2026-07-04#results
+  └─┬─┘   └──────────┬─────────────┘└┬─┘└────┬────┘└──────────────┬──────────────┘└──┬──┘
+  scheme          host             port    path              query string         fragment
+  ```
+
+  ```python
+  from urllib.parse import urlparse, parse_qs
+
+  u = urlparse("https://api.harborlines.example:8443/v2/sailings?from=oban&to=mull")
+  u.scheme, u.hostname, u.port    # 'https', 'api.harborlines.example', 8443
+  u.path                          # '/v2/sailings'
+  parse_qs(u.query)               # {'from': ['oban'], 'to': ['mull']}
+  ```
+
+  Notes that repay attention: `hostname` is lowercase-normalized (hosts
+  are case-insensitive; paths are NOT); `port` is an int or None —
+  absent means the scheme's default (443 for https), a defaulting rule
+  your exercise implements; and the fragment (`#results`) never reaches
+  the server — it is client-side state, which surprises people building
+  redirect logic.
+
+  ### The query string: a multi-dict in a trenchcoat
+
+  `?from=oban&to=mull&tag=fast&tag=cheap` — key=value pairs joined by
+  `&`, where **repeated keys are legal and meaningful** (tag appears
+  twice). Hence `parse_qs` mapping every key to a *list*. Treating query
+  strings as plain dicts silently drops duplicates — the classic bug in
+  hand-rolled parsers, and the reason yours (exercise a-series) returns
+  lists.
+
+  ### Percent-encoding: the escape layer
+
+  Spaces, `&`, `=`, and non-ASCII cannot appear raw inside a URL — they
+  would be parsed as structure. Percent-encoding escapes them
+  (`%20` for space, `%26` for &):
+
+  ```python
+  from urllib.parse import quote, unquote, urlencode
+
+  quote("fish & chips")               # 'fish%20%26%20chips'
+  urlencode({"q": "fish & chips"})    # 'q=fish+%26+chips'  (+ for space in queries)
+  ```
+
+  The rules that matter: encode *values*, never the structure around
+  them (encoding the whole URL turns `?` into `%3F` and breaks it);
+  space becomes `+` in query strings by form convention but `%20` in
+  paths; and decoding twice corrupts (`%2526` → `%26` → `&` — a value
+  that legitimately contained "%26" now injects structure). Build query
+  strings with `urlencode(dict)`, never f-strings — the injection
+  argument from the security area applies letter for letter: a value
+  containing `&admin=true` must arrive as *data*, not become a new
+  parameter.
+
+  With parsing and encoding in hand, the next lesson assembles whole
+  requests — method, headers, body — as the data structures they are.
+checkpoints:
+  - question: Why does parse_qs map each key to a LIST of values, and what bug does a plain-dict version cause?
+    answer: 'Repeated keys are legal, meaningful query syntax (tag=fast&tag=cheap); a dict keyed by name keeps only one value per key, silently dropping the rest — multi-select filters mysteriously losing selections.'
+    explanation: 'The query string is a multi-map; the list-valued representation is the honest one, and collapsing it is a data-loss decision to make explicitly if at all.'
+  - question: A URL builder does f"...?q={user_text}" and a user types "fish&admin=true". What happens, and what is the correct construction?
+    answer: 'The & in the value becomes query structure — a new admin=true parameter appears, injected by data; urlencode({"q": user_text}) percent-encodes the & so it stays inside the value.'
+    explanation: 'Same disease as SQL injection: concatenating data into a structured language; same cure: the encoding API that knows the language''s escape rules.'
+  - question: Why must percent-decoding happen exactly once?
+    answer: 'Decoding is not idempotent — a value legitimately containing the text %26 decodes to &, which a second decode (or a later parse) then treats as structure; double-decoding corrupts data and enables smuggling attacks.'
+    explanation: 'Encode once at construction, decode once at parsing, and never re-process — the layering discipline of every escape mechanism.'

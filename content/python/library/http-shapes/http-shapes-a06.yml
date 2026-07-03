@@ -1,0 +1,113 @@
+id: exercise.library.http_shapes.a06
+kind: exercise
+version: 1
+language: python
+title: Sorting Responses at the Gateway
+slug: http-shapes-a06
+difficulty: medium
+concepts:
+  - python.http_model
+  - python.conditionals
+prerequisites:
+  - python.operators
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.http_shapes.a06
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original status-category mapper themed around a harbor API gateway; pure range-to-label logic.
+prompt_markdown: |
+  The harbor's API gateway tags every response with a single category word so
+  the logs read cleanly. Write `classify_status_code(code)` that takes an
+  integer HTTP status code and returns exactly one of these category strings:
+
+  - `"informational"` for 1xx codes (`100` to `199`).
+  - `"success"` for 2xx codes (`200` to `299`).
+  - `"redirect"` for 3xx codes (`300` to `399`).
+  - `"client_error"` for 4xx codes (`400` to `499`).
+  - `"server_error"` for 5xx codes (`500` to `599`).
+  - `"unknown"` for any integer outside the range `100` to `599`, including
+    small numbers, negatives, and codes of `600` or more.
+
+  The boundaries are inclusive on both ends: `100`, `199`, `200`, ..., `599` all
+  land in the category named for their block, while `99` and `600` are
+  `"unknown"`.
+
+  Examples:
+
+  - `200` returns `"success"`.
+  - `302` returns `"redirect"`.
+  - `404` returns `"client_error"`.
+starter_code: |
+  def classify_status_code(code):
+      return ""
+function_name: classify_status_code
+input_mode: function
+solution_sketch: Check each inclusive hundred-block range in turn and return its label; fall through to "unknown" for anything outside 100..599.
+sample_solution: |
+  def classify_status_code(code):
+      if 100 <= code <= 199:
+          return "informational"
+      if 200 <= code <= 299:
+          return "success"
+      if 300 <= code <= 399:
+          return "redirect"
+      if 400 <= code <= 499:
+          return "client_error"
+      if 500 <= code <= 599:
+          return "server_error"
+      return "unknown"
+hints:
+  - level: 1
+    text: Each hundred-block maps to one label; walk the blocks from 1xx up to 5xx.
+  - level: 2
+    text: 'A chain of `if 100 <= code <= 199: return ...` guards handles one block each, and the first match returns immediately.'
+  - level: 3
+    text: After the five range checks, a final `return "unknown"` catches everything below 100 or 600 and up, including negatives.
+tests:
+  public:
+    - name: success
+      input: 200
+      expected: success
+    - name: redirect
+      input: 302
+      expected: redirect
+    - name: client_error
+      input: 404
+      expected: client_error
+  validation:
+    - name: informational_lower
+      input: 100
+      expected: informational
+    - name: informational_upper
+      input: 199
+      expected: informational
+    - name: server_upper_boundary
+      input: 599
+      expected: server_error
+    - name: below_range
+      input: 99
+      expected: unknown
+    - name: above_range
+      input: 600
+      expected: unknown
+explanation_markdown: |
+  This is the label version of the earlier flag check: instead of three
+  booleans, the gateway wants one category word per response. A chain of
+  range guards handles it cleanly because the blocks are mutually exclusive, so
+  the first guard that matches can return immediately and the rest never run.
+
+  The interesting design choice is the `"unknown"` fallthrough. Real traffic and
+  buggy clients do send codes outside the standard 100–599 window, and a
+  classifier that quietly forces them into a real category hides problems. By
+  reserving `"unknown"` for anything below 100 or at 600 and above (negatives
+  included), the logs stay honest about codes that should never appear. Because
+  every branch has an inclusive upper bound, the exact boundary values like 199
+  and 599 land in the right block.
+common_mistakes:
+  - Using `code // 100` to pick the block, which maps stray values like 700 or negative codes to a real category instead of "unknown".
+  - Writing overlapping or open-ended ranges (like `code >= 400` before the 5xx check), so a 500 is mislabeled as a client error.
+  - Forgetting the "unknown" fallthrough, leaving out-of-range codes with no returned value (None).

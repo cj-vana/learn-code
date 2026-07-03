@@ -1,0 +1,95 @@
+id: exercise.library.oop_classes.a02
+kind: exercise
+version: 1
+language: python
+title: Counting People at the Museum Gate
+slug: oop-classes-a02
+difficulty: easy
+concepts:
+  - python.classes
+prerequisites:
+  - python.functions
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.oop_classes.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original museum-gate occupancy scenario drilling instance methods that mutate state with a floor.
+prompt_markdown: |
+  A museum tracks how many visitors are currently inside using a single gate. Each
+  event is either `"enter"` (one person walks in) or `"leave"` (one person walks
+  out). The count can never drop below zero -- a `"leave"` recorded when the museum
+  is already empty is a glitch and should be ignored.
+
+  Complete `occupancy(events)`, where `events` is a list of the strings `"enter"`
+  and `"leave"` in the order they happened. Inside the function, define a `Gate`
+  class that keeps an inside count and exposes methods to record an entry and an
+  exit. Return the number of people inside after all events are processed.
+starter_code: |
+  def occupancy(events):
+      # Define a Gate class that tracks occupancy, then replay every event.
+      return 0
+function_name: occupancy
+input_mode: function
+solution_sketch: Build a Gate whose leave method refuses to go below zero, then replay each event string.
+sample_solution: |
+  def occupancy(events):
+      class Gate:
+          def __init__(self):
+              self.inside = 0
+
+          def enter(self):
+              self.inside += 1
+
+          def leave(self):
+              if self.inside > 0:
+                  self.inside -= 1
+
+      gate = Gate()
+      for event in events:
+          if event == "enter":
+              gate.enter()
+          else:
+              gate.leave()
+      return gate.inside
+hints:
+  - level: 1
+    text: Start an inside count at 0 in __init__ and change it by one for each event.
+  - level: 2
+    text: The leave method should only decrement when self.inside is greater than 0, so the count never goes negative.
+  - level: 3
+    text: Loop over events, call gate.enter() for "enter" and gate.leave() otherwise, then return gate.inside.
+tests:
+  public:
+    - name: simple_flow
+      input: [enter, enter, leave]
+      expected: 1
+    - name: empty_events
+      input: []
+      expected: 0
+    - name: leave_when_empty
+      input: [leave]
+      expected: 0
+  validation:
+    - name: all_enter
+      input: [enter, enter, enter]
+      expected: 3
+    - name: balanced
+      input: [enter, leave, leave]
+      expected: 0
+    - name: mixed_long
+      input: [enter, enter, leave, enter, leave, leave]
+      expected: 0
+explanation_markdown: |
+  The `Gate` bundles the occupancy count together with the only two operations
+  allowed on it. Putting the floor rule inside `leave` means every caller obeys it
+  automatically -- there is no way to drive the count negative from outside. The
+  loop translates each string into a method call, and the final state is read
+  straight off the instance.
+common_mistakes:
+  - Decrementing on every "leave" without the greater-than-zero guard, letting the count go negative.
+  - Returning the length of events instead of the running inside count.
+  - Treating an unknown string as an error rather than following the two documented cases.

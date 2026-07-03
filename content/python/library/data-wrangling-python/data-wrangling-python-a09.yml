@@ -1,0 +1,160 @@
+id: exercise.library.data_wrangling_python.a09
+kind: exercise
+version: 1
+language: python
+title: Reshaping the Sensor Log
+slug: data-wrangling-python-a09
+difficulty: medium
+concepts:
+  - concepts.grouping_aggregation
+prerequisites:
+  - python.dictionaries
+  - python.loops
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.data_wrangling_python.a09
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original long-to-wide pivot drill framed around a weather station network's hourly reading log.
+prompt_markdown: |
+  A weather network records readings as a long log: one row per station per hour.
+  Analysts want that reshaped into a **station-by-hour table** so they can look up
+  a single station's row and scan across the hours.
+
+  Write `pivot(payload)` that takes **one dictionary** with four entries:
+
+  - `"rows"`: a list of dictionaries (the long log).
+  - `"index"`: the field name whose values become the outer keys (one row per station).
+  - `"column"`: the field name whose values become the inner keys (the hours).
+  - `"value"`: the field name holding the cell value.
+
+  Example call:
+
+  ```python
+  pivot({
+      "rows": [{"station": "north", "hour": 9, "reading": 12}],
+      "index": "station",
+      "column": "hour",
+      "value": "reading",
+  })
+  # -> {"north": {9: 12}}
+  ```
+
+  Return a **nested dictionary** of the form `{index_value: {column_value: value}}`.
+  Each log row contributes one cell: under its index value, set the column value
+  to its cell value. If two rows land in the same (index, column) cell, the
+  **later** row in the list overwrites the earlier one. If `rows` is empty, return
+  an empty dictionary.
+starter_code: |
+  def pivot(payload):
+      return {}
+function_name: pivot
+input_mode: function
+solution_sketch: Walk the rows once; for each, use setdefault on the index value to get or create its inner dict, then assign the cell value under the column value so later rows overwrite earlier ones.
+sample_solution: |
+  def pivot(payload):
+      rows = payload["rows"]
+      index = payload["index"]
+      column = payload["column"]
+      value = payload["value"]
+      table = {}
+      for row in rows:
+          inner = table.setdefault(row[index], {})
+          inner[row[column]] = row[value]
+      return table
+hints:
+  - level: 1
+    text: The outer dictionary maps each index value to an inner dictionary that maps column values to cell values.
+  - level: 2
+    text: Use table.setdefault(index_value, {}) so the first row for a station creates its inner dict and later rows reuse it.
+  - level: 3
+    text: Plain assignment inner[column_value] = value naturally lets a later duplicate overwrite the earlier cell, which is exactly the rule.
+tests:
+  public:
+    - name: empty_rows
+      input:
+        rows: []
+        index: station
+        column: hour
+        value: reading
+      expected: {}
+    - name: single_cell
+      input:
+        rows:
+          - {station: "north", hour: 9, reading: 12}
+        index: station
+        column: hour
+        value: reading
+      expected: {north: {9: 12}}
+    - name: two_stations
+      input:
+        rows:
+          - {station: "north", hour: 9, reading: 12}
+          - {station: "north", hour: 10, reading: 15}
+          - {station: "south", hour: 9, reading: 8}
+        index: station
+        column: hour
+        value: reading
+      expected:
+        north: {9: 12, 10: 15}
+        south: {9: 8}
+  validation:
+    - name: later_duplicate_overwrites
+      input:
+        rows:
+          - {station: "north", hour: 9, reading: 12}
+          - {station: "north", hour: 9, reading: 20}
+        index: station
+        column: hour
+        value: reading
+      expected: {north: {9: 20}}
+    - name: one_station_many_hours
+      input:
+        rows:
+          - {station: "west", hour: 6, reading: 1}
+          - {station: "west", hour: 7, reading: 2}
+          - {station: "west", hour: 8, reading: 3}
+        index: station
+        column: hour
+        value: reading
+      expected: {west: {6: 1, 7: 2, 8: 3}}
+    - name: three_stations_same_hour
+      input:
+        rows:
+          - {station: "a", hour: 9, reading: 5}
+          - {station: "b", hour: 9, reading: 6}
+          - {station: "c", hour: 9, reading: 7}
+        index: station
+        column: hour
+        value: reading
+      expected:
+        a: {9: 5}
+        b: {9: 6}
+        c: {9: 7}
+    - name: negative_readings
+      input:
+        rows:
+          - {station: "north", hour: 5, reading: -3}
+          - {station: "north", hour: 6, reading: 0}
+        index: station
+        column: hour
+        value: reading
+      expected: {north: {5: -3, 6: 0}}
+explanation_markdown: |
+  Pivoting from long to wide is a grouping problem with two levels of key. The
+  outer key is the index value and the inner key is the column value, so a nested
+  dictionary is the natural container. `setdefault(index_value, {})` gives you the
+  inner dictionary whether the station is new or already seen, which is the same
+  get-or-create move you use for any grouped accumulator.
+
+  Because the cell is a plain assignment rather than an accumulation, a later row
+  targeting the same (index, column) pair simply overwrites the earlier value,
+  matching the last-write-wins rule. The whole reshape is one linear pass over the
+  log, and lookups in the resulting table are O(1) at both levels.
+common_mistakes:
+  - Reinitialising the inner dictionary on every row (index_value = {}), which discards all earlier cells for that station.
+  - Appending values into a list instead of assigning, so duplicates accumulate rather than overwrite.
+  - Swapping the index and column fields, which transposes the table into the wrong orientation.

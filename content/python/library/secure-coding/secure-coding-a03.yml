@@ -1,0 +1,105 @@
+id: exercise.library.secure_coding.a03
+kind: exercise
+version: 1
+language: python
+title: Escaping Comments on the Museum Guestbook
+slug: secure-coding-a03
+difficulty: medium
+concepts:
+  - python.secure_coding
+  - python.strings
+prerequisites:
+  - python.functions
+  - python.strings
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.secure_coding.a03
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original output-encoding drill framed around a museum guestbook that escapes the five HTML-significant characters, emphasizing the ampersand-first ordering.
+prompt_markdown: |
+  A museum's public guestbook shows visitor comments back on a web page. If a
+  comment is dropped into the page as raw HTML, a message like
+  `<script>alert(1)</script>` would run as code — a cross-site scripting hole. The
+  fix is output encoding: escape the characters that carry special meaning in HTML
+  so they render as literal text.
+
+  Write `sanitize_html_input(text)` that returns `text` with these five
+  replacements applied, in exactly this order:
+
+  1. `&`  becomes  `&amp;`
+  2. `<`  becomes  `&lt;`
+  3. `>`  becomes  `&gt;`
+  4. `"`  becomes  `&quot;`
+  5. `'`  becomes  `&#x27;`
+
+  The ampersand MUST be escaped first. If you escaped `<` first, a later `&`
+  replacement would corrupt the `&lt;` you just produced by turning its `&` into
+  `&amp;`. An empty string returns an empty string, and text with none of these
+  characters is returned unchanged.
+starter_code: |
+  def sanitize_html_input(text):
+      return text
+function_name: sanitize_html_input
+input_mode: function
+solution_sketch: Chain str.replace calls, escaping '&' first, then the four other HTML-significant characters.
+sample_solution: |
+  def sanitize_html_input(text):
+      text = text.replace("&", "&amp;")
+      text = text.replace("<", "&lt;")
+      text = text.replace(">", "&gt;")
+      text = text.replace('"', "&quot;")
+      text = text.replace("'", "&#x27;")
+      return text
+hints:
+  - level: 1
+    text: Each replacement is a str.replace call; the tricky part is the order they run in.
+  - level: 2
+    text: Escape "&" before anything else, because every other escape you produce contains an "&".
+  - level: 3
+    text: After the ampersand, replace "<", ">", double-quote with &quot;, and single-quote with &#x27; in turn.
+tests:
+  public:
+    - name: script_tag
+      input: <script>alert(1)</script>
+      expected: '&lt;script&gt;alert(1)&lt;/script&gt;'
+    - name: ampersand
+      input: Tom & Jerry
+      expected: 'Tom &amp; Jerry'
+    - name: plain_text
+      input: Hello world
+      expected: Hello world
+  validation:
+    - name: double_quotes
+      input: 'He said "hi"'
+      expected: 'He said &quot;hi&quot;'
+    - name: single_quote
+      input: "it's"
+      expected: 'it&#x27;s'
+    - name: ampersand_before_lt
+      input: a & b < c
+      expected: 'a &amp; b &lt; c'
+    - name: mixed_markup
+      input: "<a href=\"x\">'go'</a>"
+      expected: '&lt;a href=&quot;x&quot;&gt;&#x27;go&#x27;&lt;/a&gt;'
+    - name: empty
+      input: ''
+      expected: ''
+explanation_markdown: |
+  Output encoding neutralizes injection by moving the decision about "is this
+  markup or text?" back under your control. Once `<` becomes `&lt;`, the browser
+  displays a literal less-than sign instead of opening a tag, so the injected
+  `<script>` can never execute. The ordering rule is the subtle part: because
+  every replacement you emit contains an ampersand (`&lt;`, `&quot;`, and so on),
+  you must escape real ampersands first. Reverse the order and `a & b < c` would
+  become `a &amp; b &amp;lt; c` — the `&` from your own `&lt;` gets double-escaped
+  into `&amp;lt;`, which renders as the wrong text. In production you would reach
+  for `html.escape`, which performs these same five replacements in this same
+  order; doing it by hand once shows why that ordering is baked in.
+common_mistakes:
+  - Escaping "<" or ">" before "&", which double-escapes the ampersands inside your own entities.
+  - Forgetting to escape quotes, leaving attribute-context injection possible when the text lands inside an HTML attribute.
+  - Trying to blacklist the word "script" instead of encoding the characters, which is trivially bypassed.

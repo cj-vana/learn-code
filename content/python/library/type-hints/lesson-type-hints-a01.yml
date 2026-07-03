@@ -1,0 +1,98 @@
+id: lesson.library.type_hints.a01
+kind: lesson
+version: 1
+language: python
+title: 'Type Hints: Signatures That Say What They Mean'
+slug: lesson-type-hints-a01
+difficulty: easy
+concepts:
+  - python.type_hints
+prerequisites:
+  - python.functions
+  - python.types
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.type_hints.a01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original type-hints introduction framed around a boat-rental booking function, with fresh worked code.
+body_markdown: |
+  Here are two versions of the same function from a boat-rental system:
+
+  ```python
+  def quote(hours, member):
+      ...
+
+  def quote(hours: float, member: bool) -> float:
+      ...
+  ```
+
+  The second one answers, in the signature itself, the questions every caller
+  has: what do I pass, and what do I get back? Those annotations are **type
+  hints** — and the first thing to understand is what they are *not*.
+
+  ### Hints do not enforce anything at runtime
+
+  Python happily runs `quote("three", "yes")` despite the annotations. Hints
+  are ignored by the interpreter; they exist for *readers* and for *tools*.
+  A type checker (mypy, pyright — the same engine behind your editor's
+  squiggles) reads them and flags contradictions before the code ever runs:
+
+  ```python
+  quote(3, member="gold")     # checker: expected bool, got str
+  ```
+
+  This is a different kind of testing: tests check behavior on inputs you
+  thought of, while the checker proves consistency of types on *every* call
+  site, including the ones you forgot. The two catch different bugs, and
+  professional codebases run both.
+
+  ### The basic vocabulary
+
+  ```python
+  def label_crates(names: list[str], limit: int) -> dict[str, int]:
+      ...
+  ```
+
+  Builtin types annotate themselves: `int`, `float`, `str`, `bool`. Container
+  types take their element types in square brackets: `list[str]`,
+  `dict[str, int]`, `tuple[int, int]`, `set[str]`. Variables can carry hints
+  too (`count: int = 0`), though signatures matter most — they are the
+  contract; the body is implementation.
+
+  Two subtleties worth knowing on day one:
+
+  - **`bool` is a subclass of `int`.** `isinstance(True, int)` is `True`, and
+    `True + True == 2`. Code that sorts values by type must check `bool`
+    *before* `int` or booleans will masquerade as numbers.
+  - **An `int` is accepted where `float` is expected.** The checker follows
+    the numeric tower, so `quote(3, True)` is fine for `hours: float`.
+
+  ### Hints as design pressure
+
+  Something interesting happens when you annotate honestly. A function whose
+  true signature is
+
+  ```python
+  def process(data: list[int | str | None]) -> dict | None:
+  ```
+
+  is *telling you* it takes a mess and returns a maybe. The annotation did
+  not create that complexity — it revealed it. Cleaning up the types
+  (validate the list first; return an empty dict instead of None) cleans up
+  the design. That feedback loop, more than bug-catching, is why experienced
+  Python programmers annotate even personal projects: types are the cheapest
+  design review you will ever get.
+checkpoints:
+  - question: What happens at runtime when you call a function with arguments that contradict its type hints, and where do hints actually get checked?
+    answer: Nothing — the interpreter ignores annotations entirely; contradictions are caught by static tools like mypy or pyright (and by editors running them) before the code runs.
+    explanation: Hints are machine-readable documentation for readers and tools, not runtime guards — enforcing them at runtime requires explicit isinstance checks.
+  - question: Why must code that dispatches on types check bool before int?
+    answer: bool subclasses int, so isinstance(True, int) is True; checking int first routes booleans into the number branch.
+    explanation: True and False really are 1 and 0 underneath — a historical design decision that every type-dispatch function must account for.
+  - question: You annotate an existing function honestly and its signature comes out as list[int | str | None] -> dict | None. What is this telling you beyond types?
+    answer: The function accepts a mess and may return nothing — a design smell the annotation revealed; tightening the types (validating inputs, returning an empty dict) usually improves the design itself.
+    explanation: Honest annotations surface hidden complexity, which is why typing works as a lightweight design review, not just a bug catcher.

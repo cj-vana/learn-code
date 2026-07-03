@@ -1,0 +1,88 @@
+id: lesson.library.language_models_from_scratch.a02
+kind: lesson
+version: 1
+language: python
+title: 'Smoothing: What To Do About Never'
+slug: lesson-language-models-from-scratch-a02
+difficulty: medium
+concepts:
+  - ai.language_models
+  - concepts.probability
+prerequisites:
+  - ai.language_models
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.language_models_from_scratch.a02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original smoothing walkthrough continuing the lighthouse-logbook example, with fresh worked Laplace calculations.
+body_markdown: |
+  Ask the lighthouse bigram model for P(fog | calm) and it answers **zero** —
+  `calm fog` never appeared in two lines of training text. But zero is not
+  "unlikely"; zero is *impossible*, and the model has no business being that
+  confident from two lines of data. Worse, the poison spreads: a sequence's
+  probability is a product over its pairs, and any single zero multiplies the
+  whole thing to zero. One unseen pair and the model declares an entire
+  plausible sentence impossible.
+
+  This is not a corner case. By the sparsity arithmetic of the last lesson,
+  *most* grammatical pairs never occur in any finite corpus. A raw counting
+  model is mostly holes.
+
+  ### Laplace smoothing: everyone gets one imaginary count
+
+  The oldest fix is disarmingly direct — pretend every possible pair was
+  seen once more than it was:
+
+  ```text
+  P(next | ctx) = (count(ctx, next) + 1) / (count(ctx, *) + V)
+  ```
+
+  `V` is the vocabulary size, added to the denominator so the distribution
+  still sums to 1 (every one of the V possible next-tokens got its +1).
+
+  With context `calm` (3 occurrences) and V = 5:
+
+  - P(sea | calm) = (2+1) / (3+5) = 0.375   (was 0.667)
+  - P(fog | calm) = (0+1) / (3+5) = 0.125   (was 0.0)
+
+  Nothing is impossible anymore. Note the cost: probability was *taken from
+  seen events and redistributed to unseen ones* — seen pairs got noticeably
+  cheaper. With small counts and a large vocabulary the redistribution is
+  heavy-handed (add-one steals a lot), which is why refinements exist
+  (add-k for k < 1, and backoff — fall back to the unigram table when the
+  bigram context is unseen, interpolating the two). You will implement
+  interpolation in the exercises; the principle is what matters:
+
+  > A model must hold probability in reserve for events it has never seen.
+
+  ### The other kind of never: unknown words
+
+  Smoothing handles unseen *pairs* of known words. But what if the test text
+  contains a word that was never in training at all — a token with no row
+  anywhere? The standard move is an escape hatch **in the vocabulary
+  itself**: replace rare training words with a special token `<unk>`, so the
+  model learns statistics *for the category of rare-and-unknown words*. At
+  prediction time, out-of-vocabulary words map to `<unk>` and inherit those
+  statistics.
+
+  Two lessons generalize far beyond n-grams:
+
+  - **Reserve mass for the unseen.** Every probabilistic system — spam
+    filters, recommenders, LLMs — needs an answer for inputs it never met.
+  - **Design the unknown into the vocabulary.** `<unk>` prefigures the
+    special tokens of modern models (padding, end-of-text) — bookkeeping
+    made first-class.
+checkpoints:
+  - question: Why is a single unseen bigram catastrophic when scoring a whole sentence, rather than just locally inaccurate?
+    answer: A sentence's probability is the product of its pair probabilities, and one zero factor makes the entire product zero — the model declares the whole sentence impossible because of one gap in training coverage.
+    explanation: Multiplicative scoring amplifies point failures into total failures, which is why zeros must be eliminated rather than tolerated.
+  - question: In add-one smoothing, why is V added to the denominator, and what property would break without it?
+    answer: Each of the V possible next-tokens received one imaginary count, so the total imaginary mass is V; without adding it the probabilities over next-tokens would sum to more than 1 and stop being a distribution.
+    explanation: Smoothing must conserve total probability — the +1s in numerators and +V in the denominator are two halves of one bookkeeping identity.
+  - question: Smoothing fixes unseen pairs of known words. What problem remains, and what is the standard vocabulary-level fix?
+    answer: Entirely unknown words have no row at all; training replaces rare words with an <unk> token so the model learns statistics for the unknown-word category, and unseen test words map to it.
+    explanation: Making "unknown" a first-class vocabulary item — rather than an error case — is a design move that persists into modern LLM special tokens.

@@ -1,0 +1,101 @@
+id: quiz.library.eval_metrics_for_models.a01
+kind: quiz
+version: 1
+language: python
+title: Which Metric Answers the Question?
+slug: quiz-eval-metrics-for-models-a01
+difficulty: medium
+concepts:
+  - ai.model_evaluation
+prerequisites:
+  - ai.model_evaluation
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.eval_metrics_for_models.a01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pattern-recognition quiz on matching evaluation metrics to decisions and spotting their blind spots.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      A model screening 10,000 water samples for contamination (2% actually
+      contaminated) reports 97.8% accuracy. What is the FIRST thing to check?
+    choices:
+      - Recall — a do-nothing model scores 98% here, so accuracy may hide that most contamination is missed
+      - Whether the model runs fast enough for production
+      - The model's parameter count
+      - Whether accuracy was computed on the training set
+    correct_choice: Recall — a do-nothing model scores 98% here, so accuracy may hide that most contamination is missed
+    explanation: |
+      At 2% prevalence the all-negative baseline scores 98%; only the
+      confusion matrix — recall especially — reveals whether the model catches
+      anything at all.
+    concepts:
+      - ai.model_evaluation
+  - id: q2
+    prompt: |
+      A legal-document search tool will be judged by "is the right document
+      near the top of the results?" Which metric matches?
+    choices:
+      - Mean reciprocal rank — it scores 1/position of the first correct result, weighting the top of the list heavily
+      - Accuracy over all returned documents
+      - BLEU between the query and the documents
+      - Calibration error of the ranking scores
+    correct_choice: Mean reciprocal rank — it scores 1/position of the first correct result, weighting the top of the list heavily
+    explanation: |
+      MRR is purpose-built for "did the right answer place high" — its
+      reciprocal shape mirrors how sharply user attention decays down a
+      ranking.
+    concepts:
+      - ai.model_evaluation
+  - id: q3
+    prompt: |
+      Team A tunes their spam filter's threshold for high precision; team B
+      tunes an aneurysm screen for high recall. Both are right. Why?
+    choices:
+      - Error costs are asymmetric in opposite directions — deleting real mail costs more than passing spam, while missing an aneurysm costs more than a false alarm
+      - Precision and recall are interchangeable at scale
+      - Medical data has more classes than email
+      - Team A has more data, so precision is measurable
+    correct_choice: Error costs are asymmetric in opposite directions — deleting real mail costs more than passing spam, while missing an aneurysm costs more than a false alarm
+    explanation: |
+      The threshold dial trades FP against FN; which side to favor is a domain
+      judgment about costs, not a property of the math.
+    concepts:
+      - ai.model_evaluation
+  - id: q4
+    prompt: |
+      A translation model outputs "the the the the the" and scores 100% on
+      UNCLIPPED unigram precision against a normal reference. What repairs
+      the metric?
+    choices:
+      - Clipping — each token's credit is capped at its count in the reference, so repeated tokens stop earning
+      - Lowercasing both texts first
+      - Using recall instead of precision
+      - Longer references
+    correct_choice: Clipping — each token's credit is capped at its count in the reference, so repeated tokens stop earning
+    explanation: |
+      Degenerate repetition exploits unclipped counting; the clip closes the
+      loophole — the archetype of metric-gaming and its repair.
+    concepts:
+      - ai.model_evaluation
+  - id: q5
+    prompt: |
+      A frost model with AUC 0.99 says "70% frost risk" on nights where frost
+      occurs only 30% of the time. Which property fails, and which passes?
+    choices:
+      - Calibration fails (probabilities don't match observed frequencies) while ranking passes (AUC near 1 means frosty nights score above safe ones)
+      - Ranking fails while calibration passes
+      - Both fail — high AUC requires calibration
+      - Neither — 70% versus 30% is within tolerance
+    correct_choice: Calibration fails (probabilities don't match observed frequencies) while ranking passes (AUC near 1 means frosty nights score above safe ones)
+    explanation: |
+      AUC certifies ordering only; calibration is the separate question of
+      whether the numbers mean what they claim — a model can excel at one and
+      lie about the other.
+    concepts:
+      - ai.model_evaluation

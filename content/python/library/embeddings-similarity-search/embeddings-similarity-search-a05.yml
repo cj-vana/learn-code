@@ -1,0 +1,127 @@
+id: exercise.library.embeddings_similarity_search.a05
+kind: exercise
+version: 1
+language: python
+title: Nearest Birdsong in the Archive
+slug: embeddings-similarity-search-a05
+difficulty: medium
+concepts:
+  - ai.embeddings_retrieval
+prerequisites:
+  - python.lists
+  - python.loops
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.embeddings_similarity_search.a05
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original nearest-neighbour retrieval drill framed around a birdsong recording archive.
+prompt_markdown: |
+  A retrieval system answers "which stored item is most like my query?" by
+  scoring every stored vector against the query and keeping the best match. The
+  score is cosine similarity:
+
+      cos(a, b) = (a . b) / (|a| * |b|)
+
+  where `a . b` is the dot product `a0*b0 + ... + a(n-1)*b(n-1)` and `|a|` and
+  `|b|` are the vector magnitudes (sqrt of the sum of squares).
+
+  A birdsong archive stores each recording as a short vector. Write
+  `most_similar(job)` where `job` is a dictionary shaped like
+  `{"query": [1, 0], "corpus": [[0, 1], [1, 0], [1, 1]]}`. Return the **index**
+  of the corpus vector with the highest cosine similarity to `query`. If two
+  vectors tie for the highest score, return the lower index. Assume `corpus`
+  has at least one vector, and that the query and every corpus vector are
+  non-zero.
+starter_code: |
+  import math
+
+
+  def most_similar(job):
+      return 0
+function_name: most_similar
+input_mode: function
+solution_sketch: Score each corpus vector against the query with cosine similarity; track the best score and its index, replacing only on a strictly higher score so ties keep the lower index.
+sample_solution: |
+  import math
+
+
+  def most_similar(job):
+      query = job["query"]
+      corpus = job["corpus"]
+
+      def cosine(a, b):
+          dot = sum(x * y for x, y in zip(a, b))
+          mag_a = math.sqrt(sum(x * x for x in a))
+          mag_b = math.sqrt(sum(y * y for y in b))
+          return dot / (mag_a * mag_b)
+
+      best_index = 0
+      best_score = cosine(query, corpus[0])
+      for i in range(1, len(corpus)):
+          score = cosine(query, corpus[i])
+          if score > best_score:
+              best_score = score
+              best_index = i
+      return best_index
+hints:
+  - level: 1
+    text: Compare the query against every corpus vector one at a time and remember which comparison scored highest.
+  - level: 2
+    text: A small cosine(a, b) helper keeps the loop readable; start best_index at 0 using the first vector's score.
+  - level: 3
+    text: Update the best only when a later score is strictly greater (use >, not >=), so an equal score never displaces the lower index.
+tests:
+  public:
+    - name: pick_parallel
+      input:
+        query: [1, 0]
+        corpus: [[0, 1], [1, 0], [1, 1]]
+      expected: 1
+    - name: single_doc
+      input:
+        query: [2, 3]
+        corpus: [[1, 1]]
+      expected: 0
+    - name: tie_lowest_index
+      input:
+        query: [1, 1]
+        corpus: [[2, 2], [1, 1], [0, 1]]
+      expected: 0
+  validation:
+    - name: three_docs
+      input:
+        query: [1, 2]
+        corpus: [[2, 1], [1, 2], [3, 1]]
+      expected: 1
+    - name: negative_similarities
+      input:
+        query: [1, 0]
+        corpus: [[-1, 0], [0, -1], [1, -1]]
+      expected: 2
+    - name: last_best
+      input:
+        query: [0, 1]
+        corpus: [[1, 0], [1, 1], [0, 2]]
+      expected: 2
+    - name: three_dim
+      input:
+        query: [1, 1, 1]
+        corpus: [[1, 0, 0], [1, 1, 0], [1, 1, 1]]
+      expected: 2
+explanation_markdown: |
+  This is nearest-neighbour search in miniature: score the query against the
+  whole corpus and keep the arg-max. Because cosine similarity ignores length,
+  a corpus vector that merely points the same way as the query (like [2, 2] for
+  query [1, 1]) already scores the maximum of 1, which is why the tie case
+  resolves to the earliest such vector. Updating only on a strictly greater
+  score is the standard way to make ties deterministic without a separate
+  check. Real systems use an index to avoid scanning every vector, but the
+  scoring rule is exactly this.
+common_mistakes:
+  - Using >= when updating the best, which lets a later tie overwrite the lower index the prompt asks for.
+  - Returning the best score or the best vector itself instead of its index.
+  - Seeding best_score with 0 or negative infinity incorrectly, then mishandling the all-negative-score case.

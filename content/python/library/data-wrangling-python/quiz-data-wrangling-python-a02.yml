@@ -1,0 +1,103 @@
+id: quiz.library.data_wrangling_python.a02
+kind: quiz
+version: 1
+language: python
+title: Dicts, Sorts, and setdefault in the Wild
+slug: quiz-data-wrangling-python-a02
+difficulty: medium
+concepts:
+  - concepts.grouping_aggregation
+  - python.sorting
+  - python.dictionaries
+prerequisites:
+  - python.dictionaries
+  - python.sorting
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.data_wrangling_python.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax quiz on the dict and sorting mechanics behind pure-Python record wrangling.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: |
+      What does `groups.setdefault(row["team"], []).append(row)` do when
+      row["team"] is not yet a key in `groups`?
+    choices:
+      - Inserts an empty list under that key, then appends the row to it
+      - Raises a KeyError because the key is missing
+      - Appends the row to a temporary list that is then discarded
+      - Replaces any existing list for that key with [row]
+    correct_choice: Inserts an empty list under that key, then appends the row to it
+    explanation: |
+      setdefault returns the existing value or inserts and returns the default,
+      so the append always lands in the dict — the idiomatic one-line group-by.
+    concepts:
+      - python.dictionaries
+      - concepts.grouping_aggregation
+  - id: q2
+    prompt: |
+      `sorted(rows, key=lambda r: (r["dept"], -r["salary"]))` sorts by department
+      ascending and salary descending. When does this tuple-negation trick break?
+    choices:
+      - When the descending field is a string, which cannot be negated
+      - When there are more than two sort keys
+      - When two rows share the same department
+      - It never breaks; negation works on any comparable value
+    correct_choice: When the descending field is a string, which cannot be negated
+    explanation: |
+      Unary minus is only defined for numbers. Mixed-direction sorts on strings
+      need chained stable sorts (least significant first) instead.
+    concepts:
+      - python.sorting
+  - id: q3
+    prompt: |
+      Two dicts are merged with `{**left_row, **right_row}`. If both contain the
+      key "status", whose value survives?
+    choices:
+      - right_row's, because later unpacking overwrites earlier keys
+      - left_row's, because earlier unpacking takes priority
+      - Neither — Python raises a duplicate-key error
+      - Both, stored as a two-element list
+    correct_choice: right_row's, because later unpacking overwrites earlier keys
+    explanation: |
+      Dict literals apply entries left to right, so the last source of a repeated
+      key wins — which is why join code puts the side that should dominate last.
+    concepts:
+      - python.dictionaries
+  - id: q4
+    prompt: |
+      Why does building `index = {r["id"]: r for r in right}` before joining a
+      thousand left rows beat scanning `right` inside the loop?
+    choices:
+      - Each lookup becomes O(1) on average instead of an O(n) scan per row
+      - Dict comprehensions run in compiled C while loops are interpreted
+      - It avoids copying the right rows
+      - Scanning inside the loop would mutate the right list
+    correct_choice: Each lookup becomes O(1) on average instead of an O(n) scan per row
+    explanation: |
+      The index turns an O(n*m) nested-loop join into O(n + m): one pass to build
+      the hash index, one pass of constant-time lookups.
+    concepts:
+      - python.dictionaries
+      - concepts.grouping_aggregation
+  - id: q5
+    prompt: |
+      A cleaning step coerces text fields with `int(value)`. Which input makes
+      this raise instead of returning a number?
+    choices:
+      - '"12 kg"'
+      - '"  12  "'
+      - '"-12"'
+      - '"0012"'
+    correct_choice: '"12 kg"'
+    explanation: |
+      int() tolerates surrounding whitespace, signs, and leading zeros, but any
+      other stray character raises ValueError — which is why robust cleaners
+      wrap coercion in try/except.
+    concepts:
+      - python.types

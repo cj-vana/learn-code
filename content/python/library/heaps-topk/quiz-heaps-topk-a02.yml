@@ -1,0 +1,122 @@
+id: quiz.library.heaps_topk.a02
+kind: quiz
+version: 1
+language: python
+title: Tracing heapq and bisect
+slug: quiz-heaps-topk-a02
+difficulty: medium
+concepts:
+  - python.heapq_bisect
+  - patterns.heap_topk
+prerequisites:
+  - python.heapq_bisect
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.heaps_topk.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax-tracing quiz covering heappush/heappop, heap ordering, nlargest, negation, and bisect output.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: |
+      What does this print?
+
+          import heapq
+          h = []
+          for x in [5, 1, 3]:
+              heapq.heappush(h, x)
+          print(heapq.heappop(h))
+    choices:
+      - '1'
+      - '5'
+      - '3'
+      - '[1, 3, 5]'
+    correct_choice: '1'
+    explanation: |
+      A min-heap always pops its smallest element first, and 1 is the smallest of
+      the three values pushed.
+    concepts:
+      - python.heapq_bisect
+  - id: q2
+    prompt: |
+      After this code runs, what is guaranteed about `h[0]`?
+
+          import heapq
+          h = [8, 3, 5, 1, 9]
+          heapq.heapify(h)
+    choices:
+      - It is the smallest element, 1
+      - It is the original first element, 8
+      - The whole list is now fully sorted
+      - It is the largest element, 9
+    correct_choice: It is the smallest element, 1
+    explanation: |
+      heapify only enforces the heap property, which pins the minimum to index 0.
+      The rest of the list is partially ordered, not fully sorted.
+    concepts:
+      - python.heapq_bisect
+      - patterns.heap_topk
+  - id: q3
+    prompt: |
+      What does this print?
+
+          import heapq
+          data = [4, 9, 1, 7, 3]
+          print(heapq.nlargest(2, data))
+    choices:
+      - '[9, 7]'
+      - '[1, 3]'
+      - '[7, 9]'
+      - '[9, 7, 4]'
+    correct_choice: '[9, 7]'
+    explanation: |
+      heapq.nlargest(2, data) returns the two largest values already sorted from
+      largest to smallest.
+    concepts:
+      - patterns.heap_topk
+      - python.heapq_bisect
+  - id: q4
+    prompt: |
+      What does this print?
+
+          import heapq
+          temps = [18, 25, 21]
+          mx = [-t for t in temps]
+          heapq.heapify(mx)
+          print(-heapq.heappop(mx))
+    choices:
+      - '25'
+      - '18'
+      - '-25'
+      - '21'
+    correct_choice: '25'
+    explanation: |
+      Negating simulates a max-heap: the most negative stored value, -25, pops
+      first, and negating it back yields 25, the largest temperature.
+    concepts:
+      - python.heapq_bisect
+      - patterns.heap_topk
+  - id: q5
+    prompt: |
+      What does this print?
+
+          import bisect
+          board = [10, 20, 30]
+          bisect.insort(board, 20)
+          print(board, bisect.bisect_left(board, 20))
+    choices:
+      - '[10, 20, 20, 30] 1'
+      - '[10, 20, 20, 30] 2'
+      - '[10, 20, 30, 20] 1'
+      - '[10, 20, 30] 1'
+    correct_choice: '[10, 20, 20, 30] 1'
+    explanation: |
+      insort places the new 20 in sorted order, giving [10, 20, 20, 30], and
+      bisect_left returns the leftmost index of 20, which is 1.
+    concepts:
+      - python.heapq_bisect
+      - patterns.binary_search

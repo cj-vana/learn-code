@@ -1,0 +1,116 @@
+id: exercise.library.eval_metrics_for_models.a03
+kind: exercise
+version: 1
+language: python
+title: Precision and Recall for the Warbler Detector
+slug: eval-metrics-for-models-a03
+difficulty: medium
+concepts:
+  - ai.model_evaluation
+prerequisites:
+  - python.dictionaries
+  - python.conditionals
+  - python.operators
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.eval_metrics_for_models.a03
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original precision/recall drill continuing the warbler-detector confusion-count series.
+prompt_markdown: |
+  Accuracy hides an important trade-off: a detector can look good overall while
+  being wrong in one specific, costly direction. **Precision** and **recall** pull
+  those two failure modes apart.
+
+  - **Precision** asks "when the detector shouts *warbler*, how often is it right?"
+
+    ```
+    precision = tp / (tp + fp)
+    ```
+
+  - **Recall** asks "of all the real warbler calls, how many did the detector
+    catch?"
+
+    ```
+    recall = tp / (tp + fn)
+    ```
+
+  Write `precision_recall(counts)` that takes a single dictionary with keys
+  `"tp"`, `"fp"`, `"tn"`, and `"fn"` (all non-negative ints). Return a dictionary
+  `{"precision": ..., "recall": ...}` with each value a float **rounded to 4
+  decimal places**.
+
+  A denominator can be zero. If `tp + fp == 0` the detector never predicted a
+  warbler, so define its precision as `0.0`. If `tp + fn == 0` there were no real
+  warblers to find, so define recall as `0.0`.
+
+  Example:
+
+  ```python
+  precision_recall({"tp": 2, "fp": 2, "tn": 1, "fn": 2})
+  # -> {"precision": 0.5, "recall": 0.5}
+  ```
+starter_code: |
+  def precision_recall(counts):
+      return {"precision": 0.0, "recall": 0.0}
+function_name: precision_recall
+input_mode: function
+solution_sketch: Guard each denominator against zero, compute tp/(tp+fp) and tp/(tp+fn), and round both to 4 decimals in the returned dict.
+sample_solution: |
+  def precision_recall(counts):
+      tp = counts["tp"]
+      fp = counts["fp"]
+      fn = counts["fn"]
+      precision = tp / (tp + fp) if (tp + fp) > 0 else 0.0
+      recall = tp / (tp + fn) if (tp + fn) > 0 else 0.0
+      return {"precision": round(precision, 4), "recall": round(recall, 4)}
+hints:
+  - level: 1
+    text: Precision divides by the predicted positives (tp + fp); recall divides by the actual positives (tp + fn).
+  - level: 2
+    text: Check each denominator before dividing, substituting 0.0 whenever it would be zero.
+  - level: 3
+    text: A conditional expression like tp / (tp + fp) if (tp + fp) > 0 else 0.0 handles the guard in one line; round both values to 4 places.
+tests:
+  public:
+    - name: balanced
+      input: {"tp": 2, "fp": 2, "tn": 1, "fn": 2}
+      expected: {"precision": 0.5, "recall": 0.5}
+    - name: no_positive_predictions
+      input: {"tp": 0, "fp": 0, "tn": 5, "fn": 3}
+      expected: {"precision": 0.0, "recall": 0.0}
+    - name: perfect
+      input: {"tp": 4, "fp": 0, "tn": 2, "fn": 0}
+      expected: {"precision": 1.0, "recall": 1.0}
+  validation:
+    - name: high_precision_low_recall
+      input: {"tp": 3, "fp": 1, "tn": 10, "fn": 6}
+      expected: {"precision": 0.75, "recall": 0.3333}
+    - name: low_precision_high_recall
+      input: {"tp": 6, "fp": 4, "tn": 2, "fn": 1}
+      expected: {"precision": 0.6, "recall": 0.8571}
+    - name: no_true_positives
+      input: {"tp": 0, "fp": 5, "tn": 3, "fn": 0}
+      expected: {"precision": 0.0, "recall": 0.0}
+    - name: repeating_decimals
+      input: {"tp": 2, "fp": 1, "tn": 0, "fn": 4}
+      expected: {"precision": 0.6667, "recall": 0.3333}
+explanation_markdown: |
+  Precision and recall watch different mistakes. Precision is damaged by false
+  positives (crying warbler when there is none), so it matters when acting on a
+  detection is expensive. Recall is damaged by false negatives (missing a real
+  call), so it matters when a miss is the costly outcome. The same detector can
+  score high on one and low on the other, which is why reporting both is standard
+  practice.
+
+  The zero-denominator guards encode sensible conventions rather than crashing.
+  With no positive predictions there is nothing to be precise about, and with no
+  real positives there is nothing to recall; defining each as `0.0` keeps the
+  metrics usable in aggregation without silently dividing by zero.
+common_mistakes:
+  - Swapping the denominators, dividing precision by tp + fn or recall by tp + fp.
+  - Letting tp + fp or tp + fn hit zero and raising ZeroDivisionError instead of returning 0.0.
+  - Rounding only one of the two values, so the other keeps a long trailing decimal.

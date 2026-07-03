@@ -1,0 +1,130 @@
+id: exercise.library.bit_number_theory.a11
+kind: exercise
+version: 1
+language: python
+title: The Vintage Binary Odometer
+slug: bit-number-theory-a11
+difficulty: hard
+concepts:
+  - patterns.bit_manipulation
+  - python.strings
+prerequisites:
+  - python.strings
+  - python.loops
+estimated_time_minutes: 20
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.bit_number_theory.a11
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original ripple-carry binary addition drill framed as totalling two readings from a vintage binary counter odometer.
+prompt_markdown: |
+  A vintage machine tracks distance on a binary odometer: each reading is a string
+  of `'0'` and `'1'` characters, most significant bit first. A mechanic needs to
+  add two such readings and record the total, still as a binary string.
+
+  Write `add_readings(readings)` where `readings` is a dictionary with two keys:
+
+  - `"a"`: a binary string (only the characters `'0'` and `'1'`).
+  - `"b"`: a binary string in the same format.
+
+  Return their sum as a binary string. You must do the addition **by hand** with a
+  right-to-left ripple carry (line the strings up at their least significant bit,
+  add column by column, carry the 1s). Do **not** convert the strings to integers
+  with `int(s, 2)` or use `bin()`.
+
+  Rules:
+
+  - Each input has no leading zeros except the single string `"0"`, which means
+    zero.
+  - The result must also have no leading zeros (return `"0"` when the total is
+    zero).
+
+  Example: `add_readings({"a": "101", "b": "11"})` returns `"1000"`, because
+  binary `101` (five) plus `11` (three) is `1000` (eight).
+starter_code: |
+  def add_readings(readings):
+      return "0"
+function_name: add_readings
+input_mode: function
+solution_sketch: Walk both strings from the right, add matching bits plus a carry, append each result bit, then reverse and strip leading zeros.
+sample_solution: |
+  def add_readings(readings):
+      a = readings["a"]
+      b = readings["b"]
+      i = len(a) - 1
+      j = len(b) - 1
+      carry = 0
+      out = []
+      while i >= 0 or j >= 0 or carry:
+          bit_a = 1 if i >= 0 and a[i] == "1" else 0
+          bit_b = 1 if j >= 0 and b[j] == "1" else 0
+          total = bit_a + bit_b + carry
+          out.append("1" if total % 2 else "0")
+          carry = total // 2
+          i -= 1
+          j -= 1
+      result = "".join(reversed(out)).lstrip("0")
+      return result or "0"
+hints:
+  - level: 1
+    text: Add the way you would on paper, starting from the rightmost bit and carrying a 1 into the next column when a column sums to 2 or more.
+  - level: 2
+    text: Use two indices that start at the last character of each string and move left; treat a missing character (index below 0) as a 0 bit.
+  - level: 3
+    text: Each column's output bit is total % 2 and the carry is total // 2; keep looping while either index is valid or a carry remains, then reverse the collected bits and strip leading zeros.
+tests:
+  public:
+    - name: simple_carry
+      input:
+        a: "1"
+        b: "1"
+      expected: "10"
+    - name: both_zero
+      input:
+        a: "0"
+        b: "0"
+      expected: "0"
+    - name: uneven_lengths
+      input:
+        a: "101"
+        b: "11"
+      expected: "1000"
+  validation:
+    - name: all_ones
+      input:
+        a: "1111"
+        b: "1111"
+      expected: "11110"
+    - name: ripple_chain
+      input:
+        a: "111"
+        b: "1"
+      expected: "1000"
+    - name: one_side_zero
+      input:
+        a: "0"
+        b: "101"
+      expected: "101"
+    - name: equal_length
+      input:
+        a: "1010"
+        b: "1011"
+      expected: "10101"
+explanation_markdown: |
+  Binary addition is the same column algorithm as decimal addition, only each
+  column can hold at most `1 + 1 + 1 == 3`. Walking from the least significant bit,
+  the sum of the two bits plus the incoming carry gives an output bit of
+  `total % 2` and a new carry of `total // 2`. Treating any index that has fallen
+  off the left end as a `0` lets you add strings of different lengths without
+  padding them first. The loop must keep going while a carry is still pending, so a
+  final carry becomes a new leading `1` (as in `1111 + 1111 == 11110`). Because you
+  build the answer from the right, you reverse it at the end, and stripping leading
+  zeros (with a fallback to `"0"`) keeps the result canonical.
+common_mistakes:
+  - Stopping the loop as soon as both strings are exhausted, dropping a final carry bit.
+  - Forgetting to reverse the collected bits, so the answer comes out backwards.
+  - Reading past the front of a string instead of substituting a 0 for a missing column.
+  - Leaving leading zeros (or returning an empty string) when the total is zero.

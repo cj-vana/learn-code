@@ -18,9 +18,9 @@ export function WorkbenchShell() {
       <header className="shell__masthead">
         <div>
           <p className="shell__brand">
-            Workbench<span>·</span>Ledger
+            Night<span>·</span>Study
           </p>
-          <p className="shell__tagline">a study workshop for interview python</p>
+          <p className="shell__tagline">python, worked by lamplight</p>
         </div>
         <p className="shell__tagline">bench notes · evidence · repetition</p>
       </header>

@@ -1,0 +1,101 @@
+id: exercise.library.caching_performance.a10
+kind: exercise
+version: 1
+language: python
+title: Logging Distinct Vessels at the Harbor
+slug: caching-performance-a10
+difficulty: medium
+concepts:
+  - concepts.performance
+  - patterns.set_membership
+prerequisites:
+  - python.sets
+  - python.iterators_generators
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.caching_performance.a10
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original streaming-dedupe drill framed as a harbor master logging the first sighting of each vessel from a live radio feed, emphasising a generator plus seen-set over sorting or full materialisation.
+prompt_markdown: |
+  A harbor master listens to a live radio feed and logs each vessel the **first**
+  time it is heard, ignoring every later repeat. The feed can be long, so the log
+  should be built by passing over the stream once, remembering only which vessels
+  have already been seen — never sorting or re-scanning.
+
+  Write `dedupe_streaming(stream)`. `stream` is a list of vessel identifiers
+  (integers or strings). Return a list containing each distinct value **once**,
+  in the order of its first appearance.
+
+  Examples:
+
+  - `[1, 1, 2, 3, 3, 3, 2]` returns `[1, 2, 3]`.
+  - `["a", "b", "a"]` returns `["a", "b"]`.
+
+  An empty stream returns an empty list. Do not sort the output — first-seen
+  order is the whole point.
+starter_code: |
+  def dedupe_streaming(stream):
+      return []
+function_name: dedupe_streaming
+input_mode: function
+solution_sketch: Keep a set of already-seen values. Iterate once; the first time a value appears, add it to the set and yield it, skipping any later repeat. Materialise the generator into a list for the return value.
+sample_solution: |
+  def dedupe_streaming(stream):
+      def first_sightings():
+          seen = set()
+          for item in stream:
+              if item not in seen:
+                  seen.add(item)
+                  yield item
+      return list(first_sightings())
+hints:
+  - level: 1
+    text: A set answers "have I seen this before?" in constant time, which is exactly the question streaming dedupe asks on every item.
+  - level: 2
+    text: Walk the stream once. Only act on a value the first time you meet it — add it to the seen set and record it, then let later repeats fall through untouched.
+  - level: 3
+    text: Do not sort and do not compare against the whole output list each time. A generator that yields on first sight, wrapped in list(), keeps first-seen order and one pass.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: already_distinct
+      input: [3, 1, 2]
+      expected: [3, 1, 2]
+    - name: collapses_repeats
+      input: [1, 1, 2, 3, 3, 3, 2]
+      expected: [1, 2, 3]
+  validation:
+    - name: all_identical
+      input: [7, 7, 7, 7]
+      expected: [7]
+    - name: string_ids
+      input: [harbor, dock, harbor, pier, dock]
+      expected: [harbor, dock, pier]
+    - name: preserves_first_order
+      input: [5, 3, 5, 1, 3, 9, 1]
+      expected: [5, 3, 1, 9]
+    - name: negatives_and_zero
+      input: [0, -1, 0, -1, 2, -1]
+      expected: [0, -1, 2]
+explanation_markdown: |
+  Streaming dedupe is the canonical trade of a little memory for a lot of speed.
+  Checking membership against a `set` is O(1) on average, so the whole pass is
+  O(n) time and O(k) memory for `k` distinct values — versus the O(n^2) trap of
+  asking `if item in result_list` on every element, or the O(n log n) cost of
+  sorting (which also destroys first-seen order).
+
+  Building the result through an inner generator makes the streaming shape
+  explicit: values are emitted the moment they are first seen, without ever
+  holding a second copy of the input. Calling `list()` on it here just collects
+  the first sightings for grading; in a real pipeline you would keep it lazy and
+  feed the generator straight into the next stage.
+common_mistakes:
+  - Testing membership against the growing output list instead of a set, which quietly turns a one-pass scan into quadratic time.
+  - Reaching for sorted() or set() directly, which removes duplicates but scrambles the required first-seen order.
+  - Adding a value to the seen set but forgetting to also record it in the output, dropping legitimate first sightings.

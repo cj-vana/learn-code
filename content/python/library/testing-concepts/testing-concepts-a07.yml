@@ -1,0 +1,101 @@
+id: exercise.library.testing_concepts.a07
+kind: exercise
+version: 1
+language: python
+title: Auditing a Data-Cleaning Pass for Idempotence
+slug: testing-concepts-a07
+difficulty: medium
+concepts:
+  - concepts.testing
+  - python.lists
+prerequisites:
+  - python.conditionals
+  - python.functions
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.testing_concepts.a07
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original property-check drill framed around auditing a data-cleaning pipeline for the idempotence property; no external problem reused.
+prompt_markdown: |
+  A data-cleaning pipeline runs a normalizing step over each raw record before the
+  records are stored. A cleaning step is **idempotent** when running it a second
+  time changes nothing: cleaning an already-clean value leaves it identical. This
+  is a property worth testing, because a pipeline that keeps mutating "clean" data
+  on every pass is a bug waiting to happen.
+
+  A trustworthy whitespace normalizer, for instance, collapses each run of spaces
+  to one and trims the ends, so `"  a  b  "` becomes `"a b"`, and cleaning `"a b"`
+  again still gives `"a b"` -- idempotent. A buggy step that strips only one
+  leading space per pass turns `"   go"` into `"  go"` and then `" go"` -- not
+  idempotent.
+
+  Write `idempotency_check(job)` where `job` is a dict with three parallel lists:
+
+  - `values`: the raw records before cleaning (kept in the job for context).
+  - `once`: each record after the cleaning step ran **once**.
+  - `twice`: each record after the cleaning step ran a **second** time on `once`.
+
+  Return `True` if the step is idempotent over this sample -- that is, if `once`
+  and `twice` are exactly equal -- and `False` otherwise. Two empty lists count as
+  equal, so an empty job returns `True`. You only need `once` and `twice` to decide;
+  `values` is there so a reviewer can see what went in.
+starter_code: |
+  def idempotency_check(job):
+      # Idempotent means a second cleaning pass changes nothing.
+      return False
+function_name: idempotency_check
+input_mode: function
+solution_sketch: Idempotence over the sample means the second pass equalled the first, so compare job["once"] and job["twice"] directly and return the boolean.
+sample_solution: |
+  def idempotency_check(job):
+      return job["once"] == job["twice"]
+hints:
+  - level: 1
+    text: Idempotent means running the step again does nothing, so the result after one pass and after two passes must be the same.
+  - level: 2
+    text: You do not need to re-run any cleaning yourself; the job already gives you the "once" and "twice" outputs to compare.
+  - level: 3
+    text: Return job["once"] == job["twice"]; Python list equality already checks length and every element, and two empty lists compare equal.
+tests:
+  public:
+    - name: stable_normalizer_true
+      input: {values: ['  a  b  '], once: ['a b'], twice: ['a b']}
+      expected: true
+    - name: two_records_true
+      input: {values: ['A ', ' B'], once: ['A', 'B'], twice: ['A', 'B']}
+      expected: true
+    - name: shifting_op_false
+      input: {values: ['abc'], once: ['bc'], twice: ['c']}
+      expected: false
+  validation:
+    - name: empty_lists_true
+      input: {values: [], once: [], twice: []}
+      expected: true
+    - name: uppercase_idempotent_true
+      input: {values: ['abc'], once: ['ABC'], twice: ['ABC']}
+      expected: true
+    - name: drop_char_not_idempotent_false
+      input: {values: ['long'], once: ['ong'], twice: ['ng']}
+      expected: false
+    - name: one_of_two_changes_false
+      input: {values: ['a  b', ' c '], once: ['a b', ' c'], twice: ['a b', 'c']}
+      expected: false
+explanation_markdown: |
+  Idempotence is a *property*, not a single input-output pair: it says that for
+  every record, applying the step twice equals applying it once. When you already
+  have both the one-pass output (`once`) and the two-pass output (`twice`), the
+  whole property collapses to a single comparison, `once == twice`. Python's list
+  equality does the per-element work for you -- it returns `False` the moment any
+  element differs or the lengths disagree, and `True` for two empty lists because
+  there is nothing that could differ. This is exactly the shape of a good
+  property-based test: pick the invariant ("a second pass is a no-op"), express it
+  as a comparison, and let one check cover the entire sample instead of hand-writing
+  an assertion per record.
+common_mistakes:
+  - Comparing against `values` instead of comparing `once` with `twice`; the raw input is only context and a clean step is not required to leave it unchanged.
+  - Looping element by element and returning early on the first match instead of requiring every element to agree, which flips the logic.
+  - Assuming an empty job is somehow invalid; two empty lists are equal, so the honest answer is True.

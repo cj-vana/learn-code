@@ -1,0 +1,243 @@
+id: exercise.library.capstone_ledger.c04
+kind: exercise
+version: 1
+language: python
+title: The Market Ledger - Tiered Cooperative Fees
+slug: capstone-ledger-c04
+difficulty: hard
+concepts:
+  - python.sorting
+  - concepts.grouping_aggregation
+prerequisites:
+  - python.dictionaries
+  - python.tuples
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.capstone_ledger.c04
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original fourth stage of the market ledger capstone; applies an unsorted tiered fee schedule to each vendor statement by selecting the highest qualifying threshold.
+prompt_markdown: |
+  Stage 4 of the Market Ledger capstone: the cooperative funds itself by charging
+  each vendor a percentage fee on their gross, and the rate climbs in tiers - the
+  more you sell, the higher your bracket. You must post each vendor's fee and net.
+
+  Write `apply_fees(job)` where `job` is a dictionary with two keys:
+
+  - `"statements"`: the Stage 3 output - a dict mapping each vendor to a statement
+    dict with `"gross"` (float), `"items"` (dict) and `"days_active"` (int).
+  - `"fee_tiers"`: a list of `[threshold, rate]` pairs, **given in no particular
+    order**. Each pair means "if a vendor's gross is at least `threshold`, the fee
+    rate is `rate`". You may assume the tiers always include a base tier with
+    threshold `0`, so every non-negative gross matches at least one tier.
+
+  For each vendor, find the tier with the **highest threshold that is less than or
+  equal to** the vendor's gross, and use that tier's rate. Then add two keys to
+  that vendor's statement:
+
+  - `"fee"`: `gross * rate`, rounded to 2 decimals.
+  - `"net"`: `gross - fee`, rounded to 2 decimals.
+
+  Return the statements dictionary with `"fee"` and `"net"` added to every vendor,
+  keeping all the existing keys and the original vendor order.
+
+  Example:
+
+  ```python
+  apply_fees({
+      "statements": {
+          "Rosewood Farm": {"gross": 50.05,
+                            "items": {"heirloom tomatoes": 12, "basil": 7},
+                            "days_active": 1},
+      },
+      "fee_tiers": [[50, 0.05], [0, 0.0]],
+  })
+  # Rosewood's gross 50.05 clears the 50 tier -> rate 0.05
+  # fee = 2.5, net = 47.55
+  ```
+starter_code: |
+  def apply_fees(job):
+      return job["statements"]
+function_name: apply_fees
+input_mode: function
+solution_sketch: Sort the tiers by threshold ascending, then for each vendor scan upward keeping the rate of every threshold that does not exceed gross, stopping at the first one that does; compute fee and net rounded to 2 places.
+sample_solution: |
+  def apply_fees(job):
+      statements = job["statements"]
+      tiers = sorted(job["fee_tiers"])
+      result = {}
+      for vendor, statement in statements.items():
+          gross = statement["gross"]
+          rate = 0.0
+          for threshold, tier_rate in tiers:
+              if threshold <= gross:
+                  rate = tier_rate
+              else:
+                  break
+          fee = round(gross * rate, 2)
+          updated = dict(statement)
+          updated["fee"] = fee
+          updated["net"] = round(gross - fee, 2)
+          result[vendor] = updated
+      return result
+hints:
+  - level: 1
+    text: Sorting the tiers by threshold turns "pick the highest qualifying one" into a simple upward scan, because sorted([[threshold, rate], ...]) orders by the first element.
+  - level: 2
+    text: Walk the sorted tiers keeping the rate of every threshold <= gross; the moment a threshold exceeds gross you can stop, and the last rate you kept is the right one.
+  - level: 3
+    text: fee is round(gross * rate, 2) and net is round(gross - fee, 2). Copy the statement with dict(statement) before adding fee and net so you keep items and days_active intact.
+tests:
+  public:
+    - name: single_vendor_one_tier
+      input:
+        statements:
+          Rosewood Farm:
+            gross: 50.05
+            items: {"heirloom tomatoes": 12, "basil": 7}
+            days_active: 1
+        fee_tiers: [[50, 0.05], [0, 0.0]]
+      expected:
+        Rosewood Farm:
+          gross: 50.05
+          items: {"heirloom tomatoes": 12, "basil": 7}
+          days_active: 1
+          fee: 2.5
+          net: 47.55
+    - name: two_vendors_two_tiers
+      input:
+        statements:
+          Rosewood Farm:
+            gross: 120.0
+            items: {"heirloom tomatoes": 12}
+            days_active: 1
+          Hillside Dairy:
+            gross: 8.0
+            items: {"butter": 2}
+            days_active: 1
+        fee_tiers: [[100, 0.08], [0, 0.0], [50, 0.05]]
+      expected:
+        Rosewood Farm:
+          gross: 120.0
+          items: {"heirloom tomatoes": 12}
+          days_active: 1
+          fee: 9.6
+          net: 110.4
+        Hillside Dairy:
+          gross: 8.0
+          items: {"butter": 2}
+          days_active: 1
+          fee: 0.0
+          net: 8.0
+    - name: only_base_tier_applies
+      input:
+        statements:
+          Bramble Orchard:
+            gross: 30.0
+            items: {"cider": 10}
+            days_active: 2
+        fee_tiers: [[50, 0.05], [0, 0.0]]
+      expected:
+        Bramble Orchard:
+          gross: 30.0
+          items: {"cider": 10}
+          days_active: 2
+          fee: 0.0
+          net: 30.0
+  validation:
+    - name: unsorted_tiers_pick_middle
+      input:
+        statements:
+          Rosewood Farm:
+            gross: 75.0
+            items: {"basil": 5}
+            days_active: 1
+        fee_tiers: [[100, 0.08], [50, 0.05], [0, 0.0]]
+      expected:
+        Rosewood Farm:
+          gross: 75.0
+          items: {"basil": 5}
+          days_active: 1
+          fee: 3.75
+          net: 71.25
+    - name: gross_exactly_on_threshold
+      input:
+        statements:
+          Hillside Dairy:
+            gross: 50.0
+            items: {"butter": 10}
+            days_active: 1
+        fee_tiers: [[0, 0.0], [50, 0.05]]
+      expected:
+        Hillside Dairy:
+          gross: 50.0
+          items: {"butter": 10}
+          days_active: 1
+          fee: 2.5
+          net: 47.5
+    - name: fee_rounds_up
+      input:
+        statements:
+          Bramble Orchard:
+            gross: 33.33
+            items: {"cider": 3}
+            days_active: 1
+        fee_tiers: [[0, 0.03]]
+      expected:
+        Bramble Orchard:
+          gross: 33.33
+          items: {"cider": 3}
+          days_active: 1
+          fee: 1.0
+          net: 32.33
+    - name: top_tier_of_three
+      input:
+        statements:
+          Rosewood Farm:
+            gross: 200.0
+            items: {"heirloom tomatoes": 40}
+            days_active: 3
+        fee_tiers: [[0, 0.0], [50, 0.05], [150, 0.1]]
+      expected:
+        Rosewood Farm:
+          gross: 200.0
+          items: {"heirloom tomatoes": 40}
+          days_active: 3
+          fee: 20.0
+          net: 180.0
+    - name: base_rate_zero_leaves_net_equal_gross
+      input:
+        statements:
+          Ash Grove:
+            gross: 12.4
+            items: {"plums": 8}
+            days_active: 1
+        fee_tiers: [[100, 0.08], [0, 0.0]]
+      expected:
+        Ash Grove:
+          gross: 12.4
+          items: {"plums": 8}
+          days_active: 1
+          fee: 0.0
+          net: 12.4
+explanation_markdown: |
+  The trap in a tiered schedule is that the tiers arrive unsorted, so you cannot
+  just take the last one that matches in input order. Sorting by threshold first
+  makes the rule mechanical: scan from the smallest threshold upward, remember the
+  rate of every tier your gross clears, and the moment a threshold is too big you
+  are done - everything past it is even bigger. The last rate you kept belongs to
+  the highest qualifying tier.
+
+  Because `sorted` on a list of `[threshold, rate]` pairs orders by the first
+  element, one call does the heavy lifting. Copying each statement with
+  `dict(statement)` before adding `"fee"` and `"net"` preserves the items and
+  day-count from Stage 3 while extending the record, and rounding both money
+  fields keeps net exactly equal to gross minus the posted fee.
+common_mistakes:
+  - Assuming fee_tiers arrive sorted and reading them in input order, which picks the wrong bracket.
+  - Using a strict threshold < gross so a gross that lands exactly on a threshold drops to the tier below.
+  - Computing net from the unrounded fee, so net and the posted fee do not reconcile to the cent.
+  - Replacing the statement with a bare fee/net dict and dropping the items and days_active keys.

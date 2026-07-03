@@ -1,0 +1,108 @@
+id: lesson.library.typing_runtime.a03
+kind: lesson
+version: 1
+language: python
+title: 'Generics: Writing Containers That Keep Their Types'
+slug: lesson-typing-runtime-a03
+difficulty: hard
+concepts:
+  - python.type_hints
+prerequisites:
+  - python.type_hints
+  - python.classes
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.typing_runtime.a03
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original generics walkthrough building a typed job-queue container with PEP 695 syntax, with fresh examples.
+body_markdown: |
+  You have consumed generics all along — `list[int]`, `dict[str, float]`.
+  This lesson is about *producing* them: writing your own functions and
+  classes that preserve type relationships, which is where typed library
+  code lives.
+
+  ### The problem a type variable solves
+
+  ```python
+  def first(items: list) -> object: ...
+  ```
+
+  This signature *forgets*: pass a `list[Booking]` and get back an
+  `object` — every caller must cast. The fix is a **type variable**, a
+  placeholder the checker solves per call site. Modern (3.12+, PEP 695)
+  syntax puts it in brackets:
+
+  ```python
+  def first[T](items: list[T]) -> T:
+      return items[0]
+
+  first(bookings)     # checker knows: Booking
+  first([1, 2, 3])    # checker knows: int
+  ```
+
+  Read `[T]` as "for any type T": the signature promises the *output
+  type equals the element type*, and the checker enforces the promise at
+  every call with a different concrete T each time. (Older code spells
+  it `T = TypeVar("T")` outside the def — same meaning, more ceremony;
+  you will read both for years.)
+
+  ### Generic classes: containers with a memory
+
+  A dispatch office needs a job queue usable for several job types —
+  safely:
+
+  ```python
+  class JobQueue[T]:
+      def __init__(self) -> None:
+          self._items: list[T] = []
+
+      def push(self, item: T) -> None:
+          self._items.append(item)
+
+      def pop(self) -> T:
+          return self._items.pop(0)
+
+  repairs: JobQueue[RepairJob] = JobQueue()
+  repairs.push(delivery_job)     # checker error: wrong job type
+  ```
+
+  One `T` threading through the class means push and pop *agree*: what
+  goes in is what comes out, per instance. This is precisely how
+  `list[int]` works from the inside — and now you can build the same
+  guarantee into domain containers (queues, repositories, caches).
+
+  Constraints narrow the "any": `def largest[T: Comparable](items:
+  list[T]) -> T` — the *bound* `T: Comparable` admits only types
+  satisfying it, so the body may legally compare. An unbounded T,
+  conversely, permits nothing but shuffling values — which is exactly
+  the honesty generics enforce: the signature says what the body may
+  assume.
+
+  ### The runtime story (short, familiar)
+
+  `JobQueue[RepairJob]` at runtime is erased to plain `JobQueue` —
+  subscripting a class is recorded (via `__class_getitem__`, the hook
+  your exercise pokes) but no per-type class is created, `isinstance`
+  against the subscripted form fails, and `T` binds nothing at runtime.
+  All the guarantees are checker-time, consistent with everything this
+  area has taught: static structure, runtime erasure, boundaries
+  validated by tools that *read* the annotations.
+
+  With generics, the typing arc of this curriculum closes: you can read
+  any signature in the standard library, and — more to the point — write
+  library-grade signatures of your own that make wrong code fail before
+  it runs.
+checkpoints:
+  - question: 'What promise does def first[T](items: list[T]) -> T make that def first(items: list) -> object cannot?'
+    answer: 'That the return type IS the element type — the checker solves T per call site (Booking in, Booking out), so callers keep their types without casting, and violations inside the body are checker errors.'
+    explanation: 'Type variables express relationships between parameter and return types — the information a plain "list" signature discards.'
+  - question: In the generic JobQueue[T], what guarantee does threading one T through push and pop create, and per what scope?
+    answer: 'Per INSTANCE: a JobQueue[RepairJob] accepts and yields only RepairJobs — what goes in is what comes out — because both methods reference the same T bound at instantiation.'
+    explanation: One shared type variable is what turns a container from a bag of objects into a typed contract, exactly as builtin generics behave.
+  - question: What survives of JobQueue[RepairJob] at runtime, and what does that imply for isinstance checks?
+    answer: 'Only plain JobQueue — the subscription is recorded via __class_getitem__ but erased for execution; isinstance(x, JobQueue[RepairJob]) raises, so runtime checks use the bare class and trust the checker (or element inspection) for the parameter.'
+    explanation: 'Generic erasure completes the area''s theme: rich static structure, minimal runtime footprint, with tools reading annotations where runtime knowledge is needed.'

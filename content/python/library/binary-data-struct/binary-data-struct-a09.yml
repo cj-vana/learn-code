@@ -1,0 +1,166 @@
+id: exercise.library.binary_data_struct.a09
+kind: exercise
+version: 1
+language: python
+title: Base64 for the Bakery Label Printer
+slug: binary-data-struct-a09
+difficulty: medium
+concepts:
+  - python.binary_data
+  - python.strings
+prerequisites:
+  - python.lists
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.binary_data_struct.a09
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original base64 round-trip drill themed around encoding binary logo bytes for a text-only bakery label printer feed.
+prompt_markdown: |
+  The bakery's label printer only accepts plain ASCII text over its serial
+  feed, but the logos and barcodes it prints are raw binary. The fix is
+  base64: encode the binary bytes into safe printable characters for transit,
+  then decode them back on arrival. You will build and verify one full round
+  trip.
+
+  Write `base64_roundtrip(payload)` that takes a single dictionary:
+
+  ```
+  {
+    "data":    [251, 255, 254],   # raw byte values, each 0..255
+    "urlsafe": true                # which alphabet to use
+  }
+  ```
+
+  Do the following:
+
+  - Turn `data` into `bytes` and base64-encode it. When `urlsafe` is `true`,
+    use the URL-safe alphabet (which uses `-` and `_` in place of `+` and `/`);
+    when it is `false`, use the standard alphabet. Decode the resulting bytes
+    to an ASCII `str`.
+  - Decode that string back to bytes using the matching alphabet, and turn the
+    recovered bytes into a **list of ints**.
+  - Return a dictionary with:
+    - `"encoded"`: the base64 text as a `str`.
+    - `"restored"`: the decoded bytes as a list of ints.
+    - `"roundtrip_ok"`: `True` if `restored` equals the original `data`,
+      else `False`.
+
+  Notes on the encoding: base64 packs every 3 input bytes into 4 characters,
+  padding the final group with `=` when the input length is not a multiple of
+  3. An empty `data` encodes to the empty string `""` and restores to `[]`.
+  One leftover byte yields two `=` padding characters; two leftover bytes yield
+  one.
+starter_code: |
+  import base64
+
+
+  def base64_roundtrip(payload):
+      return {}
+function_name: base64_roundtrip
+input_mode: function
+solution_sketch: Pick the standard or URL-safe base64 encoder based on the flag, encode the bytes to an ASCII string, decode back to a list of ints, and compare against the original.
+sample_solution: |
+  import base64
+
+
+  def base64_roundtrip(payload):
+      data = payload["data"]
+      urlsafe = payload["urlsafe"]
+      raw = bytes(data)
+      if urlsafe:
+          encoded = base64.urlsafe_b64encode(raw).decode("ascii")
+          restored = list(base64.urlsafe_b64decode(encoded))
+      else:
+          encoded = base64.b64encode(raw).decode("ascii")
+          restored = list(base64.b64decode(encoded))
+      return {
+          "encoded": encoded,
+          "restored": restored,
+          "roundtrip_ok": restored == list(data),
+      }
+hints:
+  - level: 1
+    text: base64.b64encode and base64.urlsafe_b64encode both take a bytes object and return bytes, so call .decode("ascii") to get a str.
+  - level: 2
+    text: Use the URL-safe encode/decode pair together, and the standard encode/decode pair together -- mixing alphabets corrupts bytes that map to + / or - _.
+  - level: 3
+    text: Rebuild the bytes with base64.*_b64decode, wrap them in list(...), and set roundtrip_ok by comparing that list to the original data list.
+tests:
+  public:
+    - name: empty
+      input:
+        data: []
+        urlsafe: false
+      expected:
+        encoded: ""
+        restored: []
+        roundtrip_ok: true
+    - name: two_bytes_one_pad
+      input:
+        data: [72, 105]
+        urlsafe: false
+      expected:
+        encoded: "SGk="
+        restored: [72, 105]
+        roundtrip_ok: true
+    - name: one_byte_two_pad
+      input:
+        data: [77]
+        urlsafe: false
+      expected:
+        encoded: "TQ=="
+        restored: [77]
+        roundtrip_ok: true
+  validation:
+    - name: urlsafe_alphabet
+      input:
+        data: [251, 255, 254]
+        urlsafe: true
+      expected:
+        encoded: "-__-"
+        restored: [251, 255, 254]
+        roundtrip_ok: true
+    - name: standard_alphabet_same_bytes
+      input:
+        data: [251, 255, 254]
+        urlsafe: false
+      expected:
+        encoded: "+//+"
+        restored: [251, 255, 254]
+        roundtrip_ok: true
+    - name: three_bytes_no_pad
+      input:
+        data: [77, 97, 110]
+        urlsafe: false
+      expected:
+        encoded: "TWFu"
+        restored: [77, 97, 110]
+        roundtrip_ok: true
+    - name: six_bytes
+      input:
+        data: [0, 1, 2, 3, 4, 5]
+        urlsafe: false
+      expected:
+        encoded: "AAECAwQF"
+        restored: [0, 1, 2, 3, 4, 5]
+        roundtrip_ok: true
+explanation_markdown: |
+  Base64 is a way to carry arbitrary bytes through a channel that only tolerates
+  a small set of printable characters. It reads the input three bytes (24 bits)
+  at a time and re-slices those bits into four 6-bit groups, each mapped to one
+  alphabet character -- which is why the output length is always a multiple of
+  four and grows by roughly one third. When the input does not divide evenly by
+  three, the encoder pads with `=` so the four-character grouping still holds.
+  The standard and URL-safe alphabets agree on the first 62 symbols and differ
+  only on the last two (`+`/`/` versus `-`/`_`), which matters when your bytes
+  land on those values, as `[251, 255, 254]` does here. Decoding with the same
+  alphabet you encoded with reverses the process exactly, so a correct round
+  trip always reproduces the original bytes.
+common_mistakes:
+  - Forgetting to .decode() the encoder output, leaving encoded as a bytes object rather than the required str.
+  - Encoding with one alphabet and decoding with the other, which corrupts any byte that maps to the differing characters.
+  - Returning the recovered bytes object directly instead of converting it to a list of ints.

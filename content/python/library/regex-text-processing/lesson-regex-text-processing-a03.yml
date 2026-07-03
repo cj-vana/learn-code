@@ -1,0 +1,97 @@
+id: lesson.library.regex_text_processing.a03
+kind: lesson
+version: 1
+language: python
+title: Validating, Masking, and Reporting
+slug: lesson-regex-text-processing-a03
+difficulty: medium
+concepts:
+  - python.regex
+  - python.string_formatting
+prerequisites:
+  - python.regex
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.regex_text_processing.a03
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original observatory-log framing tying validation, masking, and f-string reporting together.
+body_markdown: |
+  Once you can match and rewrite, three practical jobs open up: checking that a
+  string has the right shape, hiding sensitive fragments, and turning matched
+  data into a tidy report. Each leans on a tool you have already met plus one new
+  habit.
+
+  **Validation** means asking "does this *entire* string fit the pattern?" The
+  key is `re.fullmatch`, which succeeds only when the pattern consumes the whole
+  string. Contrast it with `re.match`, which anchors at the start but happily
+  ignores trailing junk. An observatory tags each night's data file with a code
+  like `OBS-2026-014`, and you want to reject anything malformed:
+
+  ```python
+  import re
+
+  def is_valid_code(code):
+      return re.fullmatch(r"OBS-\d{4}-\d{3}", code) is not None
+
+  print(is_valid_code("OBS-2026-014"))   # True
+  print(is_valid_code("OBS-2026-14"))    # False -- needs exactly 3 trailing digits
+  print(is_valid_code("OBS-2026-014x"))  # False -- fullmatch rejects the extra x
+  ```
+
+  The `{4}` and `{3}` are *quantifiers*: `\d{4}` means exactly four digits.
+  Returning `... is not None` converts the match object (or `None`) into a clean
+  boolean.
+
+  **Masking** hides part of a string while keeping its shape. Use `re.sub` with a
+  replacement function so you can decide, per match, which characters to keep.
+  Here a log line exposes long member numbers, and policy says keep only the last
+  four digits:
+
+  ```python
+  def mask(m):
+      digits = m.group()
+      return "*" * (len(digits) - 4) + digits[-4:]
+
+  text = "member 100245 logged in"
+  print(re.sub(r"\d{6,}", mask, text))   # "member **0245 logged in"
+  ```
+
+  `\d{6,}` means "six or more digits", so short numbers like a room count stay
+  untouched while genuine ID numbers get starred.
+
+  **Reporting** combines extraction with string formatting. Pull the fields out
+  with groups, then build human-readable lines with f-strings. Because a report
+  should be deterministic, sort your keys before formatting:
+
+  ```python
+  def summary(lines):
+      counts = {}
+      for line in lines:
+          m = re.search(r"BAY-(\d+)", line)
+          if m:
+              bay = m.group(1)
+              counts[bay] = counts.get(bay, 0) + 1
+      return "\n".join(f"BAY-{bay}: {n} readings" for bay, n in sorted(counts.items()))
+  ```
+
+  The f-string `f"BAY-{bay}: {n} readings"` drops each captured value straight
+  into place. Sorting the dictionary items first guarantees the same output every
+  run, which matters when another program (or a test) compares the result.
+
+  Together these three moves turn raw text into something trustworthy: validated
+  on the way in, masked where privacy demands it, and formatted cleanly on the
+  way out.
+checkpoints:
+  - question: Why use re.fullmatch instead of re.match when validating a code like "OBS-2026-014"?
+    answer: re.fullmatch requires the pattern to consume the entire string, so it rejects strings with extra trailing characters, whereas re.match only anchors at the start and would accept trailing junk.
+    explanation: Validation usually means the whole string must fit the shape, which is exactly what fullmatch checks.
+  - question: In the masking example, what does the quantifier \d{6,} match, and why does that protect short numbers?
+    answer: It matches a run of six or more digits, so numbers with five or fewer digits are never matched and stay unchanged.
+    explanation: Choosing a minimum length lets you target long ID numbers while leaving small counts alone.
+  - question: Why does the reporting function sort the dictionary items before joining them into the output string?
+    answer: Sorting makes the output order deterministic, so the same input always produces the same report regardless of dictionary insertion order.
+    explanation: Deterministic output is essential when the result is compared by another program or an automated test.

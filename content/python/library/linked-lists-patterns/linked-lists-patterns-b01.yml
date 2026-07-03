@@ -1,0 +1,146 @@
+id: exercise.library.linked_lists_patterns.b01
+kind: exercise
+version: 1
+language: python
+title: Split the Freight Around a Weight Limit
+slug: linked-lists-patterns-b01
+difficulty: hard
+concepts:
+  - patterns.linked_list
+prerequisites:
+  - python.classes
+  - python.loops
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.linked_lists_patterns.b01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original rail-yard framing that stably partitions a node chain around a pivot by rewiring links into two runs.
+prompt_markdown: |
+  A rail yard splits an arriving train around a weight limit before sending the
+  cars up two different ramps. Write `split_carriages(job)` where `job` is a dict
+  with:
+
+  - `"weights"`: a list of carriage weights (integers) in coupling order.
+  - `"pivot"`: an integer weight limit.
+
+  Build a singly linked list of `Node` objects from the weights (in order), then
+  split the chain into two runs **by rewiring the `.next` links**, not by sorting:
+
+  - the **light** run holds every carriage whose weight is *strictly less than*
+    `pivot`;
+  - the **heavy** run holds every carriage whose weight is *greater than or equal
+    to* `pivot`.
+
+  Both runs must keep the carriages in their original relative order (a stable
+  split). Return a dict `{"light": [...], "heavy": [...]}` of the two runs'
+  weights as plain lists.
+
+  For example, `weights = [40, 10, 55, 30, 60]` with `pivot = 50` returns
+  `{"light": [40, 10, 30], "heavy": [55, 60]}`. An empty train returns
+  `{"light": [], "heavy": []}`.
+starter_code: |
+  def split_carriages(job):
+      # Build a Node chain, then rewire it into a light run and a heavy run.
+      return {"light": [], "heavy": []}
+function_name: split_carriages
+input_mode: function
+solution_sketch: Build the chain, then walk it once detaching each node onto one of two tail pointers (light or heavy) based on the pivot; serialize both runs from their dummy heads.
+sample_solution: |
+  def split_carriages(job):
+      class Node:
+          def __init__(self, value):
+              self.value = value
+              self.next = None
+
+      weights = job["weights"]
+      pivot = job["pivot"]
+
+      head = None
+      tail = None
+      for weight in weights:
+          node = Node(weight)
+          if head is None:
+              head = node
+              tail = node
+          else:
+              tail.next = node
+              tail = node
+
+      light_head = Node(None)
+      heavy_head = Node(None)
+      light_tail = light_head
+      heavy_tail = heavy_head
+
+      current = head
+      while current is not None:
+          nxt = current.next
+          current.next = None
+          if current.value < pivot:
+              light_tail.next = current
+              light_tail = current
+          else:
+              heavy_tail.next = current
+              heavy_tail = current
+          current = nxt
+
+      def serialize(dummy):
+          out = []
+          node = dummy.next
+          while node is not None:
+              out.append(node.value)
+              node = node.next
+          return out
+
+      return {"light": serialize(light_head), "heavy": serialize(heavy_head)}
+hints:
+  - level: 1
+    text: Keep two separate output chains, each with its own tail pointer, and append every node to whichever run its weight belongs to.
+  - level: 2
+    text: A dummy head node in front of each run means you never special-case the first carriage added to that run.
+  - level: 3
+    text: Walk the original chain once; for each node save its next link, detach it (set its next to None), then attach it to the light tail or heavy tail. Walking in order keeps both runs stable.
+tests:
+  public:
+    - name: example
+      input: {weights: [40, 10, 55, 30, 60], pivot: 50}
+      expected: {light: [40, 10, 30], heavy: [55, 60]}
+    - name: empty
+      input: {weights: [], pivot: 50}
+      expected: {light: [], heavy: []}
+    - name: all_light
+      input: {weights: [1, 2, 3], pivot: 100}
+      expected: {light: [1, 2, 3], heavy: []}
+  validation:
+    - name: all_heavy
+      input: {weights: [5, 6, 7], pivot: 1}
+      expected: {light: [], heavy: [5, 6, 7]}
+    - name: equal_goes_heavy
+      input: {weights: [50, 49, 50, 51], pivot: 50}
+      expected: {light: [49], heavy: [50, 50, 51]}
+    - name: duplicates_stable
+      input: {weights: [30, 30, 70, 30, 70], pivot: 50}
+      expected: {light: [30, 30, 30], heavy: [70, 70]}
+    - name: negatives
+      input: {weights: [-5, 20, -3, 80], pivot: 0}
+      expected: {light: [-5, -3], heavy: [20, 80]}
+    - name: single_light
+      input: {weights: [10], pivot: 50}
+      expected: {light: [10], heavy: []}
+explanation_markdown: |
+  A stable partition is the linked-list version of splitting a deck into two piles
+  without shuffling either pile. The trick that makes it clean is a pair of dummy
+  head nodes: one anchors the light run, one anchors the heavy run, and each keeps
+  a tail pointer so appending is O(1). Walking the original chain exactly once and
+  attaching each node to the correct tail preserves arrival order in both runs,
+  which is what "stable" means. Saving `current.next` before detaching a node is
+  the essential guard: once you set `current.next = None`, the only way back to the
+  rest of the train is the reference you saved. The whole split is O(n) time with
+  no comparisons between carriages, unlike a sort.
+common_mistakes:
+  - Sending carriages equal to the pivot to the light run; the spec puts weight equal to pivot in the heavy run.
+  - Forgetting to save current.next before detaching a node, which loses the rest of the chain.
+  - Building the runs by prepending, which reverses each run and breaks the required stable order.

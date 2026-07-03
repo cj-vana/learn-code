@@ -1,0 +1,151 @@
+id: exercise.library.secure_coding.a08
+kind: exercise
+version: 1
+language: python
+title: Verifying the Observatory Gate Signature
+slug: secure-coding-a08
+difficulty: medium
+concepts:
+  - python.secure_coding
+  - python.strings
+prerequisites:
+  - python.strings
+  - python.dictionaries
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.secure_coding.a08
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original webhook-style HMAC signature check themed around an observatory gate, teaching constant-time comparison via secrets.compare_digest over a recomputed HMAC-SHA256 tag.
+prompt_markdown: |
+  A mountaintop observatory receives control messages over an untrusted link — a
+  message like `shutter open 21:15`. Each message arrives with a **signature
+  tag**: the sender computed an HMAC-SHA256 of the message using a shared secret
+  key and attached the resulting hex digest. The gate should act on a message
+  only if it can recompute the same tag, proving the message was not forged or
+  tampered with in transit.
+
+  Write `verify_signature(payload)` where `payload` is a dict with three string
+  keys:
+
+  - `"message"`: the message text.
+  - `"key"`: the shared secret key.
+  - `"tag"`: the hex signature that came with the message.
+
+  Recompute the expected tag as the HMAC-SHA256 of the message under the key,
+  encoding both strings as UTF-8 and taking the lowercase hex digest. Return
+  `True` if the provided tag matches the expected tag and `False` otherwise.
+
+  Two rules matter for security:
+
+  - Compare the two tags with `secrets.compare_digest`, **not** with `==`. A
+    plain `==` on strings can short-circuit at the first differing character, and
+    the tiny timing difference leaks how much of the tag an attacker guessed
+    correctly. `compare_digest` takes the same time regardless of where the
+    mismatch is.
+  - `compare_digest` returns `False` (it does not raise) when the two tags have
+    different lengths, so a truncated or padded tag is simply rejected.
+
+  An empty message is still a real message: it has a well-defined HMAC, so a
+  correct tag for it must return `True`.
+starter_code: |
+  import hashlib
+  import hmac
+  import secrets
+
+
+  def verify_signature(payload):
+      # Recompute the HMAC tag and compare it in constant time.
+      return False
+function_name: verify_signature
+input_mode: function
+solution_sketch: Recompute hmac.new(key.encode(), message.encode(), hashlib.sha256).hexdigest(), then return secrets.compare_digest of that expected tag against the provided tag.
+sample_solution: |
+  import hashlib
+  import hmac
+  import secrets
+
+
+  def verify_signature(payload):
+      expected = hmac.new(
+          payload["key"].encode("utf-8"),
+          payload["message"].encode("utf-8"),
+          hashlib.sha256,
+      ).hexdigest()
+      return secrets.compare_digest(expected, payload["tag"])
+hints:
+  - level: 1
+    text: Recompute the tag yourself from the message and key, then check whether the provided tag equals what you computed.
+  - level: 2
+    text: Build the expected tag with hmac.new(key.encode(), message.encode(), hashlib.sha256).hexdigest(); both the key and message must be encoded to bytes first.
+  - level: 3
+    text: Compare with secrets.compare_digest(expected, payload["tag"]) rather than ==, so the check is constant-time and returns False for a length mismatch instead of raising.
+tests:
+  public:
+    - name: valid_signature
+      input:
+        message: 'ledger-entry-42'
+        key: 'orion-shared-secret'
+        tag: 'd7fd521d9bb0a3c0123b27aae11bf89900260f2be4acd3f7032f7b4d82299b09'
+      expected: true
+    - name: tampered_message
+      input:
+        message: 'ledger-entry-43'
+        key: 'orion-shared-secret'
+        tag: 'd7fd521d9bb0a3c0123b27aae11bf89900260f2be4acd3f7032f7b4d82299b09'
+      expected: false
+    - name: wrong_tag_same_length
+      input:
+        message: 'ledger-entry-42'
+        key: 'orion-shared-secret'
+        tag: 'd7fd521d9bb0a3c0123b27aae11bf89900260f2be4acd3f7032f7b4d82299b08'
+      expected: false
+  validation:
+    - name: empty_message_valid
+      input:
+        message: ''
+        key: 'orion-shared-secret'
+        tag: '4d62cb741f0c84a4980ec20ff384634d064e59f89c1c787cb17e5e4bfd7d8ad4'
+      expected: true
+    - name: wrong_key
+      input:
+        message: 'ledger-entry-42'
+        key: 'imposter-secret'
+        tag: 'd7fd521d9bb0a3c0123b27aae11bf89900260f2be4acd3f7032f7b4d82299b09'
+      expected: false
+    - name: different_message_valid
+      input:
+        message: 'shutter open 21:15'
+        key: 'dome-key-7'
+        tag: 'f462d593247e17a1484a33a701babf4240a6766e679112a4637f2d81446e1ba0'
+      expected: true
+    - name: truncated_tag_length_mismatch
+      input:
+        message: 'ledger-entry-42'
+        key: 'orion-shared-secret'
+        tag: 'd7fd521d'
+      expected: false
+explanation_markdown: |
+  Signature verification is the backbone of trusting data from an untrusted
+  channel: instead of trusting the message, you trust that only someone holding
+  the shared key could have produced a matching HMAC over it. Recomputing the tag
+  and comparing is exactly what webhook receivers do to confirm a payload came
+  from the expected sender.
+
+  The constant-time comparison is the subtle, load-bearing part. A normal string
+  `==` is allowed to stop at the first byte that differs, so a comparison that
+  fails on character 2 returns faster than one that fails on character 40. An
+  attacker who can measure that timing can recover the correct tag one character
+  at a time — a real class of exploit against naive verifiers. `secrets.compare_digest`
+  (the same routine as `hmac.compare_digest`) is written to take time
+  independent of where the first difference is, closing that side channel. It
+  also treats a length mismatch as a plain `False`, so you never have to guard
+  the lengths yourself.
+common_mistakes:
+  - Comparing the tags with == instead of secrets.compare_digest, reintroducing the timing side channel the exercise is about.
+  - Forgetting to encode the key and message to bytes before passing them to hmac.new.
+  - Comparing the raw digest bytes against a hex string, or vice versa, so a correct signature never matches.
+  - Adding a manual length check that raises on a short tag instead of letting compare_digest return False.

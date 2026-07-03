@@ -1,0 +1,118 @@
+id: exercise.library.trees_lite.b02
+kind: exercise
+version: 1
+language: python
+title: The Busiest Tier of a River Delta
+slug: trees-lite-b02
+difficulty: hard
+concepts:
+  - patterns.tree_traversal
+  - python.trees_as_data
+prerequisites:
+  - patterns.queue_bfs
+  - python.dictionaries
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.trees_lite.b02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original river-delta framing that finds the widest breadth-first level of a binary tree, breaking ties toward the smaller level index.
+prompt_markdown: |
+  A river delta is mapped as a binary tree of channel junctions. The source is the
+  root at tier `0`, its two branches are tier `1`, and so on. A survey crew wants
+  the **busiest tier**: the level that contains the most junctions.
+
+  Write `widest_level(tree)` where `tree` is a binary tree of nested dictionaries.
+  Each node is `{"value": ..., "left": ..., "right": ...}`, where `left` and
+  `right` are child nodes or `None`, and an empty delta is `None`.
+
+  Walk the tree **breadth-first**, tier by tier, and return a list
+  `[tier_index, width]` naming the tier with the most junctions and how many
+  junctions it holds. If two tiers tie for the most junctions, return the
+  **smaller** tier index. An empty delta has no tiers, so return `[-1, 0]`.
+
+  For example, a delta whose tiers hold 1, then 2, then 4 junctions returns
+  `[2, 4]`.
+starter_code: |
+  def widest_level(tree):
+      # Breadth-first sweep; return [tier_index, width] of the busiest tier.
+      return [-1, 0]
+function_name: widest_level
+input_mode: function
+solution_sketch: Do a level-order sweep, one tier at a time; the current frontier's length is that tier's width. Track the best width and its tier, updating only on a strictly larger width so the smallest index wins ties.
+sample_solution: |
+  def widest_level(tree):
+      if tree is None:
+          return [-1, 0]
+
+      best_index = 0
+      best_width = 0
+      tier = 0
+      frontier = [tree]
+      while frontier:
+          width = len(frontier)
+          if width > best_width:
+              best_width = width
+              best_index = tier
+          nxt = []
+          for node in frontier:
+              if node["left"] is not None:
+                  nxt.append(node["left"])
+              if node["right"] is not None:
+                  nxt.append(node["right"])
+          frontier = nxt
+          tier += 1
+      return [best_index, best_width]
+hints:
+  - level: 1
+    text: Process the tree one whole tier at a time; the number of nodes you are holding for a tier is that tier's width.
+  - level: 2
+    text: From the current tier's nodes, gather all their non-None children to form the next tier, then move on.
+  - level: 3
+    text: Update your best tier only when a width is strictly greater than the best so far; because earlier tiers are seen first, that rule keeps the smaller index on a tie.
+tests:
+  public:
+    - name: single
+      input: {value: 1, left: null, right: null}
+      expected: [0, 1]
+    - name: empty
+      input: null
+      expected: [-1, 0]
+    - name: bottom_widest
+      input: {value: 1, left: {value: 2, left: {value: 4, left: null, right: null}, right: {value: 5, left: null, right: null}}, right: {value: 3, left: {value: 6, left: null, right: null}, right: {value: 7, left: null, right: null}}}
+      expected: [2, 4]
+  validation:
+    - name: root_widest_all_ones
+      input: {value: 1, left: {value: 2, left: null, right: {value: 3, left: null, right: null}}, right: null}
+      expected: [0, 1]
+    - name: middle_tie_smaller_index
+      input: {value: 1, left: {value: 2, left: {value: 4, left: {value: 6, left: null, right: null}, right: null}, right: null}, right: {value: 3, left: null, right: {value: 5, left: null, right: null}}}
+      expected: [1, 2]
+    - name: third_tier_widest
+      input: {value: 1, left: {value: 2, left: {value: 4, left: null, right: null}, right: null}, right: {value: 3, left: {value: 5, left: null, right: null}, right: {value: 6, left: null, right: null}}}
+      expected: [2, 3]
+    - name: two_tiers
+      input: {value: 1, left: {value: 2, left: null, right: null}, right: {value: 3, left: null, right: null}}
+      expected: [1, 2]
+    - name: deep_narrow_chain
+      input: {value: 1, left: {value: 2, left: {value: 3, left: {value: 4, left: null, right: null}, right: null}, right: null}, right: null}
+      expected: [0, 1]
+explanation_markdown: |
+  Breadth-first traversal is the natural fit whenever a question is phrased "per
+  level," because it hands you each tier as a complete batch. The clean version
+  keeps a `frontier` list of the current tier's nodes: its length *is* that tier's
+  width, and the next frontier is every non-`None` child of the current one. You
+  never need explicit depth bookkeeping on individual nodes; the loop advances one
+  tier per iteration, so a counter tracks the tier index for free. The tie rule
+  falls out of a single choice: update the best only when a width is *strictly*
+  greater than the current best. Since tiers are visited in increasing order, an
+  equal-width later tier can never displace an earlier one, so the smaller index
+  wins automatically. Each junction is enqueued and dequeued once, making the sweep
+  O(n).
+common_mistakes:
+  - Using a >= comparison when tracking the best width, which lets a later tier overwrite an earlier tie and returns the wrong index.
+  - Adding None children to the next frontier, which inflates the width counts with phantom junctions.
+  - Returning the width alone or the tier alone instead of the [tier_index, width] pair the spec asks for.

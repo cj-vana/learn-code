@@ -1,0 +1,83 @@
+id: exercise.library.collections_itertools.a05
+kind: exercise
+version: 1
+language: python
+title: Loom Run-Length Encoding
+slug: collections-itertools-a05
+difficulty: medium
+concepts:
+  - python.itertools_module
+  - concepts.grouping_aggregation
+prerequisites:
+  - python.lists
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.collections_itertools.a05
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original textile-loom scenario drilling itertools.groupby over already-consecutive runs.
+prompt_markdown: |
+  A loom prints a strip of coloured threads one after another. To store the
+  strip compactly you record each *run* of identical consecutive colours as a
+  `[colour, length]` pair. Write `run_lengths(threads)` where `threads` is a
+  list of colour names in the order they were printed. Return a list of
+  `[colour, length]` pairs, one per consecutive run, in order. An empty strip
+  returns an empty list.
+
+  For example `["red", "red", "green"]` becomes `[["red", 2], ["green", 1]]`.
+  Note that a colour can reappear in a later run, and each run is reported
+  separately.
+starter_code: |
+  def run_lengths(threads):
+      return []
+function_name: run_lengths
+input_mode: function
+solution_sketch: Let itertools.groupby split the strip into consecutive runs and measure each run's length.
+sample_solution: |
+  from itertools import groupby
+
+
+  def run_lengths(threads):
+      return [[colour, len(list(group))] for colour, group in groupby(threads)]
+hints:
+  - level: 1
+    text: The strip is already in order, so you only need to collapse neighbouring equal colours.
+  - level: 2
+    text: itertools.groupby walks the sequence and yields (colour, group) whenever the colour changes.
+  - level: 3
+    text: For each (colour, group) pair, len(list(group)) is the run length; collect [colour, that length].
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: []
+    - name: two_runs
+      input: [red, red, green]
+      expected: [[red, 2], [green, 1]]
+    - name: alternating
+      input: [a, b, a]
+      expected: [[a, 1], [b, 1], [a, 1]]
+  validation:
+    - name: single_long_run
+      input: [gold, gold, gold, gold]
+      expected: [[gold, 4]]
+    - name: single_item
+      input: [teal]
+      expected: [[teal, 1]]
+    - name: mixed_runs
+      input: [r, r, g, g, g, r]
+      expected: [[r, 2], [g, 3], [r, 1]]
+explanation_markdown: |
+  `groupby` yields a `(key, group)` pair every time the value changes, and the
+  `group` is a lazy iterator over just that run. Wrapping it in `list(...)` and
+  taking its length counts the run. Because the loom output is already in
+  printed order, no sorting is needed -- and sorting would actually be *wrong*
+  here, since it would merge the two separate red runs into one. That is the
+  signature behaviour of `groupby`: it groups only *consecutive* equal items.
+common_mistakes:
+  - Sorting the threads first, which incorrectly merges non-adjacent runs of the same colour.
+  - Consuming the group iterator twice (for example calling len after already looping it), which yields 0 the second time.
+  - Returning tuples like (colour, length) when the tests expect [colour, length] lists.

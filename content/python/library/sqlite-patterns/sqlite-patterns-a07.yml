@@ -1,0 +1,208 @@
+id: exercise.library.sqlite_patterns.a07
+kind: exercise
+version: 1
+language: python
+title: Trimming the Harbor Berth Board
+slug: sqlite-patterns-a07
+difficulty: medium
+concepts:
+  - python.sqlite_sql
+  - python.sorting
+prerequisites:
+  - python.lists
+  - python.dictionaries
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.sqlite_patterns.a07
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original ORDER BY / LIMIT drill framed around a fishing harbor's live berth board; seeds an in-memory SQLite table and reads back the top rows.
+prompt_markdown: |
+  A busy fishing harbor keeps a live berth board: every vessel tied up right now is
+  one row, a dict shaped like `{"name": "Marlin", "tons": 50}`. The harbormaster
+  wants the board narrowed to just the heaviest (or lightest) few vessels.
+
+  Write `order_and_limit(request)` where `request` is a single dict:
+
+  - `"rows"`: the list of vessel dicts. Every row shares the same set of keys.
+  - `"order_col"`: the column name to sort by, for example `"tons"`.
+  - `"descending"`: `True` sorts largest-first, `False` sorts smallest-first.
+  - `"limit"`: how many rows to keep from the top of the sorted board.
+
+  Load the rows into an in-memory SQLite table, run a single `ORDER BY ... LIMIT`
+  query, and return the surviving rows as a list of dicts with the same keys as the
+  input rows.
+
+  Rules for every edge case:
+
+  - Ties on `order_col` keep the vessels in their original input order (a stable
+    ordering).
+  - If `limit` is larger than the number of rows, return every row.
+  - If `limit` is `0`, return an empty list.
+  - If `"rows"` is empty, return an empty list.
+
+  This is real SQL: open `sqlite3.connect(":memory:")` inside the function, never a
+  file on disk.
+starter_code: |
+  import sqlite3
+
+
+  def order_and_limit(request):
+      return []
+function_name: order_and_limit
+input_mode: function
+solution_sketch: "Create an in-memory table whose columns are the row keys, insert the rows, then SELECT them back with ORDER BY the chosen column DESC or ASC plus a rowid tiebreak and a bound LIMIT; rebuild dicts from the fetched tuples."
+sample_solution: |
+  import sqlite3
+
+
+  def order_and_limit(request):
+      rows = request["rows"]
+      if not rows:
+          return []
+      order_col = request["order_col"]
+      limit = request["limit"]
+      direction = "DESC" if request["descending"] else "ASC"
+      columns = list(rows[0].keys())
+      col_list = ", ".join('"%s"' % c for c in columns)
+      placeholders = ", ".join("?" for _ in columns)
+      conn = sqlite3.connect(":memory:")
+      conn.execute("CREATE TABLE berths(%s)" % col_list)
+      conn.executemany(
+          "INSERT INTO berths(%s) VALUES(%s)" % (col_list, placeholders),
+          [tuple(row[c] for c in columns) for row in rows],
+      )
+      query = 'SELECT %s FROM berths ORDER BY "%s" %s, rowid ASC LIMIT ?' % (
+          col_list,
+          order_col,
+          direction,
+      )
+      fetched = conn.execute(query, (limit,)).fetchall()
+      return [dict(zip(columns, row)) for row in fetched]
+hints:
+  - level: 1
+    text: Build the table columns from the keys of the first row, then insert every row with a parameterized executemany call.
+  - level: 2
+    text: The sort direction is a boolean, so turn it into the literal text DESC or ASC yourself; only the LIMIT value should be a bound ? parameter.
+  - level: 3
+    text: Add a secondary ORDER BY rowid ASC so tied rows come back in insertion order, and zip each fetched tuple with the column names to rebuild dicts.
+tests:
+  public:
+    - name: empty_board
+      input:
+        rows: []
+        order_col: tons
+        descending: true
+        limit: 3
+      expected: []
+    - name: top_two_heaviest
+      input:
+        rows:
+          - name: Marlin
+            tons: 50
+          - name: Petrel
+            tons: 90
+          - name: Kestrel
+            tons: 70
+        order_col: tons
+        descending: true
+        limit: 2
+      expected:
+        - name: Petrel
+          tons: 90
+        - name: Kestrel
+          tons: 70
+    - name: ascending_limit_over_count
+      input:
+        rows:
+          - name: Marlin
+            tons: 50
+          - name: Petrel
+            tons: 90
+          - name: Kestrel
+            tons: 70
+        order_col: tons
+        descending: false
+        limit: 10
+      expected:
+        - name: Marlin
+          tons: 50
+        - name: Kestrel
+          tons: 70
+        - name: Petrel
+          tons: 90
+  validation:
+    - name: ties_keep_input_order
+      input:
+        rows:
+          - name: Marlin
+            tons: 90
+          - name: Petrel
+            tons: 90
+          - name: Kestrel
+            tons: 50
+        order_col: tons
+        descending: true
+        limit: 2
+      expected:
+        - name: Marlin
+          tons: 90
+        - name: Petrel
+          tons: 90
+    - name: limit_zero
+      input:
+        rows:
+          - name: Osprey
+            tons: 40
+        order_col: tons
+        descending: true
+        limit: 0
+      expected: []
+    - name: single_row
+      input:
+        rows:
+          - name: Osprey
+            tons: 40
+        order_col: tons
+        descending: true
+        limit: 1
+      expected:
+        - name: Osprey
+          tons: 40
+    - name: ascending_tie_then_trim
+      input:
+        rows:
+          - name: Anchor
+            tons: 5
+          - name: Buoy
+            tons: 5
+          - name: Cleat
+            tons: 1
+        order_col: tons
+        descending: false
+        limit: 2
+      expected:
+        - name: Cleat
+          tons: 1
+        - name: Anchor
+          tons: 5
+explanation_markdown: |
+  `ORDER BY` plus `LIMIT` is how a database hands you a leaderboard without pulling
+  every row into your program. The one subtlety is stability: SQLite does not
+  promise to keep equal rows in any particular order, so tied vessels could come
+  back either way across versions. Adding `, rowid ASC` as a second sort key pins
+  ties to insertion order, because each inserted row gets a monotonically
+  increasing implicit `rowid`.
+
+  Notice what is a parameter and what is not. The `LIMIT` value is untrusted data,
+  so it is bound with `?`. The sort *direction* and *column* are identifiers, which
+  cannot be bound as parameters — you assemble them into the query text yourself,
+  which is safe here because they come from your own schema rather than raw user
+  input.
+common_mistakes:
+  - Trying to bind the column name or DESC/ASC as a ? parameter; only values can be bound, identifiers and keywords are part of the query text.
+  - Forgetting the rowid tiebreak, so tied rows come back in an unspecified order and the test that checks input-order stability fails.
+  - Assuming a LIMIT larger than the row count is an error; SQLite simply returns every available row.

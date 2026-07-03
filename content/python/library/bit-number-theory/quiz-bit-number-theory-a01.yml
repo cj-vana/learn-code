@@ -1,0 +1,102 @@
+id: quiz.library.bit_number_theory.a01
+kind: quiz
+version: 1
+language: python
+title: Spotting Bit and Number-Theory Shapes
+slug: quiz-bit-number-theory-a01
+difficulty: medium
+concepts:
+  - patterns.bit_manipulation
+  - concepts.number_theory
+prerequisites:
+  - patterns.bit_manipulation
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.bit_number_theory.a01
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pattern-recognition quiz on choosing bitwise and number-theory tools for word problems.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      A cash register logs every drawer-open event twice — once on open, once on
+      close — except for one event that was interrupted. Which technique finds the
+      unpaired event id in one pass with O(1) extra space?
+    choices:
+      - XOR every id together; pairs cancel and the survivor remains
+      - Sort the ids and scan for a gap
+      - Count occurrences in a dictionary and search for the odd one
+      - Sum the ids and subtract the expected total
+    correct_choice: XOR every id together; pairs cancel and the survivor remains
+    explanation: |
+      x ^ x = 0 and XOR is commutative, so folding XOR across the log cancels
+      every pair and leaves the unpaired id. A dictionary also works but costs
+      O(n) extra space.
+    concepts:
+      - patterns.bit_manipulation
+  - id: q2
+    prompt: |
+      Eight independent on/off privileges must travel inside a single integer
+      column of a legacy database. What is the standard representation?
+    choices:
+      - A bitmask, with each privilege assigned one bit position
+      - A string of the privilege names joined by commas
+      - The product of eight distinct prime numbers
+      - An eight-element list stored via its repr
+    correct_choice: A bitmask, with each privilege assigned one bit position
+    explanation: |
+      One bit per flag packs all eight into a small int, and membership, union,
+      and subset checks become single &, |, and comparison operations.
+    concepts:
+      - patterns.bit_manipulation
+  - id: q3
+    prompt: |
+      You need every prime number below 100,000. Which approach is the right
+      shape for this job?
+    choices:
+      - A sieve that crosses off multiples of each prime up to the limit
+      - Trial-dividing every number by everything smaller than it
+      - Checking each number against a fixed list of the first ten primes
+      - Generating random numbers and testing them until enough primes appear
+    correct_choice: A sieve that crosses off multiples of each prime up to the limit
+    explanation: |
+      The sieve of Eratosthenes finds all primes below n in roughly O(n log log n),
+      far faster than trial division per number, and it is exact where sampling
+      is not.
+    concepts:
+      - concepts.number_theory
+  - id: q4
+    prompt: |
+      Two lighthouse beams flash every 12 and every 18 seconds, both flashing
+      now. Which single quantity tells you when they next flash together?
+    choices:
+      - The least common multiple of 12 and 18
+      - The greatest common divisor of 12 and 18
+      - The sum of 12 and 18
+      - The larger of the two periods
+    correct_choice: The least common multiple of 12 and 18
+    explanation: |
+      Simultaneous flashes happen at common multiples of both periods, and the
+      first one is the least common multiple — 36 seconds, computable as
+      12 * 18 // gcd(12, 18).
+    concepts:
+      - concepts.number_theory
+  - id: q5
+    prompt: |
+      A menu has 8 dishes and you must consider every possible tasting selection.
+      Why do the integers 0 through 255 enumerate exactly the choices?
+    choices:
+      - Each integer's binary digits mark which of the 8 dishes are included
+      - Because 255 is the largest byte value Python supports
+      - Each integer is the sum of the chosen dishes' menu positions
+      - They do not; subsets require recursion to enumerate
+    correct_choice: Each integer's binary digits mark which of the 8 dishes are included
+    explanation: |
+      There are 2^8 = 256 subsets of 8 items, and reading bit i of a counter from
+      0 to 255 as "dish i included" pairs every subset with exactly one integer.
+    concepts:
+      - patterns.bit_manipulation

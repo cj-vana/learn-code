@@ -1,0 +1,102 @@
+id: exercise.library.cli_parsing.a05
+kind: exercise
+version: 1
+language: python
+title: The Bindery's On-Off Switch
+slug: cli-parsing-a05
+difficulty: easy
+concepts:
+  - python.cli_args
+  - python.lists
+prerequisites:
+  - python.conditionals
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.cli_parsing.a05
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original bookbindery job-runner framing for a presence-as-true boolean flag detector using exact token membership.
+prompt_markdown: |
+  The bindery's job runner has switches like `--trim` and `--gild` that are either
+  on or off. There is no value to read: the switch counts as on simply because it
+  appears in the command, and off because it does not.
+
+  Write `parse_boolean_flag(job)` where `job` is a dict with two keys:
+
+  - `job["argv"]`: the list of command-line tokens.
+  - `job["flag_name"]`: the exact flag token to look for, such as `'--trim'`.
+
+  Return `True` if `flag_name` appears anywhere in `argv`, and `False` otherwise.
+  The match must be exact: `'--trim'` is not considered present just because
+  `'--trim-edges'` appears. An empty `argv` returns `False`.
+starter_code: |
+  def parse_boolean_flag(job):
+      argv = job["argv"]
+      flag_name = job["flag_name"]
+      # A boolean switch is on when its exact token is present in argv.
+      return False
+function_name: parse_boolean_flag
+input_mode: function
+solution_sketch: Return whether flag_name is an element of the argv list using the in operator.
+sample_solution: |
+  def parse_boolean_flag(job):
+      argv = job["argv"]
+      flag_name = job["flag_name"]
+      return flag_name in argv
+hints:
+  - level: 1
+    text: A boolean flag carries no value; its whole meaning is whether the token is there or not.
+  - level: 2
+    text: Python's `in` operator tests list membership and already returns a bool.
+  - level: 3
+    text: "`flag_name in argv` compares whole elements, so it will not match a longer look-alike token; return that expression directly."
+tests:
+  public:
+    - name: present
+      input:
+        argv: ['--trim', '--port', '80']
+        flag_name: '--trim'
+      expected: true
+    - name: absent
+      input:
+        argv: ['--port', '80']
+        flag_name: '--trim'
+      expected: false
+    - name: empty_argv
+      input:
+        argv: []
+        flag_name: '--trim'
+      expected: false
+  validation:
+    - name: present_at_end
+      input:
+        argv: ['--port', '80', '--dry-run']
+        flag_name: '--dry-run'
+      expected: true
+    - name: lookalike_not_matched
+      input:
+        argv: ['--trim-edges']
+        flag_name: '--trim'
+      expected: false
+    - name: among_many_switches
+      input:
+        argv: ['--trim', '--gild', '--emboss']
+        flag_name: '--gild'
+      expected: true
+explanation_markdown: |
+  A boolean or "store true" flag is the simplest command-line construct: it has no
+  argument, and its presence is its value. Because `argv` is a list, the whole job
+  is a membership test, and `in` returns a bool directly, so no `if`/`else` is
+  needed. The one thing to be careful about is that `in` on a list compares entire
+  elements, not substrings, so `'--trim'` will not accidentally match
+  `'--trim-edges'`. That whole-element behavior is exactly what you want here,
+  and it is why this differs from a substring search. Real parsers layer more on
+  top (rejecting an unexpected value after the switch, supporting a `--no-trim`
+  form), but the core idea stays this presence check.
+common_mistakes:
+  - Reaching for a substring test so a longer look-alike token is wrongly treated as the flag.
+  - Writing an if/else to return True or False when `flag_name in argv` already is the boolean answer.
+  - Trying to read a value after the flag, when a boolean switch has no value to consume.

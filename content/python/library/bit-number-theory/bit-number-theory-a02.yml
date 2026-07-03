@@ -1,0 +1,92 @@
+id: exercise.library.bit_number_theory.a02
+kind: exercise
+version: 1
+language: python
+title: Counting Enabled Toggles
+slug: bit-number-theory-a02
+difficulty: easy
+concepts:
+  - patterns.bit_manipulation
+prerequisites:
+  - python.loops
+  - python.operators
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.bit_number_theory.a02
+  author: generated
+  generated_at: '2026-07-02T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original popcount drill using the n & (n-1) clear-lowest-set-bit trick, themed around counting enabled feature toggles.
+prompt_markdown: |
+  A settings service records which feature toggles a user has switched on by
+  setting the matching bits of one non-negative integer. Write
+  `count_active_toggles(n)` that returns how many bits are set to `1` in `n`.
+
+  `n` is a single non-negative integer (the input is the number itself, not a
+  dict or list). `count_active_toggles(0)` returns `0` because no toggles are on.
+
+  The clean way to do this is the `n & (n - 1)` trick: that expression clears the
+  lowest set bit of `n`, so if you loop applying it until `n` reaches zero, the
+  number of passes equals the number of set bits. You do not need to convert the
+  number to a string.
+starter_code: |
+  def count_active_toggles(n):
+      return 0
+function_name: count_active_toggles
+input_mode: function
+solution_sketch: Loop while n is non-zero, clearing the lowest set bit with n &= n - 1 each pass and counting the passes.
+sample_solution: |
+  def count_active_toggles(n):
+      count = 0
+      while n:
+          n &= n - 1
+          count += 1
+      return count
+hints:
+  - level: 1
+    text: Subtracting 1 from a number flips its lowest set bit to 0 and turns the zeros below it into ones.
+  - level: 2
+    text: AND-ing n with n - 1 therefore erases exactly the lowest set bit, removing one enabled toggle per step.
+  - level: 3
+    text: Loop `while n:` doing `n &= n - 1` and increment a counter each pass; return the counter once n is zero.
+tests:
+  public:
+    - name: none_on
+      input: 0
+      expected: 0
+    - name: three_low_bits
+      input: 7
+      expected: 3
+    - name: single_high_bit
+      input: 8
+      expected: 1
+  validation:
+    - name: one_toggle
+      input: 1
+      expected: 1
+    - name: full_byte
+      input: 255
+      expected: 8
+    - name: lone_far_bit
+      input: 1024
+      expected: 1
+    - name: alternating
+      input: 5
+      expected: 2
+    - name: ten_of_ten
+      input: 1023
+      expected: 10
+explanation_markdown: |
+  Because subtracting one flips the lowest `1` bit to `0` and every trailing `0`
+  to `1`, AND-ing the result back against the original wipes out precisely that
+  lowest set bit and nothing else. Each loop therefore removes one enabled toggle,
+  so the loop runs exactly as many times as there are set bits — never once per
+  possible bit position. That makes the work proportional to the number of toggles
+  that are on, which is why the trick is faster than scanning every bit for a
+  sparsely populated integer.
+common_mistakes:
+  - Using `n & n - 1` while forgetting Python evaluates it correctly by precedence, then reassigning to the wrong variable so the loop never ends.
+  - Looping a fixed 32 or 64 times regardless of n instead of stopping when n hits zero.
+  - Shifting n right and testing `n & 1` but forgetting to actually update n, causing an infinite loop.

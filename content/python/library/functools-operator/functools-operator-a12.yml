@@ -1,0 +1,112 @@
+id: exercise.library.functools_operator.a12
+kind: exercise
+version: 1
+language: python
+title: Every Combination Lock Code
+slug: functools-operator-a12
+difficulty: medium
+concepts:
+  - python.functools_operator
+  - python.itertools_module
+  - patterns.brute_force
+prerequisites:
+  - python.lists
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.functools_operator.a12
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original itertools.product(repeat=...) drill framed as enumerating every code a workshop's combination lock can hold.
+prompt_markdown: |
+  A workshop is testing combination padlocks. Each lock has a fixed number of
+  dials, and every dial can show any symbol from the same set. To audit a lock you
+  need *every possible code* — the full Cartesian product of the symbol set with
+  itself, once per dial. `itertools.product` with the `repeat=` keyword produces
+  exactly that.
+
+  Write `enumerate_lock_codes(data)` where `data` is a dict with two keys:
+
+  - `"dials"`: a list of the symbols a single dial can show (numbers or strings).
+  - `"length"`: a non-negative integer (`>= 0`), the number of dials.
+
+  Return a list of codes, where **each code is a list** of `length` symbols, in
+  the standard `itertools.product` order (odometer order: the rightmost position
+  varies fastest). `product` yields tuples, so convert each to a list.
+
+  Edge cases you must handle:
+
+  - A `"length"` of `0` yields exactly one code: the empty code `[]`, so the
+    result is `[[]]`. (The empty product has one arrangement — choosing nothing.)
+  - If `"dials"` is empty but `"length"` is `1` or more, no code can be formed, so
+    return `[]`.
+  - A `"length"` of `1` returns one single-symbol code per dial symbol.
+
+  Example: `enumerate_lock_codes({"dials": ["A", "B"], "length": 2})` returns
+  `[["A", "A"], ["A", "B"], ["B", "A"], ["B", "B"]]`.
+starter_code: |
+  import itertools
+
+
+  def enumerate_lock_codes(data):
+      return []
+function_name: enumerate_lock_codes
+input_mode: function
+solution_sketch: Call itertools.product(dials, repeat=length) and convert each yielded tuple into a list.
+sample_solution: |
+  import itertools
+
+
+  def enumerate_lock_codes(data):
+      return [list(code) for code in itertools.product(data["dials"], repeat=data["length"])]
+hints:
+  - level: 1
+    text: itertools.product(pool, repeat=k) is the Cartesian product of the pool with itself k times - every length-k code over the symbols.
+  - level: 2
+    text: product yields tuples in odometer order (rightmost position varies fastest); wrap each tuple with list() to match the required shape.
+  - level: 3
+    text: repeat=0 gives a single empty tuple, so you return [[]]; an empty pool with repeat >= 1 gives nothing, so you return []. Both fall out of product automatically.
+tests:
+  public:
+    - name: pairs
+      input: {dials: ["A", "B"], length: 2}
+      expected: [["A", "A"], ["A", "B"], ["B", "A"], ["B", "B"]]
+    - name: length_zero
+      input: {dials: ["A", "B"], length: 0}
+      expected: [[]]
+    - name: single_dial
+      input: {dials: ["X", "Y", "Z"], length: 1}
+      expected: [["X"], ["Y"], ["Z"]]
+  validation:
+    - name: binary_triples
+      input: {dials: [0, 1], length: 3}
+      expected: [[0, 0, 0], [0, 0, 1], [0, 1, 0], [0, 1, 1], [1, 0, 0], [1, 0, 1], [1, 1, 0], [1, 1, 1]]
+    - name: empty_dials_nonzero_length
+      input: {dials: [], length: 2}
+      expected: []
+    - name: three_symbols_two_dials
+      input: {dials: ["a", "b", "c"], length: 2}
+      expected: [["a", "a"], ["a", "b"], ["a", "c"], ["b", "a"], ["b", "b"], ["b", "c"], ["c", "a"], ["c", "b"], ["c", "c"]]
+explanation_markdown: |
+  `itertools.product(pool, repeat=k)` is the tidy way to enumerate every length-`k`
+  sequence over a symbol set — the same result as `k` nested loops, but flat and
+  data-driven. It emits tuples in odometer order: the last position cycles fastest,
+  the first slowest, which is why `["A", "B"]` at length 2 runs `AA, AB, BA, BB`.
+
+  The two edge cases are worth internalising. `repeat=0` means "the product of no
+  factors," which by convention has a single arrangement — the empty tuple — so you
+  get `[[]]`, not `[]`. An empty pool with `repeat >= 1` has nothing to draw from,
+  so the product is genuinely empty and you get `[]`. Both follow directly from the
+  definition of a Cartesian product, so `itertools.product` handles them without any
+  guard clauses on your side; you only add the `list()` conversion.
+
+  Because the output grows as `len(dials) ** length`, this is a brute-force
+  enumeration — fine for auditing a small lock, but a reminder that Cartesian
+  products explode quickly as either the symbol set or the code length grows.
+common_mistakes:
+  - Returning [] for length 0 instead of the single empty code [[]].
+  - Leaving the results as tuples from product rather than converting each code to a list.
+  - Passing dials positionally k times (product(dials, dials, ...)) instead of using repeat=, which cannot adapt to a runtime length.
+  - Confusing product with permutations or combinations, which forbid repeats and would drop codes like ["A", "A"].

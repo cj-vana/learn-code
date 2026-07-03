@@ -1,0 +1,96 @@
+id: lesson.library.numeric_precision.a02
+kind: lesson
+version: 1
+language: python
+title: 'Decimal: Money Math That Adds Up'
+slug: lesson-numeric-precision-a02
+difficulty: medium
+concepts:
+  - python.numeric_precision
+prerequisites:
+  - python.numeric_precision
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.numeric_precision.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original Decimal walkthrough framed around a market co-op's fee settlements, with fresh worked rounding-mode examples.
+body_markdown: |
+  The market-ledger capstone rounded floats defensively at every boundary.
+  That discipline works — but for code where money is the *domain*
+  (billing, settlements, accounting), Python offers arithmetic where the
+  problem cannot arise: `decimal.Decimal` computes in base ten, so 0.1
+  is *exactly* 0.1.
+
+  ### The string rule
+
+  ```python
+  from decimal import Decimal
+
+  Decimal("0.10") + Decimal("0.20") == Decimal("0.30")   # True. Exactly.
+  ```
+
+  One construction rule carries the whole module: **build Decimals from
+  strings, not floats.** `Decimal(0.1)` faithfully preserves the float's
+  binary approximation — `Decimal('0.1000000000000000055511151231257827...')`
+  — importing the very disease you came to cure. The string is the exact
+  value you meant. (Note also that `Decimal("0.10")` remembers its two
+  places — significance survives arithmetic, which accountants care
+  about.)
+
+  ### Rounding is a decision, not an accident
+
+  Floats round by IEEE hardware rules; Decimal makes rounding an explicit,
+  named choice via `quantize`:
+
+  ```python
+  from decimal import ROUND_HALF_UP, ROUND_HALF_EVEN
+
+  fee = Decimal("2.675")
+  fee.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP)    # 2.68 — ledger style
+  fee.quantize(Decimal("0.01"), rounding=ROUND_HALF_EVEN)  # 2.68; but 2.665 -> 2.66
+  ```
+
+  The ones that matter: `ROUND_HALF_UP` (the schoolbook rule most
+  financial specs mean), `ROUND_HALF_EVEN` (banker's rounding — ties go
+  to the even digit, statistically unbiased over many operations, and
+  the default), `ROUND_DOWN`/`ROUND_UP` (toward/away from zero —
+  truncation and its opposite). Which is *correct* is not a math
+  question: regulations and contracts specify rounding, and `quantize`
+  is how code states its compliance. Meanwhile Python's builtin
+  `round()` uses half-even — `round(2.5)` is `2` — which surprises
+  everyone once; with Decimal the behavior is chosen, visible, and
+  testable.
+
+  (`quantize(Decimal("0.01"))` also *sets the scale* — the way to force
+  a result to cents. Context precision — `getcontext().prec` — bounds
+  significant digits globally; the default 28 is plenty for money.)
+
+  ### What Decimal costs, and when to pay
+
+  Decimal is software arithmetic: markedly slower than hardware floats,
+  and *still finite* — `Decimal(1) / Decimal(3)` rounds at the context
+  precision (base ten fixes tenths, not thirds). The decision table:
+
+  ```text
+  money, ledgers, anything with legal rounding    Decimal
+  measurements, science, ML, geometry             float (+ isclose, fsum)
+  exact fractions like 1/3 that must stay exact   Fraction (next lesson)
+  ```
+
+  The exercises settle fee schedules with specified rounding modes,
+  demonstrate the float-constructor trap, and sum ledgers exactly — the
+  competence the capstone's defensive rounding was standing in for.
+checkpoints:
+  - question: Why does Decimal(0.1) fail to deliver exact decimal arithmetic while Decimal("0.1") succeeds?
+    answer: 'Decimal(0.1) converts the float — which already holds the binary approximation 0.1000...0055 — preserving the error exactly; the string "0.1" states the intended decimal value directly and is stored exactly.'
+    explanation: 'The constructor is the boundary: cross it from text (or integers), never from floats, or the disease comes along.'
+  - question: A payment spec mandates "round half away from zero to cents." Which tool and argument express that, and why not builtin round()?
+    answer: 'value.quantize(Decimal("0.01"), rounding=ROUND_HALF_UP) — the mode is named and testable; builtin round() uses banker''s rounding (round(2.5) == 2), silently violating the spec on ties.'
+    explanation: 'Financial rounding is a compliance requirement; quantize turns it from an accident of the runtime into a stated decision.'
+  - question: Decimal fixes 0.1 + 0.2. What does it NOT fix, and what does that tell you about its domain?
+    answer: 'Values with no finite DECIMAL expansion — Decimal(1)/Decimal(3) still rounds at context precision; Decimal moves exactness from base two to base ten, which is precisely right for money and wrong to assume for general math.'
+    explanation: 'Every radix has its blind spots; Decimal is the money tool, Fraction is the exact-ratio tool, float is the science tool.'

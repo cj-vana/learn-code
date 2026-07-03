@@ -1,0 +1,105 @@
+id: exercise.library.autodiff_scalar_engine.a06
+kind: exercise
+version: 1
+language: python
+title: Accumulating Gradients When a Value Is Reused
+slug: autodiff-scalar-engine-a06
+difficulty: medium
+concepts:
+  - ai.gradients_autodiff
+  - concepts.grouping_aggregation
+prerequisites:
+  - python.dictionaries
+  - python.lists
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.autodiff_scalar_engine.a06
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: >-
+    Original framing of gradient accumulation as summing per-node contributions,
+    built to make concrete why backprop uses += (a node used in several places
+    receives one contribution from each) rather than overwriting.
+prompt_markdown: |
+  Here is the subtlety that trips up every from-scratch autodiff engine: when a
+  single value feeds into **more than one** later operation, the backward pass
+  reaches it several times, once along each path it fed. The correct total
+  gradient for that value is the **sum** of all those contributions. That is why
+  real engines write `node.grad += contribution` (add) instead of
+  `node.grad = contribution` (overwrite) -- overwriting would throw away every
+  contribution but the last.
+
+  You are given `contributions`, a list of `[node_name, grad]` pairs collected
+  during a backward pass, for example:
+
+  ```
+  [["a", 1.5], ["b", 2.5], ["a", 0.5]]
+  ```
+
+  Here node `"a"` was used twice and picked up two contributions.
+
+  Write `accumulate_grads(contributions)` that returns a dictionary mapping each
+  node name to the **sum** of its contributions. **Round each summed value to 6
+  decimal places** with `round(value, 6)`. An empty list returns an empty
+  dictionary `{}`. Sum first, then round the final total for each node.
+starter_code: |
+  def accumulate_grads(contributions):
+      # Sum every contribution per node name, then round each total.
+      totals = {}
+      return totals
+function_name: accumulate_grads
+input_mode: function
+solution_sketch: Add each pair's grad into a dict keyed by node name using +=, then round every accumulated total to 6 decimals.
+sample_solution: |
+  def accumulate_grads(contributions):
+      totals = {}
+      for name, grad in contributions:
+          totals[name] = totals.get(name, 0.0) + grad
+      return {name: round(total, 6) for name, total in totals.items()}
+hints:
+  - level: 1
+    text: A node that appears in several pairs must have its gradients added together, not replaced.
+  - level: 2
+    text: Use totals.get(name, 0.0) + grad so the first sighting starts from zero and later ones add on.
+  - level: 3
+    text: After summing every pair, round each accumulated value with a dict comprehension so 0.1 + 0.2 becomes 0.3.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: {}
+    - name: single_node
+      input: [["x", 2.0]]
+      expected: {"x": 2.0}
+    - name: same_node_twice
+      input: [["x", 1.0], ["x", 3.0]]
+      expected: {"x": 4.0}
+  validation:
+    - name: two_nodes_one_repeated
+      input: [["a", 1.5], ["b", 2.5], ["a", 0.5]]
+      expected: {"a": 2.0, "b": 2.5}
+    - name: float_tail_cleaned
+      input: [["w", 0.1], ["w", 0.2]]
+      expected: {"w": 0.3}
+    - name: cancels_to_zero
+      input: [["p", -1.0], ["q", 2.0], ["p", 1.0]]
+      expected: {"p": 0.0, "q": 2.0}
+explanation_markdown: |
+  This is the rule that makes shared values work in a computation graph. If `x`
+  is fed into two different downstream operations, then changing `x` moves the
+  loss through *both* of them, and calculus says those effects add. During
+  backprop each path independently reports its contribution to `x`, and the
+  engine sums them. Overwriting instead of adding is the single most common bug
+  when people first build autodiff by hand -- it silently drops gradients and the
+  network trains wrong.
+
+  Summing before rounding matters too: `0.1 + 0.2` is `0.30000000000000004` in
+  floating point, so you round the finished total to `0.3` once, rather than
+  rounding each piece and hoping the tails cancel.
+common_mistakes:
+  - Overwriting with totals[name] = grad instead of adding, so only each node's last contribution survives.
+  - Rounding each contribution before summing rather than rounding the final per-node total.
+  - Assuming a node appears at most once, so no accumulation is needed.

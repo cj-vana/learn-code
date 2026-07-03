@@ -1,0 +1,128 @@
+id: exercise.library.type_hints.a05
+kind: exercise
+version: 1
+language: python
+title: Reading Down the Config Tree
+slug: type-hints-a05
+difficulty: medium
+concepts:
+  - python.type_hints
+  - python.types
+prerequisites:
+  - python.dictionaries
+  - python.loops
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.type_hints.a05
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original safe-traversal drill framed around walking a nested settings tree for a small observatory's telescope rig, returning a default on any missing or non-dict step.
+prompt_markdown: |
+  A small observatory stores its telescope settings as a tree of nested
+  dictionaries. Reading a deep value like "mount, tracking, rate" is risky: any
+  level along the way might be missing, or might not even be a dictionary. You are
+  writing the safe reader that never raises, it returns a default instead.
+
+  Read the signature:
+
+  ```python
+  def safe_get(job: dict[str, Any]) -> Any:
+  ```
+
+  The return annotation is `Any` because the value at the end of the path could be
+  anything, an int, a string, a nested dict, and the default could be a different
+  type again.
+
+  `job` has three keys:
+
+  - `"data"`: the nested-dictionary tree.
+  - `"path"`: a list of keys to follow in order, for example `["mount", "tracking", "rate"]`.
+  - `"default"`: the value to return if the path cannot be fully followed.
+
+  Walk the path one key at a time starting from `"data"`. At each step, if the
+  current value is **not a dictionary**, or it **does not contain** the next key,
+  stop immediately and return `"default"`. If you consume the whole path, return
+  the value you landed on, even if that value is falsy like `0` or an empty string.
+  An **empty path** returns `"data"` itself unchanged.
+
+  Example:
+
+  ```python
+  safe_get({
+      "data": {"mount": {"tracking": {"rate": 15}}},
+      "path": ["mount", "tracking", "rate"],
+      "default": None,
+  })
+  # -> 15
+  ```
+starter_code: |
+  from typing import Any
+
+
+  def safe_get(job: dict[str, Any]) -> Any:
+      return job["default"]
+function_name: safe_get
+input_mode: function
+solution_sketch: Start at job["data"] and iterate the path; before each descent, bail out to the default if the current value is not a dict or lacks the key, otherwise step into it. Return the final value after the loop.
+sample_solution: |
+  from typing import Any
+
+
+  def safe_get(job: dict[str, Any]) -> Any:
+      current: Any = job["data"]
+      for key in job["path"]:
+          if not isinstance(current, dict) or key not in current:
+              return job["default"]
+          current = current[key]
+      return current
+hints:
+  - level: 1
+    text: Keep a running "current" value that starts at job["data"] and moves one key deeper each iteration over job["path"].
+  - level: 2
+    text: Before stepping into a key, guard with isinstance(current, dict) and key in current; if either fails, return job["default"] right away.
+  - level: 3
+    text: After the loop finishes with no bail-out, return current itself, which is correct even when the landed value is 0 or an empty string; an empty path returns the original data.
+tests:
+  public:
+    - name: deep_hit
+      input: {"data": {"mount": {"tracking": {"rate": 15}}}, "path": ["mount", "tracking", "rate"], "default": null}
+      expected: 15
+    - name: missing_key
+      input: {"data": {"mount": {"tracking": {}}}, "path": ["mount", "tracking", "rate"], "default": 0}
+      expected: 0
+    - name: shallow
+      input: {"data": {"name": "prod"}, "path": ["name"], "default": "unknown"}
+      expected: "prod"
+  validation:
+    - name: non_dict_midway
+      input: {"data": {"rate": 15}, "path": ["rate", "unit"], "default": -1}
+      expected: -1
+    - name: first_key_missing
+      input: {"data": {"x": 1}, "path": ["y", "z"], "default": "none"}
+      expected: "none"
+    - name: empty_path_returns_root
+      input: {"data": {"a": 1}, "path": [], "default": "d"}
+      expected: {"a": 1}
+    - name: landed_value_is_falsy
+      input: {"data": {"flags": {"enabled": 0}}, "path": ["flags", "enabled"], "default": 99}
+      expected: 0
+explanation_markdown: |
+  Safe traversal is a guard-as-you-go loop. You keep a single `current` reference
+  and, before every descent, ask two questions: is `current` still a dictionary,
+  and does it contain the next key? Answering "no" to either means the path is
+  broken, so you return the default and stop. This is why a value part-way down that
+  turns out to be an `int` or a `str` does not crash the walk, the `isinstance`
+  check catches it before you try to index into a non-dict.
+
+  Returning `current` after the loop, rather than something like
+  `current or default`, is what preserves a legitimately falsy result such as `0`
+  or `""`. And because the loop body never runs for an empty path, `current` is
+  still the original tree, which is the natural "you asked for nothing, here is
+  everything" answer.
+common_mistakes:
+  - Indexing current[key] without first checking isinstance(current, dict), which raises TypeError when a mid-path value is an int or string.
+  - Returning current or default at the end, which wrongly swaps in the default when the real value is 0 or an empty string.
+  - Catching a missing key only at the first level and assuming deeper levels are always present.

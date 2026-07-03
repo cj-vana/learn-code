@@ -1,0 +1,97 @@
+id: lesson.library.secure_coding.a02
+kind: lesson
+version: 1
+language: python
+title: 'Injection: When Data Becomes Code'
+slug: lesson-secure-coding-a02
+difficulty: medium
+concepts:
+  - python.secure_coding
+prerequisites:
+  - python.secure_coding
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.secure_coding.a02
+  author: generated
+  generated_at: '2026-07-04T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original injection walkthrough unifying SQL, command, and template injection under one mechanism, with fresh worked examples.
+body_markdown: |
+  One flaw has topped vulnerability charts for twenty years, and it wears
+  many costumes: SQL injection, command injection, template injection,
+  path traversal. Underneath they are **one bug** — and seeing the unity
+  is what lets you defend against forms you have never met.
+
+  > **The injection bug**: untrusted data is concatenated into a string
+  > that is then interpreted as a structured language, so the data can
+  > become *structure* — commands, queries, code.
+
+  You have met it twice already (URL query strings, SQL parameters); here
+  is the general shape.
+
+  ### The same disease, three costumes
+
+  **SQL** — `f"WHERE name='{n}'"` lets `' OR '1'='1` rewrite the query
+  (the sqlite area). **Cure**: parameterized queries — the value binds
+  to a pre-compiled statement as data, never touching the parser.
+
+  **OS commands** — building a shell string from input:
+
+  ```python
+  os.system(f"convert {filename} out.png")     # NEVER
+  # filename = "x.jpg; rm -rf ~"  runs the rm
+  ```
+
+  **Cure**: pass an argument *list* to `subprocess.run`, never a shell
+  string — `subprocess.run(["convert", filename, "out.png"])`. The list
+  form hands the OS separate arguments; there is no shell to interpret
+  `;`, `|`, or `$()`, so the filename stays one literal argument no
+  matter what it contains. (And `shell=True` is the flag to never pair
+  with untrusted input.)
+
+  **Templates / eval** — `eval(user_input)` or a template engine
+  rendering user data as template syntax executes it. **Cure**: never
+  `eval`/`exec` on input (use `ast.literal_eval` for literals, `json` for
+  data), and use template engines' autoescaping so `{{...}}` from a user
+  is text.
+
+  **Path traversal** — `open(base + user_name)` where
+  `user_name = "../../etc/passwd"` escapes the directory (the pathlib
+  area). **Cure**: resolve and verify containment.
+
+  ### The unifying cure: separate data from code, structurally
+
+  Notice the pattern across all four fixes: **never build the structured
+  string by concatenation — use an interface that keeps data and
+  structure in separate channels.** Parameters (SQL), argument lists
+  (shell), safe parsers (eval), path APIs with containment (files). The
+  broken versions all *assemble* the language from text; the correct
+  versions *never assemble it at all* — the structure is fixed, the data
+  binds into designated slots. That is not one trick repeated four
+  times; it is one principle with four APIs, and it defends against the
+  next injection class you meet by the same move: find the interface that
+  separates the channels, refuse the one that concatenates.
+
+  ### Escaping is the fallback, not the plan
+
+  Sometimes no parameterized interface exists and you must escape (build
+  HTML, say). Then use a *vetted library escaper* for that exact context
+  (`html.escape`, the DB driver's quoting) — never hand-rolled, because
+  each context (HTML, SQL, shell, URL) has different rules and history is
+  full of escapers that missed one. But reach for escaping only when a
+  separating interface is genuinely unavailable; the parameterized
+  channel is always the stronger defense. Your exercises identify the
+  injection class from a code smell and select the structural cure —
+  which is the security engineer's core reflex.
+checkpoints:
+  - question: State the single mechanism underlying SQL, command, template, and path injection.
+    answer: 'Untrusted data is concatenated into a string that is then interpreted as a structured language (query, shell command, code, path), so the data can break out and become structure rather than staying a value.'
+    explanation: 'Recognizing the one bug behind many names is what lets you defend against injection classes you have never specifically studied.'
+  - question: Why does passing an argument list to subprocess.run defend against command injection where an f-string shell command does not?
+    answer: 'The list form hands the OS pre-separated arguments with no shell involved, so metacharacters like ; | $() in a filename are never interpreted — the value stays one literal argument; the f-string builds a shell string the shell then parses, letting injected characters become commands.'
+    explanation: 'No shell, no shell metacharacter interpretation — the list interface removes the interpreter the attack depends on.'
+  - question: What is the unifying cure across all injection classes, and where does escaping fit?
+    answer: 'Use an interface that keeps data and structure in separate channels — parameters, argument lists, safe parsers, path APIs — so the structured string is never assembled from untrusted text; escaping with a vetted per-context library is the fallback only when no separating interface exists.'
+    explanation: 'Structural separation removes the vulnerability; escaping merely guards it and must be context-correct, making it the weaker, last-resort defense.'

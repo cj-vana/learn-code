@@ -1,0 +1,132 @@
+id: exercise.library.type_hints.a06
+kind: exercise
+version: 1
+language: python
+title: Filling the Order Form with House Defaults
+slug: type-hints-a06
+difficulty: medium
+concepts:
+  - python.type_hints
+  - python.types
+prerequisites:
+  - python.dictionaries
+  - python.loops
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.type_hints.a06
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original default-merging drill framed around a sandwich shop's order form, where a blank field is None (absent) and the house default fills it in.
+prompt_markdown: |
+  A sandwich shop's order form has a slot for every choice, but customers leave
+  some slots blank. In the data, a blank slot arrives as `None`, meaning "not
+  provided". The shop fills every blank from its house defaults before sending the
+  order to the kitchen.
+
+  Read the signature:
+
+  ```python
+  def apply_defaults(job: dict[str, Any]) -> dict[str, Any]:
+  ```
+
+  `job` has two keys:
+
+  - `"record"`: the customer's order, where a value of `None` means the field was
+    left blank.
+  - `"defaults"`: the house defaults to fall back on.
+
+  Return a **new dictionary** built like this:
+
+  - Start from all of the `"defaults"`.
+  - For each field in `"record"` whose value is **not `None`**, use the customer's
+    value (overriding any default). A field whose value is `None` is treated as
+    absent, so the default stays if there is one.
+  - A `None` field with **no** matching default is simply left out of the result.
+
+  Crucially, only `None` counts as blank. A real value like `0` or an empty string
+  is a genuine choice and must be kept, never replaced by a default.
+
+  Example:
+
+  ```python
+  apply_defaults({
+      "record": {"bread": "rye", "cheese": None},
+      "defaults": {"bread": "white", "cheese": "cheddar"},
+  })
+  # -> {"bread": "rye", "cheese": "cheddar"}
+  ```
+starter_code: |
+  from typing import Any
+
+
+  def apply_defaults(job: dict[str, Any]) -> dict[str, Any]:
+      return dict(job["defaults"])
+function_name: apply_defaults
+input_mode: function
+solution_sketch: Copy the defaults into a new dict, then overlay only the record entries whose value is not None so that None (absent) leaves the default in place and a missing default drops the key entirely.
+sample_solution: |
+  from typing import Any
+
+
+  def apply_defaults(job: dict[str, Any]) -> dict[str, Any]:
+      record = job["record"]
+      defaults = job["defaults"]
+      result: dict[str, Any] = dict(defaults)
+      for key, value in record.items():
+          if value is not None:
+              result[key] = value
+      return result
+hints:
+  - level: 1
+    text: Begin with a fresh copy of the defaults using dict(job["defaults"]) so the caller's dictionaries are never mutated.
+  - level: 2
+    text: Loop over the record's items and only copy a value into the result when value is not None, letting None fields keep whatever default exists.
+  - level: 3
+    text: Because you start from the defaults and never add None values, a None field without a default simply never appears, while a real 0 or "" is copied over normally.
+tests:
+  public:
+    - name: fills_blank
+      input: {"record": {"bread": "rye", "cheese": null}, "defaults": {"bread": "white", "cheese": "cheddar"}}
+      expected: {"bread": "rye", "cheese": "cheddar"}
+    - name: all_provided
+      input: {"record": {"bread": "wheat"}, "defaults": {"bread": "white"}}
+      expected: {"bread": "wheat"}
+    - name: empty_record
+      input: {"record": {}, "defaults": {"bread": "white"}}
+      expected: {"bread": "white"}
+  validation:
+    - name: extra_record_key
+      input: {"record": {"topping": "olives", "bread": "sourdough"}, "defaults": {"bread": "white"}}
+      expected: {"bread": "sourdough", "topping": "olives"}
+    - name: none_without_default_dropped
+      input: {"record": {"bread": null, "sauce": null, "cheese": "swiss"}, "defaults": {"bread": "white"}}
+      expected: {"bread": "white", "cheese": "swiss"}
+    - name: all_blank_use_defaults
+      input: {"record": {"bread": null, "cheese": null}, "defaults": {"bread": "white", "cheese": "cheddar"}}
+      expected: {"bread": "white", "cheese": "cheddar"}
+    - name: zero_is_a_real_choice
+      input: {"record": {"count": 0}, "defaults": {"count": 6}}
+      expected: {"count": 0}
+    - name: empty_defaults
+      input: {"record": {"bread": "rye"}, "defaults": {}}
+      expected: {"bread": "rye"}
+explanation_markdown: |
+  This is the `Optional` idea made concrete. When a field's type is `T | None`, the
+  `None` stands for "no value here", and merging with defaults is how you turn that
+  optional field into a definite one. Starting the result from a copy of the
+  defaults, then overlaying only the record's non-`None` entries, expresses the rule
+  in two lines and never mutates the inputs.
+
+  The discipline that makes it correct is testing `value is not None` rather than a
+  truthiness check. A blank slot is specifically `None`; a `0`, an empty string, or
+  a `False` is a deliberate answer the customer gave, so it must survive. Testing
+  truthiness would wrongly wipe those real choices and refill them from the house
+  defaults. And because a `None` field is never copied in, one that has no default
+  simply never appears in the finished order.
+common_mistakes:
+  - Filtering with a truthiness test like "if value:" instead of "if value is not None:", which discards real 0, "", and False values.
+  - Mutating job["defaults"] or job["record"] in place instead of building and returning a new dictionary.
+  - Copying every record field over the defaults first and only then trying to patch None slots, which overwrites good defaults with None.

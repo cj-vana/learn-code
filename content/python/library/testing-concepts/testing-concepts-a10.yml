@@ -1,0 +1,112 @@
+id: exercise.library.testing_concepts.a10
+kind: exercise
+version: 1
+language: python
+title: What the Rehearsal Prompter Recorded
+slug: testing-concepts-a10
+difficulty: hard
+concepts:
+  - concepts.testing
+  - python.dictionaries
+prerequisites:
+  - python.loops
+  - python.functions
+estimated_time_minutes: 20
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.testing_concepts.a10
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original mock-recording drill framed as a stage rehearsal prompter that tallies cue calls and remembers each cue's first payload.
+prompt_markdown: |
+  During a stage rehearsal, a prompter sits in the wings and logs every **cue** the
+  crew calls -- a lighting change, a sound sting, a scene fade. This is exactly what
+  a *mock* (or *stub*) does in a test: instead of really firing the effect, it just
+  records that the call happened and with what arguments, so you can assert on the
+  interactions afterwards.
+
+  Write `stub_recorder(calls)` where `calls` is a list of records, in the order the
+  cues were called. Each record is a dict with:
+
+  - `method`: the cue name (a string).
+  - `args`: the payload passed with that cue (a list of values).
+
+  Return a summary dict with exactly two keys:
+
+  - `counts`: a dict mapping each cue name to how many times it was called.
+  - `first_args`: a dict mapping each cue name to the `args` of the **first** time
+    that cue was called. Later calls to the same cue do not change this entry.
+
+  A cue that is called several times appears once in each summary dict: with its
+  total count in `counts`, and with its earliest payload in `first_args`. An empty
+  `calls` list returns `{"counts": {}, "first_args": {}}`.
+
+  For example, `[{"method": "light", "args": ["on"]}, {"method": "light", "args":
+  ["off"]}]` returns `{"counts": {"light": 2}, "first_args": {"light": ["on"]}}`.
+starter_code: |
+  def stub_recorder(calls):
+      # Tally each method and remember the args of its first call.
+      return {"counts": {}, "first_args": {}}
+function_name: stub_recorder
+input_mode: function
+solution_sketch: Iterate the calls in order, bumping a per-method counter, and record args in first_args only the first time a method is seen.
+sample_solution: |
+  def stub_recorder(calls):
+      counts = {}
+      first_args = {}
+      for call in calls:
+          method = call["method"]
+          args = call["args"]
+          counts[method] = counts.get(method, 0) + 1
+          if method not in first_args:
+              first_args[method] = args
+      return {"counts": counts, "first_args": first_args}
+hints:
+  - level: 1
+    text: Make one pass over calls in order, updating two dictionaries keyed by the cue name.
+  - level: 2
+    text: For counts, use counts.get(method, 0) + 1 so a brand-new cue starts at 1 and repeats accumulate.
+  - level: 3
+    text: For first_args, only assign when the method is not already a key, so the earliest payload sticks and later calls leave it untouched.
+tests:
+  public:
+    - name: single_call
+      input: [{method: 'cue', args: [1, 2]}]
+      expected: {counts: {cue: 1}, first_args: {cue: [1, 2]}}
+    - name: repeated_method_keeps_first
+      input: [{method: 'light', args: ['on']}, {method: 'light', args: ['off']}]
+      expected: {counts: {light: 2}, first_args: {light: ['on']}}
+    - name: two_methods
+      input: [{method: 'cue', args: []}, {method: 'fade', args: [3]}]
+      expected: {counts: {cue: 1, fade: 1}, first_args: {cue: [], fade: [3]}}
+  validation:
+    - name: empty_calls
+      input: []
+      expected: {counts: {}, first_args: {}}
+    - name: interleaved_repeats
+      input: [{method: 'a', args: [1]}, {method: 'b', args: [2]}, {method: 'a', args: [9]}, {method: 'a', args: [8]}]
+      expected: {counts: {a: 3, b: 1}, first_args: {a: [1], b: [2]}}
+    - name: multi_arg_payload_preserved
+      input: [{method: 'move', args: [1, 2, 3]}, {method: 'move', args: [4]}]
+      expected: {counts: {move: 2}, first_args: {move: [1, 2, 3]}}
+    - name: three_distinct
+      input: [{method: 'x', args: ['q']}, {method: 'y', args: ['r']}, {method: 'z', args: ['s']}]
+      expected: {counts: {x: 1, y: 1, z: 1}, first_args: {x: ['q'], y: ['r'], z: ['s']}}
+explanation_markdown: |
+  A recording mock has one job: capture *what was called and how*, without doing the
+  real work, so a test can inspect the interactions afterwards. Two facts are worth
+  keeping here. The **count** is a running tally, so `counts.get(method, 0) + 1`
+  starts each new cue at one and lets repeats add up. The **first payload** must be
+  sticky, which is why you only write to `first_args` when the cue name is not
+  already a key -- the guard `if method not in first_args` freezes the earliest
+  `args` and quietly ignores every later call to the same cue. Doing both in a single
+  ordered pass mirrors how a real mock accumulates state as calls arrive. The empty
+  input returns two empty dicts because nothing was ever recorded, and because dicts
+  compare by content, the order in which cue names appear in your summary does not
+  affect correctness.
+common_mistakes:
+  - Overwriting first_args on every call, so it ends up holding the *last* payload instead of the first.
+  - Forgetting to default the counter for a new cue (for example indexing a missing key), which raises a KeyError on the first call.
+  - Returning the two dicts at the top level instead of nesting them under the "counts" and "first_args" keys the summary requires.
