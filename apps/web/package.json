@@ -1,6 +1,6 @@
 {
   "name": "@learn-code/web",
-  "version": "0.1.0",
+  "version": "1.1.0",
   "private": true,
   "type": "module",
   "description": "Workbench Ledger — the browser client for the Learn Code /api/v1 backend.",

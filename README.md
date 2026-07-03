@@ -1,12 +1,14 @@
 # Learn Code
 
+[![CI](https://github.com/cj-vana/learn-code/actions/workflows/ci.yml/badge.svg)](https://github.com/cj-vana/learn-code/actions/workflows/ci.yml)
+
 A local, Dockerized platform for learning Python — from first variables to
 building a transformer's attention mechanism by hand. Original exercises with
 an autograding runner, structured lessons, quizzes, and curated skill and
 career paths, all running on your own machine.
 
-> **Night Study** — the browser app is a dark, lamplit desk where lessons are
-> lit pages and every attempt is filed as evidence.
+> The browser app is a gamified, neo-brutalist quest board: XP, streaks, and
+> levels over white cards with hard black borders on a lavender field.
 
 ## What's inside
 
@@ -57,7 +59,7 @@ learn-code validate-content      # validate the content library
 
 | Piece | Role |
 |-------|------|
-| `apps/web` | Vite + React browser app (the Night Study UI) |
+| `apps/web` | Vite + React browser app |
 | `apps/api` | FastAPI backend — content, progress, grading, paths, planner |
 | `apps/cli` | Typer CLI, an HTTP client of the same API |
 | `services/runner-broker` | Spawns short-lived containers to run learner code |
@@ -91,9 +93,13 @@ make validate    # repo guard + tests + web build + compose config check
 
 ## Scope
 
-- Python only in this version.
+- Python only in this version. JavaScript/TypeScript is next, with Go after
+  that.
 - Original practice content only — no third-party problems.
-- Local, single-user, offline-capable (no web fonts, no external calls).
+- Local, single-user, offline-capable (no web fonts, no accounts, no
+  telemetry). The API's only outbound call is a once-a-day check of GitHub
+  Releases for a newer version; it fails silently offline and
+  `LEARN_CODE_UPDATE_CHECK=off` disables it.
 
 ## License
 

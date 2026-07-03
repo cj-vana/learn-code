@@ -25,12 +25,12 @@ into 30 learning paths (7 career, 23 skill).
   dataframe thinking.
 - **Capstone projects** end each career path (market ledger, observatory night
   logs, courier dispatch board).
-- **Platform**: FastAPI backend, SQLite progress, Typer CLI, Vite/React "Night
-  Study" UI, sandboxed runner-broker, adaptive planner with spaced review and
-  timed practice, mastery-gated paths with milestones.
+- **Platform**: FastAPI backend, SQLite progress, Typer CLI, gamified
+  Vite/React UI, sandboxed runner-broker, adaptive planner with spaced review
+  and timed practice, mastery-gated paths with milestones.
 
 ## Post-V1 ideas
 
-- More languages beyond Python.
+- More languages beyond Python: JavaScript/TypeScript first, then Go.
 - Richer mentor-review flows.
 - A hosted multi-user mode (would require an auth/isolation redesign).
