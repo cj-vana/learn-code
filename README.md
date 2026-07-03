@@ -1,6 +1,35 @@
 # Learn Code
 
-Learn Code is a local, Dockerized programming learning platform. V1 teaches Python with a browser app, CLI, original exercises, adaptive interview-prep practice, and a contained local runner.
+A local, Dockerized platform for learning Python — from first variables to
+building a transformer's attention mechanism by hand. Original exercises with
+an autograding runner, structured lessons, quizzes, and curated skill and
+career paths, all running on your own machine.
+
+> **Night Study** — the browser app is a dark, lamplit desk where lessons are
+> lit pages and every attempt is filed as evidence.
+
+## What's inside
+
+The catalogue is **1,300+ original items across 70+ topic areas**:
+
+- **910 autograded exercises** — each a single Python function checked against
+  hidden tests, with a tiered hint ladder and worked explanations.
+- **235 lessons** — structured reading with self-check checkpoints.
+- **180 quizzes** — pattern-recognition and syntax multiple choice.
+- **30 learning paths** — 7 career arcs and 23 focused skill paths.
+
+Coverage runs from fundamentals through the full interview-algorithm catalogue
+(two pointers → dynamic programming → graphs → bits), professional Python (OOP,
+generators, decorators, typing, testing), practical tooling (files, dates,
+CLIs, HTTP, SQLite, logging, config, security, performance), Python internals
+(descriptors, the MRO, the memory model, concurrency, bytecode), and a complete
+**AI-from-scratch track** — classic ML, a micrograd-style autodiff engine,
+n-gram language models, BPE tokenization, embeddings and retrieval, and scaled
+dot-product attention — all implemented in pure standard-library Python.
+
+Career paths end in **scaffolded capstone projects** (a market ledger, an
+observatory log pipeline, a courier dispatch board) that compose everything the
+path taught.
 
 ## Quick start
 
@@ -8,12 +37,64 @@ Learn Code is a local, Dockerized programming learning platform. V1 teaches Pyth
 docker compose up --build
 ```
 
-Then open `http://127.0.0.1:5173`.
+Then open **http://127.0.0.1:5173**.
+
+The browser app and the CLI both talk to the same FastAPI backend. Learner code
+runs in short-lived, sandboxed Python containers via the runner-broker — nothing
+you write touches the host.
+
+### CLI
+
+```bash
+# inside the repo (or the api container)
+learn-code paths                 # list learning paths
+learn-code path <path-id>        # show a path's syllabus
+learn-code enroll <path-id>      # enroll (sets your active path)
+learn-code validate-content      # validate the content library
+```
+
+## How it works
+
+| Piece | Role |
+|-------|------|
+| `apps/web` | Vite + React browser app (the Night Study UI) |
+| `apps/api` | FastAPI backend — content, progress, grading, paths, planner |
+| `apps/cli` | Typer CLI, an HTTP client of the same API |
+| `services/runner-broker` | Spawns short-lived containers to run learner code |
+| `services/python-runner` | The sandboxed `python:3.12-slim` execution image |
+| `content/python` | The original YAML content library |
+| `scripts/generate_paths.py` | Regenerates learning paths from the catalogue |
+
+Progress is single-user and stored locally in SQLite; path completion is
+**derived** from your activity, never stored. An adaptive planner surfaces what
+to do next, with spaced review of past mistakes and optional timed practice.
+
+## Content authoring
+
+Content is original YAML under `content/python`, validated through a review flow
+(briefed → drafted → reviewed → tests validated → published). Every exercise's
+sample solution is executed against its own tests during validation.
+
+```bash
+learn-code validate-content            # structure, references, and solutions
+python3 scripts/generate_paths.py      # regenerate paths after adding content
+```
+
+See `docs/content-authoring.md` and `docs/architecture.md` for details.
+
+## Development
+
+```bash
+make test        # api, cli, runner-broker (pytest) + web (vitest)
+make validate    # repo guard + tests + web build + compose config check
+```
 
 ## Scope
 
-- Python only in V1.
-- Original practice content only.
-- Local single-user progress in SQLite.
-- Browser and CLI use the same FastAPI backend.
-- Learner code runs through runner-broker and short-lived Python containers.
+- Python only in this version.
+- Original practice content only — no third-party problems.
+- Local, single-user, offline-capable (no web fonts, no external calls).
+
+## License
+
+MIT — see [LICENSE](LICENSE).
