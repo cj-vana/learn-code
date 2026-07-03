@@ -34,6 +34,7 @@ import type {
   SubmissionResponse,
   TimedSessionRequest,
   TimedSessionResponse,
+  UpdateStatus,
 } from '../contracts';
 
 export const API_BASE = '/api/v1';
@@ -146,6 +147,10 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 export const apiClient = {
   health(signal?: AbortSignal): Promise<HealthResponse> {
     return request<HealthResponse>('/health', { signal });
+  },
+
+  updateStatus(signal?: AbortSignal): Promise<UpdateStatus> {
+    return request<UpdateStatus>('/update', { signal });
   },
 
   listContent(signal?: AbortSignal): Promise<ContentSummary[]> {

@@ -42,6 +42,7 @@ services:
       LEARN_CODE_CONTENT_ROOT: ${LEARN_CODE_CONTENT_ROOT:-/srv/content/python}
       RUNNER_BROKER_URL: http://runner-broker:8080
       OLLAMA_ENABLED: ${OLLAMA_ENABLED:-auto}
+      LEARN_CODE_UPDATE_CHECK: ${LEARN_CODE_UPDATE_CHECK:-on}
       OLLAMA_HOST: ${OLLAMA_HOST:-http://host.docker.internal:11434}
       OLLAMA_MODEL: ${OLLAMA_MODEL:-granite-code:8b}
       OLLAMA_TIMEOUT_SECONDS: ${OLLAMA_TIMEOUT_SECONDS:-30}

@@ -36,6 +36,15 @@ export function useHealth() {
   });
 }
 
+export function useUpdateStatus() {
+  return useQuery({
+    queryKey: ['update'] as const,
+    queryFn: ({ signal }) => apiClient.updateStatus(signal),
+    staleTime: 60 * 60 * 1000,
+    retry: false,
+  });
+}
+
 export function usePlan() {
   return useQuery({
     queryKey: queryKeys.plan,

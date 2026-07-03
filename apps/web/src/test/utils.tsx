@@ -22,6 +22,9 @@ export type RouteMap = Record<string, RouteHandler>;
 
 const DEFAULT_ROUTES: RouteMap = {
   'GET /api/v1/health': { json: { status: 'ok' } },
+  'GET /api/v1/update': {
+    json: { current_version: '0.1.0', latest_version: null, update_available: false },
+  },
 };
 
 /**
