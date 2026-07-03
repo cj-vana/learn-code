@@ -656,6 +656,22 @@ def test_path_detail_tracks_completion_and_next_item(tmp_path):
     assert detail["percent_complete"] > 0
 
 
+def test_path_units_gate_on_mastery_and_carry_milestones(tmp_path):
+    client, _, _ = make_client(tmp_path)
+    detail = client.get("/api/v1/paths/path.career.python_interview_prep").json()
+    units = detail["units"]
+    assert units[0]["status"] == "available"
+    assert all(unit["status"] == "locked" for unit in units[1:])
+    assert any(unit["milestone"] for unit in units)
+
+    # Completing one item makes the first unit in_progress; the rest stay locked.
+    first_lesson = next(i for i in units[0]["items"] if i["kind"] == "lesson")
+    assert client.post(f"/api/v1/lessons/{first_lesson['id']}/complete").status_code == 200
+    detail = client.get("/api/v1/paths/path.career.python_interview_prep").json()
+    assert detail["units"][0]["status"] == "in_progress"
+    assert detail["units"][1]["status"] == "locked"
+
+
 def test_path_enroll_unenroll_roundtrip(tmp_path):
     client, _, _ = make_client(tmp_path)
     resp = client.post("/api/v1/paths/path.skill.python_foundations/enroll")

@@ -489,8 +489,64 @@ PATHS = [
 ]
 
 
+# Milestone labels shown when the learner finishes these units — waypoints
+# that break long career paths into celebrated sections.
+MILESTONES = {
+    "path.career.python_interview_prep": {
+        "debugging": "Fundamentals complete — you write working Python",
+        "sliding_window": "Core patterns down — half the interview toolkit is yours",
+        "recursion_backtracking": "Every classic pattern family covered",
+        "dp_recognition": "Advanced families done — capstones ahead",
+        "mixed_capstones": "Interview-ready: the full arc is complete",
+    },
+    "path.career.python_developer_mastery": {
+        "debugging": "Fundamentals complete — you write working Python",
+        "decorators_closures": "The senior idioms — OOP, generators, decorators — are yours",
+        "regex_text_processing": "Text and data tooling mastered",
+        "type_hints": "You test and type like a professional",
+        "capstone_ledger": "Mastery: you built a complete system from scratch",
+    },
+    "path.career.algorithms_specialist": {
+        "sliding_window": "Array patterns mastered",
+        "recursion_backtracking": "Search and recursion under your belt",
+        "heaps_topk": "Linked, tree, graph, and heap structures conquered",
+        "bit_number_theory": "The whole pattern catalog — including DP and bits",
+        "capstone_dispatch": "Specialist: you composed every pattern into one system",
+    },
+    "path.career.python_data_automation": {
+        "error_handling": "Robust code foundations set",
+        "regex_text_processing": "Text processing toolkit complete",
+        "data_wrangling_python": "You wrangle data with the stdlib alone",
+        "capstone_observatory": "Automation pro: a real pipeline, built end to end",
+    },
+    "path.career.ai_engineer_python": {
+        "collections_itertools": "Python foundations locked in",
+        "eval_metrics_for_models": "Classic ML, autodiff, and evaluation — the ML core",
+        "tokenization_bpe": "You build and tokenize language models by hand",
+        "attention_mechanics": "AI engineer: attention itself, implemented from scratch",
+    },
+}
+
+
 def area_key(area: str, wave: int) -> str:
     return area if wave == 1 else f"{area}_w2"
+
+
+def interleave_items(lessons: list[str], exercises: list[str], quizzes: list[str]) -> list[str]:
+    """Lessons teach first; quizzes then interleave between exercise blocks so
+    assessment lands mid-unit instead of stacking at the end."""
+    if not quizzes or not exercises:
+        return [*lessons, *exercises, *quizzes]
+    blocks = len(quizzes) + 1
+    per_block = math.ceil(len(exercises) / blocks)
+    items = list(lessons)
+    remaining = list(exercises)
+    for quiz in quizzes:
+        items.extend(remaining[:per_block])
+        remaining = remaining[per_block:]
+        items.append(quiz)
+    items.extend(remaining)
+    return items
 
 
 def unit_title(area: str, wave: int) -> str:
@@ -519,20 +575,22 @@ def main() -> None:
             kinds = by_area.get(key)
             if kinds is None:
                 raise SystemExit(f"no content found for area {key}")
-            items = [
-                *sorted(kinds.get("lesson", [])),
-                *sorted(kinds.get("exercise", [])),
-                *sorted(kinds.get("quiz", [])),
-            ]
-            total_minutes += sum(minutes[item_id] for item_id in items)
-            units.append(
-                {
-                    "id": f"unit.{key}",
-                    "title": unit_title(area, wave),
-                    "description": f"Lessons, drills, and quizzes for {AREA_TITLES[area].lower()}.",
-                    "items": items,
-                }
+            items = interleave_items(
+                sorted(kinds.get("lesson", [])),
+                sorted(kinds.get("exercise", [])),
+                sorted(kinds.get("quiz", [])),
             )
+            total_minutes += sum(minutes[item_id] for item_id in items)
+            unit = {
+                "id": f"unit.{key}",
+                "title": unit_title(area, wave),
+                "description": f"Lessons, drills, and quizzes for {AREA_TITLES[area].lower()}.",
+                "items": items,
+            }
+            milestone = MILESTONES.get(spec["id"], {}).get(key)
+            if milestone:
+                unit["milestone"] = milestone
+            units.append(unit)
         doc = {
             "id": spec["id"],
             "kind": "path",

@@ -30,13 +30,13 @@ units:
   - exercise.library.prefix_sums.a01
   - exercise.library.prefix_sums.a02
   - exercise.library.prefix_sums.a03
+  - quiz.library.prefix_sums.a01
   - exercise.library.prefix_sums.a04
   - exercise.library.prefix_sums.a05
   - exercise.library.prefix_sums.a06
+  - quiz.library.prefix_sums.a02
   - exercise.library.prefix_sums.a07
   - exercise.library.prefix_sums.a08
-  - quiz.library.prefix_sums.a01
-  - quiz.library.prefix_sums.a02
 - id: unit.stack_queue_bfs
   title: Stacks, Queues & BFS
   description: Lessons, drills, and quizzes for stacks, queues & bfs.
@@ -47,16 +47,16 @@ units:
   - exercise.library.stack_queue_bfs.a01
   - exercise.library.stack_queue_bfs.a02
   - exercise.library.stack_queue_bfs.a03
+  - quiz.library.stack_queue_bfs.a01
   - exercise.library.stack_queue_bfs.a04
   - exercise.library.stack_queue_bfs.a05
   - exercise.library.stack_queue_bfs.a06
+  - quiz.library.stack_queue_bfs.a02
   - exercise.library.stack_queue_bfs.a07
   - exercise.library.stack_queue_bfs.a08
   - exercise.library.stack_queue_bfs.b01
-  - exercise.library.stack_queue_bfs.b02
-  - quiz.library.stack_queue_bfs.a01
-  - quiz.library.stack_queue_bfs.a02
   - quiz.library.stack_queue_bfs.a03
+  - exercise.library.stack_queue_bfs.b02
 - id: unit.binary_search
   title: Binary Search
   description: Lessons, drills, and quizzes for binary search.
@@ -67,13 +67,13 @@ units:
   - exercise.library.binary_search.a01
   - exercise.library.binary_search.a02
   - exercise.library.binary_search.a03
+  - quiz.library.binary_search.a01
   - exercise.library.binary_search.a04
   - exercise.library.binary_search.a05
   - exercise.library.binary_search.a06
+  - quiz.library.binary_search.a02
   - exercise.library.binary_search.a07
   - exercise.library.binary_search.a08
-  - quiz.library.binary_search.a01
-  - quiz.library.binary_search.a02
 - id: unit.recursion_backtracking
   title: Recursion & Backtracking
   description: Lessons, drills, and quizzes for recursion & backtracking.
@@ -84,13 +84,13 @@ units:
   - exercise.library.recursion_backtracking.a01
   - exercise.library.recursion_backtracking.a02
   - exercise.library.recursion_backtracking.a03
+  - quiz.library.recursion_backtracking.a01
   - exercise.library.recursion_backtracking.a04
   - exercise.library.recursion_backtracking.a05
   - exercise.library.recursion_backtracking.a06
+  - quiz.library.recursion_backtracking.a02
   - exercise.library.recursion_backtracking.a07
   - exercise.library.recursion_backtracking.a08
-  - quiz.library.recursion_backtracking.a01
-  - quiz.library.recursion_backtracking.a02
 - id: unit.heaps_topk
   title: Heaps & Top-K
   description: Lessons, drills, and quizzes for heaps & top-k.
@@ -103,17 +103,17 @@ units:
   - exercise.library.heaps_topk.a03
   - exercise.library.heaps_topk.a04
   - exercise.library.heaps_topk.a05
+  - quiz.library.heaps_topk.a01
   - exercise.library.heaps_topk.a06
   - exercise.library.heaps_topk.a07
   - exercise.library.heaps_topk.a08
   - exercise.library.heaps_topk.a09
   - exercise.library.heaps_topk.a10
+  - quiz.library.heaps_topk.a02
   - exercise.library.heaps_topk.a11
   - exercise.library.heaps_topk.a12
   - exercise.library.heaps_topk.b01
   - exercise.library.heaps_topk.b02
-  - quiz.library.heaps_topk.a01
-  - quiz.library.heaps_topk.a02
 - id: unit.intervals_greedy
   title: Intervals & Greedy
   description: Lessons, drills, and quizzes for intervals & greedy.
@@ -126,36 +126,36 @@ units:
   - exercise.library.intervals_greedy.a03
   - exercise.library.intervals_greedy.a04
   - exercise.library.intervals_greedy.a05
+  - quiz.library.intervals_greedy.a01
   - exercise.library.intervals_greedy.a06
   - exercise.library.intervals_greedy.a07
   - exercise.library.intervals_greedy.a08
   - exercise.library.intervals_greedy.a09
   - exercise.library.intervals_greedy.a10
+  - quiz.library.intervals_greedy.a02
   - exercise.library.intervals_greedy.a11
   - exercise.library.intervals_greedy.a12
   - exercise.library.intervals_greedy.b01
   - exercise.library.intervals_greedy.b02
-  - quiz.library.intervals_greedy.a01
-  - quiz.library.intervals_greedy.a02
 - id: unit.mixed_capstones
   title: Mixed Capstones
   description: Lessons, drills, and quizzes for mixed capstones.
   items:
   - exercise.library.mixed_capstones.a01
   - exercise.library.mixed_capstones.a02
+  - quiz.library.mixed_capstones.a01
   - exercise.library.mixed_capstones.a03
   - exercise.library.mixed_capstones.a04
+  - quiz.library.mixed_capstones.a02
   - exercise.library.mixed_capstones.a05
   - exercise.library.mixed_capstones.a06
+  - quiz.library.mixed_capstones.a03
   - exercise.library.mixed_capstones.a07
   - exercise.library.mixed_capstones.a08
+  - quiz.library.mixed_capstones.a04
   - exercise.library.mixed_capstones.b01
   - exercise.library.mixed_capstones.b02
+  - quiz.library.mixed_capstones.a05
   - exercise.library.mixed_capstones.b03
   - exercise.library.mixed_capstones.b04
-  - quiz.library.mixed_capstones.a01
-  - quiz.library.mixed_capstones.a02
-  - quiz.library.mixed_capstones.a03
-  - quiz.library.mixed_capstones.a04
-  - quiz.library.mixed_capstones.a05
   - quiz.library.mixed_capstones.a06

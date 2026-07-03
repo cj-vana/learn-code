@@ -37,24 +37,24 @@ units:
   - exercise.library.python_refresh.a02
   - exercise.library.python_refresh.a03
   - exercise.library.python_refresh.a04
+  - quiz.library.python_refresh.a01
   - exercise.library.python_refresh.a05
   - exercise.library.python_refresh.a06
   - exercise.library.python_refresh.a07
   - exercise.library.python_refresh.a08
+  - quiz.library.python_refresh.a02
   - exercise.library.python_refresh.b01
   - exercise.library.python_refresh.b02
   - exercise.library.python_refresh.b03
   - exercise.library.python_refresh.b04
+  - quiz.library.python_refresh.a03
   - exercise.library.python_refresh.b05
   - exercise.library.python_refresh.b06
   - exercise.library.python_refresh.b07
   - exercise.library.python_refresh.b08
+  - quiz.library.python_refresh.a04
   - exercise.library.python_refresh.c01
   - exercise.library.python_refresh.c02
-  - quiz.library.python_refresh.a01
-  - quiz.library.python_refresh.a02
-  - quiz.library.python_refresh.a03
-  - quiz.library.python_refresh.a04
 - id: unit.loops_lists_strings
   title: Loops, Lists & Strings
   description: Lessons, drills, and quizzes for loops, lists & strings.
@@ -69,24 +69,24 @@ units:
   - exercise.library.loops_lists_strings.a02
   - exercise.library.loops_lists_strings.a03
   - exercise.library.loops_lists_strings.a04
+  - quiz.library.loops_lists_strings.a01
   - exercise.library.loops_lists_strings.a05
   - exercise.library.loops_lists_strings.a06
   - exercise.library.loops_lists_strings.a07
   - exercise.library.loops_lists_strings.a08
+  - quiz.library.loops_lists_strings.a02
   - exercise.library.loops_lists_strings.b01
   - exercise.library.loops_lists_strings.b02
   - exercise.library.loops_lists_strings.b03
   - exercise.library.loops_lists_strings.b04
+  - quiz.library.loops_lists_strings.a03
   - exercise.library.loops_lists_strings.b05
   - exercise.library.loops_lists_strings.b06
   - exercise.library.loops_lists_strings.b07
   - exercise.library.loops_lists_strings.b08
+  - quiz.library.loops_lists_strings.a04
   - exercise.library.loops_lists_strings.c01
   - exercise.library.loops_lists_strings.c02
-  - quiz.library.loops_lists_strings.a01
-  - quiz.library.loops_lists_strings.a02
-  - quiz.library.loops_lists_strings.a03
-  - quiz.library.loops_lists_strings.a04
 - id: unit.dicts_sets_tuples
   title: Dicts, Sets & Tuples
   description: Lessons, drills, and quizzes for dicts, sets & tuples.
@@ -100,24 +100,24 @@ units:
   - exercise.library.dicts_sets_tuples.a02
   - exercise.library.dicts_sets_tuples.a03
   - exercise.library.dicts_sets_tuples.a04
+  - quiz.library.dicts_sets_tuples.a01
   - exercise.library.dicts_sets_tuples.a05
   - exercise.library.dicts_sets_tuples.a06
   - exercise.library.dicts_sets_tuples.a07
   - exercise.library.dicts_sets_tuples.a08
+  - quiz.library.dicts_sets_tuples.a02
   - exercise.library.dicts_sets_tuples.b01
   - exercise.library.dicts_sets_tuples.b02
   - exercise.library.dicts_sets_tuples.b03
   - exercise.library.dicts_sets_tuples.b04
+  - quiz.library.dicts_sets_tuples.a03
   - exercise.library.dicts_sets_tuples.b05
   - exercise.library.dicts_sets_tuples.b06
   - exercise.library.dicts_sets_tuples.b07
   - exercise.library.dicts_sets_tuples.b08
+  - quiz.library.dicts_sets_tuples.a04
   - exercise.library.dicts_sets_tuples.c01
   - exercise.library.dicts_sets_tuples.c02
-  - quiz.library.dicts_sets_tuples.a01
-  - quiz.library.dicts_sets_tuples.a02
-  - quiz.library.dicts_sets_tuples.a03
-  - quiz.library.dicts_sets_tuples.a04
 - id: unit.debugging
   title: Debugging
   description: Lessons, drills, and quizzes for debugging.
@@ -129,16 +129,17 @@ units:
   - exercise.library.debugging.a01
   - exercise.library.debugging.a02
   - exercise.library.debugging.a03
+  - quiz.library.debugging.a01
   - exercise.library.debugging.a04
   - exercise.library.debugging.a05
   - exercise.library.debugging.a06
+  - quiz.library.debugging.a02
   - exercise.library.debugging.a07
   - exercise.library.debugging.a08
   - exercise.library.debugging.b01
-  - exercise.library.debugging.b02
-  - quiz.library.debugging.a01
-  - quiz.library.debugging.a02
   - quiz.library.debugging.a03
+  - exercise.library.debugging.b02
+  milestone: "Fundamentals complete \u2014 you write working Python"
 - id: unit.brute_force_bigo
   title: Brute Force & Big-O
   description: Lessons, drills, and quizzes for brute force & big-o.
@@ -149,13 +150,13 @@ units:
   - exercise.library.brute_force_bigo.a01
   - exercise.library.brute_force_bigo.a02
   - exercise.library.brute_force_bigo.a03
+  - quiz.library.brute_force_bigo.a01
   - exercise.library.brute_force_bigo.a04
   - exercise.library.brute_force_bigo.a05
   - exercise.library.brute_force_bigo.a06
+  - quiz.library.brute_force_bigo.a02
   - exercise.library.brute_force_bigo.a07
   - exercise.library.brute_force_bigo.a08
-  - quiz.library.brute_force_bigo.a01
-  - quiz.library.brute_force_bigo.a02
 - id: unit.hashmap_set
   title: Hash Maps & Sets
   description: Lessons, drills, and quizzes for hash maps & sets.
@@ -166,18 +167,18 @@ units:
   - exercise.library.hashmap_set.a01
   - exercise.library.hashmap_set.a02
   - exercise.library.hashmap_set.a03
+  - quiz.library.hashmap_set.a01
   - exercise.library.hashmap_set.a04
   - exercise.library.hashmap_set.a05
   - exercise.library.hashmap_set.a06
+  - quiz.library.hashmap_set.a02
   - exercise.library.hashmap_set.a07
   - exercise.library.hashmap_set.a08
   - exercise.library.hashmap_set.b01
+  - quiz.library.hashmap_set.a03
   - exercise.library.hashmap_set.b02
   - exercise.library.hashmap_set.b03
   - exercise.library.hashmap_set.b04
-  - quiz.library.hashmap_set.a01
-  - quiz.library.hashmap_set.a02
-  - quiz.library.hashmap_set.a03
 - id: unit.two_pointers
   title: Two Pointers
   description: Lessons, drills, and quizzes for two pointers.
@@ -188,18 +189,18 @@ units:
   - exercise.library.two_pointers.a01
   - exercise.library.two_pointers.a02
   - exercise.library.two_pointers.a03
+  - quiz.library.two_pointers.a01
   - exercise.library.two_pointers.a04
   - exercise.library.two_pointers.a05
   - exercise.library.two_pointers.a06
+  - quiz.library.two_pointers.a02
   - exercise.library.two_pointers.a07
   - exercise.library.two_pointers.a08
   - exercise.library.two_pointers.b01
+  - quiz.library.two_pointers.a03
   - exercise.library.two_pointers.b02
   - exercise.library.two_pointers.b03
   - exercise.library.two_pointers.b04
-  - quiz.library.two_pointers.a01
-  - quiz.library.two_pointers.a02
-  - quiz.library.two_pointers.a03
 - id: unit.sliding_window
   title: Sliding Window
   description: Lessons, drills, and quizzes for sliding window.
@@ -210,18 +211,19 @@ units:
   - exercise.library.sliding_window.a01
   - exercise.library.sliding_window.a02
   - exercise.library.sliding_window.a03
+  - quiz.library.sliding_window.a01
   - exercise.library.sliding_window.a04
   - exercise.library.sliding_window.a05
   - exercise.library.sliding_window.a06
+  - quiz.library.sliding_window.a02
   - exercise.library.sliding_window.a07
   - exercise.library.sliding_window.a08
   - exercise.library.sliding_window.b01
+  - quiz.library.sliding_window.a03
   - exercise.library.sliding_window.b02
   - exercise.library.sliding_window.b03
   - exercise.library.sliding_window.b04
-  - quiz.library.sliding_window.a01
-  - quiz.library.sliding_window.a02
-  - quiz.library.sliding_window.a03
+  milestone: "Core patterns down \u2014 half the interview toolkit is yours"
 - id: unit.prefix_sums
   title: Prefix Sums
   description: Lessons, drills, and quizzes for prefix sums.
@@ -231,13 +233,13 @@ units:
   - exercise.library.prefix_sums.a01
   - exercise.library.prefix_sums.a02
   - exercise.library.prefix_sums.a03
+  - quiz.library.prefix_sums.a01
   - exercise.library.prefix_sums.a04
   - exercise.library.prefix_sums.a05
   - exercise.library.prefix_sums.a06
+  - quiz.library.prefix_sums.a02
   - exercise.library.prefix_sums.a07
   - exercise.library.prefix_sums.a08
-  - quiz.library.prefix_sums.a01
-  - quiz.library.prefix_sums.a02
 - id: unit.stack_queue_bfs
   title: Stacks, Queues & BFS
   description: Lessons, drills, and quizzes for stacks, queues & bfs.
@@ -248,16 +250,16 @@ units:
   - exercise.library.stack_queue_bfs.a01
   - exercise.library.stack_queue_bfs.a02
   - exercise.library.stack_queue_bfs.a03
+  - quiz.library.stack_queue_bfs.a01
   - exercise.library.stack_queue_bfs.a04
   - exercise.library.stack_queue_bfs.a05
   - exercise.library.stack_queue_bfs.a06
+  - quiz.library.stack_queue_bfs.a02
   - exercise.library.stack_queue_bfs.a07
   - exercise.library.stack_queue_bfs.a08
   - exercise.library.stack_queue_bfs.b01
-  - exercise.library.stack_queue_bfs.b02
-  - quiz.library.stack_queue_bfs.a01
-  - quiz.library.stack_queue_bfs.a02
   - quiz.library.stack_queue_bfs.a03
+  - exercise.library.stack_queue_bfs.b02
 - id: unit.binary_search
   title: Binary Search
   description: Lessons, drills, and quizzes for binary search.
@@ -268,13 +270,13 @@ units:
   - exercise.library.binary_search.a01
   - exercise.library.binary_search.a02
   - exercise.library.binary_search.a03
+  - quiz.library.binary_search.a01
   - exercise.library.binary_search.a04
   - exercise.library.binary_search.a05
   - exercise.library.binary_search.a06
+  - quiz.library.binary_search.a02
   - exercise.library.binary_search.a07
   - exercise.library.binary_search.a08
-  - quiz.library.binary_search.a01
-  - quiz.library.binary_search.a02
 - id: unit.recursion_backtracking
   title: Recursion & Backtracking
   description: Lessons, drills, and quizzes for recursion & backtracking.
@@ -285,13 +287,14 @@ units:
   - exercise.library.recursion_backtracking.a01
   - exercise.library.recursion_backtracking.a02
   - exercise.library.recursion_backtracking.a03
+  - quiz.library.recursion_backtracking.a01
   - exercise.library.recursion_backtracking.a04
   - exercise.library.recursion_backtracking.a05
   - exercise.library.recursion_backtracking.a06
+  - quiz.library.recursion_backtracking.a02
   - exercise.library.recursion_backtracking.a07
   - exercise.library.recursion_backtracking.a08
-  - quiz.library.recursion_backtracking.a01
-  - quiz.library.recursion_backtracking.a02
+  milestone: Every classic pattern family covered
 - id: unit.linked_lists_patterns
   title: Linked Lists
   description: Lessons, drills, and quizzes for linked lists.
@@ -304,17 +307,17 @@ units:
   - exercise.library.linked_lists_patterns.a03
   - exercise.library.linked_lists_patterns.a04
   - exercise.library.linked_lists_patterns.a05
+  - quiz.library.linked_lists_patterns.a01
   - exercise.library.linked_lists_patterns.a06
   - exercise.library.linked_lists_patterns.a07
   - exercise.library.linked_lists_patterns.a08
   - exercise.library.linked_lists_patterns.a09
   - exercise.library.linked_lists_patterns.a10
+  - quiz.library.linked_lists_patterns.a02
   - exercise.library.linked_lists_patterns.a11
   - exercise.library.linked_lists_patterns.a12
   - exercise.library.linked_lists_patterns.b01
   - exercise.library.linked_lists_patterns.b02
-  - quiz.library.linked_lists_patterns.a01
-  - quiz.library.linked_lists_patterns.a02
 - id: unit.trees_lite
   title: Trees
   description: Lessons, drills, and quizzes for trees.
@@ -327,19 +330,19 @@ units:
   - exercise.library.trees_lite.a02
   - exercise.library.trees_lite.a03
   - exercise.library.trees_lite.a04
+  - quiz.library.trees_lite.a01
   - exercise.library.trees_lite.a05
   - exercise.library.trees_lite.a06
   - exercise.library.trees_lite.a07
   - exercise.library.trees_lite.a08
+  - quiz.library.trees_lite.a02
   - exercise.library.trees_lite.a09
   - exercise.library.trees_lite.a10
   - exercise.library.trees_lite.a11
   - exercise.library.trees_lite.a12
+  - quiz.library.trees_lite.a03
   - exercise.library.trees_lite.b01
   - exercise.library.trees_lite.b02
-  - quiz.library.trees_lite.a01
-  - quiz.library.trees_lite.a02
-  - quiz.library.trees_lite.a03
 - id: unit.graphs_lite
   title: Graphs
   description: Lessons, drills, and quizzes for graphs.
@@ -352,19 +355,19 @@ units:
   - exercise.library.graphs_lite.a02
   - exercise.library.graphs_lite.a03
   - exercise.library.graphs_lite.a04
+  - quiz.library.graphs_lite.a01
   - exercise.library.graphs_lite.a05
   - exercise.library.graphs_lite.a06
   - exercise.library.graphs_lite.a07
   - exercise.library.graphs_lite.a08
+  - quiz.library.graphs_lite.a02
   - exercise.library.graphs_lite.a09
   - exercise.library.graphs_lite.a10
   - exercise.library.graphs_lite.a11
   - exercise.library.graphs_lite.a12
+  - quiz.library.graphs_lite.a03
   - exercise.library.graphs_lite.b01
   - exercise.library.graphs_lite.b02
-  - quiz.library.graphs_lite.a01
-  - quiz.library.graphs_lite.a02
-  - quiz.library.graphs_lite.a03
 - id: unit.heaps_topk
   title: Heaps & Top-K
   description: Lessons, drills, and quizzes for heaps & top-k.
@@ -377,17 +380,17 @@ units:
   - exercise.library.heaps_topk.a03
   - exercise.library.heaps_topk.a04
   - exercise.library.heaps_topk.a05
+  - quiz.library.heaps_topk.a01
   - exercise.library.heaps_topk.a06
   - exercise.library.heaps_topk.a07
   - exercise.library.heaps_topk.a08
   - exercise.library.heaps_topk.a09
   - exercise.library.heaps_topk.a10
+  - quiz.library.heaps_topk.a02
   - exercise.library.heaps_topk.a11
   - exercise.library.heaps_topk.a12
   - exercise.library.heaps_topk.b01
   - exercise.library.heaps_topk.b02
-  - quiz.library.heaps_topk.a01
-  - quiz.library.heaps_topk.a02
 - id: unit.intervals_greedy
   title: Intervals & Greedy
   description: Lessons, drills, and quizzes for intervals & greedy.
@@ -400,17 +403,17 @@ units:
   - exercise.library.intervals_greedy.a03
   - exercise.library.intervals_greedy.a04
   - exercise.library.intervals_greedy.a05
+  - quiz.library.intervals_greedy.a01
   - exercise.library.intervals_greedy.a06
   - exercise.library.intervals_greedy.a07
   - exercise.library.intervals_greedy.a08
   - exercise.library.intervals_greedy.a09
   - exercise.library.intervals_greedy.a10
+  - quiz.library.intervals_greedy.a02
   - exercise.library.intervals_greedy.a11
   - exercise.library.intervals_greedy.a12
   - exercise.library.intervals_greedy.b01
   - exercise.library.intervals_greedy.b02
-  - quiz.library.intervals_greedy.a01
-  - quiz.library.intervals_greedy.a02
 - id: unit.dp_recognition
   title: Dynamic Programming
   description: Lessons, drills, and quizzes for dynamic programming.
@@ -424,36 +427,38 @@ units:
   - exercise.library.dp_recognition.a03
   - exercise.library.dp_recognition.a04
   - exercise.library.dp_recognition.a05
+  - quiz.library.dp_recognition.a01
   - exercise.library.dp_recognition.a06
   - exercise.library.dp_recognition.a07
   - exercise.library.dp_recognition.a08
   - exercise.library.dp_recognition.a09
   - exercise.library.dp_recognition.a10
+  - quiz.library.dp_recognition.a02
   - exercise.library.dp_recognition.a11
   - exercise.library.dp_recognition.a12
   - exercise.library.dp_recognition.b01
   - exercise.library.dp_recognition.b02
-  - quiz.library.dp_recognition.a01
-  - quiz.library.dp_recognition.a02
+  milestone: "Advanced families done \u2014 capstones ahead"
 - id: unit.mixed_capstones
   title: Mixed Capstones
   description: Lessons, drills, and quizzes for mixed capstones.
   items:
   - exercise.library.mixed_capstones.a01
   - exercise.library.mixed_capstones.a02
+  - quiz.library.mixed_capstones.a01
   - exercise.library.mixed_capstones.a03
   - exercise.library.mixed_capstones.a04
+  - quiz.library.mixed_capstones.a02
   - exercise.library.mixed_capstones.a05
   - exercise.library.mixed_capstones.a06
+  - quiz.library.mixed_capstones.a03
   - exercise.library.mixed_capstones.a07
   - exercise.library.mixed_capstones.a08
+  - quiz.library.mixed_capstones.a04
   - exercise.library.mixed_capstones.b01
   - exercise.library.mixed_capstones.b02
+  - quiz.library.mixed_capstones.a05
   - exercise.library.mixed_capstones.b03
   - exercise.library.mixed_capstones.b04
-  - quiz.library.mixed_capstones.a01
-  - quiz.library.mixed_capstones.a02
-  - quiz.library.mixed_capstones.a03
-  - quiz.library.mixed_capstones.a04
-  - quiz.library.mixed_capstones.a05
   - quiz.library.mixed_capstones.a06
+  milestone: 'Interview-ready: the full arc is complete'

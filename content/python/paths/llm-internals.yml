@@ -33,16 +33,16 @@ units:
   - exercise.library.tokenization_bpe.a02
   - exercise.library.tokenization_bpe.a03
   - exercise.library.tokenization_bpe.a04
+  - quiz.library.tokenization_bpe.a01
   - exercise.library.tokenization_bpe.a05
   - exercise.library.tokenization_bpe.a06
   - exercise.library.tokenization_bpe.a07
   - exercise.library.tokenization_bpe.a08
+  - quiz.library.tokenization_bpe.a02
   - exercise.library.tokenization_bpe.a09
   - exercise.library.tokenization_bpe.a10
   - exercise.library.tokenization_bpe.a11
   - exercise.library.tokenization_bpe.a12
-  - quiz.library.tokenization_bpe.a01
-  - quiz.library.tokenization_bpe.a02
 - id: unit.language_models_from_scratch
   title: Language Models from Scratch
   description: Lessons, drills, and quizzes for language models from scratch.
@@ -54,16 +54,16 @@ units:
   - exercise.library.language_models_from_scratch.a02
   - exercise.library.language_models_from_scratch.a03
   - exercise.library.language_models_from_scratch.a04
+  - quiz.library.language_models_from_scratch.a01
   - exercise.library.language_models_from_scratch.a05
   - exercise.library.language_models_from_scratch.a06
   - exercise.library.language_models_from_scratch.a07
   - exercise.library.language_models_from_scratch.a08
+  - quiz.library.language_models_from_scratch.a02
   - exercise.library.language_models_from_scratch.a09
   - exercise.library.language_models_from_scratch.a10
   - exercise.library.language_models_from_scratch.a11
   - exercise.library.language_models_from_scratch.a12
-  - quiz.library.language_models_from_scratch.a01
-  - quiz.library.language_models_from_scratch.a02
 - id: unit.embeddings_similarity_search
   title: Embeddings & Retrieval
   description: Lessons, drills, and quizzes for embeddings & retrieval.
@@ -75,16 +75,16 @@ units:
   - exercise.library.embeddings_similarity_search.a02
   - exercise.library.embeddings_similarity_search.a03
   - exercise.library.embeddings_similarity_search.a04
+  - quiz.library.embeddings_similarity_search.a01
   - exercise.library.embeddings_similarity_search.a05
   - exercise.library.embeddings_similarity_search.a06
   - exercise.library.embeddings_similarity_search.a07
   - exercise.library.embeddings_similarity_search.a08
+  - quiz.library.embeddings_similarity_search.a02
   - exercise.library.embeddings_similarity_search.a09
   - exercise.library.embeddings_similarity_search.a10
   - exercise.library.embeddings_similarity_search.a11
   - exercise.library.embeddings_similarity_search.a12
-  - quiz.library.embeddings_similarity_search.a01
-  - quiz.library.embeddings_similarity_search.a02
 - id: unit.attention_mechanics
   title: Attention Mechanics
   description: Lessons, drills, and quizzes for attention mechanics.
@@ -96,13 +96,13 @@ units:
   - exercise.library.attention_mechanics.a02
   - exercise.library.attention_mechanics.a03
   - exercise.library.attention_mechanics.a04
+  - quiz.library.attention_mechanics.a01
   - exercise.library.attention_mechanics.a05
   - exercise.library.attention_mechanics.a06
   - exercise.library.attention_mechanics.a07
   - exercise.library.attention_mechanics.a08
+  - quiz.library.attention_mechanics.a02
   - exercise.library.attention_mechanics.a09
   - exercise.library.attention_mechanics.a10
   - exercise.library.attention_mechanics.a11
   - exercise.library.attention_mechanics.a12
-  - quiz.library.attention_mechanics.a01
-  - quiz.library.attention_mechanics.a02

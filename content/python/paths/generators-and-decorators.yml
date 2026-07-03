@@ -33,19 +33,19 @@ units:
   - exercise.library.iterators_generators.a02
   - exercise.library.iterators_generators.a03
   - exercise.library.iterators_generators.a04
+  - quiz.library.iterators_generators.a01
   - exercise.library.iterators_generators.a05
   - exercise.library.iterators_generators.a06
   - exercise.library.iterators_generators.a07
   - exercise.library.iterators_generators.a08
+  - quiz.library.iterators_generators.a02
   - exercise.library.iterators_generators.a09
   - exercise.library.iterators_generators.a10
   - exercise.library.iterators_generators.a11
   - exercise.library.iterators_generators.a12
+  - quiz.library.iterators_generators.a03
   - exercise.library.iterators_generators.b01
   - exercise.library.iterators_generators.b02
-  - quiz.library.iterators_generators.a01
-  - quiz.library.iterators_generators.a02
-  - quiz.library.iterators_generators.a03
 - id: unit.decorators_closures
   title: Closures & Decorators
   description: Lessons, drills, and quizzes for closures & decorators.
@@ -58,14 +58,14 @@ units:
   - exercise.library.decorators_closures.a03
   - exercise.library.decorators_closures.a04
   - exercise.library.decorators_closures.a05
+  - quiz.library.decorators_closures.a01
   - exercise.library.decorators_closures.a06
   - exercise.library.decorators_closures.a07
   - exercise.library.decorators_closures.a08
   - exercise.library.decorators_closures.a09
   - exercise.library.decorators_closures.a10
+  - quiz.library.decorators_closures.a02
   - exercise.library.decorators_closures.a11
   - exercise.library.decorators_closures.a12
   - exercise.library.decorators_closures.b01
   - exercise.library.decorators_closures.b02
-  - quiz.library.decorators_closures.a01
-  - quiz.library.decorators_closures.a02

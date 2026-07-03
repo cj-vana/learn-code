@@ -33,17 +33,17 @@ units:
   - exercise.library.grid_simulation.a03
   - exercise.library.grid_simulation.a04
   - exercise.library.grid_simulation.a05
+  - quiz.library.grid_simulation.a01
   - exercise.library.grid_simulation.a06
   - exercise.library.grid_simulation.a07
   - exercise.library.grid_simulation.a08
   - exercise.library.grid_simulation.a09
   - exercise.library.grid_simulation.a10
+  - quiz.library.grid_simulation.a02
   - exercise.library.grid_simulation.a11
   - exercise.library.grid_simulation.a12
   - exercise.library.grid_simulation.b01
   - exercise.library.grid_simulation.b02
-  - quiz.library.grid_simulation.a01
-  - quiz.library.grid_simulation.a02
 - id: unit.bit_number_theory
   title: Bits & Number Theory
   description: Lessons, drills, and quizzes for bits & number theory.
@@ -56,14 +56,14 @@ units:
   - exercise.library.bit_number_theory.a03
   - exercise.library.bit_number_theory.a04
   - exercise.library.bit_number_theory.a05
+  - quiz.library.bit_number_theory.a01
   - exercise.library.bit_number_theory.a06
   - exercise.library.bit_number_theory.a07
   - exercise.library.bit_number_theory.a08
   - exercise.library.bit_number_theory.a09
   - exercise.library.bit_number_theory.a10
+  - quiz.library.bit_number_theory.a02
   - exercise.library.bit_number_theory.a11
   - exercise.library.bit_number_theory.a12
   - exercise.library.bit_number_theory.b01
   - exercise.library.bit_number_theory.b02
-  - quiz.library.bit_number_theory.a01
-  - quiz.library.bit_number_theory.a02

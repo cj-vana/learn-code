@@ -32,17 +32,17 @@ units:
   - exercise.library.intervals_greedy.a03
   - exercise.library.intervals_greedy.a04
   - exercise.library.intervals_greedy.a05
+  - quiz.library.intervals_greedy.a01
   - exercise.library.intervals_greedy.a06
   - exercise.library.intervals_greedy.a07
   - exercise.library.intervals_greedy.a08
   - exercise.library.intervals_greedy.a09
   - exercise.library.intervals_greedy.a10
+  - quiz.library.intervals_greedy.a02
   - exercise.library.intervals_greedy.a11
   - exercise.library.intervals_greedy.a12
   - exercise.library.intervals_greedy.b01
   - exercise.library.intervals_greedy.b02
-  - quiz.library.intervals_greedy.a01
-  - quiz.library.intervals_greedy.a02
 - id: unit.dp_recognition
   title: Dynamic Programming
   description: Lessons, drills, and quizzes for dynamic programming.
@@ -56,14 +56,14 @@ units:
   - exercise.library.dp_recognition.a03
   - exercise.library.dp_recognition.a04
   - exercise.library.dp_recognition.a05
+  - quiz.library.dp_recognition.a01
   - exercise.library.dp_recognition.a06
   - exercise.library.dp_recognition.a07
   - exercise.library.dp_recognition.a08
   - exercise.library.dp_recognition.a09
   - exercise.library.dp_recognition.a10
+  - quiz.library.dp_recognition.a02
   - exercise.library.dp_recognition.a11
   - exercise.library.dp_recognition.a12
   - exercise.library.dp_recognition.b01
   - exercise.library.dp_recognition.b02
-  - quiz.library.dp_recognition.a01
-  - quiz.library.dp_recognition.a02

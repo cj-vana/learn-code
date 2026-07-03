@@ -34,24 +34,24 @@ units:
   - exercise.library.loops_lists_strings.a02
   - exercise.library.loops_lists_strings.a03
   - exercise.library.loops_lists_strings.a04
+  - quiz.library.loops_lists_strings.a01
   - exercise.library.loops_lists_strings.a05
   - exercise.library.loops_lists_strings.a06
   - exercise.library.loops_lists_strings.a07
   - exercise.library.loops_lists_strings.a08
+  - quiz.library.loops_lists_strings.a02
   - exercise.library.loops_lists_strings.b01
   - exercise.library.loops_lists_strings.b02
   - exercise.library.loops_lists_strings.b03
   - exercise.library.loops_lists_strings.b04
+  - quiz.library.loops_lists_strings.a03
   - exercise.library.loops_lists_strings.b05
   - exercise.library.loops_lists_strings.b06
   - exercise.library.loops_lists_strings.b07
   - exercise.library.loops_lists_strings.b08
+  - quiz.library.loops_lists_strings.a04
   - exercise.library.loops_lists_strings.c01
   - exercise.library.loops_lists_strings.c02
-  - quiz.library.loops_lists_strings.a01
-  - quiz.library.loops_lists_strings.a02
-  - quiz.library.loops_lists_strings.a03
-  - quiz.library.loops_lists_strings.a04
 - id: unit.loops_lists_strings_w2
   title: 'Loops, Lists & Strings: Round Two'
   description: Lessons, drills, and quizzes for loops, lists & strings.
@@ -66,21 +66,21 @@ units:
   - exercise.library.loops_lists_strings_w2.a02
   - exercise.library.loops_lists_strings_w2.a03
   - exercise.library.loops_lists_strings_w2.a04
+  - quiz.library.loops_lists_strings_w2.a01
   - exercise.library.loops_lists_strings_w2.a05
   - exercise.library.loops_lists_strings_w2.a06
   - exercise.library.loops_lists_strings_w2.a07
   - exercise.library.loops_lists_strings_w2.a08
+  - quiz.library.loops_lists_strings_w2.a02
   - exercise.library.loops_lists_strings_w2.b01
   - exercise.library.loops_lists_strings_w2.b02
   - exercise.library.loops_lists_strings_w2.b03
   - exercise.library.loops_lists_strings_w2.b04
+  - quiz.library.loops_lists_strings_w2.a03
   - exercise.library.loops_lists_strings_w2.b05
   - exercise.library.loops_lists_strings_w2.b06
   - exercise.library.loops_lists_strings_w2.b07
   - exercise.library.loops_lists_strings_w2.b08
+  - quiz.library.loops_lists_strings_w2.a04
   - exercise.library.loops_lists_strings_w2.c01
   - exercise.library.loops_lists_strings_w2.c02
-  - quiz.library.loops_lists_strings_w2.a01
-  - quiz.library.loops_lists_strings_w2.a02
-  - quiz.library.loops_lists_strings_w2.a03
-  - quiz.library.loops_lists_strings_w2.a04

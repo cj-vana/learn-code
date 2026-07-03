@@ -227,6 +227,8 @@ export interface PathUnitDetail {
   description: string;
   items: PathItemStatus[];
   percent_complete: number;
+  status: 'locked' | 'available' | 'in_progress' | 'complete';
+  milestone: string | null;
 }
 
 export interface PathSummary {

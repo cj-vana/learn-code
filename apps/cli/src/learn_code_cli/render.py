@@ -116,12 +116,16 @@ def render_path_detail(detail: dict[str, Any]) -> str:
     ]
     for unit in detail.get("units", []):
         lines.append("")
-        lines.append(f"{unit['title']}  [{unit['percent_complete']}%]")
+        unit_status = unit.get("status", "available")
+        lock = " (locked until previous unit hits 70%)" if unit_status == "locked" else ""
+        lines.append(f"{unit['title']}  [{unit['percent_complete']}%]{lock}")
         for item in unit.get("items", []):
             mark = "x" if item["status"] == "complete" else " "
             lines.append(
                 f"  [{mark}] {item['kind']:<8} {item['title']}  ({item['id']})"
             )
+        if unit.get("milestone") and unit_status == "complete":
+            lines.append(f"  ** milestone: {unit['milestone']}")
     if detail.get("next_item_id"):
         lines.append("")
         lines.append(f"next: {detail['next_item_id']}")

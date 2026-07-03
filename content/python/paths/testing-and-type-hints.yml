@@ -32,16 +32,16 @@ units:
   - exercise.library.testing_concepts.a02
   - exercise.library.testing_concepts.a03
   - exercise.library.testing_concepts.a04
+  - quiz.library.testing_concepts.a01
   - exercise.library.testing_concepts.a05
   - exercise.library.testing_concepts.a06
   - exercise.library.testing_concepts.a07
   - exercise.library.testing_concepts.a08
+  - quiz.library.testing_concepts.a02
   - exercise.library.testing_concepts.a09
   - exercise.library.testing_concepts.a10
   - exercise.library.testing_concepts.a11
   - exercise.library.testing_concepts.a12
-  - quiz.library.testing_concepts.a01
-  - quiz.library.testing_concepts.a02
 - id: unit.type_hints
   title: Type Hints & Contracts
   description: Lessons, drills, and quizzes for type hints & contracts.
@@ -53,13 +53,13 @@ units:
   - exercise.library.type_hints.a02
   - exercise.library.type_hints.a03
   - exercise.library.type_hints.a04
+  - quiz.library.type_hints.a01
   - exercise.library.type_hints.a05
   - exercise.library.type_hints.a06
   - exercise.library.type_hints.a07
   - exercise.library.type_hints.a08
+  - quiz.library.type_hints.a02
   - exercise.library.type_hints.a09
   - exercise.library.type_hints.a10
   - exercise.library.type_hints.a11
   - exercise.library.type_hints.a12
-  - quiz.library.type_hints.a01
-  - quiz.library.type_hints.a02

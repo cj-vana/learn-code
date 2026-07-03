@@ -34,17 +34,17 @@ units:
   - exercise.library.linked_lists_patterns.a03
   - exercise.library.linked_lists_patterns.a04
   - exercise.library.linked_lists_patterns.a05
+  - quiz.library.linked_lists_patterns.a01
   - exercise.library.linked_lists_patterns.a06
   - exercise.library.linked_lists_patterns.a07
   - exercise.library.linked_lists_patterns.a08
   - exercise.library.linked_lists_patterns.a09
   - exercise.library.linked_lists_patterns.a10
+  - quiz.library.linked_lists_patterns.a02
   - exercise.library.linked_lists_patterns.a11
   - exercise.library.linked_lists_patterns.a12
   - exercise.library.linked_lists_patterns.b01
   - exercise.library.linked_lists_patterns.b02
-  - quiz.library.linked_lists_patterns.a01
-  - quiz.library.linked_lists_patterns.a02
 - id: unit.trees_lite
   title: Trees
   description: Lessons, drills, and quizzes for trees.
@@ -57,19 +57,19 @@ units:
   - exercise.library.trees_lite.a02
   - exercise.library.trees_lite.a03
   - exercise.library.trees_lite.a04
+  - quiz.library.trees_lite.a01
   - exercise.library.trees_lite.a05
   - exercise.library.trees_lite.a06
   - exercise.library.trees_lite.a07
   - exercise.library.trees_lite.a08
+  - quiz.library.trees_lite.a02
   - exercise.library.trees_lite.a09
   - exercise.library.trees_lite.a10
   - exercise.library.trees_lite.a11
   - exercise.library.trees_lite.a12
+  - quiz.library.trees_lite.a03
   - exercise.library.trees_lite.b01
   - exercise.library.trees_lite.b02
-  - quiz.library.trees_lite.a01
-  - quiz.library.trees_lite.a02
-  - quiz.library.trees_lite.a03
 - id: unit.graphs_lite
   title: Graphs
   description: Lessons, drills, and quizzes for graphs.
@@ -82,19 +82,19 @@ units:
   - exercise.library.graphs_lite.a02
   - exercise.library.graphs_lite.a03
   - exercise.library.graphs_lite.a04
+  - quiz.library.graphs_lite.a01
   - exercise.library.graphs_lite.a05
   - exercise.library.graphs_lite.a06
   - exercise.library.graphs_lite.a07
   - exercise.library.graphs_lite.a08
+  - quiz.library.graphs_lite.a02
   - exercise.library.graphs_lite.a09
   - exercise.library.graphs_lite.a10
   - exercise.library.graphs_lite.a11
   - exercise.library.graphs_lite.a12
+  - quiz.library.graphs_lite.a03
   - exercise.library.graphs_lite.b01
   - exercise.library.graphs_lite.b02
-  - quiz.library.graphs_lite.a01
-  - quiz.library.graphs_lite.a02
-  - quiz.library.graphs_lite.a03
 - id: unit.heaps_topk
   title: Heaps & Top-K
   description: Lessons, drills, and quizzes for heaps & top-k.
@@ -107,14 +107,14 @@ units:
   - exercise.library.heaps_topk.a03
   - exercise.library.heaps_topk.a04
   - exercise.library.heaps_topk.a05
+  - quiz.library.heaps_topk.a01
   - exercise.library.heaps_topk.a06
   - exercise.library.heaps_topk.a07
   - exercise.library.heaps_topk.a08
   - exercise.library.heaps_topk.a09
   - exercise.library.heaps_topk.a10
+  - quiz.library.heaps_topk.a02
   - exercise.library.heaps_topk.a11
   - exercise.library.heaps_topk.a12
   - exercise.library.heaps_topk.b01
   - exercise.library.heaps_topk.b02
-  - quiz.library.heaps_topk.a01
-  - quiz.library.heaps_topk.a02

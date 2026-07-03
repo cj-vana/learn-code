@@ -33,19 +33,19 @@ units:
   - exercise.library.oop_classes.a02
   - exercise.library.oop_classes.a03
   - exercise.library.oop_classes.a04
+  - quiz.library.oop_classes.a01
   - exercise.library.oop_classes.a05
   - exercise.library.oop_classes.a06
   - exercise.library.oop_classes.a07
   - exercise.library.oop_classes.a08
+  - quiz.library.oop_classes.a02
   - exercise.library.oop_classes.a09
   - exercise.library.oop_classes.a10
   - exercise.library.oop_classes.a11
   - exercise.library.oop_classes.a12
+  - quiz.library.oop_classes.a03
   - exercise.library.oop_classes.b01
   - exercise.library.oop_classes.b02
-  - quiz.library.oop_classes.a01
-  - quiz.library.oop_classes.a02
-  - quiz.library.oop_classes.a03
 - id: unit.error_handling
   title: Errors & Exceptions
   description: Lessons, drills, and quizzes for errors & exceptions.
@@ -57,16 +57,16 @@ units:
   - exercise.library.error_handling.a02
   - exercise.library.error_handling.a03
   - exercise.library.error_handling.a04
+  - quiz.library.error_handling.a01
   - exercise.library.error_handling.a05
   - exercise.library.error_handling.a06
   - exercise.library.error_handling.a07
   - exercise.library.error_handling.a08
+  - quiz.library.error_handling.a02
   - exercise.library.error_handling.a09
   - exercise.library.error_handling.a10
   - exercise.library.error_handling.a11
   - exercise.library.error_handling.a12
+  - quiz.library.error_handling.a03
   - exercise.library.error_handling.b01
   - exercise.library.error_handling.b02
-  - quiz.library.error_handling.a01
-  - quiz.library.error_handling.a02
-  - quiz.library.error_handling.a03

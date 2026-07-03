@@ -32,16 +32,16 @@ units:
   - exercise.library.files_formats.a02
   - exercise.library.files_formats.a03
   - exercise.library.files_formats.a04
+  - quiz.library.files_formats.a01
   - exercise.library.files_formats.a05
   - exercise.library.files_formats.a06
   - exercise.library.files_formats.a07
   - exercise.library.files_formats.a08
+  - quiz.library.files_formats.a02
   - exercise.library.files_formats.a09
   - exercise.library.files_formats.a10
   - exercise.library.files_formats.a11
   - exercise.library.files_formats.a12
-  - quiz.library.files_formats.a01
-  - quiz.library.files_formats.a02
 - id: unit.datetime_handling
   title: Dates & Times
   description: Lessons, drills, and quizzes for dates & times.
@@ -53,13 +53,13 @@ units:
   - exercise.library.datetime_handling.a02
   - exercise.library.datetime_handling.a03
   - exercise.library.datetime_handling.a04
+  - quiz.library.datetime_handling.a01
   - exercise.library.datetime_handling.a05
   - exercise.library.datetime_handling.a06
   - exercise.library.datetime_handling.a07
   - exercise.library.datetime_handling.a08
+  - quiz.library.datetime_handling.a02
   - exercise.library.datetime_handling.a09
   - exercise.library.datetime_handling.a10
   - exercise.library.datetime_handling.a11
   - exercise.library.datetime_handling.a12
-  - quiz.library.datetime_handling.a01
-  - quiz.library.datetime_handling.a02

@@ -187,6 +187,10 @@ class PathUnitDetail(BaseModel):
     description: str
     items: list[PathItemStatus]
     percent_complete: int
+    # Derived mastery gate: "locked" until the previous unit reaches the
+    # mastery threshold; purely informational — nothing blocks server-side.
+    status: Literal["locked", "available", "in_progress", "complete"]
+    milestone: str | None
 
 
 class PathSummary(BaseModel):

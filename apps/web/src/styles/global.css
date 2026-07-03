@@ -944,3 +944,13 @@ select.text-input {
   justify-content: space-between;
   gap: var(--space-2);
 }
+
+.path-milestone {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.04em;
+  color: var(--pine, #2f5d3a);
+  border-top: 1px dashed var(--graphite);
+  padding-top: var(--space-2);
+  margin-top: var(--space-3);
+}
