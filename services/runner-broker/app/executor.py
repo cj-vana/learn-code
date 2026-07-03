@@ -23,6 +23,10 @@ from app.contracts import RunLimits
 
 HARNESS_COMMAND = ["python3", "/app/harness.py", "/workspace/job.json", "/workspace/result.json"]
 CONTAINER_WORKSPACE_PATH = "/workspace"
+# Fixed non-root identity baked into the python-runner image (its Dockerfile
+# creates uid/gid 1000); the workspace is chowned to it before each run.
+RUNNER_UID = 1000
+RUNNER_GID = 1000
 
 
 def build_container_options(limits: RunLimits) -> dict[str, Any]:
@@ -39,7 +43,7 @@ def build_container_options(limits: RunLimits) -> dict[str, Any]:
         "cap_drop": ["ALL"],
         "security_opt": ["no-new-privileges"],
         "read_only": True,
-        "user": "1000:1000",
+        "user": f"{RUNNER_UID}:{RUNNER_GID}",
         # `auto_remove` (not `remove`) is the kwarg docker-py's containers.create()
         # accepts; `remove` is a run()-only convenience and makes create() raise
         # TypeError. It maps to the daemon's HostConfig AutoRemove.
@@ -174,10 +178,17 @@ class Executor:
     def execute(self, job: dict, limits: RunLimits) -> dict:
         workspace = Path(tempfile.mkdtemp(prefix="learn-code-run-", dir=self._workspace_root))
         # mkdtemp yields 0700 owned by the broker's user, but the runner
-        # container runs as uid 1000 (build_container_options) and must write
-        # result.json into the bind-mounted workspace. Docker Desktop masks
-        # host ownership; Linux hosts enforce it, so open the dir explicitly.
-        os.chmod(workspace, 0o777)
+        # container runs as RUNNER_UID and must write result.json into the
+        # bind-mounted workspace; Linux hosts enforce ownership. Hand the dir
+        # to the runner uid (the root broker still bypasses 0700 to read the
+        # result). Outside the container the broker isn't root, so fall back
+        # to a world-writable dir — dev/test only, and Docker Desktop masks
+        # host ownership there regardless.
+        try:
+            os.chown(workspace, RUNNER_UID, RUNNER_GID)
+            os.chmod(workspace, 0o700)
+        except PermissionError:
+            os.chmod(workspace, 0o777)
         try:
             return self._run_in_workspace(workspace, job, limits)
         finally:
