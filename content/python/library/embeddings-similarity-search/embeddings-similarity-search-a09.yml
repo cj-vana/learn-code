@@ -1,0 +1,159 @@
+id: exercise.library.embeddings_similarity_search.a09
+kind: exercise
+version: 1
+language: python
+title: Rarity Weights for a Field Guide Index
+slug: embeddings-similarity-search-a09
+difficulty: medium
+concepts:
+  - ai.embeddings_retrieval
+  - concepts.grouping_aggregation
+prerequisites:
+  - python.dictionaries
+  - python.sets
+  - python.loops
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.embeddings_similarity_search.a09
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original inverse-document-frequency drill themed on a botanical field-guide index over species-token entries.
+prompt_markdown: |
+  Common words appear in almost every document and tell you little; rare words are
+  the ones that make a document distinctive. **Inverse document frequency (IDF)**
+  turns that intuition into a weight. Here each "document" is a list of species
+  tokens from one entry of a field guide.
+
+  Write `idf(job)` where `job` is a single dict:
+
+  ```
+  {"docs": [["fern", "moss"], ["fern", "lichen"]]}
+  ```
+
+  Let `N` be the number of documents. For each term, let `df(term)` be its
+  **document frequency**: the number of documents that contain the term **at least
+  once** (repeats inside one document count only once). Return a dict mapping every
+  term that appears anywhere to
+
+  ```
+  idf(term) = ln(N / df(term))
+  ```
+
+  where `ln` is the natural logarithm (`math.log`), **rounded to 6 decimal places**
+  with `round(value, 6)`.
+
+  In the example, `N = 2`. `fern` is in both documents, so `df = 2` and
+  `idf = ln(2 / 2) = 0.0`. `moss` and `lichen` each appear in one document, so
+  `idf = ln(2 / 1) = 0.693147`. The result is
+  `{"fern": 0.0, "moss": 0.693147, "lichen": 0.693147}`.
+
+  If `docs` is empty, return an empty dict `{}`.
+starter_code: |
+  import math
+
+
+  def idf(job):
+      return {}
+function_name: idf
+input_mode: function
+solution_sketch: Count, for each term, how many documents contain it by iterating over the set of each document, then map each term to round(math.log(N / df), 6).
+sample_solution: |
+  import math
+  from collections import Counter
+
+
+  def idf(job):
+      docs = job["docs"]
+      n = len(docs)
+      if n == 0:
+          return {}
+      df = Counter()
+      for doc in docs:
+          for term in set(doc):
+              df[term] += 1
+      return {term: round(math.log(n / df[term]), 6) for term in df}
+hints:
+  - level: 1
+    text: Document frequency counts documents, not occurrences. Convert each document to a set first so a word repeated within one entry still adds only one to its count.
+  - level: 2
+    text: Loop over every document, and for each distinct term in it, increment that term's document-frequency tally.
+  - level: 3
+    text: "With N = len(docs) and df built up, return {term: round(math.log(N / df[term]), 6) for term in df}; a term present in every document gives ln(1) = 0.0."
+tests:
+  public:
+    - name: two_docs
+      input:
+        docs:
+          - [fern, moss]
+          - [fern, lichen]
+      expected:
+        fern: 0.0
+        moss: 0.693147
+        lichen: 0.693147
+    - name: single_doc_repeat
+      input:
+        docs:
+          - [fern, fern, moss]
+      expected:
+        fern: 0.0
+        moss: 0.0
+    - name: empty
+      input:
+        docs: []
+      expected: {}
+  validation:
+    - name: three_docs_pairs
+      input:
+        docs:
+          - [fern, moss]
+          - [fern, lichen]
+          - [moss, lichen]
+      expected:
+        fern: 0.405465
+        moss: 0.405465
+        lichen: 0.405465
+    - name: term_in_two_of_three
+      input:
+        docs:
+          - [fern]
+          - [moss]
+          - [fern]
+      expected:
+        fern: 0.405465
+        moss: 1.098612
+    - name: rare_across_four
+      input:
+        docs:
+          - [fern, moss]
+          - [fern]
+          - [fern]
+          - [fern, lichen]
+      expected:
+        fern: 0.0
+        moss: 1.386294
+        lichen: 1.386294
+    - name: duplicates_do_not_inflate_df
+      input:
+        docs:
+          - [fern, fern, fern]
+          - [moss]
+      expected:
+        fern: 0.693147
+        moss: 0.693147
+explanation_markdown: |
+  IDF is the counterweight to term frequency. A word in every document scores
+  `ln(N / N) = 0`, so it contributes nothing to a document's identity, while a word
+  in a single document out of many scores highest. Multiplying a term's frequency
+  by its IDF (the next exercise) yields TF-IDF, the classic sparse retrieval
+  weighting.
+
+  The subtle part is that document frequency counts **documents, not tokens**.
+  Wrapping each document in `set(doc)` before tallying guarantees that a species
+  named three times in one entry still only proves that entry contains it once.
+common_mistakes:
+  - Counting total occurrences of a term instead of the number of documents it appears in.
+  - Forgetting to deduplicate within a document, so repeated words inflate the document frequency.
+  - Using log base 10 or log base 2 instead of the natural logarithm math.log expects by default.

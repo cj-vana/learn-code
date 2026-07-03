@@ -1,0 +1,87 @@
+id: path.skill.ml_from_scratch
+kind: path
+path_type: skill
+version: 1
+language: python
+title: Machine Learning from Scratch
+slug: machine-learning-from-scratch
+description: 'The algorithms under every ML library, implemented in pure Python: distances, clustering,
+  gradient descent, backprop, and the metrics that judge them.'
+outcomes:
+- Implement k-NN, k-means, and perceptron updates by hand
+- Build and numerically verify a scalar autodiff backward pass
+- Score models with confusion matrices, F1, and calibration error
+estimated_hours: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: brief.paths.v1
+  author: agent
+  generated_at: '2026-07-02T18:00:00Z'
+  inspiration_sources: []
+  originality_notes: Curated ordering over the repository's original content bank; no external syllabus
+    copied.
+units:
+- id: unit.classic_ml_from_scratch
+  title: Classic ML from Scratch
+  description: Lessons, drills, and quizzes for classic ml from scratch.
+  items:
+  - lesson.library.classic_ml_from_scratch.a01
+  - lesson.library.classic_ml_from_scratch.a02
+  - lesson.library.classic_ml_from_scratch.a03
+  - exercise.library.classic_ml_from_scratch.a01
+  - exercise.library.classic_ml_from_scratch.a02
+  - exercise.library.classic_ml_from_scratch.a03
+  - exercise.library.classic_ml_from_scratch.a04
+  - exercise.library.classic_ml_from_scratch.a05
+  - exercise.library.classic_ml_from_scratch.a06
+  - exercise.library.classic_ml_from_scratch.a07
+  - exercise.library.classic_ml_from_scratch.a08
+  - exercise.library.classic_ml_from_scratch.a09
+  - exercise.library.classic_ml_from_scratch.a10
+  - exercise.library.classic_ml_from_scratch.a11
+  - exercise.library.classic_ml_from_scratch.a12
+  - quiz.library.classic_ml_from_scratch.a01
+  - quiz.library.classic_ml_from_scratch.a02
+- id: unit.autodiff_scalar_engine
+  title: Autodiff from Scratch
+  description: Lessons, drills, and quizzes for autodiff from scratch.
+  items:
+  - lesson.library.autodiff_scalar_engine.a01
+  - lesson.library.autodiff_scalar_engine.a02
+  - lesson.library.autodiff_scalar_engine.a03
+  - exercise.library.autodiff_scalar_engine.a01
+  - exercise.library.autodiff_scalar_engine.a02
+  - exercise.library.autodiff_scalar_engine.a03
+  - exercise.library.autodiff_scalar_engine.a04
+  - exercise.library.autodiff_scalar_engine.a05
+  - exercise.library.autodiff_scalar_engine.a06
+  - exercise.library.autodiff_scalar_engine.a07
+  - exercise.library.autodiff_scalar_engine.a08
+  - exercise.library.autodiff_scalar_engine.a09
+  - exercise.library.autodiff_scalar_engine.a10
+  - exercise.library.autodiff_scalar_engine.a11
+  - exercise.library.autodiff_scalar_engine.a12
+  - quiz.library.autodiff_scalar_engine.a01
+  - quiz.library.autodiff_scalar_engine.a02
+- id: unit.eval_metrics_for_models
+  title: Evaluating Models
+  description: Lessons, drills, and quizzes for evaluating models.
+  items:
+  - lesson.library.eval_metrics_for_models.a01
+  - lesson.library.eval_metrics_for_models.a02
+  - lesson.library.eval_metrics_for_models.a03
+  - exercise.library.eval_metrics_for_models.a01
+  - exercise.library.eval_metrics_for_models.a02
+  - exercise.library.eval_metrics_for_models.a03
+  - exercise.library.eval_metrics_for_models.a04
+  - exercise.library.eval_metrics_for_models.a05
+  - exercise.library.eval_metrics_for_models.a06
+  - exercise.library.eval_metrics_for_models.a07
+  - exercise.library.eval_metrics_for_models.a08
+  - exercise.library.eval_metrics_for_models.a09
+  - exercise.library.eval_metrics_for_models.a10
+  - exercise.library.eval_metrics_for_models.a11
+  - exercise.library.eval_metrics_for_models.a12
+  - quiz.library.eval_metrics_for_models.a01
+  - quiz.library.eval_metrics_for_models.a02

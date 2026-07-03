@@ -1,0 +1,224 @@
+id: exercise.library.autodiff_scalar_engine.a09
+kind: exercise
+version: 1
+language: python
+title: Backpropagation Through Add and Multiply
+slug: autodiff-scalar-engine-a09
+difficulty: hard
+concepts:
+  - ai.gradients_autodiff
+  - patterns.graph_traversal
+prerequisites:
+  - python.dictionaries
+  - python.functions
+  - patterns.recursion
+estimated_time_minutes: 24
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.autodiff_scalar_engine.a09
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original reverse-mode autodiff drill over an add/mul graph, with gradient accumulation across shared inputs and a squared node, written from the local-derivative rules rather than any library's tutorial.
+prompt_markdown: |
+  This is the heart of an autodiff engine: **reverse-mode differentiation**, also
+  called backpropagation. After the forward pass computes every node's value, the
+  backward pass computes how sensitive the output is to each input -- the gradient
+  of the output with respect to each leaf.
+
+  Write `backward_pass(job)`. The `job` has the **same shape as the forward-pass
+  graph** (`job["nodes"]` and `job["output"]`), with the same three node kinds:
+
+  - `{"op": "leaf", "value": v}`
+  - `{"op": "add", "inputs": [names...]}` -- value is the sum of its inputs.
+  - `{"op": "mul", "inputs": [names...]}` -- value is the product of its inputs.
+
+  The gradient of the output with respect to itself is `1.0`. Push that seed
+  backward using the **local derivative rules**, and return a dictionary mapping
+  **each leaf name to its gradient**, rounded to 6 places.
+
+  Local rules (let `g` be the gradient already arriving at a node):
+
+  - **add** (`z = a + b + ...`): each input's derivative is `1`, so every input
+    receives `g`.
+  - **mul** (`z = a * b * ...`): input `i`'s derivative is the product of the
+    **other** inputs' values, so input `i` receives `g * (product of the other
+    inputs' values)`. For a two-input product `z = a * b`, `a` gets `g * b` and
+    `b` gets `g * a`.
+
+  **Accumulate**: a node used by several parents (or listed twice, as in a square
+  `x * x`) collects the **sum** of the gradients from each use. Return
+  `{leaf_name: round(grad, 6)}` for every leaf.
+
+  Example:
+
+  ```python
+  backward_pass({
+      "nodes": {
+          "x": {"op": "leaf", "value": 3.0},
+          "y": {"op": "leaf", "value": 4.0},
+          "s": {"op": "add", "inputs": ["x", "y"]},  # s = x + y
+          "L": {"op": "mul", "inputs": ["s", "y"]},  # L = s * y = (x + y) * y
+      },
+      "output": "L",
+  })
+  # dL/ds = y = 4  ->  dL/dx = 4, dL/dy gets 4 from s
+  # dL/dy (direct) = s = 7  ->  total dL/dy = 7 + 4 = 11
+  # -> {"x": 4.0, "y": 11.0}
+  ```
+starter_code: |
+  def backward_pass(job):
+      return {}
+function_name: backward_pass
+input_mode: function
+solution_sketch: Evaluate every node's value with memoized recursion, build a post-order list of the nodes reachable from the output, seed the output gradient at 1.0, then walk the list in reverse distributing each node's incoming gradient to its inputs by the add/mul rules while accumulating with +=.
+sample_solution: |
+  def backward_pass(job):
+      nodes = job["nodes"]
+      output = job["output"]
+      value = {}
+
+      def forward(name):
+          if name in value:
+              return value[name]
+          node = nodes[name]
+          op = node["op"]
+          if op == "leaf":
+              result = node["value"]
+          elif op == "add":
+              result = 0.0
+              for child in node["inputs"]:
+                  result += forward(child)
+          else:
+              result = 1.0
+              for child in node["inputs"]:
+                  result *= forward(child)
+          value[name] = result
+          return result
+
+      forward(output)
+
+      order = []
+      seen = set()
+
+      def visit(name):
+          if name in seen:
+              return
+          seen.add(name)
+          node = nodes[name]
+          if node["op"] != "leaf":
+              for child in node["inputs"]:
+                  visit(child)
+          order.append(name)
+
+      visit(output)
+
+      grad = {name: 0.0 for name in seen}
+      grad[output] = 1.0
+      for name in reversed(order):
+          node = nodes[name]
+          op = node["op"]
+          incoming = grad[name]
+          if op == "add":
+              for child in node["inputs"]:
+                  grad[child] += incoming
+          elif op == "mul":
+              inputs = node["inputs"]
+              for i, child in enumerate(inputs):
+                  product = 1.0
+                  for j, other in enumerate(inputs):
+                      if j != i:
+                          product *= value[other]
+                  grad[child] += incoming * product
+
+      return {name: round(grad[name], 6)
+              for name in seen if nodes[name]["op"] == "leaf"}
+hints:
+  - level: 1
+    text: First run a forward pass to get every node's value; you need the input values to differentiate a multiply. Store them in a dict.
+  - level: 2
+    text: Process nodes from the output back toward the leaves. Seed grad[output] = 1.0 and use += so a node reached by several paths accumulates its gradient before you read it.
+  - level: 3
+    text: For an add node send the incoming gradient unchanged to every input. For a mul node send, to each input, the incoming gradient times the product of the other inputs' forward values. Return only the leaf gradients, each rounded to 6 places.
+tests:
+  public:
+    - name: add_output
+      input:
+        nodes:
+          x: {op: leaf, value: 3.0}
+          y: {op: leaf, value: 4.0}
+          s: {op: add, inputs: [x, y]}
+        output: s
+      expected: {x: 1.0, y: 1.0}
+    - name: mul_output
+      input:
+        nodes:
+          a: {op: leaf, value: 3.0}
+          b: {op: leaf, value: 5.0}
+          p: {op: mul, inputs: [a, b]}
+        output: p
+      expected: {a: 5.0, b: 3.0}
+    - name: sum_times_input
+      input:
+        nodes:
+          x: {op: leaf, value: 3.0}
+          y: {op: leaf, value: 4.0}
+          s: {op: add, inputs: [x, y]}
+          L: {op: mul, inputs: [s, y]}
+        output: L
+      expected: {x: 4.0, y: 11.0}
+  validation:
+    - name: product_plus_input
+      input:
+        nodes:
+          x: {op: leaf, value: 2.0}
+          y: {op: leaf, value: 5.0}
+          p: {op: mul, inputs: [x, y]}
+          out: {op: add, inputs: [p, x]}
+        output: out
+      expected: {x: 6.0, y: 2.0}
+    - name: square_node
+      input:
+        nodes:
+          x: {op: leaf, value: 1.5}
+          sq: {op: mul, inputs: [x, x]}
+        output: sq
+      expected: {x: 3.0}
+    - name: accumulate_shared_input
+      input:
+        nodes:
+          a: {op: leaf, value: 0.1}
+          b: {op: leaf, value: 0.2}
+          x: {op: leaf, value: 5.0}
+          p: {op: mul, inputs: [a, x]}
+          q: {op: mul, inputs: [b, x]}
+          out: {op: add, inputs: [p, q]}
+        output: out
+      expected: {a: 5.0, b: 5.0, x: 0.3}
+    - name: leaf_is_output
+      input:
+        nodes:
+          a: {op: leaf, value: 7.0}
+        output: a
+      expected: {a: 1.0}
+explanation_markdown: |
+  Reverse-mode autodiff applies the chain rule from the output backward. Each node
+  has a **local derivative** with respect to each of its inputs, and the gradient
+  reaching an input is the gradient at the node times that local derivative. For
+  addition the local derivative is `1`, so the gradient passes straight through.
+  For multiplication `z = a * b`, `dz/da = b` and `dz/db = a`, which generalizes
+  to "the product of the other inputs" for more factors -- and it is why a
+  multiply node needs the forward **values** you cached.
+
+  Two details make it correct. First, you must visit nodes in **reverse
+  topological order** so a node's gradient is fully accumulated before it is
+  passed on. Second, you must **accumulate with `+=`**: a leaf feeding several
+  nodes (like `x` in the shared test, or `x` used twice in `x * x`) collects a
+  contribution from each use. The `x * x` case gives `dg/dx = 1.5 + 1.5 = 3.0`,
+  exactly `2x` -- the same accumulation rule that lets one engine differentiate an
+  entire network in a single backward sweep.
+common_mistakes:
+  - Sending the incoming gradient to a mul input as-is instead of scaling by the other inputs' values, which drops the product rule.
+  - Overwriting a leaf's gradient instead of adding, so a shared input keeps only its last contribution.
+  - Walking the graph forward (leaves first) during the backward sweep, so a node is read before all its parents have deposited gradient into it.

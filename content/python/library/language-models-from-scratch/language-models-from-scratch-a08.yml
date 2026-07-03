@@ -1,0 +1,116 @@
+id: exercise.library.language_models_from_scratch.a08
+kind: exercise
+version: 1
+language: python
+title: How Surprised Is the Model?
+slug: language-models-from-scratch-a08
+difficulty: medium
+concepts:
+  - ai.language_models
+  - concepts.probability
+prerequisites:
+  - python.lists
+  - python.loops
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.language_models_from_scratch.a08
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original perplexity drill that takes per-token log-probabilities as input, framed as a weather-report language model.
+prompt_markdown: |
+  **Perplexity** is the standard yardstick for a language model: it answers "on
+  average, how many equally-likely tokens was the model hesitating between at
+  each step?" Lower is better. A perplexity of 1 means the model was perfectly
+  certain every time; a perplexity of 8 means it was as unsure as if it were
+  guessing uniformly among 8 tokens.
+
+  You are handed the model's per-token natural-log probabilities for a scored
+  weather report — one `math.log(p)` value per token (each is `<= 0` because
+  probabilities are at most 1). Write `perplexity(log_probs)` that takes **that
+  list directly** and returns the perplexity, defined as:
+
+  ```
+  perplexity = exp( -(1/N) * sum(log_probs) )
+  ```
+
+  where `N` is the number of tokens. In words: average the log-probabilities,
+  negate that average, and exponentiate with `math.exp`.
+
+  Rules:
+
+  - Return the result **rounded to 4 decimal places**.
+  - If the list is **empty** there are no tokens to score, so return `None`.
+
+  Example: `perplexity([-1.0, -1.0])` has mean `-1.0`, so the result is
+  `math.exp(1.0)` -> `2.7183`.
+starter_code: |
+  import math
+
+
+  def perplexity(log_probs):
+      return 0.0
+function_name: perplexity
+input_mode: function
+solution_sketch: Guard the empty list by returning None, otherwise take the mean of the log probabilities, negate it, exponentiate with math.exp, and round to 4 decimals.
+sample_solution: |
+  import math
+
+
+  def perplexity(log_probs):
+      if not log_probs:
+          return None
+      mean = sum(log_probs) / len(log_probs)
+      return round(math.exp(-mean), 4)
+hints:
+  - level: 1
+    text: Perplexity is just exp of the negative average log-probability, so start by averaging the list with sum(log_probs) / len(log_probs).
+  - level: 2
+    text: Negate that mean before exponentiating; a more negative mean (less likely text) should give a larger perplexity.
+  - level: 3
+    text: Return round(math.exp(-mean), 4), but first handle the empty list by returning None so you never divide by zero.
+tests:
+  public:
+    - name: two_equal
+      input: [-1.0, -1.0]
+      expected: 2.7183
+    - name: perfectly_certain
+      input: [0.0]
+      expected: 1.0
+    - name: empty
+      input: []
+      expected: null
+  validation:
+    - name: averages_to_minus_one
+      input: [-0.5, -1.5]
+      expected: 2.7183
+    - name: three_uniform
+      input: [-2.0, -2.0, -2.0]
+      expected: 7.3891
+    - name: nearly_certain
+      input: [-0.1]
+      expected: 1.1052
+    - name: mixed_three
+      input: [-1.2, -0.8, -1.0]
+      expected: 2.7183
+explanation_markdown: |
+  Perplexity is the exponential of the average per-token cross-entropy, and it
+  has a clean intuition: `exp(-mean_log_prob)` is the effective branching factor
+  the model faced. If every token was predicted with probability `1/8`, each log
+  is `math.log(1/8)`, the mean is that same value, and exponentiating its
+  negative returns `8` — the model was effectively choosing among 8 options each
+  step.
+
+  Because it averages the logs *before* exponentiating, perplexity is a
+  per-token measure that does not punish longer texts just for being long, which
+  is what makes it comparable across sequences of different lengths. A perfectly
+  confident model (`log_prob` of `0.0`, i.e. probability `1`) yields perplexity
+  `1`, the best possible score, and every real gap in the model pushes the
+  number up.
+common_mistakes:
+  - Forgetting the negative sign, which exponentiates the mean directly and yields values below 1 for realistic (negative) log-probabilities.
+  - Summing the logs without dividing by the token count, so the score balloons with sequence length instead of staying per-token.
+  - Returning 0 or raising on an empty list instead of the required None, or dividing by len before checking for emptiness.
+  - Rounding to the wrong number of decimals; the exact comparison needs round(x, 4).

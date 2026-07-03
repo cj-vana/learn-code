@@ -1,0 +1,98 @@
+id: quiz.library.files_formats.a02
+kind: quiz
+version: 1
+language: python
+title: 'Parsing Mechanics: splitlines, StringIO, and Friends'
+slug: quiz-files-formats-a02
+difficulty: medium
+concepts:
+  - python.json_csv
+  - python.strings
+prerequisites:
+  - python.json_csv
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.files_formats.a02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax quiz on the string, csv, and json mechanics used when parsing text data.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: |
+      Text arrives from a Windows-edited file with \r\n line endings. Which
+      call iterates its lines without leaving stray \r characters?
+    choices:
+      - text.splitlines()
+      - text.split("\n")
+      - text.split("\r")
+      - text.partition("\n")
+    correct_choice: text.splitlines()
+    explanation: |
+      splitlines recognizes every line-boundary convention; split("\n") leaves
+      a trailing \r on each line, producing invisible comparison failures.
+    concepts:
+      - python.strings
+  - id: q2
+    prompt: |
+      csv.reader requires a file-like object, but your CSV text is already in
+      a string variable. What bridges the gap?
+    choices:
+      - io.StringIO(text)
+      - text.encode("utf-8")
+      - list(text)
+      - open(text)
+    correct_choice: io.StringIO(text)
+    explanation: |
+      StringIO wraps a string in an in-memory object with a file's read
+      interface — the standard bridge for parsing (and testing) without disk.
+    concepts:
+      - python.json_csv
+  - id: q3
+    prompt: 'What does json.loads(''{"a": null, "b": true}'') return?'
+    choices:
+      - "{'a': None, 'b': True}"
+      - "{'a': 'null', 'b': 'true'}"
+      - "{'a': 0, 'b': 1}"
+      - A JSONDecodeError — null is not valid JSON
+    correct_choice: "{'a': None, 'b': True}"
+    explanation: |
+      The JSON values null/true/false map to Python's None/True/False; they
+      arrive as real objects, not strings.
+    concepts:
+      - python.json_csv
+  - id: q4
+    prompt: |
+      Every value read by csv.DictReader is a string, including "42" and
+      "4.50". Where should conversion to int and float happen?
+    choices:
+      - At the boundary, as each record is built, so type errors surface immediately
+      - Lazily, at the moment each value is used in arithmetic
+      - Never — Python coerces strings in numeric contexts
+      - In the csv module via the convert_types=True option
+    correct_choice: At the boundary, as each record is built, so type errors surface immediately
+    explanation: |
+      csv has no type conversion (and Python never coerces "4" + 1); converting
+      at the boundary concentrates validation in one place instead of
+      scattering int() calls through the codebase.
+    concepts:
+      - python.json_csv
+      - python.types
+  - id: q5
+    prompt: |
+      Your test compares generated CSV against an expected string and fails:
+      every line ends with \r\n instead of \n. What is the fix?
+    choices:
+      - Pass lineterminator="\n" when creating the csv.writer
+      - Call text.strip() on each row before writing
+      - Use csv.writer(out, newline=False)
+      - Write with json.dumps instead
+    correct_choice: Pass lineterminator="\n" when creating the csv.writer
+    explanation: |
+      The writer's default line ending is \r\n per the CSV spec; lineterminator
+      overrides it for deterministic, platform-independent output.
+    concepts:
+      - python.json_csv

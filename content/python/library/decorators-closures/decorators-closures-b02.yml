@@ -1,0 +1,161 @@
+id: exercise.library.decorators_closures.b02
+kind: exercise
+version: 1
+language: python
+title: A Memo Cache With a Tight Budget
+slug: decorators-closures-b02
+difficulty: hard
+concepts:
+  - python.closures_decorators
+  - concepts.memoization
+prerequisites:
+  - python.closures_decorators
+  - python.dictionaries
+estimated_time_minutes: 24
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.decorators_closures.b02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original budget-capped FIFO memo cache held in a closure, themed around a low-memory field logger, that reports both the recurrence value and how many evictions the cap forced.
+prompt_markdown: |
+  A solar-powered field logger evaluates a calibration sequence defined by the
+  recurrence
+
+  ```
+  cal(0) = 1
+  cal(1) = 1
+  cal(k) = cal(k - 1) + 2 * cal(k - 2)   for k >= 2
+  ```
+
+  The logger memoizes results so it does not recompute the same term twice, but
+  its chip has room for only `budget` cached entries. When the cache is full and a
+  brand-new result needs to be stored, the logger **evicts the oldest-inserted
+  entry** (first in, first out) to make room, and counts that eviction. An evicted
+  term is simply gone: if the recurrence needs it again, it is recomputed from
+  scratch, which may itself trigger further evictions.
+
+  Write `memo_with_budget(job)` that takes **one dictionary**:
+
+  - `"n"`: which term to compute (`cal(n)`), an int with `n >= 0`.
+  - `"budget"`: the maximum number of entries the cache may hold at once, an int
+    with `budget >= 1`.
+
+  Compute `cal(n)` using a recursive helper wrapped by a memo that you keep in a
+  **closure** (a dict for the values plus a record of insertion order). Follow
+  these rules exactly so the eviction count is well defined:
+
+  - Every term, including the base cases `cal(0)` and `cal(1)`, goes through the
+    cache.
+  - When evaluating `cal(k)` for `k >= 2`, compute `cal(k - 1)` **fully first**,
+    then `cal(k - 2)` (this is just left-to-right evaluation of the sum).
+  - A cache **hit** returns immediately and stores nothing. A cache **miss**
+    computes the term, and *then* stores it: if the cache already holds `budget`
+    entries, first evict the oldest-inserted key and add one to the eviction
+    count, then insert the new key.
+
+  Return a dictionary `{"value": ..., "evictions": ...}` where `value` is `cal(n)`
+  and `evictions` is the total number of entries the cap forced out.
+
+  Example:
+
+  ```python
+  memo_with_budget({"n": 5, "budget": 2})
+  # -> {"value": 21, "evictions": 9}
+  ```
+
+  With room for only two terms, the logger keeps throwing away results it will
+  need again, so computing `cal(5)` forces nine evictions. Give the cache enough
+  budget and the eviction count drops to zero while the value stays the same.
+starter_code: |
+  def memo_with_budget(job):
+      # Keep a dict of cached values and an insertion-order record in a closure.
+      # On a miss, compute then store; if full, evict the oldest key and count it.
+      return {"value": 0, "evictions": 0}
+function_name: memo_with_budget
+input_mode: function
+solution_sketch: A recursive helper checks the closure dict first; on a miss it computes cal(k), and before inserting evicts the front of an insertion-order list when the dict is already at budget, tallying each eviction.
+sample_solution: |
+  def memo_with_budget(job):
+      n = job["n"]
+      budget = job["budget"]
+
+      order = []
+      cache = {}
+      stats = {"evictions": 0}
+
+      def cal(k):
+          if k in cache:
+              return cache[k]
+          if k < 2:
+              value = 1
+          else:
+              value = cal(k - 1) + 2 * cal(k - 2)
+          if len(cache) >= budget:
+              oldest = order.pop(0)
+              del cache[oldest]
+              stats["evictions"] += 1
+          cache[k] = value
+          order.append(k)
+          return value
+
+      result = cal(n)
+      return {"value": result, "evictions": stats["evictions"]}
+hints:
+  - level: 1
+    text: Keep two things alive in the closure across recursive calls -- a dict from k to its value, and a list recording the order keys were inserted so you know which is oldest.
+  - level: 2
+    text: Structure each call as check-then-store. Return early on a hit. On a miss compute the value first, then handle the budget before inserting.
+  - level: 3
+    text: When len(cache) is already at budget, pop the front of the order list, delete that key from the dict, and increment the eviction counter; only then set cache[k] and append k to the order list.
+tests:
+  public:
+    - name: base_case_no_eviction
+      input: {n: 0, budget: 1}
+      expected: {value: 1, evictions: 0}
+    - name: roomy_budget
+      input: {n: 6, budget: 8}
+      expected: {value: 43, evictions: 0}
+    - name: tight_budget_forces_recompute
+      input: {n: 5, budget: 2}
+      expected: {value: 21, evictions: 9}
+  validation:
+    - name: just_over_budget
+      input: {n: 2, budget: 2}
+      expected: {value: 3, evictions: 1}
+    - name: mid_budget
+      input: {n: 4, budget: 3}
+      expected: {value: 11, evictions: 2}
+    - name: seven_budget_four
+      input: {n: 7, budget: 4}
+      expected: {value: 85, evictions: 4}
+    - name: budget_one_short
+      input: {n: 10, budget: 10}
+      expected: {value: 683, evictions: 1}
+    - name: budget_of_one
+      input: {n: 3, budget: 1}
+      expected: {value: 5, evictions: 4}
+explanation_markdown: |
+  This combines memoization with a bounded cache, and the closure is what makes it
+  possible: `cache`, `order`, and `stats` all live in the enclosing scope, so the
+  recursive `cal` sees the same three objects on every call. Without that shared
+  state there would be nothing to evict from and nothing to count.
+
+  The subtle rule is *compute first, then store*. A term's value is produced by
+  recursion before you ever touch the cache, so eviction only happens at the
+  moment of insertion. When the dict already holds `budget` keys, you drop the
+  front of the insertion-order list -- the oldest key -- which is plain FIFO
+  eviction. Because an evicted term may be needed again, a small budget snowballs:
+  `cal(5)` with a budget of two keeps discarding terms it must rebuild, so eleven
+  misses occur and nine of them evict. A useful check on your logic is that once
+  the cache first fills, it stays full, so `evictions` equals the number of misses
+  minus `budget`. Preserving left-to-right evaluation (`cal(k - 1)` before
+  `cal(k - 2)`) fixes exactly which key is oldest at each insertion, which is why
+  the counts are reproducible at all.
+common_mistakes:
+  - Storing the result before the recursive calls finish, so the wrong key looks oldest and the eviction count drifts.
+  - Forgetting to record insertion order, then evicting an arbitrary key instead of the true first-in entry.
+  - Skipping the cache for the base cases, so cal(0) and cal(1) never occupy or free a slot and the counts come out wrong.
+  - Counting a cache hit as a miss, or re-inserting a key that is already present, which inflates both misses and evictions.

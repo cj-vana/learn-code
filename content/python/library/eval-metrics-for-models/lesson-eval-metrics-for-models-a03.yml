@@ -1,0 +1,93 @@
+id: lesson.library.eval_metrics_for_models.a03
+kind: lesson
+version: 1
+language: python
+title: 'Thresholds, Curves, and Calibration'
+slug: lesson-eval-metrics-for-models-a03
+difficulty: hard
+concepts:
+  - ai.model_evaluation
+prerequisites:
+  - ai.model_evaluation
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.eval_metrics_for_models.a03
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original walkthrough of threshold sweeps, ROC points, and calibration error framed around an orchard's frost-warning model.
+body_markdown: |
+  An orchard's frost-warning model doesn't output "frost" or "no frost" —
+  it outputs 0.73. Nearly every real classifier is like this: the model
+  produces a **score**, and someone chooses a **threshold** that turns
+  scores into decisions. That choice, not the model, sets the
+  precision/recall balance — and evaluating scored models properly needs
+  three more tools.
+
+  ### The threshold sweep
+
+  Lower the frost threshold and you catch every frost but wake the farmer
+  nightly; raise it and alarms are rare but frosts slip through. A
+  **threshold sweep** — recompute the confusion matrix at each candidate
+  threshold — makes the menu of tradeoffs explicit. Your exercise
+  implements it directly, and one convention matters: decide `>=` versus
+  `>` *once*, document it, and test the boundary case, because a score
+  exactly at threshold flips sides depending on the choice — the same
+  boundary discipline as the testing area, wearing an ML hat.
+
+  ### ROC: the tradeoff, standardized
+
+  Each threshold yields one **ROC point**: the true-positive rate
+  TP/(TP+FN) — recall under another name — against the false-positive rate
+  FP/(FP+TN). Sweep all thresholds and the points trace the ROC curve.
+  Reading it is a skill worth thirty seconds: (0,0) is the
+  threshold-so-high-nothing-flags corner; (1,1) flags everything; the
+  diagonal between them is *coin-flipping* (any point on it means TPR =
+  FPR — hits at the same rate as false alarms); and distance above the
+  diagonal is skill. Area under the curve (AUC) summarizes the whole
+  tradeoff in one threshold-free number, which is why papers report it.
+
+  ### Calibration: do the probabilities mean anything?
+
+  A subtler question. When the model says 0.7, does frost actually happen
+  about 70% of the time? A model can *rank* perfectly (every frost night
+  scored above every safe night — AUC 1.0) while its probabilities are
+  systematic lies (all scores crammed into 0.45-0.55). Ranking and
+  calibration are different virtues, and decisions that consume the raw
+  probability — "spray the trees if P(frost) x cost-of-frost exceeds
+  cost-of-spraying" — need the second one.
+
+  The standard measurement buckets predictions by confidence and compares
+  each bucket's *claimed* confidence to its *observed* frequency:
+
+  ```text
+  bucket 0.6-0.8: mean claimed 0.71, observed frost rate 0.44  -> gap 0.27
+  ```
+
+  The bucket-weighted average of those gaps is **expected calibration
+  error (ECE)** — your final exercise. Modern relevance: neural networks
+  are notoriously *overconfident* (softmax outputs sharper than reality
+  justifies), and LLM-based judges inherit the problem, so calibration
+  checks have become routine parts of AI evaluation harnesses.
+
+  ### The evaluator's habit
+
+  Across the area, one habit ties it together: **ask what question each
+  number answers, and what it cannot see.** Accuracy hides imbalance;
+  precision hides misses; AUC hides calibration; calibration hides
+  ranking; BLEU hides truth. None of these are flaws — each metric earns
+  its keep — but the evaluator's job is matching the metric to the
+  decision at hand. That habit, more than any formula, is what this area
+  is for.
+checkpoints:
+  - question: What does a point exactly on the ROC diagonal mean, and why is that the "coin-flip" line?
+    answer: TPR equals FPR there — the model flags true positives at the same rate it flags false alarms, exactly what random guessing at that threshold achieves; skill is measured by how far the curve bows above the diagonal.
+    explanation: 'The diagonal is the zero-knowledge baseline: any classifier can reach it, so only distance above it counts as evidence of ranking ability.'
+  - question: A model has AUC 1.0 (perfect ranking) but every prediction lies between 0.45 and 0.55. What virtue is it missing, and which decisions does that break?
+    answer: 'Calibration — its probability values do not correspond to observed frequencies even though the ordering is perfect; any decision that consumes the raw probability, like expected-cost tradeoffs, gets systematically wrong inputs.'
+    explanation: Ranking and calibration are independent virtues — AUC certifies one and is blind to the other, which is why calibration error is measured separately.
+  - question: 'In expected calibration error, what does each bucket compare, and what does an overconfident model''s pattern look like?'
+    answer: 'Each bucket compares the mean claimed confidence of predictions in it against the observed frequency of correctness; an overconfident model claims (say) 0.9 in buckets where reality delivers 0.7 — claimed exceeding observed across the high buckets.'
+    explanation: Overconfidence is the characteristic failure of neural classifiers and LLM judges, which is why ECE checks are now standard in evaluation harnesses.

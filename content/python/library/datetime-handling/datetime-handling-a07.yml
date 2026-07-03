@@ -1,0 +1,117 @@
+id: exercise.library.datetime_handling.a07
+kind: exercise
+version: 1
+language: python
+title: Bakery Orders by ISO Week
+slug: datetime-handling-a07
+difficulty: medium
+concepts:
+  - python.datetime_module
+  - patterns.hash_map_counting
+prerequisites:
+  - python.dictionaries
+  - python.strings
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.datetime_handling.a07
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original ISO-week bucketing drill framed around a bakery tallying its order volume week by week.
+prompt_markdown: |
+  A neighbourhood bakery logs the calendar date of every order it takes and wants
+  a weekly volume report. Weeks are counted using the **ISO week calendar**, where
+  a week runs Monday through Sunday and belongs to the year that owns most of it,
+  so the tail of December can land in ISO week 52 or 53 while the first days of
+  January sometimes still belong to the previous ISO year.
+
+  Write `bucket_by_week(job)` that takes a single dictionary with one key:
+
+  - `"dates"`: a list of ISO date strings like `"2026-01-05"`, in any order.
+
+  Return a dictionary that maps an ISO year-week label to the number of orders in
+  that week. The label must be built from `date.isocalendar()` and formatted as
+  `"YYYY-Www"`, where the week number is **zero-padded to two digits** (for
+  example `"2026-W02"` or `"2026-W53"`). An empty `"dates"` list returns an empty
+  dictionary.
+
+  Example:
+
+  ```python
+  bucket_by_week({"dates": ["2026-01-05", "2026-01-06", "2026-01-12"]})
+  # -> {"2026-W02": 2, "2026-W03": 1}
+  ```
+
+  Note that `2026-01-05` (a Monday) and `2026-01-06` (a Tuesday) share ISO week 2,
+  while `2026-01-12` starts ISO week 3.
+starter_code: |
+  from datetime import date
+
+
+  def bucket_by_week(job):
+      return {}
+function_name: bucket_by_week
+input_mode: function
+solution_sketch: Parse each date, read its isocalendar year and week, build a "YYYY-Www" key with a two-digit padded week, and count occurrences into a dict.
+sample_solution: |
+  from datetime import date
+
+
+  def bucket_by_week(job):
+      counts = {}
+      for value in job["dates"]:
+          iso = date.fromisoformat(value).isocalendar()
+          key = f"{iso[0]}-W{iso[1]:02d}"
+          counts[key] = counts.get(key, 0) + 1
+      return counts
+hints:
+  - level: 1
+    text: date.fromisoformat turns each string into a date, and that date's isocalendar() gives you the ISO year and ISO week to group by.
+  - level: 2
+    text: 'Build the bucket key by formatting the ISO year and week together, padding the week to two digits: f"{iso_year}-W{iso_week:02d}".'
+  - level: 3
+    text: Use a running dict, incrementing counts.get(key, 0) + 1 for each date so repeated weeks accumulate their totals.
+tests:
+  public:
+    - name: empty
+      input: {"dates": []}
+      expected: {}
+    - name: single
+      input: {"dates": ["2026-01-05"]}
+      expected: {"2026-W02": 1}
+    - name: two_weeks
+      input: {"dates": ["2026-01-05", "2026-01-06", "2026-01-12"]}
+      expected: {"2026-W02": 2, "2026-W03": 1}
+  validation:
+    - name: year_boundary
+      input: {"dates": ["2025-12-29", "2026-01-01", "2026-01-04"]}
+      expected: {"2026-W01": 3}
+    - name: same_week
+      input: {"dates": ["2026-03-02", "2026-03-03", "2026-03-08"]}
+      expected: {"2026-W10": 3}
+    - name: mixed_volume
+      input: {"dates": ["2026-06-01", "2026-06-01", "2026-06-08", "2026-06-15", "2026-06-08"]}
+      expected: {"2026-W23": 2, "2026-W24": 2, "2026-W25": 1}
+    - name: week_fifty_three
+      input: {"dates": ["2026-12-28", "2026-12-31", "2027-01-01"]}
+      expected: {"2026-W53": 3}
+explanation_markdown: |
+  The ISO week calendar is the reliable way to group dates into weeks because it
+  fixes two awkward edge cases automatically: weeks always start on Monday, and
+  the days around New Year are assigned to whichever ISO year owns the majority of
+  that week. `date.isocalendar()` returns the `(iso_year, iso_week, iso_weekday)`
+  triple, and the first two fields are exactly what you need for a stable bucket
+  key. Formatting the week with `:02d` guarantees `"2026-W02"` rather than
+  `"2026-W2"`, so labels sort and compare cleanly.
+
+  Watch the boundaries: `2025-12-29` is a Monday that already belongs to ISO week
+  1 of 2026, and `2026-12-31` sits in ISO week 53 of 2026 alongside `2027-01-01`.
+  If you had grouped by the plain calendar year instead of the ISO year, those
+  dates would have landed in the wrong bucket. Counting into a dict as you go is a
+  single pass, so the whole tally is O(n).
+common_mistakes:
+  - Grouping by the plain calendar year (date.year) instead of the ISO year from isocalendar(), which misplaces late-December and early-January dates.
+  - Forgetting to zero-pad the week number, producing keys like "2026-W2" that no longer line up with "2026-W02".
+  - Building the label from strftime("%W") or "%U", which use a different week-numbering convention than ISO weeks.

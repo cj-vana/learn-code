@@ -1,0 +1,114 @@
+id: exercise.library.classic_ml_from_scratch.a03
+kind: exercise
+version: 1
+language: python
+title: Snap a Star to Its Nearest Prototype
+slug: classic-ml-from-scratch-a03
+difficulty: medium
+concepts:
+  - ai.classic_ml
+prerequisites:
+  - python.lists
+  - python.loops
+  - python.conditionals
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.classic_ml_from_scratch.a03
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original nearest-prototype drill framed around matching a star spectrum to catalogue centroids.
+prompt_markdown: |
+  Nearest-centroid classification is one of the simplest ideas in machine
+  learning: given a set of prototype vectors (centroids), a new example belongs to
+  whichever prototype it sits closest to. It is also the "assign" half of the
+  k-means clustering loop.
+
+  An observatory summarises each star as a short spectrum vector, and keeps a
+  catalogue of prototype spectra, one per star class. Write
+  `nearest_centroid(job)` that takes a single dictionary with two keys:
+
+  - `"point"`: the example vector, a list of numbers.
+  - `"centroids"`: a non-empty list of centroid vectors, each the same length as
+    `"point"`.
+
+  Return the **index** of the centroid closest to `"point"` by Euclidean distance.
+  If two centroids are exactly tied for closest, return the **lower** index.
+
+  A useful shortcut: to find the *nearest* point you do not need the square root
+  at all. The centroid with the smallest sum of squared differences is also the
+  one with the smallest Euclidean distance, because square root is
+  order-preserving. Comparing squared distances keeps the code exact and cheap.
+
+  Example:
+
+  ```python
+  nearest_centroid({"point": [4.0, 4.0], "centroids": [[0.0, 0.0], [5.0, 5.0], [9.0, 1.0]]})
+  # -> 1   (centroid [5.0, 5.0] is closest)
+  ```
+starter_code: |
+  def nearest_centroid(job):
+      return 0
+function_name: nearest_centroid
+input_mode: function
+solution_sketch: Loop over centroids tracking the smallest sum of squared differences and its index, using strict < so ties keep the earlier index.
+sample_solution: |
+  def nearest_centroid(job):
+      point = job["point"]
+      centroids = job["centroids"]
+      best_index = 0
+      best_dist = None
+      for i, centroid in enumerate(centroids):
+          dist = 0.0
+          for x, y in zip(point, centroid):
+              dist += (x - y) ** 2
+          if best_dist is None or dist < best_dist:
+              best_dist = dist
+              best_index = i
+      return best_index
+hints:
+  - level: 1
+    text: For each centroid compute its squared distance to the point, the sum of (x - y) ** 2 over paired coordinates.
+  - level: 2
+    text: Track the best (smallest) squared distance seen so far together with the index that produced it.
+  - level: 3
+    text: Update the best only when the new distance is strictly less than the current best, so an equal distance leaves the earlier index in place.
+tests:
+  public:
+    - name: single_centroid
+      input: {"point": [1.0, 1.0], "centroids": [[5.0, 5.0]]}
+      expected: 0
+    - name: pick_second
+      input: {"point": [9.0, 9.0], "centroids": [[0.0, 0.0], [10.0, 10.0]]}
+      expected: 1
+    - name: tie_keeps_lower
+      input: {"point": [5.0, 0.0], "centroids": [[0.0, 0.0], [10.0, 0.0]]}
+      expected: 0
+  validation:
+    - name: pick_first
+      input: {"point": [1.0, 1.0], "centroids": [[0.0, 0.0], [10.0, 10.0]]}
+      expected: 0
+    - name: three_centroids
+      input: {"point": [4.0, 4.0], "centroids": [[0.0, 0.0], [5.0, 5.0], [9.0, 1.0]]}
+      expected: 1
+    - name: three_dim
+      input: {"point": [2.0, 2.0, 2.0], "centroids": [[0.0, 0.0, 0.0], [3.0, 3.0, 3.0]]}
+      expected: 1
+explanation_markdown: |
+  The loop keeps a champion index and the squared distance that earned it. Each
+  centroid challenges the champion, and it only wins when its squared distance is
+  **strictly** smaller. That strict comparison is what breaks ties toward the
+  lower index: when the new distance merely equals the current best, nothing
+  changes, so the earliest qualifying centroid stays on top.
+
+  Working with the sum of squared differences rather than the actual distance
+  saves the square root entirely. Since `sqrt` is monotonic, whichever centroid
+  minimises the squared distance also minimises the true distance, so the answer
+  is identical while avoiding floating-point square roots and keeping the
+  comparison exact.
+common_mistakes:
+  - Using <= instead of < when updating the best, which flips ties toward the higher index.
+  - Seeding best_dist with 0 instead of None, so the first real centroid can never beat it.
+  - Returning the centroid vector itself rather than its index.

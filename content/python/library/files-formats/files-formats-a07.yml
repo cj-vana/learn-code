@@ -1,0 +1,159 @@
+id: exercise.library.files_formats.a07
+kind: exercise
+version: 1
+language: python
+title: Exporting the Regatta Results Sheet
+slug: files-formats-a07
+difficulty: medium
+concepts:
+  - python.json_csv
+prerequisites:
+  - python.dictionaries
+  - python.lists
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.files_formats.a07
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original CSV-export drill framed around a sailing club publishing a regatta results sheet from in-memory records.
+prompt_markdown: |
+  A sailing club stores each finished race as a dictionary and wants to publish a
+  results sheet as CSV text. Write `records_to_csv(job)` that takes **one
+  dictionary** with two entries:
+
+  - `"records"`: a list of dictionaries, one per boat.
+  - `"columns"`: a list of column names, in the exact order they should appear.
+
+  Example call:
+
+  ```python
+  records_to_csv({
+      "records": [{"boat": "Wren", "skipper": "Ada", "points": 12}],
+      "columns": ["boat", "skipper", "points"],
+  })
+  # -> "boat,skipper,points\nWren,Ada,12\n"
+  ```
+
+  Return a **single CSV string** built with the `csv` module writing into an
+  `io.StringIO` buffer. Rules:
+
+  - The first line is the header: the column names in the given order.
+  - Then one line per record, pulling each column's value from the record.
+  - If a record is **missing a column key**, write an **empty string** for that
+    cell (do not skip the column or raise).
+  - Use `csv` so that a value containing a comma is quoted automatically.
+  - Set the writer's `lineterminator` to `"\n"` so every row, **including the
+    last one**, ends with a single `"\n"` (no `"\r\n"`).
+  - If `"records"` is empty, still emit the header line on its own.
+
+  Values may be strings or integers; the `csv` writer converts them to text for
+  you.
+starter_code: |
+  import csv
+  import io
+
+
+  def records_to_csv(job):
+      return ""
+function_name: records_to_csv
+input_mode: function
+solution_sketch: Write into an io.StringIO with a csv.writer whose lineterminator is "\n"; emit the header row, then one row per record built from [record.get(col, "") for col in columns], and return buffer.getvalue().
+sample_solution: |
+  import csv
+  import io
+
+
+  def records_to_csv(job):
+      records = job["records"]
+      columns = job["columns"]
+      buffer = io.StringIO()
+      writer = csv.writer(buffer, lineterminator="\n")
+      writer.writerow(columns)
+      for record in records:
+          writer.writerow([record.get(column, "") for column in columns])
+      return buffer.getvalue()
+hints:
+  - level: 1
+    text: Create an io.StringIO buffer and a csv.writer over it, then call writer.writerow once for the header and once per record.
+  - level: 2
+    text: Pass lineterminator="\n" to csv.writer so rows are separated by a single newline instead of the default "\r\n".
+  - level: 3
+    text: Build each data row with a list comprehension record.get(column, "") for column in columns so a missing key becomes an empty string; finish with return buffer.getvalue().
+tests:
+  public:
+    - name: two_full_rows
+      input:
+        records:
+          - {boat: "Wren", skipper: "Ada", points: 12}
+          - {boat: "Tern", skipper: "Ben", points: 9}
+        columns: ["boat", "skipper", "points"]
+      expected: |
+        boat,skipper,points
+        Wren,Ada,12
+        Tern,Ben,9
+    - name: missing_trailing_key
+      input:
+        records:
+          - {boat: "Wren", skipper: "Ada"}
+        columns: ["boat", "skipper", "points"]
+      expected: |
+        boat,skipper,points
+        Wren,Ada,
+    - name: no_records_header_only
+      input:
+        records: []
+        columns: ["boat", "skipper", "points"]
+      expected: |
+        boat,skipper,points
+  validation:
+    - name: comma_value_is_quoted
+      input:
+        records:
+          - {boat: "Wren", skipper: "Reyes, M.", points: 5}
+        columns: ["boat", "skipper", "points"]
+      expected: |
+        boat,skipper,points
+        Wren,"Reyes, M.",5
+    - name: extra_field_ignored
+      input:
+        records:
+          - {boat: "Wren", skipper: "Ada", points: 12, sail: "77"}
+        columns: ["boat", "skipper", "points"]
+      expected: |
+        boat,skipper,points
+        Wren,Ada,12
+    - name: missing_middle_key
+      input:
+        records:
+          - {boat: "Wren", points: 12}
+        columns: ["boat", "skipper", "points"]
+      expected: |
+        boat,skipper,points
+        Wren,,12
+    - name: single_row_zero_points
+      input:
+        records:
+          - {boat: "Gull", skipper: "Cy", points: 0}
+        columns: ["boat", "skipper", "points"]
+      expected: |
+        boat,skipper,points
+        Gull,Cy,0
+explanation_markdown: |
+  The `csv` module exists so you never hand-roll comma joining and quoting. A
+  `csv.writer` bound to an `io.StringIO` buffer lets you build the whole document
+  in memory and read it back with `getvalue()`. Passing `lineterminator="\n"`
+  overrides the default `"\r\n"`, which keeps the output stable across platforms
+  and makes each row end in exactly one newline.
+
+  Pulling cells with `record.get(column, "")` is what makes a ragged set of
+  records line up under a fixed header: any absent field becomes a blank cell
+  instead of throwing a `KeyError`. And because the writer quotes fields on your
+  behalf, a value like `"Reyes, M."` is wrapped in double quotes so the embedded
+  comma is not read as a column break when the sheet is parsed back.
+common_mistakes:
+  - Joining fields with ",".join yourself, which breaks the moment a value contains a comma that csv would have quoted.
+  - Leaving the default lineterminator so rows end with "\r\n" and the expected "\n" output no longer matches.
+  - Indexing record[column] directly, which raises KeyError on a missing field instead of writing an empty cell.

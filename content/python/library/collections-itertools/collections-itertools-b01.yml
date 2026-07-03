@@ -1,0 +1,117 @@
+id: exercise.library.collections_itertools.b01
+kind: exercise
+version: 1
+language: python
+title: Reconciling the Chandlery Ledger
+slug: collections-itertools-b01
+difficulty: hard
+concepts:
+  - python.collections_module
+prerequisites:
+  - python.dictionaries
+  - python.sorting
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.collections_itertools.b01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original ship-chandlery stock-reconciliation task using Counter arithmetic, flooring closing stock and flagging oversold items.
+prompt_markdown: |
+  A ship chandlery reconciles its stock at the end of each day. Write
+  `inventory_delta(job)` where `job` is a dict with:
+
+  - `"opening"`: a dict mapping each item name to its opening quantity (a
+    non-negative integer).
+  - `"movements"`: a list of change records, each a dict `{"item": name, "qty":
+    delta}` where `delta` is an integer that may be positive (stock received) or
+    negative (stock sold). An item may appear in several movements, and a movement
+    may name an item not present at opening.
+
+  Apply every movement to the opening counts using `Counter` arithmetic, then
+  return a dict with two keys:
+
+  - `"closing"`: a dict of the remaining stock. Any item whose running total ends
+    at zero or below is **floored to 0 and left out** of `closing`, so `closing`
+    lists only items with stock still on hand.
+  - `"oversold"`: a **sorted** list of the names of items whose running total
+    finished **below zero** (more was sold than was available).
+
+  For example, opening `{"bolts": 10, "nuts": 5}` with movements
+  `[{"item": "bolts", "qty": -3}, {"item": "nuts", "qty": -8}, {"item": "washers",
+  "qty": 4}]` returns
+  `{"closing": {"bolts": 7, "washers": 4}, "oversold": ["nuts"]}`.
+starter_code: |
+  from collections import Counter
+
+
+  def inventory_delta(job):
+      # Apply movements to opening counts; report closing stock and oversold items.
+      return {"closing": {}, "oversold": []}
+function_name: inventory_delta
+input_mode: function
+solution_sketch: Load opening into a Counter, add each movement's signed qty, collect names that ended below zero for oversold, then use unary plus to drop non-positive counts for closing.
+sample_solution: |
+  from collections import Counter
+
+
+  def inventory_delta(job):
+      counts = Counter(job["opening"])
+      for move in job["movements"]:
+          counts[move["item"]] += move["qty"]
+
+      oversold = sorted(item for item, qty in counts.items() if qty < 0)
+      closing = dict(+counts)
+      return {"closing": closing, "oversold": oversold}
+hints:
+  - level: 1
+    text: A Counter behaves like a dict of tallies, and indexing a missing key gives 0, so you can add a signed qty to any item without checking whether it exists yet.
+  - level: 2
+    text: After applying every movement, an item is oversold exactly when its accumulated count is strictly less than zero.
+  - level: 3
+    text: Unary plus on a Counter (+counts) returns a new Counter that keeps only the entries with a strictly positive count, which is precisely the floored closing stock.
+tests:
+  public:
+    - name: example
+      input: {opening: {bolts: 10, nuts: 5}, movements: [{item: bolts, qty: -3}, {item: nuts, qty: -8}, {item: washers, qty: 4}]}
+      expected: {closing: {bolts: 7, washers: 4}, oversold: [nuts]}
+    - name: no_movements
+      input: {opening: {rope: 4}, movements: []}
+      expected: {closing: {rope: 4}, oversold: []}
+    - name: empty_opening_receipt
+      input: {opening: {}, movements: [{item: rivets, qty: 6}]}
+      expected: {closing: {rivets: 6}, oversold: []}
+  validation:
+    - name: exact_zero_dropped
+      input: {opening: {clamps: 3}, movements: [{item: clamps, qty: -3}]}
+      expected: {closing: {}, oversold: []}
+    - name: multiple_moves_same_item
+      input: {opening: {gaskets: 2}, movements: [{item: gaskets, qty: 5}, {item: gaskets, qty: -4}, {item: gaskets, qty: -1}]}
+      expected: {closing: {gaskets: 2}, oversold: []}
+    - name: two_oversold_sorted
+      input: {opening: {anchors: 1, chain: 2}, movements: [{item: chain, qty: -5}, {item: anchors, qty: -4}]}
+      expected: {closing: {}, oversold: [anchors, chain]}
+    - name: new_item_oversold
+      input: {opening: {}, movements: [{item: flares, qty: -2}]}
+      expected: {closing: {}, oversold: [flares]}
+    - name: mixed_survivors_and_oversold
+      input: {opening: {rope: 10, tar: 1}, movements: [{item: rope, qty: -4}, {item: tar, qty: -3}, {item: pitch, qty: 8}]}
+      expected: {closing: {rope: 6, pitch: 8}, oversold: [tar]}
+explanation_markdown: |
+  `Counter` turns stock reconciliation into arithmetic. Loading `opening` straight
+  into a `Counter` gives every known item its starting tally, and because indexing
+  a missing key returns `0`, you can add a signed `qty` to any item — even one that
+  never appeared at opening — without a guard clause. Accumulating in place lets an
+  item collect several movements naturally. The two outputs then read off the same
+  tallies from different angles: an item is *oversold* when its final count is
+  strictly negative, and the *closing* stock is what remains after flooring
+  negatives away. The tidy way to floor is unary plus: `+counts` returns a new
+  `Counter` containing only strictly positive entries, which drops both the
+  oversold items and anything that landed exactly at zero. Sorting the oversold
+  names makes the report deterministic.
+common_mistakes:
+  - Using Counter subtraction that clamps at zero before you can see which items went negative, so oversold items are missed.
+  - Leaving items that ended at zero in the closing dict; the spec floors them out entirely.
+  - Forgetting to sort the oversold list, which makes the output order depend on insertion order.

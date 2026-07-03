@@ -1,0 +1,106 @@
+id: lesson.library.datetime_handling.a03
+kind: lesson
+version: 1
+language: python
+title: 'Schedules, Spans, and Recurring Events'
+slug: lesson-datetime-handling-a03
+difficulty: medium
+concepts:
+  - python.datetime_module
+  - patterns.intervals
+prerequisites:
+  - python.datetime_module
+  - python.loops
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.datetime_handling.a03
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original scheduling-math walkthrough framed around a greenhouse feeding rota, with fresh worked code.
+body_markdown: |
+  Once dates are objects and durations are `timedelta`s, a whole family of
+  scheduling problems becomes loops and comparisons. This lesson collects the
+  three moves that solve most of them.
+
+  ### Move 1: generate a recurrence
+
+  A greenhouse feeding rota — every 3 days from a start date until a cutoff —
+  is a while loop stepping by a fixed delta:
+
+  ```python
+  from datetime import date, timedelta
+
+  def feeding_days(start, every_days, until):
+      current, out = start, []
+      step = timedelta(days=every_days)
+      while current <= until:
+          out.append(current)
+          current += step
+      return out
+  ```
+
+  Every calendar subtlety (month ends, leap years) is handled by the
+  addition. The only decisions left are boundary decisions — is `until`
+  inclusive? does the series include `start`? — and those belong in the
+  function's contract, stated and tested.
+
+  ### Move 2: find the next weekday
+
+  "The next Tuesday strictly after d" is modular arithmetic on `weekday()`:
+
+  ```python
+  def next_weekday(d, target):          # target: Monday=0 .. Sunday=6
+      days_ahead = (target - d.weekday() - 1) % 7 + 1
+      return d + timedelta(days=days_ahead)
+  ```
+
+  The `- 1 ... % 7 + 1` dance maps "same day" to *seven* days ahead instead of
+  zero, which is what "strictly after" means. If "today counts" is the rule
+  instead, the formula is `(target - d.weekday()) % 7`. Two nearly identical
+  formulas, two different contracts — recurrence bugs are almost always
+  boundary bugs, not calendar bugs.
+
+  Business-day arithmetic composes the same pieces: to add N working days,
+  step one day at a time and only count days where `weekday() < 5`.
+
+  ### Move 3: treat time ranges as intervals
+
+  Two bookings on the same day, as ("HH:MM", "HH:MM") pairs, overlap by the
+  same rule as any intervals — convert to minutes since midnight and take
+  `max(0, min(ends) - max(starts))`:
+
+  ```python
+  def to_minutes(hhmm):
+      h, m = hhmm.split(":")
+      return int(h) * 60 + int(m)
+
+  def overlap_minutes(a, b):
+      start = max(to_minutes(a[0]), to_minutes(b[0]))
+      end = min(to_minutes(a[1]), to_minutes(b[1]))
+      return max(0, end - start)
+  ```
+
+  Converting to a single integer unit first — minutes here, seconds or days
+  elsewhere — flattens clock math into ordinary arithmetic. This is the same
+  sweep-and-merge machinery from the intervals lessons, wearing a wristwatch.
+
+  ### Grouping by calendar buckets
+
+  Reports want totals "per week" or "per month". The trick is choosing a
+  *bucket key* per record and grouping as usual. For weeks, `isocalendar()`
+  gives a (year, week, weekday) triple whose first two parts make a clean
+  key; for months, `(d.year, d.month)` already is one. Sorting bucket keys
+  then sorts the report chronologically for free.
+checkpoints:
+  - question: A recurrence function takes start, every_days, and until. Name the two boundary decisions its contract must pin down before a single line is written.
+    answer: Whether the series includes start itself, and whether until is inclusive or exclusive — both change the output list without changing any calendar logic.
+    explanation: Recurrence bugs are boundary bugs; the loop is trivial once the contract is explicit and tested at both edges.
+  - question: Why does the "next Tuesday" formula use (target - weekday - 1) % 7 + 1 rather than plain (target - weekday) % 7?
+    answer: The plain formula maps "d is already Tuesday" to 0 days ahead, meaning today; the adjusted one maps it to 7, which implements "strictly after".
+    explanation: Both formulas are correct for different contracts — the choice encodes whether today counts, which is exactly the kind of requirement to confirm before coding.
+  - question: What single transformation turns clock-time overlap questions into the ordinary interval arithmetic from the intervals lessons?
+    answer: Converting each HH:MM to minutes since midnight, so times become plain integers and overlap is max(0, min(ends) - max(starts)).
+    explanation: Reducing times to one integer unit removes all clock structure from the problem; the interval toolkit then applies unchanged.

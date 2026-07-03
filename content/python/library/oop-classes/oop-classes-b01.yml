@@ -1,0 +1,170 @@
+id: exercise.library.oop_classes.b01
+kind: exercise
+version: 1
+language: python
+title: Reconciling the Jar Bank Ledger
+slug: oop-classes-b01
+difficulty: hard
+concepts:
+  - python.classes
+  - python.dictionaries
+prerequisites:
+  - python.classes
+  - python.dictionaries
+estimated_time_minutes: 24
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.oop_classes.b01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original event-sourcing drill where a community pantry replays create/add/transfer events through a small ledger class that rejects invalid events atomically.
+prompt_markdown: |
+  A community pantry tracks its saved coins in labelled jars, and every change is
+  recorded as an event so the books can be replayed at any time. Write
+  `build_jar_ledger(events)` where `events` is a **list** of event dictionaries.
+  Replay the events in order through a small ledger you build **inside** the
+  function (define and use your own class), then return a dictionary
+  `{"balances": {jar: total}, "rejected": count}` where `balances` maps every jar
+  that was successfully created to its final integer balance and `rejected` is how
+  many events were refused.
+
+  Each event has an `"op"` key. The three valid operations are:
+
+  - `{"op": "create", "jar": name, "amount": n}` -- open a new jar holding `n`
+    coins. **Reject** it if a jar with that name already exists, or if `n` is
+    negative.
+  - `{"op": "add", "jar": name, "amount": n}` -- change a jar's balance by `n`
+    (a negative `n` is a withdrawal). **Reject** it if the jar does not exist, or
+    if the change would drive the balance below zero.
+  - `{"op": "transfer", "from": src, "to": dst, "amount": n}` -- move `n` coins
+    from `src` to `dst`. This is **atomic**: reject the whole event (moving
+    nothing) unless both jars exist, `src` and `dst` are different, `n` is not
+    negative, and `src` currently holds at least `n` coins.
+
+  Any event whose `"op"` is none of these three counts as rejected and changes no
+  balances. A rejected event never alters any jar. An empty event list returns
+  `{"balances": {}, "rejected": 0}`.
+
+  For example, replaying
+  `[{"op": "create", "jar": "A", "amount": 100}, {"op": "create", "jar": "B", "amount": 0}, {"op": "transfer", "from": "A", "to": "B", "amount": 40}, {"op": "add", "jar": "B", "amount": 10}]`
+  returns `{"balances": {"A": 60, "B": 50}, "rejected": 0}`.
+starter_code: |
+  def build_jar_ledger(events):
+      # Define a small ledger class, replay each event through it,
+      # then return {"balances": {...}, "rejected": n}.
+      return {"balances": {}, "rejected": 0}
+function_name: build_jar_ledger
+input_mode: function
+solution_sketch: A Ledger class holds a balances dict and a rejected counter; each create/add/transfer method validates its rules and either applies the change or bumps the counter. Replay the events by dispatching on op, treating any unknown op as a rejection.
+sample_solution: |
+  def build_jar_ledger(events):
+      class Ledger:
+          def __init__(self):
+              self.balances = {}
+              self.rejected = 0
+
+          def create(self, jar, amount):
+              if jar in self.balances or amount < 0:
+                  self.rejected += 1
+                  return
+              self.balances[jar] = amount
+
+          def add(self, jar, amount):
+              if jar not in self.balances or self.balances[jar] + amount < 0:
+                  self.rejected += 1
+                  return
+              self.balances[jar] += amount
+
+          def transfer(self, src, dst, amount):
+              if (src not in self.balances or dst not in self.balances
+                      or src == dst or amount < 0
+                      or self.balances[src] < amount):
+                  self.rejected += 1
+                  return
+              self.balances[src] -= amount
+              self.balances[dst] += amount
+
+      ledger = Ledger()
+      for event in events:
+          op = event.get("op")
+          if op == "create":
+              ledger.create(event["jar"], event["amount"])
+          elif op == "add":
+              ledger.add(event["jar"], event["amount"])
+          elif op == "transfer":
+              ledger.transfer(event["from"], event["to"], event["amount"])
+          else:
+              ledger.rejected += 1
+      return {"balances": ledger.balances, "rejected": ledger.rejected}
+hints:
+  - level: 1
+    text: Keep all mutable state on one object -- a dict of balances and an integer count of refusals -- and give it one method per operation so each method owns its own validation.
+  - level: 2
+    text: Validate before you mutate. Check every rule for an operation first; only if all checks pass do you touch a balance, otherwise increment the rejected counter and return without changing anything.
+  - level: 3
+    text: A transfer must be all-or-nothing, so verify both jars exist, the two names differ, the amount is non-negative, and the source has enough before subtracting from one side and adding to the other. Dispatch on event["op"] and treat any unrecognised op as a rejection.
+tests:
+  public:
+    - name: create_and_transfer
+      input:
+        - {"op": "create", "jar": "A", "amount": 100}
+        - {"op": "create", "jar": "B", "amount": 0}
+        - {"op": "transfer", "from": "A", "to": "B", "amount": 40}
+        - {"op": "add", "jar": "B", "amount": 10}
+      expected: {"balances": {"A": 60, "B": 50}, "rejected": 0}
+    - name: empty_stream
+      input: []
+      expected: {"balances": {}, "rejected": 0}
+    - name: insufficient_transfer_rejected
+      input:
+        - {"op": "create", "jar": "A", "amount": 30}
+        - {"op": "create", "jar": "B", "amount": 0}
+        - {"op": "transfer", "from": "A", "to": "B", "amount": 50}
+      expected: {"balances": {"A": 30, "B": 0}, "rejected": 1}
+  validation:
+    - name: duplicate_create
+      input:
+        - {"op": "create", "jar": "A", "amount": 10}
+        - {"op": "create", "jar": "A", "amount": 99}
+      expected: {"balances": {"A": 10}, "rejected": 1}
+    - name: add_missing_jar
+      input:
+        - {"op": "add", "jar": "X", "amount": 5}
+      expected: {"balances": {}, "rejected": 1}
+    - name: withdrawal_then_overdraw
+      input:
+        - {"op": "create", "jar": "A", "amount": 20}
+        - {"op": "add", "jar": "A", "amount": -5}
+        - {"op": "add", "jar": "A", "amount": -50}
+      expected: {"balances": {"A": 15}, "rejected": 1}
+    - name: same_jar_transfer_and_unknown_op
+      input:
+        - {"op": "create", "jar": "A", "amount": 10}
+        - {"op": "transfer", "from": "A", "to": "A", "amount": 5}
+        - {"op": "freeze", "jar": "A"}
+      expected: {"balances": {"A": 10}, "rejected": 2}
+    - name: negative_create_rejected
+      input:
+        - {"op": "create", "jar": "A", "amount": -10}
+        - {"op": "create", "jar": "B", "amount": 5}
+      expected: {"balances": {"B": 5}, "rejected": 1}
+explanation_markdown: |
+  Event sourcing means the balances are never stored directly; they are derived by
+  replaying an ordered log of changes. Packaging the state in a small class keeps
+  the replay loop clean: it simply dispatches on `op`, and each method decides for
+  itself whether the event is legal. The golden rule is validate-then-mutate --
+  every check happens before any balance moves, so a refused event leaves the books
+  untouched.
+
+  The transfer is the subtle one because it touches two jars, so it must be atomic:
+  if any precondition fails you change nothing at all, rather than debiting the
+  source and then discovering the destination was invalid. Treating an unknown `op`
+  as a rejection makes the ledger robust to a corrupt or future event type. Each
+  event does constant work, so replaying the whole log is O(n) in the number of
+  events.
+common_mistakes:
+  - Debiting the source jar before checking the destination exists, leaving a half-applied transfer when the event should have been rejected whole.
+  - Forgetting that a negative add is a legal withdrawal, and only rejecting it when it would push the balance below zero.
+  - Counting a rejected event as both rejected and applied, or skipping the rejected tally for an unrecognised op.

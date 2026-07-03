@@ -1,0 +1,97 @@
+id: exercise.library.language_models_from_scratch.a06
+kind: exercise
+version: 1
+language: python
+title: The Next-Token Distribution
+slug: language-models-from-scratch-a06
+difficulty: medium
+concepts:
+  - ai.language_models
+  - concepts.probability
+prerequisites:
+  - python.dictionaries
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.language_models_from_scratch.a06
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original next-token distribution drill filtering a bigram count table by context and normalizing.
+prompt_markdown: |
+  To actually *generate* text, a language model needs the probability distribution
+  over the next token given the current context. You are handed a count table and a
+  context, and must produce that distribution.
+
+  Write `next_distribution(job)` where `job` is a dict with keys:
+  - `table`: a dict mapping each `"context|next"` string to an integer count,
+  - `context`: the context token you want to continue from.
+
+  Collect every table entry whose context part equals `context`, then return a dict
+  mapping each observed `next` token to its probability `count / total`, where
+  `total` is the sum of counts for that context, **rounded to 6 decimal places**.
+  If the context never appears in the table, return an empty dict `{}`.
+
+  Example: with `table = {"a|b": 3, "a|c": 1, "b|a": 2}` and `context = "a"`, the
+  `a` rows total `4`, so the result is `{"b": 0.75, "c": 0.25}`.
+starter_code: |
+  def next_distribution(job):
+      return {}
+function_name: next_distribution
+input_mode: function
+solution_sketch: Split each key into context and next, keep the rows matching the given context while summing their counts, then divide each kept count by the total and round.
+sample_solution: |
+  def next_distribution(job):
+      table = job["table"]
+      context = job["context"]
+      matches = {}
+      total = 0
+      for key, count in table.items():
+          ctx, nxt = key.split("|")
+          if ctx == context:
+              matches[nxt] = count
+              total += count
+      if total == 0:
+          return {}
+      return {nxt: round(count / total, 6) for nxt, count in matches.items()}
+hints:
+  - level: 1
+    text: First find every row whose context (the part before the "|") matches, and add up their counts.
+  - level: 2
+    text: Split each key with ctx, nxt = key.split("|") and keep only the rows where ctx == context.
+  - level: 3
+    text: Divide each kept count by the running total and round to 6 places; if nothing matched (total is 0), return {}.
+tests:
+  public:
+    - name: basic
+      input: {table: {"a|b": 3, "a|c": 1, "b|a": 2}, context: "a"}
+      expected: {"b": 0.75, "c": 0.25}
+    - name: even
+      input: {table: {"the|cat": 2, "the|dog": 2}, context: "the"}
+      expected: {"cat": 0.5, "dog": 0.5}
+    - name: unseen_context
+      input: {table: {"a|b": 1}, context: "z"}
+      expected: {}
+  validation:
+    - name: thirds
+      input: {table: {"sun|up": 1, "sun|down": 1, "sun|set": 1}, context: "sun"}
+      expected: {"up": 0.333333, "down": 0.333333, "set": 0.333333}
+    - name: single_next
+      input: {table: {"x|y": 5, "p|q": 2}, context: "x"}
+      expected: {"y": 1.0}
+    - name: weighted
+      input: {table: {"fog|horn": 4, "fog|bank": 1, "clear|sky": 2}, context: "fog"}
+      expected: {"horn": 0.8, "bank": 0.2}
+explanation_markdown: |
+  Filtering the table down to a single context and normalizing those counts gives
+  the categorical distribution you would sample from to pick the next token — the
+  heart of text generation. Only the matching context's rows contribute to the
+  denominator, so unrelated rows (a different context) are ignored entirely. An
+  unseen context returns `{}`, a deliberate "no information here" signal — that is
+  exactly the situation where a real system would fall back to smoothing or to a
+  shorter-context model. Rounding to 6 places keeps the floats matching under `==`.
+common_mistakes:
+  - Normalizing over the whole table instead of only the rows matching the requested context.
+  - Returning a default value or zeros for an unseen context instead of an empty dict.
+  - Splitting the key wrong and comparing the next token, rather than the context, to `context`.

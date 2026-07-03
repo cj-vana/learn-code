@@ -1,0 +1,109 @@
+id: exercise.library.testing_concepts.a09
+kind: exercise
+version: 1
+language: python
+title: Narrowing Down the Failing Crate
+slug: testing-concepts-a09
+difficulty: medium
+concepts:
+  - concepts.testing
+  - python.slicing
+prerequisites:
+  - python.lists
+  - python.loops
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.testing_concepts.a09
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original simplified test-case-minimization drill framed as narrowing a shipment down to the shortest prefix that still contains the failing crate.
+prompt_markdown: |
+  When a whole shipment fails inspection, the inspector wants the **shortest run of
+  crates, taken from the front of the line, that still contains the one bad crate**.
+  Shrinking the failing case down to a minimal reproducer like this is a core
+  testing habit: a smaller failing example is far easier to reason about than the
+  full batch.
+
+  Write `shrink_case(job)` where `job` is a dict with:
+
+  - `items`: the crates in inspection order (a list).
+  - `bad_item`: the value of the crate known to fail inspection.
+
+  Return the smallest **prefix** of `items` (a leading slice `items[:n]`) that still
+  contains `bad_item`. Concretely, that is everything up to and including the
+  **first** occurrence of `bad_item`. Rules for the edges:
+
+  - If `bad_item` is at the front, the prefix is just that one crate.
+  - If `bad_item` appears more than once, stop at the first occurrence -- a shorter
+    prefix already reproduces the failure.
+  - If `bad_item` does **not** appear in `items` at all, no prefix contains it, so
+    return an empty list.
+
+  For example, `{"items": [10, 20, 30, 40], "bad_item": 30}` returns `[10, 20, 30]`.
+  Return a list.
+starter_code: |
+  def shrink_case(job):
+      # Return items up to and including the first occurrence of bad_item.
+      return []
+function_name: shrink_case
+input_mode: function
+solution_sketch: Scan for the first index whose value equals bad_item and return the slice through that index; if none matches, return an empty list.
+sample_solution: |
+  def shrink_case(job):
+      items = job["items"]
+      bad = job["bad_item"]
+      for i, item in enumerate(items):
+          if item == bad:
+              return items[:i + 1]
+      return []
+hints:
+  - level: 1
+    text: The shortest prefix that still contains the bad crate ends exactly at that crate's first appearance.
+  - level: 2
+    text: Walk the list from the front and note the first index whose value equals bad_item; a later duplicate cannot make a shorter prefix.
+  - level: 3
+    text: When you find that index i, return items[:i + 1]; if the loop finishes without a match, return an empty list.
+tests:
+  public:
+    - name: bad_in_middle
+      input: {items: [10, 20, 30, 40], bad_item: 30}
+      expected: [10, 20, 30]
+    - name: bad_at_front
+      input: {items: [5, 6, 7], bad_item: 5}
+      expected: [5]
+    - name: bad_at_end
+      input: {items: [1, 2, 3], bad_item: 3}
+      expected: [1, 2, 3]
+  validation:
+    - name: not_present
+      input: {items: [1, 2, 3], bad_item: 9}
+      expected: []
+    - name: duplicate_stops_at_first
+      input: {items: [4, 7, 4, 9], bad_item: 4}
+      expected: [4]
+    - name: empty_items
+      input: {items: [], bad_item: 1}
+      expected: []
+    - name: string_crates
+      input: {items: ['C1', 'C2', 'C3'], bad_item: 'C3'}
+      expected: ['C1', 'C2', 'C3']
+explanation_markdown: |
+  This is a stripped-down version of *test-case minimization*: given a failing
+  input, find a smaller input that still fails. Here "smaller" means "a shorter
+  leading run of crates", and "still fails" means "still contains the bad crate".
+  Because a prefix must start at the front, the shortest one that includes the bad
+  crate has to end at that crate's **first** occurrence -- stopping at any later
+  duplicate would only make the reproducer longer, and stopping earlier would drop
+  the failure entirely. Scanning left to right and returning `items[:i + 1]` at the
+  first hit captures exactly that boundary. When the bad crate is absent, there is
+  no prefix that reproduces the failure, so the honest result is the empty list
+  rather than the whole batch. Real shrinkers repeat this narrowing many times; the
+  single-pass version here isolates the key idea of finding the minimal failing
+  slice.
+common_mistakes:
+  - Returning the slice through the last occurrence instead of the first, producing a longer prefix than necessary.
+  - Using items[:i] instead of items[:i + 1], which drops the bad crate itself from the reproducer.
+  - Returning the full list (or the crates after the bad one) when bad_item is missing, instead of an empty list.

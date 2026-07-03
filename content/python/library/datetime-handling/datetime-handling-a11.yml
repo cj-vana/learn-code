@@ -1,0 +1,120 @@
+id: exercise.library.datetime_handling.a11
+kind: exercise
+version: 1
+language: python
+title: Boatyard Timesheets
+slug: datetime-handling-a11
+difficulty: hard
+concepts:
+  - python.datetime_module
+prerequisites:
+  - python.lists
+  - python.conditionals
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.datetime_handling.a11
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original punch-clock duration drill framed around a boatyard totalling worked minutes from clock-in and clock-out pairs.
+prompt_markdown: |
+  A boatyard tracks each worker's shift as a pair of punches: a clock-in datetime
+  and a clock-out datetime. Payroll needs the total minutes worked across a day's
+  punches, but a garbled log where someone clocked out before (or at the same
+  moment as) they clocked in must be rejected outright.
+
+  Write `timesheet_hours(job)` that takes a single dictionary with one key:
+
+  - `"punches"`: a list of two-element lists `["in", "out"]`, where each element
+    is an ISO datetime string like `"2026-05-01T08:00:00"`. A shift may run
+    overnight, so the clock-out can fall on a later calendar date than the
+    clock-in.
+
+  Return the **total whole minutes** worked, summed over every punch pair, as an
+  integer. However, if **any** pair has a clock-out that is less than or equal to
+  its clock-in, return the string `"invalid"` instead (do not add up the valid
+  pairs). An empty `"punches"` list returns `0`.
+
+  Example:
+
+  ```python
+  timesheet_hours({"punches": [
+      ["2026-05-01T08:00:00", "2026-05-01T12:30:00"],
+      ["2026-05-01T13:00:00", "2026-05-01T17:15:00"],
+  ]})
+  # -> 525
+  ```
+
+  That is 270 minutes for the morning shift plus 255 for the afternoon.
+starter_code: |
+  from datetime import datetime
+
+
+  def timesheet_hours(job):
+      return 0
+function_name: timesheet_hours
+input_mode: function
+solution_sketch: Parse each in/out pair with datetime.fromisoformat; if any out is not strictly after its in, short-circuit to "invalid", otherwise add the difference converted to whole minutes and return the running total.
+sample_solution: |
+  from datetime import datetime
+
+
+  def timesheet_hours(job):
+      total = 0
+      for start_text, end_text in job["punches"]:
+          start = datetime.fromisoformat(start_text)
+          end = datetime.fromisoformat(end_text)
+          if end <= start:
+              return "invalid"
+          total += int((end - start).total_seconds() // 60)
+      return total
+hints:
+  - level: 1
+    text: datetime.fromisoformat parses each "YYYY-MM-DDTHH:MM:SS" string into a datetime you can subtract.
+  - level: 2
+    text: Subtracting two datetimes yields a timedelta; its total_seconds() divided by 60 (integer division) gives whole minutes, and this works even when the clock-out is on the next day.
+  - level: 3
+    text: Before adding any pair, check end <= start and return "invalid" the moment one fails, so a single bad pair rejects the whole timesheet regardless of the others.
+tests:
+  public:
+    - name: single_shift
+      input: {"punches": [["2026-05-01T08:00:00", "2026-05-01T12:00:00"]]}
+      expected: 240
+    - name: two_shifts
+      input: {"punches": [["2026-05-01T08:00:00", "2026-05-01T12:30:00"], ["2026-05-01T13:00:00", "2026-05-01T17:15:00"]]}
+      expected: 525
+    - name: no_punches
+      input: {"punches": []}
+      expected: 0
+  validation:
+    - name: zero_length_shift_invalid
+      input: {"punches": [["2026-05-01T08:00:00", "2026-05-01T08:00:00"]]}
+      expected: "invalid"
+    - name: out_before_in
+      input: {"punches": [["2026-05-01T09:00:00", "2026-05-01T08:00:00"]]}
+      expected: "invalid"
+    - name: overnight_shift
+      input: {"punches": [["2026-05-01T22:00:00", "2026-05-02T06:30:00"]]}
+      expected: 510
+    - name: one_bad_pair_rejects_all
+      input: {"punches": [["2026-05-01T08:00:00", "2026-05-01T12:00:00"], ["2026-05-01T09:00:00", "2026-05-01T08:30:00"]]}
+      expected: "invalid"
+explanation_markdown: |
+  Subtracting two `datetime` values produces a `timedelta`, and that object already
+  accounts for the calendar, so an overnight shift from `22:00` to `06:30` the
+  next morning comes out as 510 minutes without any manual date bookkeeping.
+  Converting to whole minutes is `total_seconds() // 60`, wrapped in `int` so the
+  result is an integer rather than a float.
+
+  The validation rule is a short-circuit. Because a single malformed pair
+  invalidates the entire timesheet, the moment you find `end <= start` you return
+  `"invalid"` immediately and never fold that day's numbers into the total. Note
+  that equal times count as invalid too: a zero-length shift is not a real shift.
+  The empty-list case returns `0` naturally, since the loop never runs and the
+  accumulator stays at its starting value.
+common_mistakes:
+  - Using a strict-less check that misses the equal-times case, so a zero-length shift is wrongly counted instead of rejected.
+  - Summing the valid pairs and only then noticing a bad one, instead of returning "invalid" as soon as any pair fails.
+  - Computing minutes from hour and minute fields directly, which breaks for overnight shifts that cross midnight into the next date.

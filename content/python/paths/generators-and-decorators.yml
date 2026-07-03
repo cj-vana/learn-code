@@ -10,7 +10,7 @@ description: "Master lazy iteration with generators and higher-order composition
 outcomes:
 - Write and chain generator pipelines
 - Build decorators, including parameterized and stacked ones
-estimated_hours: 8
+estimated_hours: 9
 review_status: published
 source_status: original
 provenance:
@@ -41,6 +41,8 @@ units:
   - exercise.library.iterators_generators.a10
   - exercise.library.iterators_generators.a11
   - exercise.library.iterators_generators.a12
+  - exercise.library.iterators_generators.b01
+  - exercise.library.iterators_generators.b02
   - quiz.library.iterators_generators.a01
   - quiz.library.iterators_generators.a02
   - quiz.library.iterators_generators.a03
@@ -63,5 +65,7 @@ units:
   - exercise.library.decorators_closures.a10
   - exercise.library.decorators_closures.a11
   - exercise.library.decorators_closures.a12
+  - exercise.library.decorators_closures.b01
+  - exercise.library.decorators_closures.b02
   - quiz.library.decorators_closures.a01
   - quiz.library.decorators_closures.a02

@@ -1,0 +1,107 @@
+id: exercise.library.testing_concepts.a04
+kind: exercise
+version: 1
+language: python
+title: Auditing the Mystery Sorting Machine
+slug: testing-concepts-a04
+difficulty: medium
+concepts:
+  - concepts.testing
+  - python.sorting
+prerequisites:
+  - python.lists
+  - python.comprehensions
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.testing_concepts.a04
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original property-based-oracle framing that audits any sort by checking orderedness and permutation together.
+prompt_markdown: |
+  A workshop bought a second-hand sorting machine and refuses to trust it. Rather
+  than reimplement the sort to compare against, you audit its output with the two
+  properties that **every** correct ascending sort must satisfy at once:
+
+  1. **Ordered** — the `result` is in non-decreasing order (each item is `<=` the
+     next).
+  2. **Permutation** — the `result` contains exactly the same values as the
+     `original`, with the same counts. Nothing added, dropped, or changed.
+
+  Write `is_sorted_permutation(job)` where `job` is a dict with two keys:
+
+  - `original` — the list of integers fed into the machine
+  - `result` — the list the machine handed back
+
+  Return `True` only when **both** properties hold, and `False` otherwise.
+
+  Note that each property alone is not enough: `[1, 3, 2]` is a permutation of
+  `[3, 1, 2]` but is not ordered, and `[1, 2]` is ordered but is not a permutation
+  of `[3, 1, 2]` because a value was dropped. Duplicates must be counted, so a
+  `result` of `[1, 1, 2]` is not a valid sort of `[2, 2, 1]`. Two empty lists
+  return `True`.
+starter_code: |
+  def is_sorted_permutation(job):
+      # Return True only if result is non-decreasing AND a permutation of original.
+      return False
+function_name: is_sorted_permutation
+input_mode: function
+solution_sketch: Check non-decreasing order with a pairwise comparison, check the permutation property by comparing sorted(original) to sorted(result), and require both.
+sample_solution: |
+  def is_sorted_permutation(job):
+      original = job["original"]
+      result = job["result"]
+      is_ordered = all(result[i] <= result[i + 1] for i in range(len(result) - 1))
+      same_items = sorted(original) == sorted(result)
+      return is_ordered and same_items
+hints:
+  - level: 1
+    text: Neither property is sufficient by itself — a list can be ordered but missing values, or hold the right values in the wrong order.
+  - level: 2
+    text: For ordering, compare each element to the one after it; for the permutation check, two lists are permutations exactly when their sorted forms are equal.
+  - level: 3
+    text: Combine all(result[i] <= result[i + 1] for i in range(len(result) - 1)) with sorted(original) == sorted(result) using and.
+tests:
+  public:
+    - name: correct_sort
+      input: {original: [3, 1, 2], result: [1, 2, 3]}
+      expected: true
+    - name: permutation_not_ordered
+      input: {original: [3, 1, 2], result: [1, 3, 2]}
+      expected: false
+    - name: ordered_but_dropped
+      input: {original: [3, 1, 2], result: [1, 2]}
+      expected: false
+  validation:
+    - name: duplicates_ok
+      input: {original: [2, 2, 1], result: [1, 2, 2]}
+      expected: true
+    - name: duplicate_miscount
+      input: {original: [2, 2, 1], result: [1, 1, 2]}
+      expected: false
+    - name: both_empty
+      input: {original: [], result: []}
+      expected: true
+    - name: extra_element
+      input: {original: [1, 2], result: [1, 2, 2]}
+      expected: false
+    - name: negatives_sorted
+      input: {original: [0, -1, 3], result: [-1, 0, 3]}
+      expected: true
+explanation_markdown: |
+  This is a property-based oracle: instead of knowing the one right answer, you
+  assert invariants that any correct implementation must preserve. For sorting,
+  "ordered" and "same multiset" together are exactly the definition, which is why
+  the pair catches every kind of bug — a sort that loses elements fails the
+  permutation check, and a sort that leaves things jumbled fails the order check.
+  Comparing `sorted(original)` to `sorted(result)` is a compact way to test the
+  permutation property because equal sorted forms mean identical values and
+  counts. Testing a black box by its guaranteed properties, rather than a single
+  expected output, is a powerful technique when reference answers are hard to
+  produce.
+common_mistakes:
+  - Checking only that the result is ordered and forgetting it might have dropped or invented values.
+  - Using set(original) == set(result), which ignores duplicate counts and wrongly accepts [1, 1, 2] for [2, 2, 1].
+  - Indexing result[i + 1] past the end instead of stopping the order check at the second-to-last element.

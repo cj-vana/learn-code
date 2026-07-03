@@ -1,0 +1,118 @@
+id: lesson.library.type_hints.a03
+kind: lesson
+version: 1
+language: python
+title: 'Typing Structures: TypedDict, Dataclasses, and Contracts'
+slug: lesson-type-hints-a03
+difficulty: medium
+concepts:
+  - python.type_hints
+  - python.dataclasses_dunder
+prerequisites:
+  - python.type_hints
+  - python.dictionaries
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.type_hints.a03
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original structural-typing walkthrough framed around a stained-glass studio's order records, with fresh worked code.
+body_markdown: |
+  `dict[str, str]` says a dict maps strings to strings. It does not say
+  *which* strings — and most real dicts are records with specific fields. A
+  stained-glass studio's order looks like:
+
+  ```python
+  order = {"client": "Alma", "panels": 3, "rush": False}
+  ```
+
+  Calling this `dict[str, str | int | bool]` is both ugly and useless: it
+  permits `{"clientt": ...}` (typo) and forbids nothing. The typed vocabulary
+  for "a dict with exactly these keys" is **TypedDict**:
+
+  ```python
+  from typing import TypedDict
+
+  class Order(TypedDict):
+      client: str
+      panels: int
+      rush: bool
+
+  def price(order: Order) -> float: ...
+  ```
+
+  At runtime an `Order` is still a plain dict — TypedDict adds zero cost and
+  zero behavior. But a checker now catches `order["clientt"]` and
+  `order["panels"] + "x"` at every use site. You have turned an implicit
+  record shape into an explicit, checkable contract.
+
+  ### Dataclasses: when the record deserves to be a class
+
+  The `dicts-and-classes` line is worth drawing consciously. When a record
+  starts accumulating behavior — validation, derived values, methods —
+  promote it:
+
+  ```python
+  from dataclasses import dataclass
+
+  @dataclass
+  class Order:
+      client: str
+      panels: int
+      rush: bool = False
+
+      def price(self) -> float:
+          base = 120.0 * self.panels
+          return base * 1.5 if self.rush else base
+  ```
+
+  The annotations here are load-bearing: `@dataclass` *reads them* to
+  generate `__init__`, `__repr__`, and `__eq__`. Attribute access
+  (`order.panels`) replaces key access, typos become `AttributeError` at
+  runtime and checker errors before it, and defaults live in one place.
+
+  Rule of thumb: data crossing a boundary (JSON in, CSV out) starts as dicts
+  — TypedDict describes it. Data *living* inside your program, especially
+  with behavior attached, wants to be a dataclass.
+
+  ### Protocols: typing by capability
+
+  Sometimes what matters is not what a thing *is* but what it *can do* — any
+  object with an `area()` method, say. That is a **Protocol**:
+
+  ```python
+  from typing import Protocol
+
+  class HasArea(Protocol):
+      def area(self) -> float: ...
+
+  def total_glass(pieces: list[HasArea]) -> float:
+      return sum(p.area() for p in pieces)
+  ```
+
+  Any class with a matching `area()` satisfies `HasArea` — no inheritance,
+  no registration. This is duck typing made checkable: the runtime behavior
+  Python always had, now stated as a contract tools can verify.
+
+  ### The payoff
+
+  Together these three — TypedDict for record-shaped dicts, dataclasses for
+  behavioral records, Protocols for capabilities — let signatures carry real
+  designs: `def invoice(orders: list[Order]) -> Statement` reads as a
+  sentence. In the exercises you will implement the *runtime* side of these
+  ideas (shape validators, structural dispatch, schema inference), because
+  knowing what the checker does under the hood is what turns hints from
+  decoration into engineering.
+checkpoints:
+  - question: What does TypedDict change at runtime, and what does it change for a type checker?
+    answer: 'Nothing at runtime — the value is still a plain dict; for the checker it pins the exact keys and per-key value types, so typo''d keys and wrong-typed values become errors at every use site.'
+    explanation: TypedDict is a zero-cost contract layer over dicts, which is why it suits data arriving from JSON or CSV boundaries.
+  - question: A dict-shaped record has started sprouting helper functions that all take it as their first argument. What is the idiomatic promotion and what do you get for free?
+    answer: Make it a @dataclass — the annotations generate __init__, __repr__, and __eq__, the helpers become methods, typos become AttributeErrors, and defaults are declared once.
+    explanation: '"Functions clustering around a dict" is the classic sign the data wants to be a class; dataclasses make the promotion nearly free.'
+  - question: How does a Protocol differ from a base class for expressing "anything with an area() method"?
+    answer: A Protocol is satisfied structurally — any object with a matching area() conforms, no inheritance or registration needed — whereas a base class requires every conforming type to explicitly inherit it.
+    explanation: Protocols make Python's native duck typing statically checkable, so third-party classes you can't modify still satisfy your contracts.

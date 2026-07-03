@@ -1,0 +1,86 @@
+id: lesson.library.attention_mechanics.a01
+kind: lesson
+version: 1
+language: python
+title: 'Attention: A Soft Dictionary Lookup'
+slug: lesson-attention-mechanics-a01
+difficulty: hard
+concepts:
+  - ai.attention_transformers
+prerequisites:
+  - ai.embeddings_retrieval
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.attention_mechanics.a01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original attention introduction built on the soft-lookup metaphor with a fresh hand-worked numeric example.
+body_markdown: |
+  You already know a hard lookup: `d[key]` finds the one exactly-matching
+  key and returns its value, all-or-nothing. **Attention** — the mechanism
+  the T in GPT is built from — is a *soft* lookup: compare a **query**
+  against every **key**, get a weight for each, and return the weighted
+  blend of all the **values**. No single winner; every entry contributes in
+  proportion to how well its key matches.
+
+  You have every ingredient already. Similarity of vectors? Dot product,
+  from the embeddings area. Scores into weights that sum to one? Softmax,
+  built and stabilized last area. Attention is those two, composed:
+
+  ```text
+  scores  = [dot(query, k) for k in keys]        # how well does each key match?
+  weights = softmax(scores / sqrt(d_k))          # scores -> proportions (scaling: next lesson)
+  output  = sum(w * v for w, v in zip(weights, values))   # blend of values
+  ```
+
+  ### One worked example, by hand
+
+  Query q = [1, 0]. Keys k1 = [1, 0], k2 = [0, 1], values v1 = [10, 0],
+  v2 = [0, 10]. (Dimension 2, so the scale factor sqrt(2) — ignore it this
+  once for round numbers.)
+
+  - scores: dot(q, k1) = 1, dot(q, k2) = 0
+  - softmax([1, 0]) ≈ [0.731, 0.269]
+  - output ≈ 0.731·[10, 0] + 0.269·[0, 10] = **[7.31, 2.69]**
+
+  The query "pointed at" k1, so the output leans strongly toward v1 — but
+  v2 still contributes 27%. Change the query to [0.5, 0.5] (equally matched
+  to both keys) and the weights become [0.5, 0.5]: an even blend. The
+  lookup is *continuous* in the query — that is the whole trick, and it is
+  why gradients can flow through it: a soft lookup is differentiable, a
+  hard `d[key]` is not. Attention is the dictionary you can train.
+
+  ### Why a language model wants this
+
+  In "the boat that lost its mast drifted", what does "drifted" refer to?
+  The boat — seven tokens back. A model processing "drifted" issues a query
+  ("looking for: a drifting thing"); every earlier token offers a key
+  ("I'm a vessel", "I'm a verb"...) and a value (its actual content). The
+  boat's key matches best, so information about the boat flows into the
+  representation of "drifted" — *directly*, regardless of the seven tokens
+  of distance. Older architectures passed information step by step down
+  the sequence, degrading over distance like a rumor. Attention is a direct
+  connection between any two positions.
+
+  And where do queries, keys, and values come from? Each token's embedding,
+  multiplied by three learned weight matrices — learned by gradient descent,
+  through the very backward pass you built in the autodiff area. Everything
+  in this course has been converging here.
+
+  In the exercises you implement each stage as its own function — scores,
+  scaling, softmax weights, weighted sum — then compose them into
+  `single_head`. Dimensions stay tiny (2-4) so every number is checkable by
+  hand, exactly as in the example above.
+checkpoints:
+  - question: 'Contrast attention with a Python dict lookup: what do they share and where do they fundamentally differ?'
+    answer: 'Both map a query against keys to retrieve values; the dict returns exactly one value on an exact key match, while attention returns a weighted blend of ALL values, weighted by soft query-key similarity — continuous and differentiable rather than all-or-nothing.'
+    explanation: The soft-lookup framing is precise, not a loose analogy — and differentiability is why the mechanism can be trained by gradient descent.
+  - question: In the worked example, the query [1,0] produced output [7.31, 2.69] rather than [10, 0]. Why doesn't the best-matching key take everything?
+    answer: Softmax converts scores into proportions, never all-or-nothing — the weaker key's 0.269 weight keeps its value contributing 27% of the blend; only an infinitely large score gap would approach winner-takes-all.
+    explanation: The always-blending behavior is what makes attention smooth enough to differentiate, at the cost of never being perfectly selective.
+  - question: What problem with long-range dependencies does attention solve that step-by-step sequential architectures suffered from?
+    answer: Sequential models pass information through every intermediate step, so it degrades with distance; attention gives any position a direct weighted connection to any other, making token 1 as reachable from token 50 as token 49 is.
+    explanation: Distance-independent information flow is the architectural reason transformers displaced recurrent models.

@@ -1,0 +1,109 @@
+id: exercise.library.eval_metrics_for_models.a02
+kind: exercise
+version: 1
+language: python
+title: Grading the Detector With Accuracy
+slug: eval-metrics-for-models-a02
+difficulty: easy
+concepts:
+  - ai.model_evaluation
+prerequisites:
+  - python.dictionaries
+  - python.conditionals
+  - python.operators
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.eval_metrics_for_models.a02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original accuracy drill that consumes the confusion counts from the warbler-detector series.
+prompt_markdown: |
+  Once each clip has been sorted into the four confusion-matrix buckets, the
+  simplest score for the warbler detector is its **accuracy**: the fraction of
+  clips it got right, whether that meant correctly flagging a warbler or correctly
+  staying silent.
+
+  With the counts `tp` (true positive), `fp` (false positive), `tn` (true
+  negative), and `fn` (false negative), accuracy is:
+
+  ```
+  accuracy = (tp + tn) / (tp + fp + tn + fn)
+  ```
+
+  Write `accuracy(counts)` that takes a single dictionary with keys `"tp"`,
+  `"fp"`, `"tn"`, and `"fn"` (all non-negative ints). Return the accuracy as a
+  float **rounded to 4 decimal places**.
+
+  If all four counts are zero there were no clips to grade, so accuracy is
+  undefined: return `None` in that case.
+
+  Example:
+
+  ```python
+  accuracy({"tp": 1, "fp": 1, "tn": 1, "fn": 1})
+  # -> 0.5   (2 correct out of 4 clips)
+  ```
+starter_code: |
+  def accuracy(counts):
+      return 0.0
+function_name: accuracy
+input_mode: function
+solution_sketch: Add the four counts for the total; if it is zero return None, otherwise return round((tp + tn) / total, 4).
+sample_solution: |
+  def accuracy(counts):
+      tp = counts["tp"]
+      fp = counts["fp"]
+      tn = counts["tn"]
+      fn = counts["fn"]
+      total = tp + fp + tn + fn
+      if total == 0:
+          return None
+      return round((tp + tn) / total, 4)
+hints:
+  - level: 1
+    text: The correct predictions are the true positives plus the true negatives; the denominator is every clip.
+  - level: 2
+    text: Compute total = tp + fp + tn + fn first so you can guard against dividing by zero.
+  - level: 3
+    text: If total is 0 return None; otherwise return round((tp + tn) / total, 4).
+tests:
+  public:
+    - name: empty_counts
+      input: {"tp": 0, "fp": 0, "tn": 0, "fn": 0}
+      expected: null
+    - name: perfect
+      input: {"tp": 5, "fp": 0, "tn": 5, "fn": 0}
+      expected: 1.0
+    - name: half_right
+      input: {"tp": 1, "fp": 1, "tn": 1, "fn": 1}
+      expected: 0.5
+  validation:
+    - name: rounds_to_four_places
+      input: {"tp": 2, "fp": 2, "tn": 1, "fn": 2}
+      expected: 0.4286
+    - name: mostly_correct
+      input: {"tp": 8, "fp": 1, "tn": 9, "fn": 2}
+      expected: 0.85
+    - name: all_wrong
+      input: {"tp": 0, "fp": 3, "tn": 0, "fn": 2}
+      expected: 0.0
+    - name: repeating_decimal
+      input: {"tp": 1, "fp": 0, "tn": 0, "fn": 2}
+      expected: 0.3333
+explanation_markdown: |
+  Accuracy answers "what share of all clips did the detector call correctly?" by
+  putting the two correct buckets (`tp` and `tn`) over the grand total. It is the
+  most intuitive score, but it can be misleading when one class dominates: a
+  detector that never reports a warbler still scores high accuracy if warblers are
+  rare, which is exactly why the later metrics in this series exist.
+
+  The zero-total guard matters because dividing by zero raises an error rather than
+  returning a number. Returning `None` communicates "undefined" honestly instead of
+  inventing a score for a grade sheet with no clips on it.
+common_mistakes:
+  - Dividing by only tp + fp (the predicted-positive count) instead of all four buckets.
+  - Forgetting the all-zero guard, so an empty grade sheet raises ZeroDivisionError.
+  - Returning the raw quotient without round(..., 4), leaving a long float that fails the exact comparison.

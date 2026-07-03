@@ -1,0 +1,104 @@
+id: lesson.library.type_hints.a02
+kind: lesson
+version: 1
+language: python
+title: 'Optional, Union, and the Shape of Maybe'
+slug: lesson-type-hints-a02
+difficulty: medium
+concepts:
+  - python.type_hints
+prerequisites:
+  - python.type_hints
+  - python.conditionals
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.type_hints.a02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original walkthrough of union types, None-handling, and narrowing, framed around a repair-shop ticket lookup with fresh worked code.
+body_markdown: |
+  The most consequential type in Python is not `int` or `str` — it is `None`,
+  because `None` is how Python says *maybe not*. A repair shop's ticket lookup
+  can succeed or come up empty:
+
+  ```python
+  def find_ticket(ticket_id: int) -> dict | None:
+      ...
+  ```
+
+  That `dict | None` is a **union**: the value is one of these types, and the
+  caller must be ready for either. (`Optional[dict]` from `typing` means
+  exactly the same thing; modern code prefers the `| None` spelling.) The
+  moment you write it, a type checker starts enforcing the discipline that
+  matters:
+
+  ```python
+  ticket = find_ticket(1042)
+  print(ticket["owner"])          # checker: ticket might be None
+  ```
+
+  ### Narrowing: the check that changes the type
+
+  The fix is to *narrow* the union — prove to yourself (and the checker)
+  which branch you are in:
+
+  ```python
+  ticket = find_ticket(1042)
+  if ticket is None:
+      return "no such ticket"
+  print(ticket["owner"])          # fine: ticket is dict here
+  ```
+
+  Inside the `if`, the type of `ticket` genuinely differs branch by branch —
+  checkers track this through `is None`, `isinstance(...)`, and early
+  returns. Narrowing is just the code you should write anyway; hints make
+  skipping it visible.
+
+  Two idioms to keep straight:
+
+  - **`is None`, not `== None` or `if not ticket:`** — truthiness conflates
+    `None` with `{}`, `0`, and `""`, which are values, not absences. An empty
+    ticket and a missing ticket usually mean different things.
+  - **Return early on the None branch.** Handling absence first keeps the
+    happy path unindented and makes the narrowing obvious.
+
+  ### Unions beyond None
+
+  Sometimes a value is legitimately several things — an ID that arrives as
+  `int | str` from a form, a config value that is `str | list[str]`.
+  Narrowing then uses `isinstance`:
+
+  ```python
+  def normalize_id(raw: int | str) -> int:
+      if isinstance(raw, str):
+          return int(raw.strip())
+      return raw
+  ```
+
+  A function like this is a **boundary normalizer**: it accepts the messy
+  union at the edge of the system and returns a single clean type, so
+  everything downstream deals in `int` only. Pushing unions to the edges —
+  wide types at the boundary, narrow types in the core — is the central
+  architecture lesson of typed Python.
+
+  ### Defaults and the Optional parameter trap
+
+  `def ship(address: str | None = None)` is the standard shape for "optional
+  argument with a computed default". The trap is mutable defaults:
+  `def add_tag(tags: list[str] = [])` shares one list across every call.
+  The typed idiom is `tags: list[str] | None = None` plus
+  `tags = [] if tags is None else tags` in the body — the union type is what
+  makes the safe pattern natural to write.
+checkpoints:
+  - question: Why is "if ticket is None" safer than "if not ticket" for a function returning dict | None?
+    answer: Truthiness treats an empty dict the same as None, but an empty ticket is a present value while None is absence — "is None" distinguishes the two.
+    explanation: Conflating falsy values with missing values causes bugs exactly when legitimate-but-empty data first appears.
+  - question: What does it mean that a type checker "narrows" a union, and name two constructs it narrows through.
+    answer: After a check proves which member of the union a value is, the checker treats it as that specific type in that branch — it narrows through "is None" checks, isinstance() tests, and early returns.
+    explanation: Narrowing aligns the checker's knowledge with the runtime guarantee your code just established, which is why well-typed code and well-guarded code end up being the same code.
+  - question: 'Where should union types like int | str live in a well-typed program, and what is the name for the function that enforces this?'
+    answer: At the boundaries where messy input arrives; a boundary normalizer accepts the union and returns one clean type so the core of the program never handles the mess.
+    explanation: Wide types at the edge, narrow types in the core keeps every interior function simple — unions that leak inward multiply narrowing checks everywhere.

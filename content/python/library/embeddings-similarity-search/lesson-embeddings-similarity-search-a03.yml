@@ -1,0 +1,96 @@
+id: lesson.library.embeddings_similarity_search.a03
+kind: lesson
+version: 1
+language: python
+title: 'Chunks, Ranks, and the Shape of Retrieval Pipelines'
+slug: lesson-embeddings-similarity-search-a03
+difficulty: medium
+concepts:
+  - ai.embeddings_retrieval
+prerequisites:
+  - ai.embeddings_retrieval
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.embeddings_similarity_search.a03
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original retrieval-pipeline walkthrough covering chunking, ranking, and softmax, framed around a museum archive assistant.
+body_markdown: |
+  You can measure similarity and score documents. This lesson assembles the
+  remaining pieces of a real retrieval pipeline — the architecture behind
+  every "chat with your documents" product, usually named **RAG**
+  (retrieval-augmented generation): retrieve relevant text, hand it to a
+  language model as context. The model is someone else's problem; the
+  retrieval is entirely buildable with what you know.
+
+  ### Chunking: retrieval's unit of account
+
+  A museum's 80-page conservation manual cannot be one vector — one
+  embedding cannot faithfully summarize 80 pages, and retrieving "the whole
+  manual" doesn't answer a question about beeswax. Documents are split into
+  **chunks**, and the standard scheme is a sliding window with overlap:
+
+  ```python
+  def chunk(words, size, overlap):
+      step = size - overlap
+      return [words[i:i + size] for i in range(0, len(words), step)]
+  ```
+
+  The overlap exists for one reason: a fact that straddles a boundary —
+  sentence starting in one chunk, finishing in the next — would otherwise
+  be split into two half-facts that neither chunk's vector represents.
+  Overlapping windows give boundary content a home in two chunks. The cost
+  is duplication (with overlap o and size s, storage inflates by roughly
+  s/(s-o)); the tradeoff between chunk size, overlap, and retrieval
+  precision is tuned per corpus, but the mechanics are exactly this
+  function — including the edge cases (final partial window, overlap
+  approaching size) your exercises pin down.
+
+  ### Ranking: top-k with lawful ties
+
+  Retrieval returns the k best chunks: score all, sort descending, slice.
+  By now the discipline is reflex — equal scores need a stated tie-break
+  (lowest index first), or retrieval becomes nondeterministic and untestable.
+  One subtlety deserves its name: scoring every chunk is **exhaustive
+  search**, exact and O(n) per query. Approximate indexes (HNSW, IVF — the
+  acronyms on vector-database brochures) trade a little recall for a lot of
+  speed at millions of chunks. Learn the exact version; the approximations
+  are engineering on top of unchanged math.
+
+  ### Softmax: scores into weights
+
+  Retrieval scores arrive on arbitrary scales — cosine in [-1, 1], BM25
+  unbounded. Downstream consumers often want a **distribution**: how much
+  should each retrieved chunk count? Softmax converts any score list into
+  positive weights summing to one:
+
+  ```text
+  softmax(s)_i = exp(s_i) / sum_j exp(s_j)
+  ```
+
+  Two properties you will verify by hand: it *exponentiates* gaps (a chunk
+  scoring one point higher gets e times the weight — softmax sharpens
+  preferences, it does not just rescale), and it must be computed with the
+  **max-subtraction trick** — subtract max(s) from every score first.
+  exp(1000) overflows floats; exp(s - max) never exceeds exp(0) = 1, and
+  the subtraction provably cancels out of the ratio. The same function,
+  same trick, reappears at the heart of attention in the next area — build
+  it carefully once and you own it twice.
+
+  A retrieval pipeline, end to end: chunk the corpus, embed or score the
+  chunks, rank against the query, weight the winners. Four functions, all
+  yours now — and the next area puts softmax to work inside the attention
+  mechanism itself.
+checkpoints:
+  - question: What failure does chunk overlap prevent, and what does it cost?
+    answer: A fact spanning a chunk boundary would be split into two half-facts that neither chunk's vector represents well; overlap gives boundary content a complete home in two chunks, at the cost of duplicated storage (inflation of roughly size/(size-overlap)).
+    explanation: 'Overlap is redundancy spent on boundary integrity — the classic space-for-correctness trade, tuned per corpus.'
+  - question: Softmax "sharpens" scores rather than rescaling them. What does a one-point score gap become after softmax, and why?
+    answer: 'A factor of e (about 2.7) in weight, because softmax exponentiates before normalizing — differences become ratios, so preferences amplify rather than shift.'
+    explanation: This exponential sharpening is why softmax appears wherever a system must convert scores into decisive weights — retrieval fusion and attention alike.
+  - question: Why must softmax subtract the maximum score before exponentiating, and why is the answer unchanged?
+    answer: exp of a large score overflows floating point; subtracting the max makes every exponent non-positive so exp stays in (0, 1], and the common factor exp(-max) cancels identically from numerator and denominator.
+    explanation: The max-subtraction trick is the canonical example of numerically-stable-but-algebraically-identical rewriting — required knowledge before implementing attention.

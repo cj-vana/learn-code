@@ -1,0 +1,143 @@
+id: exercise.library.graphs_lite.b02
+kind: exercise
+version: 1
+language: python
+title: Cheapest Barge Run Through the Canals
+slug: graphs-lite-b02
+difficulty: hard
+concepts:
+  - patterns.graph_traversal
+  - python.heapq_bisect
+prerequisites:
+  - python.dictionaries
+  - python.lists
+estimated_time_minutes: 26
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.graphs_lite.b02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: >-
+    Original canal-toll framing for weighted shortest path. The twist beyond a
+    plain Dijkstra is a lexicographic tie-break that returns the alphabetically
+    smallest junction sequence among all cheapest routes, achieved by carrying
+    the path inside the heap entry.
+prompt_markdown: |
+  A freight barge crosses a network of canals. Each canal joins two junctions and
+  charges a fixed toll to pass, in either direction. You plan a run from a start
+  junction to a goal junction and want to pay the least total toll.
+
+  You are given `job` with this shape:
+
+  ```
+  {
+    "junctions": ["dock", "mill", "weir"],
+    "canals": [["dock", "mill", 2], ["mill", "weir", 3]],
+    "start": "dock",
+    "goal": "weir"
+  }
+  ```
+
+  Each canal is `[a, b, toll]` with a positive integer `toll` and is two-way.
+
+  Write `cheapest_route(job)` that returns a list `[cost, path]` where `cost` is
+  the minimum total toll and `path` is the list of junctions travelled, starting
+  at `start` and ending at `goal`. When several routes tie for the cheapest toll,
+  return the one whose junction sequence is **lexicographically smallest** (compare
+  the paths element by element by junction name, so `["dock", "mill", "weir"]`
+  beats `["dock", "quay", "weir"]` because `"mill"` < `"quay"`).
+
+  Edge cases the tests cover:
+
+  - If `start` equals `goal`, the cost is `0` and the path is just `[start]`.
+  - If no chain of canals connects `start` to `goal`, return `[-1, []]`.
+  - A cheaper multi-hop route must be preferred over a pricier direct canal.
+starter_code: |
+  def cheapest_route(job):
+      # Return [cost, path]; [-1, []] if the goal is unreachable.
+      return [-1, []]
+function_name: cheapest_route
+input_mode: function
+solution_sketch: >-
+  Build an undirected adjacency map, then run Dijkstra with a min-heap whose
+  entries are (running_cost, path_so_far); popping orders first by cost and then
+  by the path list itself, so the first time a junction is finalised you have both
+  its cheapest cost and the smallest tie-breaking path.
+sample_solution: |
+  import heapq
+
+
+  def cheapest_route(job):
+      adjacency = {j: [] for j in job["junctions"]}
+      for a, b, toll in job["canals"]:
+          adjacency[a].append((b, toll))
+          adjacency[b].append((a, toll))
+
+      start = job["start"]
+      goal = job["goal"]
+      heap = [(0, [start])]
+      settled = set()
+      while heap:
+          cost, path = heapq.heappop(heap)
+          node = path[-1]
+          if node in settled:
+              continue
+          settled.add(node)
+          if node == goal:
+              return [cost, path]
+          for neighbour, toll in adjacency[node]:
+              if neighbour not in settled:
+                  heapq.heappush(heap, (cost + toll, path + [neighbour]))
+      return [-1, []]
+hints:
+  - level: 1
+    text: This is a weighted shortest-path problem, so a plain breadth-first search will not do. Use a min-heap that always hands back the cheapest partial route discovered so far.
+  - level: 2
+    text: Store each heap entry as (cost_so_far, path_so_far). Because tuples compare field by field and a path is a list of names, entries with equal cost are ordered by their path, giving the lexicographic tie-break for free.
+  - level: 3
+    text: Mark a junction settled the first time you pop it and skip it thereafter -- that first pop already carries its cheapest cost and smallest path. Return [cost, path] when you settle the goal, or [-1, []] if the heap empties first.
+tests:
+  public:
+    - name: simple_chain
+      input: {"junctions": ["a", "b", "c"], "canals": [["a", "b", 2], ["b", "c", 3]], "start": "a", "goal": "c"}
+      expected: [5, ["a", "b", "c"]]
+    - name: start_equals_goal
+      input: {"junctions": ["a", "b"], "canals": [["a", "b", 1]], "start": "a", "goal": "a"}
+      expected: [0, ["a"]]
+    - name: unreachable
+      input: {"junctions": ["a", "b", "c", "d"], "canals": [["a", "b", 1], ["c", "d", 1]], "start": "a", "goal": "d"}
+      expected: [-1, []]
+  validation:
+    - name: equal_cost_lexicographic
+      input: {"junctions": ["a", "b", "c", "d"], "canals": [["a", "b", 1], ["b", "d", 2], ["a", "c", 1], ["c", "d", 2]], "start": "a", "goal": "d"}
+      expected: [3, ["a", "b", "d"]]
+    - name: detour_beats_direct
+      input: {"junctions": ["a", "b", "c"], "canals": [["a", "c", 10], ["a", "b", 1], ["b", "c", 1]], "start": "a", "goal": "c"}
+      expected: [2, ["a", "b", "c"]]
+    - name: cheapest_then_smallest_path
+      input: {"junctions": ["a", "b", "c", "d"], "canals": [["a", "b", 1], ["a", "c", 2], ["b", "c", 1], ["c", "d", 1], ["b", "d", 5]], "start": "a", "goal": "d"}
+      expected: [3, ["a", "b", "c", "d"]]
+explanation_markdown: |
+  Dijkstra's algorithm grows a settled region outward, always finalising the
+  unsettled junction reachable at the lowest total toll. The min-heap is what
+  makes "lowest total toll" cheap to ask for: each pop hands back the smallest
+  cost still pending. The moment a junction is first popped, no cheaper route to
+  it can remain in the heap, so it is safe to lock in.
+
+  The lexicographic tie-break needs one small idea. Instead of storing just a cost
+  in the heap, store `(cost, path)` where `path` is the whole route so far. Python
+  compares those tuples field by field: first by cost, and when costs are equal, by
+  the path lists themselves, which compare junction name by junction name. So among
+  all routes that tie on price, the one that is alphabetically smallest is popped
+  first and settled first. `equal_cost_lexicographic` shows this directly: both
+  `a-b-d` and `a-c-d` cost 3, and `a-b-d` wins because `"b"` < `"c"`.
+
+  Because tolls are positive, the first settlement of the goal is optimal on both
+  keys, so you can return immediately. If the heap drains without ever settling the
+  goal, the two junctions sit in separate components and you return `[-1, []]`.
+common_mistakes:
+  - Using breadth-first search by hop count, which minimises the number of canals rather than the total toll.
+  - Storing only the cost in the heap, so cheapest routes are found but the lexicographic path tie-break is lost.
+  - Settling a junction on every pop without skipping already-settled ones, so a later, worse entry overwrites the optimal path.

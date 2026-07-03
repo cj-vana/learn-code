@@ -1,0 +1,113 @@
+id: exercise.library.capstone_dispatch.c04
+kind: exercise
+version: 1
+language: python
+title: 'The Courier Dispatch Board: Packing the Cargo Trailer'
+slug: capstone-dispatch-c04
+difficulty: hard
+concepts:
+  - patterns.dynamic_programming
+  - concepts.big_o
+prerequisites:
+  - python.lists
+  - python.dictionaries
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.capstone_dispatch.c04
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: >-
+    Fourth stage of the courier capstone; a 0/1 knapsack that maximises trailer
+    fee within a weight limit, each parcel taken at most once.
+prompt_markdown: |
+  A cargo trailer bolts onto one bicycle and can carry only so much weight. Write
+  `pack_cargo(job)` where `job` is a dictionary with two keys:
+
+  - `"capacity"`: a non-negative integer, the most total weight the trailer holds.
+  - `"parcels"`: a list of parcels, each a dictionary with an integer `"weight"`
+    and an integer `"fee"` the collective earns for carrying it.
+
+  Return the largest total `fee` reachable by loading a subset of parcels whose
+  combined `weight` does not exceed `capacity`. Each parcel is a single physical
+  item: you either load it or you do not — you can never take a fraction of one and
+  never take the same parcel twice.
+
+  Edge cases the tests cover:
+
+  - An empty parcel list, or a `capacity` of `0`, returns `0`.
+  - A parcel heavier than the whole trailer simply cannot be loaded.
+  - Two lighter parcels can beat one heavy parcel even when the heavy one pays more
+    on its own.
+
+  For example, `{"capacity": 5, "parcels": [{"weight": 4, "fee": 5}, {"weight": 5, "fee": 6}]}`
+  returns `6`: both together weigh 9 and will not fit, so the trailer takes the
+  single best-fitting parcel.
+starter_code: |
+  def pack_cargo(job):
+      return 0
+function_name: pack_cargo
+input_mode: function
+solution_sketch: Run a 0/1 knapsack DP over capacities, iterating each parcel's weight from capacity down to the weight so no parcel is counted twice.
+sample_solution: |
+  def pack_cargo(job):
+      capacity = job["capacity"]
+      dp = [0] * (capacity + 1)
+      for parcel in job["parcels"]:
+          weight = parcel["weight"]
+          fee = parcel["fee"]
+          for cap in range(capacity, weight - 1, -1):
+              dp[cap] = max(dp[cap], dp[cap - weight] + fee)
+      return dp[capacity]
+hints:
+  - level: 1
+    text: For each parcel you make one yes/no choice, and the best fee for a given capacity depends on the best fee for smaller capacities — that overlap is the signal for dynamic programming.
+  - level: 2
+    text: Keep a table dp where dp[c] is the best fee achievable within weight c. Start it all at zero and fold in one parcel at a time.
+  - level: 3
+    text: When adding a parcel, iterate the capacity from high down to the parcel's weight so each parcel is used at most once, updating dp[c] = max(dp[c], dp[c - weight] + fee).
+tests:
+  public:
+    - name: no_parcels
+      input: {"capacity": 10, "parcels": []}
+      expected: 0
+    - name: everything_fits
+      input: {"capacity": 10, "parcels": [{"weight": 4, "fee": 5}, {"weight": 5, "fee": 6}]}
+      expected: 11
+    - name: must_choose_one
+      input: {"capacity": 5, "parcels": [{"weight": 4, "fee": 5}, {"weight": 5, "fee": 6}]}
+      expected: 6
+  validation:
+    - name: classic_four_parcels
+      input: {"capacity": 7, "parcels": [{"weight": 1, "fee": 1}, {"weight": 3, "fee": 4}, {"weight": 4, "fee": 5}, {"weight": 5, "fee": 7}]}
+      expected: 9
+    - name: zero_capacity
+      input: {"capacity": 0, "parcels": [{"weight": 1, "fee": 100}]}
+      expected: 0
+    - name: parcel_too_heavy
+      input: {"capacity": 3, "parcels": [{"weight": 5, "fee": 100}, {"weight": 2, "fee": 3}]}
+      expected: 3
+    - name: two_light_beat_one_heavy
+      input: {"capacity": 6, "parcels": [{"weight": 3, "fee": 6}, {"weight": 3, "fee": 6}, {"weight": 6, "fee": 10}]}
+      expected: 12
+explanation_markdown: |
+  This is the 0/1 knapsack problem: each parcel is taken whole or not at all, and
+  you want the most fee without busting the weight limit. The one-dimensional table
+  `dp[c]` holds the best fee achievable using a weight budget of exactly `c` or
+  less, considering the parcels folded in so far.
+
+  The direction of the inner loop is the whole trick. Iterating capacity from
+  `capacity` **down** to the parcel's weight means that when you read
+  `dp[c - weight]`, that value has not yet been updated for the current parcel, so
+  the parcel contributes to `dp[c]` at most once. Sweeping upward instead would let
+  a parcel be reused, turning it into the unbounded-knapsack answer. The final
+  `two_light_beat_one_heavy` case shows why a greedy "take the biggest fee" rule
+  fails: two three-weight parcels fill the six-weight trailer for a fee of 12,
+  beating the single six-weight parcel that pays only 10. The DP runs in
+  `O(parcels * capacity)` time and `O(capacity)` space.
+common_mistakes:
+  - Iterating the inner capacity loop upward, which lets a single parcel be loaded multiple times.
+  - Reaching for a greedy fee-per-weight rule, which is optimal for fractional loads but not for whole parcels.
+  - Sizing the table as `capacity` instead of `capacity + 1`, so the full-capacity entry is off the end.

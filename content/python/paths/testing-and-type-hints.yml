@@ -1,0 +1,65 @@
+id: path.skill.testing_types
+kind: path
+path_type: skill
+version: 1
+language: python
+title: Testing & Type Hints
+slug: testing-and-type-hints
+description: 'Write code you can trust: assertions, edge cases, and property-based thinking, plus type
+  hints that turn signatures into contracts.'
+outcomes:
+- Design test cases with boundary analysis and property oracles
+- Read and write typed signatures, unions, and structural contracts
+estimated_hours: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: brief.paths.v1
+  author: agent
+  generated_at: '2026-07-02T18:00:00Z'
+  inspiration_sources: []
+  originality_notes: Curated ordering over the repository's original content bank; no external syllabus
+    copied.
+units:
+- id: unit.testing_concepts
+  title: Testing & Invariants
+  description: Lessons, drills, and quizzes for testing & invariants.
+  items:
+  - lesson.library.testing_concepts.a01
+  - lesson.library.testing_concepts.a02
+  - lesson.library.testing_concepts.a03
+  - exercise.library.testing_concepts.a01
+  - exercise.library.testing_concepts.a02
+  - exercise.library.testing_concepts.a03
+  - exercise.library.testing_concepts.a04
+  - exercise.library.testing_concepts.a05
+  - exercise.library.testing_concepts.a06
+  - exercise.library.testing_concepts.a07
+  - exercise.library.testing_concepts.a08
+  - exercise.library.testing_concepts.a09
+  - exercise.library.testing_concepts.a10
+  - exercise.library.testing_concepts.a11
+  - exercise.library.testing_concepts.a12
+  - quiz.library.testing_concepts.a01
+  - quiz.library.testing_concepts.a02
+- id: unit.type_hints
+  title: Type Hints & Contracts
+  description: Lessons, drills, and quizzes for type hints & contracts.
+  items:
+  - lesson.library.type_hints.a01
+  - lesson.library.type_hints.a02
+  - lesson.library.type_hints.a03
+  - exercise.library.type_hints.a01
+  - exercise.library.type_hints.a02
+  - exercise.library.type_hints.a03
+  - exercise.library.type_hints.a04
+  - exercise.library.type_hints.a05
+  - exercise.library.type_hints.a06
+  - exercise.library.type_hints.a07
+  - exercise.library.type_hints.a08
+  - exercise.library.type_hints.a09
+  - exercise.library.type_hints.a10
+  - exercise.library.type_hints.a11
+  - exercise.library.type_hints.a12
+  - quiz.library.type_hints.a01
+  - quiz.library.type_hints.a02

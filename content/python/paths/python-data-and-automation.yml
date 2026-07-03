@@ -12,7 +12,7 @@ outcomes:
 - Build robust, well-structured data-processing functions
 - Group, join, pivot, and dedupe records with the standard library alone
 - Parse and transform messy text with regex confidently
-estimated_hours: 25
+estimated_hours: 36
 review_status: published
 source_status: original
 provenance:
@@ -43,6 +43,8 @@ units:
   - exercise.library.oop_classes.a10
   - exercise.library.oop_classes.a11
   - exercise.library.oop_classes.a12
+  - exercise.library.oop_classes.b01
+  - exercise.library.oop_classes.b02
   - quiz.library.oop_classes.a01
   - quiz.library.oop_classes.a02
   - quiz.library.oop_classes.a03
@@ -65,6 +67,8 @@ units:
   - exercise.library.error_handling.a10
   - exercise.library.error_handling.a11
   - exercise.library.error_handling.a12
+  - exercise.library.error_handling.b01
+  - exercise.library.error_handling.b02
   - quiz.library.error_handling.a01
   - quiz.library.error_handling.a02
   - quiz.library.error_handling.a03
@@ -88,6 +92,8 @@ units:
   - exercise.library.collections_itertools.a10
   - exercise.library.collections_itertools.a11
   - exercise.library.collections_itertools.a12
+  - exercise.library.collections_itertools.b01
+  - exercise.library.collections_itertools.b02
   - quiz.library.collections_itertools.a01
   - quiz.library.collections_itertools.a02
   - quiz.library.collections_itertools.a03
@@ -110,8 +116,52 @@ units:
   - exercise.library.regex_text_processing.a10
   - exercise.library.regex_text_processing.a11
   - exercise.library.regex_text_processing.a12
+  - exercise.library.regex_text_processing.b01
+  - exercise.library.regex_text_processing.b02
   - quiz.library.regex_text_processing.a01
   - quiz.library.regex_text_processing.a02
+- id: unit.files_formats
+  title: Files & Data Formats
+  description: Lessons, drills, and quizzes for files & data formats.
+  items:
+  - lesson.library.files_formats.a01
+  - lesson.library.files_formats.a02
+  - lesson.library.files_formats.a03
+  - exercise.library.files_formats.a01
+  - exercise.library.files_formats.a02
+  - exercise.library.files_formats.a03
+  - exercise.library.files_formats.a04
+  - exercise.library.files_formats.a05
+  - exercise.library.files_formats.a06
+  - exercise.library.files_formats.a07
+  - exercise.library.files_formats.a08
+  - exercise.library.files_formats.a09
+  - exercise.library.files_formats.a10
+  - exercise.library.files_formats.a11
+  - exercise.library.files_formats.a12
+  - quiz.library.files_formats.a01
+  - quiz.library.files_formats.a02
+- id: unit.datetime_handling
+  title: Dates & Times
+  description: Lessons, drills, and quizzes for dates & times.
+  items:
+  - lesson.library.datetime_handling.a01
+  - lesson.library.datetime_handling.a02
+  - lesson.library.datetime_handling.a03
+  - exercise.library.datetime_handling.a01
+  - exercise.library.datetime_handling.a02
+  - exercise.library.datetime_handling.a03
+  - exercise.library.datetime_handling.a04
+  - exercise.library.datetime_handling.a05
+  - exercise.library.datetime_handling.a06
+  - exercise.library.datetime_handling.a07
+  - exercise.library.datetime_handling.a08
+  - exercise.library.datetime_handling.a09
+  - exercise.library.datetime_handling.a10
+  - exercise.library.datetime_handling.a11
+  - exercise.library.datetime_handling.a12
+  - quiz.library.datetime_handling.a01
+  - quiz.library.datetime_handling.a02
 - id: unit.data_wrangling_python
   title: Pure-Python Data Wrangling
   description: Lessons, drills, and quizzes for pure-python data wrangling.
@@ -131,6 +181,8 @@ units:
   - exercise.library.data_wrangling_python.a10
   - exercise.library.data_wrangling_python.a11
   - exercise.library.data_wrangling_python.a12
+  - exercise.library.data_wrangling_python.b01
+  - exercise.library.data_wrangling_python.b02
   - quiz.library.data_wrangling_python.a01
   - quiz.library.data_wrangling_python.a02
 - id: unit.grid_simulation
@@ -152,27 +204,18 @@ units:
   - exercise.library.grid_simulation.a10
   - exercise.library.grid_simulation.a11
   - exercise.library.grid_simulation.a12
+  - exercise.library.grid_simulation.b01
+  - exercise.library.grid_simulation.b02
   - quiz.library.grid_simulation.a01
   - quiz.library.grid_simulation.a02
-- id: unit.mixed_capstones
-  title: Mixed Capstones
-  description: Lessons, drills, and quizzes for mixed capstones.
+- id: unit.capstone_observatory
+  title: 'Capstone: The Observatory Night Logs'
+  description: 'Lessons, drills, and quizzes for capstone: the observatory night logs.'
   items:
-  - exercise.library.mixed_capstones.a01
-  - exercise.library.mixed_capstones.a02
-  - exercise.library.mixed_capstones.a03
-  - exercise.library.mixed_capstones.a04
-  - exercise.library.mixed_capstones.a05
-  - exercise.library.mixed_capstones.a06
-  - exercise.library.mixed_capstones.a07
-  - exercise.library.mixed_capstones.a08
-  - exercise.library.mixed_capstones.b01
-  - exercise.library.mixed_capstones.b02
-  - exercise.library.mixed_capstones.b03
-  - exercise.library.mixed_capstones.b04
-  - quiz.library.mixed_capstones.a01
-  - quiz.library.mixed_capstones.a02
-  - quiz.library.mixed_capstones.a03
-  - quiz.library.mixed_capstones.a04
-  - quiz.library.mixed_capstones.a05
-  - quiz.library.mixed_capstones.a06
+  - lesson.library.capstone_observatory.a01
+  - exercise.library.capstone_observatory.c01
+  - exercise.library.capstone_observatory.c02
+  - exercise.library.capstone_observatory.c03
+  - exercise.library.capstone_observatory.c04
+  - exercise.library.capstone_observatory.c05
+  - exercise.library.capstone_observatory.c06

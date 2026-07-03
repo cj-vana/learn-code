@@ -1,0 +1,99 @@
+id: exercise.library.embeddings_similarity_search.a04
+kind: exercise
+version: 1
+language: python
+title: Normalizing a Chili Blend
+slug: embeddings-similarity-search-a04
+difficulty: medium
+concepts:
+  - ai.embeddings_retrieval
+prerequisites:
+  - python.lists
+  - python.comprehensions
+  - python.conditionals
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.embeddings_similarity_search.a04
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original unit-vector drill framed around chili spice-blend profiles.
+prompt_markdown: |
+  **Normalizing** a vector rescales it to length 1 while keeping its direction.
+  Retrieval systems store normalized vectors so that later comparisons depend
+  only on direction, never on size. To normalize, divide every component by the
+  vector's magnitude:
+
+      unit(v) = [v0/|v|, v1/|v|, ..., v(n-1)/|v|]
+
+  where `|v| = sqrt(v0^2 + v1^2 + ... + v(n-1)^2)`.
+
+  Each chili blend on a spice rack is a vector of heat, sweetness, and
+  earthiness scores. Write `normalize(v)` that takes one such list and returns
+  its unit vector, with every component rounded to 6 decimal places. If the
+  vector is all zeros its magnitude is 0 and it has no direction, so return
+  `None`.
+starter_code: |
+  import math
+
+
+  def normalize(v):
+      return None
+function_name: normalize
+input_mode: function
+solution_sketch: Compute the magnitude; if it is 0 return None, otherwise divide each component by the magnitude and round each result to 6 places.
+sample_solution: |
+  import math
+
+
+  def normalize(v):
+      mag = math.sqrt(sum(x * x for x in v))
+      if mag == 0:
+          return None
+      return [round(x / mag, 6) for x in v]
+hints:
+  - level: 1
+    text: A unit vector points the same way but has length 1, so scale every component by the same factor.
+  - level: 2
+    text: That factor is 1 divided by the magnitude; compute the magnitude once, then reuse it for every component.
+  - level: 3
+    text: Guard mag == 0 with a None return, then build [round(x / mag, 6) for x in v].
+tests:
+  public:
+    - name: three_four
+      input: [3, 4]
+      expected: [0.6, 0.8]
+    - name: already_unit
+      input: [1, 0]
+      expected: [1.0, 0.0]
+    - name: zero_vector
+      input: [0, 0]
+      expected: null
+  validation:
+    - name: three_dim
+      input: [2, 3, 6]
+      expected: [0.285714, 0.428571, 0.857143]
+    - name: negatives
+      input: [-3, 4]
+      expected: [-0.6, 0.8]
+    - name: equal_components
+      input: [1, 1]
+      expected: [0.707107, 0.707107]
+    - name: single
+      input: [5]
+      expected: [1.0]
+explanation_markdown: |
+  Dividing by the magnitude guarantees the result has length 1: if you fed the
+  output back into a magnitude function you would get 1.0 (up to rounding).
+  Because only the shared scale factor changes, the direction is untouched, so
+  [3, 4] and any positive multiple of it normalize to the same [0.6, 0.8]. Once
+  vectors are normalized, cosine similarity reduces to a plain dot product,
+  which is why search indexes normalize everything up front. Compute the
+  magnitude once and reuse it rather than recomputing it inside the loop, and
+  round each component independently.
+common_mistakes:
+  - Dividing by the sum of the components or by the number of components instead of the magnitude.
+  - Rounding the magnitude first and dividing by the rounded value, which drifts away from true length 1.
+  - Returning the original vector unchanged when the magnitude is 0 instead of returning None.

@@ -1,0 +1,101 @@
+id: exercise.library.attention_mechanics.a10
+kind: exercise
+version: 1
+language: python
+title: The Skip Connection
+slug: attention-mechanics-a10
+difficulty: easy
+concepts:
+  - ai.attention_transformers
+prerequisites:
+  - python.lists
+  - python.loops
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.attention_mechanics.a10
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original residual-connection drill framed as adding a sublayer's output back onto the signal that skipped past it.
+prompt_markdown: |
+  Every block in a transformer wraps its real work (attention, or a small feed
+  forward network) in a **residual connection**, also called a skip connection.
+  Instead of replacing the input with the sublayer's output, the block *adds* the
+  output back onto the untouched input:
+
+      out[k] = x[k] + sublayer[k]
+
+  So the original signal `x` always flows straight through, and the sublayer only
+  has to learn a small adjustment on top of it. Both lists have the same length.
+
+  Write `residual_add(job)` that takes one dictionary such as
+  `{"x": [1.0, 2.0, 3.0], "sublayer": [0.5, 0.5, 0.5]}` and returns the
+  element-wise sum, with every entry rounded to 6 decimal places.
+starter_code: |
+  def residual_add(job):
+      return []
+function_name: residual_add
+input_mode: function
+solution_sketch: Pair the two equal-length lists with zip, add each pair, and round to 6 places.
+sample_solution: |
+  def residual_add(job):
+      x = job["x"]
+      sublayer = job["sublayer"]
+      return [round(a + b, 6) for a, b in zip(x, sublayer)]
+hints:
+  - level: 1
+    text: Walk both lists together, position by position, adding matching entries.
+  - level: 2
+    text: zip(x, sublayer) hands you the matching pairs so you never juggle an index yourself.
+  - level: 3
+    text: Return [round(a + b, 6) for a, b in zip(x, sublayer)].
+tests:
+  public:
+    - name: constant_shift
+      input:
+        x: [1.0, 2.0, 3.0]
+        sublayer: [0.5, 0.5, 0.5]
+      expected: [1.5, 2.5, 3.5]
+    - name: cancels_out
+      input:
+        x: [0.0, 0.0]
+        sublayer: [1.0, -1.0]
+      expected: [1.0, -1.0]
+    - name: swap_and_add
+      input:
+        x: [1.5, 2.5]
+        sublayer: [2.5, 1.5]
+      expected: [4.0, 4.0]
+  validation:
+    - name: exact_negation
+      input:
+        x: [-1.0, -2.0, -3.0]
+        sublayer: [1.0, 2.0, 3.0]
+      expected: [0.0, 0.0, 0.0]
+    - name: small_adjustment
+      input:
+        x: [0.1, 0.2, 0.3]
+        sublayer: [0.01, 0.02, 0.03]
+      expected: [0.11, 0.22, 0.33]
+    - name: single_entry
+      input:
+        x: [10.0]
+        sublayer: [-0.5]
+      expected: [9.5]
+explanation_markdown: |
+  Skip connections are the reason very deep transformers train at all. When
+  gradients flow backward through many layers they tend to shrink toward zero,
+  but the `+ x[k]` term gives every gradient a direct path back to earlier
+  layers, so the signal does not vanish on the way. Practically, the sublayer
+  only needs to learn a correction to the identity rather than reconstruct the
+  whole representation from scratch, which is a far easier target.
+
+  The addition itself is deliberately trivial: pairing the two lists with `zip`
+  keeps them aligned by position, and rounding to 6 places keeps floating-point
+  sums like `0.1 + 0.01` from carrying tiny errors into the result.
+common_mistakes:
+  - Concatenating the two lists (x + sublayer) instead of adding them element by element.
+  - Looping over one list's indices and forgetting the lengths must stay matched, so entries get dropped.
+  - Returning the raw sums without rounding to 6 decimal places.

@@ -55,6 +55,22 @@ AREA_TITLES = {
     "data_wrangling_python": "Pure-Python Data Wrangling",
     "grid_simulation": "Grids & Simulation",
     "bit_number_theory": "Bits & Number Theory",
+    # Wave-4 expansion: practical Python + capstones
+    "files_formats": "Files & Data Formats",
+    "datetime_handling": "Dates & Times",
+    "testing_concepts": "Testing & Invariants",
+    "type_hints": "Type Hints & Contracts",
+    "capstone_ledger": "Capstone: The Market Ledger",
+    "capstone_observatory": "Capstone: The Observatory Night Logs",
+    "capstone_dispatch": "Capstone: The Courier Dispatch Board",
+    # Wave-5 expansion: AI & ML from scratch
+    "classic_ml_from_scratch": "Classic ML from Scratch",
+    "autodiff_scalar_engine": "Autodiff from Scratch",
+    "eval_metrics_for_models": "Evaluating Models",
+    "language_models_from_scratch": "Language Models from Scratch",
+    "tokenization_bpe": "Tokenization & BPE",
+    "embeddings_similarity_search": "Embeddings & Retrieval",
+    "attention_mechanics": "Attention Mechanics",
 }
 
 _ORIGINAL_AREAS = [
@@ -224,8 +240,13 @@ PATHS = [
             ("decorators_closures", 1),
             ("collections_itertools", 1),
             ("regex_text_processing", 1),
+            ("files_formats", 1),
+            ("datetime_handling", 1),
             ("data_wrangling_python", 1),
+            ("testing_concepts", 1),
+            ("type_hints", 1),
             ("mixed_capstones", 1),
+            ("capstone_ledger", 1),
         ],
     },
     {
@@ -261,6 +282,7 @@ PATHS = [
             ("dp_recognition", 1),
             ("bit_number_theory", 1),
             ("mixed_capstones", 1),
+            ("capstone_dispatch", 1),
         ],
     },
     {
@@ -283,9 +305,11 @@ PATHS = [
             ("error_handling", 1),
             ("collections_itertools", 1),
             ("regex_text_processing", 1),
+            ("files_formats", 1),
+            ("datetime_handling", 1),
             ("data_wrangling_python", 1),
             ("grid_simulation", 1),
-            ("mixed_capstones", 1),
+            ("capstone_observatory", 1),
         ],
     },
     {
@@ -369,6 +393,98 @@ PATHS = [
             "Use bitmasks, GCD, and modular arithmetic fluently",
         ],
         "areas": [("grid_simulation", 1), ("bit_number_theory", 1)],
+    },
+    {
+        "id": "path.career.ai_engineer_python",
+        "path_type": "career",
+        "title": "AI Engineer Python",
+        "slug": "ai-engineer-python",
+        "description": (
+            "Build the machinery behind modern AI with nothing but Python: "
+            "classic ML algorithms, a scalar autodiff engine, counting language "
+            "models, byte-pair tokenization, embeddings and retrieval scoring, "
+            "and scaled dot-product attention — every formula implemented and "
+            "tested by hand, no numpy, no torch."
+        ),
+        "outcomes": [
+            "Implement k-NN, k-means, and gradient descent from scratch",
+            "Build and verify a micrograd-style backward pass",
+            "Train a bigram language model and measure its perplexity",
+            "Write BPE tokenization, cosine retrieval, and attention by hand",
+            "Evaluate models with precision/recall, BLEU-style overlap, and calibration",
+        ],
+        "areas": [
+            ("python_refresh", 1),
+            ("loops_lists_strings", 1),
+            ("dicts_sets_tuples", 1),
+            ("collections_itertools", 1),
+            ("classic_ml_from_scratch", 1),
+            ("autodiff_scalar_engine", 1),
+            ("eval_metrics_for_models", 1),
+            ("language_models_from_scratch", 1),
+            ("tokenization_bpe", 1),
+            ("embeddings_similarity_search", 1),
+            ("attention_mechanics", 1),
+        ],
+    },
+    {
+        "id": "path.skill.practical_python",
+        "path_type": "skill",
+        "title": "Practical Python: Files, Formats & Dates",
+        "slug": "practical-python-files-and-dates",
+        "description": "The working developer's daily bread: parsing text, JSON, and CSV safely, and doing calendar math without off-by-one regrets.",
+        "outcomes": [
+            "Parse config files, JSON payloads, and quoted CSV correctly",
+            "Do date arithmetic, recurrence, and timestamp parsing with datetime",
+        ],
+        "areas": [("files_formats", 1), ("datetime_handling", 1)],
+    },
+    {
+        "id": "path.skill.testing_types",
+        "path_type": "skill",
+        "title": "Testing & Type Hints",
+        "slug": "testing-and-type-hints",
+        "description": "Write code you can trust: assertions, edge cases, and property-based thinking, plus type hints that turn signatures into contracts.",
+        "outcomes": [
+            "Design test cases with boundary analysis and property oracles",
+            "Read and write typed signatures, unions, and structural contracts",
+        ],
+        "areas": [("testing_concepts", 1), ("type_hints", 1)],
+    },
+    {
+        "id": "path.skill.ml_from_scratch",
+        "path_type": "skill",
+        "title": "Machine Learning from Scratch",
+        "slug": "machine-learning-from-scratch",
+        "description": "The algorithms under every ML library, implemented in pure Python: distances, clustering, gradient descent, backprop, and the metrics that judge them.",
+        "outcomes": [
+            "Implement k-NN, k-means, and perceptron updates by hand",
+            "Build and numerically verify a scalar autodiff backward pass",
+            "Score models with confusion matrices, F1, and calibration error",
+        ],
+        "areas": [
+            ("classic_ml_from_scratch", 1),
+            ("autodiff_scalar_engine", 1),
+            ("eval_metrics_for_models", 1),
+        ],
+    },
+    {
+        "id": "path.skill.llm_internals",
+        "path_type": "skill",
+        "title": "LLM Internals",
+        "slug": "llm-internals",
+        "description": "What actually happens inside a language model: tokenization, n-gram probabilities, embeddings and retrieval, and the attention mechanism — all built by hand.",
+        "outcomes": [
+            "Train BPE merges and tokenize unseen text with them",
+            "Compute sequence probabilities, perplexity, and temperature scaling",
+            "Implement cosine retrieval, BM25, and single-head attention",
+        ],
+        "areas": [
+            ("tokenization_bpe", 1),
+            ("language_models_from_scratch", 1),
+            ("embeddings_similarity_search", 1),
+            ("attention_mechanics", 1),
+        ],
     },
 ]
 

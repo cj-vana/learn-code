@@ -1,0 +1,132 @@
+id: exercise.library.attention_mechanics.a07
+kind: exercise
+version: 1
+language: python
+title: Reading Runes Left to Right
+slug: attention-mechanics-a07
+difficulty: hard
+concepts:
+  - ai.attention_transformers
+prerequisites:
+  - python.lists
+  - python.loops
+  - concepts.probability
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.attention_mechanics.a07
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original causal-mask softmax drill framed as a decoder reading a line of carved runes one glyph at a time.
+prompt_markdown: |
+  A decoder that writes text one token at a time is not allowed to peek at
+  tokens it has not produced yet. It enforces this with a **causal mask**: when
+  it scores how much to attend to each earlier position, everything from the
+  current position onward is blocked out.
+
+  Imagine a scribe reading a line of carved runes strictly left to right. At the
+  moment it is looking at rune number `i`, it may weigh only the runes in
+  positions `0, 1, ..., i-1`; the rest are hidden.
+
+  You are given a list of raw attention `scores` (one number per rune) and an
+  integer `mask_from`. Attend to the first `mask_from` scores and hide the rest.
+  Turn the visible scores into attention weights with the **softmax** function.
+  For visible scores `s[0], s[1], ..., s[m-1]` (where `m = mask_from`):
+
+      weight[k] = exp(s[k]) / (exp(s[0]) + exp(s[1]) + ... + exp(s[m-1]))
+
+  The visible weights are non-negative and sum to 1. Every hidden position
+  (index `mask_from` and beyond) gets weight `0.0`.
+
+  Write `masked_attention_row(job)` that takes one dictionary such as
+  `{"scores": [1.0, 1.0, 5.0], "mask_from": 2}` and returns a list the same
+  length as `scores`: the softmax weights for the first `mask_from` entries
+  followed by `0.0` for each hidden entry. Round every number to 6 decimal
+  places. You may assume `1 <= mask_from <= len(scores)`.
+starter_code: |
+  import math
+
+
+  def masked_attention_row(job):
+      return []
+function_name: masked_attention_row
+input_mode: function
+solution_sketch: Slice off the first mask_from scores, exponentiate them (subtracting the max for stability), divide by their sum to get softmax weights, then pad the tail with 0.0 and round.
+sample_solution: |
+  import math
+
+
+  def masked_attention_row(job):
+      scores = job["scores"]
+      m = job["mask_from"]
+      visible = scores[:m]
+      shift = max(visible)
+      exps = [math.exp(s - shift) for s in visible]
+      total = sum(exps)
+      result = [round(e / total, 6) for e in exps]
+      result += [0.0] * (len(scores) - m)
+      return result
+hints:
+  - level: 1
+    text: Split the work in two. First compute softmax over scores[:mask_from], then append one 0.0 for every remaining position.
+  - level: 2
+    text: Softmax is exp(each score) divided by the sum of all the exponentials. Subtracting max(visible) from each score before exp keeps the numbers small without changing the result.
+  - level: 3
+    text: Build exps = [math.exp(s - shift) for s in visible], divide each by sum(exps), round to 6 places, then extend the list with [0.0] * (len(scores) - mask_from).
+tests:
+  public:
+    - name: two_visible_one_hidden
+      input:
+        scores: [1.0, 1.0, 5.0]
+        mask_from: 2
+      expected: [0.5, 0.5, 0.0]
+    - name: all_equal_all_visible
+      input:
+        scores: [0.0, 0.0, 0.0]
+        mask_from: 3
+      expected: [0.333333, 0.333333, 0.333333]
+    - name: only_first_visible
+      input:
+        scores: [2.0, 1.0]
+        mask_from: 1
+      expected: [1.0, 0.0]
+  validation:
+    - name: three_of_four
+      input:
+        scores: [1.0, 2.0, 3.0, 4.0]
+        mask_from: 3
+      expected: [0.090031, 0.244728, 0.665241, 0.0]
+    - name: negatives_visible
+      input:
+        scores: [-1.0, 0.0, 1.0]
+        mask_from: 2
+      expected: [0.268941, 0.731059, 0.0]
+    - name: tie_both_visible
+      input:
+        scores: [0.5, 0.5]
+        mask_from: 2
+      expected: [0.5, 0.5]
+    - name: full_row
+      input:
+        scores: [3.0, 1.0, 2.0, 0.0]
+        mask_from: 4
+      expected: [0.643914, 0.087144, 0.236883, 0.032059]
+explanation_markdown: |
+  Causal masking is what lets one transformer generate text without cheating.
+  During training the model sees the whole sentence at once, so the mask is the
+  only thing stopping position `i` from attending to future words and trivially
+  copying the answer. Setting the hidden weights to exactly `0.0` (rather than a
+  tiny number) means those positions contribute nothing to the weighted sum that
+  follows.
+
+  Softmax turns arbitrary real scores into a probability distribution: every
+  weight is positive and they add up to 1. Subtracting the maximum visible score
+  before calling `exp` is a standard trick; because it divides top and bottom by
+  the same constant, the weights are unchanged, but the exponentials stay in a
+  safe numeric range instead of overflowing on large scores.
+common_mistakes:
+  - Running softmax over the whole scores list first and only zeroing the tail afterward, which leaves the visible weights too small because the hidden scores still fed the denominator.
+  - Forgetting to pad the result so the returned list is shorter than the input.
+  - Skipping the round call and returning raw floats that differ from the expected values in their final digits.

@@ -1,0 +1,114 @@
+id: exercise.library.embeddings_similarity_search.a12
+kind: exercise
+version: 1
+language: python
+title: Turning Retrieval Scores into Probabilities
+slug: embeddings-similarity-search-a12
+difficulty: medium
+concepts:
+  - ai.embeddings_retrieval
+prerequisites:
+  - python.lists
+  - python.comprehensions
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.embeddings_similarity_search.a12
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original numerically stable softmax drill framed as converting raw retrieval similarity scores into a probability distribution over candidate passages.
+prompt_markdown: |
+  A retriever hands back a raw similarity score per candidate passage, but a
+  reranker or a reader usually wants a **probability distribution** over the
+  candidates. `softmax` does that conversion: it turns any list of real numbers
+  into positive values that sum to (about) one, with larger scores getting larger
+  shares.
+
+  Write `softmax(scores)` that takes a list of numbers and returns a list of
+  probabilities. The definition for the `i`-th score is
+
+  ```
+  softmax(scores)[i] = exp(scores[i]) / sum(exp(scores[j]) for all j)
+  ```
+
+  Compute it in the **numerically stable** way by subtracting the maximum score
+  before exponentiating (this changes nothing mathematically because the shift
+  cancels between numerator and denominator, but it prevents `exp` from
+  overflowing on large inputs). Concretely, let `m = max(scores)` and use
+  `exp(scores[i] - m)` in both the numerator and the denominator.
+
+  Round each probability to **6 decimal places** with `round(value, 6)`.
+
+  For example, `[0.0, 0.0]` returns `[0.5, 0.5]`, and `[1000.0, 1000.0, 1000.0]`
+  returns `[0.333333, 0.333333, 0.333333]` without overflowing.
+
+  If `scores` is empty, return an empty list `[]`.
+starter_code: |
+  import math
+
+
+  def softmax(scores):
+      return []
+function_name: softmax
+input_mode: function
+solution_sketch: Subtract the max score, exponentiate each shifted value, divide by the sum of those exponentials, and round every result to 6 places.
+sample_solution: |
+  import math
+
+
+  def softmax(scores):
+      if not scores:
+          return []
+      m = max(scores)
+      exps = [math.exp(s - m) for s in scores]
+      total = sum(exps)
+      return [round(e / total, 6) for e in exps]
+hints:
+  - level: 1
+    text: Find the largest score first and subtract it from every score before calling math.exp. The shifted values are all zero or negative, so exp stays small and safe.
+  - level: 2
+    text: Build the list of shifted exponentials once, then sum it to get the normaliser you divide each element by.
+  - level: 3
+    text: Return [round(e / total, 6) for e in exps] where exps = [math.exp(s - max(scores)) for s in scores] and total = sum(exps); guard the empty input by returning [].
+tests:
+  public:
+    - name: ascending_three
+      input: [1.0, 2.0, 3.0]
+      expected: [0.090031, 0.244728, 0.665241]
+    - name: uniform_pair
+      input: [0.0, 0.0]
+      expected: [0.5, 0.5]
+    - name: single_score
+      input: [5.0]
+      expected: [1.0]
+  validation:
+    - name: mixed_signs
+      input: [2.5, -0.5, 1.0]
+      expected: [0.785597, 0.039113, 0.17529]
+    - name: large_values_stable
+      input: [1000.0, 1000.0, 1000.0]
+      expected: [0.333333, 0.333333, 0.333333]
+    - name: two_scores
+      input: [2.0, 1.0]
+      expected: [0.731059, 0.268941]
+    - name: repeated_top_scores
+      input: [0.0, 1.0, 0.0, 1.0]
+      expected: [0.134471, 0.365529, 0.134471, 0.365529]
+explanation_markdown: |
+  Softmax is the standard bridge from scores to probabilities, whether the scores
+  are retrieval similarities, reranker logits, or the final layer of a classifier.
+  Because it exponentiates, the gap between the top score and the rest gets
+  amplified: a lead of one point already gives roughly a 73/27 split.
+
+  The max-subtraction trick is the point of the exercise. Mathematically
+  `exp(x - m) / sum(exp(x_j - m))` equals `exp(x) / sum(exp(x_j))` because the
+  factor `exp(-m)` cancels. Numerically it is the difference between working and
+  overflowing: `exp(1000)` is infinity in floating point, but `exp(1000 - 1000)`
+  is just `1.0`. Rounding each output independently means the returned values may
+  not sum to exactly 1.0, which is expected.
+common_mistakes:
+  - Exponentiating the raw scores without subtracting the max, which overflows to inf on large inputs and yields nan.
+  - Normalising by the count of scores or by the max instead of by the sum of the exponentials.
+  - Subtracting the max only in the numerator, breaking the cancellation and returning wrong probabilities.

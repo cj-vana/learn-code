@@ -1,0 +1,193 @@
+id: exercise.library.capstone_ledger.c02
+kind: exercise
+version: 1
+language: python
+title: The Market Ledger - Intake with a Reject Pile
+slug: capstone-ledger-c02
+difficulty: medium
+concepts:
+  - python.strings
+  - python.exceptions
+prerequisites:
+  - python.lists
+  - python.dictionaries
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.capstone_ledger.c02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original second stage of the market ledger capstone; batches the Stage 1 parser over many lines and surfaces a numbered reject pile using the same rejection taxonomy.
+prompt_markdown: |
+  Stage 2 of the Market Ledger capstone: the cooperative's till exports a whole
+  day of sales as a list of raw lines, and not every line is clean. You need to
+  keep the good rows and hand the bookkeeper a numbered reject pile so bad lines
+  can be fixed by hand.
+
+  Write `intake_ledger(lines)` where `lines` is a list of pipe-delimited strings
+  in the Stage 1 format `YYYY-MM-DD|vendor|item|qty|unit_price`. Return a
+  dictionary with exactly two keys:
+
+  - `"entries"`: a list of the successfully parsed rows, each a dict with the
+    keys `"date"`, `"vendor"`, `"item"`, `"qty"` (int), `"unit_price"` (float, 2
+    decimals) and `"total"` (float, 2 decimals) - the same shape Stage 1
+    produced - in the same order the good lines appeared.
+  - `"rejects"`: a list of `[line_number, reason]` pairs, where `line_number` is
+    **1-based** (the first line is line 1) and `reason` is one of these exact
+    strings, decided in this precedence order:
+
+    1. `"wrong field count"` - the line does not split into exactly 5 fields.
+    2. `"non-numeric qty"` - the quantity is not a whole number.
+    3. `"non-positive qty"` - the quantity is `0` or negative.
+    4. `"non-numeric price"` - the price is not a number.
+
+  The rejects appear in the order the bad lines occurred. An empty input returns
+  `{"entries": [], "rejects": []}`.
+
+  Example:
+
+  ```python
+  intake_ledger([
+      "2026-06-01|Rosewood Farm|heirloom tomatoes|12|3.50",
+      "2026-06-01|bad line",
+  ])
+  # -> {"entries": [{"date": "2026-06-01", "vendor": "Rosewood Farm",
+  #                  "item": "heirloom tomatoes", "qty": 12,
+  #                  "unit_price": 3.5, "total": 42.0}],
+  #     "rejects": [[2, "wrong field count"]]}
+  ```
+starter_code: |
+  def intake_ledger(lines):
+      return {"entries": [], "rejects": []}
+function_name: intake_ledger
+input_mode: function
+solution_sketch: Walk the lines with a 1-based counter, running the Stage 1 checks; on the first failing check record a [number, reason] pair, otherwise append the parsed dict to entries.
+sample_solution: |
+  def intake_ledger(lines):
+      entries = []
+      rejects = []
+      for number, line in enumerate(lines, start=1):
+          fields = line.split("|")
+          if len(fields) != 5:
+              rejects.append([number, "wrong field count"])
+              continue
+          date, vendor, item, qty_text, price_text = fields
+          try:
+              qty = int(qty_text)
+          except ValueError:
+              rejects.append([number, "non-numeric qty"])
+              continue
+          if qty <= 0:
+              rejects.append([number, "non-positive qty"])
+              continue
+          try:
+              price = float(price_text)
+          except ValueError:
+              rejects.append([number, "non-numeric price"])
+              continue
+          unit_price = round(price, 2)
+          entries.append({
+              "date": date,
+              "vendor": vendor,
+              "item": item,
+              "qty": qty,
+              "unit_price": unit_price,
+              "total": round(qty * unit_price, 2),
+          })
+      return {"entries": entries, "rejects": rejects}
+hints:
+  - level: 1
+    text: enumerate(lines, start=1) gives you the 1-based line number and the line together on each pass.
+  - level: 2
+    text: Run the same four checks Stage 1 used, but instead of returning None, append a [number, reason] pair and use continue so a bad line never reaches the entries list.
+  - level: 3
+    text: The precedence is fixed - field count, then int() of qty, then the qty <= 0 test, then float() of price - so the reason you record for a given line is deterministic.
+tests:
+  public:
+    - name: all_good
+      input:
+        - "2026-06-01|Rosewood Farm|heirloom tomatoes|12|3.50"
+        - "2026-06-04|Hillside Dairy|butter|2|4"
+      expected:
+        entries:
+          - {"date": "2026-06-01", "vendor": "Rosewood Farm", "item": "heirloom tomatoes", "qty": 12, "unit_price": 3.5, "total": 42.0}
+          - {"date": "2026-06-04", "vendor": "Hillside Dairy", "item": "butter", "qty": 2, "unit_price": 4.0, "total": 8.0}
+        rejects: []
+    - name: one_bad_line
+      input:
+        - "2026-06-01|Rosewood Farm|heirloom tomatoes|12|3.50"
+        - "2026-06-01|bad line"
+      expected:
+        entries:
+          - {"date": "2026-06-01", "vendor": "Rosewood Farm", "item": "heirloom tomatoes", "qty": 12, "unit_price": 3.5, "total": 42.0}
+        rejects:
+          - [2, "wrong field count"]
+    - name: empty_batch
+      input: []
+      expected:
+        entries: []
+        rejects: []
+  validation:
+    - name: non_numeric_qty
+      input:
+        - "2026-06-02|Hillside Dairy|goat cheese|many|6.00"
+      expected:
+        entries: []
+        rejects:
+          - [1, "non-numeric qty"]
+    - name: non_positive_qty
+      input:
+        - "2026-06-02|Hillside Dairy|goat cheese|0|6.00"
+      expected:
+        entries: []
+        rejects:
+          - [1, "non-positive qty"]
+    - name: non_numeric_price
+      input:
+        - "2026-06-03|Bramble Orchard|cider|3|market"
+      expected:
+        entries: []
+        rejects:
+          - [1, "non-numeric price"]
+    - name: mixed_batch_keeps_line_numbers
+      input:
+        - "2026-06-01|Rosewood Farm|heirloom tomatoes|12|3.50"
+        - "2026-06-02|Hillside Dairy|goat cheese|0|6.00"
+        - "2026-06-03|Bramble Orchard|cider|3|market"
+        - "2026-06-04|Hillside Dairy|butter|2|4"
+      expected:
+        entries:
+          - {"date": "2026-06-01", "vendor": "Rosewood Farm", "item": "heirloom tomatoes", "qty": 12, "unit_price": 3.5, "total": 42.0}
+          - {"date": "2026-06-04", "vendor": "Hillside Dairy", "item": "butter", "qty": 2, "unit_price": 4.0, "total": 8.0}
+        rejects:
+          - [2, "non-positive qty"]
+          - [3, "non-numeric price"]
+    - name: too_many_fields_then_good
+      input:
+        - "2026-06-01|Rosewood Farm|basil|7|1.15|extra"
+        - "2026-06-03|Rosewood Farm|basil|7|1.15"
+      expected:
+        entries:
+          - {"date": "2026-06-03", "vendor": "Rosewood Farm", "item": "basil", "qty": 7, "unit_price": 1.15, "total": 8.05}
+        rejects:
+          - [1, "wrong field count"]
+explanation_markdown: |
+  Batch intake is Stage 1 wrapped in a loop, but the design choice that matters is
+  what to do with a bad row. Throwing the whole batch out because one line is
+  broken would be useless to a bookkeeper; silently dropping bad lines would hide
+  real data-entry mistakes. The reject pile threads that needle - good rows flow
+  straight into `entries`, and each bad row is logged with the exact line number
+  and a reason precise enough to act on.
+
+  The `continue` after each failed check is what enforces the precedence: once a
+  line is rejected for the first thing that is wrong with it, later checks never
+  run, so a line that is both a bad quantity and a bad price is reported by its
+  first fault only. Keeping `enumerate(..., start=1)` in charge of the counter
+  means the numbers always line up with what a human sees in the file.
+common_mistakes:
+  - Numbering rejects from 0 instead of 1, so the bookkeeper looks at the wrong line.
+  - Forgetting continue after logging a reject, so a malformed line falls through and crashes a later check or gets partially parsed.
+  - Collecting multiple reasons for one line instead of stopping at the first fault the precedence names.
+  - Appending the raw line to entries instead of the parsed dictionary, so downstream stages get strings they cannot sum.

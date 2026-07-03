@@ -9,7 +9,7 @@ description: From greedy interval-sweep reasoning to recognizing and solving ove
 outcomes:
 - Merge, sweep, and schedule intervals greedily
 - Spot overlapping subproblems and memoize them away
-estimated_hours: 8
+estimated_hours: 10
 review_status: published
 source_status: original
 provenance:
@@ -39,6 +39,8 @@ units:
   - exercise.library.intervals_greedy.a10
   - exercise.library.intervals_greedy.a11
   - exercise.library.intervals_greedy.a12
+  - exercise.library.intervals_greedy.b01
+  - exercise.library.intervals_greedy.b02
   - quiz.library.intervals_greedy.a01
   - quiz.library.intervals_greedy.a02
 - id: unit.dp_recognition
@@ -61,5 +63,7 @@ units:
   - exercise.library.dp_recognition.a10
   - exercise.library.dp_recognition.a11
   - exercise.library.dp_recognition.a12
+  - exercise.library.dp_recognition.b01
+  - exercise.library.dp_recognition.b02
   - quiz.library.dp_recognition.a01
   - quiz.library.dp_recognition.a02

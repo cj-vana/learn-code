@@ -1,0 +1,101 @@
+id: lesson.library.attention_mechanics.a03
+kind: lesson
+version: 1
+language: python
+title: 'Around the Attention Block: Norms, Residuals, and Positions'
+slug: lesson-attention-mechanics-a03
+difficulty: hard
+concepts:
+  - ai.attention_transformers
+prerequisites:
+  - ai.attention_transformers
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.attention_mechanics.a03
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original walkthrough of the transformer block's supporting machinery — positional encoding, layer norm, residuals, and multi-head structure — with fresh examples.
+body_markdown: |
+  Attention is the star, but a transformer block wraps it in supporting
+  machinery — and each piece answers a real defect. This lesson tours the
+  four you will implement, each a small pure function, each carrying an
+  idea worth owning.
+
+  ### Positions: attention is order-blind
+
+  Compute attention over the tokens of "dog bites man" and "man bites dog"
+  with the same embeddings and you get **identical outputs per token** —
+  nothing in query-key-value math knows *where* a token sits. Word order,
+  rather central to language, is invisible.
+
+  The classic fix injects position into each embedding as a pattern of
+  sinusoids — component 2i of position p's encoding is
+  `sin(p / 10000^(2i/d))`, component 2i+1 the matching cosine. Why such a
+  baroque recipe? Each dimension pair oscillates at a different frequency,
+  so a position's encoding is unique (like a binary counter's bits, but
+  smooth), values stay bounded in [-1, 1] at any sequence length, and —
+  the elegant part — the encoding of position p+k is a fixed linear
+  function of position p's, so *relative* offsets are easy for the model
+  to compute. Your exercise implements one component of it; modern models
+  often learn positions instead, but the sinusoid remains the reference
+  design.
+
+  ### Layer norm: re-centering between operations
+
+  Deep stacks of operations let values drift large or tiny — and you know
+  from tanh and softmax what extremes do to gradients. **Layer
+  normalization** re-centers each vector on its way through: subtract the
+  vector's own mean, divide by its own standard deviation (plus a small
+  eps so a constant vector doesn't divide by zero):
+
+  ```python
+  def layer_norm(v, eps):
+      mean = sum(v) / len(v)
+      var = sum((x - mean) ** 2 for x in v) / len(v)
+      return [(x - mean) / math.sqrt(var + eps) for x in v]
+  ```
+
+  Note the axis: each *token's vector* is normalized over its own
+  components, independently of every other token — no batch, no global
+  statistics. That is why it suits variable-length sequences, and it is
+  the same z-score arithmetic you wrote in classic-ML, pointed inward.
+
+  ### Residual connections: change as adjustment
+
+  Every transformer sublayer computes `x + sublayer(x)` — the input is
+  *added back* to the output. Trivial to implement (your exercise is
+  element-wise addition), profound in effect. Conceptually, the sublayer
+  now learns an **adjustment** to x, not a replacement — "here's what to
+  add," which is easier than "here's everything, again." Mechanically,
+  recall the addition rule from your autodiff engine: addition routes
+  gradient to *both* parents unchanged. The residual path is therefore a
+  gradient highway — even if the sublayer's path saturates, the identity
+  path delivers gradient to earlier layers undiminished. Hundred-layer
+  models train because of this one plus sign.
+
+  ### Many heads: parallel soft lookups
+
+  One attention head computes one blend — one notion of relevance. Real
+  blocks run several **heads** in parallel (each with its own learned Q, K,
+  V projections): one head may track syntax, another coreference, another
+  nearby words. Your exercise averages head outputs to grasp the
+  combine-parallel-lookups idea; production models concatenate and project
+  instead, keeping each head's information separate.
+
+  Stack it all — positions in, then per token: norm, masked scaled
+  attention, residual add, norm, feed-forward, residual add — repeat the
+  block a few dozen times, and the architecture of a GPT is, genuinely,
+  nothing you have not now touched with your own functions.
+checkpoints:
+  - question: Why does a transformer need positional encodings at all, when earlier sequential models did not?
+    answer: Attention treats the sequence as an unordered set — queries, keys, and values contain nothing about location, so "dog bites man" and "man bites dog" produce identical per-token outputs; positions must be injected into the embeddings explicitly. Recurrent models processed tokens in order, so position was implicit in the processing itself.
+    explanation: Order-blindness is the price of attention's parallel, distance-independent lookups; positional encoding pays it.
+  - question: Explain, using the addition rule from the autodiff area, why residual connections let very deep models train.
+    answer: Addition routes incoming gradient to both parents unchanged, so the residual x + sublayer(x) gives gradient an identity path that bypasses the sublayer; even where sublayers saturate, earlier layers still receive full-strength gradient through the skip path.
+    explanation: The residual is a gradient highway — the plus sign is doing exactly what grads_add said it does, at architectural scale.
+  - question: Layer norm and the z-score standardization from classic ML use the same formula. What differs about the axis, and why does it matter for sequences?
+    answer: Z-scores normalize each feature across the dataset; layer norm normalizes each token's vector across its own components, using no statistics from other tokens — so it works identically for any sequence length and needs no batch.
+    explanation: Same arithmetic, different axis, different purpose — per-token self-normalization is what keeps values in range as they flow through dozens of blocks.

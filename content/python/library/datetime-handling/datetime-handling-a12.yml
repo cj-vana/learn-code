@@ -1,0 +1,133 @@
+id: exercise.library.datetime_handling.a12
+kind: exercise
+version: 1
+language: python
+title: Museum Admission Tiers
+slug: datetime-handling-a12
+difficulty: hard
+concepts:
+  - python.datetime_module
+  - concepts.grouping_aggregation
+prerequisites:
+  - python.dictionaries
+  - python.conditionals
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.datetime_handling.a12
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original age-bucketing drill framed around a museum sorting visitors into admission tiers by exact age on a given day.
+prompt_markdown: |
+  A museum charges admission by age tier and needs to sort a group of visitors
+  into those tiers based on their age **on the day of the visit**. Age is measured
+  in whole completed years.
+
+  Write `age_buckets(job)` that takes a single dictionary with two keys:
+
+  - `"on"`: an ISO date string for the visit day.
+  - `"birthdays"`: a list of ISO date strings, one birth date per visitor.
+
+  Return a dictionary with exactly the keys `"minor"`, `"adult"`, and `"senior"`
+  counting how many visitors fall in each tier:
+
+  - `"minor"`: age is under 18.
+  - `"adult"`: age is 18 up to but not including 65.
+  - `"senior"`: age is 65 or older.
+
+  Age is the number of full years elapsed from the birth date to `"on"`. The
+  birthday edge is handled exactly: a visitor **counts as their new age on the
+  birthday itself**. So someone born on `"2008-07-02"` is treated as 18 (an adult)
+  when `"on"` is `"2026-07-02"`, but is still 17 (a minor) when `"on"` is
+  `"2026-07-01"`. If the birthday has not yet arrived in the visit year, that
+  visitor is one year younger. An empty `"birthdays"` list returns all zero
+  counts.
+
+  Example:
+
+  ```python
+  age_buckets({"on": "2026-07-02", "birthdays": ["2008-07-02", "2008-07-03"]})
+  # -> {"minor": 1, "adult": 1, "senior": 0}
+  ```
+
+  The first visitor has just turned 18; the second turns 18 tomorrow and is still
+  a minor today.
+starter_code: |
+  from datetime import date
+
+
+  def age_buckets(job):
+      return {"minor": 0, "adult": 0, "senior": 0}
+function_name: age_buckets
+input_mode: function
+solution_sketch: For each birth date compute whole-year age as on.year - born.year minus 1 when the (month, day) of the visit is before the birth (month, day), then increment the minor/adult/senior counter by the tier bounds.
+sample_solution: |
+  from datetime import date
+
+
+  def age_buckets(job):
+      on = date.fromisoformat(job["on"])
+      counts = {"minor": 0, "adult": 0, "senior": 0}
+      for text in job["birthdays"]:
+          born = date.fromisoformat(text)
+          age = on.year - born.year - ((on.month, on.day) < (born.month, born.day))
+          if age < 18:
+              counts["minor"] += 1
+          elif age < 65:
+              counts["adult"] += 1
+          else:
+              counts["senior"] += 1
+      return counts
+hints:
+  - level: 1
+    text: Start from the year difference on.year - born.year, which is the age only if the birthday has already happened this year.
+  - level: 2
+    text: Compare the month-and-day of the visit against the month-and-day of the birth; if the visit's (month, day) comes first, the birthday has not arrived yet, so subtract 1.
+  - level: 3
+    text: 'Comparing tuples does this in one step: age = on.year - born.year - ((on.month, on.day) < (born.month, born.day)), and a True in that subtraction counts as 1. On the exact birthday the tuples are equal, so nothing is subtracted and the visitor gets their full age.'
+tests:
+  public:
+    - name: exact_eighteenth_birthday
+      input: {"on": "2026-07-02", "birthdays": ["2008-07-02", "2008-07-03"]}
+      expected: {"minor": 1, "adult": 1, "senior": 0}
+    - name: only_a_child
+      input: {"on": "2026-07-02", "birthdays": ["2020-01-01"]}
+      expected: {"minor": 1, "adult": 0, "senior": 0}
+    - name: no_visitors
+      input: {"on": "2026-07-02", "birthdays": []}
+      expected: {"minor": 0, "adult": 0, "senior": 0}
+  validation:
+    - name: exact_sixty_fifth_is_senior
+      input: {"on": "2026-07-02", "birthdays": ["1961-07-02"]}
+      expected: {"minor": 0, "adult": 0, "senior": 1}
+    - name: day_before_sixty_fifth_is_adult
+      input: {"on": "2026-07-02", "birthdays": ["1961-07-03"]}
+      expected: {"minor": 0, "adult": 1, "senior": 0}
+    - name: mixed_group
+      input: {"on": "2026-07-02", "birthdays": ["2008-07-02", "2008-07-03", "1961-07-02", "1961-07-03", "2020-01-01", "1990-12-31"]}
+      expected: {"minor": 2, "adult": 3, "senior": 1}
+    - name: leap_day_birthday
+      input: {"on": "2026-02-28", "birthdays": ["2008-02-29"]}
+      expected: {"minor": 1, "adult": 0, "senior": 0}
+explanation_markdown: |
+  Computing age in whole years is the classic "have they had their birthday yet
+  this year" problem. The raw year difference `on.year - born.year` overcounts by
+  one whenever the birthday is still ahead in the visit year, so you subtract a
+  correction. Comparing the `(month, day)` tuples captures that correction in a
+  single expression: `(on.month, on.day) < (born.month, born.day)` is `True`
+  exactly when the birthday has not yet arrived, and Python treats that `True` as
+  `1` inside the subtraction.
+
+  The exact-birthday edge falls out cleanly. On the birthday itself the two tuples
+  are equal, so the comparison is `False`, nothing is subtracted, and the visitor
+  is credited with the full year, which is why the 18th birthday flips someone
+  into the adult tier and the 65th into the senior tier. The leap-day case follows
+  the same rule: born `2008-02-29`, a visit on `2026-02-28` has `(2, 28) < (2, 29)`,
+  so the birthday is counted as not yet reached and the visitor is still 17. Each
+  visitor is O(1) work, so the whole group is a single linear pass.
+common_mistakes:
+  - Using the plain year difference without adjusting for whether the birthday has occurred yet, overstating ages for later-in-year birthdays.
+  - Getting the boundary wrong so the 18th or 65th birthday lands in the younger tier instead of the new one.
+  - Approximating age by dividing a day count by 365, which drifts over leap years and misclassifies people near a tier boundary.

@@ -10,7 +10,7 @@ description: Regex-powered text processing, the collections/itertools toolbox, a
 outcomes:
 - Extract and rewrite structured text with regex
 - Group, join, and pivot records with stdlib tools
-estimated_hours: 11
+estimated_hours: 13
 review_status: published
 source_status: original
 provenance:
@@ -40,6 +40,8 @@ units:
   - exercise.library.regex_text_processing.a10
   - exercise.library.regex_text_processing.a11
   - exercise.library.regex_text_processing.a12
+  - exercise.library.regex_text_processing.b01
+  - exercise.library.regex_text_processing.b02
   - quiz.library.regex_text_processing.a01
   - quiz.library.regex_text_processing.a02
 - id: unit.collections_itertools
@@ -62,6 +64,8 @@ units:
   - exercise.library.collections_itertools.a10
   - exercise.library.collections_itertools.a11
   - exercise.library.collections_itertools.a12
+  - exercise.library.collections_itertools.b01
+  - exercise.library.collections_itertools.b02
   - quiz.library.collections_itertools.a01
   - quiz.library.collections_itertools.a02
   - quiz.library.collections_itertools.a03
@@ -84,5 +88,7 @@ units:
   - exercise.library.data_wrangling_python.a10
   - exercise.library.data_wrangling_python.a11
   - exercise.library.data_wrangling_python.a12
+  - exercise.library.data_wrangling_python.b01
+  - exercise.library.data_wrangling_python.b02
   - quiz.library.data_wrangling_python.a01
   - quiz.library.data_wrangling_python.a02

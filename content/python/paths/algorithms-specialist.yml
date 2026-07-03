@@ -13,7 +13,7 @@ outcomes:
 - Traverse linked, tree, and graph structures from memory
 - Recognize DP structure and apply memoization or tabulation
 - Handle bitwise and number-theory problems without flinching
-estimated_hours: 53
+estimated_hours: 61
 review_status: published
 source_status: original
 provenance:
@@ -196,6 +196,8 @@ units:
   - exercise.library.linked_lists_patterns.a10
   - exercise.library.linked_lists_patterns.a11
   - exercise.library.linked_lists_patterns.a12
+  - exercise.library.linked_lists_patterns.b01
+  - exercise.library.linked_lists_patterns.b02
   - quiz.library.linked_lists_patterns.a01
   - quiz.library.linked_lists_patterns.a02
 - id: unit.trees_lite
@@ -218,6 +220,8 @@ units:
   - exercise.library.trees_lite.a10
   - exercise.library.trees_lite.a11
   - exercise.library.trees_lite.a12
+  - exercise.library.trees_lite.b01
+  - exercise.library.trees_lite.b02
   - quiz.library.trees_lite.a01
   - quiz.library.trees_lite.a02
   - quiz.library.trees_lite.a03
@@ -241,6 +245,8 @@ units:
   - exercise.library.graphs_lite.a10
   - exercise.library.graphs_lite.a11
   - exercise.library.graphs_lite.a12
+  - exercise.library.graphs_lite.b01
+  - exercise.library.graphs_lite.b02
   - quiz.library.graphs_lite.a01
   - quiz.library.graphs_lite.a02
   - quiz.library.graphs_lite.a03
@@ -263,6 +269,8 @@ units:
   - exercise.library.heaps_topk.a10
   - exercise.library.heaps_topk.a11
   - exercise.library.heaps_topk.a12
+  - exercise.library.heaps_topk.b01
+  - exercise.library.heaps_topk.b02
   - quiz.library.heaps_topk.a01
   - quiz.library.heaps_topk.a02
 - id: unit.intervals_greedy
@@ -284,6 +292,8 @@ units:
   - exercise.library.intervals_greedy.a10
   - exercise.library.intervals_greedy.a11
   - exercise.library.intervals_greedy.a12
+  - exercise.library.intervals_greedy.b01
+  - exercise.library.intervals_greedy.b02
   - quiz.library.intervals_greedy.a01
   - quiz.library.intervals_greedy.a02
 - id: unit.dp_recognition
@@ -306,6 +316,8 @@ units:
   - exercise.library.dp_recognition.a10
   - exercise.library.dp_recognition.a11
   - exercise.library.dp_recognition.a12
+  - exercise.library.dp_recognition.b01
+  - exercise.library.dp_recognition.b02
   - quiz.library.dp_recognition.a01
   - quiz.library.dp_recognition.a02
 - id: unit.bit_number_theory
@@ -327,6 +339,8 @@ units:
   - exercise.library.bit_number_theory.a10
   - exercise.library.bit_number_theory.a11
   - exercise.library.bit_number_theory.a12
+  - exercise.library.bit_number_theory.b01
+  - exercise.library.bit_number_theory.b02
   - quiz.library.bit_number_theory.a01
   - quiz.library.bit_number_theory.a02
 - id: unit.mixed_capstones
@@ -351,3 +365,14 @@ units:
   - quiz.library.mixed_capstones.a04
   - quiz.library.mixed_capstones.a05
   - quiz.library.mixed_capstones.a06
+- id: unit.capstone_dispatch
+  title: 'Capstone: The Courier Dispatch Board'
+  description: 'Lessons, drills, and quizzes for capstone: the courier dispatch board.'
+  items:
+  - lesson.library.capstone_dispatch.a01
+  - exercise.library.capstone_dispatch.c01
+  - exercise.library.capstone_dispatch.c02
+  - exercise.library.capstone_dispatch.c03
+  - exercise.library.capstone_dispatch.c04
+  - exercise.library.capstone_dispatch.c05
+  - exercise.library.capstone_dispatch.c06

@@ -1,0 +1,103 @@
+id: quiz.library.language_models_from_scratch.a02
+kind: quiz
+version: 1
+language: python
+title: Probability Table Mechanics
+slug: quiz-language-models-from-scratch-a02
+difficulty: medium
+concepts:
+  - ai.language_models
+  - concepts.probability
+prerequisites:
+  - ai.language_models
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.language_models_from_scratch.a02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax quiz on the dictionary, log, and smoothing mechanics inside a counting language model.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: |
+      Bigram tables in this area use string keys like "calm|sea" instead of
+      tuple keys ("calm", "sea"). What motivates this in a system whose tables
+      must serialize to JSON?
+    choices:
+      - JSON object keys must be strings, so joined-string keys survive dumps/loads round trips
+      - Tuples cannot be dictionary keys in Python
+      - String keys hash faster than tuples
+      - The | character is required by the bigram algorithm
+    correct_choice: JSON object keys must be strings, so joined-string keys survive dumps/loads round trips
+    explanation: |
+      Tuples make fine dict keys in Python but vanish into strings ("('calm',
+      'sea')") under JSON; choosing a clean joined-string format keeps the
+      table portable.
+    concepts:
+      - ai.language_models
+      - python.json_csv
+  - id: q2
+    prompt: With add-one smoothing, context total 4, vocabulary size 6, and a pair seen 0 times, what probability does the pair receive?
+    choices:
+      - '0.1'
+      - '0.0'
+      - '0.25'
+      - '0.167'
+    correct_choice: '0.1'
+    explanation: |
+      (0 + 1) / (4 + 6) = 1/10. The +1 rescues the zero; the +V in the
+      denominator keeps the distribution summing to one.
+    concepts:
+      - ai.language_models
+      - concepts.probability
+  - id: q3
+    prompt: Why does sequence_log_prob return null/None when any pair probability is 0, rather than treating log(0) loosely?
+    choices:
+      - math.log(0) raises ValueError — zero probability has no finite logarithm, and the sentinel makes the impossibility explicit
+      - Python returns -1 for log(0), which corrupts sums
+      - Zero probabilities are rounded up automatically by math.log
+      - Returning None is faster than computing the sum
+    correct_choice: math.log(0) raises ValueError — zero probability has no finite logarithm, and the sentinel makes the impossibility explicit
+    explanation: |
+      Log of zero is negative infinity mathematically and an exception in
+      Python; a designed sentinel (None) surfaces the "model says impossible"
+      case instead of crashing mid-sum.
+    concepts:
+      - ai.language_models
+  - id: q4
+    prompt: |
+      greedy_next must pick the argmax token from {"gull": 0.4, "tern": 0.4,
+      "skua": 0.2} the same way every run. What makes max(d, key=d.get) alone
+      insufficient?
+    choices:
+      - The 0.4 tie — without an explicit tie-break rule (e.g. alphabetical), the result depends on dict insertion order
+      - max cannot take a key function for dicts
+      - Probabilities must sum to exactly 1.0 before max works
+      - d.get returns None for missing keys
+    correct_choice: The 0.4 tie — without an explicit tie-break rule (e.g. alphabetical), the result depends on dict insertion order
+    explanation: |
+      max returns the first maximal element in iteration order, which is
+      insertion order for dicts — an accident of table construction. Sorting
+      by (-prob, token) makes ties deterministic and testable.
+    concepts:
+      - ai.language_models
+      - concepts.testing
+  - id: q5
+    prompt: |
+      Interpolating two models with lam=0.7 computes 0.7*p1 + 0.3*p2 over the
+      UNION of their keys. Why the union rather than the intersection?
+    choices:
+      - A token known to only one model still deserves its weighted share — intersection would silently zero it
+      - The union is faster to compute than the intersection
+      - Probabilities only sum to 1 over unions
+      - Intersections are not defined for dictionaries
+    correct_choice: A token known to only one model still deserves its weighted share — intersection would silently zero it
+    explanation: |
+      The whole point of interpolation is that one model covers the other's
+      gaps; a missing key contributes 0 from that model but keeps its share
+      from the other.
+    concepts:
+      - ai.language_models

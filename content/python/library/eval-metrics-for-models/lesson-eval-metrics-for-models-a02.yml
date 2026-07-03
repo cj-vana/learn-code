@@ -1,0 +1,92 @@
+id: lesson.library.eval_metrics_for_models.a02
+kind: lesson
+version: 1
+language: python
+title: 'Judging Generated Text and Rankings'
+slug: lesson-eval-metrics-for-models-a02
+difficulty: medium
+concepts:
+  - ai.model_evaluation
+prerequisites:
+  - ai.model_evaluation
+  - ai.language_models
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.eval_metrics_for_models.a02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original walkthrough of generation and ranking metrics — overlap scores, exact match, reciprocal rank — with fresh worked examples.
+body_markdown: |
+  Classification metrics compare a predicted label against a true label —
+  clean and binary. But how do you grade a *translation*, a *summary*, or a
+  search engine's *ranking*? There is no single right answer to compare
+  against. This lesson covers the classic answers, and — as important —
+  what each one cannot see.
+
+  ### Overlap scores: grading against a reference
+
+  Given a model's output and a human-written reference, count shared
+  vocabulary. The BLEU family of metrics starts with **clipped unigram
+  precision**: what fraction of the candidate's tokens appear in the
+  reference?
+
+  The clipping matters. Candidate "the the the the" against a reference
+  containing one "the" would score 100% unclipped — every candidate token
+  appears in the reference! Clipping caps each token's credit at its count
+  *in the reference*: one "the" of credit, precision 1/4. Your exercise
+  implements exactly this repair, and the lesson it carries outlives BLEU
+  itself: **any metric will be gamed by degenerate outputs unless its
+  loopholes are closed** — modern LLM judges wrestle with the same
+  disease in fancier clothes.
+
+  Real BLEU extends to 2-, 3-, 4-gram overlaps (rewarding correct word
+  *order*) with a brevity penalty (blocking the too-short-to-be-wrong
+  cheat). Overlap metrics are crude — a perfect paraphrase with different
+  words scores zero — but they are fast, reproducible, and immune to
+  persuasion, which keeps them alive as regression checks.
+
+  ### Exact match, with honest normalization
+
+  For short-answer tasks (extraction, arithmetic, code output), the honest
+  metric is the strictest: is the answer *right*? **Exact match** compares
+  prediction to reference after a stated normalization — casefold, strip,
+  collapse internal whitespace — so "  Brine  Shrimp " matches "brine
+  shrimp" but "brine shrimps" fails. The normalization *is* the metric's
+  design: every rule you add (drop punctuation? articles?) is a judgment
+  about what differences don't matter, and it belongs written down, not
+  implicit in the code.
+
+  ### Ranking: where did the right answer place?
+
+  Retrieval systems (like the one you built last area) return ranked
+  lists. **Reciprocal rank** scores one query as 1/position-of-first-
+  correct-result: 1.0 for first place, 0.5 for second, 0.333 for third, 0
+  if absent. Averaged over queries, this is MRR — the standard "did we put
+  the right thing near the top?" number. The reciprocal shape encodes a
+  real judgment: the difference between ranks 1 and 2 (0.5) dwarfs the
+  difference between 9 and 10 (~0.01), matching how little users scroll.
+
+  ### What none of these measure
+
+  Perplexity says a model predicts text well; BLEU says it overlaps a
+  reference; exact match says it hit a string. **None of them certify
+  truth, safety, or usefulness** — a model can be fluent, high-overlap,
+  and wrong. Production LLM evaluation therefore layers these cheap
+  automatic metrics (fast, gameable, reproducible) under expensive
+  judgments (human review, LLM-as-judge — subtler and less reproducible).
+  Knowing which layer answers which question — and which question your
+  metric is silently *not* answering — is the actual skill of evaluation,
+  and it is why this area exists in an AI path at all.
+checkpoints:
+  - question: Why must unigram precision clip each token's credit at its count in the reference, and what degenerate output does clipping defeat?
+    answer: Unclipped, every occurrence of a common token counts — the candidate "the the the the" scores 100% against any reference containing "the"; clipping caps credit at the reference count, scoring it 1/4.
+    explanation: 'The repair generalizes: every automatic metric has a degenerate output that maximizes it, and metric design is largely the closing of such loopholes.'
+  - question: What does the reciprocal in reciprocal rank encode about how ranking quality should be valued?
+    answer: 'Value falls steeply with position — rank 1 scores 1.0, rank 2 scores 0.5, rank 10 scores 0.1 — so the metric cares enormously about the top of the list and almost nothing about deep positions, matching real user behavior.'
+    explanation: A linear penalty would treat 9th-vs-10th like 1st-vs-2nd; the reciprocal shape is a deliberate model of attention decay.
+  - question: A model scores excellently on perplexity, BLEU, and exact match. What can you still not conclude, and how do production systems address it?
+    answer: 'That its outputs are true, safe, or useful — all three metrics measure prediction or overlap, not correctness of content; production evaluation layers human or LLM-judge review on top of the cheap automatic metrics.'
+    explanation: Automatic metrics are regression guards, not quality certificates — knowing what each metric is blind to is the core competence of evaluation work.

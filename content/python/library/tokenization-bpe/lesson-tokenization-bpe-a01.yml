@@ -1,0 +1,87 @@
+id: lesson.library.tokenization_bpe.a01
+kind: lesson
+version: 1
+language: python
+title: 'Tokens: The Units a Model Actually Sees'
+slug: lesson-tokenization-bpe-a01
+difficulty: medium
+concepts:
+  - ai.tokenization
+prerequisites:
+  - python.strings
+  - ai.language_models
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.tokenization_bpe.a01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original tokenization introduction framed around a seed catalogue's vocabulary problem, with fresh examples.
+body_markdown: |
+  Every language model — from your bigram table to the largest LLM — operates
+  on **tokens**, and the choice of what counts as a token is made *before*
+  any learning happens. It shapes everything the model can do. This area is
+  about that choice, and about the algorithm that resolved it for modern AI.
+
+  ### Two obvious answers, two failure modes
+
+  **Words as tokens.** Split on whitespace and each token carries real
+  meaning. But the vocabulary explodes — every plural, misspelling, rare
+  botanical name in a seed catalogue ("Cerinthe", "Cerinthes",
+  "cerinthe-blue") is its own token, most seen once or never. Unseen words
+  become `<unk>` holes: the model literally cannot say them.
+
+  **Characters as tokens.** Vocabulary is tiny (dozens of symbols) and
+  nothing is ever out-of-vocabulary. But each token now means almost
+  nothing, sequences are 5-6x longer, and the model spends its capacity
+  re-learning that q-u-i-c-k spells a word. Your character bigram model
+  from the last area lived this tradeoff.
+
+  The tension is fundamental: **big meaningful units** versus **small
+  coverage-complete units**. What modern models use is a negotiated middle:
+  **subwords** — common words stay whole, rare words split into meaningful
+  pieces ("cerinthe" becomes "cer" + "inthe", say). Coverage stays total
+  (single characters remain available as a floor), while frequent strings
+  travel as single units.
+
+  ### Where do the subwords come from? Learn them from data
+
+  The subword inventory is not designed by linguists — it is *learned from a
+  corpus* by an algorithm called **byte-pair encoding (BPE)**, which this
+  area builds in full. The idea fits in a sentence:
+
+  > Start with characters; repeatedly merge the most frequent adjacent pair
+  > into a new symbol.
+
+  Frequent words assemble themselves through repeated merges; rare words
+  stay in pieces. The learned artifact is an ordered **merge list**, and it
+  IS the tokenizer: apply the merges, in order, to any new text.
+
+  ### The end-of-word marker
+
+  One subtlety appears before any merging: each word gets a terminal marker,
+  e.g. `"cat"` becomes `["c", "a", "t", "</w>"]`. Without it, a merged unit
+  like `at` couldn't distinguish "at the end of *cat*" from "inside
+  *atlas*" — linguistically different environments. The marker also makes
+  detokenization trivial: markers become spaces. Small bookkeeping, load-
+  bearing consequences — you will implement it first in the exercises.
+
+  ### Why care, practically
+
+  Tokenization explains everyday LLM behavior: why models miscount letters
+  in words (they don't see letters), why costs are billed per token, why an
+  unusual name eats more of a context window than a common phrase. When
+  this area is done, none of that will be folklore — you will have built the
+  machine that makes those tokens.
+checkpoints:
+  - question: State the word-level and character-level failure modes that subword tokenization negotiates between.
+    answer: Word tokens give meaningful units but an exploding vocabulary with unavoidable out-of-vocabulary holes; character tokens give total coverage with a tiny vocabulary but nearly meaningless units and much longer sequences.
+    explanation: 'Subwords keep both guarantees: frequent strings become single meaningful units while single characters remain as a coverage floor.'
+  - question: What is the learned artifact of BPE training, and how is it used on new text?
+    answer: An ordered list of merges (pairs that became single symbols); tokenizing new text means splitting into characters and applying those merges in their learned order.
+    explanation: The merge list IS the tokenizer — a data-derived program, which is why the training corpus's language shapes how well new text tokenizes.
+  - question: Why is the </w> end-of-word marker attached before any merging begins?
+    answer: It distinguishes word-final letter sequences from word-internal ones (the "at" ending "cat" differs from the "at" inside "atlas"), so merges learn genuinely different units — and it makes detokenization a simple marker-to-space replacement.
+    explanation: Without the marker, statistics from different linguistic environments blur together and the original text cannot be reconstructed unambiguously.

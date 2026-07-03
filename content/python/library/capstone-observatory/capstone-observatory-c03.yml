@@ -1,0 +1,152 @@
+id: exercise.library.capstone_observatory.c03
+kind: exercise
+version: 1
+language: python
+title: 'The Observatory Night Logs: The Nightly Summary'
+slug: capstone-observatory-c03
+difficulty: hard
+concepts:
+  - concepts.grouping_aggregation
+prerequisites:
+  - python.dictionaries
+  - python.sorting
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.capstone_observatory.c03
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Capstone stage three; original group-and-aggregate over parsed observation records, producing a sorted-key summary with count, minimum magnitude, and rounded mean seeing.
+prompt_markdown: |
+  Now that individual lines are parsed, the observatory wants a **nightly
+  summary** that folds all the night's records together. Each record is a
+  dictionary in the shape produced by stage one:
+
+  ```python
+  {"timestamp": "2026-07-01 22:00", "target": "vega", "mag": 0.05, "seeing": 1.10}
+  ```
+
+  Write `nightly_summary(records)` that takes a **list** of such records and groups
+  them by the pair `(date, target)`, where the date is the first 10 characters of
+  the timestamp (`"YYYY-MM-DD"`). For each group produce a dictionary:
+
+  - `"count"`: how many records fell in the group,
+  - `"best_mag"`: the **smallest** `mag` in the group (smaller magnitude means
+    brighter, so the minimum is the best),
+  - `"avg_seeing"`: the mean of the group's `seeing` values, rounded to 2 decimal
+    places with `round(value, 2)`.
+
+  Return a dictionary keyed by the string `"date|target"` (the date, a literal
+  pipe, then the target). The keys must be inserted in **ascending sorted order**
+  so that iterating the result walks the summary alphabetically by date and then
+  by target.
+
+  Example call:
+
+  ```python
+  nightly_summary([
+      {"timestamp": "2026-07-01 22:00", "target": "vega", "mag": 0.05, "seeing": 1.10},
+      {"timestamp": "2026-07-01 23:00", "target": "vega", "mag": 0.02, "seeing": 1.30},
+  ])
+  # -> {"2026-07-01|vega": {"count": 2, "best_mag": 0.02, "avg_seeing": 1.2}}
+  ```
+
+  An empty list returns an empty dictionary.
+starter_code: |
+  def nightly_summary(records):
+      return {}
+function_name: nightly_summary
+input_mode: function
+solution_sketch: Bucket records into a dict keyed by "date|target" using setdefault, then walk the keys in sorted order building the summary dict with len for count, min of the magnitudes, and round(mean, 2) for the average seeing.
+sample_solution: |
+  def nightly_summary(records):
+      groups = {}
+      for record in records:
+          date = record["timestamp"][:10]
+          key = f"{date}|{record['target']}"
+          groups.setdefault(key, []).append(record)
+      summary = {}
+      for key in sorted(groups):
+          bucket = groups[key]
+          mags = [item["mag"] for item in bucket]
+          seeings = [item["seeing"] for item in bucket]
+          summary[key] = {
+              "count": len(bucket),
+              "best_mag": min(mags),
+              "avg_seeing": round(sum(seeings) / len(seeings), 2),
+          }
+      return summary
+hints:
+  - level: 1
+    text: First bucket the records. Build the key with the date slice timestamp[:10] and the target, then use groups.setdefault(key, []).append(record) to collect each group.
+  - level: 2
+    text: Iterate the buckets with for key in sorted(groups) so the output dictionary receives its keys already in ascending order.
+  - level: 3
+    text: For each bucket, count is len(bucket), best_mag is min of the mag values, and avg_seeing is round(sum(seeings) / len(seeings), 2).
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: {}
+    - name: single_record
+      input:
+        - {timestamp: '2026-07-01 22:00', target: vega, mag: 0.03, seeing: 1.20}
+      expected:
+        '2026-07-01|vega': {count: 1, best_mag: 0.03, avg_seeing: 1.2}
+    - name: same_group_aggregates
+      input:
+        - {timestamp: '2026-07-01 22:00', target: vega, mag: 0.05, seeing: 1.10}
+        - {timestamp: '2026-07-01 23:00', target: vega, mag: 0.02, seeing: 1.30}
+      expected:
+        '2026-07-01|vega': {count: 2, best_mag: 0.02, avg_seeing: 1.2}
+  validation:
+    - name: multiple_groups_sorted
+      input:
+        - {timestamp: '2026-07-02 01:00', target: sirius, mag: -1.40, seeing: 0.90}
+        - {timestamp: '2026-07-01 22:00', target: vega, mag: 0.05, seeing: 1.10}
+        - {timestamp: '2026-07-01 22:30', target: altair, mag: 0.77, seeing: 1.00}
+        - {timestamp: '2026-07-01 23:00', target: vega, mag: 0.02, seeing: 1.30}
+      expected:
+        '2026-07-01|altair': {count: 1, best_mag: 0.77, avg_seeing: 1.0}
+        '2026-07-01|vega': {count: 2, best_mag: 0.02, avg_seeing: 1.2}
+        '2026-07-02|sirius': {count: 1, best_mag: -1.4, avg_seeing: 0.9}
+    - name: mean_needs_rounding
+      input:
+        - {timestamp: '2026-07-03 22:00', target: mars, mag: -2.00, seeing: 1.11}
+        - {timestamp: '2026-07-03 22:10', target: mars, mag: -2.10, seeing: 1.12}
+        - {timestamp: '2026-07-03 22:20', target: mars, mag: -1.90, seeing: 1.14}
+      expected:
+        '2026-07-03|mars': {count: 3, best_mag: -2.1, avg_seeing: 1.12}
+    - name: same_target_different_dates
+      input:
+        - {timestamp: '2026-07-01 22:00', target: vega, mag: 0.05, seeing: 1.00}
+        - {timestamp: '2026-07-02 22:00', target: vega, mag: 0.03, seeing: 2.00}
+      expected:
+        '2026-07-01|vega': {count: 1, best_mag: 0.05, avg_seeing: 1.0}
+        '2026-07-02|vega': {count: 1, best_mag: 0.03, avg_seeing: 2.0}
+    - name: same_night_targets_sorted
+      input:
+        - {timestamp: '2026-07-05 21:00', target: zeta, mag: 1.00, seeing: 1.00}
+        - {timestamp: '2026-07-05 21:00', target: alpha, mag: 2.00, seeing: 2.00}
+      expected:
+        '2026-07-05|alpha': {count: 1, best_mag: 2.0, avg_seeing: 2.0}
+        '2026-07-05|zeta': {count: 1, best_mag: 1.0, avg_seeing: 1.0}
+explanation_markdown: |
+  This is the classic group-then-aggregate shape. The first pass buckets records
+  into a dictionary of lists keyed by `"date|target"`; `setdefault(key, [])` gives
+  you the bucket whether or not it already exists, so you can append in one line.
+  Slicing `timestamp[:10]` is enough to pull the date because the format is fixed
+  width, so no date parsing is required.
+
+  The second pass turns each bucket into its three statistics. `min` finds the
+  brightest magnitude, `len` gives the count, and the mean is `sum / len` rounded
+  to two places. Iterating with `sorted(groups)` is what guarantees the output
+  keys land in ascending order, because a dictionary preserves the order in which
+  keys are first inserted. Rounding the mean at the end also protects you from the
+  tiny floating-point drift that `sum` of decimals can introduce.
+common_mistakes:
+  - Using max instead of min for best_mag, which reports the faintest observation rather than the brightest.
+  - Inserting keys in first-seen order and forgetting sorted(groups), so the summary is not in ascending key order.
+  - Rounding each seeing value before averaging instead of rounding only the final mean, which distorts the average.

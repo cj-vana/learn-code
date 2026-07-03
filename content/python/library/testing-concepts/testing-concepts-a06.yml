@@ -1,0 +1,100 @@
+id: exercise.library.testing_concepts.a06
+kind: exercise
+version: 1
+language: python
+title: Untested Paths on the Switchboard
+slug: testing-concepts-a06
+difficulty: medium
+concepts:
+  - concepts.testing
+  - python.sets
+prerequisites:
+  - python.lists
+  - python.sorting
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.testing_concepts.a06
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original switchboard framing for a coverage-gap report computed as a sorted set difference.
+prompt_markdown: |
+  An old telephone switchboard has a fixed set of labelled paths a call can travel.
+  A soak test ran overnight and recorded which paths were actually exercised. You
+  need a coverage report: which paths were never touched.
+
+  Write `coverage_gaps(job)` where `job` is a dict with two keys:
+
+  - `branches` — the list of every branch label that exists (strings)
+  - `hit` — the list of branch labels the soak test actually exercised
+
+  Return a **sorted list** of the branch labels that appear in `branches` but were
+  never in `hit` — the coverage gaps. Details that the tests check:
+
+  - A branch counts as covered if its label appears anywhere in `hit`.
+  - Duplicate labels in `branches` collapse to a single entry.
+  - Labels in `hit` that are not real branches are logging noise and are ignored.
+  - If every branch was hit, return an empty list.
+
+  For `branches=["a", "b", "c"]` and `hit=["a", "c"]` the answer is `["b"]`.
+starter_code: |
+  def coverage_gaps(job):
+      # Return the branch labels never present in hit, sorted ascending.
+      return []
+function_name: coverage_gaps
+input_mode: function
+solution_sketch: Turn both lists into sets, subtract the hit set from the branches set, and return the difference sorted.
+sample_solution: |
+  def coverage_gaps(job):
+      branches = set(job["branches"])
+      hit = set(job["hit"])
+      return sorted(branches - hit)
+hints:
+  - level: 1
+    text: A gap is a branch that exists but was never exercised — think about set difference.
+  - level: 2
+    text: Converting both lists to sets handles duplicate labels and lets you subtract the hit labels in one step.
+  - level: 3
+    text: Return sorted(set(job["branches"]) - set(job["hit"])); the subtraction naturally ignores hit labels that are not real branches.
+tests:
+  public:
+    - name: one_gap
+      input: {branches: [a, b, c], hit: [a, c]}
+      expected: [b]
+    - name: all_covered
+      input: {branches: [a, b], hit: [a, b]}
+      expected: []
+    - name: none_covered
+      input: {branches: [x, y, z], hit: []}
+      expected: [x, y, z]
+  validation:
+    - name: sorted_output
+      input: {branches: [north, east, south, west], hit: [east, west]}
+      expected: [north, south]
+    - name: noise_in_hit
+      input: {branches: [a, b], hit: [a, q, z]}
+      expected: [b]
+    - name: duplicate_branches
+      input: {branches: [a, a, b], hit: [b]}
+      expected: [a]
+    - name: empty_branches
+      input: {branches: [], hit: [a]}
+      expected: []
+    - name: label_string_sort
+      input: {branches: ["line-3", "line-1", "line-2"], hit: ["line-2"]}
+      expected: ["line-1", "line-3"]
+explanation_markdown: |
+  Coverage is the flip side of a passing suite: a run can be all green and still
+  leave whole paths unexercised, and those untouched paths are where bugs hide
+  unseen. The report you want is a set difference — everything in the universe of
+  `branches` minus everything the tests actually `hit`. Using sets makes the intent
+  obvious and gives you dedup and "ignore unknown labels" for free: subtracting a
+  set only removes elements that are present, so stray labels in `hit` simply do
+  not affect the result. Sorting the leftover gives a stable, readable report a
+  reviewer can scan top to bottom.
+common_mistakes:
+  - Iterating branches and checking membership in a list instead of a set, which still works but misses the clean set-difference framing and rescans hit every time.
+  - Forgetting to sort, returning gaps in an arbitrary set-iteration order that is hard to review.
+  - Counting a label in hit that is not a real branch as reducing coverage, or letting duplicate branch labels appear twice in the output.

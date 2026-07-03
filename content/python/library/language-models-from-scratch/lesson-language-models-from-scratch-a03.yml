@@ -1,0 +1,100 @@
+id: lesson.library.language_models_from_scratch.a03
+kind: lesson
+version: 1
+language: python
+title: 'Judging a Language Model: Log Probs, Perplexity, and Temperature'
+slug: lesson-language-models-from-scratch-a03
+difficulty: medium
+concepts:
+  - ai.language_models
+  - ai.model_evaluation
+prerequisites:
+  - ai.language_models
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.language_models_from_scratch.a03
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original walkthrough of log-space scoring, perplexity, and decoding strategies with fresh worked numbers.
+body_markdown: |
+  You can build a model; now you must judge one and drive one. Three tools —
+  log probabilities, perplexity, and decoding rules — and all three carry
+  over unchanged to models a billion times larger.
+
+  ### Log space, or how to multiply a thousand small numbers
+
+  A 40-token sentence's probability is a product of 39 conditionals, each
+  maybe 0.01-0.5. The product underflows toward zero fast — floats run out
+  of exponent around 1e-308, and long before that, precision crumbles. The
+  standard escape is logarithms: **products become sums**.
+
+  ```python
+  import math
+
+  def sequence_log_prob(pairs_probs):
+      return sum(math.log(p) for p in pairs_probs)
+  ```
+
+  Log probs are negative numbers (logs of values below 1), and *less
+  negative is more probable*. Every serious probabilistic system — n-grams,
+  speech recognizers, LLM training losses — lives in log space. When you see
+  "loss = negative log likelihood" in a deep-learning paper, it is this,
+  with a minus sign to make it a thing worth minimizing.
+
+  ### Perplexity: the average branching factor
+
+  Log probs of different-length texts aren't comparable — longer texts
+  accumulate more negative terms. Normalize per token, flip signs, and
+  exponentiate:
+
+  ```text
+  perplexity = exp( -mean(log probs) )
+  ```
+
+  The result has a beautiful reading: **how many next-tokens is the model
+  effectively choosing among?** A model that always knew the next token
+  exactly would have perplexity 1. One guessing uniformly over 100 tokens:
+  perplexity 100. When a model's perplexity on held-out text drops from 120
+  to 45, its uncertainty per token shrank by nearly a factor of three.
+
+  Two honest caveats: perplexity is only comparable between models sharing a
+  vocabulary and tokenization (a character model and a word model produce
+  incomparable numbers), and it measures *predictive* skill, not truth — a
+  model can be confidently, fluently wrong. Better perplexity does not mean
+  better facts.
+
+  ### Decoding: from distribution to output
+
+  A model outputs a distribution; producing text requires choosing from it.
+  The rules you will implement:
+
+  - **Greedy**: always take the argmax. Deterministic (given a tie-break
+    rule), safe, and repetitive — a greedy loop happily circles the same
+    high-probability phrases.
+  - **Temperature** reshapes the distribution before choosing: raise every
+    probability to the power 1/T and renormalize. T below 1 sharpens the
+    distribution toward its peak (T approaching 0 recovers greedy); T above 1
+    flattens it toward uniform randomness. The "creativity dial" in every
+    LLM API is exactly this exponent — no magic, just reshaped counts.
+  - **Sampling** draws from the (possibly temperature-reshaped)
+    distribution. Real systems sample with restrictions (top-k, nucleus);
+    your exercises stay deterministic, which is also why greedy + explicit
+    tie-breaks matter: they make generation *testable*.
+
+  With scoring and decoding in hand, you have the complete life cycle of a
+  language model — build (counts), repair (smoothing), judge (perplexity),
+  drive (decoding) — the same cycle that plays out at scale, where the
+  counts are replaced by a neural network and everything else survives.
+checkpoints:
+  - question: Why do language models score sequences in log space rather than multiplying probabilities directly?
+    answer: Long products of sub-1 probabilities underflow floating point and lose precision; logs turn the product into a numerically stable sum, where less-negative totals mean more probable sequences.
+    explanation: Log-space arithmetic is universal across probabilistic ML — the "negative log likelihood" loss of neural models is this same trick with a sign flip.
+  - question: A model has perplexity 45 on held-out text. What does that number say, in plain terms, and what does it NOT say?
+    answer: On average the model's per-token uncertainty is as if it were choosing uniformly among 45 tokens; it says nothing about factual correctness — a fluent model can be confidently wrong.
+    explanation: Perplexity is the standard intrinsic metric precisely because of its branching-factor reading, and its blindness to truth is why extrinsic evals exist.
+  - question: 'What does temperature T actually do to a distribution, and what do the limits T -> 0 and large T recover?'
+    answer: Each probability is raised to the power 1/T and renormalized; T -> 0 concentrates all mass on the argmax (greedy), large T flattens toward uniform randomness.
+    explanation: The creativity dial in LLM APIs is one exponent applied to the output distribution — understanding it removes a whole layer of mystique.

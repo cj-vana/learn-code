@@ -10,7 +10,7 @@ outcomes:
 - Apply prefix sums, stacks, and binary search to fresh problems
 - Reach for heaps and greedy interval sweeps when they fit
 - Hold your own on mixed problems that hide which pattern applies
-estimated_hours: 21
+estimated_hours: 23
 review_status: published
 source_status: original
 provenance:
@@ -110,6 +110,8 @@ units:
   - exercise.library.heaps_topk.a10
   - exercise.library.heaps_topk.a11
   - exercise.library.heaps_topk.a12
+  - exercise.library.heaps_topk.b01
+  - exercise.library.heaps_topk.b02
   - quiz.library.heaps_topk.a01
   - quiz.library.heaps_topk.a02
 - id: unit.intervals_greedy
@@ -131,6 +133,8 @@ units:
   - exercise.library.intervals_greedy.a10
   - exercise.library.intervals_greedy.a11
   - exercise.library.intervals_greedy.a12
+  - exercise.library.intervals_greedy.b01
+  - exercise.library.intervals_greedy.b02
   - quiz.library.intervals_greedy.a01
   - quiz.library.intervals_greedy.a02
 - id: unit.mixed_capstones

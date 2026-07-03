@@ -1,0 +1,132 @@
+id: exercise.library.bit_number_theory.b01
+kind: exercise
+version: 1
+language: python
+title: Rostering the Broadcast Slots
+slug: bit-number-theory-b01
+difficulty: hard
+concepts:
+  - patterns.bit_manipulation
+  - patterns.dynamic_programming
+prerequisites:
+  - python.lists
+  - python.loops
+estimated_time_minutes: 24
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.bit_number_theory.b01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original community-radio rostering task counting perfect assignments with a bitmask DP over the subset of filled slots, availability given as per-host bitmasks.
+prompt_markdown: |
+  A community radio station has `n` volunteer hosts and `n` one-hour broadcast slots
+  for the day. Every host must be given exactly one slot, and every slot must be
+  covered by exactly one host: a complete roster is a one-to-one assignment of hosts
+  to slots. Each host, though, is only available for some of the slots. The station
+  wants to know how many different complete rosters are possible.
+
+  Write `schedule_mask_dp(job)` where `job` is a dict with two keys:
+
+  - `n`: the number of hosts, which equals the number of slots (`0 <= n <= 12`)
+  - `allowed`: a list of `n` integers. `allowed[i]` is a **bitmask** of host `i`'s
+    availability: bit `j` (that is, `1 << j`) is set exactly when host `i` can take
+    slot `j`. Only bits `0` through `n - 1` are ever set.
+
+  Return a single integer: the number of complete rosters, i.e. the number of ways to
+  match every host to a distinct available slot.
+
+  Edges: if some host has availability mask `0`, no roster can include them, so the
+  answer is `0`. If `n` is `0` there is exactly one (empty) roster, so return `1`.
+
+  Example: with `n = 2` and `allowed = [3, 3]` (mask `3` is binary `11`, meaning both
+  hosts are free for slots `0` and `1`), there are `2` rosters: host 0 to slot 0 with
+  host 1 to slot 1, or the swap. With `allowed = [3, 2]` (host 1's mask `2` is `10`,
+  only slot 1), host 1 is forced onto slot 1 and host 0 onto slot 0, so there is just
+  `1` roster.
+starter_code: |
+  def schedule_mask_dp(job):
+      return 0
+function_name: schedule_mask_dp
+input_mode: function
+solution_sketch: Do a bitmask DP where the state is the set of already-filled slots. The number of set bits in the mask tells you which host to place next, so process hosts in order and, for each reachable mask, try every available slot the host has not used yet.
+sample_solution: |
+  def schedule_mask_dp(job):
+      n = job["n"]
+      allowed = job["allowed"]
+      full = (1 << n) - 1
+      dp = [0] * (1 << n)
+      dp[0] = 1
+      for mask in range(1 << n):
+          ways = dp[mask]
+          if ways == 0:
+              continue
+          host = bin(mask).count("1")
+          if host >= n:
+              continue
+          options = allowed[host] & ~mask
+          while options:
+              low = options & (-options)
+              dp[mask | low] += ways
+              options ^= low
+      return dp[full]
+hints:
+  - level: 1
+    text: Fill the slots one host at a time. The only thing that matters about the past is which slots are already taken, and that set of slots is a subset you can store as a bitmask.
+  - level: 2
+    text: Let dp[mask] be the number of ways to have assigned the first popcount(mask) hosts onto exactly the slots in mask. Then bin(mask).count("1") is the index of the next host to place.
+  - level: 3
+    text: For each mask with dp[mask] > 0, the next host's free-and-unused slots are allowed[host] & ~mask. Peel off each set bit with low = options & -options and add dp[mask] into dp[mask | low]. The answer is dp[(1 << n) - 1].
+tests:
+  public:
+    - name: two_hosts_swap
+      input: {n: 2, allowed: [3, 3]}
+      expected: 2
+    - name: forced_single
+      input: {n: 2, allowed: [3, 2]}
+      expected: 1
+    - name: impossible_overlap
+      input: {n: 2, allowed: [1, 1]}
+      expected: 0
+  validation:
+    - name: three_identity
+      input: {n: 3, allowed: [1, 2, 4]}
+      expected: 1
+    - name: three_all_open
+      input: {n: 3, allowed: [7, 7, 7]}
+      expected: 6
+    - name: one_blocked
+      input: {n: 3, allowed: [7, 7, 0]}
+      expected: 0
+    - name: partial_choice
+      input: {n: 3, allowed: [3, 3, 4]}
+      expected: 2
+    - name: single_host
+      input: {n: 1, allowed: [1]}
+      expected: 1
+explanation_markdown: |
+  Counting one-to-one assignments is the permanent of the availability matrix, and the
+  standard way to compute it fast is a bitmask DP over which slots are already filled.
+  The state `dp[mask]` is the number of ways to place hosts onto *exactly* the slots in
+  `mask`. Every time you place one host you add one slot, so a mask with `k` bits set
+  corresponds to having placed hosts `0 .. k-1`. That is the key trick: the population
+  count of the mask *is* the index of the next host to assign, so you never track the
+  host separately, and every host is used once by construction.
+
+  To extend a state, host `host = popcount(mask)` may go into any slot that is both in
+  their availability and not yet taken, which is the intersection
+  `allowed[host] & ~mask`. Iterating the set bits of that value with the
+  `low = options & -options` idiom isolates each candidate slot's lowest bit in turn,
+  and `dp[mask | low] += dp[mask]` accumulates the count into the larger state. The
+  final answer is `dp[(1 << n) - 1]`, the fully filled roster.
+
+  There are `2**n` masks and up to `n` slots peeled per mask, so the work is
+  `O(n * 2**n)`, which is why `n` is capped at 12 (about 49 thousand mask-steps). A host
+  with mask `0` contributes no options and strands the DP at `0`, giving the correct
+  zero-roster answer.
+common_mistakes:
+  - Deriving the next host from something other than the mask's popcount, which lets a host be placed twice or skipped.
+  - Forgetting to intersect with ~mask, so a slot already taken gets reused and rosters are overcounted.
+  - Iterating masks in an order that reads dp[mask | low] before dp[mask] is final; pushing forward from ascending masks avoids this.
+  - Returning dp indexed by the wrong full mask (for example (1 << n) instead of (1 << n) - 1) or summing the whole dp array.

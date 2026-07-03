@@ -1,0 +1,91 @@
+id: lesson.library.eval_metrics_for_models.a01
+kind: lesson
+version: 1
+language: python
+title: 'The Confusion Matrix: Four Numbers That Tell the Truth'
+slug: lesson-eval-metrics-for-models-a01
+difficulty: medium
+concepts:
+  - ai.model_evaluation
+prerequisites:
+  - ai.classic_ml
+  - concepts.testing
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.eval_metrics_for_models.a01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original classification-metrics walkthrough framed around a mussel-farm contamination screen, with fresh worked numbers.
+body_markdown: |
+  A mussel farm installs a scanner that flags contaminated batches. After a
+  season: "94% accurate!" Should the farm celebrate? You cannot tell — and
+  learning *why* you cannot tell is the foundation of all model evaluation.
+
+  Suppose 5% of batches are actually contaminated. A scanner that flags
+  **nothing at all** is 95% accurate. The impressive-sounding 94% could be
+  *worse than a machine that doesn't work*. Accuracy collapses four very
+  different outcomes into one number, and with imbalanced classes — fraud,
+  disease, defects, spam, almost everything worth detecting — it hides
+  exactly what matters.
+
+  ### The four outcomes
+
+  Every binary prediction lands in one of four cells, and serious
+  evaluation starts by counting them separately:
+
+  - **TP** (true positive): contaminated, flagged. Caught it.
+  - **FP** (false positive): clean, flagged. False alarm — wasted batch.
+  - **TN** (true negative): clean, passed. Correct silence.
+  - **FN** (false negative): contaminated, passed. *Reached customers.*
+
+  This 2×2 count is the **confusion matrix**, and it is the honest raw
+  material from which every classification metric is derived — your first
+  exercise builds it, and the rest build on it.
+
+  ### Precision and recall: two questions, two denominators
+
+  - **Precision** = TP / (TP + FP): *of what we flagged, how much was
+    real?* The false-alarm question.
+  - **Recall** = TP / (TP + FN): *of what was really there, how much did
+    we catch?* The miss question.
+
+  Say the season's numbers were TP=40, FP=10, FN=60, TN=890. Precision =
+  40/50 = 0.80 — flags are usually right. Recall = 40/100 = 0.40 — **the
+  scanner missed most of the contamination**. Accuracy = 930/1000 = 93%.
+  Same system, three numbers, one story: the headline metric concealed the
+  failure that matters.
+
+  The two trade off through the decision threshold: flag more aggressively
+  and recall rises while precision falls; flag conservatively and the
+  reverse. Which matters more is a *domain* judgment, not a math one — a
+  contamination screen should maximize recall (a missed batch poisons
+  someone; a false alarm wastes one), while a spam filter leans precision
+  (deleting a real email costs more than passing one spam).
+
+  ### F1: one number, honestly built
+
+  When you must have a single score, the **F1 score** combines the pair —
+  but with the *harmonic* mean, 2PR/(P+R), not the arithmetic one. The
+  harmonic mean punishes imbalance: precision 1.0 with recall 0.02 averages
+  arithmetically to a healthy-looking 0.51, but F1 ≈ 0.04 — properly
+  reflecting that a system missing 98% of cases is nearly useless. A
+  metric you can only game by improving *both* components.
+
+  One discipline before the exercises: every one of these formulas divides,
+  and every denominator can be zero (no flags at all; no positives in the
+  data). Your implementations define those cases explicitly — 0.0 by
+  stated convention, not a crash — because evaluation code that dies on
+  degenerate inputs is evaluation code nobody trusts.
+checkpoints:
+  - question: A screen for a condition affecting 5% of cases reports 95% accuracy. Why might this be meaningless, and which two numbers expose the truth?
+    answer: Predicting "negative" for everything also scores 95% on such imbalanced data, so accuracy may reflect the class ratio rather than any skill; precision (how many flags were real) and recall (how many real cases were caught) separate the failure modes accuracy hides.
+    explanation: Class imbalance makes accuracy a near-useless headline — the first reflex of model evaluation is to ask for the confusion matrix behind it.
+  - question: Why does F1 use the harmonic rather than arithmetic mean of precision and recall?
+    answer: 'The harmonic mean collapses toward the smaller component: precision 1.0 with recall 0.02 gives F1 ≈ 0.04 rather than the arithmetic 0.51, so a system catastrophically weak on one axis cannot hide behind strength on the other.'
+    explanation: The choice of mean is an anti-gaming design — F1 only rises when both components rise.
+  - question: For the mussel scanner versus a spam filter, which error type does each domain prioritize minimizing, and why?
+    answer: 'The scanner minimizes false negatives (recall first) — a missed contaminated batch harms customers while a false alarm wastes one batch; the spam filter minimizes false positives (precision first) — deleting a real email costs more than letting one spam through.'
+    explanation: 'The precision/recall balance is a domain decision about asymmetric costs; the math only exposes the dial, it cannot set it.'

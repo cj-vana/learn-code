@@ -1,0 +1,129 @@
+id: exercise.library.datetime_handling.a04
+kind: exercise
+version: 1
+language: python
+title: Digitizing the Old Logbooks
+slug: datetime-handling-a04
+difficulty: medium
+concepts:
+  - python.datetime_module
+prerequisites:
+  - python.lists
+  - python.exceptions
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.datetime_handling.a04
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original archive-digitization framing for normalizing three date formats via strptime with fallback attempts.
+prompt_markdown: |
+  An archivist is digitizing decades of handwritten logbooks where dates were
+  written three different ways. Write `parse_mixed_dates(dates)` that takes a list
+  of date strings and returns a list of the same dates normalized to ISO
+  `"YYYY-MM-DD"` strings, in the same order.
+
+  Each input string is in exactly one of these formats:
+
+  - Day/Month/Year with slashes, e.g. `"09/03/2018"` means 9 March 2018.
+  - ISO already, e.g. `"2019-12-25"`.
+  - Full month name, e.g. `"March 3, 2021"`.
+
+  Days and months may be written without a leading zero (`"7/9/2018"` means
+  7 September 2018). Try each format in turn and keep the one that parses. An
+  empty input list returns an empty list.
+
+  Note the day-first convention: `"01/02/2020"` is 1 February 2020, which
+  normalizes to `"2020-02-01"`.
+starter_code: |
+  from datetime import datetime
+
+
+  def parse_mixed_dates(dates):
+      return []
+function_name: parse_mixed_dates
+input_mode: function
+solution_sketch: For each string, try strptime with each of the three format patterns inside a try/except, keep the first that succeeds, and reformat it with strftime as an ISO string.
+sample_solution: |
+  from datetime import datetime
+
+
+  def parse_mixed_dates(dates):
+      formats = ["%d/%m/%Y", "%Y-%m-%d", "%B %d, %Y"]
+      result = []
+      for raw in dates:
+          for fmt in formats:
+              try:
+                  parsed = datetime.strptime(raw, fmt)
+              except ValueError:
+                  continue
+              result.append(parsed.strftime("%Y-%m-%d"))
+              break
+      return result
+hints:
+  - level: 1
+    text: datetime.strptime raises ValueError when the string does not match the format, which you can catch to try the next pattern.
+  - level: 2
+    text: The three patterns are "%d/%m/%Y", "%Y-%m-%d", and "%B %d, %Y"; %B matches a full English month name.
+  - level: 3
+    text: Loop the patterns inside a try/except, break out on the first that parses, then output parsed.strftime("%Y-%m-%d").
+tests:
+  public:
+    - name: slash_day_first
+      input:
+        - 09/03/2018
+      expected:
+        - '2018-03-09'
+    - name: already_iso
+      input:
+        - '2019-12-25'
+      expected:
+        - '2019-12-25'
+    - name: month_name
+      input:
+        - March 3, 2021
+      expected:
+        - '2021-03-03'
+  validation:
+    - name: empty_list
+      input: []
+      expected: []
+    - name: mixed_formats_in_order
+      input:
+        - 01/02/2020
+        - '2019-12-25'
+        - December 15, 1999
+      expected:
+        - '2020-02-01'
+        - '2019-12-25'
+        - '1999-12-15'
+    - name: single_digit_day_and_month
+      input:
+        - 7/9/2018
+      expected:
+        - '2018-09-07'
+    - name: full_month_names
+      input:
+        - January 1, 2000
+        - November 30, 2022
+      expected:
+        - '2000-01-01'
+        - '2022-11-30'
+explanation_markdown: |
+  There is no single format string that matches all three layouts, so the pattern
+  here is fallback parsing: try each candidate format with `strptime` and let a
+  `ValueError` tell you it did not fit. Catching that error and moving on lets you
+  keep the first format that succeeds, then `strftime("%Y-%m-%d")` rewrites the
+  parsed value in a single canonical shape. `strptime` is tolerant of missing
+  leading zeros, so `"7/9/2018"` parses under `"%d/%m/%Y"` just as `"07/09/2018"`
+  would. The order in which you try formats only matters when two could match the
+  same string, but these three are structurally distinct (slashes, dashes, and a
+  spelled-out month), so any successful parse is unambiguous. The day-first
+  convention is baked into `%d/%m/%Y`, which is why `"01/02/2020"` becomes
+  1 February, not 2 January.
+common_mistakes:
+  - Using "%m/%d/%Y" and reading slash dates as month-first, flipping the day and month.
+  - Letting the first ValueError propagate instead of catching it and trying the next format.
+  - Using %b (abbreviated month) instead of %B (full month name), so "March" fails to parse.

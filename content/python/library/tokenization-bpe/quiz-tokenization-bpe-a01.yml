@@ -1,0 +1,104 @@
+id: quiz.library.tokenization_bpe.a01
+kind: quiz
+version: 1
+language: python
+title: Tracing BPE By Hand
+slug: quiz-tokenization-bpe-a01
+difficulty: medium
+concepts:
+  - ai.tokenization
+prerequisites:
+  - ai.tokenization
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.tokenization_bpe.a01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pattern-recognition quiz tracing BPE merges and reasoning about tokenizer design tradeoffs.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      A corpus holds "mast" 3 times and "mask" 2 times, as symbols
+      m a s t </w> and m a s k </w>. Which pair count is highest, and what
+      decides the first merge given "m a" and "a s" tie?
+    choices:
+      - Both "m a" and "a s" count 5; the stated deterministic tie-break rule (e.g. alphabetically first) decides — never dict luck
+      - '"s t" wins with count 5 because t is more frequent than k'
+      - '"m a" wins automatically because it appears leftmost in the words'
+      - Ties are impossible in BPE by construction
+    correct_choice: Both "m a" and "a s" count 5; the stated deterministic tie-break rule (e.g. alphabetically first) decides — never dict luck
+    explanation: |
+      "m a" and "a s" each occur in all 5 word instances while "s t" occurs in
+      only 3. Equal-count ties are common, and Counter iteration order is an
+      insertion-order accident — a reproducible tokenizer requires an explicit
+      tie-break rule, because a tokenizer that differs between training runs
+      breaks every model built on it.
+    concepts:
+      - ai.tokenization
+  - id: q2
+    prompt: |
+      After BPE training on English text, "the" is one token but "Tbilisi" is
+      four. What explains the difference?
+    choices:
+      - Merge decisions follow corpus frequency — extremely common strings assembled into single tokens, rare ones stopped merging early
+      - Proper nouns are excluded from merging by rule
+      - Longer words always receive more tokens
+      - The tokenizer detects English words with a dictionary
+    correct_choice: Merge decisions follow corpus frequency — extremely common strings assembled into single tokens, rare ones stopped merging early
+    explanation: |
+      Nothing in BPE knows about words or names; frequency alone built "the"
+      through successive merges while "Tbilisi"'s pairs never got frequent
+      enough to merge fully.
+    concepts:
+      - ai.tokenization
+  - id: q3
+    prompt: |
+      Why do LLMs often miscount the letters in a word like "strawberry"?
+    choices:
+      - The model sees merge-produced tokens, not characters — letters inside a merged token are invisible to it
+      - Models cannot process numbers and letters together
+      - Tokenizers delete double letters during merging
+      - Counting requires a scratchpad models lack
+    correct_choice: The model sees merge-produced tokens, not characters — letters inside a merged token are invisible to it
+    explanation: |
+      If "strawberry" rides as one or two tokens, the model never observes its
+      individual letters as sequence elements — a direct, mechanical
+      consequence of subword tokenization.
+    concepts:
+      - ai.tokenization
+  - id: q4
+    prompt: |
+      Doubling a BPE tokenizer's merge budget (vocabulary size) has which
+      systematic effect on tokenized text?
+    choices:
+      - Sequences get shorter (more strings ride as single tokens) while the vocabulary — and every model layer tied to it — gets larger
+      - Sequences get longer and the vocabulary smaller
+      - No effect on sequence length, only on training speed
+      - It eliminates the need for the </w> marker
+    correct_choice: Sequences get shorter (more strings ride as single tokens) while the vocabulary — and every model layer tied to it — gets larger
+    explanation: |
+      The merge budget IS the compression dial: more merges pack more text per
+      token at the cost of a bigger vocabulary, trading sequence length
+      against table size.
+    concepts:
+      - ai.tokenization
+  - id: q5
+    prompt: |
+      A teammate proposes skipping the </w> marker to simplify the code. Which
+      capability breaks first?
+    choices:
+      - Unambiguous detokenization — without markers, token boundaries and spaces cannot be reconstructed from the token stream
+      - Pair counting — adjacent pairs become uncountable
+      - The merge loop — it cannot terminate without markers
+      - Nothing — the marker is purely cosmetic
+    correct_choice: Unambiguous detokenization — without markers, token boundaries and spaces cannot be reconstructed from the token stream
+    explanation: |
+      The marker records where words end; strip it and "a tell" versus "at
+      ell" become the same token stream. It also keeps word-final statistics
+      distinct from word-internal ones during training.
+    concepts:
+      - ai.tokenization

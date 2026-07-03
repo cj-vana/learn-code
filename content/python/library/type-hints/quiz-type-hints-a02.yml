@@ -1,0 +1,99 @@
+id: quiz.library.type_hints.a02
+kind: quiz
+version: 1
+language: python
+title: Annotation Mechanics and Narrowing
+slug: quiz-type-hints-a02
+difficulty: medium
+concepts:
+  - python.type_hints
+  - python.types
+prerequisites:
+  - python.type_hints
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.type_hints.a02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax quiz on annotation syntax, bool/int subtleties, narrowing, and mutable defaults.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: Which annotation correctly types a function returning a list of (name, score) pairs?
+    choices:
+      - 'def ranking() -> list[tuple[str, int]]:'
+      - 'def ranking() -> list[str, int]:'
+      - 'def ranking() -> tuple[list[str], list[int]]:'
+      - 'def ranking() -> [(str, int)]:'
+    correct_choice: 'def ranking() -> list[tuple[str, int]]:'
+    explanation: |
+      Lists take one element type; each element here is a two-part tuple, so
+      the pair type nests inside. list[str, int] is malformed and literal
+      brackets aren't types.
+    concepts:
+      - python.type_hints
+  - id: q2
+    prompt: |
+      A sorter routes values by type. Given isinstance(True, int) is True, what
+      does `if isinstance(v, int): ints.append(v)` do with booleans?
+    choices:
+      - Appends True and False into the ints bucket — bool must be checked first
+      - Skips them — isinstance distinguishes bool from int
+      - Raises TypeError on boolean input
+      - Converts them to 1 and 0 before appending
+    correct_choice: Appends True and False into the ints bucket — bool must be checked first
+    explanation: |
+      bool subclasses int, so booleans pass the int check; type-dispatch code
+      must test isinstance(v, bool) before isinstance(v, int).
+    concepts:
+      - python.type_hints
+      - python.types
+  - id: q3
+    prompt: |
+      After `if x is None: return default`, why does a type checker allow
+      x.upper() on the next line when x was annotated str | None?
+    choices:
+      - The early return narrowed x to str for all code after it
+      - upper() is defined on None as well
+      - The checker ignores unions after the first use
+      - It doesn't — the code needs a cast
+    correct_choice: The early return narrowed x to str for all code after it
+    explanation: |
+      Checkers follow control flow: the None branch exited, so x can only be
+      str afterward — narrowing rewards exactly the guard style you should
+      write anyway.
+    concepts:
+      - python.type_hints
+  - id: q4
+    prompt: 'What is wrong with `def add_tag(tags: list[str] = []) -> list[str]` beyond style?'
+    choices:
+      - The default list is created once and shared, so tags leak across calls
+      - Empty lists cannot be annotated
+      - Defaults must be immutable by the type system's rules
+      - list[str] requires at least one element
+    correct_choice: The default list is created once and shared, so tags leak across calls
+    explanation: |
+      Mutable defaults are evaluated at definition time; the typed idiom is
+      tags: list[str] | None = None with a None-check creating a fresh list per
+      call.
+    concepts:
+      - python.type_hints
+      - python.functions
+  - id: q5
+    prompt: |
+      Which statement about runtime behavior of annotations is true?
+    choices:
+      - Python stores them (e.g. in __annotations__) but never enforces them
+      - Python raises TypeError when a call violates them
+      - Annotations are stripped before the code runs
+      - Annotations slow every function call while being checked
+    correct_choice: Python stores them (e.g. in __annotations__) but never enforces them
+    explanation: |
+      Hints are inert metadata at runtime — accessible for introspection (which
+      is how dataclasses read them) but enforced only by external tools like
+      mypy or pyright.
+    concepts:
+      - python.type_hints

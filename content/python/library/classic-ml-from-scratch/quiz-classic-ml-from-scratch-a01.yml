@@ -1,0 +1,102 @@
+id: quiz.library.classic_ml_from_scratch.a01
+kind: quiz
+version: 1
+language: python
+title: Which Learner Fits the Job?
+slug: quiz-classic-ml-from-scratch-a01
+difficulty: medium
+concepts:
+  - ai.classic_ml
+prerequisites:
+  - ai.classic_ml
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.classic_ml_from_scratch.a01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pattern-recognition quiz on choosing among k-NN, k-means, and gradient descent and reasoning about their failure modes.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      A harbor office has 5,000 past cargo manifests, each labeled "flagged"
+      or "cleared" by inspectors, and wants to classify new manifests by
+      similarity to past ones with no training step. Which method is this?
+    choices:
+      - k-nearest neighbours — store the data, measure distances, let the closest vote
+      - k-means — cluster the manifests and label by cluster
+      - Gradient descent on a linear model
+      - A decision stump on the largest feature
+    correct_choice: k-nearest neighbours — store the data, measure distances, let the closest vote
+    explanation: |
+      Labeled data + similarity-based prediction + no training phase is the
+      k-NN signature; k-means ignores the labels entirely.
+    concepts:
+      - ai.classic_ml
+  - id: q2
+    prompt: |
+      The same office has 5,000 UNLABELED manifests and suspects there are a
+      few natural "types". Which method and which caveat?
+    choices:
+      - k-means — but the number of types k must be chosen by a human, not the algorithm
+      - k-NN — but with k set to the number of types
+      - Gradient descent — but only after labeling 10%
+      - Any method — unlabeled data trains all of them equally
+    correct_choice: k-means — but the number of types k must be chosen by a human, not the algorithm
+    explanation: |
+      Finding structure without labels is clustering; k-means never tells you
+      how many clusters exist — k is a domain judgment, its most important
+      input.
+    concepts:
+      - ai.classic_ml
+  - id: q3
+    prompt: |
+      A k-NN model on [income_in_dollars, age_in_years] predicts almost
+      identically when age is removed entirely. What is the most likely cause?
+    choices:
+      - Unstandardized features — income's scale dwarfs age in the distance, so age barely matters
+      - k is even, causing systematic tie-breaking
+      - Age is genuinely irrelevant to every prediction task
+      - Euclidean distance cannot handle two dimensions
+    correct_choice: Unstandardized features — income's scale dwarfs age in the distance, so age barely matters
+    explanation: |
+      A feature spanning tens of thousands numerically drowns one spanning
+      decades; z-score standardization restores both axes to comparable
+      voices. This is the classic silent distance-method failure.
+    concepts:
+      - ai.classic_ml
+  - id: q4
+    prompt: |
+      Why does k-means always terminate, yet possibly return a poor clustering?
+    choices:
+      - Each step lowers a bounded quantity (total squared distance), forcing convergence — but only to a local optimum set by the initial centroids
+      - It terminates after exactly k iterations by definition
+      - Floating-point rounding eventually freezes the centroids
+      - It doesn't — implementations rely on iteration caps alone
+    correct_choice: Each step lowers a bounded quantity (total squared distance), forcing convergence — but only to a local optimum set by the initial centroids
+    explanation: |
+      Monotone descent of a non-negative quantity guarantees settling;
+      nothing guarantees the settled arrangement is globally best, which is
+      why multiple restarts are standard practice.
+    concepts:
+      - ai.classic_ml
+  - id: q5
+    prompt: |
+      Setting k=1 in k-NN scores 100% on the training data itself and poorly
+      on new data. What is this phenomenon?
+    choices:
+      - Overfitting — the model memorizes individual examples, including their noise, instead of the pattern
+      - Underfitting — the model is too simple for the data
+      - Divergence — the distance metric exploded
+      - Label leakage — the answer was in the features
+    correct_choice: Overfitting — the model memorizes individual examples, including their noise, instead of the pattern
+    explanation: |
+      Every training point's nearest neighbour is itself, so training accuracy
+      is trivially perfect while one mislabeled point corrupts real
+      predictions — overfitting in its purest form.
+    concepts:
+      - ai.classic_ml
+      - ai.model_evaluation

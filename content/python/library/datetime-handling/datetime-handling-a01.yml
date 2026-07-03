@@ -1,0 +1,100 @@
+id: exercise.library.datetime_handling.a01
+kind: exercise
+version: 1
+language: python
+title: Naming the Market Day
+slug: datetime-handling-a01
+difficulty: easy
+concepts:
+  - python.datetime_module
+prerequisites:
+  - python.strings
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.datetime_handling.a01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original farmers-market framing for turning an ISO date into its English weekday name.
+prompt_markdown: |
+  A farmers-market planner keeps every stall booking as an ISO date string in
+  `"YYYY-MM-DD"` form and needs to know which day of the week each one falls on.
+  Write `day_of_week(date_str)` that returns the English weekday name for the
+  given date: one of `"Monday"`, `"Tuesday"`, `"Wednesday"`, `"Thursday"`,
+  `"Friday"`, `"Saturday"`, or `"Sunday"`.
+
+  Parse the string with the `datetime` module rather than doing calendar
+  arithmetic by hand. The input is always a valid date, so you do not need to
+  guard against bad formats. Leap days such as `"2024-02-29"` must be handled
+  correctly.
+starter_code: |
+  from datetime import date
+
+
+  def day_of_week(date_str):
+      return ""
+function_name: day_of_week
+input_mode: function
+solution_sketch: Parse the string with date.fromisoformat, then index a fixed Monday-first list of names by the date's weekday() number.
+sample_solution: |
+  from datetime import date
+
+
+  def day_of_week(date_str):
+      names = [
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+          "Sunday",
+      ]
+      d = date.fromisoformat(date_str)
+      return names[d.weekday()]
+hints:
+  - level: 1
+    text: date.fromisoformat("2024-02-29") turns the ISO string straight into a date object you can query.
+  - level: 2
+    text: A date's weekday() method returns 0 for Monday through 6 for Sunday, so a fixed list of names lines up perfectly.
+  - level: 3
+    text: Build names = ["Monday", ..., "Sunday"] in that exact order and return names[d.weekday()].
+tests:
+  public:
+    - name: today_is_thursday
+      input: '2026-07-02'
+      expected: Thursday
+    - name: millennium_saturday
+      input: '2000-01-01'
+      expected: Saturday
+    - name: leap_day_thursday
+      input: '2024-02-29'
+      expected: Thursday
+  validation:
+    - name: friday
+      input: '2026-07-03'
+      expected: Friday
+    - name: sunday
+      input: '2023-11-05'
+      expected: Sunday
+    - name: monday_moon_landing_week
+      input: '1970-07-20'
+      expected: Monday
+    - name: saturday
+      input: '2026-07-04'
+      expected: Saturday
+explanation_markdown: |
+  `date.fromisoformat` reads the exact `"YYYY-MM-DD"` layout and hands back a
+  `date` object, so no manual splitting or integer parsing is needed. Every
+  `date` exposes `weekday()`, which numbers the days Monday=0 through Sunday=6.
+  Because that numbering is fixed, a Monday-first list of names can be indexed
+  directly by the result, which is why the order of the list matters. Relying on
+  the standard library also means quirks like leap years are already accounted
+  for: `2024-02-29` resolves to Thursday without any special handling on your
+  part.
+common_mistakes:
+  - Building the names list starting at Sunday, so every answer is shifted by one day.
+  - Confusing weekday() (Monday=0) with isoweekday() (Monday=1), which shifts the index off by one.
+  - Trying to split the string and compute the day with hand-written calendar math instead of using the datetime module.

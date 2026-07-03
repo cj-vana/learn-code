@@ -1,0 +1,112 @@
+id: exercise.library.datetime_handling.a02
+kind: exercise
+version: 1
+language: python
+title: Measuring the Loan Length
+slug: datetime-handling-a02
+difficulty: easy
+concepts:
+  - python.datetime_module
+prerequisites:
+  - python.dictionaries
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.datetime_handling.a02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original lending-library framing for a signed day count between two ISO dates.
+prompt_markdown: |
+  A lending library records each borrowed book as a job dictionary with a
+  `"start"` date (checked out) and an `"end"` date (returned), both ISO strings
+  in `"YYYY-MM-DD"` form. Write `days_between(job)` that returns the number of
+  days from start to end as an integer.
+
+  The input is a single dictionary shaped like:
+
+  ```python
+  {"start": "2026-01-01", "end": "2026-01-08"}
+  ```
+
+  Return `end - start` in days. If the two dates are the same, return `0`. If the
+  book is returned *before* the start date (a data-entry slip), the result is
+  **negative** — do not take an absolute value. Your solution must count real
+  calendar days, so leap-year gaps like February 2024 come out right.
+starter_code: |
+  from datetime import date
+
+
+  def days_between(job):
+      return 0
+function_name: days_between
+input_mode: function
+solution_sketch: Parse both ISO strings into date objects and return the .days attribute of their difference.
+sample_solution: |
+  from datetime import date
+
+
+  def days_between(job):
+      start = date.fromisoformat(job["start"])
+      end = date.fromisoformat(job["end"])
+      return (end - start).days
+hints:
+  - level: 1
+    text: Subtracting one date from another yields a timedelta object, not a number.
+  - level: 2
+    text: A timedelta exposes a .days attribute that already counts whole calendar days between the two dates.
+  - level: 3
+    text: Return (end - start).days so the sign is negative whenever end comes before start.
+tests:
+  public:
+    - name: one_week
+      input:
+        start: '2026-01-01'
+        end: '2026-01-08'
+      expected: 7
+    - name: same_day
+      input:
+        start: '2026-03-14'
+        end: '2026-03-14'
+      expected: 0
+    - name: returned_early_negative
+      input:
+        start: '2026-05-10'
+        end: '2026-05-03'
+      expected: -7
+  validation:
+    - name: across_leap_february
+      input:
+        start: '2024-02-28'
+        end: '2024-03-01'
+      expected: 2
+    - name: across_non_leap_february
+      input:
+        start: '2023-02-28'
+        end: '2023-03-01'
+      expected: 1
+    - name: across_year_boundary
+      input:
+        start: '2025-12-30'
+        end: '2026-01-02'
+      expected: 3
+    - name: long_span
+      input:
+        start: '2020-01-01'
+        end: '2021-01-01'
+      expected: 366
+explanation_markdown: |
+  Date arithmetic in Python does not give you a plain integer; subtracting two
+  `date` objects produces a `timedelta`, and it is the `timedelta.days` attribute
+  that holds the whole-day count. Because the difference preserves direction,
+  `(end - start).days` is naturally negative when the return date precedes the
+  checkout date, so no special casing is needed. Working through the standard
+  library also means leap years are handled for free: February 2024 has 29 days,
+  so `2024-02-28` to `2024-03-01` is 2 days, while the same span in the non-leap
+  year 2023 is only 1 day. Likewise, 2020 was a leap year, so a full year from
+  `2020-01-01` spans 366 days.
+common_mistakes:
+  - Wrapping the result in abs(), which hides genuinely reversed date entries.
+  - Forgetting the .days attribute and returning the timedelta object itself.
+  - Estimating with a fixed 30- or 365-day month/year instead of subtracting real dates, which breaks across leap years.

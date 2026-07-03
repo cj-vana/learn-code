@@ -1,0 +1,130 @@
+id: exercise.library.classic_ml_from_scratch.a05
+kind: exercise
+version: 1
+language: python
+title: Recompute the Cluster Centres
+slug: classic-ml-from-scratch-a05
+difficulty: medium
+concepts:
+  - ai.classic_ml
+prerequisites:
+  - python.lists
+  - python.loops
+  - python.conditionals
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.classic_ml_from_scratch.a05
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original centroid-update drill framed around averaging handwriting stroke features per cluster.
+prompt_markdown: |
+  This is the **update** half of the k-means loop. Once every point has been
+  labelled with a cluster, each cluster centre moves to the average (mean) of the
+  points assigned to it. Averaging the members is what pulls each centroid into
+  the middle of its group.
+
+  Each handwritten digit is summarised as a stroke-feature vector, and the points
+  have already been grouped. Write `update_centroids(job)` that takes a single
+  dictionary with four keys:
+
+  - `"points"`: a list of point vectors (each a list of numbers).
+  - `"assignments"`: a list of integers the same length as `"points"`;
+    `assignments[i]` is the cluster index of `points[i]`.
+  - `"k"`: the number of clusters. Valid cluster indices are `0 .. k-1`.
+  - `"previous"`: a list of `k` centroid vectors from the last round.
+
+  Return a list of `k` new centroid vectors. For cluster `j`:
+
+  - If any points are assigned to it, the new centroid is the **element-wise mean**
+    of those points: average coordinate 0 across the members, average coordinate 1,
+    and so on. Round every coordinate to **6 decimal places**.
+  - If **no** points are assigned to it (an empty cluster), keep the old centroid
+    unchanged by reusing `previous[j]` exactly as given.
+
+  Example:
+
+  ```python
+  update_centroids({
+      "points": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]],
+      "assignments": [0, 0, 1],
+      "k": 2,
+      "previous": [[0.0, 0.0], [9.9, 9.9]],
+  })
+  # -> [[2.0, 3.0], [5.0, 6.0]]
+  # cluster 0 averages [1,2] and [3,4]; cluster 1 has only [5,6]
+  ```
+starter_code: |
+  def update_centroids(job):
+      return []
+function_name: update_centroids
+input_mode: function
+solution_sketch: For each cluster index collect its member points; average them coordinate-by-coordinate with 6dp rounding, or fall back to previous[j] when the cluster is empty.
+sample_solution: |
+  def update_centroids(job):
+      points = job["points"]
+      assignments = job["assignments"]
+      k = job["k"]
+      previous = job["previous"]
+      new_centroids = []
+      for j in range(k):
+          members = [points[i] for i in range(len(points)) if assignments[i] == j]
+          if not members:
+              new_centroids.append(previous[j])
+          else:
+              dim = len(members[0])
+              centroid = []
+              for d in range(dim):
+                  total = 0.0
+                  for member in members:
+                      total += member[d]
+                  centroid.append(round(total / len(members), 6))
+              new_centroids.append(centroid)
+      return new_centroids
+hints:
+  - level: 1
+    text: Handle one cluster index j at a time, gathering the points whose assignment equals j.
+  - level: 2
+    text: If that member list is empty, append previous[j] unchanged; otherwise you must average the members coordinate by coordinate.
+  - level: 3
+    text: For each coordinate position d, sum member[d] over the members and divide by len(members), then round(..., 6) before appending.
+tests:
+  public:
+    - name: two_clusters
+      input: {"points": [[1.0, 2.0], [3.0, 4.0], [5.0, 6.0]], "assignments": [0, 0, 1], "k": 2, "previous": [[0.0, 0.0], [9.9, 9.9]]}
+      expected: [[2.0, 3.0], [5.0, 6.0]]
+    - name: empty_cluster_keeps_previous
+      input: {"points": [[2.0, 2.0], [4.0, 4.0]], "assignments": [1, 1], "k": 2, "previous": [[7.7, 7.7], [0.0, 0.0]]}
+      expected: [[7.7, 7.7], [3.0, 3.0]]
+    - name: needs_rounding
+      input: {"points": [[1.0, 1.0], [2.0, 2.0], [2.0, 2.0]], "assignments": [0, 0, 0], "k": 1, "previous": [[0.0, 0.0]]}
+      expected: [[1.666667, 1.666667]]
+  validation:
+    - name: three_singletons
+      input: {"points": [[0.0, 0.0], [10.0, 0.0], [0.0, 10.0], [2.0, 2.0]], "assignments": [0, 1, 2, 0], "k": 3, "previous": [[0.0, 0.0], [0.0, 0.0], [0.0, 0.0]]}
+      expected: [[1.0, 1.0], [10.0, 0.0], [0.0, 10.0]]
+    - name: two_empty_clusters
+      input: {"points": [[6.0, 6.0]], "assignments": [2], "k": 3, "previous": [[1.0, 1.0], [2.0, 2.0], [0.0, 0.0]]}
+      expected: [[1.0, 1.0], [2.0, 2.0], [6.0, 6.0]]
+    - name: one_dimensional_rounding
+      input: {"points": [[1.0], [2.0], [4.0]], "assignments": [0, 0, 0], "k": 1, "previous": [[0.0]]}
+      expected: [[2.333333]]
+explanation_markdown: |
+  For each cluster you first collect its members with a filter over the parallel
+  `points` and `assignments` lists, then average them one coordinate at a time.
+  The element-wise mean is the point that minimises the total squared distance to
+  the members, which is precisely why k-means moves each centre here: the
+  assignment step and this averaging step together push the total within-cluster
+  spread down every round.
+
+  The empty-cluster branch matters because a mean of zero points is undefined
+  (dividing by zero). Rather than inventing a value, you reuse the previous
+  centroid so that cluster simply stays put and can pick up points in a later
+  round. Rounding each averaged coordinate to 6 decimals keeps recurring
+  fractions like 5/3 reproducible against the expected output.
+common_mistakes:
+  - Dividing by k or by len(points) instead of by the number of members in that specific cluster.
+  - Dropping or crashing on an empty cluster rather than reusing previous[j].
+  - Averaging whole vectors as a single value instead of taking the mean separately for each coordinate.

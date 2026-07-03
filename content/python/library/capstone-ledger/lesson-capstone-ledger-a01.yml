@@ -1,0 +1,95 @@
+id: lesson.library.capstone_ledger.a01
+kind: lesson
+version: 1
+language: python
+title: 'Capstone Brief: The Market Ledger'
+slug: lesson-capstone-ledger-a01
+difficulty: hard
+concepts:
+  - python.json_csv
+  - concepts.grouping_aggregation
+  - python.string_formatting
+prerequisites:
+  - python.json_csv
+  - python.exceptions
+  - concepts.grouping_aggregation
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.capstone_ledger.a01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original capstone project brief for a farmers' market ledger system, defining the six-stage build and its data contracts.
+body_markdown: |
+  Everything in the Python Developer Mastery path has been building toward
+  this. The **Market Ledger capstone** is one continuous project: over six
+  graded stages you will build the settlement system for a farmers' market
+  cooperative — the software that takes a day of raw sales lines and turns
+  them into vendor statements with fees, flags, and a printable summary.
+
+  This brief is your project README. Read it the way you would read a real
+  one: to understand the shape of the whole system before writing stage one.
+
+  ### The domain
+
+  Forty vendors sell at the Saturday market. Each sale is recorded by the
+  till as one pipe-delimited line:
+
+  ```text
+  2026-07-04|Alma's Orchard|apples|12|0.85
+  ```
+
+  date, vendor, item, quantity, unit price. At closing time the cooperative
+  needs: each vendor's gross takings, the co-op fee deducted at the right
+  tier, anomalies flagged for the treasurer, and a formatted statement each
+  vendor can read.
+
+  ### The six stages
+
+  Each stage is a standalone exercise with its own tests, but the outputs of
+  one stage are the inputs of the next — you are building a pipeline:
+
+  1. **parse_entry** — one raw line into one typed record (or a rejection).
+     The boundary where strings become data.
+  2. **intake_ledger** — the whole file: good records in order, plus a
+     rejects list with line numbers and reasons. Nothing silently dropped.
+  3. **vendor_statements** — group by vendor: gross takings, per-item
+     quantities, days active. The aggregation core.
+  4. **apply_fees** — tiered co-op fees applied to each statement. Business
+     rules meet floating-point discipline.
+  5. **flag_anomalies** — suspicious entries: over-limit quantities and
+     totals, duplicate lines. The treasurer's safety net.
+  6. **render_statement** — one vendor's statement as an exactly formatted
+     multi-line string. Where data becomes a document.
+
+  ### Contracts to hold throughout
+
+  - **Money is rounded to 2 decimal places at every boundary** — compute,
+    then `round(x, 2)`, and never compare unrounded floats to expectations.
+  - **Rejections carry reasons.** Stage 1 defines a small taxonomy of
+    failure reasons; stage 2 reports them verbatim. A pipeline that says
+    *why* it rejected line 17 is worth ten that don't.
+  - **Order is meaning.** Entries stay in file order; grouped outputs sort
+    where the spec says so. Deterministic output is what makes the stages
+    testable — and what makes reports diffable in real life.
+
+  ### How to work it
+
+  Do the stages in order — later prompts assume you have internalized
+  earlier decisions. Before coding each stage, re-read its edge cases the
+  way the testing lessons taught: every promise in a prompt is a test that
+  will run. And when stage 6 renders its first full statement from a raw
+  ledger you parsed in stage 1, take a second to notice what you built: a
+  complete, tested data system in pure Python. That is the job.
+checkpoints:
+  - question: Why does the capstone round money to 2 decimal places at every stage boundary instead of once at the end?
+    answer: Unrounded float arithmetic accumulates representation error across stages, so downstream comparisons and fee tiers could flip on invisible differences; rounding at each boundary keeps every intermediate value exact and testable.
+    explanation: The discipline mirrors real financial code, where money crossing any interface is normalized — it is also what makes each stage independently gradeable.
+  - question: Stage 2 must return rejected lines with line numbers and reasons rather than just skipping bad lines. What professional principle is that?
+    answer: Failures should be visible and accounted for — a pipeline that reports what it dropped and why can be trusted and debugged, while silent dropping corrupts totals invisibly.
+    explanation: The rejects list is the ledger's audit trail; the treasurer can fix the till data because the software said exactly what was wrong.
+  - question: The six stages are separate functions rather than one big process_ledger. What does that decomposition buy?
+    answer: Each stage has one job, its own contract, and its own tests, so bugs localize to a stage and stages can be reused or replaced independently — the pipeline shape all real data systems use.
+    explanation: The capstone teaches architecture through structure — testable boundaries between stages are the same skill as testable functions, at a larger scale.

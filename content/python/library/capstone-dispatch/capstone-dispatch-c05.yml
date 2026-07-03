@@ -1,0 +1,120 @@
+id: exercise.library.capstone_dispatch.c05
+kind: exercise
+version: 1
+language: python
+title: 'The Courier Dispatch Board: Balancing the Riders'
+slug: capstone-dispatch-c05
+difficulty: hard
+concepts:
+  - patterns.greedy
+  - python.heapq_bisect
+prerequisites:
+  - python.lists
+  - python.tuples
+estimated_time_minutes: 20
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.capstone_dispatch.c05
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: >-
+    Fifth stage of the courier capstone; least-loaded assignment with a min-heap,
+    tie-broken by rider index, reporting the final workload of every rider.
+prompt_markdown: |
+  The dispatcher hands out the day's jobs one at a time and wants nobody buried
+  while others idle. Write `balance_riders(job)` where `job` is a dictionary with:
+
+  - `"riders"`: a positive integer `n`, the number of riders, numbered `0` to
+    `n - 1`. Every rider starts the day with a load of `0` minutes.
+  - `"jobs"`: a list of job durations in minutes, handed out **in the given order**.
+
+  Assign each job, in order, to the rider who currently has the **smallest total
+  load**. If two or more riders are tied for smallest, give it to the one with the
+  **lowest rider number**. Add the job's minutes to that rider's load, then move on
+  to the next job.
+
+  Return a **list** of the final total loads, one entry per rider, in rider-number
+  order (index `0` is rider `0`).
+
+  Edge cases the tests cover:
+
+  - With one rider, every job piles onto rider `0`.
+  - An empty job list leaves every rider at `0`.
+  - When loads tie, the lowest-numbered rider always wins the next job.
+
+  For example, `{"riders": 2, "jobs": [4, 4, 4, 4]}` returns `[8, 8]`: the jobs land
+  on riders 0, 1, 0, 1 in turn.
+starter_code: |
+  import heapq
+
+
+  def balance_riders(job):
+      return []
+function_name: balance_riders
+input_mode: function
+solution_sketch: Keep a min-heap of (load, rider_index); for each job pop the least-loaded rider, add the job, and push it back, then report loads by index.
+sample_solution: |
+  import heapq
+
+
+  def balance_riders(job):
+      n = job["riders"]
+      heap = [(0, i) for i in range(n)]
+      heapq.heapify(heap)
+      loads = [0] * n
+      for duration in job["jobs"]:
+          load, index = heapq.heappop(heap)
+          loads[index] += duration
+          heapq.heappush(heap, (load + duration, index))
+      return loads
+hints:
+  - level: 1
+    text: You repeatedly need the currently least-loaded rider, which is exactly what a min-heap gives you in O(log n) per job.
+  - level: 2
+    text: Store (load, rider_index) tuples in the heap. Popping compares load first and rider_index second, so ties naturally go to the lowest index.
+  - level: 3
+    text: For each job, pop the smallest tuple, add the duration to that rider's load in a separate list indexed by rider, then push (new_load, index) back. Return the list at the end.
+tests:
+  public:
+    - name: single_rider
+      input: {"riders": 1, "jobs": [3, 5, 2]}
+      expected: [10]
+    - name: two_riders_alternate
+      input: {"riders": 2, "jobs": [4, 4, 4, 4]}
+      expected: [8, 8]
+    - name: no_jobs
+      input: {"riders": 3, "jobs": []}
+      expected: [0, 0, 0]
+  validation:
+    - name: uneven_stream
+      input: {"riders": 2, "jobs": [5, 2, 1, 6, 3]}
+      expected: [8, 9]
+    - name: three_riders_then_tie
+      input: {"riders": 3, "jobs": [10, 10, 10, 5]}
+      expected: [15, 10, 10]
+    - name: tie_goes_to_lowest_index
+      input: {"riders": 3, "jobs": [7]}
+      expected: [7, 0, 0]
+    - name: long_stream
+      input: {"riders": 2, "jobs": [3, 1, 4, 1, 5, 9, 2, 6]}
+      expected: [17, 14]
+explanation_markdown: |
+  Keeping the workload even is a greedy problem: at each step, the job that just
+  arrived should go to whoever is least busy right now. A min-heap of
+  `(load, rider_index)` tuples makes "who is least busy" an `O(log n)` pop, so the
+  whole day costs `O(jobs * log riders)`.
+
+  Packing the rider index as the second element of the tuple does double duty. It
+  breaks ties exactly the way the prompt wants — when two riders share the smallest
+  load, the tuple comparison falls through to the index and the lower one pops
+  first — and it tells you which rider's running total to update. You maintain a
+  separate `loads` list indexed by rider so the final answer is in rider-number
+  order rather than heap order. In `three_riders_then_tie` the first three tens go
+  to riders 0, 1, 2, and the trailing 5 lands on rider 0 because all three are tied
+  and 0 is lowest, giving `[15, 10, 10]`.
+common_mistakes:
+  - Scanning the whole load list for the minimum on every job, which works but is O(jobs * riders) and misses the point of the heap.
+  - Putting the rider index first in the tuple, so the heap orders by index instead of by load.
+  - Returning the loads in heap or pop order instead of rebuilding them in rider-number order.

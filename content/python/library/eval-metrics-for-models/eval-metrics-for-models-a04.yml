@@ -1,0 +1,109 @@
+id: exercise.library.eval_metrics_for_models.a04
+kind: exercise
+version: 1
+language: python
+title: Blending Precision and Recall Into F1
+slug: eval-metrics-for-models-a04
+difficulty: medium
+concepts:
+  - ai.model_evaluation
+prerequisites:
+  - python.dictionaries
+  - python.conditionals
+  - python.operators
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.eval_metrics_for_models.a04
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original F1 harmonic-mean drill continuing the warbler-detector evaluation series.
+prompt_markdown: |
+  Precision and recall pull in opposite directions, so it helps to fold them into a
+  single score. The **F1 score** is their *harmonic* mean, which stays low unless
+  *both* numbers are healthy (unlike a plain average, which a single strong value
+  can prop up).
+
+  For precision `p` and recall `r`:
+
+  ```
+  F1 = 2 * p * r / (p + r)
+  ```
+
+  Write `f1(job)` that takes a single dictionary with two keys:
+
+  - `"precision"`: a float, the precision `p`.
+  - `"recall"`: a float, the recall `r`.
+
+  Return the F1 score as a float **rounded to 4 decimal places**.
+
+  If `p + r == 0` (both are zero) the formula divides by zero; define F1 as `0.0`
+  in that case.
+
+  Example:
+
+  ```python
+  f1({"precision": 0.5, "recall": 0.5})
+  # -> 0.5
+  ```
+starter_code: |
+  def f1(job):
+      return 0.0
+function_name: f1
+input_mode: function
+solution_sketch: Read p and r; if their sum is zero return 0.0, otherwise return round(2 * p * r / (p + r), 4).
+sample_solution: |
+  def f1(job):
+      p = job["precision"]
+      r = job["recall"]
+      if p + r == 0:
+          return 0.0
+      return round(2 * p * r / (p + r), 4)
+hints:
+  - level: 1
+    text: The harmonic mean multiplies the two values in the numerator and adds them in the denominator.
+  - level: 2
+    text: Guard against p + r being zero before dividing; the only way the sum is zero is when both are zero.
+  - level: 3
+    text: Return round(2 * p * r / (p + r), 4), or 0.0 when p + r == 0.
+tests:
+  public:
+    - name: equal_half
+      input: {"precision": 0.5, "recall": 0.5}
+      expected: 0.5
+    - name: perfect
+      input: {"precision": 1.0, "recall": 1.0}
+      expected: 1.0
+    - name: both_zero
+      input: {"precision": 0.0, "recall": 0.0}
+      expected: 0.0
+  validation:
+    - name: precision_favoured
+      input: {"precision": 0.6, "recall": 0.4}
+      expected: 0.48
+    - name: recall_starved
+      input: {"precision": 0.8, "recall": 0.2}
+      expected: 0.32
+    - name: unequal_sum
+      input: {"precision": 0.9, "recall": 0.6}
+      expected: 0.72
+    - name: rounded_inputs
+      input: {"precision": 0.3333, "recall": 0.6667}
+      expected: 0.4444
+explanation_markdown: |
+  The harmonic mean punishes imbalance. If precision is `0.8` but recall is only
+  `0.2`, the arithmetic mean would be a comfortable `0.5`, yet F1 comes out at
+  `0.32` because the harmonic mean is dragged toward the smaller value. That is
+  exactly the behaviour you want from a single headline score: a model has to do
+  well on both axes to earn a high F1.
+
+  The `p + r == 0` guard covers the degenerate case where the detector found no true
+  positives at all, leaving both precision and recall at zero. Defining F1 as `0.0`
+  there matches the intuition that such a model has no useful skill, and it avoids a
+  division-by-zero crash.
+common_mistakes:
+  - Averaging precision and recall with (p + r) / 2 instead of using the harmonic mean.
+  - Dropping the factor of 2 in the numerator, which halves every score.
+  - Skipping the p + r == 0 guard, so a fully unskilled model raises an error instead of scoring 0.0.

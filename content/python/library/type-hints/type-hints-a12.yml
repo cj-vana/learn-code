@@ -1,0 +1,140 @@
+id: exercise.library.type_hints.a12
+kind: exercise
+version: 1
+language: python
+title: Matching Lids to Jars
+slug: type-hints-a12
+difficulty: hard
+concepts:
+  - python.type_hints
+prerequisites:
+  - python.lists
+  - python.dictionaries
+estimated_time_minutes: 20
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.type_hints.a12
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original strict-zip pairing drill framed around matching pantry lids to jars, refusing to pair when the two lists are uneven.
+prompt_markdown: |
+  In the pantry, every jar should get exactly one lid. Pairing them up is a
+  generic operation -- it does not care whether the items are strings, numbers, or
+  anything else, only that the two lists line up one-to-one. If there are more
+  lids than jars (or the reverse), something is wrong and the pairing must be
+  refused rather than silently dropping the leftovers.
+
+  Write `generic_pairs(job)` that takes **one dictionary** with two entries:
+
+  - `"keys"`: a list of items (the jars)
+  - `"values"`: a list of items (the lids)
+
+  If the two lists have the **same length**, return a **list of `[key, value]`
+  pairs** (each pair a two-element list), taking the first key with the first
+  value, the second with the second, and so on. If the two lists have
+  **different lengths**, return the string `"length mismatch"` instead.
+
+  Example call:
+
+  ```python
+  generic_pairs({"keys": ["jam", "salt"], "values": ["red", "blue"]})
+  # -> [["jam", "red"], ["salt", "blue"]]
+  ```
+
+  Two empty lists are the same length, so they pair into an empty list. Return
+  lists for the pairs, not tuples.
+starter_code: |
+  from typing import Any
+
+
+  def generic_pairs(job: dict[str, list[Any]]) -> Any:
+      return []
+function_name: generic_pairs
+input_mode: function
+solution_sketch: Compare the lengths of the two lists; if they differ return "length mismatch", otherwise zip them and build a list of two-element [key, value] lists.
+sample_solution: |
+  from typing import Any
+
+
+  def generic_pairs(job: dict[str, list[Any]]) -> Any:
+      keys = job["keys"]
+      values = job["values"]
+      if len(keys) != len(values):
+          return "length mismatch"
+      return [[key, value] for key, value in zip(keys, values)]
+hints:
+  - level: 1
+    text: The very first check is whether the two lists are the same length; if not, the pairing is refused.
+  - level: 2
+    text: When the lengths match, zip pairs the lists position by position without dropping any items.
+  - level: 3
+    text: Build each pair as a two-element list [key, value] so the result is a list of lists, and return "length mismatch" otherwise.
+tests:
+  public:
+    - name: both_empty
+      input:
+        keys: []
+        values: []
+      expected: []
+    - name: simple_pairs
+      input:
+        keys: ["a", "b"]
+        values: [1, 2]
+      expected: [["a", 1], ["b", 2]]
+    - name: more_keys_than_values
+      input:
+        keys: ["a", "b", "c"]
+        values: [1]
+      expected: "length mismatch"
+    - name: single_pair
+      input:
+        keys: ["lid"]
+        values: ["jar"]
+      expected: [["lid", "jar"]]
+  validation:
+    - name: more_values_than_keys
+      input:
+        keys: ["a"]
+        values: [1, 2, 3]
+      expected: "length mismatch"
+    - name: three_pairs
+      input:
+        keys: ["x", "y", "z"]
+        values: [10, 20, 30]
+      expected: [["x", 10], ["y", 20], ["z", 30]]
+    - name: mixed_value_types
+      input:
+        keys: ["n", "f", "s"]
+        values: [1, 2.5, "go"]
+      expected: [["n", 1], ["f", 2.5], ["s", "go"]]
+    - name: empty_keys_nonempty_values
+      input:
+        keys: []
+        values: [1]
+      expected: "length mismatch"
+    - name: numeric_keys
+      input:
+        keys: [1, 2]
+        values: ["one", "two"]
+      expected: [[1, "one"], [2, "two"]]
+explanation_markdown: |
+  This models a strict, generic pairing: the same code works whatever the element
+  types are, because it only touches the list lengths and positions, never the
+  values themselves. That is exactly what a generic type parameter captures in a
+  type system -- the shape of the operation is fixed while the contents stay
+  arbitrary. The `dict[str, list[Any]]` hint on the input says the two lists may
+  hold anything.
+
+  The length guard is the point of the drill. Python's plain `zip` stops at the
+  shorter list and silently discards the tail, which would quietly lose a jar or a
+  lid. Checking `len(keys) != len(values)` first turns that silent truncation into
+  an explicit `"length mismatch"` signal, mirroring the strict pairing you would
+  want when the counts are supposed to agree. When they do agree, a single
+  comprehension over `zip` produces the aligned `[key, value]` pairs in order, a
+  linear pass over the input.
+common_mistakes:
+  - Zipping without checking lengths first, so a shorter list silently drops the extra items instead of reporting a mismatch.
+  - Returning tuples from zip directly rather than converting each pair into a two-element list.
+  - Returning an empty list for a length mismatch instead of the required "length mismatch" string.

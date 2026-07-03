@@ -1,0 +1,88 @@
+id: exercise.library.language_models_from_scratch.a01
+kind: exercise
+version: 1
+language: python
+title: Counting a Sparrow's Syllable Pairs
+slug: language-models-from-scratch-a01
+difficulty: easy
+concepts:
+  - ai.language_models
+  - patterns.hash_map_counting
+prerequisites:
+  - python.dictionaries
+  - python.loops
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.language_models_from_scratch.a01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original bigram-counting drill framed around a field birder transcribing sparrow song syllables.
+prompt_markdown: |
+  A field birder writes down a sparrow's song as a list of syllable tokens, for
+  example `["chi", "rup", "chi", "rup", "tik"]`. The first thing a counting
+  language model needs is how often each syllable is *followed* by another — the
+  **bigram** counts.
+
+  Write `bigram_counts(tokens)` that scans the list left to right and counts every
+  adjacent ordered pair `(first, second)`. A plain tuple cannot be a JSON object
+  key, so record each pair as the single string `"first|second"` (the two tokens
+  joined by a `|`). Return a dict mapping that string to how many times the pair
+  occurs.
+
+  For `["chi", "rup", "chi", "rup"]` the pairs are `chi->rup`, `rup->chi`,
+  `chi->rup`, so the result is `{"chi|rup": 2, "rup|chi": 1}`. A list with fewer
+  than two tokens has no pairs, so return an empty dict `{}`.
+starter_code: |
+  def bigram_counts(tokens):
+      return {}
+function_name: bigram_counts
+input_mode: function
+solution_sketch: Walk indices 0..len-2, build the "first|second" key from tokens[i] and tokens[i+1], and tally each with dict.get.
+sample_solution: |
+  def bigram_counts(tokens):
+      counts = {}
+      for i in range(len(tokens) - 1):
+          key = tokens[i] + "|" + tokens[i + 1]
+          counts[key] = counts.get(key, 0) + 1
+      return counts
+hints:
+  - level: 1
+    text: A bigram is just an adjacent pair, and a list of length n has n-1 of them.
+  - level: 2
+    text: Loop i from 0 to len(tokens)-2 and build the key as tokens[i] + "|" + tokens[i+1].
+  - level: 3
+    text: Accumulate with counts[key] = counts.get(key, 0) + 1; a list shorter than two tokens simply never enters the loop and returns {}.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: {}
+    - name: single_token
+      input: ["chi"]
+      expected: {}
+    - name: repeated_pair
+      input: ["chi", "rup", "chi", "rup"]
+      expected: {"chi|rup": 2, "rup|chi": 1}
+  validation:
+    - name: three_distinct
+      input: ["a", "b", "c"]
+      expected: {"a|b": 1, "b|c": 1}
+    - name: all_same
+      input: ["la", "la", "la"]
+      expected: {"la|la": 2}
+    - name: longer_song
+      input: ["chi", "rup", "tik", "rup", "chi"]
+      expected: {"chi|rup": 1, "rup|tik": 1, "tik|rup": 1, "rup|chi": 1}
+explanation_markdown: |
+  Counting adjacent pairs is a single left-to-right pass, O(n) in the number of
+  tokens. These bigram counts are the raw material a language model later
+  normalizes into `P(second | first)`. Joining the two tokens with `|` is a common
+  trick for using a compound key inside a plain dict (or JSON object), which only
+  allows string keys — the pair `("chi", "rup")` becomes the key `"chi|rup"`.
+common_mistakes:
+  - Looping to len(tokens) instead of len(tokens)-1, which reads past the end when forming the last pair.
+  - Treating pairs as unordered, so "a|b" and "b|a" get merged when they are distinct bigrams.
+  - Assigning counts[key] = 1 instead of incrementing, which discards repeats.

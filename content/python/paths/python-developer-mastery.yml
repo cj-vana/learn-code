@@ -13,7 +13,7 @@ outcomes:
 - Model programs with classes, generators, and decorators
 - Handle errors deliberately and process real-world text and records
 - Finish with capstones that mix everything without hints
-estimated_hours: 44
+estimated_hours: 67
 review_status: published
 source_status: original
 provenance:
@@ -159,6 +159,8 @@ units:
   - exercise.library.error_handling.a10
   - exercise.library.error_handling.a11
   - exercise.library.error_handling.a12
+  - exercise.library.error_handling.b01
+  - exercise.library.error_handling.b02
   - quiz.library.error_handling.a01
   - quiz.library.error_handling.a02
   - quiz.library.error_handling.a03
@@ -182,6 +184,8 @@ units:
   - exercise.library.oop_classes.a10
   - exercise.library.oop_classes.a11
   - exercise.library.oop_classes.a12
+  - exercise.library.oop_classes.b01
+  - exercise.library.oop_classes.b02
   - quiz.library.oop_classes.a01
   - quiz.library.oop_classes.a02
   - quiz.library.oop_classes.a03
@@ -205,6 +209,8 @@ units:
   - exercise.library.iterators_generators.a10
   - exercise.library.iterators_generators.a11
   - exercise.library.iterators_generators.a12
+  - exercise.library.iterators_generators.b01
+  - exercise.library.iterators_generators.b02
   - quiz.library.iterators_generators.a01
   - quiz.library.iterators_generators.a02
   - quiz.library.iterators_generators.a03
@@ -227,6 +233,8 @@ units:
   - exercise.library.decorators_closures.a10
   - exercise.library.decorators_closures.a11
   - exercise.library.decorators_closures.a12
+  - exercise.library.decorators_closures.b01
+  - exercise.library.decorators_closures.b02
   - quiz.library.decorators_closures.a01
   - quiz.library.decorators_closures.a02
 - id: unit.collections_itertools
@@ -249,6 +257,8 @@ units:
   - exercise.library.collections_itertools.a10
   - exercise.library.collections_itertools.a11
   - exercise.library.collections_itertools.a12
+  - exercise.library.collections_itertools.b01
+  - exercise.library.collections_itertools.b02
   - quiz.library.collections_itertools.a01
   - quiz.library.collections_itertools.a02
   - quiz.library.collections_itertools.a03
@@ -271,8 +281,52 @@ units:
   - exercise.library.regex_text_processing.a10
   - exercise.library.regex_text_processing.a11
   - exercise.library.regex_text_processing.a12
+  - exercise.library.regex_text_processing.b01
+  - exercise.library.regex_text_processing.b02
   - quiz.library.regex_text_processing.a01
   - quiz.library.regex_text_processing.a02
+- id: unit.files_formats
+  title: Files & Data Formats
+  description: Lessons, drills, and quizzes for files & data formats.
+  items:
+  - lesson.library.files_formats.a01
+  - lesson.library.files_formats.a02
+  - lesson.library.files_formats.a03
+  - exercise.library.files_formats.a01
+  - exercise.library.files_formats.a02
+  - exercise.library.files_formats.a03
+  - exercise.library.files_formats.a04
+  - exercise.library.files_formats.a05
+  - exercise.library.files_formats.a06
+  - exercise.library.files_formats.a07
+  - exercise.library.files_formats.a08
+  - exercise.library.files_formats.a09
+  - exercise.library.files_formats.a10
+  - exercise.library.files_formats.a11
+  - exercise.library.files_formats.a12
+  - quiz.library.files_formats.a01
+  - quiz.library.files_formats.a02
+- id: unit.datetime_handling
+  title: Dates & Times
+  description: Lessons, drills, and quizzes for dates & times.
+  items:
+  - lesson.library.datetime_handling.a01
+  - lesson.library.datetime_handling.a02
+  - lesson.library.datetime_handling.a03
+  - exercise.library.datetime_handling.a01
+  - exercise.library.datetime_handling.a02
+  - exercise.library.datetime_handling.a03
+  - exercise.library.datetime_handling.a04
+  - exercise.library.datetime_handling.a05
+  - exercise.library.datetime_handling.a06
+  - exercise.library.datetime_handling.a07
+  - exercise.library.datetime_handling.a08
+  - exercise.library.datetime_handling.a09
+  - exercise.library.datetime_handling.a10
+  - exercise.library.datetime_handling.a11
+  - exercise.library.datetime_handling.a12
+  - quiz.library.datetime_handling.a01
+  - quiz.library.datetime_handling.a02
 - id: unit.data_wrangling_python
   title: Pure-Python Data Wrangling
   description: Lessons, drills, and quizzes for pure-python data wrangling.
@@ -292,8 +346,52 @@ units:
   - exercise.library.data_wrangling_python.a10
   - exercise.library.data_wrangling_python.a11
   - exercise.library.data_wrangling_python.a12
+  - exercise.library.data_wrangling_python.b01
+  - exercise.library.data_wrangling_python.b02
   - quiz.library.data_wrangling_python.a01
   - quiz.library.data_wrangling_python.a02
+- id: unit.testing_concepts
+  title: Testing & Invariants
+  description: Lessons, drills, and quizzes for testing & invariants.
+  items:
+  - lesson.library.testing_concepts.a01
+  - lesson.library.testing_concepts.a02
+  - lesson.library.testing_concepts.a03
+  - exercise.library.testing_concepts.a01
+  - exercise.library.testing_concepts.a02
+  - exercise.library.testing_concepts.a03
+  - exercise.library.testing_concepts.a04
+  - exercise.library.testing_concepts.a05
+  - exercise.library.testing_concepts.a06
+  - exercise.library.testing_concepts.a07
+  - exercise.library.testing_concepts.a08
+  - exercise.library.testing_concepts.a09
+  - exercise.library.testing_concepts.a10
+  - exercise.library.testing_concepts.a11
+  - exercise.library.testing_concepts.a12
+  - quiz.library.testing_concepts.a01
+  - quiz.library.testing_concepts.a02
+- id: unit.type_hints
+  title: Type Hints & Contracts
+  description: Lessons, drills, and quizzes for type hints & contracts.
+  items:
+  - lesson.library.type_hints.a01
+  - lesson.library.type_hints.a02
+  - lesson.library.type_hints.a03
+  - exercise.library.type_hints.a01
+  - exercise.library.type_hints.a02
+  - exercise.library.type_hints.a03
+  - exercise.library.type_hints.a04
+  - exercise.library.type_hints.a05
+  - exercise.library.type_hints.a06
+  - exercise.library.type_hints.a07
+  - exercise.library.type_hints.a08
+  - exercise.library.type_hints.a09
+  - exercise.library.type_hints.a10
+  - exercise.library.type_hints.a11
+  - exercise.library.type_hints.a12
+  - quiz.library.type_hints.a01
+  - quiz.library.type_hints.a02
 - id: unit.mixed_capstones
   title: Mixed Capstones
   description: Lessons, drills, and quizzes for mixed capstones.
@@ -316,3 +414,14 @@ units:
   - quiz.library.mixed_capstones.a04
   - quiz.library.mixed_capstones.a05
   - quiz.library.mixed_capstones.a06
+- id: unit.capstone_ledger
+  title: 'Capstone: The Market Ledger'
+  description: 'Lessons, drills, and quizzes for capstone: the market ledger.'
+  items:
+  - lesson.library.capstone_ledger.a01
+  - exercise.library.capstone_ledger.c01
+  - exercise.library.capstone_ledger.c02
+  - exercise.library.capstone_ledger.c03
+  - exercise.library.capstone_ledger.c04
+  - exercise.library.capstone_ledger.c05
+  - exercise.library.capstone_ledger.c06

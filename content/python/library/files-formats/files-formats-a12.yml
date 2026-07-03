@@ -1,0 +1,188 @@
+id: exercise.library.files_formats.a12
+kind: exercise
+version: 1
+language: python
+title: Aggregating the Buoy Telemetry Feed
+slug: files-formats-a12
+difficulty: hard
+concepts:
+  - python.json_csv
+  - concepts.grouping_aggregation
+prerequisites:
+  - python.dictionaries
+  - python.exceptions
+estimated_time_minutes: 24
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.files_formats.a12
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original NDJSON aggregation drill framed around a marine buoy network streaming one JSON reading per line.
+prompt_markdown: |
+  A network of marine buoys streams telemetry as **newline-delimited JSON**
+  (NDJSON): one JSON object per line. The feed is noisy, so some lines are
+  corrupt. Write `ndjson_aggregate(text)` that reads the feed and returns a
+  summary dictionary:
+
+  ```python
+  {"totals": {<station>: <sum of readings>, ...}, "skipped": <count>}
+  ```
+
+  A **well-formed** record is a JSON **object** with a `"station"` field and a
+  numeric `"reading"` field. For every well-formed record, add its `reading` to
+  the running total for its `station`.
+
+  A line is **malformed** and must be **skipped and counted** in `"skipped"` if:
+
+  - it is not valid JSON, or
+  - it parses to something that is not an object (for example a JSON array or a
+    bare number), or
+  - it is an object missing `"station"` or `"reading"`, or
+  - its `"reading"` is not a number (a JSON string like `"high"` does not count).
+
+  Blank or whitespace-only lines are **ignored entirely** and do **not** add to
+  the skipped count.
+
+  Example input:
+
+  ```
+  {"station": "north", "reading": 5}
+  {"station": "south", "reading": 3}
+  {"station": "north", "reading": 2}
+  broken line
+  {"station": "south"}
+  ```
+
+  Returns `{"totals": {"north": 7, "south": 3}, "skipped": 2}`.
+starter_code: |
+  import json
+
+
+  def ndjson_aggregate(text):
+      return {"totals": {}, "skipped": 0}
+function_name: ndjson_aggregate
+input_mode: function
+solution_sketch: Iterate lines, skip blank ones, try json.loads and on failure count it skipped; otherwise require a dict with station and a numeric reading, else count skipped; on a valid record add reading into totals for its station.
+sample_solution: |
+  import json
+
+
+  def ndjson_aggregate(text):
+      totals = {}
+      skipped = 0
+      for line in text.splitlines():
+          stripped = line.strip()
+          if not stripped:
+              continue
+          try:
+              record = json.loads(stripped)
+          except json.JSONDecodeError:
+              skipped += 1
+              continue
+          if not isinstance(record, dict) or "station" not in record or "reading" not in record:
+              skipped += 1
+              continue
+          reading = record["reading"]
+          if not isinstance(reading, (int, float)) or isinstance(reading, bool):
+              skipped += 1
+              continue
+          station = record["station"]
+          totals[station] = totals.get(station, 0) + reading
+      return {"totals": totals, "skipped": skipped}
+hints:
+  - level: 1
+    text: Loop over text.splitlines(); strip each line and continue past ones that are empty so they never count as skipped.
+  - level: 2
+    text: Wrap json.loads in try/except json.JSONDecodeError, and after parsing verify you have a dict carrying both a station and a numeric reading before trusting it.
+  - level: 3
+    text: Use totals[station] = totals.get(station, 0) + reading to accumulate per station, and increment skipped on every line that fails any validity check.
+tests:
+  public:
+    - name: basic_with_malformed
+      input: |
+        {"station": "north", "reading": 5}
+        {"station": "south", "reading": 3}
+        {"station": "north", "reading": 2}
+        broken line
+        {"station": "south"}
+      expected:
+        totals:
+          north: 7
+          south: 3
+        skipped: 2
+    - name: all_valid_two_stations
+      input: |
+        {"station": "east", "reading": 4}
+        {"station": "west", "reading": 6}
+      expected:
+        totals:
+          east: 4
+          west: 6
+        skipped: 0
+    - name: empty_text
+      input: ""
+      expected:
+        totals: {}
+        skipped: 0
+  validation:
+    - name: blank_lines_not_counted
+      input: |
+        {"station": "a", "reading": 1}
+
+        {"station": "a", "reading": 4}
+      expected:
+        totals:
+          a: 5
+        skipped: 0
+    - name: non_object_json_skipped
+      input: |
+        [1, 2, 3]
+        {"station": "a", "reading": 2}
+        42
+      expected:
+        totals:
+          a: 2
+        skipped: 2
+    - name: missing_reading_skipped
+      input: |
+        {"station": "a"}
+        {"station": "a", "reading": 3}
+      expected:
+        totals:
+          a: 3
+        skipped: 1
+    - name: non_numeric_reading_skipped
+      input: |
+        {"station": "a", "reading": "high"}
+        {"station": "a", "reading": 3}
+      expected:
+        totals:
+          a: 3
+        skipped: 1
+    - name: all_malformed
+      input: |
+        nope
+        {bad json}
+      expected:
+        totals: {}
+        skipped: 2
+explanation_markdown: |
+  NDJSON is parsed one line at a time, and the discipline that keeps a noisy feed
+  from crashing your aggregator is to validate before you trust. Each line is
+  first stripped so blank lines can be ignored without inflating the skipped
+  count. Parsing is wrapped in `try/except json.JSONDecodeError`, which turns a
+  corrupt line into a counted skip rather than an exception that kills the run.
+
+  Passing `json.loads` is not enough on its own: a line might parse to a list or a
+  bare number, or be an object missing a field, so you check that you have a
+  `dict` carrying both `"station"` and a genuinely numeric `"reading"`. Only then
+  do you fold the reading into the per-station running total with
+  `totals.get(station, 0) + reading`, the standard grouped-sum idiom that seeds a
+  missing station at zero. Every rejected line increments `skipped`, so the
+  summary reports both the aggregates and how much data was unusable.
+common_mistakes:
+  - Letting a bad line raise instead of catching json.JSONDecodeError, which aborts the whole feed on the first corrupt record.
+  - Assuming any parsed JSON is a record, so a JSON array or number is summed or crashes instead of being skipped.
+  - Counting blank lines as skipped, inflating the skipped total beyond the genuinely malformed lines.

@@ -1,0 +1,117 @@
+id: exercise.library.classic_ml_from_scratch.a09
+kind: exercise
+version: 1
+language: python
+title: Squashing the Comet Score
+slug: classic-ml-from-scratch-a09
+difficulty: medium
+concepts:
+  - ai.classic_ml
+prerequisites:
+  - python.functions
+  - python.conditionals
+  - python.operators
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.classic_ml_from_scratch.a09
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original numerically stable sigmoid drill framed around turning a raw comet-detection score into a probability, emphasising the overflow-avoiding branch.
+prompt_markdown: |
+  A sky survey scores each smudge on a photographic plate with a raw number: large
+  positive means "very likely a comet", large negative means "very likely not".
+  To turn that raw score into a probability between 0 and 1, we pass it through the
+  **logistic sigmoid**:
+
+  ```
+  sigmoid(x) = 1 / (1 + exp(-x))
+  ```
+
+  Write `sigmoid(x)` that takes a single number `x` and returns the sigmoid value
+  **rounded to 6 decimal places**.
+
+  There is a trap in the naive formula. When `x` is a large negative number,
+  `-x` is large and positive, so `exp(-x)` explodes -- for `x` around `-750`,
+  `exp(-x)` overflows the range of a float and Python raises `OverflowError`. To
+  stay stable, branch on the sign of `x` and use the algebraically equal form that
+  only ever exponentiates a **non-positive** number (whose `exp` is at most 1 and
+  can never overflow):
+
+  - if `x >= 0`: `sigmoid(x) = 1 / (1 + exp(-x))`
+  - if `x < 0`: let `z = exp(x)`, then `sigmoid(x) = z / (1 + z)`
+
+  Both branches compute the same mathematical value; only the second avoids the
+  overflow. Return `round(result, 6)`.
+starter_code: |
+  import math
+
+
+  def sigmoid(x):
+      return 0.0
+function_name: sigmoid
+input_mode: function
+solution_sketch: Branch on the sign of x. For non-negative x use 1/(1+exp(-x)); for negative x compute z=exp(x) and return z/(1+z). Both are the same value, but the negative branch only exponentiates a non-positive number so it cannot overflow. Round to 6 places.
+sample_solution: |
+  import math
+
+
+  def sigmoid(x):
+      if x >= 0:
+          result = 1.0 / (1.0 + math.exp(-x))
+      else:
+          z = math.exp(x)
+          result = z / (1.0 + z)
+      return round(result, 6)
+hints:
+  - level: 1
+    text: The sigmoid maps any real number to the open interval between 0 and 1, crossing 0.5 exactly at x equal to zero.
+  - level: 2
+    text: Only exp of a non-positive argument is safe from overflow, so pick the formula whose exp receives -x when x is non-negative and x when x is negative.
+  - level: 3
+    text: For negative x, set z = exp(x) (a small positive number) and return z/(1+z); for non-negative x return 1/(1+exp(-x)). Round the final value to 6 decimals.
+tests:
+  public:
+    - name: zero_is_half
+      input: 0
+      expected: 0.5
+    - name: positive_two
+      input: 2
+      expected: 0.880797
+    - name: negative_two
+      input: -2
+      expected: 0.119203
+  validation:
+    - name: positive_one
+      input: 1
+      expected: 0.731059
+    - name: negative_three
+      input: -3
+      expected: 0.047426
+    - name: positive_five
+      input: 5
+      expected: 0.993307
+    - name: huge_negative_no_overflow
+      input: -750
+      expected: 0.0
+explanation_markdown: |
+  The sigmoid is the gate that turns an unbounded score into a probability, and it
+  shows up everywhere from logistic regression to the output of a neural unit.
+  Mathematically `1 / (1 + exp(-x))` and `exp(x) / (1 + exp(x))` are the same
+  function -- multiply the top and bottom of the first by `exp(x)` to get the
+  second. So why bother with two branches?
+
+  Floating-point range. A double can hold numbers up to roughly `1.8e308`, and
+  `exp` reaches that around an argument of `709`. Feed the naive formula a value
+  like `x = -750` and it tries to compute `exp(750)`, which overflows and raises
+  `OverflowError`. The rescue is to always exponentiate a number that is `<= 0`:
+  when `x` is negative we use `exp(x)`, which underflows harmlessly to `0.0`
+  instead of blowing up, giving `0 / (1 + 0) = 0.0`. Choosing the numerically
+  stable branch is a habit worth building early, because the same overflow trap
+  reappears in softmax, cross-entropy, and log-sum-exp.
+common_mistakes:
+  - Using the single naive formula for every input, which raises OverflowError on large negative x.
+  - Branching the wrong way so that exp still receives a large positive argument.
+  - Forgetting to round, so the returned float differs from the expected value in its trailing digits.

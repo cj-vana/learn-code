@@ -11,7 +11,7 @@ outcomes:
 - Reverse, merge, and cycle-check linked structures
 - Traverse trees and graphs in every standard order
 - Solve top-k and k-way-merge problems with heaps
-estimated_hours: 17
+estimated_hours: 20
 review_status: published
 source_status: original
 provenance:
@@ -41,6 +41,8 @@ units:
   - exercise.library.linked_lists_patterns.a10
   - exercise.library.linked_lists_patterns.a11
   - exercise.library.linked_lists_patterns.a12
+  - exercise.library.linked_lists_patterns.b01
+  - exercise.library.linked_lists_patterns.b02
   - quiz.library.linked_lists_patterns.a01
   - quiz.library.linked_lists_patterns.a02
 - id: unit.trees_lite
@@ -63,6 +65,8 @@ units:
   - exercise.library.trees_lite.a10
   - exercise.library.trees_lite.a11
   - exercise.library.trees_lite.a12
+  - exercise.library.trees_lite.b01
+  - exercise.library.trees_lite.b02
   - quiz.library.trees_lite.a01
   - quiz.library.trees_lite.a02
   - quiz.library.trees_lite.a03
@@ -86,6 +90,8 @@ units:
   - exercise.library.graphs_lite.a10
   - exercise.library.graphs_lite.a11
   - exercise.library.graphs_lite.a12
+  - exercise.library.graphs_lite.b01
+  - exercise.library.graphs_lite.b02
   - quiz.library.graphs_lite.a01
   - quiz.library.graphs_lite.a02
   - quiz.library.graphs_lite.a03
@@ -108,5 +114,7 @@ units:
   - exercise.library.heaps_topk.a10
   - exercise.library.heaps_topk.a11
   - exercise.library.heaps_topk.a12
+  - exercise.library.heaps_topk.b01
+  - exercise.library.heaps_topk.b02
   - quiz.library.heaps_topk.a01
   - quiz.library.heaps_topk.a02

@@ -1,0 +1,112 @@
+id: lesson.library.files_formats.a01
+kind: lesson
+version: 1
+language: python
+title: 'Text Into Records: Lines, Fields, and Cleanup'
+slug: lesson-files-formats-a01
+difficulty: easy
+concepts:
+  - python.json_csv
+  - python.strings
+prerequisites:
+  - python.strings
+  - python.lists
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.files_formats.a01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original walkthrough of turning raw text into structured records, framed around a kiln workshop's settings and manifest files with fresh worked code.
+body_markdown: |
+  Most real programs begin with a wall of text: a settings file, an exported
+  report, a log. The first professional Python skill after the fundamentals is
+  turning that text into data you can compute with — and the whole trick is a
+  short chain of string methods applied consistently.
+
+  Take a pottery workshop's kiln settings file:
+
+  ```text
+  # kiln controller v2
+  max_temp = 1280
+  ramp_rate = 90
+
+  glaze_hold = 20
+  ```
+
+  The recipe for parsing it never really changes:
+
+  ```python
+  def parse_config(text):
+      settings = {}
+      for line in text.splitlines():
+          line = line.strip()
+          if not line or line.startswith("#"):
+              continue                      # skip blanks and comments
+          key, _, value = line.partition("=")
+          settings[key.strip()] = value.strip()
+      return settings
+  ```
+
+  Four habits carry all the weight here:
+
+  - **`splitlines()` over `split("\n")`** — it handles `\r\n` line endings from
+    files written on other systems without leaving stray `\r` characters.
+  - **Strip early.** Whitespace at the edges of lines and fields is the single
+    most common source of "the key is there but lookup fails" bugs.
+  - **Skip junk explicitly.** Blank lines and comment lines are the rule, not
+    the exception, in files humans edit.
+  - **`partition` beats `split` for key/value lines** — it splits on only the
+    first separator, so a value containing `=` survives intact.
+
+  ### Delimited rows
+
+  A delivery manifest with one record per line and `|` between fields is the
+  same idea one level up:
+
+  ```python
+  def parse_manifest(text):
+      rows = []
+      for line in text.splitlines():
+          if not line.strip():
+              continue
+          fields = [f.strip() for f in line.split("|")]
+          rows.append(fields)
+      return rows
+  ```
+
+  The header row, if present, is just the first element of `rows` — pop it off
+  and zip it against each remaining row to build dicts:
+
+  ```python
+  header, *data = rows
+  records = [dict(zip(header, row)) for row in data]
+  ```
+
+  ### Numbers arrive as strings
+
+  Everything parsed from text is a string until you say otherwise. Convert at
+  the boundary — the moment you build the record — not later:
+
+  ```python
+  record["qty"] = int(record["qty"])
+  ```
+
+  If a conversion can fail, that is a signal, not an annoyance: the file has a
+  malformed row, and deciding what to do with it (skip it, collect it in a
+  rejects list, stop everything) is a design decision you will practise in the
+  exercises. Parsing is not glamorous, but it is where correct programs earn
+  their keep: every rule you enforce at the boundary is a bug that cannot reach
+  the rest of your code.
+checkpoints:
+  - question: Why is splitlines() safer than split("\n") for text that may come from another operating system?
+    answer: Files written on Windows end lines with \r\n; splitlines() handles every line-ending convention, while split("\n") leaves a trailing \r glued to each field.
+    explanation: The stray carriage return is invisible when printed, so it produces "the value looks right but comparisons fail" bugs that are painful to spot.
+  - question: You are parsing "retry = 5 = max" as a key/value line. What do partition("=") and split("=") each give you, and which is right?
+    answer: partition returns ("retry ", "=", " 5 = max") keeping the value whole, while split returns three pieces and loses the structure; partition is right because only the first separator matters.
+    explanation: partition splits exactly once and always returns three parts, which matches the "key, separator, rest" shape of config lines.
+  - question: Where should string-to-number conversion happen when building records from text, and why there?
+    answer: At the boundary, the moment each record is built — so malformed data is caught immediately and the rest of the program only ever sees correctly typed values.
+    explanation: Deferring conversion spreads int() calls and their failure handling across the codebase; converting at the boundary concentrates validation in one place.

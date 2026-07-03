@@ -1,0 +1,95 @@
+id: lesson.library.classic_ml_from_scratch.a01
+kind: lesson
+version: 1
+language: python
+title: 'Learning From Distance: k-Nearest Neighbours'
+slug: lesson-classic-ml-from-scratch-a01
+difficulty: medium
+concepts:
+  - ai.classic_ml
+prerequisites:
+  - python.lists
+  - python.sorting
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.classic_ml_from_scratch.a01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original k-NN introduction framed around classifying mushroom finds at a foraging club, with fresh worked code and no library dependencies.
+body_markdown: |
+  Machine learning has a reputation for requiring towers of math, but its
+  oldest algorithm is something you already do. A foraging club keeps a
+  logbook of mushroom finds: cap width, stem height, and whether the find was
+  a chanterelle or a look-alike. A new mushroom comes in. How do you classify
+  it? You look for the *most similar past finds* and go with what they were.
+  That is k-nearest neighbours, and it is machine learning in one sentence:
+  **similar inputs probably have similar outputs.**
+
+  ### Step 1: what does "similar" mean?
+
+  Each mushroom is a point — `[cap_width, stem_height]` — and similarity is
+  distance. The workhorse is Euclidean distance, the straight-line ruler:
+
+  ```python
+  import math
+
+  def euclidean(a, b):
+      return math.sqrt(sum((x - y) ** 2 for x, y in zip(a, b)))
+  ```
+
+  Manhattan distance — `sum(abs(x - y))` — walks along the axes instead, and
+  is less dominated by one wildly different feature. Choosing a distance IS a
+  modeling decision: it encodes what you believe "alike" means.
+
+  ### Step 2: vote
+
+  With a distance in hand, k-NN is embarrassingly short: measure the distance
+  to every logged find, take the k closest, and let them vote.
+
+  ```python
+  def knn_predict(train, query, k):
+      # train: list of [point, label] pairs
+      by_distance = sorted(train, key=lambda pair: euclidean(pair[0], query))
+      votes = [label for _, label in by_distance[:k]]
+      return max(set(votes), key=votes.count)
+  ```
+
+  There is no training step at all — the "model" is the data. That makes k-NN
+  the perfect first algorithm: every other method in this path is a way of
+  *compressing* the training data into something smaller (centroids, weights),
+  but k-NN skips the compression and pays for it at prediction time, scanning
+  everything for every query.
+
+  ### The knobs and their consequences
+
+  - **k = 1** trusts the single nearest find completely — sensitive to one
+    mislabeled mushroom (an *overfit* in miniature).
+  - **k = len(train)** ignores the query entirely and always predicts the
+    majority label (an *underfit*). Real k lives in between, and odd values
+    dodge ties.
+  - **Ties need rules.** Two equally near neighbours, or a split vote — every
+    serious implementation defines deterministic tie-breaks, which is why the
+    exercises specify them precisely.
+
+  ### The trap that eats beginners: scale
+
+  If cap width is measured in millimetres (20-150) and stem height in metres
+  (0.05-0.3), the width differences dwarf the height differences and the
+  ruler effectively ignores height. The fix is **standardization** — rescale
+  each feature to comparable units (you will implement z-scores later in
+  this area). Distance-based learning only works when the axes speak with
+  comparable voices; forgetting this is the single most common way k-NN
+  silently fails.
+checkpoints:
+  - question: Why does k-NN have no training step, and what price does it pay for that?
+    answer: The model IS the stored data — nothing is compressed or fitted in advance; the price is paid per prediction, which must measure the query against every stored example.
+    explanation: Every later algorithm (centroids, weights) compresses training data into a small structure; k-NN is the baseline that skips compression entirely.
+  - question: What failure modes do k=1 and k=everything represent, and why do practitioners prefer odd k in between?
+    answer: k=1 overfits — one mislabeled neighbour flips predictions; k=n underfits — it always answers the global majority regardless of the query; odd intermediate k balances the two and avoids tied votes in binary problems.
+    explanation: k is the simplicity dial — the smallest and largest settings are both degenerate, which makes k-NN a compact demonstration of the overfit/underfit tradeoff.
+  - question: Cap width in millimetres ranges 20-150 while stem height in metres ranges 0.05-0.3. What happens to Euclidean k-NN, and what is the fix?
+    answer: Width differences numerically dominate the distance, so height is effectively ignored; standardizing each feature (e.g. z-scores) puts the axes on comparable scales first.
+    explanation: Distance treats all axes as the same units — feature scaling is not preprocessing pedantry but a correctness requirement for any distance-based method.

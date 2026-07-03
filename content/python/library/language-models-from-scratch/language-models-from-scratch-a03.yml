@@ -1,0 +1,95 @@
+id: exercise.library.language_models_from_scratch.a03
+kind: exercise
+version: 1
+language: python
+title: From Counts to Conditional Probabilities
+slug: language-models-from-scratch-a03
+difficulty: medium
+concepts:
+  - ai.language_models
+  - concepts.probability
+prerequisites:
+  - python.dictionaries
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.language_models_from_scratch.a03
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original bigram-normalization drill turning raw pair counts into per-context conditional probabilities.
+prompt_markdown: |
+  Raw bigram counts become a language model once you turn them into **conditional
+  probabilities**. For a context token `a`, the probability that the next token is
+  `b` is
+
+      P(b | a) = count(a, b) / (sum over every token x of count(a, x))
+
+  The denominator is simply the total of all bigrams that start with `a`.
+
+  Write `bigram_probs(job)` where `job` is a dict with a single key `counts`: a
+  dict mapping each bigram string `"first|second"` to its integer count (the same
+  shape produced by counting bigrams). Return a dict mapping every
+  `"first|second"` key to `P(second | first)`, **rounded to 6 decimal places**.
+
+  Example: `{"counts": {"a|b": 3, "a|c": 1}}` — the context `a` was seen 4 times,
+  so `P(b|a) = 3/4 = 0.75` and `P(c|a) = 1/4 = 0.25`, giving
+  `{"a|b": 0.75, "a|c": 0.25}`.
+starter_code: |
+  def bigram_probs(job):
+      return {}
+function_name: bigram_probs
+input_mode: function
+solution_sketch: First pass sums counts per context (the token before the "|"); second pass divides each count by its context total and rounds to 6 places.
+sample_solution: |
+  def bigram_probs(job):
+      counts = job["counts"]
+      totals = {}
+      for key, n in counts.items():
+          context = key.split("|")[0]
+          totals[context] = totals.get(context, 0) + n
+      probs = {}
+      for key, n in counts.items():
+          context = key.split("|")[0]
+          probs[key] = round(n / totals[context], 6)
+      return probs
+hints:
+  - level: 1
+    text: Group the counts by their context (the part before the "|") to get each denominator.
+  - level: 2
+    text: Make one pass to sum counts per context, then a second pass to divide each pair's count by its context total.
+  - level: 3
+    text: Read the context with key.split("|")[0], and round(n / totals[context], 6) each probability so it matches the expected float.
+tests:
+  public:
+    - name: simple
+      input: {counts: {"a|b": 3, "a|c": 1}}
+      expected: {"a|b": 0.75, "a|c": 0.25}
+    - name: even_split
+      input: {counts: {"the|cat": 2, "the|dog": 2}}
+      expected: {"the|cat": 0.5, "the|dog": 0.5}
+    - name: single_pair
+      input: {counts: {"x|y": 5}}
+      expected: {"x|y": 1.0}
+  validation:
+    - name: thirds
+      input: {counts: {"a|b": 1, "a|c": 1, "a|d": 1}}
+      expected: {"a|b": 0.333333, "a|c": 0.333333, "a|d": 0.333333}
+    - name: two_contexts
+      input: {counts: {"a|b": 2, "a|c": 1, "b|a": 3}}
+      expected: {"a|b": 0.666667, "a|c": 0.333333, "b|a": 1.0}
+    - name: weighted
+      input: {counts: {"sun|rise": 3, "sun|set": 1, "moon|rise": 1}}
+      expected: {"sun|rise": 0.75, "sun|set": 0.25, "moon|rise": 1.0}
+explanation_markdown: |
+  Normalizing the counts *within each context* turns frequencies into a proper
+  probability distribution: for any fixed context, the returned probabilities sum
+  to 1. The two-pass approach costs O(number of bigrams) — the first pass builds
+  each context's denominator, the second divides. Because tests compare floats
+  with `==`, every probability is rounded to 6 places so results like `1/3` land
+  on the exact expected value `0.333333`.
+common_mistakes:
+  - Dividing by the grand total of all bigrams instead of the per-context total.
+  - Reading the second token as the context; the context is the part before the "|".
+  - Forgetting to round, so the `==` comparison against the expected float fails.

@@ -1,0 +1,111 @@
+id: exercise.library.files_formats.a03
+kind: exercise
+version: 1
+language: python
+title: Slicing a Vintage Bank Statement
+slug: files-formats-a03
+difficulty: medium
+concepts:
+  - python.strings
+  - python.slicing
+prerequisites:
+  - python.loops
+  - python.lists
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.files_formats.a03
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original fixed-width column parser themed around an archivist digitising a pre-CSV bank statement whose fields sit in fixed character columns.
+prompt_markdown: |
+  Before delimited files existed, ledgers stored data in **fixed-width columns**:
+  each field occupies a fixed number of characters, padded with spaces. An
+  archivist is digitising a vintage bank statement and needs it split into fields.
+
+  Write `parse_fixed_width(job)` where `job` is a dict with two keys:
+
+  - `text`: the statement as one string, lines separated by `\n`.
+  - `widths`: a list of integers giving the character width of each column, in
+    order.
+
+  For every line, cut it into consecutive slices using the widths (the first
+  `widths[0]` characters are field one, the next `widths[1]` characters are field
+  two, and so on), strip each field of surrounding spaces, and collect the fields
+  into a list. Return a list of these row-lists.
+
+  Details the tests rely on:
+
+  - Skip any line that is empty once stripped (blank separator lines carry no
+    row).
+  - Characters beyond the sum of the widths are ignored.
+  - If a line is shorter than the columns imply, the missing characters simply
+    produce empty-string fields (a slice past the end of a string is allowed).
+starter_code: |
+  def parse_fixed_width(job):
+      return []
+function_name: parse_fixed_width
+input_mode: function
+solution_sketch: For each non-blank line, walk the widths keeping a running start position, slice line[pos:pos+width], strip it, and gather the fields into a row list.
+sample_solution: |
+  def parse_fixed_width(job):
+      text = job["text"]
+      widths = job["widths"]
+      rows = []
+      for line in text.splitlines():
+          if not line.strip():
+              continue
+          fields = []
+          pos = 0
+          for width in widths:
+              fields.append(line[pos:pos + width].strip())
+              pos += width
+          rows.append(fields)
+      return rows
+hints:
+  - level: 1
+    text: Keep a running start index; each field is line[start:start + width], and after reading a field you advance start by that width.
+  - level: 2
+    text: Slicing a string past its end is safe in Python and yields '' for the missing tail, so short lines need no special case.
+  - level: 3
+    text: Strip each sliced field before storing it, and skip lines whose stripped form is empty so blank separators do not become rows.
+tests:
+  public:
+    - name: two_rows
+      input: {text: "01 MAR  Deposit         120.50\n03 MAR  Cheque 118      -45.00", widths: [8, 12, 10]}
+      expected: [["01 MAR", "Deposit", "120.50"], ["03 MAR", "Cheque 118", "-45.00"]]
+    - name: single_row
+      input: {text: "01 MAR  Deposit         120.50", widths: [8, 12, 10]}
+      expected: [["01 MAR", "Deposit", "120.50"]]
+    - name: empty_text
+      input: {text: "", widths: [8, 12, 10]}
+      expected: []
+  validation:
+    - name: blank_line_between_rows_skipped
+      input: {text: "01 MAR  Deposit         120.50\n   \n03 MAR  Cheque 118      -45.00", widths: [8, 12, 10]}
+      expected: [["01 MAR", "Deposit", "120.50"], ["03 MAR", "Cheque 118", "-45.00"]]
+    - name: extra_trailing_characters_ignored
+      input: {text: "07 MAR  Wire            300.00  EXTRA-IGNORED", widths: [8, 12, 10]}
+      expected: [["07 MAR", "Wire", "300.00"]]
+    - name: short_line_empty_tail_field
+      input: {text: "05 MAR  Fee", widths: [8, 12, 10]}
+      expected: [["05 MAR", "Fee", ""]]
+    - name: three_rows
+      input: {text: "01 MAR  Deposit         120.50\n03 MAR  Cheque 118      -45.00\n11 MAR  Interest          2.05", widths: [8, 12, 10]}
+      expected: [["01 MAR", "Deposit", "120.50"], ["03 MAR", "Cheque 118", "-45.00"], ["11 MAR", "Interest", "2.05"]]
+explanation_markdown: |
+  Fixed-width parsing is positional: a field is defined by *where* it sits, not by
+  a delimiter, so the core of the solution is a running cursor. Start at position
+  0, and for each width take `line[pos:pos + width]` and then advance `pos` by that
+  width so the next slice picks up exactly where the last left off. Python's
+  forgiving slicing does the edge-case work for you: a slice that runs past the
+  end of the string simply returns whatever is left (possibly nothing), so a short
+  line yields empty trailing fields instead of an error. Stripping each field
+  removes the space padding that gives the format its shape, and skipping blank
+  lines keeps separator rows out of the result.
+common_mistakes:
+  - Forgetting to advance the running position, so every field is sliced from the start of the line.
+  - Stripping the whole line up front, which shifts the columns and misaligns every field.
+  - Assuming every line is exactly the full width and indexing instead of slicing, which raises IndexError on short lines.

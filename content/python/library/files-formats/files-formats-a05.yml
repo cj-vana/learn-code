@@ -1,0 +1,112 @@
+id: exercise.library.files_formats.a05
+kind: exercise
+version: 1
+language: python
+title: Importing the Seed Catalogue Export
+slug: files-formats-a05
+difficulty: medium
+concepts:
+  - python.json_csv
+  - python.dictionaries
+prerequisites:
+  - python.strings
+  - python.lists
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.files_formats.a05
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original CSV-to-records drill themed around a seed catalogue whose exported rows include quoted description fields that contain the delimiter.
+prompt_markdown: |
+  A seed catalogue exports its listings as delimited text with a header row. Write
+  `csv_to_records(job)` that turns that export into a list of dictionaries, one
+  per data row, keyed by the header names.
+
+  `job` is a dict with two keys:
+
+  - `text`: the full export, header row first, rows separated by `\n`.
+  - `delimiter`: the single character separating fields (for example `","` or
+    `";"`).
+
+  Requirements:
+
+  - Use the standard library `csv` module together with `io.StringIO`, so that
+    quoting is handled correctly. A field wrapped in double quotes may itself
+    contain the delimiter, and that comma or semicolon must **not** split the
+    field.
+  - Every value in the returned dicts is a string; do not convert numbers.
+  - A `text` that is only a header row (no data) returns an empty list.
+
+  Return a list of dicts.
+starter_code: |
+  import csv
+  import io
+
+
+  def csv_to_records(job):
+      return []
+function_name: csv_to_records
+input_mode: function
+solution_sketch: Wrap the text in io.StringIO, feed it to csv.DictReader with the given delimiter, and collect each row (converted to a plain dict) into a list.
+sample_solution: |
+  import csv
+  import io
+
+
+  def csv_to_records(job):
+      stream = io.StringIO(job["text"])
+      reader = csv.DictReader(stream, delimiter=job["delimiter"])
+      return [dict(row) for row in reader]
+hints:
+  - level: 1
+    text: csv.reader and csv.DictReader want a file-like object, and io.StringIO(text) wraps a plain string as one.
+  - level: 2
+    text: csv.DictReader treats the first row as the header automatically and yields one dict per data row.
+  - level: 3
+    text: Pass delimiter=job["delimiter"] so the reader splits on the right character, and let the csv module handle quoted fields that contain that character.
+tests:
+  public:
+    - name: two_rows
+      input: {text: "name,days,price\nMarigold,7,1.20\nBasil,10,2.00", delimiter: ","}
+      expected:
+        - {name: "Marigold", days: "7", price: "1.20"}
+        - {name: "Basil", days: "10", price: "2.00"}
+    - name: quoted_field_with_comma
+      input: {text: "name,notes\nSunflower,\"tall, bright\"", delimiter: ","}
+      expected:
+        - {name: "Sunflower", notes: "tall, bright"}
+    - name: header_only
+      input: {text: "name,days,price", delimiter: ","}
+      expected: []
+  validation:
+    - name: semicolon_delimiter
+      input: {text: "name;price\nDill;0.90", delimiter: ";"}
+      expected:
+        - {name: "Dill", price: "0.90"}
+    - name: quoted_field_with_delimiter_semicolon
+      input: {text: "name;blurb\nThyme;\"low, creeping; hardy\"", delimiter: ";"}
+      expected:
+        - {name: "Thyme", blurb: "low, creeping; hardy"}
+    - name: three_rows_strings_kept
+      input: {text: "name,days,price\nChard,55,0.80\nKale,60,0.95\nLeek,120,1.40", delimiter: ","}
+      expected:
+        - {name: "Chard", days: "55", price: "0.80"}
+        - {name: "Kale", days: "60", price: "0.95"}
+        - {name: "Leek", days: "120", price: "1.40"}
+explanation_markdown: |
+  The reason to reach for the `csv` module instead of `text.split(delimiter)` is
+  quoting. In a real export a description like `"tall, bright"` deliberately wraps
+  a comma so the field is not torn in two, and hand-rolled splitting would get it
+  wrong. `csv.DictReader` understands those quoting rules and, as a bonus, reads
+  the header row and pairs each value with its column name. Because the reader
+  wants a file-like object, `io.StringIO` adapts the in-memory string into one
+  without touching the disk. Every value comes back as a string because CSV has no
+  type information; converting `"55"` to an int would be your decision, not the
+  format's, so the records preserve the raw text.
+common_mistakes:
+  - Splitting on the delimiter by hand, which breaks any quoted field that legitimately contains the delimiter.
+  - Passing the raw string to csv.DictReader instead of wrapping it in io.StringIO, which iterates it character by character.
+  - Forgetting the delimiter argument, so a semicolon-separated export is read as one giant column.

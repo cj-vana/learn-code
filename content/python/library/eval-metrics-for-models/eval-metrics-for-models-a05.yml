@@ -1,0 +1,100 @@
+id: exercise.library.eval_metrics_for_models.a05
+kind: exercise
+version: 1
+language: python
+title: Macro-F1 Across Every Birdsong Class
+slug: eval-metrics-for-models-a05
+difficulty: medium
+concepts:
+  - ai.model_evaluation
+prerequisites:
+  - python.lists
+  - python.loops
+  - python.operators
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.eval_metrics_for_models.a05
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original macro-averaging drill extending the birdsong evaluation series to multiple classes.
+prompt_markdown: |
+  The lab has grown from a single warbler detector into a multi-species classifier
+  that also recognises finches, thrushes, and owls. Each species is scored on its
+  own, giving one F1 value per class. To summarise the whole system in one number
+  the lab uses **macro-F1**: the plain, unweighted average of the per-class F1
+  scores, so every species counts equally no matter how many clips it had.
+
+  For per-class F1 values `f[0], f[1], ..., f[k-1]`:
+
+  ```
+  macro_F1 = (f[0] + f[1] + ... + f[k-1]) / k
+  ```
+
+  Write `macro_f1(per_class)` that takes a single list of floats, where each
+  element is one class's already-computed F1 score. Return the macro-F1 as a float
+  **rounded to 4 decimal places**. The list always has at least one class.
+
+  Example:
+
+  ```python
+  macro_f1([0.5, 0.7])
+  # -> 0.6
+  ```
+starter_code: |
+  def macro_f1(per_class):
+      return 0.0
+function_name: macro_f1
+input_mode: function
+solution_sketch: Sum the per-class F1 scores, divide by how many there are, and round to 4 decimals.
+sample_solution: |
+  def macro_f1(per_class):
+      total = sum(per_class)
+      return round(total / len(per_class), 4)
+hints:
+  - level: 1
+    text: Macro-averaging weights every class the same, so it is just the mean of the per-class F1 list.
+  - level: 2
+    text: sum(per_class) gives the numerator and len(per_class) gives the number of classes.
+  - level: 3
+    text: Return round(sum(per_class) / len(per_class), 4).
+tests:
+  public:
+    - name: two_classes
+      input: [0.5, 0.7]
+      expected: 0.6
+    - name: three_equal
+      input: [0.8, 0.8, 0.8]
+      expected: 0.8
+    - name: with_zero_class
+      input: [0.0, 1.0]
+      expected: 0.5
+  validation:
+    - name: four_classes
+      input: [0.6, 0.4, 0.8, 0.2]
+      expected: 0.5
+    - name: rounded_inputs_sum_clean
+      input: [0.3333, 0.6667, 0.5]
+      expected: 0.5
+    - name: uneven_mean
+      input: [0.72, 0.48, 0.9]
+      expected: 0.7
+    - name: single_class
+      input: [0.85]
+      expected: 0.85
+explanation_markdown: |
+  Macro-F1 treats a rare owl class exactly like a common finch class: each species
+  contributes one F1 value and they are averaged with equal weight. That makes it a
+  fair headline when you care about performance on every class, including the small
+  ones, rather than letting the biggest class dominate the score.
+
+  The implementation is deliberately plain, `sum(...) / len(...)`, which keeps the
+  intent obvious. Because the tests compare exact floats, rounding the final mean to
+  four places is what pins the answer down even when the inputs are themselves
+  rounded metrics whose sum lands a hair away from a clean value.
+common_mistakes:
+  - Weighting classes by their support (a micro-style average) instead of averaging the F1 scores equally.
+  - Dividing by a hard-coded class count instead of len(per_class), which breaks when the number of classes changes.
+  - Returning the mean without rounding, leaving a trailing decimal that fails the exact comparison.

@@ -1,0 +1,117 @@
+id: exercise.library.classic_ml_from_scratch.a01
+kind: exercise
+version: 1
+language: python
+title: How Far Apart Are Two Penguins
+slug: classic-ml-from-scratch-a01
+difficulty: easy
+concepts:
+  - ai.classic_ml
+prerequisites:
+  - python.lists
+  - python.loops
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.classic_ml_from_scratch.a01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original straight-line-distance drill framed around measured penguin bill features.
+prompt_markdown: |
+  Almost every classic machine-learning method that groups or classifies data
+  needs one basic ingredient first: a way to measure how *similar* two examples
+  are. The most common measure is the straight-line (Euclidean) distance between
+  two feature vectors.
+
+  A field team records each penguin as a vector of measurements, for example
+  `[bill_length_mm, bill_depth_mm]`. Write `euclidean(job)` that takes a single
+  dictionary with two keys:
+
+  - `"a"`: the first vector, a list of numbers.
+  - `"b"`: the second vector, the same length as `"a"`.
+
+  Return the Euclidean distance between them, defined for vectors of length `n`
+  as:
+
+  ```
+  distance = sqrt( (a[0]-b[0])**2 + (a[1]-b[1])**2 + ... + (a[n-1]-b[n-1])**2 )
+  ```
+
+  That is: square each coordinate difference, add the squares, then take the
+  square root. **Round the result to 6 decimal places** and return it as a float.
+  Identical vectors are distance `0.0`.
+
+  Example:
+
+  ```python
+  euclidean({"a": [0.0, 0.0], "b": [3.0, 4.0]})
+  # -> 5.0   (sqrt(9 + 16) = sqrt(25))
+  ```
+starter_code: |
+  import math
+
+
+  def euclidean(job):
+      return 0.0
+function_name: euclidean
+input_mode: function
+solution_sketch: Sum the squared differences of paired coordinates with zip, take math.sqrt, then round to 6 decimals.
+sample_solution: |
+  import math
+
+
+  def euclidean(job):
+      a = job["a"]
+      b = job["b"]
+      total = 0.0
+      for x, y in zip(a, b):
+          total += (x - y) ** 2
+      return round(math.sqrt(total), 6)
+hints:
+  - level: 1
+    text: Pair up the coordinates of the two vectors with zip(a, b) so you can compare them one position at a time.
+  - level: 2
+    text: Keep a running total, adding (x - y) ** 2 for each paired coordinate; this is the sum of squared differences.
+  - level: 3
+    text: After the loop, return round(math.sqrt(total), 6) so the square root is taken once over the whole sum.
+tests:
+  public:
+    - name: identical
+      input: {"a": [3.0, 4.0], "b": [3.0, 4.0]}
+      expected: 0.0
+    - name: classic_3_4_5
+      input: {"a": [0.0, 0.0], "b": [3.0, 4.0]}
+      expected: 5.0
+    - name: needs_rounding
+      input: {"a": [1.0, 1.0], "b": [2.0, 2.0]}
+      expected: 1.414214
+  validation:
+    - name: three_dim
+      input: {"a": [1.0, 2.0, 3.0], "b": [4.0, 6.0, 3.0]}
+      expected: 5.0
+    - name: negatives
+      input: {"a": [-1.0, -2.0], "b": [2.0, 2.0]}
+      expected: 5.0
+    - name: four_dim
+      input: {"a": [1.5, 2.5, 0.0, 1.0], "b": [1.0, 2.0, 1.0, 1.0]}
+      expected: 1.224745
+    - name: penguin_bills
+      input: {"a": [39.1, 18.7], "b": [39.5, 17.4]}
+      expected: 1.360147
+explanation_markdown: |
+  Euclidean distance is the Pythagorean theorem generalised to any number of
+  dimensions. You walk the two vectors together, square each coordinate gap, and
+  add those squares into one running total. Squaring makes every term
+  non-negative and punishes large gaps more than small ones, which is exactly the
+  behaviour clustering and nearest-neighbour methods rely on.
+
+  The square root is taken **once**, over the finished sum, not per coordinate.
+  Rounding to 6 decimals last keeps the answer stable to compare against an
+  expected value, since irrational results like `sqrt(2)` would otherwise carry a
+  long, machine-dependent tail.
+common_mistakes:
+  - Taking the square root inside the loop instead of once over the total sum.
+  - Forgetting to square the differences, which computes a signed sum that can even be negative.
+  - Returning the raw float without rounding, so an irrational result never matches the expected value.

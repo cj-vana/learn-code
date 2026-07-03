@@ -1,0 +1,86 @@
+id: lesson.library.capstone_dispatch.a01
+kind: lesson
+version: 1
+language: python
+title: 'Capstone Brief: The Courier Dispatch Board'
+slug: lesson-capstone-dispatch-a01
+difficulty: hard
+concepts:
+  - patterns.graph_traversal
+  - patterns.heap_topk
+  - patterns.dynamic_programming
+prerequisites:
+  - patterns.graph_traversal
+  - patterns.heap_topk
+  - patterns.intervals
+  - patterns.dynamic_programming
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.capstone_dispatch.a01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original capstone project brief for a bicycle courier dispatch system, defining the six-stage build and which algorithm family each stage exercises.
+body_markdown: |
+  The **Courier Dispatch Board capstone** ends the Algorithms Specialist path
+  by doing what specialists actually do: recognizing which pattern each piece
+  of a messy real problem wants, then composing the pieces. A bicycle courier
+  collective needs dispatch software. Riders start at the depot; the city is
+  a network of streets with travel times; deliveries have time windows and
+  payouts. Every stage of this project is a pattern you have drilled —
+  wearing work clothes.
+
+  ### The six stages
+
+  1. **build_map** — turn a street list into an adjacency structure. Graph
+     representation, the foundation everything else queries.
+  2. **fastest_route** — shortest travel time between two corners, with
+     deterministic tie-breaks. Dijkstra with a heap: your graphs and heaps
+     units, composed.
+  3. **assign_shift** — the most jobs one rider can take from a day's
+     offers. Earliest-finish greedy over intervals — and knowing *why*
+     greedy is provably right here.
+  4. **pack_cargo** — the most valuable parcel load within a weight limit.
+     0/1 selection: recognizing that greedy fails and DP is required.
+  5. **balance_riders** — spread jobs across the crew, always loading the
+     least-burdened rider. A heap as a live scheduling tool.
+  6. **dispatch_day** — the finale: one rider, a map, timed delivery
+     windows, and payouts. Route with Dijkstra, choose with greedy rules,
+     respect windows, tally earnings. Every previous stage, one problem.
+
+  ### The pattern-recognition thread
+
+  Notice what changes between stages 3 and 4. Both are "choose the best
+  subset" problems, but interval scheduling has a greedy exchange argument —
+  earliest finish never costs you — while cargo packing does not: a heavy
+  valuable parcel can beat any pile of light ones. Half of this capstone's
+  value is *feeling* that boundary, because "when is greedy safe?" is the
+  most expensive question in algorithm work.
+
+  ### Contracts to hold throughout
+
+  - **Determinism.** Tie-breaks are specified everywhere — lexicographic
+    paths, lowest rider index, catalog order. Same input, same output,
+    every run.
+  - **Unreachable is an answer.** Routes that cannot exist return the
+    sentinel the spec names, never an exception. Dispatch software that
+    crashes on a closed street strands the rider.
+  - **Compose, don't re-derive.** Stage 6 should *use* the ideas of stages
+    1-5. If you find yourself inventing new machinery, step back and ask
+    which existing piece you are re-inventing.
+
+  Work the stages in order. By the end, "which pattern is this?" will have
+  become "which of my tools does this want?" — which is the entire
+  difference between studying algorithms and using them.
+checkpoints:
+  - question: Stages 3 and 4 both choose a best subset. Why is greedy provably optimal for the shift assignment but wrong for cargo packing?
+    answer: Interval scheduling has an exchange argument — any optimal schedule can swap its first job for the earliest-finishing one without loss, so greedy never costs anything; in cargo packing a single heavy, valuable parcel can outweigh many light ones, so local best-value choices exclude better combinations and DP over capacities is required.
+    explanation: Feeling where the exchange argument holds and where it breaks is the core judgment this capstone drills — the same surface question hides two different problem structures.
+  - question: Why does fastest_route return a sentinel like [-1, []] for unreachable destinations instead of raising an exception?
+    answer: Unreachability is an expected domain outcome, not a program error — dispatch logic must branch on it routinely, and a specified sentinel keeps that path testable and the program running.
+    explanation: Exceptions are for broken invariants; answers the domain anticipates belong in the return contract.
+  - question: What is the composition lesson of stage 6, beyond getting the tests to pass?
+    answer: A hard real problem decomposes into the patterns you already own — graph shortest paths, greedy window selection, heap-based load choices — and the skill is recognizing and wiring together those pieces rather than inventing new machinery.
+    explanation: Algorithm mastery in practice is pattern recognition plus composition; stage 6 is deliberately solvable only by reusing the earlier stages' ideas.

@@ -1,0 +1,92 @@
+id: exercise.library.embeddings_similarity_search.a02
+kind: exercise
+version: 1
+language: python
+title: Length of a Penguin Measurement Vector
+slug: embeddings-similarity-search-a02
+difficulty: easy
+concepts:
+  - ai.embeddings_retrieval
+prerequisites:
+  - python.lists
+  - python.loops
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.embeddings_similarity_search.a02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original L2-norm drill framed around penguin body-measurement vectors.
+prompt_markdown: |
+  The **magnitude** of a vector (also called its L2 norm or Euclidean length)
+  measures how far it reaches from the origin. For a vector
+  `v = [v0, v1, ..., v(n-1)]` it is the square root of the sum of its squared
+  components:
+
+      |v| = sqrt(v0^2 + v1^2 + ... + v(n-1)^2)
+
+  A field biologist records each little penguin as a vector of scaled body
+  measurements (bill length, flipper span, mass). Write `magnitude(v)` that
+  takes one such list of numbers and returns its magnitude rounded to 6 decimal
+  places. The magnitude of the empty vector or an all-zero vector is 0.
+starter_code: |
+  import math
+
+
+  def magnitude(v):
+      return 0.0
+function_name: magnitude
+input_mode: function
+solution_sketch: Square every component, sum the squares, take the square root with math.sqrt, and round to 6 places.
+sample_solution: |
+  import math
+
+
+  def magnitude(v):
+      total = sum(x * x for x in v)
+      return round(math.sqrt(total), 6)
+hints:
+  - level: 1
+    text: Magnitude is the straight-line distance from the origin, found by squaring, summing, then taking a square root.
+  - level: 2
+    text: sum(x * x for x in v) gives the sum of squares; feed that into math.sqrt.
+  - level: 3
+    text: Return round(math.sqrt(sum(x * x for x in v)), 6); an empty vector sums to 0 and sqrt(0) is 0.
+tests:
+  public:
+    - name: three_four
+      input: [3, 4]
+      expected: 5.0
+    - name: zero_vector
+      input: [0, 0, 0]
+      expected: 0.0
+    - name: unit
+      input: [1, 0, 0]
+      expected: 1.0
+  validation:
+    - name: three_dim
+      input: [2, 3, 6]
+      expected: 7.0
+    - name: negatives
+      input: [-3, -4]
+      expected: 5.0
+    - name: floats
+      input: [1.5, 2.0]
+      expected: 2.5
+    - name: irrational
+      input: [1, 1]
+      expected: 1.414214
+explanation_markdown: |
+  Squaring each component makes every contribution positive, so the sign of a
+  measurement never cancels another out; the square root then converts the sum
+  of squares back to the same units as the inputs. This length is what you
+  divide by when you normalize a vector or compute cosine similarity, so it is
+  the first building block of direction-based comparison. The classic 3-4-5 and
+  2-3-6 cases land on whole numbers, while [1, 1] gives the irrational
+  sqrt(2) ≈ 1.414214, which is why rounding is stated up front.
+common_mistakes:
+  - Forgetting the square root and returning the raw sum of squares instead of the length.
+  - Squaring the sum of the components rather than summing the squares of each component.
+  - Assuming negative inputs shrink the magnitude; squaring makes -3 and 3 contribute identically.

@@ -1,0 +1,100 @@
+id: exercise.library.files_formats.a04
+kind: exercise
+version: 1
+language: python
+title: Reordering the Chandlery Stock
+slug: files-formats-a04
+difficulty: medium
+concepts:
+  - python.json_csv
+  - python.dictionaries
+prerequisites:
+  - python.lists
+  - python.sorting
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.files_formats.a04
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original JSON-parsing drill themed around a ship's chandlery deciding which supplies have fallen below their reorder level.
+prompt_markdown: |
+  A ship's chandlery exports its stock as a JSON document. Write
+  `read_json_inventory(payload)` where `payload` is a JSON **string** (not an
+  already-parsed dict). Parse it and report which supplies need reordering.
+
+  The parsed document is an object with two keys:
+
+  - `reorder_level`: an integer threshold.
+  - `items`: a list of objects, each with a `name` (string) and a `qty` (integer).
+
+  Return a list of the names of every item whose `qty` is **strictly below**
+  `reorder_level`, sorted in ascending (alphabetical) order. An item whose `qty`
+  equals `reorder_level` is adequately stocked and is not included. If nothing is
+  below the level, return an empty list.
+
+  Use `json.loads` to turn the string into Python data before you work with it.
+starter_code: |
+  import json
+
+
+  def read_json_inventory(payload):
+      return []
+function_name: read_json_inventory
+input_mode: function
+solution_sketch: json.loads the string, read the reorder_level threshold, collect the names of items whose qty is strictly less than it, and return them sorted.
+sample_solution: |
+  import json
+
+
+  def read_json_inventory(payload):
+      data = json.loads(payload)
+      level = data["reorder_level"]
+      low = [item["name"] for item in data["items"] if item["qty"] < level]
+      return sorted(low)
+hints:
+  - level: 1
+    text: The input is text, so your first step is data = json.loads(payload) to get a normal Python dict.
+  - level: 2
+    text: Pull the threshold once with data["reorder_level"], then look at each object in data["items"].
+  - level: 3
+    text: Keep names where item["qty"] < level (strictly less than), then return sorted(...) for alphabetical order.
+tests:
+  public:
+    - name: one_low_item
+      input: '{"reorder_level": 10, "items": [{"name": "Beeswax Taper", "qty": 4}, {"name": "Cotton Wick", "qty": 25}]}'
+      expected: ["Beeswax Taper"]
+    - name: nothing_low
+      input: '{"reorder_level": 5, "items": [{"name": "Pillar Mould", "qty": 8}]}'
+      expected: []
+    - name: empty_items
+      input: '{"reorder_level": 5, "items": []}'
+      expected: []
+  validation:
+    - name: result_is_sorted
+      input: '{"reorder_level": 20, "items": [{"name": "Wick Tabs", "qty": 3}, {"name": "Amber Dye", "qty": 1}, {"name": "Stearin", "qty": 30}]}'
+      expected: ["Amber Dye", "Wick Tabs"]
+    - name: equal_to_level_excluded
+      input: '{"reorder_level": 10, "items": [{"name": "Fragrance Oil", "qty": 10}, {"name": "Zinc Wick", "qty": 9}]}'
+      expected: ["Zinc Wick"]
+    - name: zero_qty_included
+      input: '{"reorder_level": 5, "items": [{"name": "Snuffer", "qty": 0}, {"name": "Taper Box", "qty": 5}]}'
+      expected: ["Snuffer"]
+    - name: all_below_level
+      input: '{"reorder_level": 100, "items": [{"name": "Tallow", "qty": 12}, {"name": "Lampblack", "qty": 4}]}'
+      expected: ["Lampblack", "Tallow"]
+explanation_markdown: |
+  The distinguishing feature here is that the payload arrives as a *string*, so
+  `json.loads` is the mandatory first move: it converts the JSON text into Python
+  dicts, lists, ints, and strings you can index normally. From there the logic is
+  an ordinary filter, but two details matter. The threshold lives *inside* the
+  document under `reorder_level`, so you read it from the parsed data rather than
+  hard-coding a number. And "below" means strictly less than, which is why an item
+  sitting exactly at the level is left out. Sorting the surviving names at the end
+  gives a stable, predictable report regardless of the order items appeared in.
+common_mistakes:
+  - Treating payload as an already-parsed dict and indexing it directly, which fails because it is still a string.
+  - Using qty <= reorder_level, which wrongly flags items that are exactly at the threshold.
+  - Returning the names in their original order instead of sorting them.

@@ -1,0 +1,101 @@
+id: quiz.library.testing_concepts.a01
+kind: quiz
+version: 1
+language: python
+title: Thinking Like a Tester
+slug: quiz-testing-concepts-a01
+difficulty: medium
+concepts:
+  - concepts.testing
+prerequisites:
+  - concepts.testing
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.testing_concepts.a01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pattern-recognition quiz on choosing testing strategies, oracles, and edge cases.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      A colleague's compress/decompress pair must be verified for arbitrary
+      data. Which single property tests it with any input you can generate?
+    choices:
+      - Round-trip — decompress(compress(x)) must equal x for every x
+      - Compression ratio — output must always be smaller than input
+      - Speed — compression must finish within a time budget
+      - Determinism — compressing twice gives the same bytes
+    correct_choice: Round-trip — decompress(compress(x)) must equal x for every x
+    explanation: |
+      The round-trip property is the correctness contract of any
+      encode/decode pair, and it quantifies over all inputs. (Ratio is even
+      false in general — incompressible data grows slightly.)
+    concepts:
+      - concepts.testing
+  - id: q2
+    prompt: |
+      A spec says "returns the discount tier for order totals: none below 100,
+      silver from 100, gold from 500". Which test set does boundary analysis
+      prescribe?
+    choices:
+      - 99, 100, 101, 499, 500, 501
+      - 50, 250, 750
+      - 0, 100, 500
+      - 100, 500 and one random value per tier
+    correct_choice: 99, 100, 101, 499, 500, 501
+    explanation: |
+      Each boundary gets its adjacent triple; the mid-tier representatives add
+      little because everything between boundaries takes the same path.
+    concepts:
+      - concepts.testing
+  - id: q3
+    prompt: |
+      Overnight, 40 tests that passed for months all errored (not failed) at
+      once. What does the failed/errored distinction suggest?
+    choices:
+      - A broken shared dependency or setup — the tests never reached their assertions
+      - Forty separate logic regressions landed simultaneously
+      - The assertions have become too strict
+      - Nothing — errors and failures are interchangeable
+    correct_choice: A broken shared dependency or setup — the tests never reached their assertions
+    explanation: |
+      Errored means raised before producing an answer; a synchronized wave of
+      errors points at shared plumbing (fixture, import, service), not at forty
+      coincidental logic bugs.
+    concepts:
+      - concepts.testing
+  - id: q4
+    prompt: |
+      A test fails only on a 300-record input nobody can read. What is the
+      productive next step, and what is it called?
+    choices:
+      - Shrink it — search for the smallest input that still fails
+      - Delete the test — inputs that large are unrealistic
+      - Increase logging and rerun the large case
+      - Split the test file into smaller files
+    correct_choice: Shrink it — search for the smallest input that still fails
+    explanation: |
+      Minimizing the failing case converts "there exists a failure" into a
+      readable diagnosis; property-testing tools automate exactly this hunt.
+    concepts:
+      - concepts.testing
+  - id: q5
+    prompt: |
+      Which pair of properties forms a COMPLETE oracle for a sorting function —
+      one that any wrong implementation must violate?
+    choices:
+      - Output is non-decreasing AND output is the same multiset as the input
+      - Output is non-decreasing AND output has the same first element
+      - Output is the same length AND starts with the minimum
+      - Output is the same multiset AND runs in O(n log n)
+    correct_choice: Output is non-decreasing AND output is the same multiset as the input
+    explanation: |
+      Ordering alone admits returning []; conservation alone admits returning
+      the input unsorted. Together they characterize sorting exactly —
+      complexity is a performance concern, not a correctness oracle.
+    concepts:
+      - concepts.testing

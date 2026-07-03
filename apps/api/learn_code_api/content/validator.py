@@ -84,6 +84,20 @@ LIBRARY_KNOWN_CONCEPTS = SEED_PROFILE_KNOWN_CONCEPTS | {
     "concepts.grouping_aggregation",
     "concepts.number_theory",
     "concepts.space_complexity",
+    # Wave-4 expansion: practical Python
+    "python.json_csv",
+    "python.datetime_module",
+    "python.type_hints",
+    "concepts.testing",
+    # Wave-5 expansion: AI & ML from scratch
+    "ai.gradients_autodiff",
+    "ai.language_models",
+    "ai.tokenization",
+    "ai.classic_ml",
+    "ai.embeddings_retrieval",
+    "ai.attention_transformers",
+    "ai.model_evaluation",
+    "concepts.probability",
 }
 
 _PROFILE_CONCEPTS = {

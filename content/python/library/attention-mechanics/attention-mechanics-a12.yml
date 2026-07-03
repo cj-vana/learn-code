@@ -1,0 +1,124 @@
+id: exercise.library.attention_mechanics.a12
+kind: exercise
+version: 1
+language: python
+title: Pooling the Heads Back Together
+slug: attention-mechanics-a12
+difficulty: hard
+concepts:
+  - ai.attention_transformers
+prerequisites:
+  - python.lists
+  - python.loops
+estimated_time_minutes: 21
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.attention_mechanics.a12
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original multi-head pooling drill framed as averaging several attention heads' output matrices element by element into one summary.
+prompt_markdown: |
+  Multi-head attention runs several attention heads in parallel. Each head looks
+  at the sequence in its own way and produces its own output matrix, where a row
+  is a token position and a column is a feature. A real transformer concatenates
+  the heads and mixes them with a learned matrix, but a simpler and common way to
+  combine them for analysis is to **average the heads element by element**.
+
+  You are given a list of heads. Every head is a matrix (a list of rows, each row
+  a list of numbers), and all heads share the same shape. Produce one output
+  matrix of that shape where each entry is the mean of that same entry across all
+  the heads:
+
+      out[r][c] = (head0[r][c] + head1[r][c] + ... + head(h-1)[r][c]) / h
+
+  where `h` is the number of heads.
+
+  Write `mean_pool_heads(job)` that takes one dictionary such as
+  `{"heads": [[[1.0, 2.0], [3.0, 4.0]], [[3.0, 2.0], [1.0, 0.0]]]}` (two heads,
+  each a 2x2 matrix) and returns the averaged matrix with every entry rounded to
+  6 decimal places. There is always at least one head.
+starter_code: |
+  def mean_pool_heads(job):
+      return []
+function_name: mean_pool_heads
+input_mode: function
+solution_sketch: For each row and column position, sum that entry across all heads, divide by the head count, and round; assemble the results back into a matrix of the same shape.
+sample_solution: |
+  def mean_pool_heads(job):
+      heads = job["heads"]
+      h = len(heads)
+      rows = len(heads[0])
+      cols = len(heads[0][0])
+      out = []
+      for r in range(rows):
+          row = []
+          for c in range(cols):
+              total = sum(head[r][c] for head in heads)
+              row.append(round(total / h, 6))
+          out.append(row)
+      return out
+hints:
+  - level: 1
+    text: Take the shape (row count and column count) from the first head, since every head matches it.
+  - level: 2
+    text: For a fixed (r, c), sum heads[k][r][c] over every head k, then divide by the number of heads.
+  - level: 3
+    text: Nest two loops over rows and columns; inside, use sum(head[r][c] for head in heads) / len(heads) and round to 6 places before appending.
+tests:
+  public:
+    - name: two_heads_2x2
+      input:
+        heads:
+          - [[1.0, 2.0], [3.0, 4.0]]
+          - [[3.0, 2.0], [1.0, 0.0]]
+      expected: [[2.0, 2.0], [2.0, 2.0]]
+    - name: single_head_scalar
+      input:
+        heads:
+          - [[0.0]]
+      expected: [[0.0]]
+    - name: three_heads_one_row
+      input:
+        heads:
+          - [[1.0, 1.0]]
+          - [[2.0, 2.0]]
+          - [[3.0, 3.0]]
+      expected: [[2.0, 2.0]]
+  validation:
+    - name: two_heads_wide_row
+      input:
+        heads:
+          - [[1.0, 2.0, 3.0]]
+          - [[4.0, 5.0, 6.0]]
+      expected: [[2.5, 3.5, 4.5]]
+    - name: negatives_cancel
+      input:
+        heads:
+          - [[-1.0, -2.0], [0.0, 4.0]]
+          - [[1.0, 2.0], [2.0, -4.0]]
+      expected: [[0.0, 0.0], [1.0, 0.0]]
+    - name: three_heads_repeating
+      input:
+        heads:
+          - [[0.5, 1.5], [2.5, 3.5]]
+          - [[1.5, 0.5], [3.5, 2.5]]
+          - [[1.0, 1.0], [1.0, 1.0]]
+      expected: [[1.0, 1.0], [2.333333, 2.333333]]
+explanation_markdown: |
+  Averaging is the simplest way to fold many heads into one representation, and
+  it makes the shared structure obvious: because each head keeps the same layout
+  of rows (positions) and columns (features), you can walk a single `(r, c)`
+  coordinate and pull the same cell out of every head. The mean at that cell is
+  just the total across heads divided by the head count.
+
+  The order of the loops does not change the answer, but reading the shape off
+  `heads[0]` once (rather than assuming a fixed size) is what lets the same code
+  handle a lone 1x1 head or several wider matrices. Rounding each averaged entry
+  to 6 places keeps a division like `7 / 3` from leaking a long tail of digits
+  into the output.
+common_mistakes:
+  - Averaging within one head (across its own rows or columns) instead of across the separate heads at each fixed position.
+  - Hard-coding the matrix shape instead of reading rows and columns from heads[0], so non-square or single-cell inputs break.
+  - Dividing by the wrong count (such as the number of rows) rather than by the number of heads.

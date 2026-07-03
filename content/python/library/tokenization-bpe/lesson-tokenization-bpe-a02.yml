@@ -1,0 +1,99 @@
+id: lesson.library.tokenization_bpe.a02
+kind: lesson
+version: 1
+language: python
+title: 'The BPE Training Loop: Count, Merge, Repeat'
+slug: lesson-tokenization-bpe-a02
+difficulty: medium
+concepts:
+  - ai.tokenization
+prerequisites:
+  - ai.tokenization
+  - python.dictionaries
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.tokenization_bpe.a02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original hand-traced BPE training walkthrough on an invented tiny corpus of nautical words.
+body_markdown: |
+  BPE training is one loop with three steps, each of which you have built
+  before in another costume. Count adjacent pairs (hash-map counting), pick
+  the most frequent (argmax with tie-breaks), rewrite sequences (careful
+  list surgery). Watch it run once by hand and it stops being an "AI
+  algorithm" and becomes a data-structures exercise.
+
+  ### A tiny corpus, traced
+
+  Train on three words with counts: `mast` ×3, `mask` ×2, `most` ×1. Split
+  into symbols (markers included):
+
+  ```text
+  m a s t </w>   (×3)
+  m a s k </w>   (×2)
+  m o s t </w>   (×1)
+  ```
+
+  **Round 1 — count pairs** (weighted by word counts): `m a` appears 5
+  times (mast + mask), `a s` 5, `s t` 4 (mast + most), `s k` 2, `m o` 1,
+  `o s` 1, plus marker pairs `t </w>` 4 and `k </w>` 2.
+
+  There is a tie: `m a` and `a s` both count 5. Real implementations define
+  a deterministic tie-break (yours: alphabetically first key) — otherwise
+  two training runs produce different tokenizers. `a s` < `m a`
+  alphabetically? No — `"a s"` sorts before `"m a"`, so merge `a s` → `as`:
+
+  ```text
+  m as t </w>   (×3)
+  m as k </w>   (×2)
+  m o s t </w>  (×1)
+  ```
+
+  Note `most` did not change: its `s` neighbors `o`, not `a`. Merges are
+  literal — only *adjacent* occurrences of exactly that pair.
+
+  **Round 2**: now `m as` counts 5 — merge to `mas`. **Round 3**: `mas t`
+  counts 3 — merge to `mast`. After three merges the learned list is:
+
+  ```text
+  [("a","s"), ("m","as"), ("mas","t")]
+  ```
+
+  The common word assembled itself into a single token; the rarer `most`
+  remains in pieces. Frequency decided everything — no dictionary, no
+  grammar, just counts.
+
+  ### The two implementation subtleties
+
+  **Left-to-right, non-overlapping rewriting.** Merging pair `("a","a")` in
+  `a a a` must produce `aa a`, not `aa aa` (reusing the middle symbol
+  twice) — scan left to right, and after a merge, jump past the new symbol.
+  This is precisely the kind of off-by-one that tests catch and prose
+  glosses over.
+
+  **Ties must be lawful.** The most-frequent pair is often not unique, and
+  Counter.most_common's order for equal counts is insertion order — an
+  accident. A stated rule (max count, then alphabetical) makes training
+  reproducible. Determinism-by-design, the same discipline as everywhere
+  else in this course, just with higher stakes: a tokenizer trained twice
+  must be the *same tokenizer*, or every downstream model breaks.
+
+  ### When does the loop stop?
+
+  After a fixed budget of merges — that budget *is* the vocabulary-size
+  knob. GPT-2's tokenizer ran this exact loop for ~50,000 merges over web
+  text. Yours will run for five over toy corpora. It is genuinely, not
+  approximately, the same algorithm; only the corpus and budget differ.
+checkpoints:
+  - question: In the traced corpus, why did the word "most" keep its separate s and t through round 1's merge of ("a","s")?
+    answer: Merges rewrite only adjacent occurrences of exactly that pair; in "most" the s is preceded by o, not a, so the pair (a, s) never occurs there and the word is untouched.
+    explanation: Merges are literal string surgery, not general rules — a pair only merges where it actually sits adjacent.
+  - question: Why must merge_pair rewrite left-to-right without overlapping, and what goes wrong on the input a a a for pair (a, a)?
+    answer: Each symbol may participate in at most one merge per pass; correct output is [aa, a], but an overlapping scan reuses the middle a and produces [aa, aa] — inventing a symbol occurrence that doesn't exist.
+    explanation: The non-overlap rule is the algorithm's trickiest off-by-one and the reason the exercises pin it with explicit tests.
+  - question: Two BPE training runs on the same corpus produce different merge lists. What was almost certainly left undefined, and why does it matter so much?
+    answer: The tie-break among equally frequent pairs — without a stated rule the winner falls to dict insertion order, and a tokenizer that differs between runs breaks every model trained on top of it.
+    explanation: Vocabulary is infrastructure; determinism in its construction is not pedantry but a compatibility requirement.

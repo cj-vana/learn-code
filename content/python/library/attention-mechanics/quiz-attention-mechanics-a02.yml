@@ -1,0 +1,104 @@
+id: quiz.library.attention_mechanics.a02
+kind: quiz
+version: 1
+language: python
+title: Transformer Block Mechanics
+slug: quiz-attention-mechanics-a02
+difficulty: hard
+concepts:
+  - ai.attention_transformers
+prerequisites:
+  - ai.attention_transformers
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.attention_mechanics.a02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax quiz on the numerical mechanics of layer norm, residuals, masking, and stable softmax inside a transformer block.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: 'What does layer_norm([4, 4, 4, 4], eps=1e-5) return, approximately, and why does eps matter here?'
+    choices:
+      - '[0, 0, 0, 0] — a constant vector has variance 0, and eps is the only thing preventing division by zero'
+      - '[4, 4, 4, 4] — normalization preserves constant vectors'
+      - '[1, 1, 1, 1] — unit vectors are the fixed point'
+      - An exception — constant vectors cannot be normalized
+    correct_choice: '[0, 0, 0, 0] — a constant vector has variance 0, and eps is the only thing preventing division by zero'
+    explanation: |
+      Each component minus the mean (4) is 0, divided by sqrt(0 + eps) is
+      still 0. The eps turns an edge-case crash into defined behavior — the
+      same guard as zscore's constant column.
+    concepts:
+      - ai.attention_transformers
+  - id: q2
+    prompt: |
+      In the masked-softmax exercise, scores [3.0, 1.0, 5.0] with mask_from=2
+      (attend only to the first 2) produce what shape of result?
+    choices:
+      - softmax over [3.0, 1.0] in the first two slots and 0.0 in the third — the masked position is excluded from normalization
+      - softmax over all three, then the third zeroed
+      - '[3.0, 1.0, 0.0] — masking skips the softmax'
+      - Equal weights [0.5, 0.5, 0.0] regardless of scores
+    correct_choice: softmax over [3.0, 1.0] in the first two slots and 0.0 in the third — the masked position is excluded from normalization
+    explanation: |
+      The allowed prefix renormalizes among itself (≈ [0.88, 0.12]); zeroing
+      after a full softmax would leave weights summing below one — the
+      -inf-before-softmax principle in exercise form.
+    concepts:
+      - ai.attention_transformers
+  - id: q3
+    prompt: |
+      residual_add is one line of element-wise addition. Through the autodiff
+      lens, what does the backward pass do at this node?
+    choices:
+      - Routes the incoming gradient unchanged to BOTH the identity path and the sublayer path
+      - Splits the gradient in half between the paths
+      - Sends gradient only to the sublayer, which did the work
+      - Blocks gradient — addition is not differentiable
+    correct_choice: Routes the incoming gradient unchanged to BOTH the identity path and the sublayer path
+    explanation: |
+      grads_add(g) = [g, g] — which is precisely why residuals act as gradient
+      highways through deep stacks: the identity branch delivers undiminished
+      gradient no matter what the sublayer does.
+    concepts:
+      - ai.attention_transformers
+      - ai.gradients_autodiff
+  - id: q4
+    prompt: |
+      The sinusoidal positional encoding uses a different frequency per
+      dimension pair. What property does this construction buy?
+    choices:
+      - Every position gets a unique, bounded encoding, and any fixed offset between positions is a simple (linear) transformation — making relative distances learnable
+      - Frequencies compress the sequence so longer inputs fit in memory
+      - It guarantees the encodings are orthogonal to the token embeddings
+      - It sorts tokens by importance before attention
+    correct_choice: Every position gets a unique, bounded encoding, and any fixed offset between positions is a simple (linear) transformation — making relative distances learnable
+    explanation: |
+      The multi-frequency design works like a smooth binary counter: unique
+      per position, values in [-1,1] at any length, and position p+k relates
+      to p by a fixed rotation — the property that makes "three tokens back"
+      expressible.
+    concepts:
+      - ai.attention_transformers
+  - id: q5
+    prompt: |
+      attention_scores, softmax_weights, and weighted_values compose into
+      single_head. Why does the course build them as separate graded functions
+      first?
+    choices:
+      - Each stage has its own edge cases and its own tests, so bugs localize — the same pipeline decomposition principle as the capstones
+      - Python cannot compose more than two functions
+      - Separate functions run faster than composed ones
+      - Grading requires every function to be under five lines
+    correct_choice: Each stage has its own edge cases and its own tests, so bugs localize — the same pipeline decomposition principle as the capstones
+    explanation: |
+      Stable softmax's max-subtraction, scaling's sqrt, the blend's dimension
+      handling — each is separately testable, and single_head then composes
+      verified parts, which is how real numerical code is built.
+    concepts:
+      - ai.attention_transformers
+      - concepts.testing

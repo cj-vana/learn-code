@@ -1,0 +1,101 @@
+id: quiz.library.testing_concepts.a02
+kind: quiz
+version: 1
+language: python
+title: Assertions and Outcomes, Mechanically
+slug: quiz-testing-concepts-a02
+difficulty: medium
+concepts:
+  - concepts.testing
+  - python.functions
+prerequisites:
+  - concepts.testing
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.testing_concepts.a02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax quiz on assert mechanics, test outcome classification, and comparison pitfalls.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: What does `assert total == 4.5, f"expected 4.5, got {total}"` do when total is 4.35?
+    choices:
+      - Raises AssertionError carrying the message "expected 4.5, got 4.35"
+      - Prints the message and continues execution
+      - Returns False from the enclosing function
+      - Silently corrects total to 4.5
+    correct_choice: Raises AssertionError carrying the message "expected 4.5, got 4.35"
+    explanation: |
+      assert raises AssertionError with the optional message when its condition
+      is falsy; it never prints, returns, or mutates.
+    concepts:
+      - concepts.testing
+  - id: q2
+    prompt: |
+      Why is `assert compute() == expected` on floats like 0.1 + 0.2 a fragile
+      assertion, and what is the standard fix?
+    choices:
+      - Binary floats make 0.1 + 0.2 != 0.3 exactly; compare with a tolerance (math.isclose)
+      - Floats compare slowly; convert both sides to strings first
+      - assert cannot compare floats; use if/raise instead
+      - The == operator rounds floats to 2 places automatically
+    correct_choice: Binary floats make 0.1 + 0.2 != 0.3 exactly; compare with a tolerance (math.isclose)
+    explanation: |
+      0.1 and 0.2 have no exact binary representation, so their sum is
+      0.30000000000000004; isclose (or pytest.approx) expresses the intended
+      "equal within tolerance".
+    concepts:
+      - concepts.testing
+      - python.types
+  - id: q3
+    prompt: |
+      A test-runner records each case as passed, failed, or errored. Under the
+      standard classification, a case whose function RAISED an exception is:
+    choices:
+      - Errored — regardless of what the expected value was
+      - Failed — any non-pass is a failure
+      - Passed — if the expected value was also an exception type
+      - Skipped — exceptions abort classification
+    correct_choice: Errored — regardless of what the expected value was
+    explanation: |
+      Errored means "never produced an answer"; failed means "produced the
+      wrong answer". Keeping them separate is what makes reports diagnostic.
+    concepts:
+      - concepts.testing
+  - id: q4
+    prompt: |
+      Two tests share a module-level list as scratch space, and the second
+      passes only when run after the first. What testing principle is violated?
+    choices:
+      - Isolation — each test must set up its own state and pass in any order
+      - Coverage — the tests exercise overlapping branches
+      - Arrange-act-assert — the phases are out of order
+      - Shrinking — the shared list is too large
+    correct_choice: Isolation — each test must set up its own state and pass in any order
+    explanation: |
+      Order-dependent tests hide real failures and produce phantom ones;
+      shared mutable state is the usual culprit, fixed by per-test setup.
+    concepts:
+      - concepts.testing
+  - id: q5
+    prompt: |
+      is_sorted_permutation checks a sort's output by comparing
+      Counter(original) == Counter(result). What bug class does using
+      set(original) == set(result) instead let through?
+    choices:
+      - Dropped or duplicated elements — sets erase multiplicity
+      - Wrong ordering of equal elements
+      - Type errors between ints and floats
+      - Nothing — sets and Counters compare identically here
+    correct_choice: Dropped or duplicated elements — sets erase multiplicity
+    explanation: |
+      set([2,2,3]) == set([2,3,3]), so a sorter that loses one duplicate and
+      doubles another passes the set check; Counter preserves counts and
+      catches it.
+    concepts:
+      - concepts.testing
+      - python.sets

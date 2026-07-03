@@ -1,0 +1,140 @@
+id: exercise.library.grid_simulation.b02
+kind: exercise
+version: 1
+language: python
+title: Which Parcels Loop the Conveyor Forever
+slug: grid-simulation-b02
+difficulty: hard
+concepts:
+  - patterns.simulation
+  - patterns.grid_traversal
+prerequisites:
+  - patterns.grid_traversal
+  - python.sets
+estimated_time_minutes: 26
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.grid_simulation.b02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original conveyor-grid scenario where each cell holds a parcel and following the arrow directions either reaches a stop or a run-off edge, or enters a cycle detected with a visited set.
+prompt_markdown: |
+  A sorting depot lays parcels out on a grid of powered conveyor tiles. Every tile
+  holds one parcel, and each tick a tile pushes its parcel one cell in the tile's
+  direction. The tile characters are:
+
+  - `">"` push right, `"<"` push left, `"v"` push down, `"^"` push up,
+  - `"#"` a stop -- a parcel resting here never moves.
+
+  A parcel's fate is decided by following the arrows from where it starts. It
+  **stops** if it lands on a `"#"` tile or is pushed off the edge of the grid (it
+  drops into the run-off bin). It **loops** if the arrows lead it into a cycle so it
+  never stops.
+
+  Write `conveyor_jam(job)` where `job` is a dictionary with one key `"grid"`, a
+  list of rows of these characters. Treat every cell as the starting tile of one
+  parcel, trace each parcel's path, and return
+  `{"stopped": s, "looping": l}` where `s` is how many parcels eventually stop and
+  `l` is how many loop forever. A parcel that begins on a `"#"` tile is already
+  stopped.
+
+  For example, on
+  ```
+  > > v
+  ^ # v
+  ^ < <
+  ```
+  the eight tiles around the border chase each other in a ring and loop forever,
+  while the centre `"#"` parcel is already stopped, so the result is
+  `{"stopped": 1, "looping": 8}`.
+starter_code: |
+  def conveyor_jam(job):
+      # For each starting cell, follow the arrows, tracking visited tiles in a
+      # set. Reaching "#" or leaving the grid means stopped; revisiting a tile
+      # means it loops. Tally both outcomes.
+      return {"stopped": 0, "looping": 0}
+function_name: conveyor_jam
+input_mode: function
+solution_sketch: For every cell, walk the deterministic arrow path keeping a set of visited tiles. Stop counting when the path lands on a "#" or steps off the grid (stopped) or revisits a tile already in the set (looping). Tally the two outcomes across all starting cells.
+sample_solution: |
+  def conveyor_jam(job):
+      grid = job["grid"]
+      rows = len(grid)
+      cols = len(grid[0]) if rows else 0
+      moves = {">": (0, 1), "<": (0, -1), "v": (1, 0), "^": (-1, 0)}
+      stopped = 0
+      looping = 0
+      for sr in range(rows):
+          for sc in range(cols):
+              r, c = sr, sc
+              seen = set()
+              while True:
+                  cell = grid[r][c]
+                  if cell == "#":
+                      stopped += 1
+                      break
+                  if (r, c) in seen:
+                      looping += 1
+                      break
+                  seen.add((r, c))
+                  dr, dc = moves[cell]
+                  nr, nc = r + dr, c + dc
+                  if not (0 <= nr < rows and 0 <= nc < cols):
+                      stopped += 1
+                      break
+                  r, c = nr, nc
+      return {"stopped": stopped, "looping": looping}
+hints:
+  - level: 1
+    text: Each tile has exactly one out-direction, so a parcel's path is fully determined. Simulate one parcel at a time from each starting cell.
+  - level: 2
+    text: Keep a set of the tiles this parcel has already stood on. If you ever step onto a tile already in the set, the path has entered a cycle, so it loops.
+  - level: 3
+    text: End a parcel's walk in one of three ways -- landing on "#" (stopped), stepping off the grid edge (stopped), or revisiting a seen tile (looping). Add up the two outcomes over every starting cell.
+tests:
+  public:
+    - name: spinning_ring
+      input: {"grid": [[">", "v"], ["^", "<"]]}
+      expected: {"stopped": 0, "looping": 4}
+    - name: all_run_off_the_right
+      input: {"grid": [[">", ">", ">"]]}
+      expected: {"stopped": 3, "looping": 0}
+    - name: ring_with_center_stop
+      input: {"grid": [[">", ">", "v"], ["^", "#", "v"], ["^", "<", "<"]]}
+      expected: {"stopped": 1, "looping": 8}
+  validation:
+    - name: single_stop_tile
+      input: {"grid": [["#"]]}
+      expected: {"stopped": 1, "looping": 0}
+    - name: arrows_feed_a_stop
+      input: {"grid": [[">", "#"]]}
+      expected: {"stopped": 2, "looping": 0}
+    - name: all_run_off_the_top
+      input: {"grid": [["^", "^"], ["^", "^"]]}
+      expected: {"stopped": 4, "looping": 0}
+    - name: two_tile_bounce
+      input: {"grid": [[">", "<"]]}
+      expected: {"stopped": 0, "looping": 2}
+    - name: mixed_lanes
+      input: {"grid": [[">", "v", "#"], ["^", "<", "^"]]}
+      expected: {"stopped": 2, "looping": 4}
+explanation_markdown: |
+  Every tile points exactly one way, so a parcel's journey is a deterministic walk
+  with no choices to make. That means each starting cell has a single fate, and you
+  find it by stepping along the arrows. Three things can end the walk: reaching a
+  `"#"` stop, being pushed past the edge into the run-off bin, or -- the interesting
+  case -- returning to a tile the parcel has already visited, which proves the path
+  has closed into a cycle it can never escape.
+
+  A `seen` set is what turns "loops forever" into something you can actually detect
+  in finite time: the moment a step revisits a tile in the set, you stop and count a
+  loop. Because a walk either terminates or repeats a tile within `rows * cols`
+  steps, each parcel's trace is bounded, and running it from every cell gives the two
+  tallies. Tracing each start independently is simple and correct; the cost is the
+  path length per start, which is fine for depot-sized grids.
+common_mistakes:
+  - Forgetting that running off the edge is a stop, and mistakenly treating an out-of-bounds step as a loop or an error.
+  - Simulating without a visited set, so a looping parcel spins forever instead of being detected and counted.
+  - Sharing one visited set across all starting cells, which corrupts the trace for later parcels; each parcel needs its own fresh set.

@@ -1,0 +1,105 @@
+id: lesson.library.datetime_handling.a02
+kind: lesson
+version: 1
+language: python
+title: 'Parsing and Formatting Timestamps'
+slug: lesson-datetime-handling-a02
+difficulty: medium
+concepts:
+  - python.datetime_module
+  - python.string_formatting
+prerequisites:
+  - python.datetime_module
+  - python.strings
+estimated_time_minutes: 10
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.datetime_handling.a02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original strptime/strftime walkthrough framed around digitizing a lighthouse keeper's logbooks, with fresh worked code.
+body_markdown: |
+  Timestamps arrive as text — from files, forms, and feeds — and text is where
+  they must eventually return. The bridge in both directions is a pair of
+  methods whose names people confuse for years: **`strptime` parses**
+  (string → datetime, p for *parse*) and **`strftime` formats**
+  (datetime → string, f for *format*).
+
+  Both speak the same little language of `%` codes:
+
+  ```python
+  from datetime import datetime
+
+  entry = datetime.strptime("03/07/2026 21:15", "%d/%m/%Y %H:%M")
+  label = entry.strftime("%A %d %B %Y, %H:%M")   # 'Friday 03 July 2026, 21:15'
+  ```
+
+  The codes you will use constantly: `%Y` four-digit year, `%m` month, `%d`
+  day, `%H` 24-hour clock hour, `%M` minute, `%S` second, and for output
+  `%A`/`%B` full weekday and month names. `%y` (two-digit year) and `%I`
+  (12-hour clock, needing `%p` for AM/PM) exist mainly to parse other
+  people's legacy formats.
+
+  `strptime` is strict: the string must match the format exactly, or you get
+  a `ValueError`. That strictness is a feature — a silent misparse is far
+  worse than a loud one.
+
+  ### The ISO 8601 shortcut
+
+  The format you should *produce* whenever you have a choice is ISO 8601 —
+  `2026-07-03` or `2026-07-03T21:15:00`. It needs no format string at all:
+
+  ```python
+  from datetime import date, datetime
+
+  d = date.fromisoformat("2026-07-03")
+  t = datetime.fromisoformat("2026-07-03T21:15:00")
+  t.isoformat()                                  # back to the string
+  ```
+
+  ISO order (big units to small) has a lovely property: sorting the strings
+  alphabetically sorts the moments chronologically. Log files and filenames
+  named this way need no parsing to order correctly.
+
+  ### Mystery formats: try in order
+
+  Digitizing a lighthouse keeper's logbooks, you might meet three date styles
+  in one box of pages. The standard pattern is a fallback chain:
+
+  ```python
+  FORMATS = ["%Y-%m-%d", "%d/%m/%Y", "%B %d, %Y"]
+
+  def parse_logbook_date(text):
+      for fmt in FORMATS:
+          try:
+              return datetime.strptime(text.strip(), fmt).date()
+          except ValueError:
+              continue
+      return None          # caller decides what a hopeless page costs
+  ```
+
+  Order matters when formats are ambiguous: `01/02/2026` parses under both
+  day-first and month-first formats and produces *different dates*. No library
+  can resolve that for you — it is a decision about where the data came from,
+  and it belongs in a comment next to the format list.
+
+  ### The classic traps
+
+  - `%m` and `%M` are month and *minute* — swapping them parses cleanly and
+    corrupts everything.
+  - `strptime` lives on the `datetime` class: `datetime.strptime(...)`, not
+    `date.strptime(...)`. Get a `date` back with `.date()`.
+  - Formatting is for the reader; storage and comparison should stay in real
+    `date`/`datetime` objects (or ISO strings) until the final display moment.
+checkpoints:
+  - question: Which direction do strptime and strftime each go, and what's the mnemonic?
+    answer: strptime parses a string into a datetime (p for parse); strftime formats a datetime into a string (f for format).
+    explanation: They share the same % codes, so only the direction differs — misremembering it produces confusing AttributeErrors and type errors.
+  - question: Why does sorting ISO 8601 date strings alphabetically also sort them chronologically?
+    answer: ISO puts units in strictly decreasing size (year, month, day, hour...), zero-padded, so string comparison compares the most significant unit first, just like comparing the dates.
+    explanation: This property makes ISO the right format for filenames, logs, and any storage that might get sorted as text.
+  - question: The string 01/02/2026 parses successfully with both "%d/%m/%Y" and "%m/%d/%Y". What does that mean for your fallback-chain parser?
+    answer: The result depends on which format is tried first, and both give valid but different dates — so the order of the chain is a data-provenance decision that the code alone cannot make.
+    explanation: Ambiguous formats can't be resolved by parsing; you must know (or document an assumption about) the convention of the data source.

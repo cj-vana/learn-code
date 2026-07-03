@@ -10,7 +10,7 @@ description: Spatial reasoning on 2D grids and simulations, plus bitwise tricks 
 outcomes:
 - Flood-fill, rotate, and simulate on 2D grids
 - Use bitmasks, GCD, and modular arithmetic fluently
-estimated_hours: 8
+estimated_hours: 9
 review_status: published
 source_status: original
 provenance:
@@ -40,6 +40,8 @@ units:
   - exercise.library.grid_simulation.a10
   - exercise.library.grid_simulation.a11
   - exercise.library.grid_simulation.a12
+  - exercise.library.grid_simulation.b01
+  - exercise.library.grid_simulation.b02
   - quiz.library.grid_simulation.a01
   - quiz.library.grid_simulation.a02
 - id: unit.bit_number_theory
@@ -61,5 +63,7 @@ units:
   - exercise.library.bit_number_theory.a10
   - exercise.library.bit_number_theory.a11
   - exercise.library.bit_number_theory.a12
+  - exercise.library.bit_number_theory.b01
+  - exercise.library.bit_number_theory.b02
   - quiz.library.bit_number_theory.a01
   - quiz.library.bit_number_theory.a02

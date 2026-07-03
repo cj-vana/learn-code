@@ -1,0 +1,106 @@
+id: exercise.library.tokenization_bpe.a04
+kind: exercise
+version: 1
+language: python
+title: Merging a Pair Inside One Word
+slug: tokenization-bpe-a04
+difficulty: medium
+concepts:
+  - ai.tokenization
+prerequisites:
+  - python.lists
+  - python.loops
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.tokenization_bpe.a04
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original in-word merge drill emphasising non-overlapping left-to-right scanning of a symbol list.
+prompt_markdown: |
+  Once BPE has chosen a pair to merge, it must rewrite every word so that each
+  occurrence of those two neighbouring symbols becomes one glued symbol. Your job
+  is the rewrite for a single word.
+
+  Write `merge_pair_in_word(job)` where `job` is a dict with two keys:
+
+  - `"symbols"`: a list of symbol strings, for example `["l", "o", "w", "</w>"]`
+  - `"pair"`: a two-element list `[x, y]` naming the pair to merge
+
+  Scan the symbols **left to right**. Whenever a symbol equal to `x` is
+  immediately followed by a symbol equal to `y`, replace those two entries with
+  the single concatenated symbol `x + y` (no space) and continue *after* the
+  merged pair, so occurrences never overlap. Everything else is copied
+  unchanged. Return the new list.
+
+  For example, merging `["l", "o"]` in `["l", "o", "w", "</w>"]` gives
+  `["lo", "w", "</w>"]`. Merging `["a", "a"]` in `["a", "a", "a", "</w>"]` glues
+  the first two into `"aa"` and leaves the third `"a"` alone, giving
+  `["aa", "a", "</w>"]`.
+starter_code: |
+  def merge_pair_in_word(job):
+      return []
+function_name: merge_pair_in_word
+input_mode: function
+solution_sketch: Walk an index i through the list; when symbols[i]==x and symbols[i+1]==y append x+y and advance by 2, otherwise append symbols[i] and advance by 1.
+sample_solution: |
+  def merge_pair_in_word(job):
+      symbols = job["symbols"]
+      x, y = job["pair"]
+      result = []
+      i = 0
+      n = len(symbols)
+      while i < n:
+          if i < n - 1 and symbols[i] == x and symbols[i + 1] == y:
+              result.append(x + y)
+              i += 2
+          else:
+              result.append(symbols[i])
+              i += 1
+      return result
+hints:
+  - level: 1
+    text: A for loop with a fixed step is awkward here because a match consumes two positions; use a while loop with a manual index instead.
+  - level: 2
+    text: At each position check whether symbols[i] and symbols[i + 1] equal x and y, but only when i + 1 is still a valid index.
+  - level: 3
+    text: On a match append x + y and do i += 2 so the second symbol cannot start another overlapping match; otherwise append symbols[i] and do i += 1.
+tests:
+  public:
+    - name: merge_low
+      input: {symbols: ["l", "o", "w", "</w>"], pair: ["l", "o"]}
+      expected: ["lo", "w", "</w>"]
+    - name: no_occurrence
+      input: {symbols: ["c", "a", "t", "</w>"], pair: ["x", "y"]}
+      expected: ["c", "a", "t", "</w>"]
+    - name: overlapping_triple
+      input: {symbols: ["a", "a", "a", "</w>"], pair: ["a", "a"]}
+      expected: ["aa", "a", "</w>"]
+  validation:
+    - name: two_separate_occurrences
+      input: {symbols: ["e", "s", "e", "s", "</w>"], pair: ["e", "s"]}
+      expected: ["es", "es", "</w>"]
+    - name: merge_into_marker
+      input: {symbols: ["h", "i", "</w>"], pair: ["i", "</w>"]}
+      expected: ["h", "i</w>"]
+    - name: four_in_a_row
+      input: {symbols: ["a", "a", "a", "a"], pair: ["a", "a"]}
+      expected: ["aa", "aa"]
+    - name: match_in_middle
+      input: {symbols: ["l", "o", "o", "w"], pair: ["o", "o"]}
+      expected: ["l", "oo", "w"]
+explanation_markdown: |
+  This is the surgery step of BPE: every training round picks one pair and then
+  rewrites all words with this exact routine. The while loop with an explicit
+  index is what makes non-overlapping left-to-right merging correct. When a match
+  is found, jumping ahead by two (`i += 2`) means the symbol that was just
+  consumed as the right half can never also act as the left half of the next
+  match, which is why `["a", "a", "a"]` yields `["aa", "a"]` and not two
+  overlapping merges. Guarding the lookahead with `i < n - 1` avoids reading past
+  the end when the last symbol cannot begin a pair.
+common_mistakes:
+  - Advancing by 1 after a merge, which lets the right half start an overlapping match.
+  - Checking symbols[i + 1] without first confirming i + 1 is in range, causing an IndexError on the last symbol.
+  - Joining the merged pair with a space ("x y") instead of concatenating into a single symbol ("xy").

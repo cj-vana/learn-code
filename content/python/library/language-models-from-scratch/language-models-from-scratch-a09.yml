@@ -1,0 +1,118 @@
+id: exercise.library.language_models_from_scratch.a09
+kind: exercise
+version: 1
+language: python
+title: Greedy Decoding, One Step
+slug: language-models-from-scratch-a09
+difficulty: medium
+concepts:
+  - ai.language_models
+  - concepts.probability
+prerequisites:
+  - python.dictionaries
+  - python.sorting
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.language_models_from_scratch.a09
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original greedy-argmax decoding drill with deterministic alphabetical tie-breaking, framed as a tide-forecast next-word picker.
+prompt_markdown: |
+  The simplest way to turn a language model's next-token probabilities into an
+  actual choice is **greedy decoding**: always pick the single most probable
+  token. It is fast and fully deterministic, which is exactly what you want when
+  a forecast must be reproducible.
+
+  Write `greedy_next(job)` that takes **one dictionary** with a single entry:
+
+  - `"distribution"`: a dictionary mapping each candidate token (string) to its
+    probability (a number). It always has at least one entry.
+
+  Example call:
+
+  ```python
+  greedy_next({"distribution": {"rising": 0.7, "falling": 0.2, "slack": 0.1}})
+  # -> "rising"
+  ```
+
+  Return the token with the **highest** probability. If two or more tokens are
+  tied for the highest probability, break the tie by returning the one that
+  comes **first alphabetically** (so the answer never depends on dictionary
+  insertion order).
+starter_code: |
+  def greedy_next(job):
+      return ""
+function_name: greedy_next
+input_mode: function
+solution_sketch: Scan the tokens in sorted (alphabetical) order and keep the running best; using a strict greater-than comparison means the alphabetically earliest token wins any tie automatically.
+sample_solution: |
+  def greedy_next(job):
+      dist = job["distribution"]
+      best_token = None
+      best_prob = None
+      for token in sorted(dist):
+          p = dist[token]
+          if best_prob is None or p > best_prob:
+              best_prob = p
+              best_token = token
+      return best_token
+hints:
+  - level: 1
+    text: Greedy decoding just means argmax over the distribution, so track the best token and its probability as you scan the dictionary.
+  - level: 2
+    text: To make ties deterministic, iterate the tokens in sorted() order so alphabetically earlier tokens are considered first.
+  - level: 3
+    text: Use a strict comparison p > best_prob when updating; because you visit tokens alphabetically, a later equal probability will not displace the earlier winner.
+tests:
+  public:
+    - name: clear_winner
+      input:
+        distribution: {"a": 0.7, "b": 0.2, "c": 0.1}
+      expected: "a"
+    - name: tie_breaks_alphabetically
+      input:
+        distribution: {"cat": 0.5, "ant": 0.5}
+      expected: "ant"
+    - name: winner_not_alphabetical
+      input:
+        distribution: {"zebra": 0.9, "ant": 0.1}
+      expected: "zebra"
+  validation:
+    - name: three_way_winner
+      input:
+        distribution: {"m": 0.2, "a": 0.2, "z": 0.6}
+      expected: "z"
+    - name: tie_among_two_of_three
+      input:
+        distribution: {"red": 0.4, "blue": 0.4, "green": 0.2}
+      expected: "blue"
+    - name: single_token
+      input:
+        distribution: {"only": 1.0}
+      expected: "only"
+    - name: four_way_tie
+      input:
+        distribution: {"beta": 0.25, "alpha": 0.25, "gamma": 0.25, "delta": 0.25}
+      expected: "alpha"
+explanation_markdown: |
+  Greedy decoding is an argmax: among all candidate tokens, return the one with
+  the largest probability. The only subtlety is what to do when several tokens
+  share the top probability. Real dictionaries iterate in insertion order, so a
+  naive scan would return whichever tied token happened to be added first —
+  making the model's output depend on an implementation detail rather than the
+  probabilities. That is a reproducibility bug.
+
+  Visiting the tokens in `sorted()` order fixes this cheaply: alphabetical order
+  is a total, stable rule, so with a strict `>` update the earliest tied token
+  is seen first and is never overwritten by a later equal value. The result is a
+  decoder that is a pure function of its input distribution. Greedy decoding is
+  also short-sighted — it never revisits a choice — which is why more elaborate
+  schemes like beam search exist, but the single-step argmax here is their
+  common building block.
+common_mistakes:
+  - Using Python's max on the dictionary without a tie-break rule, so ties resolve by insertion order and become non-deterministic.
+  - Breaking ties with the wrong direction (returning the alphabetically last token) by using >= while scanning sorted tokens.
+  - Comparing on the token strings instead of their probabilities, returning the alphabetically first token regardless of probability.

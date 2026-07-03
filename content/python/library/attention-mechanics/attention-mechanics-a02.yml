@@ -1,0 +1,108 @@
+id: exercise.library.attention_mechanics.a02
+kind: exercise
+version: 1
+language: python
+title: Cooling the Raw Scores
+slug: attention-mechanics-a02
+difficulty: easy
+concepts:
+  - ai.attention_transformers
+prerequisites:
+  - python.lists
+  - python.comprehensions
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.attention_mechanics.a02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original explanation of the 1/sqrt(dim_k) scaling step framed around a lantern-sensor reading room.
+prompt_markdown: |
+  Raw attention scores are dot products, and their typical size grows with the
+  length of the vectors being compared. If the key vectors have `dim_k`
+  components, each with roughly unit-scale entries, the dot products tend to
+  spread out with a size proportional to `sqrt(dim_k)`. Feed those large numbers
+  straight into softmax and one score dominates so completely that its weight is
+  almost 1 and the rest are almost 0. In that **saturated** region the softmax is
+  nearly flat, its gradients vanish, and the model can barely learn. Dividing
+  every score by `sqrt(dim_k)` cools them back to a size around 1, keeping softmax
+  responsive.
+
+  Write `scale_scores(job)` where `job` is a single dict:
+
+      {"scores": [8.0, 4.0, 2.0], "dim_k": 4}
+
+  `scores` is a list of raw attention scores and `dim_k` is the key dimension
+  (a positive integer). Return a new list where each score has been divided by
+  `sqrt(dim_k)`. Round every scaled score to 6 decimal places.
+starter_code: |
+  import math
+
+
+  def scale_scores(job):
+      return []
+function_name: scale_scores
+input_mode: function
+solution_sketch: Compute sqrt(dim_k) once, then divide each score by it and round to 6 decimals.
+sample_solution: |
+  import math
+
+
+  def scale_scores(job):
+      scores = job["scores"]
+      root = math.sqrt(job["dim_k"])
+      return [round(score / root, 6) for score in scores]
+hints:
+  - level: 1
+    text: The scaling factor is the same for every score, so compute sqrt(dim_k) a single time before the loop.
+  - level: 2
+    text: Use math.sqrt(job["dim_k"]) and divide each element of job["scores"] by that value.
+  - level: 3
+    text: A list comprehension like [round(s / root, 6) for s in scores] produces the scaled list directly.
+tests:
+  public:
+    - name: dim4
+      input:
+        scores: [8.0, 4.0, 2.0]
+        dim_k: 4
+      expected: [4.0, 2.0, 1.0]
+    - name: dim1
+      input:
+        scores: [3.0, -1.5]
+        dim_k: 1
+      expected: [3.0, -1.5]
+    - name: dim2
+      input:
+        scores: [2.0, 0.0, -2.0]
+        dim_k: 2
+      expected: [1.414214, 0.0, -1.414214]
+  validation:
+    - name: dim9
+      input:
+        scores: [9.0, 6.0, 3.0, 0.0]
+        dim_k: 9
+      expected: [3.0, 2.0, 1.0, 0.0]
+    - name: dim3
+      input:
+        scores: [1.0, 2.0, 3.0]
+        dim_k: 3
+      expected: [0.57735, 1.154701, 1.732051]
+    - name: dim16
+      input:
+        scores: [10.0, -4.0]
+        dim_k: 16
+      expected: [2.5, -1.0]
+explanation_markdown: |
+  The `1 / sqrt(dim_k)` factor is a variance fix. A dot product of two random
+  unit-scale vectors of length `dim_k` has a spread that grows like
+  `sqrt(dim_k)`, so without scaling, wider heads would push softmax harder into
+  saturation than narrow ones. Dividing by `sqrt(dim_k)` normalises that spread
+  back toward 1 regardless of the head width, so softmax stays in its sensitive
+  range and gradients keep flowing. Notice `dim_k = 1` leaves the scores
+  unchanged, since `sqrt(1)` is 1.
+common_mistakes:
+  - Dividing by dim_k instead of sqrt(dim_k), which over-cools the scores as the dimension grows.
+  - Recomputing math.sqrt inside the loop, which is wasteful and easy to get wrong.
+  - Rounding before dividing rather than after, which changes the final digits.

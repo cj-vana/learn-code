@@ -1,0 +1,103 @@
+id: exercise.library.files_formats.a01
+kind: exercise
+version: 1
+language: python
+title: Reading the Kiln's Settings File
+slug: files-formats-a01
+difficulty: easy
+concepts:
+  - python.strings
+  - python.dictionaries
+prerequisites:
+  - python.loops
+  - python.conditionals
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.files_formats.a01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original key-value config drill themed around a pottery kiln controller's plain-text settings file.
+prompt_markdown: |
+  A pottery kiln controller keeps its firing settings in a small text file, one
+  setting per line in `key = value` form. Write `parse_config(text)` that turns
+  the file's contents into a dictionary of strings.
+
+  Rules for reading the file:
+
+  - Split `text` into lines and process each line in order.
+  - Strip leading and trailing whitespace from every line first.
+  - Skip a line that is empty after stripping.
+  - Skip a comment line, meaning one that starts with `#` after stripping.
+  - Otherwise split the line on the **first** `=`. The part before it, stripped,
+    is the key; the part after it, stripped, is the value. A value may itself
+    contain `=`, so only the first `=` separates key from value.
+  - If the same key appears twice, the later line wins.
+
+  Every key and value in the returned dict is a string. An empty `text` (or a
+  file of only blanks and comments) returns an empty dict.
+starter_code: |
+  def parse_config(text):
+      return {}
+function_name: parse_config
+input_mode: function
+solution_sketch: Loop the stripped lines, skip blanks and comment lines, partition each remaining line on the first '=', and store the stripped key and value in a dict so later duplicates overwrite earlier ones.
+sample_solution: |
+  def parse_config(text):
+      config = {}
+      for line in text.splitlines():
+          line = line.strip()
+          if not line or line.startswith("#"):
+              continue
+          key, _, value = line.partition("=")
+          config[key.strip()] = value.strip()
+      return config
+hints:
+  - level: 1
+    text: Use text.splitlines() to walk the file one line at a time, and strip each line before you decide what to do with it.
+  - level: 2
+    text: After stripping, continue past any line that is empty or begins with '#'; those are blanks and comments.
+  - level: 3
+    text: str.partition('=') splits on the first '=' only, giving you (key, '=', value); strip both halves and assign into the dict so a repeated key overwrites its earlier value.
+tests:
+  public:
+    - name: empty_text
+      input: ""
+      expected: {}
+    - name: single_pair
+      input: "target_temp = 1180"
+      expected: {target_temp: "1180"}
+    - name: skips_comment_and_blank
+      input: "# bisque profile\ntarget_temp = 1180\n\nhold_minutes = 20"
+      expected: {target_temp: "1180", hold_minutes: "20"}
+  validation:
+    - name: no_spaces_around_equals
+      input: "ramp_rate=95\nmode=bisque"
+      expected: {ramp_rate: "95", mode: "bisque"}
+    - name: inner_value_spaces_kept
+      input: "  glaze   =   satin white  "
+      expected: {glaze: "satin white"}
+    - name: value_contains_equals
+      input: "formula = temp = high\nlabel = cone 6"
+      expected: {formula: "temp = high", label: "cone 6"}
+    - name: duplicate_key_last_wins
+      input: "target_temp = 1000\ntarget_temp = 1180"
+      expected: {target_temp: "1180"}
+    - name: only_comments
+      input: "# nothing here\n#still nothing"
+      expected: {}
+explanation_markdown: |
+  A `key = value` file is one of the simplest formats there is, and the whole job
+  is disciplined string handling. Stripping each line first means the same code
+  handles `mode=bisque` and `  mode  =  bisque  ` identically, and it lets you
+  test for blanks and `#` comments cleanly. `str.partition('=')` is the right tool
+  because it always splits on the **first** separator and returns three parts even
+  when there is no `=`, so a value like `temp = high` survives intact. Assigning
+  into the dict as you go gives last-write-wins for repeated keys for free, since
+  a later assignment simply overwrites the earlier one.
+common_mistakes:
+  - Splitting with str.split('=') and unpacking into two names, which crashes when the value itself contains an '='.
+  - Checking for '#' before stripping, so an indented comment line slips through as a setting.
+  - Forgetting to strip the key and value, leaving stray spaces baked into the dictionary.

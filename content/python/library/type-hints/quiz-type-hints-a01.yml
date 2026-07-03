@@ -1,0 +1,104 @@
+id: quiz.library.type_hints.a01
+kind: quiz
+version: 1
+language: python
+title: Reading Signatures Like Contracts
+slug: quiz-type-hints-a01
+difficulty: medium
+concepts:
+  - python.type_hints
+prerequisites:
+  - python.type_hints
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.type_hints.a01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pattern-recognition quiz on interpreting type hints, unions, and structural typing choices.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      A function is annotated `def lookup(sku: str) -> dict | None`. What is
+      the caller's obligation that this signature makes explicit?
+    choices:
+      - Handle the None case before using the result as a dict
+      - Convert the returned dict to a string
+      - Pass the sku as a keyword argument
+      - Catch a KeyError the function may raise
+    correct_choice: Handle the None case before using the result as a dict
+    explanation: |
+      A union return says "maybe absent" in the contract itself; a type checker
+      will flag any use of the result that hasn't narrowed away the None first.
+    concepts:
+      - python.type_hints
+  - id: q2
+    prompt: |
+      Records arrive from JSON as dicts with exactly the keys "name", "qty",
+      and "price". Which typing construct expresses that shape with zero
+      runtime cost?
+    choices:
+      - TypedDict — a checkable schema over a plain dict
+      - A dataclass with __slots__
+      - dict[str, object] with a docstring
+      - A Protocol with three methods
+    correct_choice: TypedDict — a checkable schema over a plain dict
+    explanation: |
+      TypedDict pins keys and per-key types for the checker while the value
+      stays an ordinary dict — the right fit for boundary data. Dataclasses
+      would require constructing new objects.
+    concepts:
+      - python.type_hints
+  - id: q3
+    prompt: |
+      total_area(pieces) needs to accept ANY object offering area() -> float,
+      including third-party classes you cannot modify. Which construct types
+      this?
+    choices:
+      - A Protocol — structural typing by capability, no inheritance required
+      - An abstract base class every piece must inherit
+      - A Union listing all known shape classes
+      - TypedDict with an "area" key
+    correct_choice: A Protocol — structural typing by capability, no inheritance required
+    explanation: |
+      Protocols are satisfied by matching structure alone, so classes you don't
+      own conform automatically — duck typing made checkable. A base class or
+      union closes the set to types you enumerate.
+    concepts:
+      - python.type_hints
+  - id: q4
+    prompt: |
+      A parser accepts ids as int | str throughout twelve functions, each
+      re-checking isinstance. What is the architectural fix?
+    choices:
+      - Normalize the union to int once at the boundary so the core handles one type
+      - Add the isinstance checks to a shared decorator
+      - Widen every function to accept Any
+      - Convert all ids to str, since strings are more general
+    correct_choice: Normalize the union to int once at the boundary so the core handles one type
+    explanation: |
+      Wide types at the edges, narrow types in the core: one boundary
+      normalizer removes twelve repeated narrowings and every chance to forget
+      one.
+    concepts:
+      - python.type_hints
+  - id: q5
+    prompt: |
+      Static type checking and unit tests overlap but differ. Which bug does
+      the CHECKER catch that tests typically miss?
+    choices:
+      - A wrongly-typed call in a code path no test ever executes
+      - An off-by-one in a loop the tests exercise
+      - A wrong constant in a formula
+      - A slow algorithm on large inputs
+    correct_choice: A wrongly-typed call in a code path no test ever executes
+    explanation: |
+      The checker verifies every call site in the codebase without running any
+      of it, so consistency holds even on untested paths; logic and performance
+      bugs remain the tests' job.
+    concepts:
+      - python.type_hints
+      - concepts.testing

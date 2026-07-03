@@ -1,0 +1,155 @@
+id: exercise.library.error_handling.b01
+kind: exercise
+version: 1
+language: python
+title: The Container Crane Retry Log
+slug: error-handling-b01
+difficulty: hard
+concepts:
+  - python.exceptions
+  - patterns.simulation
+prerequisites:
+  - python.loops
+  - python.functions
+  - python.lists
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.error_handling.b01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pure-function retry simulator driven by an explicit outcomes list and a per-retry cooldown table, themed around a container-port crane, distinct from exponential-backoff drills.
+prompt_markdown: |
+  An automated crane at a container port tries to lift a tote off a conveyor. The
+  grab is flaky: it may miss and have to try again after a cooldown. You will model
+  the retry loop as a **pure function** -- no real waiting -- from a script of what
+  each attempt would do.
+
+  Write `retry_policy(job)` that takes **one dictionary**:
+
+  - `"outcomes"`: a list of strings, one per attempt the crane would make, in
+    order. `"ok"` means that attempt succeeds; anything else means it fails.
+  - `"max_retries"`: the maximum number of **retries** allowed after the first try
+    (an int `>= 0`). So the crane makes at most `max_retries + 1` attempts total.
+  - `"backoff"`: a list of cooldown durations. The wait scheduled *before* the
+    k-th retry (k counted 1, 2, 3, ...) is `backoff[k - 1]`.
+
+  Simulate the loop, modeling a failed attempt by raising and catching an exception:
+
+  - Make the first attempt. If it succeeds, stop.
+  - If an attempt fails and you still have retries left, schedule the appropriate
+    cooldown, then retry. If an attempt fails and no retries remain, stop.
+  - If a retry index runs **past the end of** `backoff`, reuse the **last** value
+    in `backoff`. If `backoff` is empty, every wait is `0`.
+  - If `outcomes` runs out before you stop (more attempts than listed), treat each
+    missing attempt as a failure.
+
+  Return a dictionary `{"attempts": ..., "succeeded": ..., "waited": ...}` where
+  `attempts` is how many attempts you actually made, `succeeded` is `True` if some
+  attempt succeeded, and `waited` is the sum of the cooldowns you scheduled. Note a
+  cooldown is only charged **between** attempts, never after the final one.
+
+  Example:
+
+  ```python
+  retry_policy({"outcomes": ["fail", "fail", "ok"], "max_retries": 3, "backoff": [1, 2, 4]})
+  # attempt 1 fails -> wait backoff[0]=1; attempt 2 fails -> wait backoff[1]=2;
+  # attempt 3 succeeds -> stop
+  # -> {"attempts": 3, "succeeded": True, "waited": 3}
+  ```
+starter_code: |
+  def retry_policy(job):
+      # Loop attempt by attempt: on failure, add a cooldown and retry while
+      # retries remain; stop on the first success or when retries run out.
+      return {"attempts": 0, "succeeded": False, "waited": 0}
+function_name: retry_policy
+input_mode: function
+solution_sketch: Loop making attempts; raise/catch on a non-ok outcome, and on failure add backoff[min(retries_used, len(backoff)-1)] (or 0 when empty) while retries_used < max_retries, incrementing the retry count, else break.
+sample_solution: |
+  def retry_policy(job):
+      outcomes = job["outcomes"]
+      max_retries = job["max_retries"]
+      backoff = job["backoff"]
+
+      class AttemptFailed(Exception):
+          pass
+
+      attempts = 0
+      retries_used = 0
+      succeeded = False
+      waited = 0
+      while True:
+          idx = attempts
+          attempts += 1
+          try:
+              outcome = outcomes[idx] if idx < len(outcomes) else "fail"
+              if outcome != "ok":
+                  raise AttemptFailed()
+              succeeded = True
+              break
+          except AttemptFailed:
+              if retries_used < max_retries:
+                  step = backoff[min(retries_used, len(backoff) - 1)] if backoff else 0
+                  waited += step
+                  retries_used += 1
+              else:
+                  break
+      return {"attempts": attempts, "succeeded": succeeded, "waited": waited}
+hints:
+  - level: 1
+    text: Track how many attempts you have made and how many retries you have used; the loop ends either on the first success or when a failure has no retry left.
+  - level: 2
+    text: Read the current outcome by attempt index, treating an index past the end of outcomes as a failure. Raise a small local exception on failure and catch it to decide whether to retry.
+  - level: 3
+    text: "On a caught failure with retries left, add backoff[min(retries_used, len(backoff) - 1)] (or 0 if backoff is empty) to waited, bump retries_used, and loop; otherwise break. A success adds no wait."
+tests:
+  public:
+    - name: succeeds_on_third
+      input: {outcomes: ["fail", "fail", "ok"], max_retries: 3, backoff: [1, 2, 4]}
+      expected: {attempts: 3, succeeded: true, waited: 3}
+    - name: succeeds_immediately
+      input: {outcomes: ["ok"], max_retries: 2, backoff: [1, 1]}
+      expected: {attempts: 1, succeeded: true, waited: 0}
+    - name: exhausts_retries
+      input: {outcomes: ["fail", "fail"], max_retries: 1, backoff: [5]}
+      expected: {attempts: 2, succeeded: false, waited: 5}
+  validation:
+    - name: reuses_last_backoff
+      input: {outcomes: ["fail", "fail", "fail", "fail"], max_retries: 3, backoff: [2]}
+      expected: {attempts: 4, succeeded: false, waited: 6}
+    - name: no_retries_allowed
+      input: {outcomes: ["fail"], max_retries: 0, backoff: []}
+      expected: {attempts: 1, succeeded: false, waited: 0}
+    - name: empty_backoff_waits_zero
+      input: {outcomes: ["fail", "ok"], max_retries: 2, backoff: []}
+      expected: {attempts: 2, succeeded: true, waited: 0}
+    - name: outcomes_run_out
+      input: {outcomes: ["fail"], max_retries: 2, backoff: [3, 3, 3]}
+      expected: {attempts: 3, succeeded: false, waited: 6}
+    - name: succeeds_on_last_retry
+      input: {outcomes: ["fail", "fail", "ok"], max_retries: 2, backoff: [4, 6]}
+      expected: {attempts: 3, succeeded: true, waited: 10}
+explanation_markdown: |
+  The trap in any retry loop is miscounting either the attempts or the waits. Two
+  separate counters keep them honest: `attempts` grows once per pass, while
+  `retries_used` only grows when a failure actually leads to another try. The loop
+  stops on the first success, and it also stops when a failure happens with no
+  retries left -- that second exit is what caps the work at `max_retries + 1`
+  attempts.
+
+  Modeling a failure as a raised-and-caught exception mirrors what a real retry
+  wrapper does: the `try` runs the attempt, and the `except` is the single place
+  that decides whether to schedule a cooldown and go again. Waits live strictly
+  *between* attempts, so a run that succeeds or gives up never charges a trailing
+  cooldown. The cooldown lookup `backoff[min(retries_used, len(backoff) - 1)]`
+  clamps the index to the last entry, which is why a short `backoff` list simply
+  repeats its final value, and an empty one contributes nothing. Treating a
+  missing `outcomes` entry as a failure lets the cap, not the script length, decide
+  when to give up.
+common_mistakes:
+  - Conflating attempts with retries, so the loop runs one too many or one too few times.
+  - Charging a cooldown after the final attempt, which overcounts waited whenever the run ends on a failure or a success.
+  - Indexing backoff out of range instead of clamping to the last entry when retries outnumber the cooldown table.
+  - Letting an index past the end of outcomes raise instead of treating the missing attempt as a failure.

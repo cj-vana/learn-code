@@ -1,0 +1,142 @@
+id: exercise.library.regex_text_processing.b01
+kind: exercise
+version: 1
+language: python
+title: Filling Invitation Templates
+slug: regex-text-processing-b01
+difficulty: hard
+concepts:
+  - python.regex
+  - python.dictionaries
+prerequisites:
+  - python.regex
+  - python.functions
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.regex_text_processing.b01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original stationery mail-merge task using a regex placeholder pattern with optional case filters and a callback substitution that leaves unknown keys verbatim.
+prompt_markdown: |
+  A stationery shop runs a mail-merge to print event invitations. Each template is a
+  string sprinkled with placeholders of the form `{{key}}`, and the shop supplies a
+  dictionary of values to drop in. A placeholder may also carry an optional
+  formatting filter, written `{{key|filter}}`, where `filter` is one of exactly
+  `upper`, `lower`, or `title`.
+
+  Write `template_fill(job)` where `job` is a dict with two keys:
+
+  - `template`: the template string
+  - `values`: a dict mapping placeholder keys (strings) to their replacement
+    strings
+
+  Replace each placeholder as follows:
+
+  - A placeholder key is a run of one or more of the characters `A`-`Z`, `a`-`z`,
+    `0`-`9`, and underscore, written immediately after `{{`, with no spaces inside
+    the braces.
+  - If the key is present in `values`, substitute its value. If a filter is present,
+    transform that value first: `upper` uppercases it, `lower` lowercases it, and
+    `title` title-cases it (Python's `str.title`).
+  - If the key is **not** present in `values`, leave the placeholder exactly as it
+    was written in the template, braces, filter, and all.
+  - Any text that is not a well-formed placeholder is copied through unchanged. In
+    particular, a `{{...}}` whose filter is not one of the three recognized names is
+    not a valid placeholder and is left verbatim.
+
+  Return the filled string.
+
+  Example: with `template = "Hello {{name|upper}}, welcome to {{city}}."` and
+  `values = {"name": "ada", "city": "Paris"}`, the result is
+  `"Hello ADA, welcome to Paris."`. With `values = {"name": "ada"}` the same
+  template yields `"Hello ADA, welcome to {{city}}."`, because `city` is unknown.
+starter_code: |
+  import re
+
+
+  def template_fill(job):
+      return job["template"]
+function_name: template_fill
+input_mode: function
+solution_sketch: Match placeholders with a single regex whose key and optional filter are capture groups, and hand re.sub a replacement function. The function looks the key up; on a hit it applies the filter, on a miss it returns the whole matched text unchanged.
+sample_solution: |
+  import re
+
+
+  def template_fill(job):
+      template = job["template"]
+      values = job["values"]
+      pattern = re.compile(r"\{\{([A-Za-z0-9_]+)(?:\|(upper|lower|title))?\}\}")
+
+      def replace(match):
+          key = match.group(1)
+          if key not in values:
+              return match.group(0)
+          text = values[key]
+          filt = match.group(2)
+          if filt == "upper":
+              return text.upper()
+          if filt == "lower":
+              return text.lower()
+          if filt == "title":
+              return text.title()
+          return text
+
+      return pattern.sub(replace, template)
+hints:
+  - level: 1
+    text: Write one pattern that captures the key and, optionally, the filter name. re.sub can take a function instead of a replacement string, which lets you decide per match.
+  - level: 2
+    text: Use \{\{ and \}\} to match the literal braces, a group like ([A-Za-z0-9_]+) for the key, and a non-capturing optional group (?:\|(upper|lower|title))? for the filter.
+  - level: 3
+    text: In the callback, if the key is missing from values return match.group(0) to keep the placeholder verbatim; otherwise apply .upper()/.lower()/.title() based on group(2). Because the filter alternation only lists the three names, an unknown filter never matches and is left alone automatically.
+tests:
+  public:
+    - name: greet_and_city
+      input: {template: "Hello {{name|upper}}, welcome to {{city}}.", values: {name: "ada", city: "Paris"}}
+      expected: "Hello ADA, welcome to Paris."
+    - name: unknown_key_verbatim
+      input: {template: "Dear {{name}}, seat {{seat}}.", values: {name: "Ada"}}
+      expected: "Dear Ada, seat {{seat}}."
+    - name: no_placeholders
+      input: {template: "Plain sign, no fields.", values: {}}
+      expected: "Plain sign, no fields."
+  validation:
+    - name: title_filter
+      input: {template: "{{name|title}} takes the stage.", values: {name: "ada lovelace"}}
+      expected: "Ada Lovelace takes the stage."
+    - name: lower_filter
+      input: {template: "code={{code|lower}}", values: {code: "AB12X"}}
+      expected: "code=ab12x"
+    - name: adjacent
+      input: {template: "{{a}}{{b}}!", values: {a: "Left", b: "Right"}}
+      expected: "LeftRight!"
+    - name: missing_with_filter
+      input: {template: "{{missing|upper}} stays put", values: {}}
+      expected: "{{missing|upper}} stays put"
+    - name: repeat_key
+      input: {template: "{{n}} then {{n|upper}}", values: {n: "bee"}}
+      expected: "bee then BEE"
+explanation_markdown: |
+  The whole job hinges on one pattern and one callback. The pattern
+  `\{\{([A-Za-z0-9_]+)(?:\|(upper|lower|title))?\}\}` matches a placeholder: the
+  escaped braces bracket a captured key, followed by an optional, non-capturing group
+  that captures a filter name only when it is one of the three we recognize. Because
+  the filter alternation is closed, a placeholder like `{{x|weird}}` simply fails to
+  match and is copied through untouched, which is exactly the "leave it verbatim"
+  behavior we want for anything malformed.
+
+  Passing a *function* to `re.sub` is what makes per-placeholder decisions possible.
+  For each match the callback reads the key; a missing key returns `match.group(0)`,
+  the entire matched text, so the placeholder is reprinted as-is. A present key
+  fetches the value and, if `group(2)` named a filter, applies the matching string
+  method before returning. Text outside placeholders is never touched by `re.sub`,
+  so it flows through unchanged. One pass over the template does the whole merge.
+common_mistakes:
+  - Substituting an empty string or the literal "None" for an unknown key instead of returning match.group(0) to keep the original placeholder.
+  - Forgetting to escape the braces, so \{ and \} are treated as regex quantifiers and the pattern fails to compile or match.
+  - Making the filter group greedy or required, so plain placeholders without a filter stop matching.
+  - Applying the filter to the key text rather than to the looked-up value.

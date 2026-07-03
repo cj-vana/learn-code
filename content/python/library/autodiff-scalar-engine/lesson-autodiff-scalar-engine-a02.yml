@@ -1,0 +1,108 @@
+id: lesson.library.autodiff_scalar_engine.a02
+kind: lesson
+version: 1
+language: python
+title: 'Local Rules: Every Operation Knows Its Own Derivative'
+slug: lesson-autodiff-scalar-engine-a02
+difficulty: medium
+concepts:
+  - ai.gradients_autodiff
+prerequisites:
+  - ai.gradients_autodiff
+  - python.closures_decorators
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.autodiff_scalar_engine.a02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original walkthrough of local gradient rules and closure-based backward functions, with fresh worked code independent of any published engine.
+body_markdown: |
+  The last lesson promised that autodiff needs only local rules. This one
+  writes them down. There are fewer than you would guess — five rules cover
+  a working neural-net engine — and each is one line of calculus you can
+  verify by nudging numbers.
+
+  In everything below, `g` is the gradient *arriving from above*: how much
+  the final loss changes per unit change of this operation's **output**. The
+  local rule answers: how much does the loss change per unit change of each
+  **input**?
+
+  ### The five rules
+
+  **Addition — the gradient distributor.** If `out = a + b`, nudging either
+  input nudges the output one-for-one. Both inputs receive `g` unchanged:
+
+  ```python
+  def grads_add(g):
+      return [g, g]
+  ```
+
+  **Multiplication — the gradient swapper.** If `out = a * b`, then nudging
+  `a` scales the output by `b`, and vice versa. Each input receives `g`
+  times *the other input's value*:
+
+  ```python
+  def grads_mul(a, b, g):
+      return [g * b, g * a]
+  ```
+
+  This is why the backward pass must remember forward values: you cannot
+  route the gradient through a product without knowing what the other factor
+  was.
+
+  **Power.** For `out = a ** n`: the input receives `g * n * a**(n-1)` —
+  the school power rule, wearing its chain-rule coat.
+
+  **tanh — the squashing gate.** Neural nets need a nonlinearity; `tanh`
+  squashes any input into (-1, 1). Its derivative has a lovely form,
+  `1 - tanh(x)**2`, computable *from the forward output alone*. Note what it
+  does: near x = 0 the derivative is ~1 and gradient flows freely; for
+  |x| > 3 the derivative is nearly 0 and the gradient is strangled. That is
+  **saturation** — the reason deep nets fret about activations drifting too
+  large, and (foreshadowing) the reason attention scores get scaled before
+  softmax.
+
+  **exp.** `out = e**x` is its own derivative: the input receives
+  `g * out` — again, the forward output is exactly what backward needs.
+
+  ### Packaging a rule with its context: closures
+
+  A real engine pairs each computed value with a function that knows how to
+  push gradient to its parents. The decorators-and-closures unit taught the
+  tool for "a function that remembers values from when it was made":
+
+  ```python
+  def make_mul_node(a, b):
+      out = a["data"] * b["data"]
+
+      def backward(g):
+          a["grad"] += g * b["data"]    # closure captures a and b
+          b["grad"] += g * a["data"]
+
+      return {"data": out, "backward": backward}
+  ```
+
+  Each `backward` closure captures *its own* operands at creation time. A
+  thousand multiplications create a thousand closures, each remembering its
+  own factors. And note `+=`: a value feeding several operations receives
+  gradient from each path, and contributions **accumulate**. Overwriting
+  with `=` is the classic hand-rolled-engine bug — one path's influence
+  silently vanishes.
+
+  Every exercise in this area's first half implements one of these rules as
+  a pure function. None is longer than a few lines. The magic of autodiff is
+  not in any rule — it is in their composition, which the next lesson
+  orchestrates.
+checkpoints:
+  - question: Why must the multiplication backward rule remember the forward values of both operands, while addition's rule needs nothing?
+    answer: For out = a*b the local derivatives ARE the other operand's values (d(out)/da = b), so backward needs them; addition's local derivatives are the constant 1, so the arriving gradient passes through unchanged.
+    explanation: This is why real engines store forward values (or outputs) on each node — the backward pass consumes them, and freeing them too early breaks differentiation.
+  - question: The tanh derivative 1 - tanh(x)**2 is nearly zero for |x| > 3. What is this called, and what does it do to learning?
+    answer: Saturation — a saturated unit passes almost no gradient backward, so parameters upstream of it stop receiving learning signal and effectively freeze.
+    explanation: Managing saturation drives much of deep-learning practice, from input scaling to the sqrt(d_k) scaling inside attention.
+  - question: In the closure-based node, why is a["grad"] += g * b["data"] written with += rather than = ?
+    answer: A value used by several operations receives gradient along every path, and the chain rule says those contributions sum; assignment would keep only the last path's contribution and silently drop the rest.
+    explanation: Gradient accumulation is the multi-path chain rule made concrete — and forgetting it is the most common bug in hand-written backward passes.

@@ -1,0 +1,110 @@
+id: exercise.library.tokenization_bpe.a11
+kind: exercise
+version: 1
+language: python
+title: A Report Card for the Token Stream
+slug: tokenization-bpe-a11
+difficulty: medium
+concepts:
+  - ai.tokenization
+  - python.dictionaries
+prerequisites:
+  - python.lists
+  - python.strings
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.tokenization_bpe.a11
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original framing as a diagnostic report over a tokenizer's output; the marker-stripped length statistics are invented summary metrics over standard BPE token streams.
+prompt_markdown: |
+  After tokenizing text with a byte-pair encoding (BPE) tokenizer, an engineer
+  wants a quick report on the resulting token stream. The end-of-word marker
+  `"</w>"` is bookkeeping, not real characters, so it must not count toward token
+  length.
+
+  Define the **length** of a token as the number of characters left after
+  deleting every occurrence of the literal marker `"</w>"` from it:
+  `len(token.replace("</w>", ""))`. So `"low"` has length 3, `"s</w>"` has
+  length 1, and a bare `"</w>"` has length 0.
+
+  Write `token_stats(tokens)` that takes a list of token strings and returns a
+  dict with exactly these keys:
+
+  - `"count"`: the number of tokens, `len(tokens)`.
+  - `"avg_len"`: the mean token length (using the length rule above), rounded to
+    2 decimal places with `round(value, 2)`.
+  - `"longest"`: the token with the greatest length. If several tokens tie for
+    the greatest length, return the one that is alphabetically first under
+    Python's default string comparison (compare the full token strings,
+    including any marker).
+
+  Assume `tokens` is non-empty.
+
+  Example: `tokens = ["low", "</w>", "er", "</w>"]` returns
+  `{"count": 4, "avg_len": 1.25, "longest": "low"}` — lengths are 3, 0, 2, 0, so
+  the mean is 1.25 and the longest is `"low"`.
+starter_code: |
+  def token_stats(tokens):
+      return {"count": 0, "avg_len": 0.0, "longest": ""}
+function_name: token_stats
+input_mode: function
+solution_sketch: Compute each token's marker-stripped length, take the count, the mean rounded to 2 decimals, and the max length; among tokens at the max length pick the lexicographic minimum.
+sample_solution: |
+  def token_stats(tokens):
+      lengths = [len(token.replace("</w>", "")) for token in tokens]
+      count = len(tokens)
+      avg_len = round(sum(lengths) / count, 2)
+      longest_len = max(lengths)
+      longest = min(
+          token for token, length in zip(tokens, lengths) if length == longest_len
+      )
+      return {"count": count, "avg_len": avg_len, "longest": longest}
+hints:
+  - level: 1
+    text: Compute a length for every token first, deleting the '</w>' marker before counting characters, so all three statistics can reuse those lengths.
+  - level: 2
+    text: avg_len is sum(lengths) / len(tokens) passed through round(value, 2); the count is simply len(tokens).
+  - level: 3
+    text: Find the maximum length, then among only the tokens whose length equals it, take min(...) to get the alphabetically first token as the tiebreaker.
+tests:
+  public:
+    - name: mixed_lengths
+      input: ["low", "</w>", "er", "</w>"]
+      expected: {"count": 4, "avg_len": 1.25, "longest": "low"}
+    - name: growing_pieces
+      input: ["a", "b", "cd"]
+      expected: {"count": 3, "avg_len": 1.33, "longest": "cd"}
+    - name: fused_markers
+      input: ["s</w>", "t</w>", "ab"]
+      expected: {"count": 3, "avg_len": 1.33, "longest": "ab"}
+  validation:
+    - name: tie_alphabetical
+      input: ["by", "ax", "cz"]
+      expected: {"count": 3, "avg_len": 2.0, "longest": "ax"}
+    - name: one_long_word
+      input: ["hello", "</w>"]
+      expected: {"count": 2, "avg_len": 2.5, "longest": "hello"}
+    - name: tie_with_markers
+      input: ["ab", "</w>", "cd", "</w>"]
+      expected: {"count": 4, "avg_len": 1.0, "longest": "ab"}
+    - name: single_token
+      input: ["x"]
+      expected: {"count": 1, "avg_len": 1.0, "longest": "x"}
+explanation_markdown: |
+  Token-length statistics are a cheap health check on a tokenizer: a very low
+  average length means the merges rarely fired and text is being split almost
+  into raw characters, while long tokens show which subwords the vocabulary
+  learned to keep whole. The one trap is the `"</w>"` marker — it is structural
+  metadata, so stripping it before measuring keeps a word-final piece like
+  `"s</w>"` from being scored as if it were four characters long. Computing every
+  length once up front lets the count, the rounded mean, and the longest-token
+  search all share the same numbers, and the `min(...)` over the tied tokens
+  gives a deterministic alphabetical tiebreak.
+common_mistakes:
+  - Counting the raw len(token) so that the four characters of '</w>' inflate a token's length.
+  - Returning any longest token on a tie instead of the alphabetically first one, giving nondeterministic results.
+  - Skipping round(value, 2), so a value like 1.3333333333 fails the exact equality check.

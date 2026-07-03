@@ -1,0 +1,102 @@
+id: lesson.library.language_models_from_scratch.a01
+kind: lesson
+version: 1
+language: python
+title: 'A Language Model Is a Table of Counts'
+slug: lesson-language-models-from-scratch-a01
+difficulty: medium
+concepts:
+  - ai.language_models
+  - concepts.probability
+prerequisites:
+  - python.dictionaries
+  - concepts.grouping_aggregation
+estimated_time_minutes: 11
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.language_models_from_scratch.a01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original bigram language model introduction using an invented lighthouse-logbook corpus, with fresh worked counts.
+body_markdown: |
+  Strip away the mystique and a language model is a machine that answers one
+  question: **given what came before, what probably comes next?** The models
+  behind chat assistants answer it with billions of parameters. But the same
+  question has a version you can build with a dictionary — and building it
+  teaches you what the big ones are actually doing.
+
+  ### Counting pairs
+
+  Take a tiny corpus — a lighthouse keeper's log:
+
+  ```text
+  calm sea calm wind
+  calm sea heavy swell
+  ```
+
+  Tokenize into words and slide a window of two across each line. Every
+  adjacent pair gets counted:
+
+  ```python
+  def bigram_counts(tokens):
+      counts = {}
+      for a, b in zip(tokens, tokens[1:]):
+          key = f"{a}|{b}"
+          counts[key] = counts.get(key, 0) + 1
+      return counts
+  ```
+
+  From line one: `calm|sea`, `sea|calm`, `calm|wind`. This is a **bigram
+  model** — "bi" because it looks at pairs. Notice the machinery is nothing
+  new: it is the hash-map counting pattern from your earliest units, pointed
+  at text.
+
+  ### From counts to probabilities
+
+  Counts become predictions by normalizing: of all the times `calm` appeared
+  as a context, what fraction were followed by `sea`?
+
+  ```text
+  P(next | context) = count(context, next) / count(context, anything)
+  ```
+
+  In the corpus above, `calm` is followed by `sea` twice and `wind` once, so
+  P(sea | calm) = 2/3 and P(wind | calm) = 1/3. The full model is just this
+  table — every context's probability distribution over next tokens. "The
+  model has learned" means, literally, the table got filled in.
+
+  ### Longer memories: n-grams
+
+  A bigram forgets everything except one token of context. Condition on the
+  previous *two* tokens (a trigram) and predictions sharpen: after
+  `heavy swell`, the log's habits are much more specific than after `swell`
+  alone. In general an **n-gram** model conditions on n-1 previous tokens.
+
+  The catch is combinatorial: with a vocabulary of size V there are V²
+  possible bigram contexts but Vⁿ⁻¹ n-gram contexts. Longer memories mean
+  exponentially more table rows — nearly all of which you will never see in
+  training. A trigram model trained on the two-line log above has *no idea*
+  what follows a context it never saw. That emptiness — the **sparsity
+  problem** — is the wall every counting model hits, and the next lesson is
+  about living with it.
+
+  ### Character or word?
+
+  Nothing in the machinery cares what a token is. Split text into characters
+  and the same code learns spelling patterns (q is followed by u); split
+  into words and it learns phrase patterns. Character models have tiny
+  vocabularies and long dependencies; word models the reverse. That design
+  tension — and its resolution, subword tokens — gets its own area (BPE)
+  later in this path.
+checkpoints:
+  - question: In the two-line lighthouse corpus, why is P(sea | calm) equal to 2/3, mechanically?
+    answer: The context "calm" appears three times followed by something (sea, wind, sea), and two of those continuations are "sea" — conditional probability is the pair count divided by the context's total count.
+    explanation: The entire model is this normalization applied to every context — no further machinery exists in a counting language model.
+  - question: Moving from bigrams to 4-grams sharpens predictions but creates what problem, and why does it grow so fast?
+    answer: 'Sparsity — contexts are triples now, and possible contexts grow as vocabulary size cubed, so almost every context that could occur was never seen in training and has an empty distribution.'
+    explanation: Exponential context growth against linear training data is the fundamental wall of counting models — the motivation for smoothing and, ultimately, for neural models.
+  - question: What changes in the bigram code when you switch from word tokens to character tokens, and what changes in what the model learns?
+    answer: Nothing changes in the code — tokens are just strings; the model now learns orthographic patterns (which letters follow which) instead of phrase patterns, with a much smaller vocabulary but shorter effective memory.
+    explanation: Token choice is a modeling decision outside the algorithm, which is exactly why tokenization gets its own area later in the path.

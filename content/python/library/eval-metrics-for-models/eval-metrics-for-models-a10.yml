@@ -1,0 +1,116 @@
+id: exercise.library.eval_metrics_for_models.a10
+kind: exercise
+version: 1
+language: python
+title: Plotting One Point on an ROC Curve
+slug: eval-metrics-for-models-a10
+difficulty: medium
+concepts:
+  - ai.model_evaluation
+prerequisites:
+  - python.functions
+  - python.conditionals
+  - python.operators
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.eval_metrics_for_models.a10
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original single-ROC-point drill framed around a reef-health classifier, isolating the TPR/FPR definitions and the zero-denominator guard.
+prompt_markdown: |
+  An ROC curve is built one dot at a time: at each decision threshold you plot how
+  well a classifier separates positives from negatives. This exercise computes a
+  single dot from a confusion count.
+
+  A reef-health model labels each survey site as "bleached" (positive) or
+  "healthy" (negative). You are given a single dictionary `job` with four integer
+  counts taken at one threshold:
+
+  - `"tp"`: true positives (bleached sites correctly flagged).
+  - `"fp"`: false positives (healthy sites wrongly flagged).
+  - `"total_pos"`: the number of actually-bleached sites.
+  - `"total_neg"`: the number of actually-healthy sites.
+
+  Write `roc_point(job)` returning the two-element list `[tpr, fpr]`, where
+
+  ```
+  tpr = tp / total_pos      (true positive rate, the y-axis)
+  fpr = fp / total_neg      (false positive rate, the x-axis)
+  ```
+
+  Round each value to **4 decimal places**. If a denominator is `0` (no actual
+  positives, or no actual negatives), define that rate as `0.0` instead of dividing.
+
+  ```python
+  roc_point({"tp": 3, "fp": 1, "total_pos": 4, "total_neg": 4})
+  # -> [0.75, 0.25]
+  ```
+starter_code: |
+  def roc_point(job):
+      return [0.0, 0.0]
+function_name: roc_point
+input_mode: function
+solution_sketch: Compute tpr = tp/total_pos and fpr = fp/total_neg, each guarded so a zero denominator yields 0.0, round both to 4dp, and return them as a two-element list [tpr, fpr].
+sample_solution: |
+  def roc_point(job):
+      tp = job["tp"]
+      fp = job["fp"]
+      total_pos = job["total_pos"]
+      total_neg = job["total_neg"]
+      tpr = round(tp / total_pos, 4) if total_pos else 0.0
+      fpr = round(fp / total_neg, 4) if total_neg else 0.0
+      return [tpr, fpr]
+hints:
+  - level: 1
+    text: The true positive rate uses the positive total as its denominator, and the false positive rate uses the negative total; they never share a denominator.
+  - level: 2
+    text: Guard each division separately, because either total could be zero, and a zero total means that rate is defined as 0.0.
+  - level: 3
+    text: Use a conditional like round(tp / total_pos, 4) if total_pos else 0.0 for each rate, then return [tpr, fpr] in that order.
+tests:
+  public:
+    - name: balanced_counts
+      input: {"tp": 3, "fp": 1, "total_pos": 4, "total_neg": 4}
+      expected: [0.75, 0.25]
+    - name: predict_nothing
+      input: {"tp": 0, "fp": 0, "total_pos": 5, "total_neg": 5}
+      expected: [0.0, 0.0]
+    - name: flag_everything
+      input: {"tp": 4, "fp": 4, "total_pos": 4, "total_neg": 4}
+      expected: [1.0, 1.0]
+  validation:
+    - name: both_denominators_zero
+      input: {"tp": 0, "fp": 0, "total_pos": 0, "total_neg": 0}
+      expected: [0.0, 0.0]
+    - name: uneven_class_sizes
+      input: {"tp": 2, "fp": 1, "total_pos": 3, "total_neg": 7}
+      expected: [0.6667, 0.1429]
+    - name: mostly_positive
+      input: {"tp": 7, "fp": 2, "total_pos": 8, "total_neg": 3}
+      expected: [0.875, 0.6667]
+    - name: no_negatives
+      input: {"tp": 5, "fp": 0, "total_pos": 6, "total_neg": 0}
+      expected: [0.8333, 0.0]
+explanation_markdown: |
+  A single ROC point is just two ratios read off a confusion matrix. The true
+  positive rate (also called recall or sensitivity) asks "of the sites that really
+  were bleached, what fraction did we catch?", so its denominator is `total_pos`.
+  The false positive rate asks "of the sites that were actually healthy, what
+  fraction did we wrongly alarm on?", so its denominator is `total_neg`. Plotting
+  fpr on x and tpr on y, the top-left corner is a perfect classifier and the
+  diagonal is random guessing.
+
+  The zero-denominator guard matters because evaluation slices are sometimes
+  degenerate: a batch might contain no positive examples at all. Rather than crash,
+  the convention here pins the undefined rate to `0.0` so the point still plots.
+  Keeping the two guards independent is important, since `total_pos` and
+  `total_neg` can be zero on their own, and confusing which count divides which
+  numerator is the classic ROC mistake.
+common_mistakes:
+  - Swapping the denominators, dividing tp by total_neg or fp by total_pos.
+  - Guarding both rates behind a single check so one zero total wrongly zeroes the other rate.
+  - Returning the rates in the wrong order; the list must be [tpr, fpr], matching the (y, x) roles.
+  - Leaving the values unrounded, which breaks the exact-equality comparison.

@@ -1,0 +1,98 @@
+id: exercise.library.testing_concepts.a03
+kind: exercise
+version: 1
+language: python
+title: Boundary Probes for the Ticket-Age Gate
+slug: testing-concepts-a03
+difficulty: medium
+concepts:
+  - concepts.testing
+  - python.sets
+prerequisites:
+  - python.lists
+  - python.sorting
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.testing_concepts.a03
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original helpdesk ticket-age framing for generating the classic six-point boundary test set with dedup and sort.
+prompt_markdown: |
+  A helpdesk has a gate that accepts a ticket only when its age in days falls in
+  the inclusive range `[low, high]`. The most valuable tests for a range like this
+  probe the edges: just below each boundary, the boundary itself, and just above
+  it. That gives the classic six-point set.
+
+  Write `boundary_values(job)` where `job` is a dict with two integer keys, `low`
+  and `high`. Build the six probes:
+
+  ```
+  low - 1, low, low + 1, high - 1, high, high + 1
+  ```
+
+  Some probes can coincide — for example when `high` equals `low`, or when the
+  boundaries sit close together — so **remove duplicates** and return the probes
+  as a list **sorted in ascending order**.
+
+  For `low=10, high=20` the answer is `[9, 10, 11, 19, 20, 21]`. For `low=5,
+  high=6` the six raw probes are `4, 5, 6, 5, 6, 7`, which dedupe and sort to
+  `[4, 5, 6, 7]`. Boundaries may be zero or negative.
+starter_code: |
+  def boundary_values(job):
+      # Build the six edge probes, remove duplicates, and return them sorted.
+      return []
+function_name: boundary_values
+input_mode: function
+solution_sketch: Collect the six probe values in a list, drop duplicates with a set, and return sorted(set(...)).
+sample_solution: |
+  def boundary_values(job):
+      low = job["low"]
+      high = job["high"]
+      probes = [low - 1, low, low + 1, high - 1, high, high + 1]
+      return sorted(set(probes))
+hints:
+  - level: 1
+    text: There are exactly six raw probes — three around low and three around high.
+  - level: 2
+    text: Putting the six values through a set collapses any that coincide when the boundaries are close.
+  - level: 3
+    text: Return sorted(set([low - 1, low, low + 1, high - 1, high, high + 1])) so the result is deduped and ascending.
+tests:
+  public:
+    - name: wide_range
+      input: {low: 10, high: 20}
+      expected: [9, 10, 11, 19, 20, 21]
+    - name: adjacent_boundaries
+      input: {low: 5, high: 6}
+      expected: [4, 5, 6, 7]
+    - name: equal_boundaries
+      input: {low: 3, high: 3}
+      expected: [2, 3, 4]
+  validation:
+    - name: zero_to_hundred
+      input: {low: 0, high: 100}
+      expected: [-1, 0, 1, 99, 100, 101]
+    - name: gap_of_one
+      input: {low: 1, high: 2}
+      expected: [0, 1, 2, 3]
+    - name: crosses_zero
+      input: {low: -5, high: 5}
+      expected: [-6, -5, -4, 4, 5, 6]
+    - name: gap_of_two
+      input: {low: 10, high: 12}
+      expected: [9, 10, 11, 12, 13]
+explanation_markdown: |
+  Boundary-value analysis is one of the highest-yield testing habits: bugs cluster
+  at the edges of ranges, where an off-by-one flips an accept into a reject. The
+  six probes cover one step below, exactly on, and one step above each boundary,
+  so a gate that uses `<` where it meant `<=` gets caught. The dedup-and-sort step
+  matters because when boundaries are close (or equal) the raw probes overlap, and
+  a test set should list each distinct value once. Using a set to dedupe and
+  `sorted` to order it is the idiomatic one-liner once the six values exist.
+common_mistakes:
+  - Returning the six raw probes without deduping, so close boundaries produce repeated values.
+  - Forgetting to sort, leaving high's probes tangled around low's.
+  - Only probing the boundary itself and skipping the just-below and just-above values that actually catch off-by-one bugs.

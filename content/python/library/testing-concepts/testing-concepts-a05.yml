@@ -1,0 +1,120 @@
+id: exercise.library.testing_concepts.a05
+kind: exercise
+version: 1
+language: python
+title: Sorting the Overnight Test-Rig Log
+slug: testing-concepts-a05
+difficulty: medium
+concepts:
+  - concepts.testing
+  - python.dictionaries
+prerequisites:
+  - python.lists
+  - python.conditionals
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.testing_concepts.a05
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original overnight-test-rig framing for bucketing raw check records into passed, failed, and errored.
+prompt_markdown: |
+  An overnight test rig runs a battery of checks and dumps a raw log. Your job is
+  to turn that log into a tidy report with three buckets.
+
+  Write `classify_outcomes(results)` where `results` is a **list** of record
+  dicts. Each record has four keys:
+
+  - `name` — the check's name (a string)
+  - `expected` — the value the check should have produced
+  - `actual` — the value it actually produced
+  - `raised` — a boolean that is `True` when the check blew up with an exception
+    before it could even compare the values
+
+  Sort every record's `name` into one of three buckets, using this priority:
+
+  - **errored** — any record whose `raised` is `True`, no matter what `expected`
+    and `actual` are (an exploded check has no meaningful comparison).
+  - **passed** — did not raise **and** `expected` equals `actual`.
+  - **failed** — did not raise **and** `expected` differs from `actual`.
+
+  Return a dict with exactly these keys: `{"passed": [...], "failed": [...],
+  "errored": [...]}`, where each value is the list of names in that bucket, kept in
+  the order they appear in the log. An empty log returns all three buckets empty.
+starter_code: |
+  def classify_outcomes(results):
+      # Bucket each record's name into passed, failed, or errored.
+      return {"passed": [], "failed": [], "errored": []}
+function_name: classify_outcomes
+input_mode: function
+solution_sketch: Initialize the three-bucket report, loop over records, check raised first, then compare expected to actual, and append the name to the matching bucket.
+sample_solution: |
+  def classify_outcomes(results):
+      report = {"passed": [], "failed": [], "errored": []}
+      for record in results:
+          if record["raised"]:
+              report["errored"].append(record["name"])
+          elif record["expected"] == record["actual"]:
+              report["passed"].append(record["name"])
+          else:
+              report["failed"].append(record["name"])
+      return report
+hints:
+  - level: 1
+    text: Check the raised flag before you compare values — an errored check is errored regardless of what expected and actual hold.
+  - level: 2
+    text: Use an if/elif/else so exactly one bucket gets each name, and append names as you encounter them to preserve order.
+  - level: 3
+    text: raised True means errored; otherwise expected == actual means passed, and anything else means failed.
+tests:
+  public:
+    - name: empty
+      input: []
+      expected: {passed: [], failed: [], errored: []}
+    - name: one_each
+      input:
+        - {name: "a", expected: 1, actual: 1, raised: false}
+        - {name: "b", expected: 1, actual: 2, raised: false}
+        - {name: "c", expected: 1, actual: 1, raised: true}
+      expected: {passed: [a], failed: [b], errored: [c]}
+    - name: raised_overrides_equal
+      input:
+        - {name: "x", expected: 5, actual: 5, raised: true}
+      expected: {passed: [], failed: [], errored: [x]}
+  validation:
+    - name: order_preserved
+      input:
+        - {name: "t1", expected: 0, actual: 0, raised: false}
+        - {name: "t2", expected: 0, actual: 0, raised: false}
+      expected: {passed: [t1, t2], failed: [], errored: []}
+    - name: string_values_fail
+      input:
+        - {name: "greet", expected: "hi", actual: "ho", raised: false}
+      expected: {passed: [], failed: [greet], errored: []}
+    - name: mixed_battery
+      input:
+        - {name: "login", expected: true, actual: true, raised: false}
+        - {name: "logout", expected: true, actual: false, raised: false}
+        - {name: "crash", expected: 0, actual: 0, raised: true}
+        - {name: "parse", expected: [1, 2], actual: [1, 2], raised: false}
+      expected: {passed: [login, parse], failed: [logout], errored: [crash]}
+    - name: raised_with_diff_values
+      input:
+        - {name: "boom", expected: 1, actual: 9, raised: true}
+      expected: {passed: [], failed: [], errored: [boom]}
+explanation_markdown: |
+  Real test frameworks report three distinct outcomes, not two, and the difference
+  matters. A **failure** is an assertion that came out false — the code ran and
+  gave the wrong answer. An **error** is the code exploding before any assertion
+  could be judged, which usually points at a different kind of bug (a crash, a bad
+  import, a missing key). Collapsing errors into failures hides that signal. The
+  ordering of the checks encodes the priority: test `raised` first, because once a
+  check has thrown, its `expected`/`actual` values are meaningless. Appending names
+  as you walk the log preserves run order, so the report reads in the same
+  sequence the rig produced.
+common_mistakes:
+  - Comparing expected and actual before checking raised, so a crashed check with coincidentally equal values lands in passed.
+  - Letting a name fall into two buckets by using separate if statements instead of if/elif/else.
+  - Returning only passed and failed, dropping the errored bucket that distinguishes a crash from a wrong answer.

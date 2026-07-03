@@ -1,0 +1,129 @@
+id: exercise.library.classic_ml_from_scratch.a10
+kind: exercise
+version: 1
+language: python
+title: Scoring the Rain Forecaster
+slug: classic-ml-from-scratch-a10
+difficulty: medium
+concepts:
+  - ai.classic_ml
+prerequisites:
+  - python.lists
+  - python.loops
+  - concepts.probability
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.classic_ml_from_scratch.a10
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original binary cross-entropy drill framed as grading a rain forecaster's probabilities against what actually happened, with explicit epsilon clipping to avoid log(0).
+prompt_markdown: |
+  A weather app publishes, for each day, the probability that it will rain. At the
+  end of the month you grade those forecasts against what actually happened using
+  **binary cross-entropy (BCE)** -- the standard loss for probability predictions.
+  A confident-and-correct forecast costs almost nothing; a confident-and-wrong one
+  costs a lot.
+
+  Write `bce_loss(job)` that takes a single dictionary:
+
+  ```
+  {
+    "predictions": [0.9, 0.1],
+    "targets": [1, 0],
+    "eps": 1e-7
+  }
+  ```
+
+  - `predictions` is a list of predicted probabilities, each meant to lie in
+    `[0, 1]`.
+  - `targets` is the list of true labels, each `0` or `1` (same length as
+    `predictions`).
+  - `eps` is a small positive clipping constant.
+
+  For each prediction `p` and target `y`:
+
+  1. **Clip** the probability into `[eps, 1 - eps]`:
+     `p_clipped = min(max(p, eps), 1 - eps)`. This keeps `p` strictly between 0
+     and 1 so the logarithms below are always defined.
+  2. The per-sample loss is
+     `-(y * log(p_clipped) + (1 - y) * log(1 - p_clipped))`, where `log` is the
+     natural logarithm.
+
+  Return the **mean** per-sample loss over all samples, **rounded to 6 decimal
+  places**.
+starter_code: |
+  import math
+
+
+  def bce_loss(job):
+      return 0.0
+function_name: bce_loss
+input_mode: function
+solution_sketch: For each prediction clip it into [eps, 1-eps], add -(y*log(p)+(1-y)*log(1-p)) to a running total, then divide by the number of samples and round to 6 places.
+sample_solution: |
+  import math
+
+
+  def bce_loss(job):
+      predictions = job["predictions"]
+      targets = job["targets"]
+      eps = job["eps"]
+      total = 0.0
+      for p, y in zip(predictions, targets):
+          p_clipped = min(max(p, eps), 1 - eps)
+          total += -(y * math.log(p_clipped) + (1 - y) * math.log(1 - p_clipped))
+      return round(total / len(predictions), 6)
+hints:
+  - level: 1
+    text: Each sample contributes -log(p) when its target is 1 and -log(1-p) when its target is 0. The y and (1-y) factors select which term applies.
+  - level: 2
+    text: Before taking any logarithm, clip the probability with min(max(p, eps), 1-eps) so you never call log on 0.
+  - level: 3
+    text: Accumulate every sample's loss into a running total, divide by len(predictions) for the mean, and round the result to 6 decimals.
+tests:
+  public:
+    - name: mild_confident_correct
+      input: {predictions: [0.9, 0.1], targets: [1, 0], eps: 1.0e-7}
+      expected: 0.105361
+    - name: clip_saves_log_zero
+      input: {predictions: [0.0], targets: [1], eps: 1.0e-3}
+      expected: 6.907755
+    - name: three_mixed
+      input: {predictions: [0.8, 0.4, 0.6], targets: [1, 0, 1], eps: 1.0e-7}
+      expected: 0.414932
+  validation:
+    - name: pure_uncertainty
+      input: {predictions: [0.5, 0.5], targets: [1, 0], eps: 1.0e-7}
+      expected: 0.693147
+    - name: clip_upper_end
+      input: {predictions: [1.0], targets: [0], eps: 1.0e-2}
+      expected: 4.60517
+    - name: confident_and_right
+      input: {predictions: [0.99, 0.01], targets: [1, 0], eps: 1.0e-7}
+      expected: 0.01005
+    - name: four_samples
+      input: {predictions: [0.7, 0.2, 0.9, 0.3], targets: [1, 0, 1, 0], eps: 1.0e-7}
+      expected: 0.260463
+explanation_markdown: |
+  Binary cross-entropy is the loss that trains logistic regression and every
+  binary classifier that outputs a probability. The intuition lives in the two
+  logarithms: if the truth is `y = 1`, you only pay `-log(p)`, which is near `0`
+  when `p` is close to `1` and shoots up as `p` approaches `0`. The `(1 - y)`
+  branch mirrors that for the `y = 0` case. Averaging over the batch gives one
+  number that is small when the forecaster is both confident and right.
+
+  The clipping is not a cosmetic detail. A perfectly-wrong prediction (`p = 0`
+  when `y = 1`, or `p = 1` when `y = 0`) would call `log(0)`, which is negative
+  infinity, and the whole mean becomes `inf` or `nan`. Squeezing `p` into
+  `[eps, 1 - eps]` bounds the worst-case penalty at `-log(eps)` -- the
+  `clip_saves_log_zero` case shows a raw `0.0` prediction turning into the finite
+  cost `-log(1e-3) = 6.907755` instead of blowing up. Choosing `eps` trades a
+  little accuracy for numerical safety, exactly the kind of guard real training
+  loops rely on.
+common_mistakes:
+  - Skipping the clip, so a prediction of exactly 0 or 1 calls log(0) and produces inf or nan.
+  - Summing the losses but forgetting to divide by the sample count, returning a total instead of a mean.
+  - Swapping the two log terms so the y=1 and y=0 cases are penalised backwards.

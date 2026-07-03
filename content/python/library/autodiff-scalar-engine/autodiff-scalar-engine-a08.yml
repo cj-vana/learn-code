@@ -1,0 +1,175 @@
+id: exercise.library.autodiff_scalar_engine.a08
+kind: exercise
+version: 1
+language: python
+title: Forward Pass Through an Expression Graph
+slug: autodiff-scalar-engine-a08
+difficulty: medium
+concepts:
+  - ai.gradients_autodiff
+prerequisites:
+  - python.dictionaries
+  - python.functions
+  - patterns.recursion
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.autodiff_scalar_engine.a08
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original forward-evaluation drill over a tiny add/mul expression graph, framed as a tide-height calculator, using memoized recursion so shared nodes are evaluated once.
+prompt_markdown: |
+  Before an autodiff engine can compute gradients, it runs a **forward pass**: it
+  evaluates every node of an expression graph to a number. Here you build that
+  forward evaluator for a graph whose only operations are addition and
+  multiplication -- the two primitives a scalar engine is built from.
+
+  Write `eval_expression(job)` that takes **one dictionary**:
+
+  - `job["nodes"]` maps each node name to a small dict describing it:
+    - `{"op": "leaf", "value": v}` -- a raw input holding the float `v`.
+    - `{"op": "add", "inputs": [names...]}` -- the **sum** of the listed nodes'
+      values.
+    - `{"op": "mul", "inputs": [names...]}` -- the **product** of the listed
+      nodes' values.
+  - `job["output"]` is the name of the node whose value you must return.
+
+  Evaluate the output node by evaluating its inputs first (recursively), then
+  combining them. A node may be listed as an input more than once (for example a
+  square `x * x` has `inputs: ["x", "x"]`), and a node may feed several parents;
+  compute each value from its definition. Return the output value **rounded to 6
+  decimal places** with `round(value, 6)`.
+
+  Example:
+
+  ```python
+  eval_expression({
+      "nodes": {
+          "x": {"op": "leaf", "value": 3.0},
+          "y": {"op": "leaf", "value": 4.0},
+          "c": {"op": "leaf", "value": 2.0},
+          "p": {"op": "mul", "inputs": ["x", "y"]},   # 3 * 4 = 12
+          "out": {"op": "add", "inputs": ["p", "c"]}, # 12 + 2 = 14
+      },
+      "output": "out",
+  })
+  # -> 14.0
+  ```
+starter_code: |
+  def eval_expression(job):
+      return 0.0
+function_name: eval_expression
+input_mode: function
+solution_sketch: Recursively evaluate a node from its op, caching results in a dict so shared nodes are computed once, then round the output value to 6 places.
+sample_solution: |
+  def eval_expression(job):
+      nodes = job["nodes"]
+      cache = {}
+
+      def value(name):
+          if name in cache:
+              return cache[name]
+          node = nodes[name]
+          op = node["op"]
+          if op == "leaf":
+              result = node["value"]
+          elif op == "add":
+              result = 0.0
+              for child in node["inputs"]:
+                  result += value(child)
+          else:
+              result = 1.0
+              for child in node["inputs"]:
+                  result *= value(child)
+          cache[name] = result
+          return result
+
+      return round(value(job["output"]), 6)
+hints:
+  - level: 1
+    text: Write a helper that returns a node's value. A leaf returns its stored value; add and mul first evaluate their input nodes.
+  - level: 2
+    text: For an add node start an accumulator at 0.0 and add each input's value; for a mul node start at 1.0 and multiply. Recurse to get each input's value.
+  - level: 3
+    text: Cache each computed value in a dict keyed by node name so a shared node is not re-evaluated, then return round(value(job["output"]), 6).
+tests:
+  public:
+    - name: single_leaf
+      input:
+        nodes:
+          a: {op: leaf, value: 4.0}
+        output: a
+      expected: 4.0
+    - name: simple_add
+      input:
+        nodes:
+          x: {op: leaf, value: 1.5}
+          y: {op: leaf, value: 2.5}
+          s: {op: add, inputs: [x, y]}
+        output: s
+      expected: 4.0
+    - name: mul_then_add
+      input:
+        nodes:
+          x: {op: leaf, value: 3.0}
+          y: {op: leaf, value: 4.0}
+          c: {op: leaf, value: 2.0}
+          p: {op: mul, inputs: [x, y]}
+          out: {op: add, inputs: [p, c]}
+        output: out
+      expected: 14.0
+  validation:
+    - name: float_rounding
+      input:
+        nodes:
+          a: {op: leaf, value: 0.1}
+          b: {op: leaf, value: 0.2}
+          s: {op: add, inputs: [a, b]}
+        output: s
+      expected: 0.3
+    - name: shared_square
+      input:
+        nodes:
+          x: {op: leaf, value: 2.0}
+          sq: {op: mul, inputs: [x, x]}
+        output: sq
+      expected: 4.0
+    - name: negatives
+      input:
+        nodes:
+          a: {op: leaf, value: -1.5}
+          b: {op: leaf, value: 4.0}
+          c: {op: leaf, value: -2.0}
+          s: {op: add, inputs: [a, b]}
+          out: {op: mul, inputs: [s, c]}
+        output: out
+      expected: -5.0
+    - name: two_layers
+      input:
+        nodes:
+          a: {op: leaf, value: 1.1}
+          b: {op: leaf, value: 2.2}
+          d: {op: leaf, value: 3.0}
+          s: {op: add, inputs: [a, b]}
+          out: {op: mul, inputs: [s, d]}
+        output: out
+      expected: 9.9
+explanation_markdown: |
+  Evaluating an expression graph is a post-order walk: a node's value depends on
+  its inputs, so you resolve the inputs first and then combine them. Addition
+  starts from the identity 0.0 and multiplication from 1.0, which also makes an
+  add or mul node with a single input behave sensibly. Caching each node's value
+  the first time it is computed means a node shared by several parents (or an
+  input listed twice, like `x * x`) is only evaluated once -- the same reuse an
+  autodiff framework relies on.
+
+  The `round(..., 6)` at the end matters because floats are inexact: `0.1 + 0.2`
+  is stored as `0.30000000000000004`, and rounding pins the reported result to a
+  clean `0.3`. Every value in this exercise flows out of that single rounding step
+  on the final output.
+common_mistakes:
+  - Initializing a mul accumulator at 0.0 instead of 1.0, which forces every product to zero.
+  - Rounding intermediate node values instead of only the final output, which can drift the answer.
+  - Re-evaluating shared nodes without a cache, which still gives the right number but does needless work and misses the point of a graph.

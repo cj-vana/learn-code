@@ -1,0 +1,199 @@
+id: exercise.library.embeddings_similarity_search.a11
+kind: exercise
+version: 1
+language: python
+title: Scoring a Document with BM25
+slug: embeddings-similarity-search-a11
+difficulty: hard
+concepts:
+  - ai.embeddings_retrieval
+prerequisites:
+  - python.dictionaries
+  - python.loops
+estimated_time_minutes: 26
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.embeddings_similarity_search.a11
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original single-document BM25 scoring drill themed on a kelp-forest dive log, with the length-normalised ranking formula spelled out from scratch.
+prompt_markdown: |
+  BM25 is the ranking function behind most keyword search engines. Given a query
+  and one document, it produces a relevance score that rewards matching terms,
+  discounts common ones, and penalises documents that are merely long. You will
+  compute it for a single document from a kelp-forest dive log.
+
+  Write `bm25_score(job)` where `job` is a single dict:
+
+  ```
+  {
+    "query": ["otter", "kelp"],
+    "doc": ["otter", "otter", "kelp", "crab"],
+    "df": {"otter": 1, "kelp": 2, "crab": 3},
+    "N": 3,
+    "avgdl": 4.0,
+    "k1": 1.5,
+    "b": 0.75
+  }
+  ```
+
+  where `df` maps a term to its corpus document frequency, `N` is the total number
+  of documents in the corpus, `avgdl` is the average document length, and `k1`,
+  `b` are tuning constants.
+
+  Let `dl = len(doc)` be this document's length. For each **distinct** term `t` in
+  the query, let `f` be the number of times `t` occurs in `doc` and `df_t` be
+  `df.get(t, 0)` (treat a term missing from `df` as `0`). Its contribution is
+
+  ```
+  idf(t)  = ln( 1 + (N - df_t + 0.5) / (df_t + 0.5) )
+  score(t) = idf(t) * ( f * (k1 + 1) ) / ( f + k1 * (1 - b + b * dl / avgdl) )
+  ```
+
+  The BM25 score is the sum of `score(t)` over the distinct query terms. A query
+  term that never appears in the document has `f = 0`, so its contribution is `0`.
+  Return the total **rounded to 4 decimal places** with `round(value, 4)`.
+
+  For the example the total works out to `1.8712`.
+starter_code: |
+  import math
+
+
+  def bm25_score(job):
+      return 0.0
+function_name: bm25_score
+input_mode: function
+solution_sketch: Count the document's term frequencies, compute the length-normalisation factor once, then sum the BM25 idf-weighted saturation term over the distinct query terms and round to 4 places.
+sample_solution: |
+  import math
+  from collections import Counter
+
+
+  def bm25_score(job):
+      query = job["query"]
+      doc = job["doc"]
+      df = job["df"]
+      n = job["N"]
+      avgdl = job["avgdl"]
+      k1 = job["k1"]
+      b = job["b"]
+      dl = len(doc)
+      tf = Counter(doc)
+      score = 0.0
+      for term in dict.fromkeys(query):
+          f = tf.get(term, 0)
+          df_t = df.get(term, 0)
+          idf = math.log(1 + (n - df_t + 0.5) / (df_t + 0.5))
+          denom = f + k1 * (1 - b + b * dl / avgdl)
+          score += idf * (f * (k1 + 1)) / denom
+      return round(score, 4)
+hints:
+  - level: 1
+    text: Count how many times each word appears in the document once up front, then look up f for each query term. The length factor k1 * (1 - b + b * dl / avgdl) does not depend on the term, so you can reuse it.
+  - level: 2
+    text: Iterate over the distinct query terms so a word repeated in the query is not counted twice. dict.fromkeys(query) preserves order while removing duplicates.
+  - level: 3
+    text: For each distinct term compute idf = math.log(1 + (N - df_t + 0.5) / (df_t + 0.5)) with df_t = df.get(term, 0), then add idf * (f * (k1 + 1)) / (f + k1 * (1 - b + b * dl / avgdl)) to a running total; a missing term has f = 0 and adds nothing. Round the sum to 4 places.
+tests:
+  public:
+    - name: worked_example
+      input:
+        query: [otter, kelp]
+        doc: [otter, otter, kelp, crab]
+        df:
+          otter: 1
+          kelp: 2
+          crab: 3
+        N: 3
+        avgdl: 4.0
+        k1: 1.5
+        b: 0.75
+      expected: 1.8712
+    - name: query_term_absent_from_doc
+      input:
+        query: [otter, seal]
+        doc: [otter, kelp]
+        df:
+          otter: 1
+          seal: 1
+        N: 2
+        avgdl: 2.0
+        k1: 1.5
+        b: 0.75
+      expected: 0.6931
+    - name: no_length_penalty_b_zero
+      input:
+        query: [kelp]
+        doc: [kelp, kelp, crab]
+        df:
+          kelp: 1
+        N: 1
+        avgdl: 3.0
+        k1: 1.2
+        b: 0.0
+      expected: 0.3956
+  validation:
+    - name: long_document
+      input:
+        query: [otter, kelp, crab]
+        doc: [otter, kelp, kelp, crab, crab, crab]
+        df:
+          otter: 2
+          kelp: 3
+          crab: 5
+        N: 6
+        avgdl: 4.0
+        k1: 1.5
+        b: 0.75
+      expected: 2.0509
+    - name: repeated_query_term_counts_once
+      input:
+        query: [otter, otter, kelp]
+        doc: [otter, kelp, kelp]
+        df:
+          otter: 1
+          kelp: 2
+        N: 3
+        avgdl: 3.0
+        k1: 1.5
+        b: 0.5
+      expected: 1.6523
+    - name: single_term_full_length_penalty
+      input:
+        query: [crab]
+        doc: [crab]
+        df:
+          crab: 1
+        N: 1
+        avgdl: 1.0
+        k1: 2.0
+        b: 1.0
+      expected: 0.2877
+    - name: term_missing_from_df
+      input:
+        query: [ghost]
+        doc: [ghost]
+        df: {}
+        N: 5
+        avgdl: 1.0
+        k1: 1.5
+        b: 0.75
+      expected: 2.4849
+explanation_markdown: |
+  BM25 has three moving parts. The IDF factor `ln(1 + (N - df + 0.5) / (df + 0.5))`
+  down-weights terms that appear in many documents; the `+1` inside the log keeps
+  it from going negative for very common terms. The numerator `f * (k1 + 1)` grows
+  with in-document frequency but the `f` in the denominator makes it **saturate**,
+  so the tenth occurrence of a word adds far less than the second. The factor
+  `1 - b + b * dl / avgdl` is length normalisation: with `b = 0.75` a document
+  longer than average is penalised, and with `b = 0` length is ignored entirely.
+
+  Iterating over the distinct query terms keeps a repeated query word from being
+  double-counted, and defaulting `df` to `0` lets a brand-new term still receive
+  the maximum IDF instead of raising a `KeyError`.
+common_mistakes:
+  - Summing over every query token including duplicates instead of the distinct terms.
+  - Dropping the plus-one inside the logarithm, which is the difference between the modern non-negative IDF and the older form that can go negative.
+  - Recomputing or misplacing the length factor so that b, dl, and avgdl end up in the numerator instead of the denominator.

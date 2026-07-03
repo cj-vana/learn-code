@@ -1,0 +1,162 @@
+id: exercise.library.language_models_from_scratch.a11
+kind: exercise
+version: 1
+language: python
+title: Greedy Generation From a Bigram Table
+slug: language-models-from-scratch-a11
+difficulty: hard
+concepts:
+  - ai.language_models
+  - concepts.probability
+prerequisites:
+  - python.dictionaries
+  - python.strings
+  - python.sorting
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.language_models_from_scratch.a11
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original multi-step greedy generation drill over a bigram transition table with deterministic ties and unseen-context stopping, framed as a lighthouse log auto-writer.
+prompt_markdown: |
+  Now chain single greedy steps into a whole generated sequence. A lighthouse
+  keeper's log is modelled by a **bigram transition table**: given the current
+  token (the "context"), the table lists the probabilities of each possible next
+  token. Repeatedly picking the most likely next token produces a short
+  auto-written phrase.
+
+  Write `greedy_generate(job)` that takes **one dictionary**:
+
+  - `"table"`: a dictionary whose keys have the form `"context|next"` (context
+    token, a pipe, then a candidate next token) mapping to the probability that
+    `next` follows `context`.
+  - `"start"`: the starting context token (a string). It is **not** part of the
+    output.
+  - `"steps"`: the maximum number of tokens to generate (a non-negative
+    integer).
+
+  Generate up to `steps` tokens as follows. Let the current context begin as
+  `start`. At each step, look at every table entry whose context equals the
+  current context, and choose the candidate `next` token with the **highest**
+  probability (breaking ties by the token that is **first alphabetically**).
+  Append that token to the output and make it the new context. Then repeat.
+
+  Stop early — before reaching `steps` — if the current context appears as the
+  context of **no** table entry (there is nothing to generate from it).
+
+  Return the list of generated tokens, in the order produced.
+
+  Example call:
+
+  ```python
+  greedy_generate({
+      "table": {"fog|rolls": 0.8, "fog|lifts": 0.2, "rolls|in": 1.0},
+      "start": "fog",
+      "steps": 3,
+  })
+  # -> ["rolls", "in"]   (picks "rolls", then "in", then "in" has no context -> stop)
+  ```
+starter_code: |
+  def greedy_generate(job):
+      return []
+function_name: greedy_generate
+input_mode: function
+solution_sketch: Loop up to steps times; each iteration scan the table keys in sorted order, split each on the pipe, keep only entries matching the current context, take the strict-max probability (sorted order makes ties alphabetical), append the winner and advance the context, and break as soon as no candidate is found.
+sample_solution: |
+  def greedy_generate(job):
+      table = job["table"]
+      context = job["start"]
+      steps = job["steps"]
+      generated = []
+      for _ in range(steps):
+          best_token = None
+          best_prob = None
+          for key in sorted(table):
+              ctx, _, cand = key.partition("|")
+              if ctx != context:
+                  continue
+              p = table[key]
+              if best_prob is None or p > best_prob:
+                  best_prob = p
+                  best_token = cand
+          if best_token is None:
+              break
+          generated.append(best_token)
+          context = best_token
+      return generated
+hints:
+  - level: 1
+    text: This is the single greedy step from before, run in a loop up to steps times, feeding each chosen token back in as the next context.
+  - level: 2
+    text: Split each key with key.partition("|") to recover the context and candidate; only consider entries whose context matches the current one.
+  - level: 3
+    text: Iterate sorted(table) and update with a strict p > best_prob so ties go to the alphabetically earliest candidate; if you find no candidate for the current context, break out of the loop.
+tests:
+  public:
+    - name: three_step_walk
+      input:
+        table: {"sun|rises": 0.8, "sun|sets": 0.2, "rises|high": 0.6, "rises|low": 0.4, "high|noon": 1.0}
+        start: "sun"
+        steps: 3
+      expected: ["rises", "high", "noon"]
+    - name: stops_at_dead_end
+      input:
+        table: {"sun|rises": 0.8, "sun|sets": 0.2, "rises|high": 0.6, "rises|low": 0.4, "high|noon": 1.0}
+        start: "high"
+        steps: 5
+      expected: ["noon"]
+    - name: tie_breaks_alphabetically
+      input:
+        table: {"a|zebra": 0.5, "a|ant": 0.5}
+        start: "a"
+        steps: 1
+      expected: ["ant"]
+  validation:
+    - name: zero_steps
+      input:
+        table: {"sun|rises": 0.8, "sun|sets": 0.2, "rises|high": 0.6, "rises|low": 0.4, "high|noon": 1.0}
+        start: "sun"
+        steps: 0
+      expected: []
+    - name: unseen_start
+      input:
+        table: {"sun|rises": 0.8, "sun|sets": 0.2, "rises|high": 0.6, "rises|low": 0.4, "high|noon": 1.0}
+        start: "moon"
+        steps: 3
+      expected: []
+    - name: tie_then_continue
+      input:
+        table: {"go|down": 0.5, "go|deep": 0.5, "deep|dive": 1.0}
+        start: "go"
+        steps: 2
+      expected: ["deep", "dive"]
+    - name: steps_exceed_chain
+      input:
+        table: {"sun|rises": 0.8, "sun|sets": 0.2, "rises|high": 0.6, "rises|low": 0.4, "high|noon": 1.0}
+        start: "sun"
+        steps: 10
+      expected: ["rises", "high", "noon"]
+explanation_markdown: |
+  Autoregressive generation means the model's own output becomes its next input:
+  choose a token, append it, and feed it back in as the new context. Here each
+  step is the greedy argmax from the previous exercise, applied to just the table
+  rows whose context matches where we currently are. Splitting the key with
+  `partition("|")` recovers the `(context, candidate)` pair, and scanning
+  `sorted(table)` with a strict `>` keeps ties deterministic by handing them to
+  the alphabetically earliest candidate.
+
+  The stopping rule matters as much as the picking rule. A bigram table is only
+  a partial map of the token space, so generation can walk into a context that
+  was never observed as a left-hand side. When that happens there is no valid
+  next token, and continuing would either loop forever or invent data, so we
+  break and return what we have. Two things therefore bound the loop: reaching
+  `steps`, or reaching a dead-end context. Because greedy decoding is
+  deterministic, the same table and start always produce the same phrase.
+common_mistakes:
+  - Splitting the key with split("|") and unpacking into two variables, which crashes if a token ever contains a pipe; partition is safer and keeps the candidate intact.
+  - Forgetting to update the context to the chosen token, so the generator keeps emitting the same first token.
+  - Continuing to loop when the current context has no matching rows instead of breaking, producing wrong-length output.
+  - Resolving ties by insertion order rather than alphabetically, making the output depend on how the table happened to be built.

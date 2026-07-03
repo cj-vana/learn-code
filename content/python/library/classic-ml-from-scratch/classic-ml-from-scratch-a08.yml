@@ -1,0 +1,131 @@
+id: exercise.library.classic_ml_from_scratch.a08
+kind: exercise
+version: 1
+language: python
+title: One Nudge of the Citrus Sorter
+slug: classic-ml-from-scratch-a08
+difficulty: medium
+concepts:
+  - ai.classic_ml
+prerequisites:
+  - python.lists
+  - python.conditionals
+  - python.functions
+estimated_time_minutes: 15
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.classic_ml_from_scratch.a08
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original single-step perceptron update drill framed as a citrus grader learning sweet-versus-sour from sensor readings, with an explicit sign(0) rule.
+prompt_markdown: |
+  A fruit-packing line grades each orange as **sweet** (`+1`) or **sour** (`-1`)
+  from sensor readings such as sugar and firmness. A **perceptron** is the tiny
+  linear model behind this decision: it keeps a weight per feature plus one bias,
+  and learns by nudging those numbers whenever it guesses wrong.
+
+  Write `perceptron_step(job)` that performs **one** learning step on **one**
+  training example. The input is a single dictionary:
+
+  ```
+  {
+    "weights": [0.0, 0.0],
+    "bias": 0.0,
+    "x": [2.0, 1.0],
+    "y": 1,
+    "lr": 0.5
+  }
+  ```
+
+  - `weights` is the current weight vector, `bias` a single number.
+  - `x` is the example's feature vector (same length as `weights`).
+  - `y` is the true label, either `+1` or `-1`.
+  - `lr` is the learning rate (a positive number).
+
+  The step:
+
+  1. Compute the activation `a = dot(weights, x) + bias`, where
+     `dot(weights, x) = sum(w[i] * x[i] for i in range(len(x)))`.
+  2. Predict a label from the **sign** of the activation. Use the convention
+     `sign(a) = +1` when `a > 0` and `sign(a) = -1` when `a <= 0` -- so an
+     activation of exactly `0` predicts `-1`.
+  3. If the prediction already equals `y`, the example is correct: leave
+     `weights` and `bias` unchanged. Otherwise the example is misclassified, so
+     update each weight and the bias:
+     - `weights[i] = weights[i] + lr * y * x[i]` for every `i`
+     - `bias = bias + lr * y`
+
+  Return a two-element list `[updated_weights, updated_bias]`, where
+  `updated_weights` is the list of new weights. Round every returned number to
+  **6 decimal places** (round each weight, and the bias).
+starter_code: |
+  def perceptron_step(job):
+      return [[], 0.0]
+function_name: perceptron_step
+input_mode: function
+solution_sketch: Compute the activation dot(weights, x) + bias, predict +1 only when it is strictly positive (else -1), and if that prediction differs from y add lr*y*x[i] to each weight and lr*y to the bias; return the rounded weights and bias.
+sample_solution: |
+  def perceptron_step(job):
+      weights = job["weights"]
+      bias = job["bias"]
+      x = job["x"]
+      y = job["y"]
+      lr = job["lr"]
+      activation = sum(w * xi for w, xi in zip(weights, x)) + bias
+      prediction = 1 if activation > 0 else -1
+      if prediction != y:
+          weights = [w + lr * y * xi for w, xi in zip(weights, x)]
+          bias = bias + lr * y
+      return [[round(w, 6) for w in weights], round(bias, 6)]
+hints:
+  - level: 1
+    text: Start by computing the activation as the dot product of weights and x plus the bias. A single pass with zip and sum does the dot product.
+  - level: 2
+    text: Turn the activation into a prediction of +1 only when it is strictly greater than zero, otherwise -1. That encodes the rule that an activation of exactly zero predicts -1.
+  - level: 3
+    text: Only change anything when prediction does not equal y. In that case add lr*y*x[i] to each weight and lr*y to the bias, then round every number to 6 places before returning.
+tests:
+  public:
+    - name: zero_start_update
+      input: {weights: [0.0, 0.0], bias: 0.0, x: [2.0, 1.0], y: 1, lr: 0.5}
+      expected: [[1.0, 0.5], 0.5]
+    - name: correct_no_change
+      input: {weights: [1.0, 0.5], bias: 0.5, x: [2.0, 1.0], y: 1, lr: 0.5}
+      expected: [[1.0, 0.5], 0.5]
+    - name: negative_label_update
+      input: {weights: [1.0, 1.0], bias: 0.0, x: [1.0, 3.0], y: -1, lr: 0.1}
+      expected: [[0.9, 0.7], -0.1]
+  validation:
+    - name: sign_zero_stays
+      input: {weights: [1.0, -1.0], bias: 0.0, x: [2.0, 2.0], y: -1, lr: 0.5}
+      expected: [[1.0, -1.0], 0.0]
+    - name: sign_zero_updates
+      input: {weights: [1.0, -1.0], bias: 0.0, x: [2.0, 2.0], y: 1, lr: 0.5}
+      expected: [[2.0, 0.0], 0.5]
+    - name: fractional_rounding
+      input: {weights: [0.15, 0.25], bias: 0.1, x: [0.3, 0.3], y: -1, lr: 0.1}
+      expected: [[0.12, 0.22], 0.0]
+    - name: three_features
+      input: {weights: [0.5, 0.5, 0.5], bias: -0.2, x: [1.0, -1.0, 2.0], y: -1, lr: 0.2}
+      expected: [[0.3, 0.7, 0.1], -0.4]
+explanation_markdown: |
+  The perceptron update is the ancestor of every gradient-based learner. Its logic
+  is blunt but effective: when the current line already places an example on the
+  correct side, do nothing; when it does not, shove the weights **toward** the
+  example if the true label is `+1` and **away** from it if the label is `-1`.
+  The term `lr * y * x[i]` captures exactly that -- the sign of `y` sets the
+  direction and `x[i]` sets how much each feature contributes.
+
+  Two details make the drill precise. First, the tie rule: an activation of `0`
+  sits on the boundary, and we declare that a `-1` prediction. So the same weights
+  and features can either update or not depending only on whether `y` is `-1`
+  (correct, no change) or `+1` (wrong, update) -- the two `sign_zero` cases show
+  both outcomes. Second, rounding to 6 places keeps floating-point results stable;
+  a value like `0.15 - 0.1 * 0.3` is not exactly `0.12` in binary, so rounding is
+  what lets the test compare cleanly.
+common_mistakes:
+  - Treating an activation of exactly zero as a +1 prediction, which flips whether the boundary cases update.
+  - Updating the weights even when the prediction is already correct, instead of leaving them untouched.
+  - Using y in the wrong place, for example subtracting the update or dropping the y factor so the direction is wrong.

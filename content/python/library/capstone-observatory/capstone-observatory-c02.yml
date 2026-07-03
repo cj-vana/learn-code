@@ -1,0 +1,151 @@
+id: exercise.library.capstone_observatory.c02
+kind: exercise
+version: 1
+language: python
+title: 'The Observatory Night Logs: Splitting the Night into Sessions'
+slug: capstone-observatory-c02
+difficulty: medium
+concepts:
+  - python.datetime_module
+prerequisites:
+  - python.lists
+  - python.loops
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.capstone_observatory.c02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Capstone stage two; original gap-based sessionizer over sorted observation timestamps using datetime differences in minutes.
+prompt_markdown: |
+  A night at the observatory is not one continuous run. Clouds roll in, the dome
+  closes, the instrument re-slews, and each break splits the night into separate
+  **observing sessions**. Your job is to reconstruct those sessions from the
+  timestamps alone.
+
+  Write `sessionize(job)` that takes **one dictionary**:
+
+  - `"timestamps"`: a list of instrument timestamps as strings `"YYYY-MM-DD HH:MM"`,
+    already sorted in ascending (chronological) order.
+  - `"gap_minutes"`: an integer `g`.
+
+  Walk the timestamps in order. Two consecutive timestamps belong to the same
+  session as long as the gap between them is `g` minutes or fewer. A gap of
+  **strictly more than** `g` minutes starts a new session. A gap of exactly `g`
+  minutes does **not** split.
+
+  Return a **list** of `[start, end]` pairs, one per session, in order. `start` is
+  the first timestamp of the session and `end` is its last timestamp (both as the
+  original strings). A session with a single timestamp has that timestamp as both
+  its start and end.
+
+  Example call:
+
+  ```python
+  sessionize({
+      "timestamps": ["2026-07-01 22:00", "2026-07-01 22:20", "2026-07-01 23:10"],
+      "gap_minutes": 30,
+  })
+  # -> [["2026-07-01 22:00", "2026-07-01 22:20"], ["2026-07-01 23:10", "2026-07-01 23:10"]]
+  ```
+
+  If `timestamps` is empty, return an empty list.
+starter_code: |
+  from datetime import datetime
+
+
+  def sessionize(job):
+      return []
+function_name: sessionize
+input_mode: function
+solution_sketch: Parse each timestamp with datetime.strptime, track the current session's start and the previous timestamp, and whenever the minute gap to the next timestamp exceeds gap_minutes close the current session and open a new one; append the final open session at the end.
+sample_solution: |
+  from datetime import datetime
+
+
+  def sessionize(job):
+      timestamps = job["timestamps"]
+      gap_limit = job["gap_minutes"]
+      if not timestamps:
+          return []
+      fmt = "%Y-%m-%d %H:%M"
+      sessions = []
+      start = timestamps[0]
+      prev = timestamps[0]
+      for current in timestamps[1:]:
+          minutes = (datetime.strptime(current, fmt) - datetime.strptime(prev, fmt)).total_seconds() / 60
+          if minutes > gap_limit:
+              sessions.append([start, prev])
+              start = current
+          prev = current
+      sessions.append([start, prev])
+      return sessions
+hints:
+  - level: 1
+    text: Convert two timestamp strings to datetime objects with datetime.strptime and subtract them; the result is a timedelta whose total_seconds() divided by 60 is the gap in minutes.
+  - level: 2
+    text: Keep two markers as you loop, the start of the session in progress and the previous timestamp. When the gap from previous to current exceeds gap_minutes, the previous timestamp closes a session.
+  - level: 3
+    text: After the loop ends there is always one session still open (start..prev) that you must append. Remember exactly equal to gap_minutes stays in the same session, so compare with strictly greater than.
+tests:
+  public:
+    - name: empty
+      input:
+        timestamps: []
+        gap_minutes: 30
+      expected: []
+    - name: single_timestamp
+      input:
+        timestamps: ['2026-07-01 22:00']
+        gap_minutes: 15
+      expected:
+        - ['2026-07-01 22:00', '2026-07-01 22:00']
+    - name: two_sessions
+      input:
+        timestamps: ['2026-07-01 22:00', '2026-07-01 22:20', '2026-07-01 23:10', '2026-07-01 23:30']
+        gap_minutes: 30
+      expected:
+        - ['2026-07-01 22:00', '2026-07-01 22:20']
+        - ['2026-07-01 23:10', '2026-07-01 23:30']
+  validation:
+    - name: gap_exactly_equal_stays_together
+      input:
+        timestamps: ['2026-07-01 21:00', '2026-07-01 21:30', '2026-07-01 22:00']
+        gap_minutes: 30
+      expected:
+        - ['2026-07-01 21:00', '2026-07-01 22:00']
+    - name: crosses_midnight
+      input:
+        timestamps: ['2026-07-01 23:50', '2026-07-02 00:05', '2026-07-02 02:00']
+        gap_minutes: 60
+      expected:
+        - ['2026-07-01 23:50', '2026-07-02 00:05']
+        - ['2026-07-02 02:00', '2026-07-02 02:00']
+    - name: every_gap_splits
+      input:
+        timestamps: ['2026-07-01 20:00', '2026-07-01 21:00', '2026-07-01 22:00']
+        gap_minutes: 30
+      expected:
+        - ['2026-07-01 20:00', '2026-07-01 20:00']
+        - ['2026-07-01 21:00', '2026-07-01 21:00']
+        - ['2026-07-01 22:00', '2026-07-01 22:00']
+explanation_markdown: |
+  Sessionizing is a single left-to-right pass. You never need to compare every
+  pair of timestamps, only each neighbour to the one before it, because the input
+  is already sorted. `datetime.strptime` turns each string into a comparable
+  moment; subtracting two of them yields a `timedelta`, and `total_seconds() / 60`
+  converts to minutes.
+
+  The subtle parts are the boundary and the tail. The rule is "strictly more than
+  `g` splits," so a gap that equals `g` keeps the run together, which is why the
+  comparison is `>` and not `>=`. And because a split only happens when you *see*
+  a large gap, the final session is still open when the loop ends, so you append
+  it once more after the loop. Crossing midnight needs no special handling at all:
+  the date is part of each timestamp, so `datetime` computes the true elapsed time
+  for you.
+common_mistakes:
+  - Forgetting to append the last in-progress session after the loop, which drops the final block of the night.
+  - Using >= instead of > for the gap test, which incorrectly splits runs that are exactly gap_minutes apart.
+  - Subtracting the timestamp strings directly or comparing only hours and minutes, which breaks as soon as a session crosses midnight.

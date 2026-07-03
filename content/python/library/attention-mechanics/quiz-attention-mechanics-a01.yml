@@ -1,0 +1,103 @@
+id: quiz.library.attention_mechanics.a01
+kind: quiz
+version: 1
+language: python
+title: Reasoning About Attention
+slug: quiz-attention-mechanics-a01
+difficulty: hard
+concepts:
+  - ai.attention_transformers
+prerequisites:
+  - ai.attention_transformers
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.attention_mechanics.a01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original pattern-recognition quiz on attention semantics, scaling, masking, and architectural reasoning.
+quiz_type: pattern_recognition
+questions:
+  - id: q1
+    prompt: |
+      Query [2, 0] against keys [1, 0] and [0, 1] with values [4, 4] and
+      [8, 8]. Ignoring scaling, the scores are [2, 0]. What is true of the
+      attention output?
+    choices:
+      - A blend much closer to [4, 4] than [8, 8], but with a nonzero contribution from both — softmax never gives all-or-nothing
+      - Exactly [4, 4] — the best key takes the whole lookup
+      - Exactly [6, 6] — attention averages values equally
+      - Exactly [8, 8] — larger values dominate regardless of keys
+    correct_choice: A blend much closer to [4, 4] than [8, 8], but with a nonzero contribution from both — softmax never gives all-or-nothing
+    explanation: |
+      softmax([2, 0]) ≈ [0.88, 0.12], so the output ≈ [4.48, 4.48]: dominated
+      by the matching key's value yet still blended — the soft in soft lookup.
+    concepts:
+      - ai.attention_transformers
+  - id: q2
+    prompt: |
+      Without the sqrt(d_k) scaling, attention in a d_k=512 model trains
+      poorly from the start. What is the mechanism?
+    choices:
+      - Dot products grow with dimension, producing extreme scores that saturate softmax — near one-hot weights pass almost no gradient
+      - Large dot products overflow 64-bit floats immediately
+      - The mask stops working above 256 dimensions
+      - Scores become negative, which softmax cannot handle
+    correct_choice: Dot products grow with dimension, producing extreme scores that saturate softmax — near one-hot weights pass almost no gradient
+    explanation: |
+      Typical score magnitude grows ~sqrt(d_k); softmax at extreme inputs has
+      near-zero derivatives (the tanh saturation disease), freezing the
+      attention weights. Scaling keeps scores in the responsive band.
+    concepts:
+      - ai.attention_transformers
+      - ai.gradients_autodiff
+  - id: q3
+    prompt: |
+      In a causal attention matrix for 4 tokens, which cells are masked and
+      what may row 2 (0-indexed) attend to?
+    choices:
+      - All cells above the diagonal are masked; row 2 attends to positions 0, 1, and 2
+      - All cells below the diagonal; row 2 attends to positions 3 only
+      - The diagonal itself; row 2 attends to everything but itself
+      - The first column; nothing may attend to position 0
+    correct_choice: All cells above the diagonal are masked; row 2 attends to positions 0, 1, and 2
+    explanation: |
+      Row = querying position, column = attended position; masking the upper
+      triangle forbids looking at the future, leaving each row a distribution
+      over its own prefix.
+    concepts:
+      - ai.attention_transformers
+  - id: q4
+    prompt: |
+      A colleague removes all positional encodings from a transformer to
+      simplify it. What specific capability collapses?
+    choices:
+      - Word-order sensitivity — permuting the input tokens now permutes the outputs identically, so "dog bites man" equals "man bites dog"
+      - The model can no longer attend to the first token
+      - Softmax stops summing to one
+      - Values can no longer be blended
+    correct_choice: Word-order sensitivity — permuting the input tokens now permutes the outputs identically, so "dog bites man" equals "man bites dog"
+    explanation: |
+      Attention is permutation-equivariant: nothing in Q·K·V math encodes
+      location, so without injected positions the model literally cannot
+      represent order.
+    concepts:
+      - ai.attention_transformers
+  - id: q5
+    prompt: |
+      Attention entropy is low (near 0 bits) for one head and high (near
+      log2(n)) for another. What does each pattern mean?
+    choices:
+      - The low-entropy head focuses sharply on one position; the high-entropy head spreads attention nearly uniformly
+      - The low-entropy head is broken; entropy should always be high
+      - The high-entropy head has saturated and stopped learning
+      - Both heads are equivalent after renormalization
+    correct_choice: The low-entropy head focuses sharply on one position; the high-entropy head spreads attention nearly uniformly
+    explanation: |
+      Entropy measures how peaked a distribution is — near-zero means one
+      position takes almost all weight, maximal means an even spread. Both
+      patterns are legitimate; heads specialize differently.
+    concepts:
+      - ai.attention_transformers

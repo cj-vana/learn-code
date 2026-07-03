@@ -1,0 +1,97 @@
+id: exercise.library.tokenization_bpe.a10
+kind: exercise
+version: 1
+language: python
+title: Reassembling the Log Line
+slug: tokenization-bpe-a10
+difficulty: medium
+concepts:
+  - ai.tokenization
+  - python.strings
+prerequisites:
+  - python.lists
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.tokenization_bpe.a10
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original framing as the inverse of the lighthouse-log tokenizer; the join-and-restore-spaces detokenization rule is a standard BPE step demonstrated with invented token streams.
+prompt_markdown: |
+  A byte-pair encoding (BPE) tokenizer turns text into subword tokens where the
+  marker `"</w>"` records where each word ended. To read the tokens back as plain
+  text you invert that process.
+
+  Write `detokenize(tokens)` that takes a list of token strings and returns the
+  restored text as a single string. The rule has exactly three steps:
+
+  1. Concatenate all tokens into one string with no separators (`"".join(tokens)`).
+  2. Replace every occurrence of the marker `"</w>"` with a single space. Each
+     end-of-word marker was where a word finished, so it becomes the space that
+     follows that word.
+  3. Strip leading and trailing whitespace from the result (`.strip()`), since the
+     final word's marker leaves a trailing space.
+
+  A token may carry the marker fused onto letters, like `"s</w>"` — the `.replace`
+  still turns the `"</w>"` part into a space, leaving the letters. An empty token
+  list returns the empty string.
+
+  Example: `tokens = ["c", "a", "t", "s</w>"]` returns `"cats"`; and
+  `["te", "a", "</w>", "ti", "m", "e", "</w>"]` returns `"tea time"`.
+starter_code: |
+  def detokenize(tokens):
+      text = "".join(tokens)
+      return text
+function_name: detokenize
+input_mode: function
+solution_sketch: Join the tokens into one string, replace every '</w>' with a space, then strip the leading and trailing whitespace.
+sample_solution: |
+  def detokenize(tokens):
+      joined = "".join(tokens)
+      spaced = joined.replace("</w>", " ")
+      return spaced.strip()
+hints:
+  - level: 1
+    text: Because the tokenizer glued a word's pieces together with no separators, joining the tokens with an empty string rebuilds the raw stream first.
+  - level: 2
+    text: Every '</w>' marked a word ending, so turning each one into a space recreates the word boundaries in one replace call.
+  - level: 3
+    text: The last word's marker becomes a trailing space, so finish with .strip() to remove leading and trailing whitespace.
+tests:
+  public:
+    - name: two_words
+      input: ["low", "</w>", "low", "e", "r", "</w>"]
+      expected: "low lower"
+    - name: fused_marker
+      input: ["c", "a", "t", "s</w>"]
+      expected: "cats"
+    - name: empty_tokens
+      input: []
+      expected: ""
+  validation:
+    - name: repeated_word
+      input: ["ab", "</w>", "ab", "</w>"]
+      expected: "ab ab"
+    - name: mixed_pieces
+      input: ["te", "a", "</w>", "ti", "m", "e", "</w>"]
+      expected: "tea time"
+    - name: single_word
+      input: ["hi", "</w>"]
+      expected: "hi"
+    - name: no_marker
+      input: ["run"]
+      expected: "run"
+explanation_markdown: |
+  Detokenization is the mirror image of tokenization. The tokenizer discarded the
+  original spaces and instead recorded each word ending with `"</w>"`, so the
+  restore path is to concatenate everything, then swap every marker back to the
+  space it stood in for. Doing the join first is what makes fused tokens like
+  `"s</w>"` work: after joining, the marker is still a contiguous substring, so a
+  single `.replace("</w>", " ")` handles both standalone and fused markers. The
+  closing `.strip()` cleans up the trailing space left by the very last word.
+common_mistakes:
+  - Joining tokens with a space, which inserts separators between subword pieces of the same word (turning 'low' + 'e' + 'r' into 'low e r').
+  - Forgetting to strip, so the trailing marker leaves an extra space at the end of the string.
+  - Replacing '</w>' with an empty string instead of a space, which fuses adjacent words together.

@@ -1,0 +1,205 @@
+id: exercise.library.capstone_observatory.c06
+kind: exercise
+version: 1
+language: python
+title: 'The Observatory Night Logs: The Morning Report'
+slug: capstone-observatory-c06
+difficulty: hard
+concepts:
+  - python.string_formatting
+  - python.sorting
+prerequisites:
+  - python.strings
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.capstone_observatory.c06
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Capstone finale; original exact-template report builder that sorts per-target lines by count then name and formats magnitudes to two decimals.
+prompt_markdown: |
+  The final stage of **The Observatory Night Logs**: assemble everything the
+  pipeline computed into the plain-text **morning report** that gets pinned to the
+  dome door. The format is fixed, and it must match exactly, character for
+  character.
+
+  Write `night_report(job)` that takes **one dictionary**:
+
+  - `"date"`: the night's date as a string, e.g. `"2026-07-01"`.
+  - `"targets"`: a list of dictionaries `{"name": <str>, "count": <int>, "best_mag": <float>}`.
+  - `"sessions"`: an integer, the number of observing sessions.
+  - `"events"`: an integer, the number of flagged transient events.
+
+  Build the report as a single string with lines joined by `"\n"` (no trailing
+  newline), in this exact order:
+
+  1. A header line: `Night Log for <date>`.
+  2. One line per target, sorted by `count` **descending**, and for equal counts
+     by `name` **ascending** (alphabetical). Each line reads:
+     `<name>: <count> obs, best mag <best_mag>` where `best_mag` is formatted to
+     **exactly two decimal places** (use `f"{best_mag:.2f}"`, so `0.0` prints as
+     `0.00` and `-1.5` prints as `-1.50`).
+  3. A line `Sessions recorded: <sessions>`.
+  4. A line `Events flagged: <events>`.
+
+  If `targets` is empty, the report is just the header line followed by the two
+  summary lines (no target lines in between).
+
+  Example call:
+
+  ```python
+  night_report({
+      "date": "2026-07-01",
+      "targets": [{"name": "vega", "count": 3, "best_mag": 0.02},
+                  {"name": "altair", "count": 2, "best_mag": 0.77}],
+      "sessions": 2,
+      "events": 4,
+  })
+  ```
+
+  returns the string:
+
+  ```
+  Night Log for 2026-07-01
+  vega: 3 obs, best mag 0.02
+  altair: 2 obs, best mag 0.77
+  Sessions recorded: 2
+  Events flagged: 4
+  ```
+starter_code: |
+  def night_report(job):
+      return ""
+function_name: night_report
+input_mode: function
+solution_sketch: Start a list of lines with the header, sort the targets by (-count, name), append one formatted line per target with the magnitude at two decimals, append the sessions and events summary lines, then join everything with newlines.
+sample_solution: |
+  def night_report(job):
+      lines = [f"Night Log for {job['date']}"]
+      targets = sorted(job["targets"], key=lambda t: (-t["count"], t["name"]))
+      for target in targets:
+          lines.append(f"{target['name']}: {target['count']} obs, best mag {target['best_mag']:.2f}")
+      lines.append(f"Sessions recorded: {job['sessions']}")
+      lines.append(f"Events flagged: {job['events']}")
+      return "\n".join(lines)
+hints:
+  - level: 1
+    text: Collect the report as a list of line strings and join them with "\n" at the very end, which keeps you from accidentally adding a trailing newline.
+  - level: 2
+    text: Sort the targets with key=lambda t (-t["count"], t["name"]). The negative count sorts high counts first while the name still sorts ascending as a tie-break.
+  - level: 3
+    text: Format each magnitude with an f-string field like {best_mag:.2f} so 0.0 becomes 0.00 and -1.5 becomes -1.50; build each target line as name, count obs, best mag value.
+tests:
+  public:
+    - name: typical_night
+      input:
+        date: '2026-07-01'
+        targets:
+          - {name: altair, count: 2, best_mag: 0.77}
+          - {name: vega, count: 3, best_mag: 0.02}
+          - {name: sirius, count: 1, best_mag: -1.46}
+        sessions: 2
+        events: 4
+      expected: |-
+        Night Log for 2026-07-01
+        vega: 3 obs, best mag 0.02
+        altair: 2 obs, best mag 0.77
+        sirius: 1 obs, best mag -1.46
+        Sessions recorded: 2
+        Events flagged: 4
+    - name: tie_on_count_sorts_by_name
+      input:
+        date: '2026-07-02'
+        targets:
+          - {name: vega, count: 2, best_mag: 0.02}
+          - {name: altair, count: 2, best_mag: 0.77}
+        sessions: 1
+        events: 0
+      expected: |-
+        Night Log for 2026-07-02
+        altair: 2 obs, best mag 0.77
+        vega: 2 obs, best mag 0.02
+        Sessions recorded: 1
+        Events flagged: 0
+    - name: no_targets
+      input:
+        date: '2026-07-03'
+        targets: []
+        sessions: 0
+        events: 0
+      expected: |-
+        Night Log for 2026-07-03
+        Sessions recorded: 0
+        Events flagged: 0
+  validation:
+    - name: single_target_negative_mag
+      input:
+        date: '2026-07-04'
+        targets:
+          - {name: sirius, count: 5, best_mag: -1.5}
+        sessions: 3
+        events: 7
+      expected: |-
+        Night Log for 2026-07-04
+        sirius: 5 obs, best mag -1.50
+        Sessions recorded: 3
+        Events flagged: 7
+    - name: zero_magnitude_pads_to_two_places
+      input:
+        date: '2026-07-05'
+        targets:
+          - {name: moon, count: 1, best_mag: 0.0}
+        sessions: 1
+        events: 0
+      expected: |-
+        Night Log for 2026-07-05
+        moon: 1 obs, best mag 0.00
+        Sessions recorded: 1
+        Events flagged: 0
+    - name: three_way_tie_then_name
+      input:
+        date: '2026-07-06'
+        targets:
+          - {name: c, count: 1, best_mag: 1.0}
+          - {name: a, count: 3, best_mag: 2.0}
+          - {name: b, count: 3, best_mag: 3.0}
+        sessions: 4
+        events: 2
+      expected: |-
+        Night Log for 2026-07-06
+        a: 3 obs, best mag 2.00
+        b: 3 obs, best mag 3.00
+        c: 1 obs, best mag 1.00
+        Sessions recorded: 4
+        Events flagged: 2
+    - name: large_count
+      input:
+        date: '2026-07-07'
+        targets:
+          - {name: vega, count: 12, best_mag: 0.03}
+        sessions: 2
+        events: 1
+      expected: |-
+        Night Log for 2026-07-07
+        vega: 12 obs, best mag 0.03
+        Sessions recorded: 2
+        Events flagged: 1
+explanation_markdown: |
+  The report is assembled as a list of lines and joined once at the end, which is
+  the clean way to control exact output: you never manage separators by hand, and
+  `"\n".join(...)` leaves no trailing newline. The header comes first, the two
+  summary lines come last, and the target lines slot in between.
+
+  The ordering is the only real logic. Sorting with the key `(-count, name)` gives
+  a two-level sort in one pass: negating the count makes larger counts sort first
+  while the name still sorts ascending, so ties break alphabetically without any
+  extra code. Formatting each magnitude with `:.2f` guarantees a stable two-decimal
+  column, so `0.0` reads as `0.00` and a bright, negative magnitude reads as
+  `-1.50`. When there are no targets, the loop simply adds nothing and the header
+  sits directly above the summary lines, which is exactly the required empty-night
+  shape.
+common_mistakes:
+  - Sorting by count ascending, or sorting name and count in separate passes, which produces the wrong line order on ties.
+  - Printing best_mag with str() or default formatting, so values like 0.0 show as 0.0 instead of the required 0.00.
+  - Adding a trailing newline (for example ending each line with "\n") so the whole string fails an exact-match comparison.

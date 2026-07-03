@@ -1,0 +1,111 @@
+id: exercise.library.attention_mechanics.a06
+kind: exercise
+version: 1
+language: python
+title: The Decoder Cannot Peek Ahead
+slug: attention-mechanics-a06
+difficulty: medium
+concepts:
+  - ai.attention_transformers
+prerequisites:
+  - python.lists
+  - python.loops
+  - python.conditionals
+estimated_time_minutes: 12
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.attention_mechanics.a06
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original causal-masking drill framed around a left-to-right story generator that must not read future words.
+prompt_markdown: |
+  A decoder language model writes one token at a time, left to right, and at each
+  position it predicts the **next** token. If, while summarising position `i`, it
+  were allowed to attend to positions that come after `i`, it would be peeking at
+  the very answers it is supposed to predict, which is cheating during training.
+  A **causal mask** forbids this: position `i` may attend only to positions `0`
+  through `i` (itself and everything earlier), never to future positions.
+
+  You are given the square matrix of attention scores, where `scores[i][j]` is
+  how much position `i` would attend to position `j`. Wherever `j > i` (strictly
+  above the main diagonal) the score points into the future and must be blocked.
+  Blocking means replacing it with `None`; later this becomes negative infinity
+  so softmax drives that weight to 0. Every entry on or below the diagonal
+  (`j <= i`) is kept unchanged.
+
+  Write `causal_mask(job)` where `job` is a single dict:
+
+      {"scores": [[1.0, 2.0], [3.0, 4.0]]}
+
+  `scores` is an n-by-n matrix. Return a new n-by-n matrix (do not mutate the
+  input) where every strictly-upper-triangle entry is `None` and all other
+  entries are copied through unchanged.
+starter_code: |
+  def causal_mask(job):
+      return []
+function_name: causal_mask
+input_mode: function
+solution_sketch: Build a new matrix; for each row i and column j, keep scores[i][j] when j <= i and use None when j > i.
+sample_solution: |
+  def causal_mask(job):
+      scores = job["scores"]
+      n = len(scores)
+      masked = []
+      for i in range(n):
+          row = []
+          for j in range(n):
+              if j > i:
+                  row.append(None)
+              else:
+                  row.append(scores[i][j])
+          masked.append(row)
+      return masked
+hints:
+  - level: 1
+    text: The condition for the future is column index strictly greater than row index, that is j > i.
+  - level: 2
+    text: Walk every row i and every column j; append None when j > i and the original score otherwise.
+  - level: 3
+    text: Build fresh row lists and a fresh outer list so the caller's matrix is never modified in place.
+tests:
+  public:
+    - name: two_by_two
+      input:
+        scores: [[1.0, 2.0], [3.0, 4.0]]
+      expected: [[1.0, null], [3.0, 4.0]]
+    - name: one_by_one
+      input:
+        scores: [[5.0]]
+      expected: [[5.0]]
+    - name: three_by_three
+      input:
+        scores: [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]]
+      expected: [[1.0, null, null], [4.0, 5.0, null], [7.0, 8.0, 9.0]]
+  validation:
+    - name: four_by_four
+      input:
+        scores: [[0.1, 0.2, 0.3, 0.4], [0.5, 0.6, 0.7, 0.8], [0.9, 1.0, 1.1, 1.2], [1.3, 1.4, 1.5, 1.6]]
+      expected: [[0.1, null, null, null], [0.5, 0.6, null, null], [0.9, 1.0, 1.1, null], [1.3, 1.4, 1.5, 1.6]]
+    - name: negatives
+      input:
+        scores: [[-1.0, -2.0], [-3.0, -4.0]]
+      expected: [[-1.0, null], [-3.0, -4.0]]
+    - name: three_mixed
+      input:
+        scores: [[2.5, 9.0, -1.0], [0.0, 3.5, 8.0], [1.0, 1.0, 4.5]]
+      expected: [[2.5, null, null], [0.0, 3.5, null], [1.0, 1.0, 4.5]]
+explanation_markdown: |
+  Causal masking is what makes a decoder autoregressive: it enforces that the
+  representation at each position depends only on the past and present, never the
+  future. The kept region is a lower triangle (including the diagonal, so a
+  position may always attend to itself), and the blocked region is the strict
+  upper triangle. Using `None` as the placeholder marks the spots that the
+  scaling-plus-softmax stage will treat as negative infinity, sending their
+  attention weights to exactly 0. Row 0 can see only itself, while the final row
+  can see the whole sequence.
+common_mistakes:
+  - Masking on j >= i, which wrongly blocks the diagonal so a position cannot even attend to itself.
+  - Editing scores[i][j] in place instead of building a new matrix, corrupting the caller's data.
+  - Masking the lower triangle instead of the upper one, letting the model see the future and hiding the past.

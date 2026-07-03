@@ -1,0 +1,129 @@
+id: exercise.library.type_hints.a04
+kind: exercise
+version: 1
+language: python
+title: Checking the Repair-Shop Intake Form
+slug: type-hints-a04
+difficulty: medium
+concepts:
+  - python.type_hints
+  - python.types
+prerequisites:
+  - python.dictionaries
+  - python.sorting
+estimated_time_minutes: 14
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.type_hints.a04
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original structural-validation drill framed around a bicycle repair shop's intake form, mirroring how a TypedDict declares the expected shape of a record.
+prompt_markdown: |
+  A bicycle repair shop takes in each job as a record (a dictionary), and every
+  record is supposed to match a declared shape, much like a `TypedDict` names each
+  field and its type. You are writing the checker that flags anything that does not
+  fit.
+
+  Read the signature:
+
+  ```python
+  def validate_shape(job: dict[str, Any]) -> list[str]:
+  ```
+
+  `job` has two keys:
+
+  - `"record"`: the dictionary being checked.
+  - `"shape"`: a dictionary mapping each expected field name to a type name, which
+    is one of the strings `"int"`, `"str"`, or `"list"`.
+
+  For every field declared in `"shape"`, the record is in violation if:
+
+  - the field is **missing** from the record, or
+  - the field is present but its value is **not** of the declared type.
+
+  For each violation, produce the string `"<field>: expected <type>"`, for example
+  `"quantity: expected int"`. Return the violations as a list **sorted
+  alphabetically**. A record that satisfies every declared field returns an empty
+  list. Fields present in the record but not named in `"shape"` are ignored.
+
+  Example:
+
+  ```python
+  validate_shape({
+      "record": {"quantity": "five", "label": "seat"},
+      "shape": {"quantity": "int", "label": "str"},
+  })
+  # -> ["quantity: expected int"]
+  ```
+starter_code: |
+  from typing import Any
+
+
+  def validate_shape(job: dict[str, Any]) -> list[str]:
+      return []
+function_name: validate_shape
+input_mode: function
+solution_sketch: Map each type-name string to a Python type, then for every declared field record a violation when the field is missing or fails isinstance against the mapped type; return the violations sorted.
+sample_solution: |
+  from typing import Any
+
+
+  def validate_shape(job: dict[str, Any]) -> list[str]:
+      record = job["record"]
+      shape = job["shape"]
+      type_map: dict[str, type] = {"int": int, "str": str, "list": list}
+      violations: list[str] = []
+      for field, type_name in shape.items():
+          expected_type = type_map[type_name]
+          if field not in record or not isinstance(record[field], expected_type):
+              violations.append(f"{field}: expected {type_name}")
+      return sorted(violations)
+hints:
+  - level: 1
+    text: The shape maps field names to the strings "int", "str", or "list"; translate each of those into the actual Python type object int, str, or list.
+  - level: 2
+    text: A field is a violation when it is missing (field not in record) or when isinstance(record[field], expected_type) is False.
+  - level: 3
+    text: "Build each message as f\"{field}: expected {type_name}\" and return sorted(violations) so the list comes back in alphabetical order."
+tests:
+  public:
+    - name: all_valid
+      input: {"record": {"quantity": 3, "label": "brake pad", "tags": ["urgent"]}, "shape": {"quantity": "int", "label": "str", "tags": "list"}}
+      expected: []
+    - name: missing_field
+      input: {"record": {"label": "chain"}, "shape": {"quantity": "int", "label": "str"}}
+      expected: ["quantity: expected int"]
+    - name: wrong_type
+      input: {"record": {"quantity": "five", "label": "seat"}, "shape": {"quantity": "int", "label": "str"}}
+      expected: ["quantity: expected int"]
+  validation:
+    - name: multiple_sorted
+      input: {"record": {}, "shape": {"zed": "str", "alpha": "int"}}
+      expected: ["alpha: expected int", "zed: expected str"]
+    - name: list_check
+      input: {"record": {"tags": "notalist"}, "shape": {"tags": "list"}}
+      expected: ["tags: expected list"]
+    - name: extra_fields_ignored
+      input: {"record": {"quantity": 2, "extra": 99}, "shape": {"quantity": "int"}}
+      expected: []
+    - name: all_wrong_sorted
+      input: {"record": {"a": [1], "b": 2, "c": "x"}, "shape": {"a": "int", "b": "str", "c": "list"}}
+      expected: ["a: expected int", "b: expected str", "c: expected list"]
+explanation_markdown: |
+  A `TypedDict` describes the shape a dictionary should have, but the type checker
+  only looks at your code, not at data arriving at runtime. When records come from
+  a form, a file, or a network call, you validate the shape yourself, and that is
+  exactly what this checker does.
+
+  The clean trick is mapping the type-name strings to real type objects
+  (`{"int": int, "str": str, "list": list}`) so a single `isinstance` call handles
+  every declared field. Combining the missing-field test and the type test with
+  `or` means one branch catches both failure modes. Sorting the messages at the end
+  makes the output deterministic regardless of the order the shape happened to
+  declare its fields, which is what lets the tests compare against a fixed list.
+common_mistakes:
+  - Comparing the type-name string to type(value).__name__ instead of mapping it to a real type and using isinstance, which is brittle for subclasses.
+  - Forgetting that a missing field is also a violation and only checking the type of fields that happen to be present.
+  - Returning the violations in discovery order instead of sorting them, so the output depends on the shape's field order.

@@ -1,0 +1,192 @@
+id: exercise.library.capstone_observatory.c05
+kind: exercise
+version: 1
+language: python
+title: 'The Observatory Night Logs: Cross-Matching the Catalog'
+slug: capstone-observatory-c05
+difficulty: hard
+concepts:
+  - patterns.brute_force
+prerequisites:
+  - python.dictionaries
+  - python.loops
+estimated_time_minutes: 26
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.capstone_observatory.c05
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Capstone stage five; original nearest-neighbour cross-match of observations against a star catalog within a coordinate tolerance, with deterministic tie-break by catalog order.
+prompt_markdown: |
+  Each observation records where the telescope was pointed, but the astronomers
+  need to know **which catalogued object** it actually caught. That is a
+  cross-match: line up each observation with the nearest catalog entry whose
+  coordinates are close enough on both axes.
+
+  Write `cross_match(job)` that takes **one dictionary**:
+
+  - `"observations"`: a list of dictionaries `{"name": <str>, "ra": <float>, "dec": <float>}`
+    where `ra` and `dec` are the two sky coordinates.
+  - `"catalog"`: a list of dictionaries `{"name": <str>, "ra": <float>, "dec": <float>}`.
+  - `"tolerance"`: a number `tol`.
+
+  A catalog entry is a **candidate** for an observation only if it is within `tol`
+  on **both** axes, that is `abs(obs.ra - cat.ra) <= tol` **and**
+  `abs(obs.dec - cat.dec) <= tol` (the boundary of exactly `tol` counts as inside).
+  Among an observation's candidates, pick the **nearest** one, measuring distance
+  as the squared separation `(dra)**2 + (ddec)**2`. If two candidates tie on
+  distance, prefer the one that appears **earlier in the catalog**.
+
+  Return a dictionary with two entries:
+
+  - `"matched"`: a dictionary mapping each matched observation's name to its chosen
+    catalog entry's name.
+  - `"unmatched"`: a list of the names of observations with no candidate at all, in
+    the original observation order.
+
+  Example call:
+
+  ```python
+  cross_match({
+      "observations": [{"name": "obs1", "ra": 10.0, "dec": 10.0}],
+      "catalog": [{"name": "far", "ra": 10.4, "dec": 10.0},
+                  {"name": "near", "ra": 10.1, "dec": 10.0}],
+      "tolerance": 0.5,
+  })
+  # -> {"matched": {"obs1": "near"}, "unmatched": []}
+  ```
+starter_code: |
+  def cross_match(job):
+      return {"matched": {}, "unmatched": []}
+function_name: cross_match
+input_mode: function
+solution_sketch: For each observation scan the catalog in order, keeping the entry with the smallest squared separation among those within tolerance on both axes; a strict less-than comparison keeps the earlier catalog entry on ties. Record the winner in matched or add the observation to unmatched when nothing qualifies.
+sample_solution: |
+  def cross_match(job):
+      observations = job["observations"]
+      catalog = job["catalog"]
+      tol = job["tolerance"]
+      matched = {}
+      unmatched = []
+      for obs in observations:
+          best_name = None
+          best_distance = None
+          for entry in catalog:
+              dra = obs["ra"] - entry["ra"]
+              ddec = obs["dec"] - entry["dec"]
+              if abs(dra) <= tol and abs(ddec) <= tol:
+                  distance = dra * dra + ddec * ddec
+                  if best_distance is None or distance < best_distance:
+                      best_distance = distance
+                      best_name = entry["name"]
+          if best_name is None:
+              unmatched.append(obs["name"])
+          else:
+              matched[obs["name"]] = best_name
+      return {"matched": matched, "unmatched": unmatched}
+hints:
+  - level: 1
+    text: For each observation, scan the whole catalog and keep track of the best match found so far; this is a brute-force nearest-neighbour search.
+  - level: 2
+    text: A catalog entry only qualifies when both abs(dra) <= tol and abs(ddec) <= tol. Rank the qualifying entries by squared distance dra*dra + ddec*ddec.
+  - level: 3
+    text: Iterate the catalog in order and replace the current best only when the new distance is strictly smaller, so a tie keeps the earlier entry. If no entry ever qualifies, the observation is unmatched.
+tests:
+  public:
+    - name: single_match
+      input:
+        observations:
+          - {name: obs1, ra: 10.0, dec: 20.0}
+        catalog:
+          - {name: vega, ra: 10.1, dec: 20.1}
+        tolerance: 0.5
+      expected:
+        matched: {obs1: vega}
+        unmatched: []
+    - name: no_candidate_is_unmatched
+      input:
+        observations:
+          - {name: obs1, ra: 5.0, dec: 5.0}
+        catalog:
+          - {name: vega, ra: 10.0, dec: 10.0}
+        tolerance: 0.5
+      expected:
+        matched: {}
+        unmatched: [obs1]
+    - name: nearest_wins
+      input:
+        observations:
+          - {name: obs1, ra: 10.0, dec: 10.0}
+        catalog:
+          - {name: far, ra: 10.4, dec: 10.0}
+          - {name: near, ra: 10.1, dec: 10.0}
+        tolerance: 0.5
+      expected:
+        matched: {obs1: near}
+        unmatched: []
+  validation:
+    - name: tie_breaks_to_earlier_catalog_entry
+      input:
+        observations:
+          - {name: obs1, ra: 10.0, dec: 10.0}
+        catalog:
+          - {name: a, ra: 10.2, dec: 10.0}
+          - {name: b, ra: 10.0, dec: 10.2}
+        tolerance: 0.5
+      expected:
+        matched: {obs1: a}
+        unmatched: []
+    - name: mixed_matched_and_unmatched
+      input:
+        observations:
+          - {name: obs1, ra: 10.0, dec: 10.0}
+          - {name: obs2, ra: 50.0, dec: 50.0}
+          - {name: obs3, ra: 20.0, dec: 30.0}
+        catalog:
+          - {name: vega, ra: 10.05, dec: 9.98}
+          - {name: altair, ra: 20.02, dec: 30.03}
+        tolerance: 0.1
+      expected:
+        matched: {obs1: vega, obs3: altair}
+        unmatched: [obs2]
+    - name: boundary_exactly_at_tolerance
+      input:
+        observations:
+          - {name: obs1, ra: 10.0, dec: 10.0}
+        catalog:
+          - {name: edge, ra: 10.5, dec: 10.0}
+        tolerance: 0.5
+      expected:
+        matched: {obs1: edge}
+        unmatched: []
+    - name: no_observations
+      input:
+        observations: []
+        catalog:
+          - {name: vega, ra: 10.0, dec: 10.0}
+        tolerance: 0.5
+      expected:
+        matched: {}
+        unmatched: []
+explanation_markdown: |
+  Cross-matching here is a brute-force nearest-neighbour search: for every
+  observation you look at every catalog entry, which is fine for the modest lists a
+  single night produces. The tolerance is a box, not a circle, because both axes
+  must independently be within `tol`; the boundary is inclusive, so `<=` is
+  correct. Among the entries that fall inside that box, the winner is the one with
+  the smallest separation.
+
+  Two details make the result deterministic. First, ranking by the **squared**
+  separation avoids a square root while ordering candidates identically to true
+  distance, so there is no floating-point rounding from `sqrt` to worry about.
+  Second, scanning the catalog in order and replacing the best only on a **strict**
+  improvement means that when two candidates are equally close, the one seen first,
+  the earlier catalog entry, keeps the match. Observations with an empty candidate
+  box never set a best, so they fall through to the unmatched list in their
+  original order.
+common_mistakes:
+  - Requiring closeness on only one axis, or summing the two axis errors, instead of requiring each axis independently within tolerance.
+  - Replacing the best match on distance <= best (not strictly <), which flips ties to the later catalog entry and breaks the tie-break rule.
+  - Forgetting to record unmatched observations, so the result silently drops observations that matched nothing.

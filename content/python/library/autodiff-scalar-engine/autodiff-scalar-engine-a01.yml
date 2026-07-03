@@ -1,0 +1,114 @@
+id: exercise.library.autodiff_scalar_engine.a01
+kind: exercise
+version: 1
+language: python
+title: Routing the Gradient Through a Plus Node
+slug: autodiff-scalar-engine-a01
+difficulty: easy
+concepts:
+  - ai.gradients_autodiff
+prerequisites:
+  - python.dictionaries
+  - python.lists
+estimated_time_minutes: 8
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.autodiff_scalar_engine.a01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: >-
+    Original framing of the addition backward-rule as a signal splitter on a
+    tide-gauge summing node, teaching the "route the gradient unchanged" idea
+    without copying any course phrasing.
+prompt_markdown: |
+  You are hand-building a tiny autodiff engine, the kind that powers neural
+  networks. Every value in the network is a scalar, and every operation is a
+  little node that knows how to pass gradients backward.
+
+  Consider an **addition node**. A tide gauge combines two readings into one
+  total: `total = a + b`. During training the engine works backward from a loss
+  `L` and hands this node an incoming gradient `grad_out`, which is `dL/dtotal`
+  (how much the loss changes when `total` changes).
+
+  Your job is the **chain rule**. The local derivatives of `total = a + b` are
+
+  ```
+  d(total)/da = 1        d(total)/db = 1
+  ```
+
+  so the gradient reaching each input is
+
+  ```
+  dL/da = grad_out * 1 = grad_out
+  dL/db = grad_out * 1 = grad_out
+  ```
+
+  In words: an addition node **routes the incoming gradient, unchanged, to both
+  addends**. Nothing gets scaled.
+
+  You are given `job` with this shape:
+
+  ```
+  {"grad_out": 2.5}
+  ```
+
+  Write `grads_add(job)` that returns the two input gradients as a list
+  `[grad_a, grad_b]`. Because addition just copies the gradient, both entries
+  equal `grad_out`.
+starter_code: |
+  def grads_add(job):
+      grad_out = job["grad_out"]
+      # Addition routes the same gradient to both inputs.
+      return []
+function_name: grads_add
+input_mode: function
+solution_sketch: Read grad_out from the job dict and return it twice in a list, since d(a+b)/da and d(a+b)/db are both 1.
+sample_solution: |
+  def grads_add(job):
+      grad_out = job["grad_out"]
+      return [grad_out, grad_out]
+hints:
+  - level: 1
+    text: The derivative of a + b with respect to each input is 1, so the chain rule multiplies grad_out by 1 for both.
+  - level: 2
+    text: Pull grad_out out of the job dictionary with job["grad_out"].
+  - level: 3
+    text: Return a two-element list [grad_out, grad_out]; no scaling or rounding is needed.
+tests:
+  public:
+    - name: unit_gradient
+      input: {"grad_out": 1}
+      expected: [1, 1]
+    - name: fractional_gradient
+      input: {"grad_out": 2.5}
+      expected: [2.5, 2.5]
+    - name: negative_gradient
+      input: {"grad_out": -3.0}
+      expected: [-3.0, -3.0]
+  validation:
+    - name: zero_gradient
+      input: {"grad_out": 0}
+      expected: [0, 0]
+    - name: small_gradient
+      input: {"grad_out": 0.5}
+      expected: [0.5, 0.5]
+    - name: large_gradient
+      input: {"grad_out": 7.0}
+      expected: [7.0, 7.0]
+explanation_markdown: |
+  Backpropagation is the chain rule applied node by node. For any node the rule is
+  `dL/dinput = grad_out * (local derivative)`. Addition is the friendliest case:
+  because `total = a + b` changes one-for-one with each input, both local
+  derivatives are exactly `1`, and multiplying by `1` leaves `grad_out`
+  untouched. So a plus node acts like a splitter that copies the same gradient to
+  every addend.
+
+  This is why summing many things together (bias terms, residual connections,
+  pooled scores) is cheap during the backward pass: the gradient simply fans out
+  to each contributor with no rescaling.
+common_mistakes:
+  - Returning grad_out only once instead of once per input; an addition node feeds both addends.
+  - Dividing grad_out in half, as if the gradient were shared; it is copied in full to each input.
+  - Reading the wrong key from the job dict instead of "grad_out".

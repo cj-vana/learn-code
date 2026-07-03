@@ -1,0 +1,142 @@
+id: exercise.library.capstone_observatory.c04
+kind: exercise
+version: 1
+language: python
+title: 'The Observatory Night Logs: Flagging Transient Events'
+slug: capstone-observatory-c04
+difficulty: hard
+concepts:
+  - patterns.sliding_window
+prerequisites:
+  - python.lists
+  - python.loops
+estimated_time_minutes: 24
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.capstone_observatory.c04
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Capstone stage four; original rolling-window anomaly detector that flags a reading when it exceeds the mean of the previous n readings by more than a threshold.
+prompt_markdown: |
+  The photometer streams a brightness value every few minutes, and the astronomers
+  want the pipeline to **flag transient events**: moments where the signal jumps
+  well above where it has recently been sitting. A jump is measured against the
+  recent baseline, not the whole night.
+
+  Write `detect_events(job)` that takes **one dictionary**:
+
+  - `"readings"`: a list of `[timestamp, value]` pairs in time order, where each
+    timestamp is a string and each value is a number.
+  - `"window"`: an integer `n`, the number of previous readings that form the
+    baseline.
+  - `"threshold"`: a number `t`.
+
+  For each reading at position `i`, compute the mean of the **previous `n`
+  readings** (positions `i - n` through `i - 1`). If the reading's value exceeds
+  that mean by **strictly more than** `t`, that is, `value - mean > t`, then flag
+  it. The very first `n` readings have fewer than `n` readings before them, so they
+  can never fire.
+
+  Return a **list** of the timestamps that fire, in the order they occur. A jump
+  that clears the mean by exactly `t` does **not** fire.
+
+  Example call:
+
+  ```python
+  detect_events({
+      "readings": [["22:00", 10], ["22:01", 10], ["22:02", 10], ["22:03", 30]],
+      "window": 3,
+      "threshold": 5,
+  })
+  # -> ["22:03"]  (mean of the three 10s is 10; 30 - 10 = 20 > 5)
+  ```
+starter_code: |
+  def detect_events(job):
+      return []
+function_name: detect_events
+input_mode: function
+solution_sketch: Loop i from window to the end; take the previous n values as a slice, average them, and if the current value minus that mean is strictly greater than the threshold, append the current timestamp.
+sample_solution: |
+  def detect_events(job):
+      readings = job["readings"]
+      window = job["window"]
+      threshold = job["threshold"]
+      flagged = []
+      for i in range(window, len(readings)):
+          previous = [readings[j][1] for j in range(i - window, i)]
+          mean = sum(previous) / window
+          timestamp, value = readings[i]
+          if value - mean > threshold:
+              flagged.append(timestamp)
+      return flagged
+hints:
+  - level: 1
+    text: The first window readings can never fire, so start your loop index at window rather than 0.
+  - level: 2
+    text: For position i the baseline is the values at positions i - window through i - 1. Collect those values and divide their sum by window to get the mean.
+  - level: 3
+    text: Flag the reading only when value - mean > threshold, using strictly greater than so an exact-threshold jump does not fire; append readings[i][0], the timestamp.
+tests:
+  public:
+    - name: window_larger_than_data
+      input:
+        readings: [['2026-07-01 22:00', 10], ['2026-07-01 22:01', 20]]
+        window: 3
+        threshold: 1
+      expected: []
+    - name: single_spike
+      input:
+        readings: [['2026-07-01 22:00', 10], ['2026-07-01 22:01', 10], ['2026-07-01 22:02', 10], ['2026-07-01 22:03', 30]]
+        window: 3
+        threshold: 5
+      expected: ['2026-07-01 22:03']
+    - name: below_threshold_stays_quiet
+      input:
+        readings: [['2026-07-01 22:00', 10], ['2026-07-01 22:01', 10], ['2026-07-01 22:02', 10], ['2026-07-01 22:03', 13]]
+        window: 3
+        threshold: 5
+      expected: []
+  validation:
+    - name: window_of_one
+      input:
+        readings: [['2026-07-02 01:00', 5], ['2026-07-02 01:05', 5], ['2026-07-02 01:10', 12], ['2026-07-02 01:15', 12]]
+        window: 1
+        threshold: 3
+      expected: ['2026-07-02 01:10']
+    - name: two_separate_events
+      input:
+        readings: [['2026-07-03 20:00', 2], ['2026-07-03 20:10', 2], ['2026-07-03 20:20', 10], ['2026-07-03 20:30', 2], ['2026-07-03 20:40', 11]]
+        window: 2
+        threshold: 3
+      expected: ['2026-07-03 20:20', '2026-07-03 20:40']
+    - name: exact_threshold_does_not_fire
+      input:
+        readings: [['2026-07-04 22:00', 10], ['2026-07-04 22:01', 10], ['2026-07-04 22:02', 10], ['2026-07-04 22:03', 15]]
+        window: 3
+        threshold: 5
+      expected: []
+    - name: fractional_mean_and_threshold
+      input:
+        readings: [['2026-07-05 03:00', 1], ['2026-07-05 03:10', 2], ['2026-07-05 03:20', 10]]
+        window: 2
+        threshold: 5.5
+      expected: ['2026-07-05 03:20']
+explanation_markdown: |
+  This is a rolling-window comparison. Each reading is judged only against the `n`
+  readings immediately before it, so the baseline slides forward one step at a time
+  as `i` advances. Starting the loop at `i = window` handles the "not enough
+  history yet" rule for free: there is no way to look back `n` readings before that
+  point, so those early readings simply never enter the test.
+
+  The mean is `sum(previous) / window`, and the fire test is `value - mean >
+  threshold`. Using strict `>` means a jump that only reaches the threshold exactly
+  is treated as ordinary variation rather than an event, matching the spec. Because
+  the baseline recomputes from the raw values each step, the detector adapts: after
+  a spike passes out of the window, the baseline returns to normal and later spikes
+  are judged fairly, which is why two distinct events can both fire.
+common_mistakes:
+  - Comparing against the mean of all readings so far instead of only the previous window, which drowns out short spikes.
+  - Starting the loop at index 0 and dividing by a partial or empty window for the first few readings.
+  - Using >= for the threshold test, which fires on jumps that only reach the threshold exactly instead of exceeding it.

@@ -1,0 +1,119 @@
+id: exercise.library.trees_lite.b01
+kind: exercise
+version: 1
+language: python
+title: Pruning the Dead Limbs of an Orchard
+slug: trees-lite-b01
+difficulty: hard
+concepts:
+  - python.trees_as_data
+  - patterns.tree_traversal
+prerequisites:
+  - patterns.recursion
+  - python.dictionaries
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.trees_lite.b01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original orchard-pruning task that removes maximal subtrees containing no node at or above a vigor threshold, using post-order recursion.
+prompt_markdown: |
+  An orchard is trained as a binary tree of grafts, each holding a vigor reading.
+  Every autumn the crew saws off any limb where *every* graft in that limb is too
+  weak to keep. Write `prune_dead_branches(job)` where `job` is a dict with:
+
+  - `"tree"`: a binary tree of nested dictionaries. Each node is
+    `{"value": ..., "left": ..., "right": ...}`, where `left` and `right` are child
+    nodes or `None`. An empty orchard is `None`.
+  - `"threshold"`: an integer vigor cutoff.
+
+  A graft **passes** if its value is greater than or equal to `threshold`. Remove
+  (prune) an entire subtree only when it contains **no** passing graft — that is,
+  when every node in it is below the threshold. A weak graft that still leads to at
+  least one passing descendant must be kept, because sawing it off would drop the
+  survivor too.
+
+  After pruning, return a dict `{"remaining": count, "root_survives": flag}` where
+  `count` is the number of nodes left in the pruned tree and `flag` is `True` if
+  the root itself survived (the pruned tree is non-empty) or `False` otherwise. An
+  empty orchard returns `{"remaining": 0, "root_survives": False}`.
+starter_code: |
+  def prune_dead_branches(job):
+      # Prune subtrees with no passing node, then report survivors.
+      return {"remaining": 0, "root_survives": False}
+function_name: prune_dead_branches
+input_mode: function
+solution_sketch: Post-order recursion returns a pruned subtree or None; a node is dropped only when it is below threshold and both pruned children are None. Then count the surviving nodes and check whether the pruned root is non-None.
+sample_solution: |
+  def prune_dead_branches(job):
+      threshold = job["threshold"]
+
+      def prune(node):
+          if node is None:
+              return None
+          left = prune(node["left"])
+          right = prune(node["right"])
+          if node["value"] < threshold and left is None and right is None:
+              return None
+          return {"value": node["value"], "left": left, "right": right}
+
+      def count(node):
+          if node is None:
+              return 0
+          return 1 + count(node["left"]) + count(node["right"])
+
+      pruned = prune(job["tree"])
+      return {"remaining": count(pruned), "root_survives": pruned is not None}
+hints:
+  - level: 1
+    text: Decide each node's fate only after you know what happened to its children, so recurse into both subtrees first.
+  - level: 2
+    text: A node disappears exactly when it is below the threshold and both of its children came back pruned to None; otherwise it stays, wired to whatever its children became.
+  - level: 3
+    text: Have the recursion return the rebuilt subtree or None, then run a simple node count on the pruned result and check whether that result is None for root survival.
+tests:
+  public:
+    - name: empty
+      input: {tree: null, threshold: 3}
+      expected: {remaining: 0, root_survives: false}
+    - name: single_survives
+      input: {tree: {value: 5, left: null, right: null}, threshold: 3}
+      expected: {remaining: 1, root_survives: true}
+    - name: single_pruned
+      input: {tree: {value: 2, left: null, right: null}, threshold: 3}
+      expected: {remaining: 0, root_survives: false}
+  validation:
+    - name: keep_path_to_strong
+      input: {tree: {value: 5, left: {value: 2, left: {value: 1, left: null, right: null}, right: {value: 3, left: null, right: null}}, right: {value: 8, left: null, right: {value: 1, left: null, right: null}}}, threshold: 4}
+      expected: {remaining: 2, root_survives: true}
+    - name: all_below
+      input: {tree: {value: 1, left: {value: 2, left: null, right: null}, right: {value: 0, left: null, right: null}}, threshold: 5}
+      expected: {remaining: 0, root_survives: false}
+    - name: weak_root_strong_child
+      input: {tree: {value: 1, left: {value: 9, left: null, right: null}, right: null}, threshold: 5}
+      expected: {remaining: 2, root_survives: true}
+    - name: internal_prune
+      input: {tree: {value: 10, left: {value: 1, left: {value: 1, left: null, right: null}, right: null}, right: {value: 7, left: null, right: null}}, threshold: 5}
+      expected: {remaining: 2, root_survives: true}
+    - name: all_strong
+      input: {tree: {value: 6, left: {value: 7, left: null, right: null}, right: {value: 8, left: null, right: null}}, threshold: 5}
+      expected: {remaining: 3, root_survives: true}
+explanation_markdown: |
+  The subtle word in the spec is *every*: a limb is dead only if it holds no
+  passing graft at all, so you cannot judge a node on its own value. A weak node
+  sitting above a strong descendant has to stay, because it is the path that keeps
+  the survivor attached. Post-order recursion resolves this cleanly. By pruning
+  both children before looking at the current node, the two child results already
+  encode "did anything survive down there." A node is dropped only when it fails
+  the threshold and both children came back as `None`; any surviving child forces
+  the node to stay. Rebuilding each kept node into a fresh dictionary keeps the
+  logic pure and easy to count afterwards. The traversal visits every node once, so
+  pruning is O(n), and the final count and root check read straight off the pruned
+  result.
+common_mistakes:
+  - Pruning any node whose own value is below the threshold, which wrongly cuts weak nodes that lead to a survivor.
+  - Deciding a node's fate before recursing into its children, so the child results are not yet available.
+  - Reporting root_survives from the original tree instead of the pruned tree, which stays True even when the whole orchard was removed.

@@ -1,0 +1,118 @@
+id: exercise.library.embeddings_similarity_search.a03
+kind: exercise
+version: 1
+language: python
+title: Cosine Similarity of Two Star Spectra
+slug: embeddings-similarity-search-a03
+difficulty: medium
+concepts:
+  - ai.embeddings_retrieval
+prerequisites:
+  - python.lists
+  - python.conditionals
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.embeddings_similarity_search.a03
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original cosine-similarity drill framed around comparing star light spectra.
+prompt_markdown: |
+  A raw dot product grows whenever the vectors are large, which makes it a poor
+  judge of *direction*. **Cosine similarity** fixes this by dividing the dot
+  product by both magnitudes, so it measures only the angle between two vectors
+  and always lands between -1 and 1:
+
+      cos(a, b) = (a . b) / (|a| * |b|)
+
+  Here `a . b = a0*b0 + ... + a(n-1)*b(n-1)` is the dot product and
+  `|a| = sqrt(a0^2 + ... + a(n-1)^2)` is the magnitude. A score of 1 means the
+  vectors point the same way, 0 means they are perpendicular, and -1 means they
+  point in opposite directions.
+
+  Each telescope observation records a star as a short light-spectrum vector.
+  Write `cosine_similarity(job)` where `job` is a dictionary with two vectors
+  under keys `"a"` and `"b"`, for example `{"a": [1, 2, 3], "b": [1, 2, 3]}`.
+  Return their cosine similarity rounded to 6 decimal places. If either vector
+  is all zeros its magnitude is 0 and the angle is undefined, so return `None`.
+starter_code: |
+  import math
+
+
+  def cosine_similarity(job):
+      return None
+function_name: cosine_similarity
+input_mode: function
+solution_sketch: Compute both magnitudes first; if either is 0 return None, otherwise divide the dot product by the product of magnitudes and round to 6 places.
+sample_solution: |
+  import math
+
+
+  def cosine_similarity(job):
+      a = job["a"]
+      b = job["b"]
+      mag_a = math.sqrt(sum(x * x for x in a))
+      mag_b = math.sqrt(sum(y * y for y in b))
+      if mag_a == 0 or mag_b == 0:
+          return None
+      dot = sum(x * y for x, y in zip(a, b))
+      return round(dot / (mag_a * mag_b), 6)
+hints:
+  - level: 1
+    text: Cosine similarity is the dot product scaled by both lengths, so compute the dot product and each magnitude separately.
+  - level: 2
+    text: Guard against division by zero first — if either magnitude is 0, return None before dividing.
+  - level: 3
+    text: Otherwise return round(dot / (mag_a * mag_b), 6), where dot is sum(x * y for x, y in zip(a, b)).
+tests:
+  public:
+    - name: identical
+      input:
+        a: [1, 2, 3]
+        b: [1, 2, 3]
+      expected: 1.0
+    - name: orthogonal
+      input:
+        a: [1, 0]
+        b: [0, 1]
+      expected: 0.0
+    - name: zero_vector
+      input:
+        a: [0, 0]
+        b: [1, 2]
+      expected: null
+  validation:
+    - name: opposite
+      input:
+        a: [1, 1]
+        b: [-1, -1]
+      expected: -1.0
+    - name: general
+      input:
+        a: [1, 2]
+        b: [2, 3]
+      expected: 0.992278
+    - name: both_zero
+      input:
+        a: [0, 0]
+        b: [0, 0]
+      expected: null
+    - name: scaled
+      input:
+        a: [2, 4]
+        b: [1, 2]
+      expected: 1.0
+explanation_markdown: |
+  Dividing by both magnitudes cancels out how *long* each vector is and leaves
+  only how they are *oriented*, which is why a vector and any positive scaling
+  of it (like [2, 4] and [1, 2]) score exactly 1.0. That scale-invariance is
+  the whole reason cosine similarity dominates text and image retrieval: two
+  documents about the same topic should match even if one is much longer. The
+  zero-vector guard matters because a vector with no length has no direction, so
+  the ratio would divide by zero; returning None signals "undefined" cleanly.
+common_mistakes:
+  - Dividing by only one magnitude, or by their sum instead of their product.
+  - Computing the magnitudes after the zero check, so an all-zero vector still triggers a division by zero.
+  - Forgetting that opposite-pointing vectors give -1, and clamping or taking an absolute value that hides it.

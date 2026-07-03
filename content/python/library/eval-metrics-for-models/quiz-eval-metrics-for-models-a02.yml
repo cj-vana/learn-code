@@ -1,0 +1,96 @@
+id: quiz.library.eval_metrics_for_models.a02
+kind: quiz
+version: 1
+language: python
+title: Metric Formulas, Precisely
+slug: quiz-eval-metrics-for-models-a02
+difficulty: medium
+concepts:
+  - ai.model_evaluation
+prerequisites:
+  - ai.model_evaluation
+estimated_time_minutes: 7
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.eval_metrics_for_models.a02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original syntax quiz on computing classification and ranking metrics with correct edge-case handling.
+quiz_type: syntax
+questions:
+  - id: q1
+    prompt: 'With TP=30, FP=20, FN=10, TN=940, what are precision and recall?'
+    choices:
+      - Precision 0.6, recall 0.75
+      - Precision 0.75, recall 0.6
+      - Precision 0.97, recall 0.97
+      - Precision 0.6, recall 0.03
+    correct_choice: Precision 0.6, recall 0.75
+    explanation: |
+      Precision = TP/(TP+FP) = 30/50 = 0.6; recall = TP/(TP+FN) = 30/40 =
+      0.75. Different denominators, different questions — memorize which is
+      which by the question each answers.
+    concepts:
+      - ai.model_evaluation
+  - id: q2
+    prompt: 'With precision 1.0 and recall 0.02, what is F1 (harmonic mean), roughly?'
+    choices:
+      - '0.04'
+      - '0.51'
+      - '0.98'
+      - '0.5'
+    correct_choice: '0.04'
+    explanation: |
+      F1 = 2PR/(P+R) = 2(0.02)/(1.02) ≈ 0.039 — collapsing toward the weaker
+      component, which is the entire reason the harmonic mean is used.
+    concepts:
+      - ai.model_evaluation
+  - id: q3
+    prompt: |
+      A classifier flags nothing: TP=0, FP=0. Computing precision = TP/(TP+FP)
+      does what, and what must your implementation do?
+    choices:
+      - Divides zero by zero — the code must return a stated convention (e.g. 0.0) instead of raising ZeroDivisionError
+      - Returns exactly 1.0 — no false positives means perfect precision
+      - Returns exactly 0.5 — the uninformative prior
+      - Python evaluates 0/0 as 0 automatically
+    correct_choice: Divides zero by zero — the code must return a stated convention (e.g. 0.0) instead of raising ZeroDivisionError
+    explanation: |
+      Degenerate confusion matrices occur constantly (early training, extreme
+      thresholds); evaluation code defines its conventions explicitly or dies
+      in production.
+    concepts:
+      - ai.model_evaluation
+      - concepts.testing
+  - id: q4
+    prompt: |
+      In a threshold sweep predicting 1 when score >= t, one test score equals
+      t exactly. Why does the course pin this case with a test?
+    choices:
+      - The >= versus > choice flips that prediction's side, silently changing every downstream count — a boundary contract that must be stated and tested
+      - Scores equal to thresholds are statistically impossible
+      - Floating point cannot represent equality
+      - The sweep skips tied scores automatically
+    correct_choice: The >= versus > choice flips that prediction's side, silently changing every downstream count — a boundary contract that must be stated and tested
+    explanation: |
+      It is the boundary-value discipline from the testing area applied to ML:
+      the behavior at exactly-threshold is a contract decision, and untested
+      contracts drift.
+    concepts:
+      - ai.model_evaluation
+      - concepts.testing
+  - id: q5
+    prompt: 'For ranked results ["report-7", "report-2", "report-9"] with correct answer "report-9", what is the reciprocal rank?'
+    choices:
+      - '0.3333'
+      - '3.0'
+      - '0.6667'
+      - '1.0'
+    correct_choice: '0.3333'
+    explanation: |
+      The first correct result sits at position 3 (1-indexed), so RR = 1/3 ≈
+      0.3333; had it been absent entirely, the score would be 0.0.
+    concepts:
+      - ai.model_evaluation

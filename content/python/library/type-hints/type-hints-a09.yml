@@ -1,0 +1,158 @@
+id: exercise.library.type_hints.a09
+kind: exercise
+version: 1
+language: python
+title: Pricing the Stained-Glass Order
+slug: type-hints-a09
+difficulty: medium
+concepts:
+  - python.type_hints
+prerequisites:
+  - python.dictionaries
+  - python.lists
+  - python.conditionals
+estimated_time_minutes: 13
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.type_hints.a09
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original structural-dispatch drill framed around a stained-glass studio computing the area of each cut piece by its declared kind.
+prompt_markdown: |
+  A stained-glass studio prices each piece of an order by its glass area. Every
+  piece in the cutting list is a small dictionary that declares its `"kind"`, and
+  the fields that follow depend on that kind -- a structural union the pricer has
+  to dispatch on.
+
+  Write `duck_call(job)` that takes **one dictionary** with (at least) this entry:
+
+  - `"shapes"`: a list of piece dictionaries. A circle looks like
+    `{"kind": "circle", "r": <radius>}`; a rectangle looks like
+    `{"kind": "rect", "w": <width>, "h": <height>}`.
+
+  Return a **list of areas**, one per piece in order, each **rounded to 2 decimal
+  places**:
+
+  - For a circle, the area is `pi * r * r` using `math.pi`.
+  - For a rectangle, the area is `w * h`.
+  - For any **other** `"kind"` (a shape the pricer does not recognise), put `None`
+    in that position instead of a number. Do not read any size fields off an
+    unrecognised piece.
+
+  The `job` dictionary may carry other unrelated keys; ignore them and read only
+  `"shapes"`.
+
+  Example call:
+
+  ```python
+  duck_call({"shapes": [{"kind": "circle", "r": 2},
+                        {"kind": "rect", "w": 4, "h": 5}]})
+  # -> [12.57, 20]
+  ```
+
+  An empty shape list returns an empty list.
+starter_code: |
+  import math
+  from typing import Any
+
+
+  def duck_call(job: dict[str, Any]) -> list[Any]:
+      return []
+function_name: duck_call
+input_mode: function
+solution_sketch: Iterate over job["shapes"]; branch on each piece's "kind" to compute a circle or rectangle area rounded to two decimals, appending None for any unrecognised kind, and return the list of results.
+sample_solution: |
+  import math
+  from typing import Any
+
+
+  def duck_call(job: dict[str, Any]) -> list[Any]:
+      areas: list[Any] = []
+      for shape in job["shapes"]:
+          kind = shape["kind"]
+          if kind == "circle":
+              areas.append(round(math.pi * shape["r"] * shape["r"], 2))
+          elif kind == "rect":
+              areas.append(round(shape["w"] * shape["h"], 2))
+          else:
+              areas.append(None)
+      return areas
+hints:
+  - level: 1
+    text: Loop over job["shapes"] and look at each piece's "kind" to decide which formula to use.
+  - level: 2
+    text: A circle uses math.pi * r * r and a rectangle uses w * h; wrap each result in round(value, 2).
+  - level: 3
+    text: If the kind is neither "circle" nor "rect", append None without touching any size fields, then return the collected list.
+tests:
+  public:
+    - name: empty_shapes
+      input:
+        shapes: []
+      expected: []
+    - name: single_circle
+      input:
+        shapes:
+          - {"kind": "circle", "r": 1}
+      expected: [3.14]
+    - name: single_rect
+      input:
+        shapes:
+          - {"kind": "rect", "w": 2, "h": 3}
+      expected: [6]
+    - name: unknown_kind
+      input:
+        shapes:
+          - {"kind": "triangle", "base": 2, "height": 4}
+      expected: [null]
+  validation:
+    - name: mixed_shapes
+      input:
+        shapes:
+          - {"kind": "circle", "r": 2}
+          - {"kind": "rect", "w": 4, "h": 5}
+      expected: [12.57, 20]
+    - name: unknown_between_known
+      input:
+        shapes:
+          - {"kind": "circle", "r": 1}
+          - {"kind": "blob"}
+          - {"kind": "rect", "w": 2, "h": 3}
+      expected: [3.14, null, 6]
+    - name: circle_radius_zero
+      input:
+        shapes:
+          - {"kind": "circle", "r": 0}
+      expected: [0.0]
+    - name: float_dimensions
+      input:
+        shapes:
+          - {"kind": "circle", "r": 2.5}
+          - {"kind": "rect", "w": 2.5, "h": 4}
+      expected: [19.63, 10.0]
+    - name: ignores_extra_job_keys
+      input:
+        shapes:
+          - {"kind": "rect", "w": 1.5, "h": 2}
+        currency: "gbp"
+      expected: [3.0]
+explanation_markdown: |
+  Each piece is a tagged record, and the `"kind"` field is the discriminator that
+  tells the pricer which other fields are present and which formula applies. This
+  is structural dispatch: instead of one universal area formula, you branch on the
+  tag and only then reach for the fields that tag guarantees. Guarding the unknown
+  case with `None` -- and importantly, not reading `r`, `w`, or `h` off a shape
+  you do not recognise -- keeps the function from crashing on a malformed or
+  future piece.
+
+  `round(value, 2)` gives the two-decimal price figure. When a rectangle's sides
+  are whole numbers the product is an integer and rounding leaves it an integer,
+  which compares equal to the same value written with decimals. The pass is linear
+  in the number of pieces, and it reads only the `"shapes"` key so extra metadata
+  on the job is harmless.
+common_mistakes:
+  - Reading r, w, or h before checking the kind, which raises a KeyError on an unrecognised piece instead of yielding None.
+  - Forgetting to round, so measured circles return long floating-point tails that do not match the expected prices.
+  - Using r squared as r + r or 2 * r rather than r * r, which computes the wrong circle area.

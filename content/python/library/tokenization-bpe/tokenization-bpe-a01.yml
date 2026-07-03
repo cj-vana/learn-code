@@ -1,0 +1,82 @@
+id: exercise.library.tokenization_bpe.a01
+kind: exercise
+version: 1
+language: python
+title: Splitting a Word into Starter Symbols
+slug: tokenization-bpe-a01
+difficulty: easy
+concepts:
+  - ai.tokenization
+prerequisites:
+  - python.strings
+  - python.lists
+estimated_time_minutes: 9
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.tokenization_bpe.a01
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original byte-pair-encoding warm-up framed as a field linguist preparing phrasebook words for a subword tokenizer.
+prompt_markdown: |
+  A field linguist is building a **subword tokenizer** for a small phrasebook.
+  Before any merging can happen, every word must be broken into its smallest
+  starting units: one symbol per character, followed by a special
+  **end-of-word marker** written as the literal string `</w>`. That marker lets
+  the tokenizer tell the "er" that ends *washer* apart from the "er" in the
+  middle of *herd*.
+
+  Write `word_to_symbols(word)` that takes a single string and returns a list of
+  symbols: each character of the word in order, then `"</w>"` as the final
+  element. For example `"tea"` becomes `["t", "e", "a", "</w>"]`. An empty
+  string has no characters, so it becomes just `["</w>"]`.
+starter_code: |
+  def word_to_symbols(word):
+      return []
+function_name: word_to_symbols
+input_mode: function
+solution_sketch: Turn the string into a list of its characters with list(word), then append the "</w>" marker.
+sample_solution: |
+  def word_to_symbols(word):
+      return list(word) + ["</w>"]
+hints:
+  - level: 1
+    text: A Python string is already a sequence of one-character pieces, so you can convert it straight into a list of characters.
+  - level: 2
+    text: list("tea") gives ["t", "e", "a"]; you just need one more element after it.
+  - level: 3
+    text: Return list(word) + ["</w>"] so the marker always lands at the end, even when word is empty.
+tests:
+  public:
+    - name: three_letters
+      input: "cat"
+      expected: ["c", "a", "t", "</w>"]
+    - name: single_letter
+      input: "a"
+      expected: ["a", "</w>"]
+    - name: empty_word
+      input: ""
+      expected: ["</w>"]
+  validation:
+    - name: tea
+      input: "tea"
+      expected: ["t", "e", "a", "</w>"]
+    - name: longer_word
+      input: "leaf"
+      expected: ["l", "e", "a", "f", "</w>"]
+    - name: repeated_letters
+      input: "moon"
+      expected: ["m", "o", "o", "n", "</w>"]
+explanation_markdown: |
+  Every byte-pair-encoding pipeline starts from characters. By representing a
+  word as a list of single-character symbols plus a `</w>` marker, later steps
+  can repeatedly glue neighbouring symbols together while still knowing where a
+  word ends. `list(word)` does the character split in one step because iterating
+  a string yields its characters, and concatenating `["</w>"]` guarantees the
+  marker is present even for the empty string, whose only symbol is the marker
+  itself.
+common_mistakes:
+  - Appending the marker as the characters "<", "/", "w", ">" instead of the single string "</w>".
+  - Forgetting the empty-string case, which should still return ["</w>"] rather than an empty list.
+  - Joining the characters back into one string instead of returning a list of separate symbols.

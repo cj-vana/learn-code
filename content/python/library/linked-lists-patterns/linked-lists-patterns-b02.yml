@@ -1,0 +1,130 @@
+id: exercise.library.linked_lists_patterns.b02
+kind: exercise
+version: 1
+language: python
+title: Rotate the Gondola Loop
+slug: linked-lists-patterns-b02
+difficulty: hard
+concepts:
+  - patterns.linked_list
+prerequisites:
+  - python.classes
+  - python.loops
+estimated_time_minutes: 22
+review_status: published
+source_status: original
+provenance:
+  brief_id: library.linked_lists_patterns.b02
+  author: generated
+  generated_at: '2026-07-03T00:00:00Z'
+  inspiration_sources: []
+  originality_notes: Original ski-gondola framing that rotates a node chain to the right by forming a ring and cutting it, handling k larger than the length.
+prompt_markdown: |
+  A ski resort runs a chain of gondola cabins along a cable. Overnight the
+  operators slide the whole line to the right by `k` positions so a different set
+  of cabins ends up at the boarding platform. Write `rotate_by_k(job)` where `job`
+  is a dict with:
+
+  - `"cabins"`: a list of cabin labels in order along the cable.
+  - `"k"`: a non-negative integer number of positions to rotate to the right.
+    `k` may be `0` or larger than the number of cabins.
+
+  Build a singly linked list of `Node` objects, rotate the chain to the **right**
+  by `k` positions **by rewiring links** (join the tail to the head to form a
+  ring, then cut it at the right spot), and return the cabin labels in their new
+  order as a plain list.
+
+  Rotating right by one moves the last cabin to the front. Because rotating by the
+  full length returns to the start, only `k` modulo the length matters, so a `k`
+  larger than the number of cabins wraps around. An empty line returns an empty
+  list.
+
+  For example, `cabins = [1, 2, 3, 4, 5]` with `k = 2` returns `[4, 5, 1, 2, 3]`.
+starter_code: |
+  def rotate_by_k(job):
+      # Build a Node chain, rotate it right by k via a ring, then serialize.
+      return []
+function_name: rotate_by_k
+input_mode: function
+solution_sketch: Build the chain and its length n, reduce k to k % n, close the tail onto the head to form a ring, walk to the new tail at index n - r - 1, then break the ring after it and serialize from the new head.
+sample_solution: |
+  def rotate_by_k(job):
+      class Node:
+          def __init__(self, value):
+              self.value = value
+              self.next = None
+
+      cabins = job["cabins"]
+      k = job["k"]
+      if not cabins:
+          return []
+
+      nodes = [Node(label) for label in cabins]
+      n = len(nodes)
+      for i in range(n - 1):
+          nodes[i].next = nodes[i + 1]
+
+      r = k % n
+      if r == 0:
+          new_head = nodes[0]
+      else:
+          nodes[n - 1].next = nodes[0]        # close the ring
+          new_tail = nodes[n - r - 1]
+          new_head = new_tail.next
+          new_tail.next = None                # cut the ring
+
+      result = []
+      node = new_head
+      while node is not None:
+          result.append(node.value)
+          node = node.next
+      return result
+hints:
+  - level: 1
+    text: Rotating right by the full length changes nothing, so start by reducing k with k % n where n is the number of cabins.
+  - level: 2
+    text: Connect the last node back to the first to make a ring; now every node has a next and you only need to decide where to cut.
+  - level: 3
+    text: After forming the ring, the new tail sits at index n - r - 1 from the original head; the node after it becomes the new head, and you break the ring by setting the new tail's next to None.
+tests:
+  public:
+    - name: rotate_two
+      input: {cabins: [1, 2, 3, 4, 5], k: 2}
+      expected: [4, 5, 1, 2, 3]
+    - name: k_zero
+      input: {cabins: [1, 2, 3], k: 0}
+      expected: [1, 2, 3]
+    - name: k_exceeds_length
+      input: {cabins: [1, 2, 3], k: 4}
+      expected: [3, 1, 2]
+  validation:
+    - name: empty
+      input: {cabins: [], k: 3}
+      expected: []
+    - name: single
+      input: {cabins: [9], k: 5}
+      expected: [9]
+    - name: full_rotation
+      input: {cabins: [1, 2, 3, 4], k: 4}
+      expected: [1, 2, 3, 4]
+    - name: rotate_one
+      input: {cabins: [10, 20, 30], k: 1}
+      expected: [30, 10, 20]
+    - name: large_k_wraps
+      input: {cabins: [1, 2, 3, 4, 5], k: 12}
+      expected: [4, 5, 1, 2, 3]
+explanation_markdown: |
+  Rotation looks fiddly with pointers until you notice the shape it wants: a ring.
+  Once the tail points back at the head, the list has no ends, and "rotating"
+  becomes the single decision of where to cut. Reducing `k` with `k % n` first is
+  what tames a `k` larger than the length, since spinning a ring all the way around
+  lands you exactly where you started. A right rotation by `r` means the last `r`
+  cabins move to the front, so the new head is `r` steps back from the original
+  tail, which is index `n - r` from the head, and the new tail is the node just
+  before it at index `n - r - 1`. Cutting there, by setting that node's `next` to
+  `None`, reopens the ring into a correctly rotated line. The whole thing is O(n):
+  one pass to build, one short walk to the cut point.
+common_mistakes:
+  - Forgetting to reduce k with k % n, so a k larger than the length walks off the end of the ring or loops forever.
+  - Rotating left instead of right; rotating right moves the tail cabins to the front.
+  - Leaving the ring closed and never setting the new tail's next to None, producing a cyclic list that never finishes serializing.
