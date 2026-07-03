@@ -1,0 +1,15 @@
+# Root build context (api and runner-broker images). Keep content/ in.
+.git
+.venv
+.github
+docs
+schemas
+tests
+apps/web
+apps/cli
+services/python-runner
+**/__pycache__
+**/.pytest_cache
+**/node_modules
+*.log
+.DS_Store

@@ -37,9 +37,24 @@ path taught.
 
 You need [Docker](https://docs.docker.com/get-docker/) with Compose v2
 (Docker Desktop on macOS/Windows, Docker Engine + the compose plugin on
-Linux). Everything else runs inside containers.
+Linux). Everything else — app, API, sandbox, and the full content library —
+ships inside the published multi-arch images (amd64 + arm64).
 
-**Build from source:**
+```bash
+mkdir learn-code && cd learn-code
+curl -fsSL https://raw.githubusercontent.com/cj-vana/learn-code/main/docker-compose.standalone.yml -o docker-compose.yml
+docker compose up -d
+```
+
+Then open **http://127.0.0.1:5173**. No clone, no build; progress persists in
+a Docker volume. Pin a release with `LEARN_CODE_TAG=1.3.0` (defaults to
+`latest`).
+
+**To update**: `docker compose pull && docker compose up -d` — or uncomment
+the `watchtower` service in the compose file and updates apply themselves.
+The app's status strip tells you when a newer release exists.
+
+**Hacking on it instead?** Clone and build from source:
 
 ```bash
 git clone https://github.com/cj-vana/learn-code.git
@@ -47,26 +62,9 @@ cd learn-code
 docker compose up --build
 ```
 
-**Or use the prebuilt images from GHCR** (skips the build; the clone is still
-needed because the content library is mounted as data):
-
-```bash
-git clone https://github.com/cj-vana/learn-code.git
-cd learn-code
-docker compose -f docker-compose.yml -f docker-compose.ghcr.yml pull
-docker compose -f docker-compose.yml -f docker-compose.ghcr.yml up
-```
-
-Pin a release with `LEARN_CODE_TAG=1.2.0` (defaults to `latest`).
-
-Then open **http://127.0.0.1:5173**.
-
 The browser app and the CLI both talk to the same FastAPI backend. Learner code
 runs in short-lived, sandboxed Python containers via the runner-broker — nothing
 you write touches the host.
-
-**To update**: `git pull`, then rerun your install command above. The app's
-status strip tells you when a newer release exists.
 
 ### CLI
 

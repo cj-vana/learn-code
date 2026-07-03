@@ -30,8 +30,10 @@ services:
         condition: service_healthy
 
   api:
+    # Root context: the image bakes in content/ (see apps/api/Dockerfile).
     build:
-      context: ./apps/api
+      context: .
+      dockerfile: apps/api/Dockerfile
     # localhost-only publish. The API is the only SQLite writer.
     ports:
       - "127.0.0.1:8000:8000"
@@ -71,8 +73,10 @@ services:
     # SECURITY: the api must NOT mount /var/run/docker.sock.
 
   runner-broker:
+    # Root context: the image bakes in content/ (see the service Dockerfile).
     build:
-      context: ./services/runner-broker
+      context: .
+      dockerfile: services/runner-broker/Dockerfile
     # Internal only: NO host port. Reachable only by the api over the compose
     # network. This is the ONLY service that mounts the Docker socket; it creates
     # sibling python-runner containers on the HOST daemon.

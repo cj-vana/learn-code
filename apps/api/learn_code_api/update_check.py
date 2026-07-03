@@ -14,7 +14,7 @@ import time
 import urllib.request
 
 # Keep in step with apps/api/pyproject.toml.
-CURRENT_VERSION = "1.2.0"
+CURRENT_VERSION = "1.3.0"
 
 RELEASES_URL = "https://api.github.com/repos/cj-vana/learn-code/releases/latest"
 _CACHE_TTL_SECONDS = 24 * 60 * 60

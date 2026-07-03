@@ -9,6 +9,8 @@ talk to Docker.
 from __future__ import annotations
 
 import asyncio
+from collections.abc import Callable
+from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
 
@@ -30,8 +32,16 @@ class _ThreadedExecutor:
         return await asyncio.to_thread(self._executor.execute, job, limits)
 
 
-def create_app(run_manager: RunManager) -> FastAPI:
-    app = FastAPI(title="learn-code-runner-broker")
+def create_app(run_manager: RunManager, prepare: Callable[[], None] | None = None) -> FastAPI:
+    @asynccontextmanager
+    async def lifespan(app: FastAPI):
+        # Best-effort sandbox-image refresh (see DockerPyAdapter.ensure_image).
+        # Runs at server startup, not import, so tests never touch Docker.
+        if prepare is not None:
+            await asyncio.to_thread(prepare)
+        yield
+
+    app = FastAPI(title="learn-code-runner-broker", lifespan=lifespan)
 
     @app.post("/internal/v1/runs", response_model=RunnerResponse)
     async def create_run(request: RunnerRequest) -> RunnerResponse:
@@ -43,14 +53,20 @@ def create_app(run_manager: RunManager) -> FastAPI:
     return app
 
 
-def _build_default_run_manager() -> RunManager:
+def _build_default_app() -> FastAPI:
+    adapter = DockerPyAdapter()
     executor = Executor(
-        adapter=DockerPyAdapter(),
+        adapter=adapter,
         image=settings.python_runner_image,
         workspace_root=settings.workspace_root,
         timeout_buffer_seconds=settings.docker_timeout_buffer_seconds,
     )
-    return RunManager(executor=_ThreadedExecutor(executor), content_root=settings.content_root)
+    run_manager = RunManager(
+        executor=_ThreadedExecutor(executor), content_root=settings.content_root
+    )
+    return create_app(
+        run_manager, prepare=lambda: adapter.ensure_image(settings.python_runner_image)
+    )
 
 
-app = create_app(_build_default_run_manager())
+app = _build_default_app()

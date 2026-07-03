@@ -57,6 +57,8 @@ jobs:
               - 'apps/cli/**'
               - 'apps/web/**'
               - 'services/**'
+              - 'content/**'
+              - '.dockerignore'
               - 'docker-compose.yml'
               - '.github/workflows/ci.yml'
             workflows:
@@ -162,18 +164,23 @@ jobs:
         include:
           - name: web
             context: apps/web
+            dockerfile: apps/web/Dockerfile
           - name: api
-            context: apps/api
+            context: .
+            dockerfile: apps/api/Dockerfile
           - name: runner-broker
-            context: services/runner-broker
+            context: .
+            dockerfile: services/runner-broker/Dockerfile
           - name: python-runner
             context: services/python-runner
+            dockerfile: services/python-runner/Dockerfile
     steps:
       - uses: actions/checkout@v4
       - uses: docker/setup-buildx-action@v3
       - uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
           push: false
           cache-from: type=gha,scope=${{ matrix.name }}
           cache-to: type=gha,mode=max,scope=${{ matrix.name }}
@@ -224,12 +231,16 @@ jobs:
         include:
           - name: web
             context: apps/web
+            dockerfile: apps/web/Dockerfile
           - name: api
-            context: apps/api
+            context: .
+            dockerfile: apps/api/Dockerfile
           - name: runner-broker
-            context: services/runner-broker
+            context: .
+            dockerfile: services/runner-broker/Dockerfile
           - name: python-runner
             context: services/python-runner
+            dockerfile: services/python-runner/Dockerfile
     steps:
       - uses: actions/checkout@v4
       # Apple Silicon and other ARM hosts pull these images too.
@@ -251,6 +262,7 @@ jobs:
       - uses: docker/build-push-action@v6
         with:
           context: ${{ matrix.context }}
+          file: ${{ matrix.dockerfile }}
           push: true
           platforms: linux/amd64,linux/arm64
           tags: ${{ steps.meta.outputs.tags }}

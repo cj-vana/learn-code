@@ -1,0 +1,84 @@
+# Learn Code — checkout-free install. Everything (app, API, sandbox, and the
+# full content library) ships inside the published images; no repo clone.
+#
+#   mkdir learn-code && cd learn-code
+#   curl -fsSL https://raw.githubusercontent.com/cj-vana/learn-code/main/docker-compose.standalone.yml -o docker-compose.yml
+#   docker compose up -d
+#
+# Then open http://127.0.0.1:5173. Pin a release with LEARN_CODE_TAG=1.3.0
+# (defaults to latest). Progress persists in the api-data volume.
+#
+# Auto-updates: uncomment the watchtower service below. The broker re-pulls
+# the sandbox image whenever it (re)starts, so runner updates ride along.
+
+name: learn-code
+
+services:
+  web:
+    image: ghcr.io/cj-vana/learn-code-web:${LEARN_CODE_TAG:-latest}
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
+    ports:
+      - "127.0.0.1:5173:5173"
+    environment:
+      VITE_API_PROXY_TARGET: http://api:8000
+    depends_on:
+      api:
+        condition: service_healthy
+
+  api:
+    image: ghcr.io/cj-vana/learn-code-api:${LEARN_CODE_TAG:-latest}
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
+    ports:
+      - "127.0.0.1:8000:8000"
+    environment:
+      LEARN_CODE_DATABASE_URL: sqlite:////data/learn-code.sqlite3
+      RUNNER_BROKER_URL: http://runner-broker:8080
+      OLLAMA_ENABLED: ${OLLAMA_ENABLED:-auto}
+      OLLAMA_HOST: ${OLLAMA_HOST:-http://host.docker.internal:11434}
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-granite-code:8b}
+      LEARN_CODE_UPDATE_CHECK: ${LEARN_CODE_UPDATE_CHECK:-on}
+    volumes:
+      - api-data:/data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      - runner-broker
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/v1/health')"
+      interval: 5s
+      timeout: 3s
+      retries: 20
+      start_period: 5s
+
+  runner-broker:
+    image: ghcr.io/cj-vana/learn-code-runner-broker:${LEARN_CODE_TAG:-latest}
+    labels:
+      com.centurylinklabs.watchtower.enable: "true"
+    # The ONLY service that touches the Docker socket; it spawns a short-lived
+    # sandbox container per submission and pulls that image at startup.
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Sibling-container workspace: must exist at the SAME absolute path on
+      # the host and in this container (the host daemon resolves bind paths).
+      - ${RUNNER_WORKSPACE_DIR:-/tmp/learn-code-runner}:${RUNNER_WORKSPACE_DIR:-/tmp/learn-code-runner}
+    environment:
+      PYTHON_RUNNER_IMAGE: ghcr.io/cj-vana/learn-code-python-runner:${LEARN_CODE_TAG:-latest}
+      RUNNER_WORKSPACE_ROOT: ${RUNNER_WORKSPACE_DIR:-/tmp/learn-code-runner}
+
+  # Optional: automatic updates. Uncomment to have Watchtower pull new images
+  # and restart the stack when a release lands (label-scoped: it only touches
+  # this stack's services, checking every 6 hours).
+  # watchtower:
+  #   image: containrrr/watchtower
+  #   volumes:
+  #     - /var/run/docker.sock:/var/run/docker.sock
+  #   command: --label-enable --cleanup --interval 21600
+
+volumes:
+  api-data:

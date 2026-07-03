@@ -12,6 +12,7 @@ limits" (docs/superpowers/specs/2026-07-01-learn-code-design.md:267-299).
 from __future__ import annotations
 
 import json
+import logging
 import os
 import shutil
 import tempfile
@@ -89,6 +90,27 @@ class DockerPyAdapter:
 
             self._client = docker.from_env()
         return self._client
+
+    def ensure_image(self, image: str) -> None:
+        """Best-effort image freshness at startup. Registry-hosted tags (the
+        checkout-free install) are pulled so the sandbox tracks the tag even
+        though it never runs as a service Watchtower could update; local tags
+        and offline hosts fall back to whatever the daemon already has. Never
+        raises — a truly missing image surfaces as a clear per-run error."""
+        try:
+            client = self._client_or_connect()
+            if "/" in image:
+                try:
+                    client.images.pull(image)
+                    return
+                except Exception:
+                    pass
+            client.images.get(image)
+        except Exception:
+            logging.getLogger(__name__).warning(
+                "runner image %s is not available yet; runs will fail until it is pulled or built",
+                image,
+            )
 
     def run(
         self,
