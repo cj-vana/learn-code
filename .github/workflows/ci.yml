@@ -39,6 +39,8 @@ jobs:
               - 'apps/cli/pyproject.toml'
               - 'services/runner-broker/pyproject.toml'
               - 'pyproject.toml'
+              - 'uv.lock'
+              - '.python-version'
               - 'content/**'
               - 'docker-compose.yml'
               - 'Makefile'
@@ -58,6 +60,8 @@ jobs:
               - 'apps/web/**'
               - 'services/**'
               - 'content/**'
+              - 'pyproject.toml'
+              - 'uv.lock'
               - '.dockerignore'
               - 'docker-compose.yml'
               - '.github/workflows/ci.yml'
@@ -70,13 +74,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: astral-sh/setup-uv@v6
         with:
-          python-version: "3.12"
+          enable-cache: true
+      # ruff is pinned in the root dev dependency group; --only-group skips
+      # installing the workspace members.
       - name: Ruff lint
-        run: pipx run ruff==0.15.20 check apps/api apps/cli services/runner-broker services/python-runner scripts
+        run: uv run --locked --only-group dev ruff check apps/api apps/cli services/runner-broker services/python-runner scripts
       - name: Ruff format
-        run: pipx run ruff==0.15.20 format --check apps/api apps/cli services/runner-broker services/python-runner scripts
+        run: uv run --locked --only-group dev ruff format --check apps/api apps/cli services/runner-broker services/python-runner scripts
 
   actionlint:
     needs: changes
@@ -93,23 +99,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: astral-sh/setup-uv@v6
         with:
-          python-version: "3.12"
-          cache: pip
-      # Sequential installs so the CLI's learn-code-api dependency resolves
-      # against the local editable install instead of PyPI.
-      - name: Install packages
-        run: |
-          pip install -e "apps/api[test]" pytest-timeout
-          pip install -e "apps/cli[test]"
-          pip install -e "services/runner-broker[test]"
+          enable-cache: true
+      # Whole workspace, editable, straight from the lockfile — the CLI's
+      # learn-code-api dependency resolves to the workspace member.
+      - name: Install workspace
+        run: uv sync --locked --all-packages
       - name: Repo guard
-        run: python scripts/check_repo.py
+        run: uv run python scripts/check_repo.py
       - name: Compose config
         run: docker compose config > /dev/null
       - name: Tests
-        run: python -m pytest -q
+        run: uv run pytest -q
 
   content:
     # Structure, references, path ordering, and every exercise's sample
@@ -119,16 +121,13 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: astral-sh/setup-uv@v6
         with:
-          python-version: "3.12"
-          cache: pip
-      - name: Install packages
-        run: |
-          pip install -e "apps/api"
-          pip install -e "apps/cli"
+          enable-cache: true
+      - name: Install workspace
+        run: uv sync --locked --all-packages --no-dev
       - name: Validate content library
-        run: learn-code validate-content
+        run: uv run --no-dev learn-code validate-content
 
   web:
     needs: changes

@@ -7,6 +7,9 @@ schemas
 tests
 apps/web
 apps/cli
+# apps/cli is excluded, but uv needs every workspace member's pyproject to
+# load the workspace during `uv sync` in the api/broker images.
+!apps/cli/pyproject.toml
 services/python-runner
 **/__pycache__
 **/.pytest_cache

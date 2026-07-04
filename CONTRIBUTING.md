@@ -10,13 +10,17 @@ there.
 
 ## Dev setup
 
+The Python side is a [uv](https://docs.astral.sh/uv/) workspace: one lockfile
+(`uv.lock`), one `.venv`, every package installed editable.
+
 ```bash
-python3 -m venv .venv
-.venv/bin/pip install -e "apps/api[test]" pytest-timeout
-.venv/bin/pip install -e "apps/cli[test]"
-.venv/bin/pip install -e "services/runner-broker[test]"
+uv sync --all-packages    # or: make setup
 cd apps/web && npm install
 ```
+
+If you add or change a dependency, edit the relevant `pyproject.toml`, run
+`uv lock`, and commit the lockfile — CI installs with `--locked` and fails if
+it is stale.
 
 Run everything the CI runs before opening a PR:
 
@@ -35,14 +39,14 @@ New or changed content must pass the full validation, which executes every
 exercise's sample solution against its own tests:
 
 ```bash
-PYTHONPATH=apps/cli/src:apps/api .venv/bin/python -m learn_code_cli.main validate-content
+uv run learn-code validate-content
 ```
 
 After adding content, regenerate the learning paths so unit ordering and each
 path's assumed concepts stay correct:
 
 ```bash
-.venv/bin/python scripts/generate_paths.py
+uv run scripts/generate_paths.py
 ```
 
 See `docs/content-authoring.md` for the authoring flow.

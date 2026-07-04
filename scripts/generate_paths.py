@@ -4,7 +4,7 @@ Deterministic: unit items are the area's lessons, then exercises, then quizzes,
 each sorted by id, so re-running against the same catalog reproduces the same
 files. Run from the repo root:
 
-    .venv/bin/python scripts/generate_paths.py
+    uv run scripts/generate_paths.py
 """
 
 from __future__ import annotations

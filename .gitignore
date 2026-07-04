@@ -34,3 +34,4 @@ coverage/
 # Screenshot / browser-automation artifacts
 *.png
 .playwright-mcp/
+*.egg-info/

@@ -1,3 +1,19 @@
+# Virtual workspace root: not a package itself. `uv sync --all-packages`
+# installs every member editable plus the dev group below into ./.venv.
+[tool.uv.workspace]
+members = ["apps/api", "apps/cli", "services/runner-broker"]
+
+# Test/lint tooling for the whole repo. Per-package `test` extras stay in each
+# member's pyproject for standalone installs; this group is what dev and CI use.
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-timeout",
+    "pytest-asyncio",
+    "respx",
+    "ruff==0.15.20",
+]
+
 [tool.pytest.ini_options]
 testpaths = ["tests", "apps/api/tests", "apps/cli/tests", "services/runner-broker/tests", "services/python-runner/tests"]
 pythonpath = ["apps/api", "apps/cli/src", "services/runner-broker", "services/python-runner"]

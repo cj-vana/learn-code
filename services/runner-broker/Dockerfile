@@ -7,14 +7,27 @@
 # checkout's ./content over /srv/content, shadowing the baked copy.
 FROM python:3.12-slim
 
+COPY --from=ghcr.io/astral-sh/uv:0.11.2 /uv /usr/local/bin/uv
+
 WORKDIR /srv
 
-COPY services/runner-broker/pyproject.toml /srv/pyproject.toml
+# Workspace metadata only, so this dependency layer caches until uv.lock
+# changes. Every member pyproject must be present for uv to load the workspace.
+COPY pyproject.toml uv.lock ./
+COPY apps/api/pyproject.toml apps/api/
+COPY apps/cli/pyproject.toml apps/cli/
+COPY services/runner-broker/pyproject.toml services/runner-broker/
+
+# Third-party deps straight from the lockfile; the app package ships as a
+# plain source copy below (PYTHONPATH import).
+ENV UV_PYTHON=/usr/local/bin/python3
+RUN uv sync --locked --no-dev --no-install-workspace --package learn-code-runner-broker
+
 COPY services/runner-broker/app /srv/app
 COPY content /srv/content
 
-RUN pip install --no-cache-dir .
-
+ENV PATH="/srv/.venv/bin:$PATH"
+ENV PYTHONPATH=/srv
 ENV LEARN_CODE_CONTENT_ROOT=/srv/content/python
 
 EXPOSE 8080

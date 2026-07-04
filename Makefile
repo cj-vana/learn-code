@@ -4,7 +4,8 @@
 PY := $(shell [ -x "$(CURDIR)/.venv/bin/python" ] && echo "$(CURDIR)/.venv/bin/python" || echo python3)
 
 setup:
-	python3 --version
+	uv --version
+	uv sync --all-packages
 	node --version || true
 	docker --version || true
 

@@ -53,13 +53,16 @@ Other load-bearing pieces:
 ## Commands
 
 ```bash
+uv sync --all-packages    # one-time setup: whole workspace, editable, into .venv
 make validate     # repo guard + compose config + all pytest + web build
 make test         # all pytest + web vitest
-.venv/bin/python scripts/generate_paths.py     # after content changes
-PYTHONPATH=apps/cli/src:apps/api .venv/bin/python -m learn_code_cli.main validate-content
+uv run scripts/generate_paths.py               # after content changes
+uv run learn-code validate-content
 docker compose up --build                      # full stack on :5173
 ```
 
+Python packaging is a uv workspace (root `pyproject.toml`, single `uv.lock`);
+after changing any dependency run `uv lock` and commit the lockfile.
 Python suites also run individually: `cd apps/api && python -m pytest`.
 Web: `cd apps/web && npm test -- --run` and `npx tsc -b --noEmit`.
 
