@@ -275,7 +275,7 @@ wheels = [
 
 [[package]]
 name = "learn-code-api"
-version = "1.4.0"
+version = "1.4.1"
 source = { editable = "apps/api" }
 dependencies = [
     { name = "fastapi" },
@@ -305,7 +305,7 @@ provides-extras = ["test"]
 
 [[package]]
 name = "learn-code-cli"
-version = "1.4.0"
+version = "1.4.1"
 source = { editable = "apps/cli" }
 dependencies = [
     { name = "httpx" },
@@ -331,7 +331,7 @@ provides-extras = ["test"]
 
 [[package]]
 name = "learn-code-runner-broker"
-version = "1.4.0"
+version = "1.4.1"
 source = { editable = "services/runner-broker" }
 dependencies = [
     { name = "docker" },

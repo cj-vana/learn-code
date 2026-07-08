@@ -1018,10 +1018,20 @@ select.text-input {
 
 /* ================= PROSE ========================================= */
 
+.prose h1 {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  margin: var(--space-6) 0 var(--space-3);
+}
 .prose h2 {
   font-family: var(--font-display);
   font-size: 1.3rem;
   margin: var(--space-6) 0 var(--space-3);
+}
+.prose h3 {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  margin: var(--space-4) 0 var(--space-2);
 }
 .prose p {
   margin: 0 0 var(--space-4);
@@ -1029,12 +1039,58 @@ select.text-input {
   line-height: 1.75;
   color: var(--ink-soft);
 }
-.prose code {
+.prose ul,
+.prose ol {
+  margin: 0 0 var(--space-4);
+  padding-left: var(--space-6);
+  color: var(--ink-soft);
+}
+.prose li {
+  margin: 0 0 var(--space-2);
+  line-height: 1.7;
+}
+.prose strong {
+  font-weight: 700;
+  color: var(--ink);
+}
+.prose a {
+  color: var(--purple);
+  font-weight: 600;
+}
+.prose blockquote {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-2) var(--space-4);
+  border-left: 3px solid var(--card-border);
+  color: var(--muted);
+}
+.prose table {
+  border-collapse: collapse;
+  margin: 0 0 var(--space-4);
+  font-size: 0.95rem;
+}
+.prose th,
+.prose td {
+  border: 1px solid var(--card-border);
+  padding: 6px 10px;
+  text-align: left;
+}
+.prose > :first-child {
+  margin-top: 0;
+}
+.prose > :last-child {
+  margin-bottom: 0;
+}
+
+/* Inline code chips from the Markdown renderer. Tagged (not scoped to .prose)
+   so short inline-mode fields — checkpoints, quiz prompts — chip too. */
+code.tok-inline {
   font-family: var(--font-mono);
   background: var(--lift-2);
+  color: var(--ink);
   padding: 1px 5px;
   border-radius: 5px;
   font-size: 0.85em;
+  overflow-wrap: anywhere;
 }
 .prose pre {
   font-family: var(--font-mono);
@@ -1046,6 +1102,35 @@ select.text-input {
   box-shadow: 4px 5px 0 var(--ink);
   overflow: auto;
   line-height: 1.7;
+}
+/* The <pre> is the code slab; its inner <code> carries only token spans. */
+.prose pre code {
+  font-family: inherit;
+  background: none;
+  padding: 0;
+  border: 0;
+  font-size: inherit;
+  color: inherit;
+}
+/* Token colours mirror the editor's HighlightStyle (workbenchTheme.ts), read
+   against the dark --panel-dark slab. */
+.prose pre .tok-keyword,
+.prose pre .tok-operator {
+  color: #ffb020;
+}
+.prose pre .tok-string,
+.prose pre .tok-lit {
+  color: #7be0a4;
+}
+.prose pre .tok-function {
+  color: #35b8f0;
+}
+.prose pre .tok-comment {
+  color: #9a94c0;
+  font-style: italic;
+}
+.prose pre .tok-invalid {
+  color: #ff6b5a;
 }
 
 /* ================= MISC ========================================== */

@@ -8,6 +8,7 @@ import {
 } from '../api/queries';
 import type { RunResult } from '../contracts';
 import { CodeEditor } from '../editor/CodeEditor';
+import { Markdown } from '../components/Markdown';
 import { PageHeading } from '../components/PageHeading';
 import { Panel } from '../components/Panel';
 import { QueryState } from '../components/QueryState';
@@ -136,9 +137,7 @@ export function ExerciseRoute() {
                     <PatternChip key={concept} pattern={concept} />
                   ))}
                 </div>
-                <div className="prose" style={{ whiteSpace: 'pre-wrap' }}>
-                  {detail.prompt_markdown}
-                </div>
+                <Markdown>{detail.prompt_markdown}</Markdown>
               </Panel>
 
               <Panel title="Bench notes" eyebrow="Hints climb one rung at a time">

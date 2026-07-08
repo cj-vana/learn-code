@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useCompleteLesson, useLessonDetail } from '../api/queries';
 import type { CheckpointDetail } from '../contracts';
+import { Markdown } from '../components/Markdown';
 import { PageHeading } from '../components/PageHeading';
 import { Panel } from '../components/Panel';
 import { QueryState } from '../components/QueryState';
@@ -13,11 +14,17 @@ function Checkpoint({ checkpoint, index }: { checkpoint: CheckpointDetail; index
   return (
     <article className="index-card index-card--lesson">
       <p className="index-card__meta">Checkpoint {index + 1}</p>
-      <h3 className="index-card__title">{checkpoint.question}</h3>
+      <h3 className="index-card__title">
+        <Markdown inline>{checkpoint.question}</Markdown>
+      </h3>
       {revealed ? (
         <div className="stack">
-          <p>{checkpoint.answer}</p>
-          <p className="muted">{checkpoint.explanation}</p>
+          <p>
+            <Markdown inline>{checkpoint.answer}</Markdown>
+          </p>
+          <p className="muted">
+            <Markdown inline>{checkpoint.explanation}</Markdown>
+          </p>
         </div>
       ) : (
         <div className="command-row" style={{ marginTop: 'var(--space-2)' }}>
@@ -57,9 +64,7 @@ export function LessonRoute() {
                   <PatternChip key={concept} pattern={concept} />
                 ))}
               </div>
-              <div className="prose" style={{ whiteSpace: 'pre-wrap' }}>
-                {detail.body_markdown}
-              </div>
+              <Markdown>{detail.body_markdown}</Markdown>
             </Panel>
 
             <Panel title="Checkpoints" eyebrow="Check yourself before moving on">

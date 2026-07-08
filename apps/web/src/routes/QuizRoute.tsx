@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useAnswerQuiz, useQuizDetail } from '../api/queries';
 import type { QuizAnswerResponse } from '../contracts';
+import { Markdown } from '../components/Markdown';
 import { PageHeading } from '../components/PageHeading';
 import { Panel } from '../components/Panel';
 import { QueryState } from '../components/QueryState';
@@ -74,7 +75,7 @@ export function QuizRoute() {
                   <PatternChip key={concept} pattern={concept} />
                 ))}
               </div>
-              <p style={{ whiteSpace: 'pre-wrap' }}>{question.prompt}</p>
+              <Markdown className="quiz-prompt">{question.prompt}</Markdown>
               <div className="stack" style={{ marginTop: 'var(--space-3)' }}>
                 {question.choices.map((choice) => (
                   <button
@@ -91,7 +92,9 @@ export function QuizRoute() {
               {feedback ? (
                 <div className="stack" style={{ marginTop: 'var(--space-3)' }}>
                   <p>{feedback.correct ? 'Correct.' : 'Not this time.'}</p>
-                  <p className="muted">{feedback.explanation}</p>
+                  <p className="muted">
+                    <Markdown inline>{feedback.explanation}</Markdown>
+                  </p>
                   <div className="command-row">
                     <button
                       className="command-btn command-btn--pine"

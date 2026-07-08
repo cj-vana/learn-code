@@ -47,7 +47,7 @@ docker compose up -d
 ```
 
 Then open **http://127.0.0.1:5173**. No clone, no build; progress persists in
-a Docker volume. Pin a release with `LEARN_CODE_TAG=1.4.0` (defaults to
+a Docker volume. Pin a release with `LEARN_CODE_TAG=1.4.1` (defaults to
 `latest`).
 
 **To update**: `docker compose pull && docker compose up -d` — or uncomment

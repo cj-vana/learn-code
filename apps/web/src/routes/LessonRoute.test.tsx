@@ -20,10 +20,17 @@ const LESSON: LessonDetail = {
   concepts: ['patterns.two_pointers'],
   prerequisites: [],
   estimated_time_minutes: 10,
-  body_markdown: 'Move both ends toward the middle.',
+  body_markdown: [
+    'In Python a *variable* points at a value. Bind it with `score = 10`.',
+    '',
+    '```python',
+    'def add(a, b):',
+    '    return a + b',
+    '```',
+  ].join('\n'),
   checkpoints: [
     {
-      question: 'Why move the left pointer?',
+      question: 'Why move the `left` pointer?',
       answer: 'To shrink the window.',
       explanation: 'Because the window is too wide.',
     },
@@ -42,7 +49,7 @@ describe('LessonRoute', () => {
 
     renderWithProviders(<App />, { route: '/lesson/lesson.l1' });
 
-    expect(await screen.findByText('Move both ends toward the middle.')).toBeInTheDocument();
+    expect(await screen.findByText(/points at a value/i)).toBeInTheDocument();
     expect(screen.queryByText('To shrink the window.')).not.toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: /reveal the answer/i }));
@@ -56,5 +63,31 @@ describe('LessonRoute', () => {
       method: 'POST',
       url: '/api/v1/lessons/lesson.l1/complete',
     });
+  });
+
+  it('renders markdown prose and highlighted code instead of literal source', async () => {
+    mockApi({ 'GET /api/v1/content/lesson.l1': { json: LESSON } });
+
+    const { container } = renderWithProviders(<App />, { route: '/lesson/lesson.l1' });
+    await screen.findByText(/points at a value/i);
+
+    // Emphasis becomes an <em>, not literal asterisks.
+    expect(screen.getByText('variable').tagName).toBe('EM');
+
+    // Inline code becomes a chip, not literal backticks.
+    const inline = screen.getByText('score = 10');
+    expect(inline.tagName).toBe('CODE');
+    expect(inline).toHaveClass('tok-inline');
+
+    // A fenced block becomes a real <pre><code> with syntax-highlighted tokens.
+    const pre = container.querySelector('pre');
+    expect(pre).not.toBeNull();
+    expect(pre?.querySelector('code')).not.toBeNull();
+    expect(container.querySelector('.tok-keyword')?.textContent).toBe('def');
+
+    // No raw markdown leaks through anywhere on the page.
+    expect(container.textContent).not.toContain('```');
+    expect(container.textContent).not.toContain('*variable*');
+    expect(container.textContent).not.toContain('`score = 10`');
   });
 });
